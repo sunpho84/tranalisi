@@ -14,5 +14,6 @@ AC_PROG_CXX
 AC_CONFIG_FILES(Makefile bin/Makefile)
 
 AX_CXX_COMPILE_STDCXX_11(noext,mandatory)
+AX_CXXFLAGS_WARN_ALL
 
 AC_OUTPUT
