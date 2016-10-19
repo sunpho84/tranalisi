@@ -12,5 +12,6 @@ config/depcomp
 config/install-sh
 config/missing
 configure
-include/config.hpp.in
+include/config.hpp.in*
 install
+
