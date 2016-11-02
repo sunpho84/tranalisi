@@ -15,3 +15,5 @@ configure
 include/config.hpp.in*
 install
 
+/compile_commands.json
+/Makefile
