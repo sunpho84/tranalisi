@@ -17,3 +17,4 @@ install
 
 /compile_commands.json
 /Makefile
+/.dir-locals.el
