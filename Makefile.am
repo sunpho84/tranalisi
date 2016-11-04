@@ -1,1 +1,3 @@
-SUBDIRS=bin lib
+SUBDIRS= \
+	lib \
+	bin
