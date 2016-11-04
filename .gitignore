@@ -18,3 +18,4 @@ install
 /compile_commands.json
 /Makefile
 /.dir-locals.el
+build_clang
