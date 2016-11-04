@@ -17,16 +17,25 @@ template <class T> class boot_t : public vector<T>
 {
 public:
   //! constrcutor specifying nboots
-  boot_t(int nboots) : vector<T>(nboots,0) {}
+  explicit boot_t(int nboots) : vector<T>(nboots,0) {}
   
   //! default value of nboots used
   boot_t() : boot_t(def_nboots) {}
   
+  //! init from vector<T>
+  boot_t(const vector<T> oth) : vector<T>(oth) {cout<<"Conversion from vector"<<endl;}
+  
   //! move constructor
-  boot_t(boot_t&&) = default;
+  boot_t(const boot_t&& oth) : vector<T>(move(oth)) {};
   
   //! copy constructor
-  boot_t(boot_t &oth) {cout<<"copia"<<endl;}
+  boot_t(const boot_t &oth) : vector<T>(oth) {cout<<"copia"<<endl;}
+  
+  //! move assignement
+  boot_t &operator=(const boot_t &&oth) {vector<T>(move(oth));cout<<"move"<<endl;return *this;}
+  
+  //! assign from a scalar
+  boot_t& operator=(const T &oth) {for(auto &it : *this) it=oth;return *this;}
 };
 
 #endif
