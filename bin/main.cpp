@@ -11,15 +11,17 @@ using namespace std;
 
 int main(int narg,char **arg)
 {
-  dbvec_t a(3),b(3),c(3);
+  dbvec_t a(3),b(3);
+  dboot_t c;
   a=3;
   b=1;
   c=4;
 
   dbvec_t d;
 
-  d=a;
-  d=-pow(log(b/(a+c)),2);
+  uminus(1);
+  
+  d=-pow(log(b/(a+c)),2)+2;
   //has_iterator<boot_t<double>>::value;
 
   cout<<d[0][1]<<endl;

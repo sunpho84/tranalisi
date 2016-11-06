@@ -13,6 +13,9 @@ using namespace std;
 //! standard number of bootstrap sample, if not specified
 int def_nboots=DEF_NBOOTS;
 
+//! cluster size
+int clust_size=1;
+
 //! type defining boot
 template <class T> class boot_t : public vector<T>
 {

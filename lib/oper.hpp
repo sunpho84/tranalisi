@@ -40,12 +40,13 @@ template <class T1,class T2> void check_match_size(const vector<T1> &first,const
   }
 
 DEFINE_HAS_METHOD(size);
+#define is_vector has_method_size
 
 //////////////////////////////////////////////// sum /////////////////////////////////////////////////
 
 //! operation between two vectors
 #define DEFINE_BIN_OPERATOR(OP_NAME,SELF_OP_NAME,OP)			\
-  template <class T,class = typename enable_if<has_method_size<T>::value>::type> T OP_NAME(const T &first,const T &second)	\
+  template <class T,class = typename enable_if<is_vector<T>::value>::type> T OP_NAME(const T &first,const T &second)	\
   {									\
     check_match_size(first,second);					\
     									\
@@ -54,16 +55,18 @@ DEFINE_HAS_METHOD(size);
     return out;								\
   }									\
   /* operation between vector and scalar */				\
-  template <class TV,class TS,class = typename enable_if<!is_base_of<vector<TV>,TS>::value>::type> vector<TV> OP_NAME(const vector<TV> &first,const TS &second) \
+  template <class TV,class TS,class = typename enable_if<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>::type> \
+    TV OP_NAME(const TV &first,const TS &second)	\
   {									\
-    vector<TV> out(first.size());					\
+    TV out(first.size());						\
     for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second;	\
     return out;								\
   }									\
   /* opposite */							\
-  template <class TV,class TS,class = typename enable_if<!is_base_of<vector<TV>,TS>::value>::type> vector<TV> OP_NAME(const TS &first,const vector<TV> &second) \
+  template <class TV,class TS,class = typename enable_if<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>::type> \
+    TV OP_NAME(const TS &first,const TV &second)			\
   {									\
-    vector<TV> out(first.size());					\
+    TV out(first.size());						\
     for(size_t it=0;it<first.size();it++) out[it]=first OP second[it];	\
     return out;								\
   }									\
@@ -86,7 +89,7 @@ DEFINE_BIN_OPERATOR(operator/,operator/=,/)
   }
 #define DEFINE_FUNCTION(OP_NAME) DEFINE_NAMED_FUNCTION(OP_NAME,OP_NAME)
 
-//helper for unary minus
+//! helper for unary minus
 template <class T> T uminus(const T &in)
 {return -in;}
 
