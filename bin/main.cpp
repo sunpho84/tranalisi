@@ -26,7 +26,7 @@ int main(int narg,char **arg)
 
   cout<<d[0][1]<<endl;
 
-  ave_err_t av(2.0,3.0);
+  ave_err_t av=d[0].ave_err();
   cout<<av<<endl;
   
   //cout<<has_method_size<boot_t<double>>::value<<endl;

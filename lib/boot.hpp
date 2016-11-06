@@ -19,11 +19,33 @@ using namespace std;
  #define INIT_TO(A) =A
 #endif
 
+//! define the square of a double, float or integer
+template <class T,class=typename enable_if<is_arithmetic<T>::value>::type> T sqr(T x)
+{return x*x;}
+
+/////////////////////////////////////////////////////////////// average and error /////////////////////////////////////////////////
+
+//! average and error
+class ave_err_t : pair<double,double>
+{
+public:
+  //! rebind base constructor
+  ave_err_t(double a=0,double b=0) : pair<double,double>(a,b) {};
+  
+  //! rebind average
+  double &ave=first;
+  
+  //! rebind error
+  double &err=second;
+};
+
+//////////////////////////////////////////////////////////////// boot_t /////////////////////////////////////////////////////
+
 //! standard number of bootstrap sample, if not specified
 EXTERN_BOOT int def_nboots INIT_TO(DEF_NBOOTS);
 
-//! cluster size
-EXTERN_BOOT int clust_size INIT_TO(1);
+//! number of jacknife
+EXTERN_BOOT int njacks INIT_TO(1);
 
 //! type defining boot
 template <class T> class boot_t : public vector<T>
@@ -50,6 +72,26 @@ public:
   
   //! assign from a scalar
   boot_t& operator=(const T &oth) {for(auto &it : *this) it=oth;return *this;}
+  
+  //! compute average and error
+  ave_err_t ave_err()
+  {
+    ave_err_t ae;
+    double &ave=ae.ave;
+    double &err=ae.err;
+    
+    for(auto & x : *this)
+    {
+      ave+=x;
+      err+=sqr(x);
+    }
+    ave/=this->size();
+    err/=this->size();
+    err-=sqr(ave);
+    err=sqrt(fabs(err)*(njacks-1));
+    
+    return ae;
+  }
 };
 
 //! typically we will use double numbers
@@ -86,22 +128,6 @@ public:
 
 //! typically we use double boot
 using dbvec_t=bvec_t<double>;
-
-/////////////////////////////////////////////////////////////// average and error /////////////////////////////////////////////////
-
-//! average and error
-class ave_err_t : pair<double,double>
-{
-public:
-  //! rebind base constructor
-  ave_err_t(double a,double b) : pair<double,double>(a,b) {};
-  
-  //! rebind average
-  double &ave=first;
-  
-  //! rebind error
-  double &err=second;
-};
 
 #undef EXTERN_BOOT
 #undef INIT_TO
