@@ -4,4 +4,5 @@ lib_LIBRARIES=libtran.a
 
 libtran_a_SOURCES= \
 	boot.cpp \
+	oper.cpp \
 	tools.cpp

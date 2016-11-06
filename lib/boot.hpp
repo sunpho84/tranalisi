@@ -5,6 +5,7 @@
  #include "config.hpp"
 #endif
 
+#include <cmath>
 #include <iostream>
 #include <utility>
 #include <vector>
