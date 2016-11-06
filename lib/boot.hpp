@@ -6,15 +6,23 @@
 #endif
 
 #include <iostream>
+#include <utility>
 #include <vector>
 
 using namespace std;
 
+#ifndef EXTERN_BOOT
+ #define EXTERN_BOOT extern
+ #define INIT_TO(A)
+#else
+ #define INIT_TO(A) =A
+#endif
+
 //! standard number of bootstrap sample, if not specified
-int def_nboots=DEF_NBOOTS;
+EXTERN_BOOT int def_nboots INIT_TO(DEF_NBOOTS);
 
 //! cluster size
-int clust_size=1;
+EXTERN_BOOT int clust_size INIT_TO(1);
 
 //! type defining boot
 template <class T> class boot_t : public vector<T>
@@ -77,5 +85,24 @@ public:
 
 //! typically we use double boot
 using dbvec_t=bvec_t<double>;
+
+/////////////////////////////////////////////////////////////// average and error /////////////////////////////////////////////////
+
+//! average and error
+class ave_err_t : pair<double,double>
+{
+public:
+  //! rebind base constructor
+  ave_err_t(double a,double b) : pair<double,double>(a,b) {};
+  
+  //! rebind average
+  double &ave=first;
+  
+  //! rebind error
+  double &err=second;
+};
+
+#undef EXTERN_BOOT
+#undef INIT_TO
 
 #endif

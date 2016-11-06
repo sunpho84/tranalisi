@@ -2,3 +2,5 @@
  #include "config.hpp"
 #endif
 
+#define EXTERN_BOOT
+#include <boot.hpp>

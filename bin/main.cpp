@@ -25,7 +25,9 @@ int main(int narg,char **arg)
   //has_iterator<boot_t<double>>::value;
 
   cout<<d[0][1]<<endl;
-  
+
+  ave_err_t av(2.0,3.0);
+  cout<<av.ave<<endl;
   
   //cout<<has_method_size<boot_t<double>>::value<<endl;
   
