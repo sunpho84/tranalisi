@@ -19,3 +19,6 @@ install
 /Makefile
 /.dir-locals.el
 build_clang
+/GPATH
+/GRTAGS
+/GTAGS
