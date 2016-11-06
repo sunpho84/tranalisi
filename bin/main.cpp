@@ -11,10 +11,23 @@ using namespace std;
 
 int main(int narg,char **arg)
 {
-  boot_t<double> a,b,c;
-  cout<<a.size()<<endl;
+  dbvec_t a(3),b(3),c(3);
+  a=3;
+  b=1;
+  c=4;
+
+  dbvec_t d;
+
+  d=a;
+  d=-pow(log(b/(a+c)),2);
+  //has_iterator<boot_t<double>>::value;
+
+  cout<<d[0][1]<<endl;
   
-  auto d=b+(a+c);
+  
+  //cout<<has_method_size<boot_t<double>>::value<<endl;
+  
+  //decltype(boot_t<double>::iterator(),0);
   
   return 0;
 }
