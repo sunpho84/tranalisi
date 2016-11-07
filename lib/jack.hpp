@@ -82,6 +82,8 @@ template <class T> class jvec_t : public vector<jack_t<T>>
     {for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];}
 };
 
+using djvec_t=jvec_t<double>;
+
 #undef EXTERN_JACK
 #undef INIT_TO
 

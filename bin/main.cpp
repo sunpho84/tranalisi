@@ -3,6 +3,8 @@
 #endif
 
 #include <boot.hpp>
+#include <file.hpp>
+#include <jack.hpp>
 #include <oper.hpp>
 
 #include <iostream>
@@ -47,5 +49,17 @@ int main(int narg,char **arg)
   
   cout<<bciccio.ave_err()<<endl;
   
+  //obs_file_t file("/tmp/cicc",2);
+  //file.set_col_view({0,1});
+  //auto i=file.read(4);
+  
+  //cout<<endl<<i<<endl;
+  
+  //djvec_t te(i);
+  
+  read_conf_set_t("/tmp/cicc%d",0,1,1,2,{0,1},3);
+  
+  //int o=file.read<int>("o");
+  //cout<<o<<endl;
   return 0;
 }
