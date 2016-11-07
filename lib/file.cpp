@@ -32,14 +32,13 @@ djvec_t read_conf_set_t(string template_path,size_t start,size_t each,size_t end
 	{
 	  //read
 	  temp=files[ind].read(nlines);
-	  cout<<"size: "<<temp.size()<<endl;
-	  cout<<raw_data[ind]<<temp<<endl;
+	  //cout<<raw_data[ind]<<temp<<endl;
 	  
-	  //if(temp.size()) raw_data[ind].insert(raw_data[ind].end(),temp.begin(),temp.end());
+	  //append
+	  if(temp.size()) raw_data[ind].insert(raw_data[ind].end(),temp.begin(),temp.end());
 	}
       while(temp.size());
     }
   
-  djvec_t out(raw_data);
-  return out;
+  return djvec_t(transpose(raw_data));;
 }

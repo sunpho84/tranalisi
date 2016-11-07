@@ -137,7 +137,6 @@ public:
 	//read a line
 	line_t line;
 	char *rc=get_line(line);
-	if(rc) cout<<"Line "<<iline<<": "<<line<<endl;
 	
 	//feed the line to the tokenizer
 	char *tok=NULL;
@@ -178,7 +177,7 @@ public:
     if(iline<nlines)
       {
 	data.clear();
-	cout<<"Failed reading, invalidating"<<endl;
+	//cout<<"Failed reading, invalidating"<<endl;
       }
     
     return data;

@@ -13,7 +13,7 @@ using namespace std;
 
 int main(int narg,char **arg)
 {
-  set_njacks(2);
+  set_njacks(3);
   
   dbvec_t a(3),b(3);
   dboot_t c;
@@ -43,7 +43,7 @@ int main(int narg,char **arg)
   cout<<test2.ave_err()<<endl;
 
   boot_init_t binit;binit.fill(23252523);
-  vector<vector<double>> ciccio={{3,4},{4,5}};
+  vector<vector<double>> ciccio={{3,4,1},{4,5,4}};
   
   dbvec_t bciccio(binit,ciccio);
   
@@ -57,7 +57,7 @@ int main(int narg,char **arg)
   
   //djvec_t te(i);
   
-  read_conf_set_t("/tmp/cicc%d",0,1,1,2,{0,1},3);
+  cout<<dbvec_t(binit,read_conf_set_t("/tmp/cicc%d",0,1,2, 2,{0,1},3)).ave_err()<<endl;
   
   //int o=file.read<int>("o");
   //cout<<o<<endl;
