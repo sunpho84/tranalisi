@@ -1,7 +1,7 @@
 #ifndef _RANDOM_HPP
 #define _RANDOM_HPP
 
-#include <boot.hpp>
+#include <iostream>
 #include <random>
 #include <vector>
 
@@ -18,29 +18,28 @@ using namespace std;
 class gen_t: public mt19937_64
 {
 public:
-  //! init without a seed
-  gen_t() : mt19937_64() {}
-  
   //! init with a seed
   gen_t(int seed) : mt19937_64(seed) {}
   
   //! return a real random number in the range [min,max)
-  double get_rand_double(double min,double max)
+  double get_double(double min,double max)
   {return uniform_real_distribution<double>(min,max)(*this);}
   
   //! return an integer random number in the range [min,max)
-  double get_rand_int(int min,int max)
+  double get_int(int min,int max)
   {return uniform_int_distribution<>(min,max-1)(*this);}
+  
+  //! return an integer random number in the range [min,max)
+  double get_gauss(double ave,double sig)
+  {return normal_distribution<>(ave,sig)(*this);}
+  
+private:
+  //! init without a seed
+  gen_t() : mt19937_64() {}
 };
 
-EXTERN_RANDOM gen_t glb_gen;
-
-void boot_init_t::fill(int seed)
-{
-  gen_t gen(seed);
-  
-  for(auto &it : *this) it=gen.get_rand_int(0,njacks);
-}
+//! if we ever needed a global generator...
+//EXTERN_RANDOM gen_t glb_gen;
 
 #undef EXTERN_RANDOM
 #undef INIT_TO

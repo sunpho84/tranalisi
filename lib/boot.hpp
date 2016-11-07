@@ -8,6 +8,7 @@
 #include <cmath>
 #include <iostream>
 #include <utility>
+#include <random.hpp>
 #include <vector>
 
 using namespace std;
@@ -22,9 +23,6 @@ using namespace std;
 //! standard number of bootstrap sample, if not specified
 EXTERN_BOOT int def_nboots INIT_TO(DEF_NBOOTS);
 
-//! number of jacknife
-EXTERN_BOOT int njacks INIT_TO(1);
-
 //! define the square of a double, float or integer
 template <class T,class=typename enable_if<is_arithmetic<T>::value>::type> T sqr(T x)
 {return x*x;}
@@ -37,6 +35,19 @@ class ave_err_t : pair<double,double>
 public:
   //! rebind base constructor
   ave_err_t(double a=0,double b=0) : pair<double,double>(a,b) {};
+  
+  //! move constructor
+  ave_err_t(ave_err_t&& oth)=default;
+  
+  //! copy constructor
+  ave_err_t(const ave_err_t &oth)=default;
+  
+  //! move assignement
+  ave_err_t &operator=(ave_err_t &&)=default;
+  
+  //! copy assignement
+  ave_err_t &operator=(const ave_err_t &oth)
+  {pair<double,double>::operator=(oth);return *this;}
   
   //! rebind average
   double &ave=first;
@@ -55,10 +66,40 @@ public:
   explicit boot_init_t(int nboots=def_nboots) : vector<int>(nboots) {}
   
   //! fill with a seed
-  void fill(int seed);
+  void fill(int seed)
+  {
+    check_njacks_init();
+    
+    //init the fenerator
+    gen_t gen(seed);
+    
+    //fill all elements
+    for(auto &it : *this) it=gen.get_int(0,njacks);
+  }
 };
 
 //////////////////////////////////////////////////////////////// boot_t /////////////////////////////////////////////////////
+
+//! allows to fill from gauss
+class gauss_filler_t : pair<ave_err_t,int>
+{
+public:
+  //! fill from ave_err and seed
+  gauss_filler_t(const ave_err_t &ext_ae,int ext_seed)
+  {
+    ae=ext_ae;
+    seed=ext_seed;
+  }
+  
+  //! fill from ave, err and seed
+  gauss_filler_t(double ave,double err,int ext_seed) : gauss_filler_t(ave_err_t(ave,err),ext_seed) {}
+  
+  //! rebind ave_err
+  ave_err_t &ae=first;
+  
+  //! rebind seed
+  int &seed=second;
+};
 
 //! type defining boot
 template <class T> class boot_t : public vector<T>
@@ -66,6 +107,12 @@ template <class T> class boot_t : public vector<T>
 public:
   //! constrcutor specifying nboots
   explicit boot_t(int nboots) : vector<T>(nboots,0) {}
+  
+  //! constrcutor specifying gauss_filler
+  explicit boot_t(const gauss_filler_t &gf) : boot_t() {fill_gauss(gf);}
+  
+  //! constrcutor specifying nboots and gauss_filler
+  explicit boot_t(int nboots,const gauss_filler_t &gf) : boot_t(nboots) {fill_gauss(gf);}
   
   //! default value of nboots used
   boot_t() : boot_t(def_nboots) {}
@@ -104,6 +151,25 @@ public:
     err=sqrt(fabs(err)*(njacks-1));
     
     return ae;
+  }
+  
+  //! initialize from aver_err_t and a seed
+  void fill_gauss(const gauss_filler_t &gf)
+  {
+    check_njacks_init();
+    gen_t gen(gf.seed);
+    for(auto &it : *this) it=gen.get_gauss(gf.ae.ave,gf.ae.err/sqrt(njacks-1));
+  }
+  
+  //! initialize from ave and err
+  void fill_gauss(double ave,double err,int seed)
+  {fill_gauss(ave_err_t(ave,err),seed);}
+  
+  //! initialize from a set of jackknife
+  void init_from_jackknives(const boot_init_t &iboot,jack_t &jack)
+  {
+    for(int iboot=0;iboot<nboot;iboot++) out.data[iboot]=in.data[iboot_jack[iboot]];
+    out.data[nboot]=in.data[njack];
   }
 };
 
