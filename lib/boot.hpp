@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <jack.hpp>
 #include <utility>
 #include <random.hpp>
 #include <vector>
@@ -59,11 +60,11 @@ public:
 ////////////////////////////////////////////////////// type to initialize a boot_t //////////////////////////////////////////
 
 //! class to initialize a boot_t
-class boot_init_t : public vector<int>
+class boot_init_t : public vector<size_t>
 {
 public:
   //! initialize with a given number of bootstrap
-  explicit boot_init_t(int nboots=def_nboots) : vector<int>(nboots) {}
+  explicit boot_init_t(int nboots=def_nboots) : vector<size_t>(nboots) {}
   
   //! fill with a seed
   void fill(int seed)
@@ -78,7 +79,7 @@ public:
   }
 };
 
-//////////////////////////////////////////////////////////////// boot_t /////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////// gauss_filler_t /////////////////////////////////////////////////////
 
 //! allows to fill from gauss
 class gauss_filler_t : pair<ave_err_t,int>
@@ -101,6 +102,8 @@ public:
   int &seed=second;
 };
 
+//////////////////////////////////////////////////////////////// boot_t /////////////////////////////////////////////////////
+
 //! type defining boot
 template <class T> class boot_t : public vector<T>
 {
@@ -113,6 +116,9 @@ public:
   
   //! constrcutor specifying nboots and gauss_filler
   explicit boot_t(int nboots,const gauss_filler_t &gf) : boot_t(nboots) {fill_gauss(gf);}
+  
+  //! constrcutor specifying iboot_ind and a jack
+  explicit boot_t(const boot_init_t &boot_init,const jack_t<T> &jack) : boot_t(boot_init.size()) {fill_from_jack(boot_init,jack);}
   
   //! default value of nboots used
   boot_t() : boot_t(def_nboots) {}
@@ -165,11 +171,15 @@ public:
   void fill_gauss(double ave,double err,int seed)
   {fill_gauss(ave_err_t(ave,err),seed);}
   
-  //! initialize from a set of jackknife
-  void init_from_jackknives(const boot_init_t &iboot,jack_t &jack)
+  //! initialize from a jackknife
+  void fill_from_jack(const boot_init_t &iboot_ind,const jack_t<T> &jack)
   {
-    for(int iboot=0;iboot<nboot;iboot++) out.data[iboot]=in.data[iboot_jack[iboot]];
-    out.data[nboot]=in.data[njack];
+    for(size_t iboot=0;iboot<this->size();iboot++)
+      {
+	size_t ind=iboot_ind[iboot];
+	if(ind>=njacks) CRASH("Index %d not in the interval [0,%d]",ind,njacks-1);
+	(*this)[iboot]=jack[ind];
+      }
   }
 };
 

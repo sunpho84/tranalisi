@@ -11,7 +11,7 @@ using namespace std;
 
 int main(int narg,char **arg)
 {
-  set_njacks(15);
+  set_njacks(2);
   
   dbvec_t a(3),b(3);
   dboot_t c;
@@ -39,6 +39,14 @@ int main(int narg,char **arg)
   dboot_t test2(gauss_filler_t(3,2,124142));
   cout<<(test1/test2).ave_err()<<endl;
   cout<<test2.ave_err()<<endl;
+
+  boot_init_t binit;binit.fill(23252523);
+  vector<double> ciccio={3,4};
+  
+  djack_t jciccio(ciccio);
+  dboot_t bciccio(binit,jciccio);
+  
+  cout<<bciccio.ave_err()<<endl;
   
   return 0;
 }
