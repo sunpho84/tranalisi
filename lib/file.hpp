@@ -185,6 +185,6 @@ public:
 };
 
 //! read from a set of confs
-djvec_t read_conf_set_t(string template_path,size_t start,size_t each,size_t end,size_t ntot_col,vector<size_t> cols,int nlines);
+djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,int nlines);
 
 #endif

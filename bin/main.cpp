@@ -57,7 +57,7 @@ int main(int narg,char **arg)
   
   //djvec_t te(i);
   
-  cout<<dbvec_t(binit,read_conf_set_t("/tmp/cicc%d",0,1,2, 2,{0,1},3)).ave_err()<<endl;
+  cout<<dbvec_t(binit,read_conf_set_t("/tmp/cicc%d",{0,1,2}, 2,{0,1},3)).ave_err()<<endl;
   
   //int o=file.read<int>("o");
   //cout<<o<<endl;
