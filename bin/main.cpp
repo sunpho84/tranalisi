@@ -41,10 +41,9 @@ int main(int narg,char **arg)
   cout<<test2.ave_err()<<endl;
 
   boot_init_t binit;binit.fill(23252523);
-  vector<double> ciccio={3,4};
+  vector<vector<double>> ciccio={{3,4},{4,5}};
   
-  djack_t jciccio(ciccio);
-  dboot_t bciccio(binit,jciccio);
+  dbvec_t bciccio(binit,ciccio);
   
   cout<<bciccio.ave_err()<<endl;
   

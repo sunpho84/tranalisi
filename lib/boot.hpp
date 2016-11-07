@@ -57,6 +57,8 @@ public:
   double &err=second;
 };
 
+using vec_ave_err_t=vector<ave_err_t>;
+
 ////////////////////////////////////////////////////// type to initialize a boot_t //////////////////////////////////////////
 
 //! class to initialize a boot_t
@@ -192,11 +194,14 @@ using dboot_t=boot_t<double>;
 template <class T> class bvec_t : public vector<boot_t<T>>
 {
 public:
-  //! constrcutor specifying nel and nboots
+  //! constructor specifying nel and nboots
   explicit bvec_t(int nel,int nboots) : vector<boot_t<T>>(nel,boot_t<T>(nboots)) {}
   
-  //! constrcutor specifying nel only (avoid copy constructor)
+  //! constructor specifying nel only (avoid copy constructor)
   explicit bvec_t(int nel=0) : vector<boot_t<T>>(nel) {}
+  
+  //! constructor specifying iboot_ind and a vector of jack
+  explicit bvec_t(const boot_init_t &boot_init,const jvec_t<T> &jvec) : bvec_t(jvec.size()) {fill_from_jvec(boot_init,jvec);}
   
   //! move constructor
   bvec_t(bvec_t&& oth) : vector<boot_t<T>>(forward<vector<boot_t<T>>>(oth)) {cout<<"vec move const"<<endl;}
@@ -211,8 +216,20 @@ public:
   bvec_t &operator=(const bvec_t &oth)// =default;
   {vector<boot_t<T>>::operator=(oth);cout<<"vec copy"<<endl;return *this;}
   
+  //! compute average and error
+  vec_ave_err_t ave_err()
+  {
+    vec_ave_err_t out(this->size());
+    for(size_t it=0;it<this->size();it++) out[it]=(*this)[it].ave_err();
+    return out;
+  }
+  
   //! assign from a scalar
   bvec_t& operator=(const T &oth) {for(auto &it : *this) it=oth;return *this;}
+  
+  //! initialize from a jvec
+  void fill_from_jvec(const boot_init_t &iboot_ind,const jvec_t<T> &jvec)
+  {for(size_t it=0;it<jvec.size();it++) (*this)[it].fill_from_jack(iboot_ind,jvec[it]);}
 };
 
 //! typically we use double boot

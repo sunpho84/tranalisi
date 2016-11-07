@@ -60,6 +60,28 @@ public:
 //! typically we use jackknives of double
 using djack_t=jack_t<double>;
 
+/////////////////////////////////////////////////////////// vector of jackknives ////////////////////////////////////////////////
+
+// template <class T> class jvec_t : public vector<jack_t<T>>
+// {
+// public:
+//   //! creator from data
+//   jvec_t(const vector<vector<T>> &data) : vector<jack_t<T>>(data) {init_from_data(data);}
+  
+//   //! initialize from a vector of vectors
+//   void init_from_data(const vector<vector<T>> &data)
+//   {for(size_t it=0;it<data.size();it++) (*this)[it]=data
+    
+//   }
+// };
+
+template <class T> class jvec_t : public vector<jack_t<T>>
+{
+ public:
+  jvec_t(const vector<vector<T>> o) : vector<jack_t<T>>(o.size())
+    {for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];}
+};
+
 #undef EXTERN_JACK
 #undef INIT_TO
 

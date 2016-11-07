@@ -106,7 +106,14 @@ DEFINE_FUNCTION(sqrt)
 DEFINE_FUNCTION(tan)
 DEFINE_FUNCTION(tanh)
 
-//! overload output of ave_err_R
+//! overload output of ave_err_t
 ostream& operator<<(ostream &out,const ave_err_t &ae);
+
+//! overload output of a vector
+template <class T> ostream& operator<<(ostream &out,const vector<T> &v)
+{
+  for(size_t it=0;it<v.size();it++) out<<it<<" "<<v[it]<<endl;
+  return out;
+}
 
 #endif
