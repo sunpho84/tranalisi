@@ -19,6 +19,12 @@ using namespace std;
  #define INIT_TO(A) =A
 #endif
 
+//! standard number of bootstrap sample, if not specified
+EXTERN_BOOT int def_nboots INIT_TO(DEF_NBOOTS);
+
+//! number of jacknife
+EXTERN_BOOT int njacks INIT_TO(1);
+
 //! define the square of a double, float or integer
 template <class T,class=typename enable_if<is_arithmetic<T>::value>::type> T sqr(T x)
 {return x*x;}
@@ -39,13 +45,20 @@ public:
   double &err=second;
 };
 
+////////////////////////////////////////////////////// type to initialize a boot_t //////////////////////////////////////////
+
+//! class to initialize a boot_t
+class boot_init_t : public vector<int>
+{
+public:
+  //! initialize with a given number of bootstrap
+  explicit boot_init_t(int nboots=def_nboots) : vector<int>(nboots) {}
+  
+  //! fill with a seed
+  void fill(int seed);
+};
+
 //////////////////////////////////////////////////////////////// boot_t /////////////////////////////////////////////////////
-
-//! standard number of bootstrap sample, if not specified
-EXTERN_BOOT int def_nboots INIT_TO(DEF_NBOOTS);
-
-//! number of jacknife
-EXTERN_BOOT int njacks INIT_TO(1);
 
 //! type defining boot
 template <class T> class boot_t : public vector<T>
