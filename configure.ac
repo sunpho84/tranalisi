@@ -16,6 +16,11 @@ AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX_11(noext,mandatory)
 AX_CXXFLAGS_WARN_ALL
 
+#check openmp
+AC_OPENMP
+CPPFLAGS="$CPPFLAGS $OPENMP_CPPFLAGS"
+CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS"
+
 #default number of bootstrap
 AC_ARG_ENABLE(def_nboots,
         AS_HELP_STRING([--enable-def-nboots=n],[Set default number bootstap sample [Default: 100]]),
