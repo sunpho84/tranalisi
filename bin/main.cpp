@@ -56,8 +56,18 @@ int main(int narg,char **arg)
   //cout<<endl<<i<<endl;
   
   //djvec_t te(i);
+
+  string template_path="cicc%d";
+  range_t file_range={0,1,2};
+  size_t ntot_cols=2;
+  vector<size_t> cols={0,1};
+  size_t nlines=3;
+
+  djvec_t jvec=read_conf_set_t(template_path,file_range,ntot_cols,cols,nlines);
+  raw_file_t outf("/tmp/test","w");
+  jvec.bin_write(outf);
   
-  cout<<dbvec_t(binit,read_conf_set_t("/tmp/cicc%d",{0,1,2}, 2,{0,1},3)).ave_err()<<endl;
+  cout<<dbvec_t(binit,jvec).ave_err()<<endl;
   
   //int o=file.read<int>("o");
   //cout<<o<<endl;
