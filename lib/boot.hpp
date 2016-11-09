@@ -59,6 +59,9 @@ public:
 
 using vec_ave_err_t=vector<ave_err_t>;
 
+//! output of ave_err_t
+ostream& operator<<(ostream &out,const ave_err_t &ae);
+
 ////////////////////////////////////////////////////// type to initialize a boot_t //////////////////////////////////////////
 
 //! class to initialize a boot_t
