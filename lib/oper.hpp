@@ -12,35 +12,9 @@
 using namespace std;
 using namespace placeholders;
 
-#define _CONCAT(X,Y) X##Y
-#define CONCAT(X,Y) _CONCAT(X,Y)
-#define CONCAT2(s1,s2) CONCAT(s1,s2)
-#define CONCAT3(s1,s2,s3) CONCAT(CONCAT2(s1,s2),s3)
-#define NAME2(s1,s2) CONCAT3(s1,_,s2)
-#define NAME3(s1,s2,s3) NAME2(CONCAT3(s1,_,s2),s3)
-#define NAME4(s1,s2,s3,s4) NAME3(CONCAT3(s1,_,s2),s3,s4)
-
 //! check agreement of sizes of two vectors
 template <class T1,class T2> void check_match_size(const vector<T1> &first,const vector<T2> &second)
 {if(first.size()!=second.size()) CRASH("Vectors do not agree in size, %d vs %d",first.size(),second.size());}
-
-//! check if has method
-#define DEFINE_HAS_METHOD(METHOD)					\
-  template <typename T> class NAME2(has_method,METHOD)			\
-  {									\
-  private:								\
-    typedef char yes;							\
-    typedef yes no[2];							\
-    									\
-    template<typename C> static auto test(void*)->decltype(size_t{std::declval<C const>().METHOD()},yes{}); \
-    template<typename> static no& test(...);				\
-    									\
-  public:								\
-    static bool const value=sizeof(test<T>(0))==sizeof(yes);		\
-  }
-
-DEFINE_HAS_METHOD(size);
-#define is_vector has_method_size
 
 //////////////////////////////////////////////// sum /////////////////////////////////////////////////
 
@@ -56,7 +30,7 @@ DEFINE_HAS_METHOD(size);
   }									\
   /* operation between vector and scalar */				\
   template <class TV,class TS,class = typename enable_if<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>::type> \
-    TV OP_NAME(const TV &first,const TS &second)	\
+    TV OP_NAME(const TV &first,const TS &second)			\
   {									\
     TV out(first.size());						\
     for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second;	\
@@ -81,7 +55,7 @@ DEFINE_BIN_OPERATOR(operator/,operator/=,/)
 
 //! function of a vector
 #define DEFINE_NAMED_FUNCTION(OP_NAME,OP)				\
-  template <class T,class ...Args,class = typename enable_if<has_method_size<T>::value>::type> T OP_NAME(const T &first,Args... args) \
+  template <class T,class ...Args,class = typename enable_if<is_vector<T>::value>::type> T OP_NAME(const T &first,Args... args) \
   {									\
     T out(first.size());						\
     for(size_t it=0;it<first.size();it++) out[it]=OP(first[it],args...); \
@@ -105,9 +79,6 @@ DEFINE_FUNCTION(sqr)
 DEFINE_FUNCTION(sqrt)
 DEFINE_FUNCTION(tan)
 DEFINE_FUNCTION(tanh)
-
-//! overload output of ave_err_t
-ostream& operator<<(ostream &out,const ave_err_t &ae);
 
 //! overload output of a vector
 template <class T> ostream& operator<<(ostream &out,const vector<T> &v)
