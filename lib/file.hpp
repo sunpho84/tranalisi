@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <iostream>
 #include <jack.hpp>
 #include <map>
 #include <string>
@@ -48,6 +49,17 @@ public:
   //! destructor
   ~raw_file_t()
   {close();}
+  
+  //! default
+  //template <class T,typename=void> void bin_write(const T &out);
+  
+  //! binary write, non-vector case
+  template <class T> auto bin_write(const T &out) -> typename enable_if<is_pod<T>::value>::type
+  {if(fwrite(&out,sizeof(T),1,file)!=1) CRASH("Writing to file");}
+  
+  //! specialization for vector
+  template <class T> auto bin_write(const T &out) -> typename enable_if<is_vector<T>::value>::type
+  {for(auto &it : out) bin_write(it);}
   
   //! named or unnamed read
   template <class T> T read(const char *name=NULL)
@@ -183,8 +195,5 @@ public:
     return data;
   }
 };
-
-//! read from a set of confs
-djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,int nlines);
 
 #endif

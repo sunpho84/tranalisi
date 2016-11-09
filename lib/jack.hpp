@@ -8,6 +8,8 @@
  #define INIT_TO(A) =A
 #endif
 
+#include <file.hpp>
+#include <fstream>
 #include <iostream>
 #include <tools.hpp>
 #include <vector>
@@ -80,9 +82,20 @@ template <class T> class jvec_t : public vector<jack_t<T>>
  public:
   jvec_t(const vector<vector<T>> o) : vector<jack_t<T>>(o.size())
     {for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];}
+  
+  //! write to a stream
+  void bin_write(raw_file_t &out)
+  {
+    out.bin_write<size_t>(njacks);
+    out.bin_write(this->size());
+    out.bin_write(*this);
+  }
 };
 
 using djvec_t=jvec_t<double>;
+
+//! read from a set of confs
+djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,int nlines);
 
 #undef EXTERN_JACK
 #undef INIT_TO
