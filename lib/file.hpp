@@ -22,6 +22,7 @@ using line_t=char[max_line_length];
 //! class to format data
 template <class T> class format_str : enable_if_t<is_void<T>::value> {public: static const char *value(){return "";}};
 template <> class format_str<int> {public: static const char *value(){return "%d";}};
+template <> class format_str<size_t> {public: static const char *value(){return "%zu";}};
 template <> class format_str<double> {public: static const char *value(){return "%lg";}};
 template <> class format_str<char> {public: static const char *value(){return "%c";}};
 template <> class format_str<string> {public: static const char *value(){return "%s";}};
@@ -91,6 +92,7 @@ public:
     int rc=fscanf(file,"%s",rea);
     if(rc!=1) CRASH("Obtained %d while expecting token %s",rc,tok);
     if(strcasecmp(tok,rea)) CRASH("Obtained %s while expecting %s",rea,tok);
+    
     cout<<"Discarding "<<rea<<endl;
   }
   
