@@ -30,5 +30,20 @@ if ! printf "%f" "$def_nboots" >/dev/null 2>&1; then AC_MSG_ERROR([String $def_n
 AC_MSG_RESULT([enabling number of default bootstrap samples... $def_nboots])
 AC_DEFINE_UNQUOTED([DEF_NBOOTS],$def_nboots,[Default number of bootstrap])
 
+#decide whether to propagate or not the average
+AC_DEFINE_UNQUOTED([PROP_MEAN],[0],["Propagate the mean"])
+AC_DEFINE_UNQUOTED([DISTR_MEAN],[1],["Compute the mean from distribution"])
+AC_ARG_ENABLE(mean,
+	AS_HELP_STRING([--enable-mean],[Propagate the original average [prop] or (default) compute average from distribtuion [distr]]),
+	enable_mean="${enableval}",enable_mean=distr)
+case "$enable_mean" in
+     prop) mean_type=PROP_MEAN;;
+     distr) mean_type=DISTR_MEAN;;
+     *) AC_MSG_ERROR(["Unkwnown mean propagation type ${enableval}"])
+esac
+AC_DEFINE_UNQUOTED([MEAN_TYPE],[$mean_type],[How to compute mean])
+AC_MSG_RESULT([Enable mean type... ${enable_mean}])
+
+
 AC_CONFIG_FILES(Makefile bin/Makefile lib/Makefile)
 AC_OUTPUT
