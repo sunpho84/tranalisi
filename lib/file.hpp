@@ -6,6 +6,7 @@
 #include <iostream>
 #include <jack.hpp>
 #include <map>
+#include <macros.hpp>
 #include <string>
 #include <tools.hpp>
 #include <vector>
@@ -39,8 +40,14 @@ public:
   void close()
   {if(file) fclose(file);}
   
-  //! default creator
+  //! default constructor
   raw_file_t() {file=NULL;}
+  
+  //! copy constructor
+  raw_file_t(const raw_file_t& oth)=default;
+  
+  //! move constructor
+  raw_file_t(raw_file_t&& oth)=default;
   
   //! creator with name
   raw_file_t(string s,string mode)
@@ -54,11 +61,11 @@ public:
   //template <class T,typename=void> void bin_write(const T &out);
   
   //! binary write, non-vector case
-  template <class T> auto bin_write(const T &out) -> typename enable_if<is_pod<T>::value>::type
+  template <class T> auto bin_write(const T &out) const -> enable_if_t<is_pod<T>::value>
   {if(fwrite(&out,sizeof(T),1,file)!=1) CRASH("Writing to file");}
   
   //! specialization for vector
-  template <class T> auto bin_write(const T &out) -> typename enable_if<is_vector<T>::value>::type
+  template <class T> auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value>
   {for(auto &it : out) bin_write(it);}
   
   //! named or unnamed read
