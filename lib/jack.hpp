@@ -71,9 +71,9 @@ class filter_t
 public:
   size_t each;
   size_t offset;
-  size_t howmany;
+  size_t how_many;
   
-  filter_t(size_t each,size_t offset=0,size_t howmany=1) : each(each),offset(offset),howmany(howmany) {}
+  filter_t(size_t each,size_t offset=0,size_t how_many=1) : each(each),offset(offset),how_many(how_many) {}
   filter_t() {}
 };
 
@@ -89,15 +89,15 @@ template <class T> class jvec_t : public vector<jack_t<T>>
   jvec_t filter(filter_t filter)
   {
     jvec_t out;
-    for(size_t it=filter.offset;it<=this->size()-filter.howmany;it+=filter.each)
-      for(size_t sh=0;sh<filter.howmany;sh++)
+    for(size_t it=filter.offset;it<=this->size()-filter.how_many;it+=filter.each)
+      for(size_t sh=0;sh<filter.how_many;sh++)
 	out.push_back((*this)[it+sh]);
     
     return out;
   }
   //! wrapper
-  jvec_t filter(size_t each,size_t offset=0,size_t howmany=1)
-  {return filter(filter_t(each,offset,howmany));}
+  jvec_t filter(size_t each,size_t offset=0,size_t how_many=1)
+  {return filter(filter_t(each,offset,how_many));}
   
   //! write to a stream
   void bin_write(const raw_file_t &out)
