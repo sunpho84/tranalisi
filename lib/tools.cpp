@@ -5,10 +5,25 @@
 #include <iostream>
 #include <cstdarg>
 #include <sys/stat.h>
+#include <execinfo.h>
 
 #include <tools.hpp>
 
 using namespace std;
+
+//! write the list of called routines
+void print_backtrace_list()
+{
+  void *callstack[128];
+  int frames=backtrace(callstack,128);
+  char **strs=backtrace_symbols(callstack,frames);
+  
+  //only master rank, but not master thread
+  cerr<<"Backtracing..."<<endl;
+  for(int i=0;i<frames;i++) cerr<<strs[i]<<endl;
+  
+  free(strs);
+}
 
 void internal_crash(int line,const char *file,const char *temp,...)
 {
@@ -20,6 +35,7 @@ void internal_crash(int line,const char *file,const char *temp,...)
   va_end(args);
   
   cerr<<"ERROR at line "<<line<<" of file "<<file<<": "<<buffer<<endl;
+  print_backtrace_list();
   exit(1);
 }
 
