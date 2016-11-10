@@ -21,7 +21,7 @@ int file_exists(string path);
 int dir_exists(string path);
 
 //! return a range of int
-class range_t : public array<size_t,3>
+class range_t : private array<size_t,3>
 {
 public:
   //bind
@@ -29,9 +29,15 @@ public:
   size_t &each=(*this)[1];
   size_t &end=(*this)[2];
   
-  //init from triplet
+  //! default constructor
+  range_t() {}
+  
+  //! init from triplet
   range_t(initializer_list<size_t> list)
-  {copy(list.begin(),list.end(),this->begin());}
+  {
+    if(list.size()!=3) CRASH("list size %d while expecting 3",list.size());
+    copy(list.begin(),list.end(),this->begin());
+  }
 };
 
 DEFINE_HAS_METHOD(size);

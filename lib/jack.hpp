@@ -65,6 +65,18 @@ using djack_t=jack_t<double>;
 
 /////////////////////////////////////////////////////////// vector of jackknives ////////////////////////////////////////////////
 
+//! hold a triplet to set a filter
+class filter_t
+{
+public:
+  size_t each;
+  size_t offset;
+  size_t howmany;
+  
+  filter_t(size_t each,size_t offset=0,size_t howmany=1) : each(each),offset(offset),howmany(howmany) {}
+  filter_t() {}
+};
+
 template <class T> class jvec_t : public vector<jack_t<T>>
 {
  public:
@@ -74,15 +86,18 @@ template <class T> class jvec_t : public vector<jack_t<T>>
     {for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];}
   
   //! filter vector
-  jvec_t filter(size_t each,size_t offset=0,size_t howmany=1)
+  jvec_t filter(filter_t filter)
   {
     jvec_t out;
-    for(size_t it=offset;it<=this->size()-howmany;it+=each)
-      for(size_t sh=0;sh<howmany;sh++)
+    for(size_t it=filter.offset;it<=this->size()-filter.howmany;it+=filter.each)
+      for(size_t sh=0;sh<filter.howmany;sh++)
 	out.push_back((*this)[it+sh]);
     
     return out;
   }
+  //! wrapper
+  jvec_t filter(size_t each,size_t offset=0,size_t howmany=1)
+  {return filter(filter_t(each,offset,howmany));}
   
   //! write to a stream
   void bin_write(const raw_file_t &out)
@@ -91,9 +106,14 @@ template <class T> class jvec_t : public vector<jack_t<T>>
     out.bin_write(this->size());
     out.bin_write(*this);
   }
+  
   //! wrapper with name
   void bin_write(const char *path)
   {bin_write(raw_file_t(path,"w"));}
+  
+  //! wrapper with name
+  void bin_write(const string &path)
+  {bin_write(path.c_str());}
 };
 
 using djvec_t=jvec_t<double>;
