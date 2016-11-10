@@ -20,7 +20,7 @@ using word_t=char[max_word_length];
 using line_t=char[max_line_length];
 
 //! class to format data
-template <class T> class format_str : enable_if_t<is_void<T>::value> {public: static const char *value(){return "";}};
+template <class T> class format_str {public: static const enable_if<is_void<T>::value,char> *value(){return "";}};
 template <> class format_str<int> {public: static const char *value(){return "%d";}};
 template <> class format_str<size_t> {public: static const char *value(){return "%zu";}};
 template <> class format_str<double> {public: static const char *value(){return "%lg";}};
