@@ -5,6 +5,7 @@
 #include <cmath>
 #include <functional>
 #include <iostream>
+#include <macros.hpp>
 #include <tools.hpp>
 #include <type_traits>
 #include <vector>
@@ -20,7 +21,7 @@ template <class T1,class T2> void check_match_size(const vector<T1> &first,const
 
 //! operation between two vectors
 #define DEFINE_BIN_OPERATOR(OP_NAME,SELF_OP_NAME,OP)			\
-  template <class T,class = typename enable_if<is_vector<T>::value>::type> T OP_NAME(const T &first,const T &second)	\
+  template <class T,class=enable_if_t<is_vector<T>::value>> T OP_NAME(const T &first,const T &second)	\
   {									\
     check_match_size(first,second);					\
     									\
@@ -29,7 +30,7 @@ template <class T1,class T2> void check_match_size(const vector<T1> &first,const
     return out;								\
   }									\
   /* operation between vector and scalar */				\
-  template <class TV,class TS,class = typename enable_if<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>::type> \
+  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>> \
     TV OP_NAME(const TV &first,const TS &second)			\
   {									\
     TV out(first.size());						\
@@ -37,7 +38,7 @@ template <class T1,class T2> void check_match_size(const vector<T1> &first,const
     return out;								\
   }									\
   /* opposite */							\
-  template <class TV,class TS,class = typename enable_if<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>::type> \
+  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>> \
     TV OP_NAME(const TS &first,const TV &second)			\
   {									\
     TV out(first.size());						\
@@ -55,7 +56,7 @@ DEFINE_BIN_OPERATOR(operator/,operator/=,/)
 
 //! function of a vector
 #define DEFINE_NAMED_FUNCTION(OP_NAME,OP)				\
-  template <class T,class ...Args,class = typename enable_if<is_vector<T>::value>::type> T OP_NAME(const T &first,Args... args) \
+  template <class T,class ...Args,class=enable_if<is_vector<T>::value>> T OP_NAME(const T &first,Args... args) \
   {									\
     T out(first.size());						\
     for(size_t it=0;it<first.size();it++) out[it]=OP(first[it],args...); \
