@@ -12,6 +12,8 @@ AM_SILENT_RULES([yes])
 
 AC_PROG_RANLIB
 AC_PROG_CXX
+AC_PROG_CXXCPP
+AC_LANG([C++])
 
 AX_CXX_COMPILE_STDCXX_11(noext,mandatory)
 AX_CXXFLAGS_WARN_ALL
@@ -43,6 +45,11 @@ case "$enable_mean" in
 esac
 AC_DEFINE_UNQUOTED([MEAN_TYPE],[$mean_type],[How to compute mean])
 AC_MSG_RESULT([Enable mean type... ${enable_mean}])
+
+#search Minuit2
+
+AC_CHECK_HEADERS([Minuit2/MinimumBuilder.h],[],AC_MSG_ERROR(["Unable to find headers of Minuit2"]))
+
 
 
 AC_CONFIG_FILES(Makefile bin/Makefile lib/Makefile)
