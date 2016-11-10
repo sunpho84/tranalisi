@@ -2,10 +2,7 @@
  #include <config.hpp>
 #endif
 
-#include <boot.hpp>
-#include <file.hpp>
-#include <jack.hpp>
-#include <oper.hpp>
+#include <tranalisi.hpp>
 
 #include <iostream>
 
