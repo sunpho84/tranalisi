@@ -67,6 +67,8 @@ int main(int narg,char **arg)
   raw_file_t outf("/tmp/test","w");
   jvec.bin_write(outf);
   
+  jvec.filter(2).bin_write("/tmp/202");
+  
   cout<<dbvec_t(binit,jvec).ave_err()<<endl;
   
   //int o=file.read<int>("o");
