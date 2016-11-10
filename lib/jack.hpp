@@ -80,16 +80,32 @@ using djack_t=jack_t<double>;
 template <class T> class jvec_t : public vector<jack_t<T>>
 {
  public:
+  jvec_t()=default;
+  
   jvec_t(const vector<vector<T>> o) : vector<jack_t<T>>(o.size())
     {for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];}
   
+  //! filter vector
+  jvec_t filter(size_t each,size_t offset=0,size_t howmany=1)
+  {
+    jvec_t out;
+    for(size_t it=offset;it<=this->size()-howmany;it+=each)
+      for(size_t sh=0;sh<howmany;sh++)
+	out.push_back((*this)[it+sh]);
+    
+    return out;
+  }
+  
   //! write to a stream
-  void bin_write(raw_file_t &out)
+  void bin_write(const raw_file_t &out)
   {
     out.bin_write<size_t>(njacks);
     out.bin_write(this->size());
     out.bin_write(*this);
   }
+  //! wrapper with name
+  void bin_write(const char *path)
+  {bin_write(raw_file_t(path,"w"));}
 };
 
 using djvec_t=jvec_t<double>;
