@@ -4,6 +4,7 @@
 
 #define EXTERN_JACK
 #include <jack.hpp>
+#include <omp.h>
 #include <oper.hpp>
 #include <tools.hpp>
 
@@ -34,16 +35,14 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
   
   //! raw data
   vector<vector<double>> raw_data(files.size());
+#pragma omp parallel for
   for(size_t ind=0;ind<files.size();ind++)
     {
+      printf("Thread %d reading file %zu/%zu\n",omp_get_thread_num(),ind,files.size());
       vector<double> temp;
       do
 	{
-	  //read
 	  temp=files[ind].read(nlines);
-	  //cout<<raw_data[ind]<<temp<<endl;
-	  
-	  //append
 	  if(temp.size()) raw_data[ind].insert(raw_data[ind].end(),temp.begin(),temp.end());
 	}
       while(temp.size());
