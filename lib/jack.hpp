@@ -30,7 +30,7 @@ template <class T> class jack_t : public vector<T>
 {
 public:
   //! creator
-  jack_t() : vector<T>(njacks) {check_njacks_init();}
+  jack_t() : vector<T>(njacks+1) {check_njacks_init();}
   
   //! creator from data
   jack_t(const vector<T> &data) : jack_t() {init_from_data(data);}
@@ -44,18 +44,19 @@ public:
     if(clust_size*njacks!=data.size()) CRASH("Data size=%d, njacks=%d are incommensurable",data.size(),njacks);
     
     //hold clusters
-    vector<T> clust(njacks,0);
+    vector<T> clust(njacks+1,0);
     
     //fill clusters and compute avarages
-    T tot=0;
+    (*this)[njacks]=0;
     for(size_t it=0;it<data.size();it++)
       {
 	clust[it/clust_size]+=data[it];
-	tot+=data[it];
+	(*this)[njacks]+=data[it];
       }
     
     //clusterize
-    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[ijack]=(tot-clust[ijack])/((njacks-1)*clust_size);
+    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[ijack]=((*this)[njacks]-clust[ijack])/((njacks-1)*clust_size);
+    (*this)[njacks]/=data.size();
   }
 };
 
@@ -63,19 +64,6 @@ public:
 using djack_t=jack_t<double>;
 
 /////////////////////////////////////////////////////////// vector of jackknives ////////////////////////////////////////////////
-
-// template <class T> class jvec_t : public vector<jack_t<T>>
-// {
-// public:
-//   //! creator from data
-//   jvec_t(const vector<vector<T>> &data) : vector<jack_t<T>>(data) {init_from_data(data);}
-  
-//   //! initialize from a vector of vectors
-//   void init_from_data(const vector<vector<T>> &data)
-//   {for(size_t it=0;it<data.size();it++) (*this)[it]=data
-    
-//   }
-// };
 
 template <class T> class jvec_t : public vector<jack_t<T>>
 {

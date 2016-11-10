@@ -2,6 +2,7 @@
 #define _OPER_HPP
 
 #include <algorithm>
+#include <boot.hpp>
 #include <cmath>
 #include <functional>
 #include <iostream>
@@ -17,7 +18,15 @@ using namespace placeholders;
 template <class T1,class T2> void check_match_size(const vector<T1> &first,const vector<T2> &second)
 {if(first.size()!=second.size()) CRASH("Vectors do not agree in size, %d vs %d",first.size(),second.size());}
 
-//////////////////////////////////////////////// sum /////////////////////////////////////////////////
+//! get the size to init an object, avoiding size() for boot and jack
+template <class T> const size_t init_nel(const vector<T> &obj)
+{return obj.size();}
+template <class T> const size_t init_nel(const boot_t<T> &obj)
+{return obj.nboots();}
+template <class T> const size_t init_nel(const jack_t<T> &obj)
+{return njacks;}
+
+//////////////////////////////////////////////// operations //////////////////////////////////////////////
 
 //! operation between two vectors
 #define DEFINE_BIN_OPERATOR(OP_NAME,SELF_OP_NAME,OP)			\
@@ -25,7 +34,7 @@ template <class T1,class T2> void check_match_size(const vector<T1> &first,const
   {									\
     check_match_size(first,second);					\
     									\
-    T out(first.size());						\
+    T out(init_nel(first));						\
     for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second[it]; \
     return out;								\
   }									\
@@ -33,7 +42,7 @@ template <class T1,class T2> void check_match_size(const vector<T1> &first,const
   template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>> \
     TV OP_NAME(const TV &first,const TS &second)			\
   {									\
-    TV out(first.size());						\
+    TV out(init_nel(first));						\
     for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second;	\
     return out;								\
   }									\
@@ -41,7 +50,7 @@ template <class T1,class T2> void check_match_size(const vector<T1> &first,const
   template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>> \
     TV OP_NAME(const TS &first,const TV &second)			\
   {									\
-    TV out(first.size());						\
+    TV out(init_nel(first));						\
     for(size_t it=0;it<first.size();it++) out[it]=first OP second[it];	\
     return out;								\
   }									\
@@ -58,7 +67,7 @@ DEFINE_BIN_OPERATOR(operator/,operator/=,/)
 #define DEFINE_NAMED_FUNCTION(OP_NAME,OP)				\
   template <class T,class ...Args,class=enable_if<is_vector<T>::value>> T OP_NAME(const T &first,Args... args) \
   {									\
-    T out(first.size());						\
+    T out(init_nel(first));						\
     for(size_t it=0;it<first.size();it++) out[it]=OP(first[it],args...); \
     return out;								\
   }
@@ -81,7 +90,7 @@ DEFINE_FUNCTION(sqrt)
 DEFINE_FUNCTION(tan)
 DEFINE_FUNCTION(tanh)
 
-//! overload output of a vector
+//! specify hot to print a vector
 template <class T> ostream& operator<<(ostream &out,const vector<T> &v)
 {
   for(size_t it=0;it<v.size();it++) out<<it<<" "<<v[it]<<endl;
