@@ -2,7 +2,9 @@
 
 int main(int narg,char **arg)
 {
-  input_file_t input("/tmp/input");
+  if(narg<2) CRASH("Use %s [input]",arg[0]);
+  
+  input_file_t input(arg[1]);
   
   //! the list of files
   size_t nfiles=input.read<size_t>("NFiles");
