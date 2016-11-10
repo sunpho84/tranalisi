@@ -9,19 +9,35 @@
 #include <macros.hpp>
 #include <string>
 #include <tools.hpp>
+#include <typeinfo>
 #include <vector>
 
 using namespace std;
 
-const int max_line_length=1024;
+const size_t max_word_length=128;
+const size_t max_line_length=1024;
+using word_t=char[max_word_length];
 using line_t=char[max_line_length];
 
 //! class to format data
-template <class T> class format_str {public: static const char *value(){return "";}};
+template <class T> class format_str : enable_if_t<is_void<T>::value> {public: static const char *value(){return "";}};
 template <> class format_str<int> {public: static const char *value(){return "%d";}};
 template <> class format_str<double> {public: static const char *value(){return "%lg";}};
 template <> class format_str<char> {public: static const char *value(){return "%c";}};
-template <> class format_str<char*> {public: static const char *value(){return "%s";}};
+template <> class format_str<string> {public: static const char *value(){return "%s";}};
+
+//! class to handle return type from reader
+template<class T> struct return_type {typedef T type;};
+template<size_t N> struct return_type<char[N]> {typedef string type;};
+
+//! class to handle working type from reader
+template<class T> struct working_type {typedef T type;};
+template<> struct working_type<string> {typedef word_t type;};
+
+//! class to handle working type from reader
+template<class T> const T *get_ptr(const T &in) {return &in;}
+template<class T> const T *get_ptr(const T *in) {return in;}
+template<class T,size_t n> const T *get_ptr(const T in[n]) {return in;}
 
 //! open file, basic
 class raw_file_t
@@ -68,14 +84,28 @@ public:
   template <class T> auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value>
   {for(auto &it : out) bin_write(it);}
   
-  //! named or unnamed read
-  template <class T> T read(const char *name=NULL)
+  //! check that the token is found
+  void expect(const char *tok)
   {
-    //! unnamed read
-    T out;
-    int rc=fscanf(file,(name==NULL)?format_str<T>::value():((string)name+format_str<T>::value()).c_str(),&out);
-    if(rc!=1) CRASH("Unbale to read %s with name \"%s\" from file",format_str<T>::value(),name);
-    return out;
+    word_t rea;
+    int rc=fscanf(file,"%s",rea);
+    if(rc!=1) CRASH("Obtained %d while expecting token %s",rc,tok);
+    if(strcasecmp(tok,rea)) CRASH("Obtained %s while expecting %s",rea,tok);
+    cout<<"Discarding "<<rea<<endl;
+  }
+  
+  //! named or unnamed read
+  template <class T> typename return_type<T>::type read(const char *name=NULL)
+  {
+    //check tag
+    if(name) expect(name);
+    
+    //read a type
+    typename working_type<T>::type out;
+    int rc=fscanf(file,format_str<T>::value(),get_ptr(out));
+    //check and return
+    if(rc!=1) CRASH("Unable to read %s (%s) with name \"%s\" from file",format_str<T>::value(),typeid(T).name(),name);
+    return (typename return_type<T>::type)out;
   }
   
   //! read with check
@@ -83,7 +113,7 @@ public:
   {out=read<T>(name);}
   
   //! read a line and eliminate trailing new line
-  char* get_line(line_t line)
+  char *get_line(line_t line)
   {
     char *ret=fgets(line,max_line_length,file);
     if(ret)
@@ -98,6 +128,8 @@ public:
   bool feof()
   {return std::feof(file);}
 };
+
+///////////////////////////////////////////////////// file reading observables /////////////////////////////////////
 
 //! open a file for reading, skip commented lines, put columns one after the other
 class obs_file_t : public raw_file_t
@@ -201,6 +233,18 @@ public:
     
     return data;
   }
+};
+
+//////////////////////////////////////////////// reading input files /////////////////////////////////////////
+
+//! open a file for reading, skip commented lines, put columns one after the other
+class input_file_t : public raw_file_t
+{
+public:
+  //! construct with a path
+  input_file_t(const char *path) : raw_file_t(path,"r") {};
+  
+  
 };
 
 #endif
