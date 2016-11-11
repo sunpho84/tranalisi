@@ -47,7 +47,7 @@ AC_DEFINE_UNQUOTED([MEAN_TYPE],[$mean_type],[How to compute mean])
 AC_MSG_RESULT([Enable mean type... ${enable_mean}])
 
 #search Minuit2
-AC_CHECK_HEADERS([Minuit2/MinimumBuilder.h],[],AC_MSG_ERROR([Unable to find headers of Minuit2, you can install it using the script config/install_minuit2.sh]))
+AC_CHECK_HEADERS([Minuit2/MinimumBuilder.h],[],AC_MSG_ERROR(["Unable to find headers of Minuit2! Install it using the script config/install_minuit2.sh"]))
 
 AC_CONFIG_FILES(Makefile bin/Makefile lib/Makefile)
 AC_OUTPUT
