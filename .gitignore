@@ -23,3 +23,4 @@ build_clang
 /GRTAGS
 /GTAGS
 /config/compile
+build_opt
