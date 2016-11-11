@@ -55,6 +55,7 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
 	}
       while(temp.size());
     }
+  cout<<"Finished reading"<<endl;
   
   return djvec_t(transpose(raw_data));
 }

@@ -193,7 +193,8 @@ public:
 	
 	//feed the line to the tokenizer
 	char *tok=NULL;
-	if(rc!=NULL) tok=strtok(line," ");
+	char *saveptr;
+	if(rc!=NULL) tok=strtok_r(line," \t",&saveptr);
 	
 	//skip blank line and comments
 	if(tok!=NULL && strcasecmp(tok,"#"))
@@ -204,18 +205,19 @@ public:
 	    do
 	      {
 		//read a double from the line
-		if(sscanf(tok,"%lg",&temp[nread_col])!=1) CRASH("Parsing col %d",nread_col);
+		int rc=sscanf(tok,"%lg",&temp[nread_col]);
+		if(rc!=1) CRASH("Parsing col %d, rc %d from %s, line %s",nread_col,rc,tok,line);
 		//check not exceeding ntot_col
 		if(nread_col>=ntot_col) CRASH("nread_col=%d exceeded ntot_col=%d",nread_col,ntot_col);
 		
 		//search next tok
-		tok=strtok(NULL," ");
+		tok=strtok_r(NULL," \t",&saveptr);
 		nread_col++;
 	      }
 	    while(tok);
 	    
 	    //store
-	    if(nread_col==ntot_col)
+	    if(nread_col==nvis_col)
 	      {
 		for(auto &col_list : col_contr)
 		  for(auto &icol : col_list.second)
@@ -227,11 +229,7 @@ public:
     while(!feof() && iline<nlines);
     
     //invalidate failed reading
-    if(iline<nlines)
-      {
-	data.clear();
-	//cout<<"Failed reading, invalidating"<<endl;
-      }
+    if(iline<nlines) data.clear();
     
     return data;
   }
@@ -245,8 +243,6 @@ class input_file_t : public raw_file_t
 public:
   //! construct with a path
   input_file_t(const char *path) : raw_file_t(path,"r") {};
-  
-  
 };
 
 #endif
