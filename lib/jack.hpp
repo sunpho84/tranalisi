@@ -35,6 +35,7 @@ public:
   //! creator from data
   jack_t(const vector<T> &data) : jack_t() {init_from_data(data);}
   
+  //! initialize from vector of double, so to create jackknives
   void init_from_data(const vector<T> &data)
   {
     check_njacks_init();
@@ -80,18 +81,23 @@ public:
 template <class T> class jvec_t : public vector<jack_t<T>>
 {
  public:
+  //! default constructor
   jvec_t()=default;
   
-  jvec_t(const vector<vector<T>> o) : vector<jack_t<T>>(o.size())
-    {for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];}
+  //! construct this size
+  jvec_t(size_t size) : vector<jack_t<T>>(size) {}
+  
+  jvec_t(const vector<vector<T>> &o) : vector<jack_t<T>>(o.size())
+  {for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];}
   
   //! filter vector
   jvec_t filter(filter_t filter)
   {
     jvec_t out;
-    for(size_t it=filter.offset;it<=this->size()-filter.how_many;it+=filter.each)
-      for(size_t sh=0;sh<filter.how_many;sh++)
-	out.push_back((*this)[it+sh]);
+    for(size_t it=filter.offset;it<this->size();it+=filter.each)
+      if(it+filter.how_many<this->size()) //check that we store a whole bunch
+	for(size_t sh=0;sh<filter.how_many;sh++)
+	    out.push_back((*this)[it+sh]);
     
     return out;
   }
