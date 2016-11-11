@@ -1,18 +1,19 @@
 #ifndef _JACK_HPP
 #define _JACK_HPP
 
+#include <ave_err.hpp>
+#include <file.hpp>
+#include <fstream>
+#include <iostream>
+#include <tools.hpp>
+#include <vector>
+
 #ifndef EXTERN_JACK
  #define EXTERN_JACK extern
  #define INIT_TO(A)
 #else
  #define INIT_TO(A) =A
 #endif
-
-#include <file.hpp>
-#include <fstream>
-#include <iostream>
-#include <tools.hpp>
-#include <vector>
 
 using namespace std;
 
@@ -32,8 +33,27 @@ public:
   //! creator
   jack_t() : vector<T>(njacks+1) {check_njacks_init();}
   
+  //! create with size (only njacks is accepted)
+  jack_t(size_t ext_njacks) : jack_t() {if(njacks!=ext_njacks) CRASH("NJacks %zu different from global value %zu",njacks,ext_njacks);}
+  
   //! creator from data
   jack_t(const vector<T> &data) : jack_t() {init_from_data(data);}
+  
+  //! compute average and error
+  ave_err_t ave_err() const
+  {
+    ave_err_t ae=range_ave_stddev(*this,njacks);
+    ae.err*=sqrt(njacks-1);
+    
+#if MEAN_TYPE==DISTR_MEAN
+#elif MEAN_TYPE==PROP_MEAN
+    ae.ave=(*this)[njacks];
+#else
+     #error Unknown mean propagation
+#endif
+    
+    return ae;
+  }
   
   //! initialize from vector of double, so to create jackknives
   void init_from_data(const vector<T> &data)
@@ -64,19 +84,11 @@ public:
 //! typically we use jackknives of double
 using djack_t=jack_t<double>;
 
-/////////////////////////////////////////////////////////// vector of jackknives ////////////////////////////////////////////////
+//! get the size needed to init a jack_t
+template <class T> const size_t init_nel(const jack_t<T> &obj)
+{return njacks;}
 
-//! hold a triplet to set a filter
-class filter_t
-{
-public:
-  size_t each;
-  size_t offset;
-  size_t how_many;
-  
-  filter_t(size_t each,size_t offset=0,size_t how_many=1) : each(each),offset(offset),how_many(how_many) {}
-  filter_t() {}
-};
+/////////////////////////////////////////////////////////// vector of jackknives ////////////////////////////////////////////////
 
 template <class T> class jvec_t : public vector<jack_t<T>>
 {
@@ -89,21 +101,6 @@ template <class T> class jvec_t : public vector<jack_t<T>>
   
   jvec_t(const vector<vector<T>> &o) : vector<jack_t<T>>(o.size())
   {for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];}
-  
-  //! filter vector
-  jvec_t filter(filter_t filter)
-  {
-    jvec_t out;
-    for(size_t it=filter.offset;it<this->size();it+=filter.each)
-      if(it+filter.how_many<this->size()) //check that we store a whole bunch
-	for(size_t sh=0;sh<filter.how_many;sh++)
-	    out.push_back((*this)[it+sh]);
-    
-    return out;
-  }
-  //! wrapper
-  jvec_t filter(size_t each,size_t offset=0,size_t how_many=1)
-  {return filter(filter_t(each,offset,how_many));}
   
   //! write to a stream
   void bin_write(const raw_file_t &out)
@@ -120,6 +117,14 @@ template <class T> class jvec_t : public vector<jack_t<T>>
   //! wrapper with name
   void bin_write(const string &path)
   {bin_write(path.c_str());}
+  
+  //! compute average and error
+  vec_ave_err_t ave_err() const
+  {
+    vec_ave_err_t out(this->size());
+    for(size_t it=0;it<this->size();it++) out[it]=(*this)[it].ave_err();
+    return out;
+  }
 };
 
 using djvec_t=jvec_t<double>;

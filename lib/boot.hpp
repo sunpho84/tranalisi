@@ -5,6 +5,7 @@
  #include "config.hpp"
 #endif
 
+#include <ave_err.hpp>
 #include <cmath>
 #include <iostream>
 #include <jack.hpp>
@@ -23,44 +24,6 @@ using namespace std;
 
 //! standard number of bootstrap sample, if not specified
 EXTERN_BOOT size_t def_nboots INIT_TO(DEF_NBOOTS);
-
-//! define the square of a double, float or integer
-template <class T,class=typename enable_if<is_arithmetic<T>::value>::type> T sqr(T x)
-{return x*x;}
-
-/////////////////////////////////////////////////////////////// average and error /////////////////////////////////////////////////
-
-//! average and error
-class ave_err_t : pair<double,double>
-{
-public:
-  //! rebind base constructor
-  ave_err_t(double a=0,double b=0) : pair<double,double>(a,b) {};
-  
-  //! move constructor
-  ave_err_t(ave_err_t&& oth)=default;
-  
-  //! copy constructor
-  ave_err_t(const ave_err_t &oth)=default;
-  
-  //! move assignement
-  ave_err_t &operator=(ave_err_t &&)=default;
-  
-  //! copy assignement
-  ave_err_t &operator=(const ave_err_t &oth)
-  {pair<double,double>::operator=(oth);return *this;}
-  
-  //! rebind average
-  double &ave=first;
-  
-  //! rebind error
-  double &err=second;
-};
-
-using vec_ave_err_t=vector<ave_err_t>;
-
-//! output of ave_err_t
-ostream& operator<<(ostream &out,const ave_err_t &ae);
 
 ////////////////////////////////////////////////////// type to initialize a boot_t //////////////////////////////////////////
 
@@ -147,25 +110,12 @@ public:
   boot_t& operator=(const T &oth) {for(auto &it : *this) it=oth;return *this;}
   
   //! compute average and error
-  ave_err_t ave_err()
+  ave_err_t ave_err() const
   {
-    ave_err_t ae;
-    double ave=ae.ave;
-    double &err=ae.err;
+    ave_err_t ae=range_ave_stddev(*this,nboots());
+    ae.err*=sqrt(njacks-1);
     
-    for(size_t iboot=0;iboot<nboots();iboot++)
-    {
-      double x=(*this)[iboot];
-      ave+=x;
-      err+=sqr(x);
-    }
-    ave/=this->size();
-    err/=this->size();
-    err-=sqr(ave);
-    err=sqrt(fabs(err)*(njacks-1));
-
 #if MEAN_TYPE==DISTR_MEAN
-    ae.ave=ave;
 #elif MEAN_TYPE==PROP_MEAN
     ae.ave=(*this)[nboots()];
 #else
@@ -205,6 +155,10 @@ public:
 //! typically we will use double numbers
 using dboot_t=boot_t<double>;
 
+//! return the size needed to init a boot_t
+template <class T> const size_t init_nel(const boot_t<T> &obj)
+{return obj.nboots();}
+
 ////////////////////////////////////////////////////////// vector of boot_t /////////////////////////////////////////////////
 
 //! type defining boot vec
@@ -234,7 +188,7 @@ public:
   {vector<boot_t<T>>::operator=(oth);cout<<"vec copy"<<endl;return *this;}
   
   //! compute average and error
-  vec_ave_err_t ave_err()
+  vec_ave_err_t ave_err() const
   {
     vec_ave_err_t out(this->size());
     for(size_t it=0;it<this->size();it++) out[it]=(*this)[it].ave_err();

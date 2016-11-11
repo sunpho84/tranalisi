@@ -2,7 +2,6 @@
 #define _OPER_HPP
 
 #include <algorithm>
-#include <boot.hpp>
 #include <cmath>
 #include <functional>
 #include <iostream>
@@ -21,10 +20,6 @@ template <class T1,class T2> void check_match_size(const vector<T1> &first,const
 //! get the size to init an object, avoiding size() for boot and jack
 template <class T> const size_t init_nel(const vector<T> &obj)
 {return obj.size();}
-template <class T> const size_t init_nel(const boot_t<T> &obj)
-{return obj.nboots();}
-template <class T> const size_t init_nel(const jack_t<T> &obj)
-{return njacks;}
 
 //////////////////////////////////////////////// operations //////////////////////////////////////////////
 
@@ -73,10 +68,6 @@ DEFINE_BIN_OPERATOR(operator/,operator/=,/)
   }
 #define DEFINE_FUNCTION(OP_NAME) DEFINE_NAMED_FUNCTION(OP_NAME,OP_NAME)
 
-//! helper for unary minus
-template <class T> T uminus(const T &in)
-{return -in;}
-
 DEFINE_NAMED_FUNCTION(operator-,uminus)
 DEFINE_FUNCTION(cos)
 DEFINE_FUNCTION(cosh)
@@ -107,5 +98,29 @@ template <class T> vector<vector<T>> transpose(const vector<vector<T>> &in)
   
   return out;
 }
+
+//! hold a triplet to set a filter
+class filter_t
+{
+public:
+  size_t each;
+  size_t offset;
+  size_t how_many;
+  
+  filter_t(size_t each,size_t offset=0,size_t how_many=1) : each(each),offset(offset),how_many(how_many) {}
+  filter_t() {}
+  
+  //! filter vector
+  template <class T> T operator()(const T &v)
+  {
+    T out;
+    for(size_t it=offset;it<v.size();it+=each)
+      if(it+how_many<v.size()) //check that we store a whole bunch
+	for(size_t sh=0;sh<how_many;sh++)
+	    out.push_back(v[it+sh]);
+    
+    return out;
+  }
+};
 
 #endif
