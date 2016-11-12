@@ -116,7 +116,6 @@ public:
   //! filter vector
   template <class T> T operator()(const T &v)
   {
-    cout<<"Filterin, offset "<<offset<<" each "<<each<<" how_many "<<how_many<<endl;
     T out;
     for(size_t it=offset;it<v.size();it+=each)
       if(it+how_many<v.size()) //check that we store a whole bunch
