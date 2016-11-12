@@ -2,6 +2,7 @@
 #define _GRACE_HPP
 
 #include <fstream>
+#include <ave_err.hpp>
 #include <tools.hpp>
 
 using namespace std;
@@ -24,14 +25,19 @@ public:
     (*this)<<"&"<<endl;
     shift_iset();
   }
+  
+  //! set a property
+  void set_prop(string what){(*this)<<"@s"<<iset<<" "<<what<<endl;}
+  
+  //! set line style
+  void set_line_style(size_t how){set_prop("line type "+to_string(how));}
+  
+  //! set no line
+  void no_line(){set_line_style(0);}
+
 };
 
-//! write a vector
-template <class T> enable_if_t<has_method_ave_err<typename T::value_type>::value,grace_file_t> &operator<<(grace_file_t &out,const vector<T> &data)
-{
-  out<<"@type xydy"<<endl;
-  for(size_t i=0;i<data.size();i++) out<<i<<" "<<data[i].ave_err()<<endl;
-  return out;
-}
+//! write a vector of average and error
+grace_file_t &operator<<(grace_file_t &out,const vec_ave_err_t &data);
 
 #endif
