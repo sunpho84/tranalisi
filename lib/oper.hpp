@@ -107,20 +107,41 @@ public:
   size_t offset;
   size_t how_many;
   
+  //! init from three pars
   filter_t(size_t each,size_t offset=0,size_t how_many=1) : each(each),offset(offset),how_many(how_many) {}
-  filter_t() {}
+  
+  //! default constructor
+  filter_t()=default;
   
   //! filter vector
   template <class T> T operator()(const T &v)
   {
+    cout<<"Filterin, offset "<<offset<<" each "<<each<<" how_many "<<how_many<<endl;
     T out;
     for(size_t it=offset;it<v.size();it+=each)
       if(it+how_many<v.size()) //check that we store a whole bunch
 	for(size_t sh=0;sh<how_many;sh++)
-	    out.push_back(v[it+sh]);
+	  out.push_back(v[it+sh]);
     
     return out;
   }
 };
+
+//! take the forward derivative
+template <class T> T forward_derivative(const T &v)
+{
+  T out(v.size()-1);
+  for(size_t it=0;it<out.size();it++) out[it]=v[it+1]-v[it];
+  return out;
+}
+
+//! extract a subset of a vector
+template <class T> T subset(const T &v,size_t beg,size_t end)
+{
+  if(beg>=v.size()) CRASH("Asked to extract from %zu, beyond the end %zu",beg,v.size());
+  if(end>=v.size()) CRASH("Asked to extract up to %zu, beyond the end %zu",end,v.size());
+  
+  return T(&v[beg],&v[end]);
+}
 
 #endif
