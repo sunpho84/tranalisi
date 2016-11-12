@@ -20,7 +20,7 @@ void set_njacks(int ext_njacks)
 void check_njacks_init()
 {if(njacks==UNDEF_NJACKS) CRASH("Set njacks before");}
 
-djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,int nlines)
+djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,int nlines=1)
 {
   //basic checks
   check_njacks_init();
