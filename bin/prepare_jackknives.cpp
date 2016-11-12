@@ -50,11 +50,13 @@ int main(int narg,char **arg)
   //loop on files
   for(auto &it : files)
     {
-      djvec_t jvec=read_conf_set_t(it.first,file_range,ntot_cols,cols,T);
+      djvec_t data=read_conf_set_t(it.first,file_range,ntot_cols,cols,T);
       
       //loop on filters
       for(auto &filter : filters)
-	jvec.filter(filter.second).bin_write(combine(it.second.c_str(),filter.first.c_str()));
+	filter.second(data).bin_write(combine(it.second.c_str(),filter.first.c_str()));
+      grace_file_t gr("/tmp/gr.xmg");
+      gr<<data<<endl;
     }
   
   return 0;

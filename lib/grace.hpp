@@ -27,9 +27,7 @@ public:
 };
 
 //! write a vector
-template <class T> // enable_if_t<has_method_ave_err<T>::value,grace_file_t>
-grace_file_t
-&operator<<(grace_file_t &out,const vector<T> &data)
+template <class T> enable_if_t<has_method_ave_err<typename T::value_type>::value,grace_file_t> &operator<<(grace_file_t &out,const vector<T> &data)
 {
   out<<"@type xydy"<<endl;
   for(size_t i=0;i<data.size();i++) out<<i<<" "<<data[i].ave_err()<<endl;
