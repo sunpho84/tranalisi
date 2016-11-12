@@ -92,8 +92,7 @@ public:
     int rc=fscanf(file,"%s",rea);
     if(rc!=1) CRASH("Obtained %d while expecting token %s",rc,tok);
     if(strcasecmp(tok,rea)) CRASH("Obtained %s while expecting %s",rea,tok);
-    
-    cout<<"Discarding "<<rea<<endl;
+    //cout<<"Discarding "<<rea<<endl;
   }
   
   //! named or unnamed read
