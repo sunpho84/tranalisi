@@ -58,6 +58,12 @@ public:
     return ae;
   }
   
+  //! return only the average
+  double ave() const {return ave_err().ave;}
+  
+  //! return only the error
+  double err() const {return ave_err().err;}
+  
   //! initialize from vector of double, so to create jackknives
   void init_from_data(const vector<T> &data)
   {

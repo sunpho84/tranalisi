@@ -129,6 +129,12 @@ public:
     return ae;
   }
   
+  //! return only the average
+  double ave() const {return ave_err().ave;}
+  
+  //! return only the error
+  double err() const {return ave_err().err;}
+  
   //! initialize from aver_err_t and a seed
   void fill_gauss(const gauss_filler_t &gf)
   {
