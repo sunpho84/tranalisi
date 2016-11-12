@@ -36,9 +36,9 @@ template<class T> struct working_type {typedef T type;};
 template<> struct working_type<string> {typedef word_t type;};
 
 //! class to handle working type from reader
-template<class T> const T *get_ptr(const T &in) {return &in;}
-template<class T> const T *get_ptr(const T *in) {return in;}
-template<class T,size_t n> const T *get_ptr(const T in[n]) {return in;}
+template<class T> T *get_ptr(T &in) {return &in;}
+template<class T> T *get_ptr(T *in) {return in;}
+template<class T,size_t n> T *get_ptr(T in[n]) {return in;}
 
 //! open file, basic
 class raw_file_t
