@@ -221,7 +221,7 @@ public:
 	      {
 		for(auto &col_list : col_contr)
 		  for(auto &icol : col_list.second)
-		    data[icol+nvis_col*iline]=temp[col_list.first];
+		    data[iline+nlines*icol]=temp[col_list.first];
 		iline++;
 	      }
 	  }
