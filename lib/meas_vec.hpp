@@ -13,14 +13,18 @@ public:
   //! constructor specifying nel only (avoid copy constructor)
   template <class ...Args> explicit vmeas_t(size_t nel=0,const Args &...args) : vector<meas_t>(nel,args...) {}
   
+  //! init from vector of vector
   vmeas_t(const vector<vector<base_type>> &o) : vmeas_t(o.size())
   {for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];}
-
+  
   //! move constructor
   vmeas_t(vmeas_t&& oth) : vector<meas_t>(forward<vector<meas_t>>(oth)) {cout<<"vec move const"<<endl;}
   
   //! copy constructor
   vmeas_t(const vmeas_t &oth) : vector<meas_t>(oth) {cout<<"vec copy const"<<endl;}
+  
+  //! range constructor
+  template <class InputIterator> vmeas_t(InputIterator first,InputIterator last,enable_if_t<!is_integral<InputIterator>::value>* =0) : vector<meas_t>(first,last) {}
   
   //! move assignement
   vmeas_t &operator=(vmeas_t &&oth)=default;
