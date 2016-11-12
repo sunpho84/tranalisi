@@ -4,6 +4,7 @@
 
 #define EXTERN_JACK
 #include <jack.hpp>
+#include <meas_vec.hpp>
 #ifdef USE_OMP
  #include <omp.h>
 #endif

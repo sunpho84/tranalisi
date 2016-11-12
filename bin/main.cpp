@@ -42,7 +42,7 @@ int main(int narg,char **arg)
   boot_init_t binit;binit.fill(23252523);
   vector<vector<double>> ciccio={{3,4,1},{4,5,4}};
   
-  dbvec_t bciccio(binit,ciccio);
+  dbvec_t bciccio=bvec_from_jvec(binit,djvec_t(ciccio));
   
   cout<<bciccio.ave_err()<<endl;
   
@@ -64,9 +64,9 @@ int main(int narg,char **arg)
   raw_file_t outf("/tmp/test","w");
   jvec.bin_write(outf);
   
-  jvec.filter(2).bin_write("/tmp/202");
+  filter_t(2)(jvec).bin_write("/tmp/202");
   
-  cout<<dbvec_t(binit,jvec).ave_err()<<endl;
+  //cout<<dbvec_t(binit,jvec).ave_err()<<endl;
   
   //int o=file.read<int>("o");
   //cout<<o<<endl;

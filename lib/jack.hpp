@@ -30,6 +30,9 @@ void check_njacks_init();
 template <class T> class jack_t : public vector<T>
 {
 public:
+  //! base type of the jack
+  typedef T base_type;
+  
   //! creator
   jack_t() : vector<T>(njacks+1) {check_njacks_init();}
   
@@ -87,50 +90,6 @@ using djack_t=jack_t<double>;
 //! get the size needed to init a jack_t
 template <class T> const size_t init_nel(const jack_t<T> &obj)
 {return njacks;}
-
-/////////////////////////////////////////////////////////// vector of jackknives ////////////////////////////////////////////////
-
-template <class T> class jvec_t : public vector<jack_t<T>>
-{
- public:
-  //! default constructor
-  jvec_t()=default;
-  
-  //! construct this size
-  jvec_t(size_t size) : vector<jack_t<T>>(size) {}
-  
-  jvec_t(const vector<vector<T>> &o) : vector<jack_t<T>>(o.size())
-  {for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];}
-  
-  //! write to a stream
-  void bin_write(const raw_file_t &out)
-  {
-    out.bin_write<size_t>(njacks);
-    out.bin_write(this->size());
-    out.bin_write(*this);
-  }
-  
-  //! wrapper with name
-  void bin_write(const char *path)
-  {bin_write(raw_file_t(path,"w"));}
-  
-  //! wrapper with name
-  void bin_write(const string &path)
-  {bin_write(path.c_str());}
-  
-  //! compute average and error
-  vec_ave_err_t ave_err() const
-  {
-    vec_ave_err_t out(this->size());
-    for(size_t it=0;it<this->size();it++) out[it]=(*this)[it].ave_err();
-    return out;
-  }
-};
-
-using djvec_t=jvec_t<double>;
-
-//! read from a set of confs
-djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,int nlines);
 
 #undef EXTERN_JACK
 #undef INIT_TO
