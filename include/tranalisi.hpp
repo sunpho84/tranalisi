@@ -7,5 +7,6 @@
 #include <jack.hpp>
 #include <meas_vec.hpp>
 #include <oper.hpp>
+#include <solve.hpp>
 
 #endif
