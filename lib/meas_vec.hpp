@@ -11,7 +11,7 @@ template <class meas_t> class vmeas_t : public vector<meas_t>
   
 public:
   //! constructor specifying nel only (avoid copy constructor)
-  template <class ...Args> explicit vmeas_t(size_t nel=0,const Args &...args) : vector<meas_t>(nel,args...) {}
+  explicit vmeas_t(size_t nel=0) : vector<meas_t>(nel) {}
   
   //! init from vector of vector
   vmeas_t(const vector<vector<base_type>> &o) : vmeas_t(o.size())
