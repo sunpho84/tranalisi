@@ -54,9 +54,11 @@ int main(int narg,char **arg)
       
       //loop on filters
       for(auto &filter : filters)
-	filter.second(data).bin_write(combine(it.second.c_str(),filter.first.c_str()));
-      grace_file_t gr("/tmp/gr.xmg");
-      gr<<data<<endl;
+	{
+	  auto fi=filter.second(data);fi.bin_write(combine(it.second.c_str(),filter.first.c_str()));
+	  grace_file_t gr("plots/gr.xmg");
+	  gr<<forward_derivative(log(subset(fi,0,T))).ave_err()<<endl;
+	}
     }
   
   return 0;
