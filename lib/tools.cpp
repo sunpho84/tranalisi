@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <cstdarg>
+#include <signal.h>
 #include <sys/stat.h>
 #include <execinfo.h>
 
@@ -73,3 +74,35 @@ int dir_exists(string path)
   int is=(info.st_mode&S_IFDIR);
   return (rc==0)&&is;
 }
+
+void signal_handler(int sig)
+{
+  char name[100];
+  switch(sig)
+    {
+    case SIGSEGV: sprintf(name,"segmentation violation");break;
+    case SIGFPE: sprintf(name,"floating-point exception");break;
+    case SIGXCPU: sprintf(name,"cpu time limit exceeded");break;
+    case SIGABRT: sprintf(name,"abort signal");break;
+    default: sprintf(name,"unassociated");break;
+    }
+  print_backtrace_list();
+  
+  CRASH("signal %d (%s) detected, exiting",sig,name);
+}
+
+
+//! class to force call to initialization
+class initializer_t
+{
+public:
+  initializer_t()
+  {
+    signal(SIGSEGV,signal_handler);
+    signal(SIGFPE,signal_handler);
+    signal(SIGXCPU,signal_handler);
+    signal(SIGABRT,signal_handler);
+  }
+};
+
+initializer_t initializer;

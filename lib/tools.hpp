@@ -12,10 +12,10 @@ using namespace std;
 //! measure time
 inline chrono::time_point<chrono::steady_clock> take_time()
 {return chrono::steady_clock::now();}
-
+//! mark started time
 #define START_TIME() auto start=take_time()
+//! compute elapsed time
 #define ELAPSED_TIME() chrono::duration<double,milli>(take_time()-start).count()<<" ms"
-
 
 //! crashes emitting the message
 void internal_crash(int line,const char *file,const char *temp,...);
@@ -28,6 +28,9 @@ int file_exists(string path);
 
 //! check if a directoy exists
 int dir_exists(string path);
+
+//! handle signals
+void signal_handler(int sig);
 
 //! return a range of int
 class range_t : private array<size_t,3>
