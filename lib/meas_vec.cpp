@@ -2,9 +2,12 @@
  #include <config.hpp>
 #endif
 
+#ifdef USE_OMP
+ #include <omp.h>
+#endif
 #include <meas_vec.hpp>
 
-djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,size_t nlines=1)
+djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,size_t nlines)
 {
   //basic checks
   check_njacks_init();
