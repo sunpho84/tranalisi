@@ -4,11 +4,9 @@ lib_LIBRARIES=libtran.a
 
 libtran_a_SOURCES= \
 	boot.cpp \
-	file.cpp \
 	fit.cpp \
 	grace.cpp \
 	jack.cpp \
 	meas_vec.cpp \
 	oper.cpp \
-	random.cpp \
 	tools.cpp
