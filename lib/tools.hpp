@@ -10,12 +10,27 @@
 using namespace std;
 
 //! measure time
-inline chrono::time_point<chrono::steady_clock> take_time()
+using instant_t=chrono::time_point<chrono::steady_clock>;
+inline instant_t take_time()
 {return chrono::steady_clock::now();}
-//! mark started time
-#define START_TIME() auto start=take_time()
+
 //! compute elapsed time
-#define ELAPSED_TIME() chrono::duration<double,milli>(take_time()-start).count()<<" ms"
+inline string elapsed_time(const instant_t &start)
+{
+  auto diff=take_time()-start;
+  
+  double el_nano=chrono::duration<double,nano>(diff).count();
+  if(el_nano>1) return to_string(el_nano)+" ns";
+  
+  double el_micro=chrono::duration<double,micro>(diff).count();
+  if(el_micro>1) return to_string(el_micro)+" us";
+  
+  double el_milli=chrono::duration<double,milli>(diff).count();
+  if(el_milli>1) return to_string(el_milli)+" ms";
+  
+  double el_sec=chrono::duration<double>(diff).count();
+  return to_string(el_sec)+" s";
+}
 
 //! crashes emitting the message
 void internal_crash(int line,const char *file,const char *temp,...);
