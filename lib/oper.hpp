@@ -120,11 +120,15 @@ public:
   //! filter vector
   template <class T> T operator()(const T &v)
   {
+    START_TIME();
+    
     T out;
     for(size_t it=offset;it<v.size();it+=each)
       if(it+how_many<v.size()) //check that we store a whole bunch
 	for(size_t sh=0;sh<how_many;sh++)
 	  out.push_back(v[it+sh]);
+    
+    cout<<ELAPSED_TIME()<<" to filter data"<<endl;
     
     return out;
   }
