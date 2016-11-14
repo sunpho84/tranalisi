@@ -64,29 +64,34 @@ public:
   //! return only the error
   double err() const {return ave_err().err;}
   
+  //! fill the clusters
+  size_t fill_clusters(const vector<T> &data)
+  {
+    //compute cluster size
+    size_t clust_size=data.size()/njacks;
+    if(clust_size*njacks!=data.size()) CRASH("Data size %zu is not multiple of njacks %zu",data.size(),njacks);
+    for(size_t it=0;it<data.size();it++) (*this)[it/clust_size]+=data[it];
+    
+    return clust_size;
+  }
+  
+  //! clusterize
+  void clusterize(size_t clust_size)
+  {
+    //fill clusters and compute avarages
+    (*this)[njacks]=0;
+    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[njacks]+=(*this)[ijack];
+    
+    //clusterize
+    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[ijack]=((*this)[njacks]-(*this)[ijack])/((njacks-1)*clust_size);
+    (*this)[njacks]/=clust_size*njacks;
+  }
+  
   //! initialize from vector of double, so to create jackknives
   void init_from_data(const vector<T> &data)
   {
     check_njacks_init();
-    
-    //compute cluster size
-    size_t clust_size=data.size()/njacks;
-    if(clust_size*njacks!=data.size()) CRASH("Data size=%d, njacks=%d are incommensurable",data.size(),njacks);
-    
-    //hold clusters
-    vector<T> clust(njacks+1,0);
-    
-    //fill clusters and compute avarages
-    (*this)[njacks]=0;
-    for(size_t it=0;it<data.size();it++)
-      {
-	clust[it/clust_size]+=data[it];
-	(*this)[njacks]+=data[it];
-      }
-    
-    //clusterize
-    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[ijack]=((*this)[njacks]-clust[ijack])/((njacks-1)*clust_size);
-    (*this)[njacks]/=data.size();
+    clusterize(fill_clusters(data));
   }
 };
 
