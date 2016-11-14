@@ -95,6 +95,9 @@ public:
     //cout<<"Discarding "<<rea<<endl;
   }
   
+  //! reset the position to the head
+  void go_to_head() {fseek(file,0,SEEK_SET);}
+  
   //! named or unnamed read
   template <class T> typename return_type<T>::type read(const char *name=NULL)
   {
