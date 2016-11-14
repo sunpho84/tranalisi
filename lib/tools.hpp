@@ -20,13 +20,13 @@ inline string elapsed_time(const instant_t &start)
   auto diff=take_time()-start;
   
   double el_nano=chrono::duration<double,nano>(diff).count();
-  if(el_nano>0.1) return to_string(el_nano)+" ns";
+  if(el_nano<1000) return to_string(el_nano)+" ns";
   
   double el_micro=chrono::duration<double,micro>(diff).count();
-  if(el_micro>0.1) return to_string(el_micro)+" us";
+  if(el_micro<1000) return to_string(el_micro)+" us";
   
   double el_milli=chrono::duration<double,milli>(diff).count();
-  if(el_milli>0.1) return to_string(el_milli)+" ms";
+  if(el_milli<1000) return to_string(el_milli)+" ms";
   
   double el_sec=chrono::duration<double>(diff).count();
   return to_string(el_sec)+" s";
