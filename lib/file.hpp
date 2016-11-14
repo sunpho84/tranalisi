@@ -95,8 +95,17 @@ public:
     //cout<<"Discarding "<<rea<<endl;
   }
   
+  //! set the position to the passed value
+  long get_pos() {return ftell(file);}
+  
+  //! set the position to the passed value
+  void set_pos(long offset) {fseek(file,offset,SEEK_SET);}
+  
   //! reset the position to the head
-  void go_to_head() {fseek(file,0,SEEK_SET);}
+  void go_to_head() {set_pos(0);}
+  
+  //! reset the position to the end
+  void go_to_end() {fseek(file,0,SEEK_END);}
   
   //! named or unnamed read
   template <class T> typename return_type<T>::type read(const char *name=NULL)
@@ -176,6 +185,11 @@ public:
   //! measure according to ncols
   size_t length(size_t nlines)
   {
+    //read the position and go to the head
+    long ori=get_pos();
+    go_to_head();
+    
+    //read until the end
     size_t out=0,cur_length;
     do
       {
@@ -184,7 +198,8 @@ public:
     }
     while(cur_length);
     
-    this->go_to_head();
+    //go back to previous position
+    set_pos(ori);
     
     return out;
   }
@@ -194,8 +209,8 @@ public:
   {set_col_view(vector<size_t>{icol});}
   
   //! open for reading obs
-  void open(const char *path)
-  {raw_file_t::open(path,"r");}
+  void open(const string &path)
+  {raw_file_t::open(path.c_str(),"r");}
   
   //! read
   vector<double> read(size_t nlines=1)
