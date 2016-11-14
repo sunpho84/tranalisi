@@ -57,7 +57,7 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
   
 #pragma omp parallel for
   for(size_t ijack=0;ijack<njacks;ijack++)
-    for(size_t ifile=ijack*clust_size;ifile<=(ijack+1)*clust_size;ifile++)
+    for(size_t ifile=ijack*clust_size;ifile<(ijack+1)*clust_size;ifile++)
       {
 #ifdef USE_OMP
 	printf("Thread %d/%d eading file %zu/%zu\n",omp_get_thread_num(),omp_get_num_threads(),ifile,files.size());
@@ -68,7 +68,7 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
 	//read all blocks
 	for(size_t iblock=0;iblock<nblocks;iblock++)
 	  {
-	    vector<double> temp=files[icheck_file].read(nlines);
+	    vector<double> temp=files[ifile].read(nlines);
 	    if(temp.size()!=block_nentr) CRASH("Error reading file %zu, iblock %zu",ifile,iblock);
 	    
 	    //copy
