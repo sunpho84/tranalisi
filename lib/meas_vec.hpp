@@ -2,6 +2,7 @@
 #define _MEAS_VEC_HPP
 
 #include <boot.hpp>
+#include <tools.hpp>
 
 //! type defining a vector of measures
 template <class meas_t> class vmeas_t : public vector<meas_t>
@@ -15,7 +16,12 @@ public:
   
   //! init from vector of vector
   vmeas_t(const vector<vector<base_type>> &o) : vmeas_t(o.size())
-  {for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];}
+  {
+    START_TIME();
+    cout<<"Initializing vmeas_t from vector of vector"<<endl;
+    for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];
+    cout<<ELAPSED_TIME()<<" to init vmeas_t"<<endl;
+  }
   
   //! move constructor
   vmeas_t(vmeas_t&& oth) : vector<meas_t>(forward<vector<meas_t>>(oth)) {cout<<"vec move const"<<endl;}

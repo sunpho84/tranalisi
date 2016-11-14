@@ -121,6 +121,7 @@ public:
   template <class T> T operator()(const T &v)
   {
     START_TIME();
+    cout<<"Start filtering"<<endl;
     
     T out;
     for(size_t it=offset;it<v.size();it+=each)

@@ -51,7 +51,7 @@ int main(int narg,char **arg)
   for(auto &it : files)
     {
       djvec_t data=read_conf_set_t(it.first,file_range,ntot_cols,cols,T);
-      
+      cout<<"Finihed reading"<<endl;
       //loop on filters
       for(auto &filter : filters)
 	{
