@@ -22,10 +22,15 @@ using namespace std;
 EXTERN_JACK size_t njacks INIT_TO(UNDEF_NJACKS);
 
 //! set the number of jackknives
-void set_njacks(int ext_njacks);
+inline void set_njacks(int ext_njacks)
+{
+  if(njacks==UNDEF_NJACKS) njacks=ext_njacks;
+  else CRASH("Unbale to set njacks twice");
+}
 
 //! crash if number of jackknives is not initialized
-void check_njacks_init();
+inline void check_njacks_init()
+{if(njacks==UNDEF_NJACKS) CRASH("Set njacks before");}
 
 template <class T> class jack_t : public vector<T>
 {
