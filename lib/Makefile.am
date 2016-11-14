@@ -8,6 +8,7 @@ libtran_a_SOURCES= \
 	fit.cpp \
 	grace.cpp \
 	jack.cpp \
+	meas_vec.cpp \
 	oper.cpp \
 	random.cpp \
 	tools.cpp
