@@ -4,6 +4,10 @@ int main(int narg,char **arg)
 {
   if(narg<2) CRASH("Use %s [input]",arg[0]);
   
+  //! initial time
+  auto start=take_time();
+  
+  //! input file
   input_file_t input(arg[1]);
   
   //! the list of files
@@ -56,6 +60,8 @@ int main(int narg,char **arg)
       for(auto &filter : filters)
 	filter.second(data).bin_write(combine(it.second.c_str(),filter.first.c_str()));
     }
+
+  cout<<"Total time: "<<elapsed_time(start)<<endl;
   
   return 0;
 }
