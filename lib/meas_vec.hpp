@@ -84,6 +84,6 @@ template <class T> vmeas_t<boot_t<T>> bvec_from_jvec(const boot_init_t &iboot_in
 }
 
 //! read from a set of confs
-djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,int nlines);
+djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,size_t nlines=1);
 
 #endif
