@@ -51,14 +51,10 @@ int main(int narg,char **arg)
   for(auto &it : files)
     {
       djvec_t data=read_conf_set_t(it.first,file_range,ntot_cols,cols,T);
-      cout<<"Finihed reading"<<endl;
+      
       //loop on filters
       for(auto &filter : filters)
-	{
-	  auto fi=filter.second(data);fi.bin_write(combine(it.second.c_str(),filter.first.c_str()));
-	  grace_file_t gr("plots/gr.xmg");
-	  gr<<forward_derivative(log(subset(fi,0,T))).ave_err()<<endl;
-	}
+	filter.second(data).bin_write(combine(it.second.c_str(),filter.first.c_str()));
     }
   
   return 0;
