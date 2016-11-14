@@ -53,11 +53,7 @@ public:
   
   //! write to a stream
   void bin_write(const raw_file_t &out)
-  {
-    out.bin_write<size_t>(njacks);
-    out.bin_write(this->size());
-    out.bin_write(*this);
-  }
+  {out.bin_write(*this);}
   
   //! wrapper with name
   void bin_write(const char *path)
