@@ -36,6 +36,13 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
       files[ind].set_col_view(cols);
     }
   
+  //measure the length of the first file
+  size_t length=files[0].length(nlines);
+  cout<<"Total length: "<<length<<endl;
+  
+  //! output
+  djvec_t data(length);
+  
   //! raw data
   vector<vector<double>> raw_data(files.size());
 #ifdef USE_OMP
