@@ -91,14 +91,14 @@ template <class T> ostream& operator<<(ostream &out,const vector<T> &v)
 //! transpose a matrix
 template <class T> vector<vector<T>> transpose(const vector<vector<T>> &in)
 {
-  START_TIME();
+  auto start=take_time();
   
   vector<vector<T>> out(in[0].size(),vector<T>(in.size()));
   for(size_t ir=0;ir<in.size();ir++)
     for(size_t ic=0;ic<in[0].size();ic++)
       out[ic][ir]=in[ir][ic];
   
-  cout<<ELAPSED_TIME()<<" to transpose"<<endl;
+  cout<<elapsed_time(start)<<" to transpose"<<endl;
   
   return out;
 }
@@ -120,7 +120,7 @@ public:
   //! filter vector
   template <class T> T operator()(const T &v)
   {
-    START_TIME();
+    auto start=take_time();
     cout<<"Start filtering"<<endl;
     
     T out;
@@ -129,7 +129,7 @@ public:
 	for(size_t sh=0;sh<how_many;sh++)
 	  out.push_back(v[it+sh]);
     
-    cout<<ELAPSED_TIME()<<" to filter data"<<endl;
+    cout<<elapsed_time(start)<<" to filter data"<<endl;
     
     return out;
   }

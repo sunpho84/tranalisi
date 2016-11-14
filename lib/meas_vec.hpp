@@ -17,10 +17,10 @@ public:
   //! init from vector of vector
   vmeas_t(const vector<vector<base_type>> &o) : vmeas_t(o.size())
   {
-    START_TIME();
+    auto start=take_time();
     cout<<"Initializing vmeas_t from vector of vector"<<endl;
     for(size_t it=0;it<o.size();it++) (*this)[it]=o[it];
-    cout<<ELAPSED_TIME()<<" to init vmeas_t"<<endl;
+    cout<<elapsed_time(start)<<" to init vmeas_t"<<endl;
   }
   
   //! move constructor

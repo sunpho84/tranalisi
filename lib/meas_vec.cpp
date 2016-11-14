@@ -79,9 +79,9 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
   
   //clusterize each entry
   {
-    START_TIME();
+    auto start=take_time();
     for(auto &d : data) d.clusterize(clust_size);
-    cout<<ELAPSED_TIME()<<" to clusterize"<<endl;
+    cout<<elapsed_time(start)<<" to clusterize"<<endl;
   }
   
   return data;
