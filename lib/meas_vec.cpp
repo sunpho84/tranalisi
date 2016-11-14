@@ -15,7 +15,7 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
   if(range.each==0) CRASH("Each=0");
   
   //compute nfiles and clust size
-  size_t navail_files=(range.end+1-range.start)/range.each;
+  size_t navail_files=(range.end-range.start)/range.each+1;
   size_t clust_size=navail_files/njacks;
   size_t nfiles=clust_size*njacks;
   if(navail_files!=nfiles) cout<<"Reducing nfiles from available "<<navail_files<<" to "<<nfiles<<endl;
