@@ -2,11 +2,20 @@
 #define _TOOLS_HPP
 
 #include <array>
+#include <chrono>
 #include <macros.hpp>
 #include <string>
 #include <vector>
 
 using namespace std;
+
+//! measure time
+inline chrono::time_point<chrono::steady_clock> take_time()
+{return chrono::steady_clock::now();}
+
+#define START_TIME() auto start=take_time()
+#define ELAPSED_TIME() chrono::duration<double,milli>(take_time()-start).count()<<" ms"
+
 
 //! crashes emitting the message
 void internal_crash(int line,const char *file,const char *temp,...);

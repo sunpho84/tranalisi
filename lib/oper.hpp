@@ -91,10 +91,14 @@ template <class T> ostream& operator<<(ostream &out,const vector<T> &v)
 //! transpose a matrix
 template <class T> vector<vector<T>> transpose(const vector<vector<T>> &in)
 {
+  START_TIME();
+  
   vector<vector<T>> out(in[0].size(),vector<T>(in.size()));
   for(size_t ir=0;ir<in.size();ir++)
     for(size_t ic=0;ic<in[0].size();ic++)
       out[ic][ir]=in[ir][ic];
+  
+  cout<<ELAPSED_TIME()<<" to transpose"<<endl;
   
   return out;
 }

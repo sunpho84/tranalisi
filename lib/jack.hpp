@@ -69,6 +69,8 @@ public:
   {
     check_njacks_init();
     
+    START_TIME();
+    
     //compute cluster size
     size_t clust_size=data.size()/njacks;
     if(clust_size*njacks!=data.size()) CRASH("Data size=%d, njacks=%d are incommensurable",data.size(),njacks);
@@ -87,6 +89,8 @@ public:
     //clusterize
     for(size_t ijack=0;ijack<njacks;ijack++) (*this)[ijack]=((*this)[njacks]-clust[ijack])/((njacks-1)*clust_size);
     (*this)[njacks]/=data.size();
+    
+    cout<<ELAPSED_TIME()<<" to init from data"<<endl;
   }
 };
 
