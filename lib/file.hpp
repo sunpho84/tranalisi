@@ -173,6 +173,22 @@ public:
       }
   }
   
+  //! measure according to ncols
+  size_t length(size_t nlines)
+  {
+    size_t out=0,cur_length;
+    do
+      {
+	cur_length=this->read(nlines).size();
+	out+=cur_length;
+    }
+    while(cur_length);
+    
+    this->go_to_head();
+    
+    return out;
+  }
+  
   //! set the view on columns
   void set_col_view(size_t icol)
   {set_col_view(vector<size_t>{icol});}
