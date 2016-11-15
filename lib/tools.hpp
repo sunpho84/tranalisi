@@ -32,6 +32,14 @@ inline string elapsed_time(const instant_t &start)
   return to_string(el_sec)+" s";
 }
 
+//! check if two quantities have the same sign
+template <class T> bool same_sign(const T &a,const T &b)
+{return (a<=0 and b<=0) or (a>=0 and b>=0);}
+
+//! check it two quantities have opposite sign
+template <class T> bool opposite_sign(const T &a,const T &b)
+{return !same_sign(a,b);}
+
 //! crashes emitting the message
 void internal_crash(int line,const char *file,const char *temp,...);
 
