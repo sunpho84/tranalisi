@@ -18,7 +18,7 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
   size_t navail_files=(range.end-range.start)/range.each+1;
   size_t clust_size=navail_files/njacks;
   size_t nfiles=clust_size*njacks;
-  if(navail_files!=nfiles) cout<<"Reducing nfiles from available "<<navail_files<<" to "<<nfiles<<endl;
+  if(navail_files!=nfiles) cout<<"Reducing nfiles from available "<<navail_files<<" to "<<nfiles<<" to be multiple of njacks="<<njacks<<endl;
   
   //allocate files and open them
   vector<obs_file_t> files(nfiles,obs_file_t(ntot_col));
