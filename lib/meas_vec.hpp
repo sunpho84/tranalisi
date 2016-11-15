@@ -82,14 +82,19 @@ public:
   //! return the averaged
   vmeas_t symmetrized(int par)
   {
+    size_t nel=this->size();
+    size_t nelh=nel/2;
+    
     if(abs(par)!=1) CRASH("Unknown parity %d",par);
     
-    if(this->size()%2) CRASH("Size %zu odd",this->size());
+    if(nel%2) CRASH("Size %zu odd",nel);
     
-    vmeas_t out((*this)[0],(*this)[this->size()/2+1]);
+    //! prepare output copying the first half+1
+    vmeas_t out(&((*this)[0]),&((*this)[nelh+1]));
     
-    for(size_t i=0;i<this->size()+1;i++)
-      out[i]=(out[i]+par*(*this)[(this->size()-i)%this->size()])/2;
+    //sum the mirror
+    for(size_t iel=1;iel<nelh;iel++)
+      out[iel]=(out[iel]+par*((*this)[nel-iel]))/2;
     
     return out;
   }
