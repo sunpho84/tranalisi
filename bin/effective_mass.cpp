@@ -17,5 +17,7 @@ int main(int narg,char **arg)
   
   data.bin_read(arg[1]);
   
+  cout<<data.ave_err()<<endl;
+  
   return 0;
 }
