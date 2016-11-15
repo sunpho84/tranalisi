@@ -13,9 +13,9 @@ int main(int narg,char **arg)
   int T=atoi(arg[2]);
   int ext_njacks=atoi(arg[3]);
   int iel=0;
-  if(narg>=4) iel=atoi(arg[4]);
+  if(narg>4) iel=atoi(arg[4]);
   int par=1;
-  if(narg>=5) par=atoi(arg[5]);
+  if(narg>5) par=atoi(arg[5]);
   
   //setup the number of jackknives from command line
   set_njacks(ext_njacks);
