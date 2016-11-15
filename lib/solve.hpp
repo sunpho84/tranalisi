@@ -74,6 +74,7 @@ template <typename func_t> double Brent_solve(func_t fun,double guess=1)
   
   if(same_sign(fa,fb)) CRASH("f(a) and f(b) do not have opposite sign: %lg %lg",fa,fb);
   
+  //makes a the larger value
   if(fabs(fa)<fabs(fb))
     {
       swap(a,b);
@@ -144,6 +145,7 @@ template <typename func_t> double Brent_solve(func_t fun,double guess=1)
 	  fa=fs;
 	}
       
+      //makes again a the larger
       if(fabs(fa)<fabs(fb))
 	{
 	  swap(a,b);
