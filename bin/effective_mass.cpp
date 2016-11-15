@@ -6,7 +6,7 @@
 
 int main(int narg,char **arg)
 {
-  if(narg<4) CRASH("Use %s file T njacks iel=0");
+  if(narg<4) CRASH("Use %s file T njacks iel=0",arg[0]);
   
   //setup the number of jackknives from command line
   set_njacks(atoi(arg[3]));
