@@ -47,8 +47,8 @@ template <class T> const size_t init_nel(const vector<T> &obj)
   template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>> \
     TV OP_NAME(const TS &first,const TV &second)			\
   {									\
-    TV out(init_nel(first));						\
-    for(size_t it=0;it<first.size();it++) out[it]=first OP second[it];	\
+    TV out(init_nel(second));					\
+    for(size_t it=0;it<second.size();it++) out[it]=first OP second[it];	\
     return out;								\
   }									\
   /* self-version of a given operator */				\
