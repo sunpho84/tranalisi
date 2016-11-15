@@ -3,7 +3,13 @@ AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
 
 LDADD=$(top_builddir)/lib/libtran.a
 
-bin_PROGRAMS=main prepare_jackknives
+bin_PROGRAMS= \
+	main \
+	prepare_jackknives \
+	effective_mass
 
 main_SOURCES=main.cpp
+
 prepare_jackknives_SOURCES=prepare_jackknives.cpp
+
+effective_mass_SOURCES=effective_mass.cpp
