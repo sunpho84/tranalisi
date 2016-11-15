@@ -9,7 +9,7 @@
 
 using namespace std;
 
-constexpr double epsilon=numeric_limits<double>::epsilon();
+constexpr double epsilon=2*numeric_limits<double>::epsilon();
 
 template <typename func_t> double get_bracket(func_t fun,double guess)
 {
@@ -83,66 +83,85 @@ template <typename func_t> double Brent_solve(func_t fun,double guess=1)
   double c=a,fc=fa;
   bool mflag=true;
   int iter=0;
-   
-   while(!(fb==0) and (fabs(a-b)>epsilon))
-     {
-       if(fa!=fc and fb!=fc)
-	 //{
-	 //cout<<iter+1<<" Inverse quadratic interpolation"<<endl;
-	 s=a*fb*fc/((fa-fb)*(fa-fc))+
-	   b*fc*fa/((fb-fc)*(fb-fa))+
-	   c*fa*fb/((fc-fa)*(fc-fb));
-       //}
-       else
-	 //{
-	 //cout<<i+1<<" Secant Rule"<<endl;
-	 s=b-fb*(b-a)/(fb-fa);
-       //}
-       
-       double tmp=(3*a+b)/4;
-       double what_to_comp=mflag?fabs(b-c):fabs(c-d);
-       if((!((s>tmp and s<b) or
-	     (s<tmp and s>b))) or
-	  fabs(s-b)>=what_to_comp/2 or
+  
+#ifdef DEBUG
+  cout.precision(16);
+  cout<<"Guess: "<<guess<<", err: "<<err<<endl;
+  cout<<"Fa: "<<fa<<", fb: "<<fb<<endl;
+#endif
+  
+  while(fabs(fb)>epsilon and fabs(a-b)>epsilon)
+    {
+#ifdef DEBUG
+      cout<<fabs(a-b)<<" "<<epsilon<<endl;
+#endif
+      if(fa!=fc and fb!=fc)
+	{
+#ifdef DEBUG
+	  cout<<iter+1<<" Inverse quadratic interpolation"<<endl;
+#endif
+	  s=a*fb*fc/((fa-fb)*(fa-fc))+
+	    b*fc*fa/((fb-fc)*(fb-fa))+
+	    c*fa*fb/((fc-fa)*(fc-fb));
+	}
+      else
+	{
+#ifdef DEBUG
+	  cout<<iter+1<<" Secant Rule"<<endl;
+#endif
+	  s=b-fb*(b-a)/(fb-fa);
+	}
+      
+      double tmp=(3*a+b)/4;
+      double what_to_comp=mflag?fabs(b-c):fabs(c-d);
+      if((!((s>tmp and s<b) or
+	    (s<tmp and s>b))) or
+	 fabs(s-b)>=what_to_comp/2 or
 	  what_to_comp<epsilon)
-	 {
-	   //cout<<iter+1<<" Bisection"<<endl;
-	   s=(a+b)/2;
-	   mflag=1;
-	 }
-       else mflag = 0;
-       
-       double fs=fun(s);
-       d=c;
-       c=b;
-       fc=fb;
-       
-       //replace the point with opposite sign
-       if(same_sign(fb,fs))
-	 {
-	   b=s;
-	   fb=fs;
-	 }
-       else
-	 {
-	   a=s;
-	   fa=fs;
-	 }
-       
-       if(fabs(fa)<fabs(fb))
-	 {
-	   swap(a,b);
-	   swap(fa,fb);
-	 }
-       iter++;
-       
-       if(iter>100000) CRASH("Error");
-       //cout<<s<<endl;
-     }
-   
-   //cout<<"Number of iterations: "<<iter<<endl;
-   
-   return b;
+	{
+#ifdef DEBUG
+	  cout<<iter+1<<" Bisection"<<endl;
+#endif
+	  s=(a+b)/2;
+	  mflag=1;
+	}
+      else mflag = 0;
+      
+      double fs=fun(s);
+      d=c;
+      c=b;
+      fc=fb;
+      
+      //replace the point with opposite sign
+      if(same_sign(fb,fs))
+	{
+	  b=s;
+	  fb=fs;
+	}
+      else
+	{
+	  a=s;
+	  fa=fs;
+	}
+      
+      if(fabs(fa)<fabs(fb))
+	{
+	  swap(a,b);
+	  swap(fa,fb);
+	}
+      iter++;
+      
+      if(iter>100000) CRASH("Error");
+#ifdef DEBUG
+      cout<<a<<" "<<b<<endl;
+#endif
+    }
+  
+#ifdef DEBUG
+  cout<<"Number of iterations: "<<iter<<endl;
+#endif
+  
+  return b;
 }
 
 #endif
