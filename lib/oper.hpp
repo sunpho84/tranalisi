@@ -3,9 +3,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functions.hpp>
 #include <functional>
 #include <iostream>
 #include <macros.hpp>
+#include <solve.hpp>
 #include <tools.hpp>
 #include <type_traits>
 #include <vector>
@@ -150,6 +152,30 @@ template <class T> T subset(const T &v,size_t beg,size_t end)
   if(end>=v.size()) CRASH("Asked to extract up to %zu, beyond the end %zu",end,v.size());
   
   return T(&v[beg],&v[end]);
+}
+
+//! return the effective mass of a pair of points
+double effective_mass(double ct,double ct_p_dt,int t,int TH,double guess=1,int par=1,int dt=1);
+
+//! return the effective mass of a whole vector
+template <class T> T effective_mass(const T &data,int TH=-1,int par=1,int dt=1)
+{
+  //check data size
+  if(data.size()==0) CRASH("Empty data vector");
+  
+  //asume data.size()=T/2+1
+  if(TH<0) TH=data.size()-1;
+  
+  //! output data
+  T out(data.size()-dt);
+  
+  //initial guess is taken from aperiodic effective mass
+  double guess=-log(data[0+dt][0]/data[0][0]);
+  for(size_t t=0;t<data.size()-dt;t++)
+    for(size_t i=0;i<data[0].size();i++)
+      out[t][i]=effective_mass(data[t][i],data[t+dt][i],t,TH,guess,par,dt);
+  
+  return out;
 }
 
 #endif
