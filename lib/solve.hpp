@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <tools.hpp>
 
 #include <iostream>
 
@@ -61,59 +62,180 @@ template <typename func_t> double bisect_solve(func_t fun,double guess=1,double 
 }
 
 //! solve using Brent method
-template <typename func_t> double brent_solve(func_t fun,double guess=1,double err=1e-10)
+template <typename func_t> double brent_solve2(func_t fun,double guess=1,double err=1e-10)
 {
   double x=guess;
   err=get_solve_err(fun,guess,err);
   double a=x-err,b=x+err;
-  double fa=fun(a),fb=fun(b);
-  double s,fs;
-  const double tol=1e-16;
+  a=-4;
+  b=4./3;
+  //double fa=fun(a),fb=fun(b);
   
-  do
+  if(fun(a)*fun(b)>=0) CRASH("Something went wrong");
+  if(fabs(fun(a))<fabs(fun(b)))
     {
-      double c=(a+b)/2;
-      double fc=fun(c);
-      if(fabs(fa-fc)>tol && fabs(fb-fc)>tol)
+      swap(a,b);
+      //swap(fun(a),fun(b));
+    }
+  double c=a;//,fc=fun(a);
+  double d=1e300;
+  double s=0;//,fs=1e300;
+  bool mflag=true;
+  double tol=numeric_limits<double>::epsilon();
+  int iter=0;
+  while(fun(b)!=0 && fun(s)!=0 && b!=a)
+    {
+      if(fun(a)!=fun(c) and fun(b)!=fun(c))
 	{
-	  cout<<"Inverse quadratic interpolation"<<endl;
-	  s=a*fb*fc/((fa-fb)*(fa-fc))+b*fa*fc/((fb-fa)*(fb-fc))+c*fa*fb/((fc-fa)*(fc-fb));
-      }
+	  cout<<iter+1<<" Inverse quadratic interpolation"<<endl;
+	  s=a*fun(b)*fun(c)/((fun(a)-fun(b))*(fun(a)-fun(c)))+
+	    b*fun(c)*fun(a)/((fun(b)-fun(c))*(fun(b)-fun(a)))+
+	    c*fun(a)*fun(b)/((fun(c)-fun(a))*(fun(c)-fun(b)));
+	}
       else
 	{
-	  cout<<"Secant rule"<<endl;
-	  s=b-fb*(b-a)/(fb-fa);
+	  cout<<iter+1<<" Secant method"<<endl;
+	  s=b-fun(b)*(b-a)/(fun(b)-fun(a));
 	}
-      fs=fun(s);
-      if(c>s)
+      
+      double tmp=(3*a+b)*0.25;
+      if(!((tmp<s and s<b) or
+	   (tmp>s and s>b)) or
+	 ( mflag and fabs(s-b)>=fabs(b-c)/2) or
+	 (!mflag and fabs(s-b)>=fabs(c-d)/2) or
+	 ( mflag and fabs(b-c)<tol) or
+	 (!mflag and fabs(c-d)<tol))
 	{
-	  swap(s,c);
-	  swap(fs,fc);
+	  cout<<iter+1<<" Bisection method"<<endl;
+	  s=(a+b)/2;
+	  mflag=true;
 	}
-      if(fc*fs<0)
+      else mflag=false;
+      
+      //fs=fun(s);
+      d=c;
+      c=b;
+      //fc=fb;
+      
+      if(fun(a)*fun(s)<0)
+	{
+	  b=s;
+	  cout<<" changing b to s"<<endl;
+	  //fb=fs;
+	}
+      else
 	{
 	  a=s;
-	  fa=fs;
-	  b=c;
-	  fb=fc;
+	  cout<<" changing a to s"<<endl;
+	  //fa=fs;
 	}
-      else
-	if(fs*fb<0)
-	  {
-	    a=c;
-	    fa=fc;
-	  }
-	else
-	  {
-	    b=s;
-	    fb=fs;
-	  }
       
-      cout<<a<<" "<<s<<" "<<b<<" "<<fs<<" "<<tol<<" "<<(fs<tol)<<" "<<(fabs(b-a)<tol)<<endl;
+      if(fabs(fun(a))<fabs(fun(b)))
+	{
+	  swap(a,b);
+	  cout<<" swapping a,b"<<endl;
+	  //swap(fun(a),fun(b));
+	}
+      
+      iter++;
+      cout<<s<<endl;
     }
-  while(fs>tol||fabs(b-a)>tol);	// Convergence conditions
   
   return s;
+}
+
+//! solve using Brent method
+template <typename func_t> double brent_solve3(func_t fun,double guess=1,double err=1e-10)
+{
+  double x=guess;
+  err=get_solve_err(fun,guess,err);
+  double a=x-err,b=x+err;
+  a=-4;
+  b=4./3;
+  double c = 0;
+   double d = 1e-16;
+   
+   double fa = fun(a);
+   double fb = fun(b);
+   
+   double fc = 0;
+   double s = 0;
+   double fs = 0;
+   
+   // if f(a) f(b) >= 0 then error-exit
+   if (fa * fb >= 0)
+   {
+      if (fa < fb)
+        return a;
+      else
+        return b;
+   }
+   
+   // if |f(a)| < |f(b)| then swap (a,b) end if
+   if (fabs(fa) < fabs(fb))
+   { double tmp = a; a = b; b = tmp; tmp = fa; fa = fb; fb = tmp; }
+   
+   c = a;
+   fc = fa;
+   int mflag = 1;
+   int i = 0;
+   
+   while (!(fb==0) && (fabs(a-b) > 1e-16))
+   {
+      if ((fa != fc) && (fb != fc))
+	{
+	  cout<<i+1<<" Inverse quadratic interpolation"<<endl;
+	  s = a * fb * fc / (fa - fb) / (fa - fc) + b * fa * fc / (fb - fa) /
+	    (fb - fc) + c * fa * fb / (fc - fa) / (fc - fb);
+	}
+      else
+	{
+	  cout<<i+1<<" Secant Rule"<<endl;
+	  s = b - fb * (b - a) / (fb - fa);
+	}
+      
+      double tmp2 = (3 * a + b) / 4;
+      if ((!(((s > tmp2) && (s < b)) || ((s < tmp2) && (s > b)))) ||
+          (mflag && (fabs(s - b) >= (fabs(b - c) / 2))) ||
+          (!mflag && (fabs(s - b) >= (fabs(c - d) / 2))))
+      {
+	cout<<i+1<<" Bisection"<<endl;
+         s = (a + b) / 2;
+         mflag = 1;
+      }
+      else
+      {
+         if ((mflag && (fabs(b - c) < 1e-16)) ||
+             (!mflag && (fabs(c - d) < 1e-16)))
+         {
+	cout<<i+1<<" Bisection"<<endl;
+            s = (a + b) / 2;
+            mflag = 1;
+         }
+         else
+           mflag = 0;
+      }
+      fs = fun(s);
+      d = c;
+      c = b;
+      fc = fb;
+      if (fa * fs < 0) { b = s; fb = fs; }
+      else { a = s; fa = fs; }
+      
+      // if |f(a)| < |f(b)| then swap (a,b) end if
+      if (fabs(fa) < fabs(fb))
+      { double tmp = a; a = b; b = tmp; tmp = fa; fa = fb; fb = tmp; }
+      i++;
+      if (i > 100000)
+      {
+         printf("Error is %f \n", fb);
+         break;
+      }
+      cout<<s<<endl;
+   }
+   
+   printf("Number of iterations : %d\n",i);
+   return b;
 }
 
 #endif
