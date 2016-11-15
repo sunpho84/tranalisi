@@ -85,6 +85,14 @@ public:
   template <class T> auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value>
   {for(auto &it : out) bin_write(it);}
   
+  //! binary read, non-vector case
+  template <class T> auto bin_read(T &out) const -> enable_if_t<is_pod<T>::value>
+  {if(fread(&out,sizeof(T),1,file)!=1) CRASH("Reading from file");}
+  
+  //! specialization for vector
+  template <class T> auto bin_read(T &out) const -> enable_if_t<is_vector<T>::value>
+  {for(auto &it : out) bin_read(it);}
+  
   //! check that the token is found
   void expect(const char *tok)
   {

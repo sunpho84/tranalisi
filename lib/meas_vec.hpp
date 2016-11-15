@@ -2,15 +2,16 @@
 #define _MEAS_VEC_HPP
 
 #include <boot.hpp>
+#include <file.hpp>
 #include <tools.hpp>
 
 //! type defining a vector of measures
 template <class meas_t> class vmeas_t : public vector<meas_t>
 {
+public:
   //! bind the base type of meas_t
   using base_type=typename meas_t::base_type;
   
-public:
   //! constructor specifying nel only (avoid copy constructor)
   explicit vmeas_t(size_t nel=0) : vector<meas_t>(nel) {}
   
@@ -63,6 +64,18 @@ public:
   void bin_write(const string &path)
   {bin_write(path.c_str());}
   
+  //! read to a stream
+  void bin_read(const raw_file_t &out)
+  {out.bin_read(*this);}
+  
+  //! wrapper with name
+  void bin_read(const char *path)
+  {bin_read(raw_file_t(path,"w"));}
+  
+  //! wrapper with name
+  void bin_read(const string &path)
+  {bin_read(path.c_str());}
+  
   //! assign from a scalar
   vmeas_t& operator=(const meas_t &oth) {for(auto &it : *this) it=oth;return *this;}
 };
@@ -70,6 +83,38 @@ public:
 //! typically we use double
 using djvec_t=vmeas_t<jack_t<double>>;
 using dbvec_t=vmeas_t<boot_t<double>>;
+
+//! read a binary from file
+template <class T> T read_vec_meas(raw_file_t &file,size_t nel,size_t ind=0)
+{
+  T out(nel);
+  file.set_pos(ind*sizeof(typename T::base_type)*out[0].size()*nel);
+  out.bin_read(file);
+  return out;
+}
+
+//! read a binary from the path
+template <class T> T read_vec_meas(string path,size_t nel,size_t ind=0)
+{
+  raw_file_t file(path,"r");
+  return read_vec_meas<T>(file,nel,ind);
+}
+
+//! read a djvec from path
+inline djvec_t read_djvec(string path,size_t nel,size_t ind=0)
+{return read_vec_meas<djvec_t>(path,nel,ind);}
+
+//! read a dbvec from path
+inline dbvec_t read_dbvec(string path,size_t nel,size_t ind=0)
+{return read_vec_meas<dbvec_t>(path,nel,ind);}
+
+//! read a djvec from path
+inline djvec_t read_djvec(raw_file_t &file,size_t nel,size_t ind=0)
+{return read_vec_meas<djvec_t>(file,nel,ind);}
+
+//! read a dbvec from path
+inline dbvec_t read_dbvec(raw_file_t &file,size_t nel,size_t ind=0)
+{return read_vec_meas<dbvec_t>(file,nel,ind);}
 
 //! initialize from a jvec
 template <class T> vmeas_t<boot_t<T>> bvec_from_jvec(const boot_init_t &iboot_ind,const vmeas_t<jack_t<T>> &jvec)
