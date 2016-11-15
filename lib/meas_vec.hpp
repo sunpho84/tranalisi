@@ -78,6 +78,21 @@ public:
   
   //! assign from a scalar
   vmeas_t& operator=(const meas_t &oth) {for(auto &it : *this) it=oth;return *this;}
+  
+  //! return the averaged
+  vmeas_t symmetrized(int par)
+  {
+    if(abs(par)!=1) CRASH("Unknown parity %d",par);
+    
+    if(this->size()%2) CRASH("Size %zu odd",this->size());
+    
+    vmeas_t out((*this)[0],(*this)[this->size()/2+1]);
+    
+    for(size_t i=0;i<this->size()+1;i++)
+      out[i]=(out[i]+par*(*this)[(this->size()-i)%this->size()])/2;
+    
+    return out;
+  }
 };
 
 //! typically we use double
