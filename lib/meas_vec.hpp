@@ -70,7 +70,7 @@ public:
   
   //! wrapper with name
   void bin_read(const char *path)
-  {bin_read(raw_file_t(path,"w"));}
+  {bin_read(raw_file_t(path,"r"));}
   
   //! wrapper with name
   void bin_read(const string &path)
