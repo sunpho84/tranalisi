@@ -106,7 +106,7 @@ public:
     signal(SIGABRT,signal_handler);
     
     //print info
-    cout<<"Git hash: "<<GIT_HASH<<", last commit log: \""<<GIT_LOG<<"\""<<endl;
+    cout<<"Git hash: "<<GIT_HASH<<", last commit on: "<<GIT_TIME<<", message: \""<<GIT_LOG<<"\""<<endl;
     cout<<"Configured on "<<CONFIG_TIME<<endl;
     cout<<"Configured with flags: "<<CONFIG_FLAGS<<endl;
     cout<<"Compiled at "<<__TIME__<<" of "<<__DATE__<<endl;
