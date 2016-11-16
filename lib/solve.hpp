@@ -57,7 +57,7 @@ template <typename func_t> double Brent_solve(func_t fun,double a,double b)
   
 #ifdef DEBUG
   cout.precision(16);
-  cout<<"Fa: "<<fa<<", fb: "<<fb<<endl;
+  cout<<"Fa: "<<fa<<", Fb: "<<fb<<endl;
 #endif
   
   while(fabs(fa)>epsilon and fabs(a-b)>epsilon*(fabs(a)+fabs(b)))
@@ -121,7 +121,7 @@ template <typename func_t> double Brent_solve(func_t fun,double a,double b)
       
       if(iter>100000) CRASH("Error");
 #ifdef DEBUG
-      cout<<a<<" "<<b<<endl;
+      cout<<" current interval: ["<<a<<", "<<b<<"], values: "<<fa<<", "<<fb<<endl;
 #endif
     }
   
