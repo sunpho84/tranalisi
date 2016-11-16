@@ -75,6 +75,16 @@ public:
   }
 };
 
+//! convert crashing if not working
+inline int to_int(string s)
+{
+  int out=0;
+  try{out=stoi(s);}
+  catch(exception &e){CRASH("Exception %s while converting to int string \"%s\"",e.what(),s.c_str());}
+  
+  return out;
+}
+
 DEFINE_HAS_METHOD(size);
 #define is_vector has_method_size
 
