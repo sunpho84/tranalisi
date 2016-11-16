@@ -181,7 +181,12 @@ template <class T> T effective_mass(const T &data,int TH=-1,int par=1,int dt=1)
   double guess=-log(data[0+dt][0]/data[0][0]);
   for(size_t t=0;t<data.size()-dt;t++)
     for(size_t i=0;i<data[0].size();i++)
-      out[t][i]=effective_mass(data[t][i],data[t+dt][i],t,TH,guess,par,dt);
+      {
+#ifdef DEBUG
+	cout<<"==================== t="<<t<<" iel="<<i<<" ====================="<<endl;
+#endif
+	guess=out[t][i]=effective_mass(data[t][i],data[t+dt][i],t,TH,guess,par,dt);
+      }
   
   return out;
 }
