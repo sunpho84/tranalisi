@@ -26,7 +26,7 @@ CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS"
 #default number of bootstrap
 AC_ARG_ENABLE(def_nboots,
         AS_HELP_STRING([--enable-def-nboots=n],[Set default number bootstap sample [Default: 100]]),
-        de_nboots="${enableval}",
+        def_nboots="${enableval}",
         def_nboots=100)
 if ! printf "%f" "$def_nboots" >/dev/null 2>&1; then AC_MSG_ERROR([String $def_nboots is not a number]); fi
 AC_MSG_RESULT([enabling number of default bootstrap samples... $def_nboots])
@@ -48,6 +48,18 @@ AC_MSG_RESULT([Enable mean type... ${enable_mean}])
 
 #search Minuit2
 AC_CHECK_HEADERS([Minuit2/MinimumBuilder.h],[],AC_MSG_ERROR(["Unable to find headers of Minuit2! Install it using the script config/install_minuit2.sh"]))
+
+#activate debug or not bootstrap
+AC_ARG_ENABLE(debug,
+        AS_HELP_STRING([--enable-debug=yes[,no]],[Enable debug]),
+        debug="${enableval}",
+        debug=no)
+case "$debug" in
+     no) ;;
+     yes) AC_DEFINE_UNQUOTED([DEBUG],$debug,[Enable debug mode]);;
+     *) AC_MSG_ERROR(["Unkwnown debug method $debug"])
+esac
+AC_MSG_RESULT([Enabling debug... $debug])
 
 AC_CONFIG_FILES(Makefile bin/Makefile lib/Makefile)
 AC_OUTPUT
