@@ -7,7 +7,8 @@ bin_PROGRAMS= \
 	djvec_load \
 	effective_mass \
 	main \
-	prepare_jackknives
+	prepare_jackknives \
+	Kl2_IB
 
 djvec_load_SOURCES=djvec_load.cpp
 
@@ -16,3 +17,6 @@ effective_mass_SOURCES=effective_mass.cpp
 main_SOURCES=main.cpp
 
 prepare_jackknives_SOURCES=prepare_jackknives.cpp
+
+Kl2_IB_SOURCES=Kl2_IB.cpp
+
