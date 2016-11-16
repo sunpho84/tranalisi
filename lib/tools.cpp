@@ -107,7 +107,8 @@ public:
     
     //print info
     cout<<"Tranalisi - Version: "<<GIT_HASH<<endl;
-    cout<<"Configured at "<<CONFIG_TIME<<" with flags: "<<CONFIG_FLAGS<<endl;
+    cout<<"Configured on "<<CONFIG_TIME<<endl;
+    cout<<" with flags: "<<CONFIG_FLAGS<<endl;
     cout<<"Compiled at "<<__TIME__<<" of "<<__DATE__<<endl;
   }
 };

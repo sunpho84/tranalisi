@@ -6,9 +6,9 @@ AC_DEFINE_UNQUOTED([CONFIG_FLAGS],["$config_flags"],[Flags passed to configure])
 
 #get configuration time
 AC_MSG_CHECKING([configuration date and time])
-CONFIG_DATE=`date`
+CONFIG_TIME=`date`
 AC_DEFINE_UNQUOTED([CONFIG_TIME], "$CONFIG_TIME", [time when configured])
-AC_MSG_RESULT([$CONFIG_DATE])
+AC_MSG_RESULT([$CONFIG_TIME])
 
 AC_CONFIG_SRCDIR([lib])
 AC_CONFIG_AUX_DIR([config])
