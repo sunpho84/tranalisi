@@ -27,17 +27,29 @@ void print_backtrace_list()
   free(strs);
 }
 
-void internal_crash(int line,const char *file,const char *temp,...)
+void internal_crash(int line,const char *file,const char *format,...)
 {
   char buffer[1024];
   va_list args;
   
-  va_start(args,temp);
-  vsprintf(buffer,temp,args);
+  va_start(args,format);
+  vsprintf(buffer,format,args);
   va_end(args);
   
   cerr<<"ERROR at line "<<line<<" of file "<<file<<": "<<buffer<<endl;
   print_backtrace_list();
+  exit(1);
+}
+
+void close_with_mess(const char *format,...)
+{
+  va_list args;
+  
+  va_start(args,format);
+  vprintf(format,args);
+  va_end(args);
+  printf("\n");
+  
   exit(1);
 }
 
@@ -106,12 +118,14 @@ public:
     signal(SIGABRT,signal_handler);
     
     //print info
+    cout<<endl;
     cout<<"Git hash: "<<GIT_HASH<<endl;
     cout<<"Last commit on: "<<GIT_TIME<<endl;
     cout<<"Commit message: \""<<GIT_LOG<<"\""<<endl;
     cout<<"Configured on "<<CONFIG_TIME<<endl;
     cout<<"Configured with flags: "<<CONFIG_FLAGS<<endl;
     cout<<"Compiled at "<<__TIME__<<" of "<<__DATE__<<endl;
+    cout<<endl;
   }
 };
 

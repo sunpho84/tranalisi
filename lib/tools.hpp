@@ -46,6 +46,9 @@ void internal_crash(int line,const char *file,const char *temp,...);
 //! combine arguments in a single string
 string combine(const char *format,...);
 
+//! close gently with a message
+void close_with_mess(const char *format,...);
+
 //!check if a file exists
 int file_exists(string path);
 
