@@ -80,4 +80,6 @@ DEFINE_HAS_METHOD(size);
 
 DEFINE_HAS_METHOD(ave_err);
 
+DEFINE_HAS_METHOD(is_printable);
+
 #endif

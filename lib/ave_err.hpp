@@ -36,6 +36,9 @@ public:
   
   //! rebind error
   double &err=second;
+  
+  //! check that is printable
+  bool is_printable() const {return isfinite(ave) and isfinite(err);}
 };
 
 //! compute average and stddev of a vector
