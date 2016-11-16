@@ -68,6 +68,16 @@ int main(int narg,char **arg)
   
   //cout<<dbvec_t(binit,jvec).ave_err()<<endl;
   
+  //auto fun=[](double x){return sin(0.23561634*x+0.36124252);};
+  auto fun=[](double x){return (x+3)*sqr(x-1);};
+  cout.precision(16);
+  cout<<"======================="<<endl;
+  cout<<fun(Brent_solve(fun,-1.5))<<endl;
+
+  index_t<4> ind;
+  ind.set_ranges({0,9,2,3});
+  cout<<ind({0,9,2,3})<<endl;
+  
   //int o=file.read<int>("o");
   //cout<<o<<endl;
   return 0;
