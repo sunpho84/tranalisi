@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <cstdarg>
+#include <git_hash.hpp>
 #include <signal.h>
 #include <sys/stat.h>
 #include <execinfo.h>
@@ -102,6 +103,8 @@ public:
     signal(SIGFPE,signal_handler);
     signal(SIGXCPU,signal_handler);
     signal(SIGABRT,signal_handler);
+    
+    cout<<"Version: "<<GIT_HASH<<endl;
   }
 };
 
