@@ -9,77 +9,47 @@
 
 using namespace std;
 
+//! minimal difference
 constexpr double epsilon=2*numeric_limits<double>::epsilon();
 
-template <typename func_t> double get_bracket(func_t fun,double guess)
-{
-  //enlarge until opposite sign bracketed
-  double err=epsilon;
-  while(fun(guess-err)*fun(guess+err)>=0) err*=2;
-  
-  return err;
-}
-
-//! get the guess with fb[1]>fb[0]
-template <typename func_t> double get_guess(double xb[2],double fb[2],func_t fun,double guess,double err)
-{
-  double x=guess;
-  err=get_bracket(fun,guess);
-  
-  //bisect
-  xb[0]=x-err;
-  xb[1]=x+err;
-  fb[0]=fun(xb[0]);
-  fb[1]=fun(xb[1]);
-  
-  //swap to have fb[1]>0
-  if(fb[1]<fb[0])
-    {
-      swap(fb[0],fb[1]);
-      swap(xb[0],xb[1]);
-    }
-  
-  return x;
-}
+//! crash if the two points do not bracket a zero
+inline void check_not_same_sign(double fa,double fb)
+{if(same_sign(fa,fb)) CRASH("f(a) and f(b) do not have opposite sign: %lg %lg",fa,fb);}
 
 //! solve using bisection
-template <typename func_t> double bisect_solve(func_t fun,double guess=1,double err=1e-10)
+template <typename func_t> double bisect_solve(func_t fun,double a,double b)
 {
-  double xb[2],fb[2];
-  double x=get_guess(xb,fb,fun,guess,err);
+  double fa=fun(a),fb=fun(b);
+  check_not_same_sign(fa,fb);
   
-  do
+  while(fabs(fa)>epsilon and fabs(a-b)>epsilon)
     {
       //compute midpoint
-      x=(xb[0]+xb[1])/2;
+      double x=(a+b)/2;
       double f=fun(x);
-      cout<<xb[1]<<" "<<x<<" "<<xb[0]<<endl;
-      //change into fb[1] if f>0
-      bool w=(f>0);
-      xb[w]=x;
-      fb[w]=f;
+      cout<<a<<" "<<x<<" "<<b<<endl;
+      
+      if(same_sign(fa,f))
+	{
+	  a=x;
+	  fa=f;
+	}
+      else
+	{
+	  b=x;
+	  fb=f;
+	}
     }
-  while(xb[0]!=xb[1] && fb[1]>0 && fb[0]<0);
   
-  return x;
+  return a;
 }
 
 //! solve using Brent method
-template <typename func_t> double Brent_solve(func_t fun,double guess=1)
+template <typename func_t> double Brent_solve(func_t fun,double a,double b)
 {
-  double x=guess,err=get_bracket(fun,guess);
-  double a=x-err,b=x+err,d=epsilon;
   double fa=fun(a),fb=fun(b);
-  double s=0;
-  
-  if(same_sign(fa,fb)) CRASH("f(a) and f(b) do not have opposite sign: %lg %lg",fa,fb);
-  
-  //makes a the larger value
-  if(fabs(fa)<fabs(fb))
-    {
-      swap(a,b);
-      swap(fa,fb);
-    }
+  check_not_same_sign(fa,fb);
+  double d=epsilon,s=0;
   
   double c=a,fc=fa;
   bool mflag=true;
@@ -87,15 +57,11 @@ template <typename func_t> double Brent_solve(func_t fun,double guess=1)
   
 #ifdef DEBUG
   cout.precision(16);
-  cout<<"Guess: "<<guess<<", err: "<<err<<endl;
   cout<<"Fa: "<<fa<<", fb: "<<fb<<endl;
 #endif
   
-  while(fabs(fb)>epsilon and fabs(a-b)>epsilon)
+  while(fabs(fa)>epsilon and fabs(a-b)>epsilon*(fabs(a)+fabs(b)))
     {
-#ifdef DEBUG
-      cout<<fabs(a-b)<<" "<<epsilon<<endl;
-#endif
       if(fa!=fc and fb!=fc)
 	{
 #ifdef DEBUG
