@@ -16,13 +16,17 @@ constexpr double epsilon=2*numeric_limits<double>::epsilon();
 inline void check_not_same_sign(double fa,double fb)
 {if(same_sign(fa,fb)) CRASH("f(a) and f(b) do not have opposite sign: %lg %lg",fa,fb);}
 
+//! check if |a-b|<=|a+b|
+inline bool are_close(double a,double b,double rel_tol)
+{return fabs(a-b)<=rel_tol*(fabs(a+b));}
+
 //! solve using bisection
-template <typename func_t> double bisect_solve(func_t fun,double a,double b)
+template <typename func_t> double bisect_solve(func_t fun,double a,double b,double rel_tol=epsilon*10)
 {
   double fa=fun(a),fb=fun(b);
   check_not_same_sign(fa,fb);
   
-  while(fabs(fa)>epsilon and fabs(a-b)>epsilon)
+  while(fabs(fa)>epsilon and !are_close(a,b,rel_tol))
     {
       //compute midpoint
       double x=(a+b)/2;
@@ -45,7 +49,7 @@ template <typename func_t> double bisect_solve(func_t fun,double a,double b)
 }
 
 //! solve using Brent method
-template <typename func_t> double Brent_solve(func_t fun,double a,double b)
+template <typename func_t> double Brent_solve(func_t fun,double a,double b,double rel_tol=epsilon*10)
 {
   double fa=fun(a),fb=fun(b);
   check_not_same_sign(fa,fb);
@@ -60,9 +64,11 @@ template <typename func_t> double Brent_solve(func_t fun,double a,double b)
   cout<<"Fa: "<<fa<<", Fb: "<<fb<<endl;
 #endif
   
-  while(fabs(fa)>epsilon and fabs(a-b)>epsilon*(fabs(a)+fabs(b)))
+  while(fabs(fa)>epsilon and fabs(fb)>epsilon and !are_close(a,b,rel_tol))
     {
-      if(fa!=fc and fb!=fc)
+      if(same_sign(fa,fb)) CRASH("Something went wrong");
+      
+      if(!are_close(fa,fc,rel_tol) and !are_close(fb,fc,rel_tol))
 	{
 #ifdef DEBUG
 	  cout<<iter+1<<" Inverse quadratic interpolation"<<endl;
