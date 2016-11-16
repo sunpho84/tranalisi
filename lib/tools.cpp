@@ -99,12 +99,16 @@ class initializer_t
 public:
   initializer_t()
   {
+    //associate signals
     signal(SIGSEGV,signal_handler);
     signal(SIGFPE,signal_handler);
     signal(SIGXCPU,signal_handler);
     signal(SIGABRT,signal_handler);
     
-    cout<<"Version: "<<GIT_HASH<<endl;
+    //print info
+    cout<<"Tranalisi - Version: "<<GIT_HASH<<endl;
+    cout<<"Configured at "<<CONFIG_TIME<<" with flags: "<<CONFIG_FLAGS<<endl;
+    cout<<"Compiled at "<<__TIME__<<" of "<<__DATE__<<endl;
   }
 };
 
