@@ -62,7 +62,7 @@ int main(int narg,char **arg)
       for(auto &filter : filters)
 	filter.second(data).bin_write(combine(it.second.c_str(),filter.first.c_str()));
     }
-
+  
   cout<<"Total time: "<<elapsed_time(start)<<endl;
   
   return 0;
