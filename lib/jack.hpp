@@ -42,7 +42,7 @@ public:
   jack_t() : vector<T>(njacks+1) {check_njacks_init();}
   
   //! create with size (only njacks is accepted)
-  jack_t(size_t ext_njacks) : jack_t() {if(njacks!=ext_njacks) CRASH("NJacks %zu different from global value %zu",njacks,ext_njacks);}
+  explicit jack_t(size_t ext_njacks) : jack_t() {if(njacks!=ext_njacks) CRASH("NJacks %zu different from global value %zu",njacks,ext_njacks);}
   
   //! creator from data
   jack_t(const vector<T> &data) : jack_t() {init_from_data(data);}
