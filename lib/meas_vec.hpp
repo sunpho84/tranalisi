@@ -25,10 +25,12 @@ public:
   }
   
   //! move constructor
-  vmeas_t(vmeas_t&& oth) : valarray<meas_t>(forward<valarray<meas_t>>(oth)) {cout<<"vec move const"<<endl;}
+  vmeas_t(vmeas_t&& oth) : valarray<meas_t>(forward<valarray<meas_t>>(oth)) {// cout<<"vec move const"<<endl;
+  }
   
   //! copy constructor
-  vmeas_t(const vmeas_t &oth) : valarray<meas_t>(oth) {cout<<"vec copy const"<<endl;}
+  vmeas_t(const vmeas_t &oth) : valarray<meas_t>(oth) {// cout<<"vec copy const"<<endl;
+  }
   
   //! construct from sliced array
   vmeas_t(slice_array<meas_t> &&slice) : valarray<meas_t>(forward<valarray<meas_t>>(slice)) {}
@@ -47,7 +49,8 @@ public:
   
   //! copy assignement
   vmeas_t &operator=(const vmeas_t &oth)// =default;
-  {valarray<meas_t>::operator=(oth);cout<<"vec copy"<<endl;return *this;}
+  {valarray<meas_t>::operator=(oth);// cout<<"vec copy"<<endl;
+    return *this;}
   
   //! assign from a scalar
   vmeas_t& operator=(const typename base_type::base_type &oth)

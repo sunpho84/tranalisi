@@ -51,10 +51,12 @@ public:
   jack_t(const valarray<T> &data) : jack_t() {init_from_data(data);}
   
   //! move constructor
-  jack_t(jack_t&& oth) : valarray<T>(forward<valarray<T>>(oth)) {cout<<"move const"<<endl;}
+  jack_t(jack_t&& oth) : valarray<T>(forward<valarray<T>>(oth)) {// cout<<"move const"<<endl;
+  }
   
   //! copy constructor
-  jack_t(const jack_t &oth) : valarray<T>(oth) {cout<<"copy const"<<endl;}
+  jack_t(const jack_t &oth) : valarray<T>(oth) {// cout<<"copy const"<<endl;
+  }
   
   //! move assignement
   jack_t &operator=(jack_t &&oth) noexcept =default;
