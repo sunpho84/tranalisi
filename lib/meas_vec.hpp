@@ -10,7 +10,7 @@ template <class meas_t> class vmeas_t : public vector<meas_t>
 {
 public:
   //! bind the base type of meas_t
-  using base_type=typename meas_t::base_type;
+  using base_type=meas_t;
   
   //! constructor specifying nel only (avoid copy constructor)
   explicit vmeas_t(size_t nel=0) : vector<meas_t>(nel) {}
@@ -41,7 +41,7 @@ public:
   {vector<meas_t>::operator=(oth);cout<<"vec copy"<<endl;return *this;}
   
   //! assign from a scalar
-  vmeas_t& operator=(const base_type &oth)
+  vmeas_t& operator=(const typename base_type::base_type &oth)
   {for(auto &it : *this) it=oth;return *this;}
   
   //! compute average and error
