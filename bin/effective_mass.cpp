@@ -40,9 +40,9 @@ int main(int narg,char **arg)
   //put a warning
   if(path_in=="/dev/stdin") cerr<<"Reading from stdin"<<endl;
   
-  //set njacks read
+  //set njacks and read
   set_njacks(ext_njacks);
-  auto data=read_djvec(path_in,T,iel);
+  djvec_t data=read_djvec(path_in,T,iel);
   
   //write average and error
   grace_file_t out(path_out);
