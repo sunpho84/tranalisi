@@ -6,7 +6,7 @@
 using namespace std;
 
 #if __cplusplus<201402L
-template <bool B,class T=void> using enable_if_t=typename enable_if<B,T>::type;
+ template <bool B,class T=void> using enable_if_t=typename enable_if<B,T>::type;
 #endif
 
 #define CRASH(...) internal_crash(__LINE__,__FILE__,__VA_ARGS__)
@@ -17,6 +17,8 @@ template <bool B,class T=void> using enable_if_t=typename enable_if<B,T>::type;
 #define NAME2(s1,s2) CONCAT3(s1,_,s2)
 #define NAME3(s1,s2,s3) NAME2(CONCAT3(s1,_,s2),s3)
 #define NAME4(s1,s2,s3,s4) NAME3(CONCAT3(s1,_,s2),s3,s4)
+
+enum{RE,IM};
 
 //! check if has method
 #define DEFINE_HAS_METHOD(METHOD)					\
