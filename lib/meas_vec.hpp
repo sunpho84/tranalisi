@@ -38,8 +38,8 @@ public:
   //! construct from sliced array
   vmeas_t(gslice_array<meas_t> &&gslice) : valarray<meas_t>(forward<valarray<meas_t>>(gslice)) {}
   
-  //! construct from other type
-  template<class oth_t> vmeas_t(const oth_t &oth) : valarray<meas_t>(oth) {}
+  //! construct from expr
+  template<class _Dom> vmeas_t(const _Expr<_Dom,meas_t> &oth) : valarray<meas_t>(oth) {}
   
   //! move assignement
   vmeas_t &operator=(vmeas_t &&oth) noexcept =default;
@@ -91,11 +91,11 @@ public:
   //! assign from a scalar
   vmeas_t& operator=(const meas_t &oth) {for(auto &it : *this) it=oth;return *this;}
   
-  //return a subset
+  //! return a subset including end
   vmeas_t subset(size_t beg,size_t end)
   {
     if(beg>end||beg>this->size()||beg>this->size()) CRASH("Asked to extract from %zu to %zu a vector of length %zu",beg,end,this->size());
-    return (*this)[slice(beg,end-beg,1)];
+    return (*this)[slice(beg,end-beg+1,1)];
   }
   
   //! return the tail-backked
@@ -105,7 +105,7 @@ public:
     vmeas_t out(s);
     for(size_t it=0;it<s;it++) out[s-1-it]=(*this)[it];
     
-    return s;
+    return out;
   }
   
   //! return the averaged
@@ -118,7 +118,7 @@ public:
     
     if(nel%2) CRASH("Size %zu odd",nel);
     
-    return 0.5*(this->subset(0,nelh)+this->subset(nelh,nel).inverse());
+    return vmeas_t(this->subset(0,nelh)*this->subset(nelh,nel).inverse())*0.5;//*(this->subset(0,nelh)+this->subset(nelh,nel).inverse());
   }
 };
 
