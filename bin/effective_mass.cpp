@@ -49,7 +49,6 @@ int main(int narg,char **arg)
   out.no_line();
   out.set_colors(grace::RED);
   out.set_symbol(grace::SQUARE);
-  out.closed_polygon(grace::GREEN4);
   
   out<<effective_mass(data.symmetrized(par)).ave_err()<<endl;
   
