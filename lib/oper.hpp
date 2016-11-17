@@ -27,34 +27,41 @@ template <class T> const size_t init_nel(const valarray<T> &obj)
 //////////////////////////////////////////////// operations //////////////////////////////////////////////
 
 //! operation between two vectors
-#define DEFINE_BIN_OPERATOR(OP_NAME,SELF_OP_NAME,OP)			\
-  template <class T,class=enable_if_t<is_vector<T>::value>> T OP_NAME(const T &first,const T &second)	\
-  {									\
-    check_match_size(first,second);					\
-    									\
-    T out(init_nel(first));						\
-    for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second[it]; \
-    return out;								\
-  }									\
+// template <class T,class=enable_if_t<is_vector<T>::value>> T OP_NAME(const T &first,const T &second)
+// {
+//   check_match_size(first,second);
+//
+//   T out(init_nel(first));
+//   for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second[it];
+//   return out;
+// }
+
+
+#define DEFINE_BIN_OPERATOR(OP)						\
   /* operation between vector and scalar */				\
-  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&(is_base_of<valarray<TS>,TV>::value||is_arithmetic<TS>::value)>> \
-    TV OP_NAME(const TV &first,const TS &second)			\
+  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&is_arithmetic<TS>::value>> \
+    TV operator OP(const TV &first,const TS &second)			\
   {									\
     TV out(init_nel(first));						\
     for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second;	\
     return out;								\
   }									\
   /* opposite */							\
-  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&(is_base_of<valarray<TS>,TV>::value||is_arithmetic<TS>::value)>> \
-    TV OP_NAME(const TS &first,const TV &second)			\
+  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&is_arithmetic<TS>::value>> \
+    TV operator OP(const TS &first,const TV &second)			\
   {									\
-    TV out(init_nel(second));					\
+    TV out(init_nel(second));						\
     for(size_t it=0;it<second.size();it++) out[it]=first OP second[it];	\
     return out;								\
   }									\
   /* self-version of a given operator */				\
-  template <class T1,class T2> auto SELF_OP_NAME(T1 &first,const T2 &second) -> decltype(first OP second) \
+  template <class T1,class T2> auto operator OP##=(T1 &first,const T2 &second) -> decltype(first OP second) \
   {return first=first OP second;}
+
+DEFINE_BIN_OPERATOR(+)
+DEFINE_BIN_OPERATOR(-)
+DEFINE_BIN_OPERATOR(*)
+DEFINE_BIN_OPERATOR(/)
 
 //! function of a vector
 #define DEFINE_NAMED_FUNCTION(OP_NAME,OP)				\
