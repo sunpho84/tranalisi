@@ -39,7 +39,7 @@ template <class T> const size_t init_nel(const valarray<T> &obj)
 
 #define DEFINE_BIN_OPERATOR(OP)						\
   /* operation between vector and scalar */				\
-  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&is_arithmetic<TS>::value>> \
+  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<typename TV::base_type,TS>::value)>> \
     TV operator OP(const TV &first,const TS &second)			\
   {									\
     TV out(init_nel(first));						\
@@ -47,7 +47,7 @@ template <class T> const size_t init_nel(const valarray<T> &obj)
     return out;								\
   }									\
   /* opposite */							\
-  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&is_arithmetic<TS>::value>> \
+    template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<typename TV::base_type,TS>::value)>> \
     TV operator OP(const TS &first,const TV &second)			\
   {									\
     TV out(init_nel(second));						\
@@ -55,8 +55,9 @@ template <class T> const size_t init_nel(const valarray<T> &obj)
     return out;								\
   }									\
   /* self-version of a given operator */				\
-  template <class T1,class T2> auto operator OP##=(T1 &first,const T2 &second) -> decltype(first OP second) \
-  {return first=first OP second;}
+    template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<typename TV::base_type,TS>::value)>> \
+    auto operator OP##=(TV &first,const TS &second) -> decltype(first OP second) \
+    {return first=first OP second;}
 
 DEFINE_BIN_OPERATOR(+)
 DEFINE_BIN_OPERATOR(-)
