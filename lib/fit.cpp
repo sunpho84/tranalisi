@@ -4,5 +4,3 @@
 
 #include <fit.hpp>
 
-void set_printlevel()
-{ROOT::Math::MinimizerOptions::SetDefaultPrintLevel(3);}
