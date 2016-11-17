@@ -65,6 +65,38 @@ public:
     set_line_color(fill_col);
     set_line_style(grace::STRAIGHT_LINE);
   }
+  
+  //! write a polygon
+  template <class fun_t> void write_polygon(fun_t fun,double xmin,double xmax,size_t npoints,int col=grace::BLACK)
+  {
+    if(npoints==0) CRASH("NPoints must be different from 0");
+    //! x coordinate
+    vector<double> x(npoints);
+    //! y coordinate
+    vec_ave_err_t y(npoints);
+    
+    //! interval between points
+    double dx=(xmax-xmin)/(npoints-1);
+    //set x and y
+    for(size_t ipoint=0;ipoint<npoints;ipoint++)
+      {
+	x[ipoint]=xmin+dx*ipoint;
+	y[ipoint]=fun(x[ipoint]).ave_err();
+      }
+    
+    //mark a closed polygon
+    this->closed_polygon(col);
+    //write forward and backward
+    for(size_t ipoint=0;ipoint<npoints;ipoint++)         (*this)<<x[ipoint]<<" "<<y[ipoint].ave_minus_err()<<endl;
+    for(size_t ipoint=npoints-1;ipoint<npoints;ipoint--) (*this)<<x[ipoint]<<" "<<y[ipoint].ave_plus_err()<<endl;
+    
+    //create a new set
+    this->new_set();
+  }
+  
+  //! write a constant band
+  template <class T> void write_constant_band(int xmin,int xmax,const T &c,int col=grace::BLACK)
+  {this->write_polygon([&c](double x) -> T {return c;},xmin,xmax,2,col);}
 };
 
 //! write a vector of average and error
