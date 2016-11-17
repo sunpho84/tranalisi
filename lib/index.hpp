@@ -27,9 +27,7 @@ public:
     size_t out=0;
     for(size_t i=0;i<rank;i++)
       {
-#ifdef DEBUG
 	if((*this)[i]<=oth.begin()[i]) CRASH("Calling rank %zu with value %zu greater or equal to max %zu",i,oth.begin()[i],(*this)[i]);
-#endif
 	out=out*(*this)[i]+oth.begin()[i];
       }
     return out;
