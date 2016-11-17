@@ -62,8 +62,8 @@ public:
   //! copy assignement
   jack_t &operator=(const jack_t &oth) =default;
   
-  //! assignement expr
-  template<class op> jack_t &operator=(const _Expr<op,T> &oth) {valarray<T>::operator=(oth);return *this;}
+  //! assignement
+  template<class oth_t> jack_t &operator=(const oth_t &oth) {valarray<T>::operator=(oth);return *this;}
   
   //! compute average and error
   ave_err_t ave_err() const
