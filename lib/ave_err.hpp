@@ -37,6 +37,12 @@ public:
   //! rebind error
   double &err=second;
   
+  //! return average-error
+  double ave_minus_err(){return ave-err;}
+  
+  //! return average+error
+  double ave_plus_err(){return ave+err;}
+  
   //! check that is printable
   bool is_printable() const {return isfinite(ave) and isfinite(err);}
 };
