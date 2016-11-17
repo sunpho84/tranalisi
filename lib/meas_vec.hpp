@@ -36,8 +36,8 @@ public:
   //! construct from sliced array
   vmeas_t(gslice_array<meas_t> &&gslice) : valarray<meas_t>(forward<valarray<meas_t>>(gslice)) {}
   
-  //! construct from expr
-  template<class op> vmeas_t(const _Expr<op,meas_t> &oth) : valarray<meas_t>(oth) {}
+  //! construct from other type
+  template<class oth_t> vmeas_t(const oth_t &oth) : valarray<meas_t>(oth) {}
   
   //! move assignement
   vmeas_t &operator=(vmeas_t &&oth) noexcept =default;
