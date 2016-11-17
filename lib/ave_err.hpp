@@ -5,6 +5,7 @@
 #include <fstream>
 #include <math.hpp>
 #include <oper.hpp>
+#include <valarray>
 #include <vector>
 
 using namespace std;
@@ -48,7 +49,7 @@ public:
 };
 
 //! compute average and stddev of a vector
-template <class T> ave_err_t range_ave_stddev(const vector<T> &v,size_t size)
+template <class T> ave_err_t range_ave_stddev(const valarray<T> &v,size_t size)
 {
   ave_err_t ae;
   

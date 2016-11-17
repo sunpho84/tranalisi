@@ -6,14 +6,14 @@
 #include <tools.hpp>
 
 //! type defining a vector of measures
-template <class meas_t> class vmeas_t : public vector<meas_t>
+template <class meas_t> class vmeas_t : public valarray<meas_t>
 {
 public:
   //! bind the base type of meas_t
   using base_type=meas_t;
   
   //! constructor specifying nel only (avoid copy constructor)
-  explicit vmeas_t(size_t nel=0) : vector<meas_t>(nel) {}
+  explicit vmeas_t(size_t nel=0) : valarray<meas_t>(nel) {}
   
   //! init from vector of vector
   vmeas_t(const vector<vector<base_type>> &o) : vmeas_t(o.size())
@@ -25,20 +25,29 @@ public:
   }
   
   //! move constructor
-  vmeas_t(vmeas_t&& oth) : vector<meas_t>(forward<vector<meas_t>>(oth)) {cout<<"vec move const"<<endl;}
+  vmeas_t(vmeas_t&& oth) : valarray<meas_t>(forward<valarray<meas_t>>(oth)) {cout<<"vec move const"<<endl;}
   
   //! copy constructor
-  vmeas_t(const vmeas_t &oth) : vector<meas_t>(oth) {cout<<"vec copy const"<<endl;}
+  vmeas_t(const vmeas_t &oth) : valarray<meas_t>(oth) {cout<<"vec copy const"<<endl;}
   
-  //! range constructor
-  template <class InputIterator> vmeas_t(InputIterator first,InputIterator last,enable_if_t<!is_integral<InputIterator>::value>* =0) : vector<meas_t>(first,last) {}
+  //! construct from sliced array
+  vmeas_t(slice_array<meas_t> &&slice) : valarray<meas_t>(forward<valarray<meas_t>>(slice)) {}
+  
+  //! construct from sliced array
+  vmeas_t(gslice_array<meas_t> &&gslice) : valarray<meas_t>(forward<valarray<meas_t>>(gslice)) {}
+  
+  //! construct from expr
+  template<class op> vmeas_t(const _Expr<op,meas_t> &oth) : valarray<meas_t>(oth) {}
   
   //! move assignement
-  vmeas_t &operator=(vmeas_t &&oth)=default;
+  vmeas_t &operator=(vmeas_t &&oth) noexcept =default;
+  
+  //! expression assignement
+  //template<class op> vmeas_t &operator=(const _Expr<op,meas_t> &oth) {*this=oth;}
   
   //! copy assignement
   vmeas_t &operator=(const vmeas_t &oth)// =default;
-  {vector<meas_t>::operator=(oth);cout<<"vec copy"<<endl;return *this;}
+  {valarray<meas_t>::operator=(oth);cout<<"vec copy"<<endl;return *this;}
   
   //! assign from a scalar
   vmeas_t& operator=(const typename base_type::base_type &oth)
@@ -90,11 +99,11 @@ public:
     if(nel%2) CRASH("Size %zu odd",nel);
     
     //! prepare output copying the first half+1
-    vmeas_t out(&((*this)[0]),&((*this)[nelh+1]));
+    vmeas_t out((*this)[slice(0,nelh,1)]);
     
     //sum the mirror
     for(size_t iel=1;iel<nelh;iel++)
-      out[iel]=(out[iel]+par*((*this)[nel-iel]))/2;
+      out[iel]=0.5*(out[iel]+(double)par*((*this)[nel-iel]));
     
     return out;
   }

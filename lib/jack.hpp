@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <tools.hpp>
-#include <vector>
+#include <valarray>
 
 #ifndef EXTERN_JACK
  #define EXTERN_JACK extern
@@ -32,20 +32,38 @@ inline void set_njacks(int ext_njacks)
 inline void check_njacks_init()
 {if(njacks==UNDEF_NJACKS) CRASH("Set njacks before");}
 
-template <class T> class jack_t : public vector<T>
+template <class T> class jack_t : public valarray<T>
 {
 public:
   //! base type of the jack
   typedef T base_type;
   
   //! creator
-  jack_t() : vector<T>(njacks+1) {check_njacks_init();}
+  jack_t() : valarray<T>(njacks+1) {check_njacks_init();}
   
   //! create with size (only njacks is accepted)
   explicit jack_t(size_t ext_njacks) : jack_t() {if(njacks!=ext_njacks) CRASH("NJacks %zu different from global value %zu",njacks,ext_njacks);}
   
+  //! create from sliced array
+  jack_t(const slice_array<jack_t> &slice) : valarray<T>(slice) {}
+  
   //! creator from data
-  jack_t(const vector<T> &data) : jack_t() {init_from_data(data);}
+  jack_t(const valarray<T> &data) : jack_t() {init_from_data(data);}
+  
+  //! move constructor
+  jack_t(jack_t&& oth) : valarray<T>(forward<valarray<T>>(oth)) {cout<<"move const"<<endl;}
+  
+  //! copy constructor
+  jack_t(const jack_t &oth) : valarray<T>(oth) {cout<<"copy const"<<endl;}
+  
+  //! move assignement
+  jack_t &operator=(jack_t &&oth) noexcept =default;
+  
+  //! copy assignement
+  jack_t &operator=(const jack_t &oth) =default;
+  
+  //! assignement expr
+  template<class op> jack_t &operator=(const _Expr<op,T> &oth) {valarray<T>::operator=(oth);return *this;}
   
   //! compute average and error
   ave_err_t ave_err() const
@@ -70,7 +88,7 @@ public:
   double err() const {return ave_err().err;}
   
   //! fill the clusters
-  size_t fill_clusters(const vector<T> &data)
+  size_t fill_clusters(const valarray<T> &data)
   {
     //compute cluster size
     size_t clust_size=data.size()/njacks;
@@ -93,7 +111,7 @@ public:
   }
   
   //! initialize from vector of double, so to create jackknives
-  void init_from_data(const vector<T> &data)
+  void init_from_data(const valarray<T> &data)
   {
     check_njacks_init();
     clusterize(fill_clusters(data));

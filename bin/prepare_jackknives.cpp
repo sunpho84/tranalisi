@@ -42,13 +42,13 @@ int main(int narg,char **arg)
   
   //! list of filters to be made
   size_t nfilters=input.read<size_t>("NFilters");
-  map<string,filter_t> filters;
+  map<string,pair<size_t,size_t>> filters;
   for(size_t ifilter=0;ifilter<nfilters;ifilter++)
     {
       string name=input.read<string>("Filter");
       size_t each=input.read<size_t>("each");
       size_t offset=input.read<size_t>("offset");
-      filters[name]=filter_t(each*T*ncols,offset*T*ncols,T*ncols);
+      filters[name]=make_pair(offset,each);
     }
   
   //loop on files
@@ -60,7 +60,15 @@ int main(int narg,char **arg)
       
       //loop on filters
       for(auto &filter : filters)
-	filter.second(data).bin_write(combine(it.second.c_str(),filter.first.c_str()));
+	{
+	  size_t base_nel=T*ncols;
+	  size_t offset=filter.second.first;
+	  size_t each=filter.second.second;
+	  size_t hw=data.size()/(base_nel*each);
+
+	  vec_filter(data,gslice(base_nel*offset,{hw,T*ncols},{each*T*ncols,1})).bin_write(combine(it.second.c_str(),filter.first.c_str()));
+	  //((djvec_t)data[gslice(base_nel*offset,{hw,T*ncols},{each*T*ncols,1})]).bin_write(combine(it.second.c_str(),filter.first.c_str()));
+	}
     }
   
   cout<<"Total time: "<<elapsed_time(start)<<endl;

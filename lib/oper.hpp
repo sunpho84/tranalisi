@@ -10,6 +10,7 @@
 #include <solve.hpp>
 #include <tools.hpp>
 #include <type_traits>
+#include <valarray>
 #include <vector>
 
 using namespace std;
@@ -55,11 +56,6 @@ template <class T> const size_t init_nel(const vector<T> &obj)
   template <class T1,class T2> auto SELF_OP_NAME(T1 &first,const T2 &second) -> decltype(first OP second) \
   {return first=first OP second;}
 
-DEFINE_BIN_OPERATOR(operator+,operator+=,+)
-DEFINE_BIN_OPERATOR(operator-,operator-=,-)
-DEFINE_BIN_OPERATOR(operator*,operator*=,*)
-DEFINE_BIN_OPERATOR(operator/,operator/=,/)
-
 //! function of a vector
 #define DEFINE_NAMED_FUNCTION(OP_NAME,OP)				\
   template <class T,class ...Args,class=enable_if<is_vector<T>::value>> T OP_NAME(const T &first,Args... args) \
@@ -70,18 +66,18 @@ DEFINE_BIN_OPERATOR(operator/,operator/=,/)
   }
 #define DEFINE_FUNCTION(OP_NAME) DEFINE_NAMED_FUNCTION(OP_NAME,OP_NAME)
 
-DEFINE_NAMED_FUNCTION(operator-,uminus)
-DEFINE_FUNCTION(cos)
-DEFINE_FUNCTION(cosh)
-DEFINE_FUNCTION(exp)
-DEFINE_FUNCTION(log)
-DEFINE_FUNCTION(pow)
-DEFINE_FUNCTION(sin)
-DEFINE_FUNCTION(sinh)
-DEFINE_FUNCTION(sqr)
-DEFINE_FUNCTION(sqrt)
-DEFINE_FUNCTION(tan)
-DEFINE_FUNCTION(tanh)
+// DEFINE_NAMED_FUNCTION(operator-,uminus)
+// DEFINE_FUNCTION(cos)
+// DEFINE_FUNCTION(cosh)
+// DEFINE_FUNCTION(exp)
+// DEFINE_FUNCTION(log)
+// DEFINE_FUNCTION(pow)
+// DEFINE_FUNCTION(sin)
+// DEFINE_FUNCTION(sinh)
+// DEFINE_FUNCTION(sqr)
+// DEFINE_FUNCTION(sqrt)
+// DEFINE_FUNCTION(tan)
+// DEFINE_FUNCTION(tanh)
 
 //! check that the object is printable
 template <class T> enable_if_t<!has_method_is_printable<T>::value,bool> is_printable(const T &o)
@@ -112,38 +108,6 @@ template <class T> vector<vector<T>> transpose(const vector<vector<T>> &in)
   
   return out;
 }
-
-//! hold a triplet to set a filter
-class filter_t
-{
-public:
-  size_t each;
-  size_t offset;
-  size_t how_many;
-  
-  //! init from three pars
-  filter_t(size_t each,size_t offset=0,size_t how_many=1) : each(each),offset(offset),how_many(how_many) {}
-  
-  //! default constructor
-  filter_t()=default;
-  
-  //! filter vector
-  template <class T> T operator()(const T &v)
-  {
-    auto start=take_time();
-    cout<<"Start filtering"<<endl;
-    
-    T out;
-    for(size_t it=offset;it<v.size();it+=each)
-      if(it+how_many<v.size()) //check that we store a whole bunch
-	for(size_t sh=0;sh<how_many;sh++)
-	  out.push_back(v[it+sh]);
-    
-    cout<<elapsed_time(start)<<" to filter data"<<endl;
-    
-    return out;
-  }
-};
 
 //! take the forward derivative
 template <class T> T forward_derivative(const T &v)
@@ -190,5 +154,9 @@ template <class T> T effective_mass(const T &data,int TH=-1,int par=1,int dt=1)
   
   return out;
 }
+
+//! filter a valarray
+template <class T,class=enable_if_t<has_method_size<T>::value>> T vec_filter(const T &v,const gslice &slice)
+{return (T)(v[slice]);}
 
 #endif

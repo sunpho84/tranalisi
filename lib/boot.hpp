@@ -73,7 +73,7 @@ public:
 //////////////////////////////////////////////////////////////// boot_t /////////////////////////////////////////////////////
 
 //! type defining boot
-template <class T> class boot_t : public vector<T>
+template <class T> class boot_t : public valarray<T>
 {
 public:
   //! base type of the jack
@@ -83,7 +83,7 @@ public:
   size_t nboots() const {return this->size()-1;}
   
   //! constrcutor specifying nboots
-  explicit boot_t(size_t nboots) : vector<T>(nboots+1,0) {}
+  explicit boot_t(size_t nboots) : valarray<T>(nboots+1,0) {}
   
   //! constrcutor specifying gauss_filler
   explicit boot_t(const gauss_filler_t &gf) : boot_t() {fill_gauss(gf);}
@@ -98,17 +98,17 @@ public:
   boot_t() : boot_t(def_nboots) {}
   
   //! move constructor
-  boot_t(boot_t&& oth) : vector<T>(forward<vector<T>>(oth)) {cout<<"move const"<<endl;}
+  boot_t(boot_t&& oth) : valarray<T>(forward<valarray<T>>(oth)) {cout<<"move const"<<endl;}
   
   //! copy constructor
-  boot_t(const boot_t &oth) : vector<T>(oth) {cout<<"copy const"<<endl;}
+  boot_t(const boot_t &oth) : valarray<T>(oth) {cout<<"copy const"<<endl;}
   
   //! move assignement
   boot_t &operator=(boot_t &&oth)=default;
   
   //! copy assignement
   boot_t &operator=(const boot_t &oth)// =default;
-  {vector<T>::operator=(oth);cout<<"copy"<<endl;return *this;}
+  {valarray<T>::operator=(oth);cout<<"copy"<<endl;return *this;}
   
   //! assign from a scalar
   boot_t& operator=(const T &oth) {for(auto &it : *this) it=oth;return *this;}
