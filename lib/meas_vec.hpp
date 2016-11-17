@@ -91,6 +91,23 @@ public:
   //! assign from a scalar
   vmeas_t& operator=(const meas_t &oth) {for(auto &it : *this) it=oth;return *this;}
   
+  //return a subset
+  vmeas_t subset(size_t beg,size_t end)
+  {
+    if(beg>end||beg>this->size()||beg>this->size()) CRASH("Asked to extract from %zu to %zu a vector of length %zu",beg,end,this->size());
+    return (*this)[slice(beg,end-beg,1)];
+  }
+  
+  //! return the tail-backked
+  vmeas_t inverse()
+  {
+    size_t s=this->size();
+    vmeas_t out(s);
+    for(size_t it=0;it<s;it++) out[s-1-it]=(*this)[it];
+    
+    return s;
+  }
+  
   //! return the averaged
   vmeas_t symmetrized(int par)
   {
@@ -101,14 +118,7 @@ public:
     
     if(nel%2) CRASH("Size %zu odd",nel);
     
-    //! prepare output copying the first half+1
-    vmeas_t out((*this)[slice(0,nelh,1)]);
-    
-    //sum the mirror
-    for(size_t iel=1;iel<nelh;iel++)
-      out[iel]=0.5*(out[iel]+(double)par*((*this)[nel-iel]));
-    
-    return out;
+    return 0.5*(this->subset(0,nelh)+this->subset(nelh,nel).inverse());
   }
 };
 

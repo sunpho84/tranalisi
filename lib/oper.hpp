@@ -16,12 +16,12 @@
 using namespace std;
 using namespace placeholders;
 
-//! check agreement of sizes of two vectors
-template <class T1,class T2> void check_match_size(const vector<T1> &first,const vector<T2> &second)
+//! check agreement of sizes of two valarrays
+template <class T1,class T2> void check_match_size(const valarray<T1> &first,const valarray<T2> &second)
 {if(first.size()!=second.size()) CRASH("Vectors do not agree in size, %d vs %d",first.size(),second.size());}
 
 //! get the size to init an object, avoiding size() for boot and jack
-template <class T> const size_t init_nel(const vector<T> &obj)
+template <class T> const size_t init_nel(const valarray<T> &obj)
 {return obj.size();}
 
 //////////////////////////////////////////////// operations //////////////////////////////////////////////
@@ -37,7 +37,7 @@ template <class T> const size_t init_nel(const vector<T> &obj)
     return out;								\
   }									\
   /* operation between vector and scalar */				\
-  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>> \
+  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&(is_base_of<valarray<TS>,TV>::value||is_arithmetic<TS>::value)>> \
     TV OP_NAME(const TV &first,const TS &second)			\
   {									\
     TV out(init_nel(first));						\
@@ -45,7 +45,7 @@ template <class T> const size_t init_nel(const vector<T> &obj)
     return out;								\
   }									\
   /* opposite */							\
-  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&(is_base_of<vector<TS>,TV>::value||is_arithmetic<TS>::value)>> \
+  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value&&(is_base_of<valarray<TS>,TV>::value||is_arithmetic<TS>::value)>> \
     TV OP_NAME(const TS &first,const TV &second)			\
   {									\
     TV out(init_nel(second));					\
@@ -120,8 +120,9 @@ template <class T> T forward_derivative(const T &v)
 //! extract a subset of a vector
 template <class T> T subset(const T &v,size_t beg,size_t end)
 {
-  if(beg>=v.size()) CRASH("Asked to extract from %zu, beyond the end %zu",beg,v.size());
-  if(end>=v.size()) CRASH("Asked to extract up to %zu, beyond the end %zu",end,v.size());
+  if(beg>=v.size()) CRASH("Asked to extract from %zu, beyond the physical end %zu",beg,v.size());
+  if(beg>=end) CRASH("Asked to extract from %zu, beyond the end %zu",beg,end);
+  if(end>=v.size()) CRASH("Asked to extract up to %zu, beyond the physical end %zu",end,v.size());
   
   return T(&v[beg],&v[end]);
 }

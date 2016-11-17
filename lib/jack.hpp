@@ -54,6 +54,9 @@ public:
   jack_t(jack_t&& oth) : valarray<T>(forward<valarray<T>>(oth)) {// cout<<"move const"<<endl;
   }
   
+  //! construct from other type
+  template<class oth_t> jack_t(const oth_t &oth) : valarray<T>(oth) {}
+  
   //! copy constructor
   jack_t(const jack_t &oth) : valarray<T>(oth) {// cout<<"copy const"<<endl;
   }
