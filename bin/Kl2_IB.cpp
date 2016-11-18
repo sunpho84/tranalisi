@@ -22,7 +22,7 @@ int main(int narg,char **arg)
   //read
   auto data=read_djvec(path,T,iel);
   //write average and error
-  cout<<effective_mass(data.symmetrized(par)).ave_err()<<endl;
+  cout<<effective_mass(data.symmetrized(par),T/2).ave_err()<<endl;
   
   return 0;
 }
