@@ -55,7 +55,7 @@ public:
   
   //! set symbols
   void set_symbol(int sym){set_prop("symbol "+to_string(sym));}
-  void set_no_symbol(){set_symbol(grace::NO_SYMBOL);}
+  void no_set_symbol(){set_symbol(grace::NO_SYMBOL);}
   
   //! form a closed polygon
   void closed_polygon(int fill_col)
