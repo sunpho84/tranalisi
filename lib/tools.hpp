@@ -58,6 +58,22 @@ int dir_exists(string path);
 //! handle signals
 void signal_handler(int sig);
 
+//! check that a vector is orderd
+template <class T> inline void check_ordered(const initializer_list<T> &vec)
+{
+  auto prev=vec.begin(),cur=prev+1;
+  size_t it=1;
+  do
+    {
+      if(*prev>*cur)
+	CRASH("Element %zu has value %s, greater than element %zu, %s",it-1,to_string(*prev).c_str(),it,to_string(*cur).c_str());
+      prev=cur++;
+      it++;
+    }
+  while(cur!=vec.end());
+  
+}
+
 //! return a range of int
 class range_t : private array<size_t,3>
 {
