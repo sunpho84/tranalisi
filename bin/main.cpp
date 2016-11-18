@@ -11,6 +11,7 @@ using namespace std;
 int main(int narg,char **arg)
 {
   set_njacks(15);
+  
   djvec_t corr=read_djvec("corr00_P5P5",48,0).symmetrized(1);
   djvec_t effm=effective_mass(corr);
   
