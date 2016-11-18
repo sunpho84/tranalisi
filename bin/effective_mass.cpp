@@ -50,7 +50,7 @@ int main(int narg,char **arg)
   out.set_colors(grace::RED);
   out.set_symbol(grace::SQUARE);
   
-  out<<effective_mass(data.symmetrized(par)).ave_err()<<endl;
+  out<<effective_mass(data.symmetrized(par),T/2).ave_err()<<endl;
   
   return 0;
 }
