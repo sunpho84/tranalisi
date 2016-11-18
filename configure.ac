@@ -58,6 +58,15 @@ AC_MSG_RESULT([Enable mean type... ${enable_mean}])
 
 #search Minuit2
 AC_CHECK_HEADERS([Minuit2/MinimumBuilder.h],[],AC_MSG_ERROR(["Unable to find headers of Minuit2! Install it using the script config/install_minuit2.sh"]))
+AC_LANG(C++)
+SAVED_LDFLAGS=$LDFLAGS
+LDFLAGS="$LDFLAGS -lMinuit2 -fopenmp"
+AC_LINK_IFELSE(
+  [AC_LANG_PROGRAM([#include <Minuit2/MnUserParameters.h>], 
+    [ROOT::Minuit2::MnUserParameters pars])],
+  [TEST_LIBS="$TEST_LIBS -lMinuit2"] [HAVE_LIBMINUIT2=1], 
+  [AC_MSG_ERROR([libMinuit2 is not installed.])])
+LDFLAGS=$SAVED_LDFLAGS -lMinuit2
 
 #activate debug or not bootstrap
 AC_ARG_ENABLE(debug,
