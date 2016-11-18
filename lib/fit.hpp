@@ -82,14 +82,6 @@ template <class TV,class T=typename TV::base_type> void two_pts_fit(T &M,T &Z,co
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//! return a filled vector of double ranging from 0 to max
-vector<double> double_vector_to(size_t max)
-{
-  vector<double> x(max);
-  for(size_t it=0;it<max;it++) x[it]=it;
-  return x;
-}
-
 //! perform a simple fit using x, a function and data
 template <class TV,class TS=typename TV::base_type>
 class simple_ch2_t : public FCNBase
@@ -147,7 +139,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &
   two_pts_fit(M, Z, corr, tmin, tmax, TH);
   
   //! fit a two point function
-  simple_ch2_t<TV> two_pts_fit_obj(double_vector_upto(corr.size()),tmin,tmax,corr,[TH,par](const vector<double> &p,double x)
+  simple_ch2_t<TV> two_pts_fit_obj(vector_up_to<double>(corr.size()),tmin,tmax,corr,[TH,par](const vector<double> &p,double x)
 				    {return twopts_corr_fun(p[0],p[1],TH,x,par);});
   
   //parameters to fit

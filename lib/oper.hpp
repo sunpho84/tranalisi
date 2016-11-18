@@ -128,10 +128,7 @@ template <class T> T forward_derivative(const T &v)
 //! extract a subset of a vector
 template <class T> T subset(const T &v,size_t beg,size_t end)
 {
-  if(beg>=v.size()) CRASH("Asked to extract from %zu, beyond the physical end %zu",beg,v.size());
-  if(beg>=end) CRASH("Asked to extract from %zu, beyond the end %zu",beg,end);
-  if(end>=v.size()) CRASH("Asked to extract up to %zu, beyond the physical end %zu",end,v.size());
-  
+  check_ordered({beg,end,v.size()});
   return T(&v[beg],&v[end]);
 }
 
@@ -160,6 +157,26 @@ template <class T> T effective_mass(const T &data,int TH=-1,int par=1,int dt=1)
 #endif
 	guess=out[t][i]=effective_mass(data[t][i],data[t+dt][i],t,TH,guess,par,dt);
       }
+  
+  return out;
+}
+
+//! return the effective slope of a whole vector
+template <class TV,class T=typename TV::base_type> TV effective_slope(const TV &data,const TV &M,int TH=-1,int par=1,int dt=1)
+{
+  //check data size
+  if(data.size()==0) CRASH("Empty data vector");
+  
+  //asume data.size()=T/2+1
+  if(TH<0) TH=data.size()-1;
+  
+  //! output data
+  TV out(data.size()-dt);
+  
+  //initial guess is taken from aperiodic effective mass
+  for(size_t t=0;t<data.size()-dt;t++)
+    for(size_t i=0;i<data[0].size();i++)
+      out[t][i]=(data[t+dt]-data[t])/twopts_corr_with_ins_ratio_diff_tdep(M[t],TH,t,dt,par);
   
   return out;
 }

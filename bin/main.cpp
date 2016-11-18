@@ -11,11 +11,19 @@ using namespace std;
 int main(int narg,char **arg)
 {
   set_njacks(15);
-  djvec_t data=effective_mass(read_djvec("corr00_P5P5",48,0).symmetrized(0),1);
+  djvec_t corr=read_djvec("corr00_P5P5",48,0).symmetrized(1);
+  djvec_t effm=effective_mass(corr);
   
-  constant_fit(data,10,23,"test.xmg");
+  constant_fit(effm,10,23,"test.xmg");
 
-  valarray<djack_t> f;
+  djack_t Z,M;
+  two_pts_fit(Z,M,corr, 10,24, 24,"mass.xmg","Z.xmg");
+  cout<<"Z: "<<Z.ave_err()<<endl;
+  cout<<"M: "<<M.ave_err()<<endl;
+
+  two_pts_migrad_fit(Z,M,corr,10,24,24,"mass.xmg");
+  cout<<"Z: "<<Z.ave_err()<<endl;
+  cout<<"M: "<<M.ave_err()<<endl;
   
   return 0;
 }

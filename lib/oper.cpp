@@ -22,7 +22,7 @@ double effective_mass(double ct,double ct_p_dt,int t,int TH,double guess,int par
   if(target<=0) return NaN;
   
   //function to minimize
-  auto fun=[TH,t,dt,par,target](double x){return corr_fun_effmass_ratio(x,TH,t,dt,par)-target;};
+  auto fun=[TH,t,dt,par,target](double x){return effmass_two_times_ratio_fun(x,TH,t,dt,par)-target;};
   
   //guess must be positive
   if(guess<=0 or !isfinite(guess))

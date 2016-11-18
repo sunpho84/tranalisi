@@ -104,6 +104,14 @@ inline int to_int(string s)
   return out;
 }
 
+//! return a filled vector of double ranging from 0 to max
+template <class T> vector<T> vector_up_to(size_t max)
+{
+  vector<T> x(max);
+  for(size_t it=0;it<max;it++) x[it]=it;
+  return x;
+}
+
 DEFINE_HAS_METHOD(size);
 #define is_vector has_method_size
 
