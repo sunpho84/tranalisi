@@ -108,6 +108,16 @@ public:
     return out;
   }
   
+  //! return the symmetric
+  vmeas_t symmetric()
+  {
+    size_t s=this->size();
+    vmeas_t out(s);
+    for(size_t it=0;it<s;it++) out[(s-it)%s]=(*this)[it];
+    
+    return out;
+  }
+  
   //! return the averaged
   vmeas_t symmetrized(int par)
   {
@@ -118,7 +128,7 @@ public:
     
     if(nel%2) CRASH("Size %zu odd",nel);
     
-    return vmeas_t(this->subset(0,nelh)*this->subset(nelh,nel).inverse())*0.5;//*(this->subset(0,nelh)+this->subset(nelh,nel).inverse());
+    return vmeas_t(this->subset(0,nelh)+this->symmetric().subset(0,nelh))*0.5;//*(this->subset(0,nelh)+this->subset(nelh,nel).inverse());
   }
 };
 
