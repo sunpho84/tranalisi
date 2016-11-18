@@ -17,18 +17,24 @@ using namespace ROOT::Minuit2;
 inline void set_printlevel(int lev)
 {ROOT::Math::MinimizerOptions::SetDefaultPrintLevel(lev);}
 
+///////////////////////////////////////////////////////////////// fake fits /////////////////////////////////////////////////////
+
 //! perform a fit to constant (uncorrelated)
-template <class TV,class T=typename TV::base_type> T constant_fit(const TV &in,int xmin,int xmax,string path="")
+template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data,size_t xmin,size_t xmax,string path="")
 {
-  T out(init_nel(in[0]));
+  //fix max and min, check order
+  xmin=max(xmin,0ul);
+  xmax=min(xmax,data.size()-1);
+  check_ordered({xmin,xmax,data.size()});
   
-  double norm=0;
+  T out(init_nel(data[0]));
   
   //take weighted average
-  for(int iel=max(xmin,0);iel<=min(xmax,(int)in.size()-1);iel++)
+  double norm=0;
+  for(size_t iel=xmin;iel<=xmax;iel++)
     {
-      auto ele=in[iel];
-      double err=in[iel].err();
+      auto ele=data[iel];
+      double err=data[iel].err();
       double weight=1/(err*err);
       if(!std::isnan(err)&&err!=0)
         {
@@ -39,15 +45,16 @@ template <class TV,class T=typename TV::base_type> T constant_fit(const TV &in,i
   
   //take simply average if error was zero
   if(norm==0)
-    for(int iel=max(xmin,0);iel<=min(xmax,(int)in.size()-1);iel++)
+    for(size_t iel=max(xmin,0ul);iel<=min(xmax,data.size()-1);iel++)
       {
         norm++;
-        out+=in[iel];
+        out+=data[iel];
       }
   
   //normalize
   out/=norm;
   
+  //write a plot if asked to
   if(path!="")
     {
       grace_file_t plot(path);
@@ -55,11 +62,25 @@ template <class TV,class T=typename TV::base_type> T constant_fit(const TV &in,i
       
       plot.no_line();
       plot.set_colors(grace::BLACK);
-      plot<<in.ave_err();
+      plot<<data.ave_err();
     }
   
   return out;
 }
+
+//! fit the mass and the matrix element
+template <class TV,class T=typename TV::base_type> void two_pts_fit(T &M,T &Z,const TV &corr,size_t tmin,size_t tmax,size_t TH,string path_mass="",string path_Z="",int par=1)
+{
+  //fit to constant the effective mass
+  M=constant_fit(effective_mass(corr,TH,par),tmin,tmax,path_mass);
+  
+  //prepare the reduced corr
+  TV temp=corr;
+  for(size_t t=0;t<=TH;t++) temp[t]/=twopts_corr_fun(M*0+1,M,TH,t,par);
+  Z=sqrt(constant_fit(temp,tmin,tmax,path_Z));
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //! return a filled vector of double ranging from 0 to max
 vector<double> double_vector_to(size_t max)
@@ -93,9 +114,7 @@ public:
   //! constructor
   simple_ch2_t(const vector<double> &x,size_t xmin,size_t xmax,const TV &data,fun_t fun) : x(x),xmin(xmin),xmax(xmax),data(data),fun(fun),iel(0)
   {
-    if(xmin>xmax) CRASH("Unable to fit with xmin=%zu and xmax=%zu",xmin,xmax);
-    if(xmin>data.size()) CRASH("Unable to fit with xmin=%zu and data size=%zu",xmin,data.size());
-    if(xmax>data.size()) CRASH("Unable to fit with xmax=%zu and data size=%zu",xmax,data.size());
+    check_ordered({xmin,xmax,data.size()});
     
     err.resize(data.size());
     for(size_t i=0;i<data.size();i++) err[i]=data[i].err();
@@ -122,28 +141,23 @@ public:
 };
 
 //! perform a fit to the usual 2pts ansatz
-template <class TV,class TS=typename TV::base_type> void two_pts_fit(TS &Z,TS &M,const TV &data,size_t TH,int xmin,int xmax,int par=1,string path="")
+template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &Z,TS &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
 {
+  //perform a preliminary fit
+  two_pts_fit(M, Z, corr, tmin, tmax, TH);
+  
   //! fit a two point function
-  class two_pts_fit_t : public simple_ch2_t<TV>
-  {
-    int TH,par;
-  public:
-    two_pts_fit_t(size_t xmin,size_t xmax,const TV &data,int TH,int par=1) :
-      simple_ch2_t<TV>(double_vector_to(data.size()),xmin,xmax,data,[this](const vector<double> &p,double x)
-		       {return twopts_corr_fun(p[0],p[1],this->TH,x,this->par);}),
-      TH(TH),par(par) {}
-  };
+  simple_ch2_t<TV> two_pts_fit_obj(double_vector_upto(corr.size()),tmin,tmax,corr,[TH,par](const vector<double> &p,double x)
+				    {return twopts_corr_fun(p[0],p[1],TH,x,par);});
   
   //parameters to fit
   MnUserParameters pars;
-  pars.Add("Z",1.0,0.1);
-  pars.Add("M",0.1,0.1);
+  pars.Add("Z",Z.ave(),Z.err());
+  pars.Add("M",M.ave(),M.err());
   
-  two_pts_fit_t two_pts_fit_cont(xmin,xmax,data,TH);
-  MnMigrad migrad(two_pts_fit_cont,pars);
-
-  for(size_t &iel=two_pts_fit_cont.iel=0;iel<data[0].size();iel++)
+  MnMigrad migrad(two_pts_fit_obj,pars);
+  
+  for(size_t &iel=two_pts_fit_obj.iel=0;iel<corr[0].size();iel++)
     {
       //minimize and print the result
       FunctionMinimum min=migrad();
