@@ -15,7 +15,7 @@ ostream& operator<<(ostream &out,const ave_err_t &ae)
   return out;
 }
 
-double effective_mass(double ct,double ct_p_dt,int t,int TH,double guess,int par,int dt)
+double effective_mass(double ct,double ct_p_dt,size_t t,size_t TH,double guess,int par,int dt)
 {
   //compute the target, c(t+dt)/c(t)
   double target=ct_p_dt/ct;

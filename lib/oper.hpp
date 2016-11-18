@@ -133,16 +133,13 @@ template <class T> T subset(const T &v,size_t beg,size_t end)
 }
 
 //! return the effective mass of a pair of points
-double effective_mass(double ct,double ct_p_dt,int t,int TH,double guess=1,int par=1,int dt=1);
+double effective_mass(double ct,double ct_p_dt,size_t t,size_t TH,double guess=1,int par=1,int dt=1);
 
 //! return the effective mass of a whole vector
-template <class T> T effective_mass(const T &data,int TH=-1,int par=1,int dt=1)
+template <class T> T effective_mass(const T &data,size_t TH,int par=1,int dt=1)
 {
   //check data size
   if(data.size()==0) CRASH("Empty data vector");
-  
-  //asume data.size()=T/2+1
-  if(TH<0) TH=data.size()-1;
   
   //! output data
   T out(data.size()-dt);
@@ -161,14 +158,44 @@ template <class T> T effective_mass(const T &data,int TH=-1,int par=1,int dt=1)
   return out;
 }
 
-//! return the effective slope of a whole vector
-template <class TV,class T=typename TV::base_type> TV effective_slope(const TV &data,const TV &M,int TH=-1,int par=1,int dt=1)
+//! return the effective mass of a whole vector
+template <class TV> TV effective_coupling(const TV &data,const TV &M,size_t TH,int par=1,int dt=1)
 {
   //check data size
   if(data.size()==0) CRASH("Empty data vector");
   
-  //asume data.size()=T/2+1
-  if(TH<0) TH=data.size()-1;
+  //! output data
+  TV out(data.size()-dt);
+  
+  for(size_t t=0;t<data.size()-dt;t++)
+    for(size_t i=0;i<data[0].size();i++)
+      out[t][i]=data[t][i]-twopts_corr_fun(0.0,M[t][i],TH,(double)t,par);
+  
+  return out;
+}
+
+//! return the effective slope of a whole vector
+template <class TV> TV effective_slope(const TV &data,const TV &M,size_t TH,int par=1,int dt=1)
+{
+  //check data size
+  if(data.size()==0) CRASH("Empty data vector");
+  
+  //! output data
+  TV out(data.size()-dt);
+  
+  //effective slope
+  for(size_t t=0;t<data.size()-dt;t++)
+    for(size_t i=0;i<data[0].size();i++)
+      out[t][i]=(data[t+dt][i]-data[t][i])/twopts_corr_with_ins_ratio_diff_tdep(M[t][i],TH,(double)t,(double)dt,par);
+  
+  return out;
+}
+
+//! return the effective slope offset of a whole vector
+template <class TV> TV effective_slope_offset(const TV &data,const TV &Z,const TV &M,const TV &SL,size_t TH,int par=1,int dt=1)
+{
+  //check data size
+  if(data.size()==0) CRASH("Empty data vector");
   
   //! output data
   TV out(data.size()-dt);
@@ -176,7 +203,7 @@ template <class TV,class T=typename TV::base_type> TV effective_slope(const TV &
   //initial guess is taken from aperiodic effective mass
   for(size_t t=0;t<data.size()-dt;t++)
     for(size_t i=0;i<data[0].size();i++)
-      out[t][i]=(data[t+dt]-data[t])/twopts_corr_with_ins_ratio_diff_tdep(M[t],TH,t,dt,par);
+      out[t][i]=data[t][i]-twopts_corr_with_ins_ratio_fun(0.0,SL[t][i],M[t][i],TH,(double)t,par)*twopts_corr_fun(Z[t][i],M[t][i],TH,(double)t,par);
   
   return out;
 }
