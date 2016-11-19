@@ -5,6 +5,7 @@
 #include <chrono>
 #include <macros.hpp>
 #include <string>
+#include <valarray>
 #include <vector>
 
 using namespace std;
@@ -73,6 +74,10 @@ template <class T> inline void check_ordered(const initializer_list<T> &vec)
   while(cur!=vec.end());
   
 }
+
+//! check agreement of sizes of two valarrays
+template <class T1,class T2> void check_match_size(const valarray<T1> &first,const valarray<T2> &second)
+{if(first.size()!=second.size()) CRASH("Vectors do not agree in size, %d vs %d",first.size(),second.size());}
 
 //! return a range of int
 class range_t : private array<size_t,3>

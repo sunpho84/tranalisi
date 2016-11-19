@@ -16,10 +16,6 @@
 using namespace std;
 using namespace placeholders;
 
-//! check agreement of sizes of two valarrays
-template <class T1,class T2> void check_match_size(const valarray<T1> &first,const valarray<T2> &second)
-{if(first.size()!=second.size()) CRASH("Vectors do not agree in size, %d vs %d",first.size(),second.size());}
-
 //! get the size to init an object, avoiding size() for boot and jack
 template <class T> const size_t init_nel(const valarray<T> &obj)
 {return obj.size();}
