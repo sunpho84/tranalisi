@@ -141,7 +141,8 @@ template <class T> T read_vec_meas(raw_file_t &file,size_t nel,size_t ind=0)
 {
   T out(nel);
   if(nel==0) CRASH("Nel==0");
-  file.set_pos(ind*sizeof(typename T::base_type)*out[0].size()*nel);
+  
+  file.set_pos(ind*sizeof(typename T::base_type::base_type)*out[0].size()*nel);
   out.bin_read(file);
   return out;
 }
