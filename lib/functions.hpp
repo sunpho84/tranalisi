@@ -32,15 +32,15 @@ template <class T> T effmass_two_times_ratio_fun(T M,double TH,double t,double d
 ///////////////////////////////////////////////////////////////////////////////////////
 
 //! return the ratio of a corr with insertion and an original corr
-template< class T> T periodic_twopts_corr_with_ins_ratio_fun(T A,T SL,T M,double TH,double t)
+template< class T> T periodic_twopts_corr_with_ins_ratio_fun(T M,T A,T SL,double TH,double t)
 {return A+SL*(t-TH)*tanh(M*(t-TH));}
 //! return the ratio of a corr with insertion and an original corr
-template< class T> T aperiodic_twopts_corr_with_ins_ratio_fun(T A,T SL,T M,double TH,double t)
+template< class T> T aperiodic_twopts_corr_with_ins_ratio_fun(T M,T A,T SL,double TH,double t)
 {return A+SL*(t-TH)/tanh(M*(t-TH));}
-template <class T> T twopts_corr_with_ins_ratio_fun(T A,T SL,T M,double TH,double t,const int par)
+template <class T> T twopts_corr_with_ins_ratio_fun(T M,T A,T SL,double TH,double t,const int par)
 {
-  if(par==1) return  periodic_twopts_corr_with_ins_ratio_fun(A,SL,M,TH,t);
-  else       return aperiodic_twopts_corr_with_ins_ratio_fun(A,SL,M,TH,t);
+  if(par==1) return  periodic_twopts_corr_with_ins_ratio_fun(M,A,SL,TH,t);
+  else       return aperiodic_twopts_corr_with_ins_ratio_fun(M,A,SL,TH,t);
 }
 
 //! return the time dependence expected from a certain mass, of the difference of the slope at time t+dt and t
