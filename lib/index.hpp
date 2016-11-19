@@ -21,26 +21,23 @@ public:
   }
   
   //! get an element
-  size_t operator()(const vector<size_t> &oth)
+  size_t operator()(const initializer_list<size_t> &oth)
   {
     if(oth.size()!=rank) CRASH("Calling index operator of rank %zu with the wrong size %zu",rank,oth.size());
     size_t out=0;
     for(size_t i=0;i<rank;i++)
       {
-	if((*this)[i]<=oth[i]) CRASH("Calling rank %zu with value %zu greater or equal to max %zu",i,oth.begin()[i],(*this)[i]);
-	out=out*(*this)[i]+oth[i];
+	if((*this)[i]<=oth.begin()[i]) CRASH("Calling rank %zu with value %zu greater or equal to max %zu",i,oth.begin()[i],(*this)[i]);
+	out=out*(*this)[i]+oth.begin()[i];
       }
     return out;
   }
-  size_t operator()(const initializer_list<size_t> &oth)
-  {return operator()((vector<size_t>)oth);}
   
-  //! return the size
   size_t size()
   {
-    vector<size_t> list(rank);
-    for(size_t irank=0;irank<rank;irank++) list[irank]=(*this)[irank]-1;
-    return this->operator()(list)+1;
+    size_t out=1;
+    for(size_t i=0;i<rank;i++) out*=((*this)[i]);
+    return out;
   }
 };
 
