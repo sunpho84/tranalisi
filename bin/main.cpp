@@ -29,7 +29,8 @@ int main(int narg,char **arg)
   
   ///////////////////// test slope //////////////////////////////
   
-  djvec_t corr_0S=read_djvec("corr0S_P5P5",T,0).symmetrized(1)/corr_00;
+  djvec_t corr_0S=read_djvec("corr0S_P5P5",T,0).symmetrized(1);
+  
   djack_t A,SL;
   two_pts_with_ins_ratio_fit(A,SL,M,corr_0S,corr_00,TH,10,24,"test_0S.xmg");
   cout<<"A: "<<A.ave_err()<<endl;
