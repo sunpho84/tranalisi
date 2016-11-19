@@ -1,6 +1,5 @@
-#ifndef _OPER_HPP
-#define _OPER_HPP
-
+#ifndef _EFFECTIVE_HPP
+#define _EFFECTIVE_HPP
 #include <algorithm>
 #include <cmath>
 #include <functions.hpp>

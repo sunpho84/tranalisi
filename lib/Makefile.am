@@ -4,6 +4,7 @@ lib_LIBRARIES=libtran.a
 
 libtran_a_SOURCES= \
 	boot.cpp \
+	effective.cpp \
 	fit.cpp \
 	grace.cpp \
 	jack.cpp \
