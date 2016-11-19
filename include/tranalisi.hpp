@@ -3,6 +3,7 @@
 
 #include <boot.hpp>
 #include <file.hpp>
+#include <effective.hpp>
 #include <fit.hpp>
 #include <grace.hpp>
 #include <index.hpp>
