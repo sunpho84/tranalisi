@@ -10,6 +10,13 @@
 
 using namespace std;
 
+DEFINE_HAS_METHOD(size);
+#define is_vector has_method_size
+
+DEFINE_HAS_METHOD(ave_err);
+
+DEFINE_HAS_METHOD(is_printable);
+
 //! measure time
 using instant_t=chrono::time_point<chrono::steady_clock>;
 inline instant_t take_time()
@@ -75,8 +82,9 @@ template <class T> inline void check_ordered(const initializer_list<T> &vec)
   
 }
 
-//! check agreement of sizes of two valarrays
-template <class T1,class T2> void check_match_size(const valarray<T1> &first,const valarray<T2> &second)
+//! check agreement of sizes of two vectors
+template <class T1,class T2,class=enable_if_t<is_vector<T1>::value and is_vector<T2>::value>>
+void check_match_size(const T1 &first,const T2 &second)
 {if(first.size()!=second.size()) CRASH("Vectors do not agree in size, %d vs %d",first.size(),second.size());}
 
 //! return a range of int
@@ -116,12 +124,5 @@ template <class T> vector<T> vector_up_to(size_t max)
   for(size_t it=0;it<max;it++) x[it]=it;
   return x;
 }
-
-DEFINE_HAS_METHOD(size);
-#define is_vector has_method_size
-
-DEFINE_HAS_METHOD(ave_err);
-
-DEFINE_HAS_METHOD(is_printable);
 
 #endif
