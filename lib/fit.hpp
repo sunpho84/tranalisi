@@ -185,7 +185,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
   A=constant_fit(eff_slope_offset,tmin,tmax,"/tmp/test_slope_offset.xmg");
   
   //! fit a two point function
-  simple_ch2_t<TV> two_pts_fit_obj(vector_up_to<double>(corr.size()),tmin,tmax,corr,[TH,par](const vector<double> &p,double x)
+  simple_ch2_t<TV> two_pts_fit_obj(vector_up_to<double>(corr.size()),tmin,tmax,corr_ins/corr,[TH,par](const vector<double> &p,double x)
 				   {return twopts_corr_with_ins_ratio_fun(p[0],p[1],p[2],TH,x,par);});
   
   //parameters to fit
@@ -209,11 +209,11 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
   if(path!="")
     {
       grace_file_t out(path);
-      out.write_polygon([A,SL,M,TH,par](double x){return twopts_corr_with_ins_ratio_fun(A,SL,M,TH,x,par);},tmin,tmax,100);
+      out.write_polygon([A,SL,M,TH,par](double x){return twopts_corr_with_ins_ratio_fun(A,SL,M,TH,x,par);},tmin,tmax);
       out.new_set();
       
       out.no_line();
-      out<<corr.ave_err();
+      out<<TV(corr_ins/corr).ave_err();
     }
 }
 

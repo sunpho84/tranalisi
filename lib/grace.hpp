@@ -67,7 +67,7 @@ public:
   }
   
   //! write a polygon
-  template <class fun_t> void write_polygon(fun_t fun,double xmin,double xmax,size_t npoints,int col=grace::BLACK)
+  template <class fun_t> void write_polygon(fun_t fun,double xmin,double xmax,size_t npoints=100,int col=grace::BLACK)
   {
     if(npoints==0) CRASH("NPoints must be different from 0");
     //! x coordinate
