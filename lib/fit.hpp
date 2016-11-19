@@ -179,11 +179,9 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
   //perform a preliminary fit
   TV eff_mass=effective_mass(corr,TH,par);
   M=constant_fit(eff_mass,tmin,tmax,"/tmp/test_mass.xmg");
-  TV eff_coupling=effective_coupling(corr,eff_mass,TH,par);
-  TS Z=constant_fit(eff_coupling,tmin,tmax,"/tmp/test_coupling.xmg");
-  TV eff_slope=effective_slope(corr_ins,eff_mass,TH);
+  TV eff_slope=effective_slope(TV(corr_ins/corr),eff_mass,TH);
   SL=constant_fit(eff_slope,tmin,tmax,"/tmp/test_slope.xmg");
-  TV eff_slope_offset=effective_slope_offset(corr_ins,eff_coupling,eff_mass,eff_slope,TH);
+  TV eff_slope_offset=effective_slope_offset(TV(corr_ins/corr),eff_mass,eff_slope,TH);
   A=constant_fit(eff_slope_offset,tmin,tmax,"/tmp/test_slope_offset.xmg");
   
   //! fit a two point function
