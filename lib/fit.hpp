@@ -99,12 +99,12 @@ class simple_ch2_t : public FCNBase
   fun_t fun;
   //! error
   vector<double> err;
+  //! element of the data-dstribution
+  size_t &iel;
   
 public:
-  //! element of the data-dstribution
-  size_t iel;
   //! constructor
-  simple_ch2_t(const vector<double> &x,size_t xmin,size_t xmax,const TV &data,fun_t fun) : x(x),xmin(xmin),xmax(xmax),data(data),fun(fun),iel(0)
+  simple_ch2_t(const vector<double> &x,size_t xmin,size_t xmax,const TV &data,fun_t fun,size_t &iel) : x(x),xmin(xmin),xmax(xmax),data(data),fun(fun),iel(iel)
   {
     check_ordered({xmin,xmax,data.size()});
     
@@ -139,8 +139,9 @@ template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &
   two_pts_fit(Z,M,corr,TH,tmin,tmax);
   
   //! fit a two point function
+  size_t iel;
   simple_ch2_t<TV> two_pts_fit_obj(vector_up_to<double>(corr.size()),tmin,tmax,corr,[TH,par](const vector<double> &p,double x)
-				    {return twopts_corr_fun(p[0],p[1],TH,x,par);});
+				   {return twopts_corr_fun(p[0],p[1],TH,x,par);},iel);
   
   //parameters to fit
   MnUserParameters pars;
@@ -149,7 +150,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &
   
   MnMigrad migrad(two_pts_fit_obj,pars);
   
-  for(size_t &iel=two_pts_fit_obj.iel=0;iel<corr[0].size();iel++)
+  for(iel=0;iel<corr[0].size();iel++)
     {
       //minimize and print the result
       FunctionMinimum min=migrad();
@@ -171,51 +172,100 @@ template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &
   // cout<<M.ave_err()<<endl;
 }
 
+//! perform a simple fit using x, a function and data
+template <class TV,class TS=typename TV::base_type>
+class multi_ch2_t : public FCNBase
+{
+  //! type of function to be passed
+  using fun_t=function<double(const vector<double> &p,double x)>;
+  using fun_shuf_t=function<vector<double>(const vector<double> &p,size_t icontr)>;
+  
+  //! individual contributions
+  vector<simple_ch2_t<TV>> contrs;
+  
+  //! shuffle parameters to individual contribtuions
+  fun_shuf_t fun_shuf;
+public:
+  //! constructor
+  multi_ch2_t(const initializer_list<vector<double>> &xs,initializer_list<size_t> xmins,initializer_list<size_t> xmaxs,const initializer_list<TV> &datas,initializer_list<fun_t> funs,const fun_shuf_t &fun_shuf,size_t &iel) : fun_shuf(fun_shuf)
+  {
+    //init all subch2
+    auto x=xs.begin();auto xmin=xmins.begin();auto xmax=xmaxs.begin();auto data=datas.begin();auto fun=funs.begin();
+    while(x!=xs.end()) contrs.push_back(simple_ch2_t<TV>(*(x++),*(xmin++),*(xmax++),*(data++),*(fun++),iel));
+  }
+  
+  //! compute the sum of all ch2
+  double operator()(const vector<double> &p) const
+  {
+    double ch2=0;
+    for(size_t icontr=0;icontr<contrs.size();icontr++) ch2+=contrs[icontr](fun_shuf(p,icontr));
+    
+    return ch2;
+  }
+  
+  double Up() const {return 1;}
+};
+
 //////////////////////////////////////////////////////////// slope /////////////////////////////////////////////////////
 
 //! perform a fit to determine the slope
-template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &A,TS &SL,TS &M,const TV &corr_ins,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
+template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &M,TS &A,TS &SL,const TV &corr_ins,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
 {
   //perform a preliminary fit
   TV eff_mass=effective_mass(corr,TH,par);
   M=constant_fit(eff_mass,tmin,tmax,"/tmp/test_mass.xmg");
+  TV eff_coupling=effective_coupling(corr,eff_mass,TH,par);
+  TS Z=constant_fit(eff_coupling,tmin,tmax,"/tmp/test_coupling.xmg");
   TV eff_slope=effective_slope(TV(corr_ins/corr),eff_mass,TH);
   SL=constant_fit(eff_slope,tmin,tmax,"/tmp/test_slope.xmg");
   TV eff_slope_offset=effective_slope_offset(TV(corr_ins/corr),eff_mass,eff_slope,TH);
   A=constant_fit(eff_slope_offset,tmin,tmax,"/tmp/test_slope_offset.xmg");
   
   //! fit a two point function
-  simple_ch2_t<TV> two_pts_fit_obj(vector_up_to<double>(corr.size()),tmin,tmax,corr_ins/corr,[TH,par](const vector<double> &p,double x)
-				   {return twopts_corr_with_ins_ratio_fun(p[0],p[1],p[2],TH,x,par);});
+  size_t iel=0;
+  auto x=vector_up_to<double>(corr.size());
+  multi_ch2_t<TV> two_pts_fit_obj({x,x},{tmin,tmin},{tmax,tmax},{corr,corr_ins/corr},{
+      [TH,par](const vector<double> &p,double x)
+	{return twopts_corr_fun(p[0],p[1],TH,x,par);},
+      [TH,par](const vector<double> &p,double x)
+	{return twopts_corr_with_ins_ratio_fun(p[0],p[1],p[2],TH,x,par);}},
+    [](const vector<double> &pin,size_t icontr)
+    {
+      switch(icontr)
+	{
+	case 0:return vector<double>({pin[0],pin[1]});break;
+	case 1:return vector<double>({pin[1],pin[2],pin[3]});break;
+	default: CRASH("Unknown contr %zu",icontr);return pin;
+	}},iel);
   
   //parameters to fit
   MnUserParameters pars;
-  pars.Add("A",0,0.1);
-  pars.Add("SL",0,0.1);
-  pars.Add("M",0.14,0.1);
+  pars.Add("Z",Z[0],Z.err());
+  pars.Add("M",M[0],M.err());
+  pars.Add("A",A[0],A.err());
+  pars.Add("SL",SL[0],SL.err());
   
   MnMigrad migrad(two_pts_fit_obj,pars);
   
-  for(size_t &iel=two_pts_fit_obj.iel=0;iel<corr[0].size();iel++)
+  for(iel=0;iel<corr[0].size();iel++)
     {
       //minimize and print the result
       FunctionMinimum min=migrad();
       MinimumParameters par_min=min.Parameters();
-      A[iel]=par_min.Vec()[0];
-      SL[iel]=par_min.Vec()[1];
-      M[iel]=par_min.Vec()[2];
+      M[iel]=par_min.Vec()[1];
+      A[iel]=par_min.Vec()[2];
+      SL[iel]=par_min.Vec()[3];
     }
   
   if(path!="")
     {
       grace_file_t out(path);
-      out.write_polygon([A,SL,M,TH,par](double x){return twopts_corr_with_ins_ratio_fun(A,SL,M,TH,x,par);},tmin,tmax);
+      out.write_polygon([M,A,SL,TH,par](double x){return twopts_corr_with_ins_ratio_fun(M,A,SL,TH,x,par);},tmin,tmax);
       out.new_set();
       
       out.no_line();
       out<<TV(corr_ins/corr).ave_err();
     }
 }
-
 
 #endif
