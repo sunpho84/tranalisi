@@ -40,31 +40,26 @@ int main(int narg,char **arg)
   out_pi<<pi_ratio.ave_err();
 
   //kaon
-  size_t ims=1,iml=0,r0=0,r1=1;
-  size_t ind_K1=ind({ims,iml,r0,RE});
-  size_t ind_K2=ind({ims,iml,r1,RE});
-  size_t ind_K3=ind({iml,ims,r0,RE});
-  size_t ind_K4=ind({iml,ims,r1,RE});
-  cout<<"Kaon index1: "<<ind_K1<<endl;
-  cout<<"Kaon index2: "<<ind_K2<<endl;
-  cout<<"Kaon index3: "<<ind_K3<<endl;
-  cout<<"Kaon index4: "<<ind_K4<<endl;
+
+  
+  // size_t ims=1,iml=0,r0=0,r1=1;
+  // size_t ind_K1=ind({ims,iml,r0,RE});
+  // size_t ind_K2=ind({ims,iml,r1,RE});
+  
+  // cout<<"Kaon index1: "<<ind_K1<<endl;
+  // cout<<"Kaon index2: "<<ind_K2<<endl;
   
   
   //0,1,0,0 è identico a 1,0,0,0
-  djvec_t dk000=read_djvec("corr00_P5P5",T,ind_K1);
-  djvec_t dk001=read_djvec("corr00_P5P5",T,ind_K2);
+  djvec_t dk000=read_djvec("corr00_P5P5",T,ind({1,0,0,0}));
+  djvec_t dk001=read_djvec("corr00_P5P5",T,ind({1,0,1,0}));
 
   //1,0,0,0 è identico a 0,1,0,0
-  djvec_t dkLL0=read_djvec("corrLL_P5P5",T,ind_K1);
-  djvec_t dkLL1=read_djvec("corrLL_P5P5",T,ind_K2);
-  djvec_t dkLL2=read_djvec("corrLL_P5P5",T,ind_K3);
-  djvec_t dkLL3=read_djvec("corrLL_P5P5",T,ind_K4);
+  djvec_t dkLL0=read_djvec("corrLL_P5P5",T,ind({0,1,0,0}));
+  djvec_t dkLL1=read_djvec("corrLL_P5P5",T,ind({0,1,1,0}));
   
-  cout<<dkLL0[0].ave_err()<<endl;
-  cout<<dkLL1[0].ave_err()<<endl;
-  cout<<dkLL2[0].ave_err()<<endl;
-  cout<<dkLL3[0].ave_err()<<endl;
+  //cout<<dkLL0[0].ave_err()<<endl;
+  
   djvec_t dk0M0=read_djvec("corr0M_P5P5",T,ind({1,0,0,0}));
   djvec_t dk0M1=read_djvec("corr0M_P5P5",T,ind({1,0,1,0}));
 
@@ -94,8 +89,46 @@ int main(int narg,char **arg)
   out_k_tad<<k_ratio_tad.ave_err();
   out_k_s<<k_ratio_s.ave_err();
   out_k_p<<k_ratio_p.ave_err();
+
+  //D meson
+
+  djvec_t dD000=read_djvec("corr00_P5P5",T,ind({2,0,0,0}));
+  djvec_t dD001=read_djvec("corr00_P5P5",T,ind({2,0,1,0}));
   
-  
+  djvec_t dDLL0=read_djvec("corrLL_P5P5",T,ind({0,2,0,0}));
+  djvec_t dDLL1=read_djvec("corrLL_P5P5",T,ind({0,2,1,0}));
+
+  djvec_t dD0M0=read_djvec("corr0M_P5P5",T,ind({2,0,0,0}));
+  djvec_t dD0M1=read_djvec("corr0M_P5P5",T,ind({2,0,1,0}));
+
+  djvec_t dD0T0=read_djvec("corr0T_P5P5",T,ind({2,0,0,0}));
+  djvec_t dD0T1=read_djvec("corr0T_P5P5",T,ind({2,0,1,0}));
+
+  djvec_t dD0S0=read_djvec("corr0S_P5P5",T,ind({2,0,0,0}));
+  djvec_t dD0S1=read_djvec("corr0S_P5P5",T,ind({2,0,1,0}));
+
+  djvec_t dD0P0=read_djvec("corr0P_P5P5",T,ind({2,0,0,1}));
+  djvec_t dD0P1=read_djvec("corr0P_P5P5",T,ind({2,0,1,1}));
+
+  djvec_t D_ratio_exch=(dDLL0+dDLL1)/(dD000+dD001);
+  djvec_t D_ratio_self=(dD0M0+dD0M1)/(dD000+dD001);
+  djvec_t D_ratio_tad=(dD0T0+dD0T1)/(dD000+dD001);
+  djvec_t D_ratio_s=(dD0S0+dD0S1)/(dD000+dD001);
+  djvec_t D_ratio_p=(dD0P0-dD0P1)/(dD000+dD001);
+
+
+  grace_file_t out_D_exch("D_ratio_exch.xmg");
+  grace_file_t out_D_self("D_ratio_self.xmg");
+  grace_file_t out_D_tad("D_ratio_tad.xmg");
+  grace_file_t out_D_s("D_ratio_s.xmg");
+  grace_file_t out_D_p("D_ratio_p.xmg");
+  out_D_exch<<D_ratio_exch.ave_err();
+  out_D_self<<D_ratio_self.ave_err();
+  out_D_tad<<D_ratio_tad.ave_err();
+  out_D_s<<D_ratio_s.ave_err();
+  out_D_p<<D_ratio_p.ave_err();
+
+
 
   
   
