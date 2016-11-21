@@ -35,7 +35,7 @@ int main(int narg,char **arg)
       if(i-optind==1) path_out=arg[i];
     }
   
-  if(T==-1 or ext_njacks==-1 or path_in=="") close_with_mess("Use: %s path_in[stdin] -T=size -n=njacks -i=iel[0] -p=par[1] path_out[stdout]",arg[0]);
+  if(T==-1 or ext_njacks==-1 or path_in=="") close_with_mess("Use: %s -T=size -n=njacks -i=iel[0] -p=par[1] path_in[stdin] path_out[stdout]",arg[0]);
   
   //put a warning
   if(path_in=="/dev/stdin") cerr<<"Reading from stdin"<<endl;

@@ -209,7 +209,7 @@ public:
 //////////////////////////////////////////////////////////// slope /////////////////////////////////////////////////////
 
 //! perform a fit to determine the slope
-template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &M,TS &A,TS &SL,const TV &corr_ins,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
+template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &M,TS &A,TS &SL,const TV &corr,const TV &corr_ins,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
 {
   //perform a preliminary fit
   TV eff_mass=effective_mass(corr,TH,par);
