@@ -31,26 +31,27 @@ public:
   {
     (*this)<<"&"<<endl;
     shift_iset();
+    (*this)<<"@target G0.S"<<iset<<endl;
   }
   
   //! set a property
   void set_prop(string what){(*this)<<"@s"<<iset<<" "<<what<<endl;}
   
   //! set line style
-  void set_line_style(size_t how){set_prop("line type "+to_string(how));}
-  void no_line(){set_line_style(grace::NO_LINE);}
+  void line_style(size_t how){set_prop("line type "+to_string(how));}
+  void no_line(){line_style(grace::NO_LINE);}
   
   //! set colors
-  void set_symbol_color(int col){set_prop("symbol color "+to_string(col));}
-  void set_symbol_fill_color(int col){set_prop("symbol fill color "+to_string(col));}
-  void set_line_color(int col){set_prop("line color "+to_string(col));}
-  void set_errorbar_color(int col){set_prop("errorbar color "+to_string(col));}
-  void set_colors(int col)
+  void symbol_color(int col){set_prop("symbol color "+to_string(col));}
+  void symbol_fill_color(int col){set_prop("symbol fill color "+to_string(col));}
+  void line_color(int col){set_prop("line color "+to_string(col));}
+  void errorbar_color(int col){set_prop("errorbar color "+to_string(col));}
+  void color(int col)
   {
-    set_symbol_color(col);
-    set_symbol_fill_color(col);
-    set_line_color(col);
-    set_errorbar_color(col);
+    symbol_color(col);
+    symbol_fill_color(col);
+    line_color(col);
+    errorbar_color(col);
   }
   
   //! set symbols
@@ -62,8 +63,8 @@ public:
   {
     set_prop("fill type 1");
     set_prop("fill color "+to_string(fill_col));
-    set_line_color(fill_col);
-    set_line_style(grace::STRAIGHT_LINE);
+    line_color(fill_col);
+    line_style(grace::STRAIGHT_LINE);
   }
   
   //! write a polygon
@@ -89,9 +90,6 @@ public:
     //write forward and backward
     for(size_t ipoint=0;ipoint<npoints;ipoint++)         (*this)<<x[ipoint]<<" "<<y[ipoint].ave_minus_err()<<endl;
     for(size_t ipoint=npoints-1;ipoint<npoints;ipoint--) (*this)<<x[ipoint]<<" "<<y[ipoint].ave_plus_err()<<endl;
-    
-    //create a new set
-    this->new_set();
   }
   
   //! write a constant band

@@ -46,7 +46,7 @@ int main(int narg,char **arg)
   //write average and error
   grace_file_t out(path_out);
   out.no_line();
-  out.set_colors(grace::RED);
+  out.color(grace::RED);
   out.set_symbol(grace::SQUARE);
 
   out<<data.ave_err()<<endl;
