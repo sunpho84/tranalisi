@@ -15,6 +15,9 @@ public:
   //! constructor specifying nel only (avoid copy constructor)
   explicit vmeas_t(size_t nel=0) : valarray<meas_t>(nel) {}
   
+  //! constructor specifying nel and an element
+  explicit vmeas_t(size_t nel,const meas_t &in) : valarray<meas_t>(in,nel) {}
+  
   //! init from vector of vector
   vmeas_t(const vector<vector<base_type>> &o) : vmeas_t(o.size())
   {

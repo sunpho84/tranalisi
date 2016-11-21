@@ -97,6 +97,17 @@ public:
   {this->write_polygon([&c](double x) -> T {return c;},xmin,xmax,2,col);}
 };
 
+//! prepare a plot with a constant
+template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &v)
+{
+  grace_file_t out(path);
+  out.write_constant_band(xmin,xmax,c);
+  out.new_set();
+  
+  out.no_line();
+  out<<v.ave_err();
+}
+
 //! write a vector of average and error
 grace_file_t &operator<<(grace_file_t &out,const vec_ave_err_t &data);
 
