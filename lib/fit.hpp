@@ -209,7 +209,7 @@ public:
 //////////////////////////////////////////////////////////// slope /////////////////////////////////////////////////////
 
 //! perform a fit to determine the slope
-template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &M,TS &A,TS &SL,const TV &corr,const TV &corr_ins,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
+template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &M,TS &A,TS &SL,const TV &corr,const TV &corr_ins,size_t TH,size_t tmin,size_t tmax,string path="",string path_ins="",int par=1)
 {
   //perform a preliminary fit
   TV eff_mass=effective_mass(corr,TH,par);
@@ -260,6 +260,16 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
   if(path!="")
     {
       grace_file_t out(path);
+      out.write_polygon([Z,M,TH,par](double x){return twopts_corr_fun(Z,M,TH,x,par);},tmin,tmax);
+      out.new_set();
+      
+      out.no_line();
+      out<<TV(corr).ave_err();
+    }
+ 
+  if(path_ins!="")
+    {
+      grace_file_t out(path_ins);
       out.write_polygon([M,A,SL,TH,par](double x){return twopts_corr_with_ins_ratio_fun(M,A,SL,TH,x,par);},tmin,tmax);
       out.new_set();
       

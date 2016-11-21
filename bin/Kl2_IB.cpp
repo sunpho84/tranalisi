@@ -76,7 +76,7 @@ int main(int narg,char **arg)
   out_D_p<<D_ratio_p.ave_err();
 
   djack_t M,A,SL;
-  two_pts_with_ins_ratio_fit(M,A,SL,load("corrLL_P5P5",0,0),load("corr00_P5P5",0,0),TH,10,24,"test.xmg");
+  two_pts_with_ins_ratio_fit(M,A,SL,load("corrLL_P5P5",0,0),load("corr00_P5P5",0,0),TH,10,24,"test.xmg","test_ins.xmg");
   cout<<"M: "<<M.ave_err()<<endl;
   cout<<"A: "<<A.ave_err()<<endl;
   cout<<"SL: "<<SL.ave_err()<<endl;
