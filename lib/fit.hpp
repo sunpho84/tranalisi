@@ -27,7 +27,7 @@ template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data
   xmax=min(xmax,data.size()-1);
   check_ordered({xmin,xmax,data.size()});
   
-  T out(init_nel(data[0]));
+  T res(init_nel(data[0]));
   
   //take weighted average
   double norm=0;
@@ -38,7 +38,7 @@ template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data
       double weight=1/(err*err);
       if(!std::isnan(err)&&err!=0)
         {
-          out+=ele*weight;
+          res+=ele*weight;
           norm+=weight;
         }
     }
@@ -48,24 +48,16 @@ template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data
     for(size_t iel=max(xmin,0ul);iel<=min(xmax,data.size()-1);iel++)
       {
         norm++;
-        out+=data[iel];
+        res+=data[iel];
       }
   
   //normalize
-  out/=norm;
+  res/=norm;
   
   //write a plot if asked to
-  if(path!="")
-    {
-      grace_file_t plot(path);
-      plot.write_constant_band(xmin,xmax,out,grace::RED);
-      
-      plot.no_line();
-      plot.set_colors(grace::BLACK);
-      plot<<data.ave_err();
-    }
+  if(path!="") write_constant_fit_plot(path,xmin,xmax,res,data);
   
-  return out;
+  return res;
 }
 
 //! fit the mass and the matrix element
@@ -225,17 +217,14 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
   size_t iel=0;
   auto x=vector_up_to<double>(corr.size());
   multi_ch2_t<TV> two_pts_fit_obj({x,x},{tmin,tmin},{tmax,tmax},{corr,corr_ins/corr},{
-      [TH,par](const vector<double> &p,double x)
-	{return twopts_corr_fun(p[0],p[1],TH,x,par);},
-      [TH,par](const vector<double> &p,double x)
-	{return twopts_corr_with_ins_ratio_fun(p[0],p[1],p[2],TH,x,par);}},
-    [](const vector<double> &pin,size_t icontr)
+      two_pts_corr_fun_t(TH,par),two_pts_corr_with_ins_fun_t(TH,par)},
+    [](const vector<double> &p,size_t icontr)
     {
       switch(icontr)
 	{
-	case 0:return vector<double>({pin[0],pin[1]});break;
-	case 1:return vector<double>({pin[1],pin[2],pin[3]});break;
-	default: CRASH("Unknown contr %zu",icontr);return pin;
+	case 0:return vector<double>({p[0],p[1]});break;
+	case 1:return vector<double>({p[1],p[2],p[3]});break;
+	default: CRASH("Unknown contr %zu",icontr);return p;
 	}},iel);
   
   //parameters to fit
@@ -257,25 +246,9 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
       SL[iel]=par_min.Vec()[3];
     }
   
-  if(path!="")
-    {
-      grace_file_t out(path);
-      out.write_polygon([Z,M,TH,par](double x){return twopts_corr_fun(Z,M,TH,x,par);},tmin,tmax);
-      out.new_set();
-      
-      out.no_line();
-      out<<TV(corr).ave_err();
-    }
- 
-  if(path_ins!="")
-    {
-      grace_file_t out(path_ins);
-      out.write_polygon([M,A,SL,TH,par](double x){return twopts_corr_with_ins_ratio_fun(M,A,SL,TH,x,par);},tmin,tmax);
-      out.new_set();
-      
-      out.no_line();
-      out<<TV(corr_ins/corr).ave_err();
-    }
+  //write plots
+  if(path!="") write_constant_fit_plot(path,tmin,tmax,M,eff_mass);
+  if(path_ins!="") write_constant_fit_plot(path_ins,tmin,tmax,SL,effective_slope(TV(corr_ins/corr),TV(TH,M),TH));
 }
 
 #endif
