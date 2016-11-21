@@ -3,23 +3,53 @@
 #endif
 
 #include <tranalisi.hpp>
+#include <unistd.h>
 
 int main(int narg,char **arg)
 {
-  if(narg<4) CRASH("Use %s file T njacks iel=0",arg[0]);
+  //pars
+  int T=-1,ext_njacks=-1,iel=0;
   
-  const char *path=arg[1];
-  int T=atoi(arg[2]);
-  int ext_njacks=atoi(arg[3]);
-  int iel=0;
-  if(narg>4) iel=atoi(arg[4]);
+  //parse opts
+  int c;
+  while((c=getopt(narg,arg,"T:n:i::"))!= -1)
+    switch (c)
+      {
+      case 'T': T=to_int(optarg); break;
+      case 'n': ext_njacks=to_int(optarg); break;
+      case 'i': iel=to_int(optarg); break;
+      case '?': exit(0);break;
+      default: CRASH("Unknown option -%c",optopt);
+      }
   
-  //setup the number of jackknives from command line
+  //check mandatory options
+  if(T==-1) cerr<<"Missing argument T"<<endl;
+  if(ext_njacks==-1) cerr<<"Missing argument n"<<endl;
+  
+  //parse paths
+  string path_in="/dev/stdin",path_out="/dev/stdout";
+  for(int i=optind;i<narg;i++)
+    {
+      if(i-optind==0) path_in=arg[i];
+      if(i-optind==1) path_out=arg[i];
+    }
+  
+  if(T==-1 or ext_njacks==-1 or path_in=="") close_with_mess("Use: %s path_in[stdin] -T=size -n=njacks -i=iel[0] -p=par[1] path_out[stdout]",arg[0]);
+  
+  //put a warning
+  if(path_in=="/dev/stdin") cerr<<"Reading from stdin"<<endl;
+  
+  //set njacks and read
   set_njacks(ext_njacks);
-  //read
-  auto data=read_djvec(path,T,iel);
+  djvec_t data=read_djvec(path_in,T,iel);
+  
   //write average and error
-  cout<<data.ave_err()<<endl;
+  grace_file_t out(path_out);
+  out.no_line();
+  out.set_colors(grace::RED);
+  out.set_symbol(grace::SQUARE);
+
+  out<<data.ave_err()<<endl;
   
   return 0;
 }
