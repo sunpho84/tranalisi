@@ -29,10 +29,13 @@ int main(int narg,char **arg)
   
   ///////////////////// test slope //////////////////////////////
   
-  djvec_t corr_0S=read_djvec("corr0S_P5P5",T,0).symmetrized(1);
+  //djvec_t corr_0S=read_djvec("corr0S_P5P5",T,0).symmetrized(1);
+  djvec_t corr_LL=read_djvec("corrLL_P5P5",T,0).symmetrized(1);
+  grace_file_t tmp_file("ratio_LL.xmg");
+  tmp_file<<djvec_t(corr_LL/corr_00).ave_err();
   
   djack_t A,SL;
-  two_pts_with_ins_ratio_fit(M,A,SL,corr_00,corr_0S,TH,10,24,"test_00.xmg","test_0S.xmg");
+  two_pts_with_ins_ratio_fit(M,A,SL,corr_00,corr_LL,TH,10,24,"test_00.xmg","test_LL.xmg");
   cout<<"M: "<<M.ave_err()<<endl;
   cout<<"A: "<<A.ave_err()<<endl;
   cout<<"SL: "<<SL.ave_err()<<endl;
