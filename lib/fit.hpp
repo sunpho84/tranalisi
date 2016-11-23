@@ -68,7 +68,7 @@ template <class TV,class T=typename TV::base_type> void two_pts_fit(T &Z,T &M,co
   
   //prepare the reduced corr
   TV temp=corr;
-  for(size_t t=0;t<=TH;t++) temp[t]/=twopts_corr_fun(M*0+1,M,TH,t,par);
+  for(size_t t=0;t<=TH;t++) temp[t]/=two_pts_corr_fun(M*0+1,M,TH,t,par);
   Z=sqrt(constant_fit(temp,tmin,tmax,path_Z));
 }
 
@@ -132,8 +132,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &
   
   //! fit a two point function
   size_t iel;
-  simple_ch2_t<TV> two_pts_fit_obj(vector_up_to<double>(corr.size()),tmin,tmax,corr,[TH,par](const vector<double> &p,double x)
-				   {return twopts_corr_fun(p[0],p[1],TH,x,par);},iel);
+  simple_ch2_t<TV> two_pts_fit_obj(vector_up_to<double>(corr.size()),tmin,tmax,corr,two_pts_corr_fun_t(TH,par),iel);
   
   //parameters to fit
   MnUserParameters pars;
@@ -154,7 +153,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &
   if(path!="")
     {
       grace_file_t out(path);
-      out.write_polygon([Z,M,TH,par](double x){return twopts_corr_fun(Z,M,TH,x,par);},tmin,tmax,100);
+      out.write_polygon([Z,M,TH,par](double x){return two_pts_corr_fun(Z,M,TH,x,par);},tmin,tmax,100);
       out.new_set();
       
       out.no_line();
@@ -216,8 +215,8 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
   //! fit a two point function
   size_t iel=0;
   auto x=vector_up_to<double>(corr.size());
-  multi_ch2_t<TV> two_pts_fit_obj({x,x},{tmin,tmin},{tmax,tmax},{corr,corr_ins/corr},{
-      two_pts_corr_fun_t(TH,par),two_pts_corr_with_ins_fun_t(TH,par)},
+  multi_ch2_t<TV> two_pts_fit_obj({x,x},{tmin,tmin},{tmax,tmax},{corr,corr_ins/corr},
+				  {two_pts_corr_fun_t(TH,par),two_pts_corr_with_ins_fun_t(TH,par)},
     [](const vector<double> &p,size_t icontr)
     {
       switch(icontr)
@@ -225,7 +224,8 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
 	case 0:return vector<double>({p[0],p[1]});break;
 	case 1:return vector<double>({p[1],p[2],p[3]});break;
 	default: CRASH("Unknown contr %zu",icontr);return p;
-	}},iel);
+	}
+    },iel);
   
   //parameters to fit
   MnUserParameters pars;

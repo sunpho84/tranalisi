@@ -1,5 +1,6 @@
 #ifndef _EFFECTIVE_HPP
 #define _EFFECTIVE_HPP
+
 #include <algorithm>
 #include <cmath>
 #include <functions.hpp>
@@ -49,7 +50,7 @@ template <class TV> TV effective_coupling(const TV &data,const TV &M,size_t TH,i
   
   for(size_t t=0;t<data.size()-dt;t++)
     for(size_t i=0;i<data[0].size();i++)
-      out[t][i]=sqrt(data[t][i]/twopts_corr_fun(1.0,M[t][i],TH,(double)t,par));
+      out[t][i]=sqrt(data[t][i]/two_pts_corr_fun(1.0,M[t][i],TH,(double)t,par));
   
   return out;
 }
@@ -67,7 +68,7 @@ template <class TV> TV effective_slope(const TV &data,const TV &M,size_t TH,int 
   for(size_t t=0;t<data.size()-dt;t++)
     for(size_t i=0;i<data[0].size();i++)
       out[t][i]=(data[t+dt][i]-data[t][i])
-	/twopts_corr_with_ins_ratio_diff_tdep(M[t][i],TH,(double)t,(double)dt,par);
+	/two_pts_corr_with_ins_ratio_diff_tdep(M[t][i],TH,(double)t,(double)dt,par);
   
   return out;
 }
@@ -84,7 +85,7 @@ template <class TV> TV effective_slope_offset(const TV &data,const TV &M,const T
   //initial guess is taken from aperiodic effective mass
   for(size_t t=0;t<data.size()-dt;t++)
     for(size_t i=0;i<data[0].size();i++)
-      out[t][i]=data[t][i]-twopts_corr_with_ins_ratio_fun(0.0,SL[t][i],M[t][i],TH,(double)t,par);
+      out[t][i]=data[t][i]-two_pts_corr_with_ins_ratio_fun(0.0,SL[t][i],M[t][i],TH,(double)t,par);
   
   return out;
 }
