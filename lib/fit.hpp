@@ -150,17 +150,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &
       M[iel]=par_min.Vec()[1];
     }
   
-  if(path!="")
-    {
-      grace_file_t out(path);
-      out.write_polygon([Z,M,TH,par](double x){return two_pts_corr_fun(Z,M,TH,x,par);},tmin,tmax,100);
-      out.new_set();
-      
-      out.no_line();
-      out<<corr.ave_err();
-    }
-  // cout<<Z.ave_err()<<endl;
-  // cout<<M.ave_err()<<endl;
+  if(path!="") write_constant_fit_plot(path,tmin,tmax,M,effective_mass(corr,TH,par));
 }
 
 //! perform a simple fit using x, a function and data
