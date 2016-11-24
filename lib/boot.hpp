@@ -120,6 +120,7 @@ public:
     ae.err*=sqrt(njacks-1);
     
 #if MEAN_TYPE==DISTR_MEAN
+    //do nothing, the previously computed is already correct
 #elif MEAN_TYPE==PROP_MEAN
     ae.ave=(*this)[nboots()];
 #else
