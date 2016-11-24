@@ -146,10 +146,10 @@ public:
   }
   
   //! skip a line
-  void skip_line()
+  void skip_line(size_t nskip=1)
   {
     line_t skip;
-    get_line(skip);
+    for(size_t iskip=0;iskip<nskip;iskip++) get_line(skip);
   }
   
   //! return whether we are at the end of file
