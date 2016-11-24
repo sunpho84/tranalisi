@@ -94,7 +94,7 @@ public:
   {for(auto &it : out) bin_read(it);}
   
   //! check that the token is found
-  void expect(const char *tok)
+  void expect(const char *tok) const
   {
     word_t rea;
     int rc=fscanf(file,"%s",rea);
@@ -115,7 +115,7 @@ public:
   void go_to_end() {fseek(file,0,SEEK_END);}
   
   //! named or unnamed read
-  template <class T> typename return_type<T>::type read(const char *name=NULL)
+  template <class T> typename return_type<T>::type read(const char *name=NULL) const
   {
     //check tag
     if(name) expect(name);
@@ -130,11 +130,11 @@ public:
   }
   
   //! read with check
-  template <class T,class=enable_if_t<is_pod<T>::value>> void read(T &out,const char *name=NULL)
+  template <class T,class=enable_if_t<is_pod<T>::value>> void read(T &out,const char *name=NULL) const
   {out=read<T>(name);}
   
   //! read a vector
-  template <class TV,class TS=typename TV::base_type,class=enable_if_t<is_vector<TV>::value>> void read(TV &out,const char *name=NULL)
+  template <class TV,class TS=typename TV::base_type,class=enable_if_t<is_vector<TV>::value>> void read(TV &out,const char *name=NULL) const
   {if(name) expect(name);for(auto &o : out) read(o);}
   
   //! read a line and eliminate trailing new line
