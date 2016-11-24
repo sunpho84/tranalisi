@@ -83,7 +83,7 @@ public:
   size_t nboots() const {return this->size()-1;}
   
   //! constrcutor specifying nboots
-  explicit boot_t(size_t nboots) : valarray<T>(nboots+1,0) {}
+  explicit boot_t(size_t nboots) : valarray<T>((T)0.0,nboots+1) {}
   
   //! constrcutor specifying gauss_filler
   explicit boot_t(const gauss_filler_t &gf) : boot_t() {fill_gauss(gf);}
