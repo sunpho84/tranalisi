@@ -25,6 +25,9 @@ public:
   //! copy constructor
   ave_err_t(const ave_err_t &oth)=default;
   
+  //! write to a grace file
+  void write(const string &path);
+  
   //! move assignement
   ave_err_t &operator=(ave_err_t &&)=default;
   
@@ -71,5 +74,6 @@ using vec_ave_err_t=vector<ave_err_t>;
 
 //! output of ave_err_t
 ostream& operator<<(ostream &out,const ave_err_t &ae);
+
 
 #endif

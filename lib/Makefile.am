@@ -3,6 +3,7 @@ ACLOCAL_AMFLAGS=-I m4
 lib_LIBRARIES=libtran.a
 
 libtran_a_SOURCES= \
+	ave_err.cpp \
 	boot.cpp \
 	effective.cpp \
 	fit.cpp \

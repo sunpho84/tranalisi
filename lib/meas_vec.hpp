@@ -92,10 +92,6 @@ public:
   void bin_read(const string &path)
   {bin_read(path.c_str());}
   
-  //! write to a grace file
-  void write(const string &path)
-  {grace_file_t file(path);file<<(*this);file.new_set();}
-  
   //! assign from a scalar
   vmeas_t& operator=(const meas_t &oth) {for(auto &it : *this) it=oth;return *this;}
   
