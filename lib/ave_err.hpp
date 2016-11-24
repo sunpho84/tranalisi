@@ -25,9 +25,6 @@ public:
   //! copy constructor
   ave_err_t(const ave_err_t &oth)=default;
   
-  //! write to a grace file
-  void write(const string &path);
-  
   //! move assignement
   ave_err_t &operator=(ave_err_t &&)=default;
   
@@ -70,7 +67,15 @@ template <class T> ave_err_t range_ave_stddev(const valarray<T> &v,size_t size)
     return ae;
 }
 
-using vec_ave_err_t=vector<ave_err_t>;
+//! a vector of ave_err_t
+class vec_ave_err_t : public vector<ave_err_t>
+{
+public:
+  explicit vec_ave_err_t(size_t in) : vector<ave_err_t>(in) {}
+  
+  //! write to a grace file
+  void write(const string &path);
+};
 
 //! output of ave_err_t
 ostream& operator<<(ostream &out,const ave_err_t &ae);
