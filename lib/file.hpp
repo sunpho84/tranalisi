@@ -101,6 +101,7 @@ public:
     if(rc!=1) CRASH("Obtained %d while expecting token %s",rc,tok);
     if(strcasecmp(tok,rea)) CRASH("Obtained %s while expecting %s",rea,tok);
   }
+  
   //! expect a list of tokens
   void expect(const initializer_list<string> &toks) const
   {for(auto &tok : toks) expect(tok.c_str());}
