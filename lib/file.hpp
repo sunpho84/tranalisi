@@ -130,8 +130,12 @@ public:
   }
   
   //! read with check
-  template <class T> void read(T &out,const char *name=NULL)
+  template <class T,class=enable_if_t<is_pod<T>::value>> void read(T &out,const char *name=NULL)
   {out=read<T>(name);}
+  
+  //! read a vector
+  template <class TV,class TS=typename TV::base_type,class=enable_if_t<is_vector<TV>::value>> void read(TV &out,const char *name=NULL)
+  {if(name) expect(name);for(auto &o : out) read(o);}
   
   //! read a line and eliminate trailing new line
   char *get_line(line_t line)
