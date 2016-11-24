@@ -145,6 +145,13 @@ public:
     return ret;
   }
   
+  //! skip a line
+  void skip_line()
+  {
+    line_t skip;
+    get_line(skip);
+  }
+  
   //! return whether we are at the end of file
   bool feof()
   {return std::feof(file);}
