@@ -25,3 +25,4 @@ build_clang
 /config/compile
 build_opt
 build*
+/lib/#fit.hpp#
