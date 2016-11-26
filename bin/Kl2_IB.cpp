@@ -143,7 +143,7 @@ int main(int narg,char **arg)
 
   
 
-  raw_file_t file("ultimate_input.out","r");
+  raw_file_t file("../ultimate_input.out","r");
 
   //int jack_index[noa][nbeta][nmusea_max][nboots];
   
