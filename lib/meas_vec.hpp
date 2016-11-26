@@ -128,11 +128,11 @@ public:
     size_t nel=this->size();
     size_t nelh=nel/2;
     
-    if(abs(par)!=1) CRASH("Unknown parity %d",par);
+    if(abs(par)!=1 && par!=0) CRASH("Unknown parity %d",par);
     
     if(nel%2) CRASH("Size %zu odd",nel);
     
-    return vmeas_t(this->subset(0,nelh)+this->symmetric().subset(0,nelh))*0.5;//*(this->subset(0,nelh)+this->subset(nelh,nel).inverse());
+    return vmeas_t(this->subset(0,nelh)+par*this->symmetric().subset(0,nelh))/(1.0+abs(par));//*(this->subset(0,nelh)+this->subset(nelh,nel).inverse());
   }
 };
 
