@@ -7,13 +7,21 @@
 int T;
 index_t<4> ind;
 size_t noa=8,nbeta=3,nboots=100;
-
+//size_t nmusea_max=4;
 class lat_par_t
 {
 public:
   dboot_t ml,ms,mc;
-  dbvec_t ainv(nbeta);
+  //dboot_t r0,f0,dB0;
+  dbvec_t ainv;
+  //dbvec_t Z;
+  lat_par_t() : ainv(nbeta) {}
+  //,Z(nbeta)
+  
+  
 };
+
+
 
 dboot_t read_boot(const raw_file_t &file)
 {
@@ -120,8 +128,20 @@ int main(int narg,char **arg)
   D_ratio_s.ave_err().write("D_ratio_s.xmg");
   D_ratio_p.ave_err().write("D_ratio_p.xmg");
 
+
+
+
+
+  /////////////////////////test file input bootstrap////////////////////////
+
+
+  
+
   raw_file_t file("/Users/mac/Programmi/Tesi_Laurea_Magistrale_bozza/Archivio definitivo/Tesi Magistrale/Programmi/New Nucleon/bootstrapFVE/ultimate_input.out","r");
 
+  //int jack_index[noa][nbeta][nmusea_max][nboots];
+  
+  
   vector<lat_par_t> lat_par(noa);
   double dum;
   file.expect({"ml","(GeV)"});
@@ -139,11 +159,69 @@ int main(int narg,char **arg)
     for(size_t ibeta=0;ibeta<nbeta;ibeta++)
       for(size_t iboot=0;iboot<nboots;iboot++)
 	file.read(lat_par[ia].ainv[ibeta][iboot]);
-  //file.skip_line_line(2);
-  //double ainv[Nbeta][Nev], r0[Nev], Z1[Nbeta], Z2[Nbeta], Zev[Nbeta][Nev], f0[Nev], B0[Nev];
-  //int iboot[Nbeta][Nmusea_max][Nev];
+  /*
+  file.expect({"r0","(GeV^-1)"});
+  file.read(dum);
+  for(size_t ia=0;ia<noa;ia++) lat_par[ia].r0=read_boot(file);
+  file.expect({"Zp","(1.90","1.95","2.10)"});
+  file.read(dum);
+  for(size_t ia=0;ia<noa/2;ia++)
+    for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+      for(size_t iboot=0;iboot<nboots;iboot++)
+	file.read(lat_par[ia].Z[ibeta][iboot]);
+  file.read(dum);
+  for(size_t ia=noa/2;ia<noa;ia++)
+    for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+      for(size_t iboot=0;iboot<nboots;iboot++)
+	file.read(lat_par[ia].Z[ibeta][iboot]);
+  file.expect({"Jackknife","numbers","(","0.0030(32),0.0040(32),","0.0050(32),","0.0040(24)","...)"});
+  for(size_t ia=0;ia<noa;ia++)
+    for(size_t ibeta=0;ibeta<nbeta;ibeta++){
+      size_t nmusea=0;
+      if(ibeta==0)
+      {nmusea=3;}
+    else if(ibeta==1)
+      {nmusea=4;}
+    else if(ibeta==2)
+      {nmusea=4;}
+    else if(ibeta==3)
+      {nmusea=1;}
+    else if(ibeta==4)
+      {nmusea=3;}
+      for(size_t imusea=0;imusea<nmusea;imusea++)
+	for(size_t iboot=0;iboot<nboots;iboot++)
+	  file.read(jack_index[ia][ibeta][imusea][iboot]);
+    }
+  file.expect({"f0","(GeV)"});
+  file.read(dum);
+  for(size_t ia=0;ia<noa;ia++) lat_par[ia].f0=read_boot(file);
+  file.expect({"2*B0","(GeV)"});
+  file.read(dum);
+  for(size_t ia=0;ia<noa;ia++) lat_par[ia].dB0=read_boot(file);
+  */
   
-  cout<<lat_par[0].ms.ave_err()<<endl;
+  
+  //cout<<lat_par[0].ms.ave_err()<<endl;
+
+
+  ///////////////////////Delta m critico/////////////////////
+
+  djvec_t ward_cr=djvec_t(load("corrLL_V0P5",0,0)+load("corr0M_V0P5",0,0)+load("corr0T_V0P5",0,0)+load("corr0M_V0P5",0,0)+load("corr0T_V0P5",0,0));
+  djvec_t num_deltam_cr=forward_derivative(ward_cr);
+  djvec_t denom_deltam_cr=forward_derivative(load("corr0P_V0P5",0,0));
+
+  
+  djvec_t deltam_cr=-num_deltam_cr/denom_deltam_cr;
+  deltam_cr.ave_err().write("deltam_cr_t.xmg");
+
+  num_deltam_cr.ave_err().write("num");
+  denom_deltam_cr.ave_err().write("denom");
+
+  djack_t out=constant_fit(deltam_cr,10,23,"out_deltam_cr.xmg");
+  
+  raw_file_t out_deltam_cr("fit_deltam_cr","w");
+  out_deltam_cr.bin_write(out);
+  
   
   return 0;
 }
