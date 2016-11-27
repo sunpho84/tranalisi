@@ -69,7 +69,8 @@ void signal_handler(int sig);
 //! check that a vector is orderd
 template <class T> inline void check_ordered(const initializer_list<T> &vec)
 {
-  auto prev=vec.begin(),cur=prev+1;
+  auto prev=vec.begin();
+  auto cur=prev+1;
   size_t it=1;
   do
     {
@@ -79,7 +80,6 @@ template <class T> inline void check_ordered(const initializer_list<T> &vec)
       it++;
     }
   while(cur!=vec.end());
-  
 }
 
 //! check agreement of sizes of two vectors
