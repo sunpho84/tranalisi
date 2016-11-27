@@ -167,7 +167,7 @@ public:
 using dboot_t=boot_t<double>;
 
 //! return the size needed to init a boot_t
-template <class T> const size_t init_nel(const boot_t<T> &obj)
+template <class T> size_t init_nel(const boot_t<T> &obj)
 {return obj.nboots();}
 
 #undef EXTERN_BOOT

@@ -17,7 +17,7 @@ using namespace std;
 using namespace placeholders;
 
 //! get the size to init an object, avoiding size() for boot and jack
-template <class T> const size_t init_nel(const valarray<T> &obj)
+template <class T> size_t init_nel(const valarray<T> &obj)
 {return obj.size();}
 
 //////////////////////////////////////////////// operations //////////////////////////////////////////////
