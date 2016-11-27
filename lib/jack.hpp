@@ -128,7 +128,7 @@ public:
 using djack_t=jack_t<double>;
 
 //! get the size needed to init a jack_t
-template <class T> const size_t init_nel(const jack_t<T> &obj)
+template <class T> size_t init_nel(const jack_t<T> &obj)
 {return njacks;}
 
 #undef EXTERN_JACK
