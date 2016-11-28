@@ -65,7 +65,7 @@ int main(int narg,char **arg)
 	  size_t offset=filter.second.first;
 	  size_t each=filter.second.second;
 	  size_t hw=data.size()/(base_nel*each);
-
+	  
 	  vec_filter(data,gslice(base_nel*offset,{hw,T*ncols},{each*T*ncols,1})).bin_write(combine(it.second.c_str(),filter.first.c_str()));
 	  //((djvec_t)data[gslice(base_nel*offset,{hw,T*ncols},{each*T*ncols,1})]).bin_write(combine(it.second.c_str(),filter.first.c_str()));
 	}
