@@ -6,31 +6,8 @@
 
 int T;
 index_t<4> ind;
-size_t noa=8,nbeta=3,nboots=100;
-//size_t nmusea_max=4;
-class lat_par_t
-{
-public:
-  dboot_t ml,ms,mc;
-  //dboot_t r0,f0,dB0;
-  dbvec_t ainv;
-  //dbvec_t Z;
-  lat_par_t() : ainv(nbeta) {}
-  //,Z(nbeta)
-  
-  
-};
 
-
-
-dboot_t read_boot(const raw_file_t &file)
-{
-  dboot_t out;
-  for(size_t ib=0;ib<nboots;ib++) file.read(out[ib]);
-  return out;
-}
-
-djvec_t load(string path,size_t im1,size_t im2,size_t reim=RE,int rpar=1,int spat_par=1)
+djvec_t load(string path,size_t im1,size_t im2,size_t reim,int rpar,int spat_par)
 {
   djvec_t corr_r0=read_djvec(path,T,ind({im1,im2,0,reim}));
   djvec_t corr_r1=read_djvec(path,T,ind({im1,im2,1,reim}));
@@ -38,21 +15,48 @@ djvec_t load(string path,size_t im1,size_t im2,size_t reim=RE,int rpar=1,int spa
   return djvec_t(corr_r0+rpar*corr_r1).symmetrized(spat_par)/(1.0+abs(rpar));
 }
 
-djvec_t load_P5P5(string ins,size_t im1,size_t im2,int reim=RE,int rpar=1,int spat_par=1)
+djvec_t load_P5P5(string ins,size_t im1,size_t im2,size_t reim=RE,int rpar=1,int spat_par=1)
 {return load(combine("corr%s_P5P5",ins.c_str()),im1,im2,reim,rpar,spat_par);}
 
-djvec_t load_V0P5(string ins,size_t im1,size_t im2,int reim=IM,int rpar=-1,int spat_par=-1)
+djvec_t load_V0P5(string ins,size_t im1,size_t im2,size_t reim=IM,int rpar=-1,int spat_par=-1)
 {return load(combine("corr%s_V0P5",ins.c_str()),im1,im2,reim,rpar,spat_par);}
 
 int main(int narg,char **arg)
 {
-  if(narg<2) CRASH("Use %s T",arg[0]);
-  
+  if(narg<3) CRASH("Use %s T ibeta",arg[0]);
+
+  int ibeta;
   T=atoi(arg[1]);
+  ibeta=atoi(arg[2]);
   int TH=T/2;
   
   ind.set_ranges({3,3,2,2});  
   set_njacks(15);
+  
+  raw_file_t input;
+  
+  switch(ibeta)
+    {
+    case 0: input.open("../../input_t_A_32.txt","r"); break;
+    case 1: input.open("../../input_t_A_24.txt","r"); break;
+    case 2: input.open("../../input_t_B_32.txt","r"); break;
+    case 3: input.open("../../input_t_B_24.txt","r"); break;
+    case 4: input.open("../../input_t_D.txt","r"); break;
+    default: CRASH("Undefined ibeta"); break;
+    }
+ 
+  size_t pi_tmin=input.read<int>("pi_tmin");
+  size_t pi_tmax=input.read<int>("pi_tmax");
+  size_t k_tmin=input.read<int>("k_tmin");
+  size_t k_tmax=input.read<int>("k_tmax");
+  size_t D_tmin=input.read<int>("D_tmin");
+  size_t D_tmax=input.read<int>("D_tmax");
+  size_t ud_tmin=input.read<int>("ud_tmin");
+  size_t ud_tmax=input.read<int>("ud_tmax");
+  size_t s_tmin=input.read<int>("s_tmin");
+  size_t s_tmax=input.read<int>("s_tmax");
+  size_t c_tmin=input.read<int>("c_tmin");
+  size_t c_tmax=input.read<int>("c_tmax");
   
   //pion
   
@@ -61,19 +65,16 @@ int main(int narg,char **arg)
   pi_ratio.ave_err().write("pi_ratio.xmg");
 
   djack_t pi_M,pi_A,pi_SL;
-  two_pts_with_ins_ratio_fit(pi_M,pi_A,pi_SL,load_P5P5("00",0,0),load_P5P5("LL",0,0),TH,10,20,"Mpi.xmg","pi_ins.xmg");
+  two_pts_with_ins_ratio_fit(pi_M,pi_A,pi_SL,load_P5P5("00",0,0),load_P5P5("LL",0,0),TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_ins.xmg");
   cout<<"pi_M: "<<pi_M.ave_err()<<endl;
   cout<<"pi_A: "<<pi_A.ave_err()<<endl;
   cout<<"pi_SL: "<<pi_SL.ave_err()<<endl;
 
+  raw_file_t pi_obs_file("pi_obs","w");
+  pi_obs_file.bin_write(pi_M);
+  pi_obs_file.bin_write(pi_SL);
 
-  raw_file_t obs_file("obs_pi","w");
-  obs_file.bin_write(pi_M);
-  obs_file.bin_write(pi_SL);
-
-  
   //kaon
-
 
   djvec_t k_ratio_exch=load_P5P5("LL",0,1)/load_P5P5("00",1,0);
   djvec_t k_ratio_self=load_P5P5("0M",1,0)/load_P5P5("00",1,0);
@@ -87,41 +88,39 @@ int main(int narg,char **arg)
   k_ratio_s.ave_err().write("k_ratio_s.xmg");
   k_ratio_p.ave_err().write("k_ratio_p.xmg");
 
+  djack_t k_M,k_A_exch,k_SL_exch,k_A_selftad,k_SL_selftad,k_A_s,k_SL_s,k_A_p,k_SL_p;
+  
+  // djack_t M_k,Z_k;
 
-
-  djack_t k_M1,k_M2,k_M3,k_M4,k_A_exch,k_SL_exch,k_A_selftad,k_SL_selftad,k_A_s,k_SL_s,k_A_p,k_SL_p;
-
-  djack_t k_M,k_Z;
-
-  djvec_t corr_00=load_P5P5("00",1,0);
-  two_pts_migrad_fit(k_Z,k_M,corr_00,TH,10,20,"kaon_mass.xmg");
-  cout<<"k_Z: "<<k_Z.ave_err()<<endl;
+  // djvec_t k_corr_00=load_P5P5("00",1,0);
+  // two_pts_migrad_fit(Z_k,M_k,k_corr_00,TH,k_tmin,k_tmax,"Mk.xmg");
+  // cout<<"k_Z: "<<Z_k.ave_err()<<endl;
+  // cout<<"k_M: "<<M_k.ave_err()<<endl;
+  
+  two_pts_with_ins_ratio_fit(k_M,k_A_exch,k_SL_exch,load_P5P5("00",1,0),load_P5P5("LL",0,1),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_exch.xmg");
+  two_pts_with_ins_ratio_fit(k_M,k_A_s,k_SL_s,load_P5P5("00",1,0),load_P5P5("0S",1,0),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_s.xmg");
+  two_pts_with_ins_ratio_fit(k_M,k_A_p,k_SL_p,load_P5P5("00",1,0),load_P5P5("0P",1,0,IM,-1),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_p.xmg");
+  two_pts_with_ins_ratio_fit(k_M,k_A_selftad,k_SL_selftad,load_P5P5("00",1,0),djvec_t(load_P5P5("0M",1,0)+load_P5P5("0T",1,0)),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_selftad.xmg");
+  
   cout<<"k_M: "<<k_M.ave_err()<<endl;
-
-  
-  
-  two_pts_with_ins_ratio_fit(k_M1,k_A_exch,k_SL_exch,load_P5P5("00",1,0),load_P5P5("LL",0,1),TH,10,20,"Mk1.xmg","k_exch.xmg");
-  two_pts_with_ins_ratio_fit(k_M2,k_A_selftad,k_SL_selftad,load_P5P5("00",1,0),djvec_t(load_P5P5("0M",1,0)+load_P5P5("0T",1,0)),TH,10,20,"Mk2.xmg","k_selftad.xmg");
-  two_pts_with_ins_ratio_fit(k_M3,k_A_s,k_SL_s,load_P5P5("00",1,0),load_P5P5("0S",1,0),TH,10,20,"Mk3.xmg","k_s.xmg");
-  two_pts_with_ins_ratio_fit(k_M4,k_A_p,k_SL_p,load_P5P5("00",1,0),load_P5P5("0P",1,0),TH,10,20,"Mk4.xmg","k_p.xmg");
-  
-  
-  cout<<"k_M1: "<<k_M1.ave_err()<<endl;
   cout<<"k_A_exch: "<<k_A_exch.ave_err()<<endl;
   cout<<"k_SL_exch: "<<k_SL_exch.ave_err()<<endl;
-  cout<<"k_M2: "<<k_M2.ave_err()<<endl;
   cout<<"k_A_selftad: "<<k_A_selftad.ave_err()<<endl;
   cout<<"k_SL_selftad: "<<k_SL_selftad.ave_err()<<endl;
-  cout<<"k_M3: "<<k_M3.ave_err()<<endl;
   cout<<"k_A_s: "<<k_A_s.ave_err()<<endl;
   cout<<"k_SL_s: "<<k_SL_s.ave_err()<<endl;
-  cout<<"k_M4: "<<k_M4.ave_err()<<endl;
   cout<<"k_A_p: "<<k_A_p.ave_err()<<endl;
   cout<<"k_SL_p: "<<k_SL_p.ave_err()<<endl;
 
+  raw_file_t k_obs_file("k_obs","w");
+  k_obs_file.bin_write(k_M);
+  k_obs_file.bin_write(k_SL_exch);
+  k_obs_file.bin_write(k_SL_selftad);
+  k_obs_file.bin_write(k_SL_s);
+  k_obs_file.bin_write(k_SL_p);
+
   //D meson
 
- 
   djvec_t D_ratio_exch=load_P5P5("LL",0,2)/load_P5P5("00",2,0);
   djvec_t D_ratio_self=load_P5P5("0M",2,0)/load_P5P5("00",2,0);
   djvec_t D_ratio_tad=load_P5P5("0T",2,0)/load_P5P5("00",2,0);
@@ -134,100 +133,101 @@ int main(int narg,char **arg)
   D_ratio_s.ave_err().write("D_ratio_s.xmg");
   D_ratio_p.ave_err().write("D_ratio_p.xmg");
 
-
-
-
-
-  /////////////////////////test file input bootstrap////////////////////////
-
-
+  djack_t D_M,D_A_exch,D_SL_exch,D_A_selftad,D_SL_selftad,D_A_s,D_SL_s,D_A_p,D_SL_p;
   
+  // djack_t M_D,Z_D;
 
-  raw_file_t file("../ultimate_input.out","r");
+  // djvec_t D_corr_00=load_P5P5("00",2,0);
+  // two_pts_migrad_fit(Z_D,M_D,D_corr_00,TH,D_tmin,D_tmax,"MD.xmg");
+  // cout<<"D_Z: "<<Z_D.ave_err()<<endl;
+  // cout<<"D_M: "<<M_D.ave_err()<<endl;
+  
+  two_pts_with_ins_ratio_fit(D_M,D_A_exch,D_SL_exch,load_P5P5("00",2,0),load_P5P5("LL",0,2),TH,D_tmin,D_tmax,"D_mass.xmg","D_exch.xmg");
+  two_pts_with_ins_ratio_fit(D_M,D_A_s,D_SL_s,load_P5P5("00",2,0),load_P5P5("0S",2,0),TH,D_tmin,D_tmax,"D_mass.xmg","D_s.xmg");
+  two_pts_with_ins_ratio_fit(D_M,D_A_p,D_SL_p,load_P5P5("00",2,0),load_P5P5("0P",2,0,IM,-1),TH,D_tmin,D_tmax,"D_mass.xmg","D_p.xmg");
+  two_pts_with_ins_ratio_fit(D_M,D_A_selftad,D_SL_selftad,load_P5P5("00",2,0),djvec_t(load_P5P5("0M",2,0)+load_P5P5("0T",2,0)),TH,D_tmin,D_tmax,"D_mass.xmg","D_selftad.xmg");
+  
+  cout<<"D_M: "<<D_M.ave_err()<<endl;
+  cout<<"D_A_exch: "<<D_A_exch.ave_err()<<endl;
+  cout<<"D_SL_exch: "<<D_SL_exch.ave_err()<<endl;
+  cout<<"D_A_selftad: "<<D_A_selftad.ave_err()<<endl;
+  cout<<"D_SL_selftad: "<<D_SL_selftad.ave_err()<<endl;
+  cout<<"D_A_s: "<<D_A_s.ave_err()<<endl;
+  cout<<"D_SL_s: "<<D_SL_s.ave_err()<<endl;
+  cout<<"D_A_p: "<<D_A_p.ave_err()<<endl;
+  cout<<"D_SL_p: "<<D_SL_p.ave_err()<<endl;
 
-  //int jack_index[noa][nbeta][nmusea_max][nboots];
-  
-  
-  vector<lat_par_t> lat_par(noa);
-  double dum;
-  file.expect({"ml","(GeV)"});
-  file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].ml=read_boot(file);
-  file.expect({"ms","(GeV)"});
-  file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].ms=read_boot(file);
-  file.expect({"mc(2","GeV)","(GeV)"});
-  file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].mc=read_boot(file);
-  file.expect({"a^-1","(GeV)","(1.90","1.95","2.10)"});
-  file.read(dum);
-  for(size_t ia=0;ia<noa;ia++)
-    for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-      for(size_t iboot=0;iboot<nboots;iboot++)
-	file.read(lat_par[ia].ainv[ibeta][iboot]);
-  /*
-  file.expect({"r0","(GeV^-1)"});
-  file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].r0=read_boot(file);
-  file.expect({"Zp","(1.90","1.95","2.10)"});
-  file.read(dum);
-  for(size_t ia=0;ia<noa/2;ia++)
-    for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-      for(size_t iboot=0;iboot<nboots;iboot++)
-	file.read(lat_par[ia].Z[ibeta][iboot]);
-  file.read(dum);
-  for(size_t ia=noa/2;ia<noa;ia++)
-    for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-      for(size_t iboot=0;iboot<nboots;iboot++)
-	file.read(lat_par[ia].Z[ibeta][iboot]);
-  file.expect({"Jackknife","numbers","(","0.0030(32),0.0040(32),","0.0050(32),","0.0040(24)","...)"});
-  for(size_t ia=0;ia<noa;ia++)
-    for(size_t ibeta=0;ibeta<nbeta;ibeta++){
-      size_t nmusea=0;
-      if(ibeta==0)
-      {nmusea=3;}
-    else if(ibeta==1)
-      {nmusea=4;}
-    else if(ibeta==2)
-      {nmusea=4;}
-    else if(ibeta==3)
-      {nmusea=1;}
-    else if(ibeta==4)
-      {nmusea=3;}
-      for(size_t imusea=0;imusea<nmusea;imusea++)
-	for(size_t iboot=0;iboot<nboots;iboot++)
-	  file.read(jack_index[ia][ibeta][imusea][iboot]);
-    }
-  file.expect({"f0","(GeV)"});
-  file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].f0=read_boot(file);
-  file.expect({"2*B0","(GeV)"});
-  file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].dB0=read_boot(file);
-  */
-  
-  
-  //cout<<lat_par[0].ms.ave_err()<<endl;
-
+  raw_file_t D_obs_file("D_obs","w");
+  D_obs_file.bin_write(D_M);
+  D_obs_file.bin_write(D_SL_exch);
+  D_obs_file.bin_write(D_SL_selftad);
+  D_obs_file.bin_write(D_SL_s);
+  D_obs_file.bin_write(D_SL_p);
 
   ///////////////////////Delta m critico/////////////////////
-  djvec_t ward_cr=djvec_t(load_V0P5("LL",0,0)+load_V0P5("0M",0,0)+load_V0P5("0T",0,0)+load_V0P5("0M",0,0)+load_V0P5("0T",0,0));
-  djvec_t num_deltam_cr=forward_derivative(ward_cr);
-  num_deltam_cr.ave_err().write("num_deltam_cr.xmg");
-  djvec_t denom_deltam_cr=forward_derivative(load_V0P5("0P",0,0,RE,0,0));
-  denom_deltam_cr.ave_err().write("denom_deltam_cr.xmg");
-  
-  djvec_t deltam_cr=-num_deltam_cr/denom_deltam_cr;
-  deltam_cr.ave_err().write("deltam_cr_t.xmg");
 
-  num_deltam_cr.ave_err().write("num");
-  denom_deltam_cr.ave_err().write("denom");
+  //ud
+  
+  djvec_t ud_contr_ward_cr=djvec_t(load_V0P5("LL",0,0)+2.0*djvec_t(load_V0P5("0M",0,0)+load_V0P5("0T",0,0)));
+  djvec_t ud_contr_ward_cr_wo=djvec_t(load_V0P5("LL",0,0)+2.0*djvec_t(load_V0P5("0M",0,0)));
+  djvec_t ud_num_deltam_cr=forward_derivative(ud_contr_ward_cr);
+  djvec_t ud_num_deltam_cr_wo=forward_derivative(ud_contr_ward_cr_wo);
+  ud_num_deltam_cr.ave_err().write("ud_num_deltam_cr.xmg");
+  djvec_t ud_denom_deltam_cr=forward_derivative(load_V0P5("0P",0,0,RE,1));
+  ud_denom_deltam_cr.ave_err().write("ud_denom_deltam_cr.xmg");
+  
+  djvec_t ud_deltam_cr=djvec_t(ud_num_deltam_cr/ud_denom_deltam_cr)/2.0;
+  ud_deltam_cr.ave_err().write("ud_deltam_cr_t.xmg");
+  djvec_t ud_deltam_cr_wo=djvec_t(ud_num_deltam_cr_wo/ud_denom_deltam_cr)/2.0;
+  ud_deltam_cr.ave_err().write("ud_deltam_cr_t_wo.xmg");
 
-  djack_t out=constant_fit(deltam_cr,10,23,"out_deltam_cr.xmg");
+  djack_t ud_fit_deltam_cr=constant_fit(ud_deltam_cr,ud_tmin,ud_tmax,"ud_fit_deltam_cr.xmg");
+  djack_t ud_fit_deltam_cr_wo=constant_fit(ud_deltam_cr_wo,ud_tmin,ud_tmax,"ud_fit_deltam_cr_wo.xmg");
   
-  raw_file_t out_deltam_cr("fit_deltam_cr","w");
-  out_deltam_cr.bin_write(out);
+  raw_file_t ud_out_fit_deltam_cr("ud_fit_deltam_cr","w");
+  ud_out_fit_deltam_cr.bin_write(ud_fit_deltam_cr);
+  raw_file_t ud_out_fit_deltam_cr_wo("ud_fit_deltam_cr_wo","w");
+  ud_out_fit_deltam_cr_wo.bin_write(ud_fit_deltam_cr_wo);
+
+  cout<<"ud_deltam_cr:"<<" "<<ud_fit_deltam_cr.ave_err()<<endl;
+  cout<<"ud_deltam_cr_wo:"<<" "<<ud_fit_deltam_cr_wo.ave_err()<<endl;
+
+  //s
+
+  djvec_t s_contr_ward_cr=djvec_t(load_V0P5("LL",1,1)+2.0*djvec_t(load_V0P5("0M",1,1)+load_V0P5("0T",1,1)));
+  djvec_t s_num_deltam_cr=forward_derivative(s_contr_ward_cr);
+  s_num_deltam_cr.ave_err().write("s_num_deltam_cr.xmg");
+  djvec_t s_denom_deltam_cr=forward_derivative(load_V0P5("0P",1,1,RE,1));
+  s_denom_deltam_cr.ave_err().write("s_denom_deltam_cr.xmg");
   
+  djvec_t s_deltam_cr=djvec_t(s_num_deltam_cr/s_denom_deltam_cr)/2.0;
+  s_deltam_cr.ave_err().write("s_deltam_cr_t.xmg");
+
+  djack_t s_fit_deltam_cr=constant_fit(s_deltam_cr,s_tmin,s_tmax,"s_fit_deltam_cr.xmg");
   
+  raw_file_t s_out_fit_deltam_cr("s_fit_deltam_cr","w");
+  s_out_fit_deltam_cr.bin_write(s_fit_deltam_cr);
+
+  cout<<"s_deltam_cr:"<<" "<<s_fit_deltam_cr.ave_err()<<endl;
+
+  //c
+
+  djvec_t c_contr_ward_cr=djvec_t(load_V0P5("LL",2,2)+2.0*djvec_t(load_V0P5("0M",2,2)+load_V0P5("0T",2,2)));
+  djvec_t c_num_deltam_cr=forward_derivative(c_contr_ward_cr);
+  c_num_deltam_cr.ave_err().write("c_num_deltam_cr.xmg");
+  djvec_t c_denom_deltam_cr=forward_derivative(load_V0P5("0P",2,2,RE,1));
+  c_denom_deltam_cr.ave_err().write("c_denom_deltam_cr.xmg");
+  
+  djvec_t c_deltam_cr=djvec_t(c_num_deltam_cr/c_denom_deltam_cr)/2.0;
+  c_deltam_cr.ave_err().write("c_deltam_cr_t.xmg");
+
+  djack_t c_fit_deltam_cr=constant_fit(c_deltam_cr,c_tmin,c_tmax,"c_fit_deltam_cr.xmg");
+  
+  raw_file_t c_out_fit_deltam_cr("c_fit_deltam_cr","w");
+  c_out_fit_deltam_cr.bin_write(c_fit_deltam_cr);
+
+  cout<<"c_deltam_cr:"<<" "<<c_fit_deltam_cr.ave_err()<<endl;  
+
   return 0;
+
 }
