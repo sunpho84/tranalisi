@@ -10,6 +10,9 @@ const double e2=4*M_PI/137.;
 const double eu=2.0/3;
 const double ed=-1.0/3;
 
+const vector<size_t> symbol={grace::SQUARE,grace::CIRCLE,grace::DIAMOND};
+const vector<size_t> color={grace::GREEN4,grace::RED,grace::BLUE};
+
 class lat_par_t
 {
 public:
@@ -49,7 +52,29 @@ template <class T> T FVE_d2M(const T &M,const T &Lphys)
   double alpha=1.0/137;
   return -FVE_k*alpha/Lphys*(M+2.0/Lphys);
 }
-  
+
+//! plot the three ensemble separately
+template <class Tx,class Ty> void plot_ens_data(grace_file_t &file,const Tx &x,const Ty &y)
+{
+  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+    {
+      file.no_line();
+      file.set_symbol(symbol[ibeta]);
+      file.color(color[ibeta]);
+      file<<"@type xydy"<<endl;
+      for(size_t iens=0;iens<raw_data.size();iens++)
+	if(raw_data[iens].ibeta==ibeta)
+	  file<<x[iens].ave()<<" "<<y[iens].ave_err()<<endl;
+      file.new_set();
+    }
+}
+
+template <class Tx,class Ty> void plot_ens_data(const string &path,const Tx &x,const Ty &y)
+{
+  grace_file_t file(path);
+  plot_ens_data(file,x,y);
+}
+
 int main(int narg,char **arg)
 {
   set_njacks(15);
@@ -170,11 +195,10 @@ int main(int narg,char **arg)
   cout<<endl;
   for(size_t ia=0;ia<noa;ia++)
     {
-      grace_file_t dM2Pi_file(combine("plots/dM2Pi_an%zu.xmg",ia));
-      
-      dboot_t ml(raw_data.size());
-      dboot_t dM2Pi(raw_data.size());
-      dboot_t FVE_dM2Pi(raw_data.size());
+      dbvec_t ml(raw_data.size());
+      dbvec_t M2Pi(raw_data.size());
+      dbvec_t dM2Pi(raw_data.size());
+      dbvec_t FVE_dM2Pi(raw_data.size());
       
       for(size_t iens=0;iens<raw_data.size();iens++)
 	{
@@ -187,20 +211,14 @@ int main(int narg,char **arg)
 	  dboot_t MPi_sl=dboot_t(bi,raw_data[iens].pi_SL)/a;
 	  dboot_t L=raw_data[iens].L*a;
 	  
+	  M2Pi[iens]=MPi*MPi;
 	  dM2Pi[iens]=MPi*sqr(eu-ed)*e2*MPi_sl;
 	  ml[iens]=raw_data[iens].aml/lat_par[ia].Z[ibeta]/a;
-	  FVE_d2MPi[iens]=FVE_d2M(MPi,L);
+	  FVE_dM2Pi[iens]=FVE_d2M(MPi,L);
 	}
-
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	{
-	  dM2Pi_file.no_line();
-	  dM2Pi_file<<"@type xydy"<<endl;
-	  for(size_t iens=0;iens<raw_data[iens].size();iens++)
-	    if(raw_data[iens].ibeta==ibeta)
-	      dM2Pi_file<<ml[iens].ave()<<" "<<sqr(MPi[iens]).ave_err()<<endl;
-	  dM2Pi_file.new_set();
-	}
+      
+      plot_ens_data(combine("plots/dM2Pi_an%zu.xmg",ia),ml,dM2Pi);
+      plot_ens_data(combine("plots/dM2Pi_FVEcorr_an%zu.xmg",ia),ml,dM2Pi-FVE_dM2Pi);
     }
 
   return 0;
