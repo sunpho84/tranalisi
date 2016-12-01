@@ -100,6 +100,9 @@ public:
   //! move constructor
   boot_t(boot_t&& oth) : valarray<T>(forward<valarray<T>>(oth)) {cout<<"move const"<<endl;}
   
+  //! construct from expr
+  template<class _Dom> boot_t(const _Expr<_Dom,T> &oth) : valarray<T>(oth) {}
+  
   //! copy constructor
   boot_t(const boot_t &oth) : valarray<T>(oth) {cout<<"copy const"<<endl;}
   
