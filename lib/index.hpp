@@ -15,7 +15,6 @@ public:
   //! set the range
   void set_ranges(const initializer_list<size_t> &list)
   {
-    cout<<" "<<list.size()<<endl;
     if(list.size()!=rank) CRASH("Initializing index of rank %zu with the wrong size %zu",rank,list.size());
     copy(list.begin(),list.end(),this->begin());
   }
