@@ -7,6 +7,7 @@
 void vec_ave_err_t::write(const string &path)
 {
   grace_file_t file(path);
-  file<<(*this);file.new_set();
+  file<<(*this);
+  file.new_set();
 }
 

@@ -68,12 +68,8 @@ template <class Tx,class Ty> void plot_ens_data(grace_file_t &file,const Tx &x,c
       file.new_set();
     }
 }
-
-template <class Tx,class Ty> void plot_ens_data(const string &path,const Tx &x,const Ty &y)
-{
-  grace_file_t file(path);
-  plot_ens_data(file,x,y);
-}
+template <class Tx,class Ty> void plot_ens_data(grace_file_t &&file,const Tx &x,const Ty &y)
+{plot_ens_data(file,x,y);}
 
 int main(int narg,char **arg)
 {
