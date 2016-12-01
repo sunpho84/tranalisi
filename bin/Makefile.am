@@ -9,6 +9,7 @@ bin_PROGRAMS= \
 	main \
 	prepare_jackknives \
 	Kl2_IB \
+	gm2 \
 	Kl2_IB_glb
 
 djvec_load_SOURCES=djvec_load.cpp
@@ -20,6 +21,7 @@ main_SOURCES=main.cpp
 prepare_jackknives_SOURCES=prepare_jackknives.cpp
 
 Kl2_IB_SOURCES=Kl2_IB.cpp
-
 Kl2_IB_glb_SOURCES=Kl2_IB_glb.cpp
+
+gm2_SOURCES=gm2.cpp
 
