@@ -113,8 +113,8 @@ public:
   boot_t &operator=(const boot_t &oth)// =default;
   {valarray<T>::operator=(oth);cout<<"copy"<<endl;return *this;}
   
-  //! assign from a scalar
-  boot_t& operator=(const T &oth) {for(auto &it : *this) it=oth;return *this;}
+  //! assignement
+  template<class oth_t> boot_t &operator=(const oth_t &oth) {valarray<T>::operator=(oth);return *this;}
   
   //! compute average and error
   ave_err_t ave_err() const
