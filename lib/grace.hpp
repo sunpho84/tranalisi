@@ -22,6 +22,9 @@ public:
   //! default constructor
   grace_file_t(const string &path) : ofstream(path),iset(0) {if(!this->good()) CRASH("Unable to open grace file %s",path.c_str());}
   
+  //! move constructor
+  grace_file_t(grace_file_t&& oth) =default;
+  
   //! shift iset
   void shift_iset(size_t how_many=1)
   {iset+=how_many;}
@@ -35,17 +38,17 @@ public:
   }
   
   //! set a property
-  void set_prop(string what){(*this)<<"@s"<<iset<<" "<<what<<endl;}
+  void set_prop(string what) {(*this)<<"@s"<<iset<<" "<<what<<endl;}
   
   //! set line style
-  void line_style(size_t how){set_prop("line type "+to_string(how));}
-  void no_line(){line_style(grace::NO_LINE);}
+  void line_style(size_t how) {set_prop("line type "+to_string(how));}
+  void no_line() {line_style(grace::NO_LINE);}
   
   //! set colors
-  void symbol_color(int col){set_prop("symbol color "+to_string(col));}
-  void symbol_fill_color(int col){set_prop("symbol fill color "+to_string(col));}
-  void line_color(int col){set_prop("line color "+to_string(col));}
-  void errorbar_color(int col){set_prop("errorbar color "+to_string(col));}
+  void symbol_color(int col) {set_prop("symbol color "+to_string(col));}
+  void symbol_fill_color(int col) {set_prop("symbol fill color "+to_string(col));}
+  void line_color(int col) {set_prop("line color "+to_string(col));}
+  void errorbar_color(int col) {set_prop("errorbar color "+to_string(col));}
   void color(int col)
   {
     symbol_color(col);
@@ -55,8 +58,8 @@ public:
   }
   
   //! set symbols
-  void set_symbol(int sym){set_prop("symbol "+to_string(sym));}
-  void no_set_symbol(){set_symbol(grace::NO_SYMBOL);}
+  void set_symbol(int sym) {set_prop("symbol "+to_string(sym));}
+  void no_set_symbol() {set_symbol(grace::NO_SYMBOL);}
   
   //! form a closed polygon
   void closed_polygon(int fill_col)
