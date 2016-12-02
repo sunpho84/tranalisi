@@ -59,13 +59,12 @@ int main(int narg,char **arg)
   size_t c_tmax=input.read<int>("c_tmax");
   
   //pion
-  
-  djvec_t pi_ratio=load_P5P5("LL",0,0)/load_P5P5("00",0,0);
 
-  pi_ratio.ave_err().write("pi_ratio.xmg");
+  djvec_t pi_plain=load_P5P5("00",0,0);
+  djvec_t pi_exch=load_P5P5("LL",0,0);
 
   djack_t pi_M,pi_A,pi_SL;
-  two_pts_with_ins_ratio_fit(pi_M,pi_A,pi_SL,load_P5P5("00",0,0),load_P5P5("LL",0,0),TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_ins.xmg");
+  two_pts_with_ins_ratio_fit(pi_M,pi_A,pi_SL,pi_plain,pi_exch,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_ins.xmg");
   cout<<"pi_M: "<<pi_M.ave_err()<<endl;
   cout<<"pi_A: "<<pi_A.ave_err()<<endl;
   cout<<"pi_SL: "<<pi_SL.ave_err()<<endl;
@@ -76,17 +75,12 @@ int main(int narg,char **arg)
 
   //kaon
 
-  djvec_t k_ratio_exch=load_P5P5("LL",0,1)/load_P5P5("00",1,0);
-  djvec_t k_ratio_self=load_P5P5("0M",1,0)/load_P5P5("00",1,0);
-  djvec_t k_ratio_tad=load_P5P5("0T",1,0)/load_P5P5("00",1,0);
-  djvec_t k_ratio_s=load_P5P5("0S",1,0)/load_P5P5("00",1,0);
-  djvec_t k_ratio_p=load_P5P5("0P",1,0,IM,-1)/load_P5P5("00",1,0);
-
-  k_ratio_exch.ave_err().write("k_ratio_exch.xmg");
-  k_ratio_self.ave_err().write("k_ratio_self.xmg");
-  k_ratio_tad.ave_err().write("k_ratio_tad.xmg");
-  k_ratio_s.ave_err().write("k_ratio_s.xmg");
-  k_ratio_p.ave_err().write("k_ratio_p.xmg");
+  djvec_t k_plain=load_P5P5("00",0,1);
+  djvec_t k_exch=load_P5P5("LL",0,1);
+  djvec_t k_self=load_P5P5("0M",1,0);
+  djvec_t k_tad=load_P5P5("0T",1,0);
+  djvec_t k_s=load_P5P5("0S",1,0);
+  djvec_t k_p=-load_P5P5("0P",1,0,IM,-1);
 
   djack_t k_M,k_A_exch,k_SL_exch,k_A_selftad,k_SL_selftad,k_A_s,k_SL_s,k_A_p,k_SL_p;
   
@@ -97,10 +91,10 @@ int main(int narg,char **arg)
   // cout<<"k_Z: "<<Z_k.ave_err()<<endl;
   // cout<<"k_M: "<<M_k.ave_err()<<endl;
   
-  two_pts_with_ins_ratio_fit(k_M,k_A_exch,k_SL_exch,load_P5P5("00",1,0),load_P5P5("LL",0,1),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_exch.xmg");
-  two_pts_with_ins_ratio_fit(k_M,k_A_s,k_SL_s,load_P5P5("00",1,0),load_P5P5("0S",1,0),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_s.xmg");
-  two_pts_with_ins_ratio_fit(k_M,k_A_p,k_SL_p,load_P5P5("00",1,0),load_P5P5("0P",1,0,IM,-1),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_p.xmg");
-  two_pts_with_ins_ratio_fit(k_M,k_A_selftad,k_SL_selftad,load_P5P5("00",1,0),djvec_t(load_P5P5("0M",1,0)+load_P5P5("0T",1,0)),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_selftad.xmg");
+  two_pts_with_ins_ratio_fit(k_M,k_A_exch,k_SL_exch,k_plain,k_exch,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_exch.xmg");
+  two_pts_with_ins_ratio_fit(k_M,k_A_s,k_SL_s,k_plain,k_s,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_s.xmg");
+  two_pts_with_ins_ratio_fit(k_M,k_A_p,k_SL_p,k_plain,k_p,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_p.xmg");
+  two_pts_with_ins_ratio_fit(k_M,k_A_selftad,k_SL_selftad,k_plain,djvec_t(k_self+k_tad),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_selftad.xmg");
   
   cout<<"k_M: "<<k_M.ave_err()<<endl;
   cout<<"k_A_exch: "<<k_A_exch.ave_err()<<endl;
@@ -176,9 +170,9 @@ int main(int narg,char **arg)
   djvec_t ud_denom_deltam_cr=forward_derivative(load_V0P5("0P",0,0,RE,1));
   ud_denom_deltam_cr.ave_err().write("ud_denom_deltam_cr.xmg");
   
-  djvec_t ud_deltam_cr=djvec_t(ud_num_deltam_cr/ud_denom_deltam_cr)/2.0;
+  djvec_t ud_deltam_cr=djvec_t(-ud_num_deltam_cr/ud_denom_deltam_cr)/2.0;
   ud_deltam_cr.ave_err().write("ud_deltam_cr_t.xmg");
-  djvec_t ud_deltam_cr_wo=djvec_t(ud_num_deltam_cr_wo/ud_denom_deltam_cr)/2.0;
+  djvec_t ud_deltam_cr_wo=djvec_t(-ud_num_deltam_cr_wo/ud_denom_deltam_cr)/2.0;
   ud_deltam_cr.ave_err().write("ud_deltam_cr_t_wo.xmg");
 
   djack_t ud_fit_deltam_cr=constant_fit(ud_deltam_cr,ud_tmin,ud_tmax,"ud_fit_deltam_cr.xmg");
@@ -200,7 +194,7 @@ int main(int narg,char **arg)
   djvec_t s_denom_deltam_cr=forward_derivative(load_V0P5("0P",1,1,RE,1));
   s_denom_deltam_cr.ave_err().write("s_denom_deltam_cr.xmg");
   
-  djvec_t s_deltam_cr=djvec_t(s_num_deltam_cr/s_denom_deltam_cr)/2.0;
+  djvec_t s_deltam_cr=djvec_t(-s_num_deltam_cr/s_denom_deltam_cr)/2.0;
   s_deltam_cr.ave_err().write("s_deltam_cr_t.xmg");
 
   djack_t s_fit_deltam_cr=constant_fit(s_deltam_cr,s_tmin,s_tmax,"s_fit_deltam_cr.xmg");
@@ -218,7 +212,7 @@ int main(int narg,char **arg)
   djvec_t c_denom_deltam_cr=forward_derivative(load_V0P5("0P",2,2,RE,1));
   c_denom_deltam_cr.ave_err().write("c_denom_deltam_cr.xmg");
   
-  djvec_t c_deltam_cr=djvec_t(c_num_deltam_cr/c_denom_deltam_cr)/2.0;
+  djvec_t c_deltam_cr=djvec_t(-c_num_deltam_cr/c_denom_deltam_cr)/2.0;
   c_deltam_cr.ave_err().write("c_deltam_cr_t.xmg");
 
   djack_t c_fit_deltam_cr=constant_fit(c_deltam_cr,c_tmin,c_tmax,"c_fit_deltam_cr.xmg");
