@@ -257,11 +257,37 @@ public:
   boot_fit_data_t(const fun_t &fun_val,const fun_t &fun_ansatz,double err) : fun_val(fun_val),fun_ansatz(fun_ansatz),err(err) {}
 };
 
+//! add a parameter to the fit
+inline size_t add_fit_par(MnUserParameters &pars,string name,double ans,double err)
+{
+  size_t ipar=pars.Parameters().size();
+  pars.Add(name.c_str(),ans,err);
+  return ipar;
+}
+
+//! add a parameter that gets self-fitted (useful to propagate erorr on x)
+inline void add_self_fitted_point(MnUserParameters &pars,string name,vector<boot_fit_data_t> &data,const dboot_t &point)
+{
+  int ipar=add_fit_par(pars,name.c_str(),point[0],point.err());
+  data.push_back(boot_fit_data_t(//numerical data
+				 [point]
+				 (vector<double> p,int iel)
+				 {return point[iel];},
+				 //ansatz
+				 [ipar]
+				 (vector<double> p,int iel)
+				 {return p[ipar];},
+				 //error
+				 point.err()));
+  cout<<"ipar: "<<ipar<<" "<<pars.Parameters().size()<<endl;
+  pars.Fix(ipar);
+}
+
 //! perform a bootstrap fit
 class boot_fit_t : public FCNBase
 {
   //! data to be fitted
-  const vector<boot_fit_data_t> &data;
+  vector<boot_fit_data_t> data;
   //! element of the data-dstribution
   size_t &iel;
   
@@ -280,7 +306,7 @@ public:
 	double e=data[ix].err;
 	double contr=sqr((n-t)/e);
 	ch2+=contr;
-	//cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
       }
     return ch2;
   }

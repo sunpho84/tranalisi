@@ -46,7 +46,7 @@ template< class T> T fit_delta_pion_square()
 vector<lat_par_t> lat_par(noa);
 vector<ens_data_t> raw_data;
 
-template <class T> T FVE_d2M(const T &M,const T &Lphys)
+template <class T1,class T2> T1 FVE_d2M(const T1 &M,const T2 &Lphys)
 {
   const double FVE_k=2.837297;
   double alpha=1.0/137;
@@ -191,9 +191,9 @@ int main(int narg,char **arg)
   for(size_t ia=0;ia<noa;ia++)
     {
       dbvec_t ml(raw_data.size());
-      dbvec_t M2Pi(raw_data.size());
-      dbvec_t dM2Pi(raw_data.size());
-      dbvec_t FVE_dM2Pi(raw_data.size());
+      dbvec_t a2M2Pi(raw_data.size());
+      dbvec_t da2M2Pi(raw_data.size());
+      dbvec_t FVE_da2M2Pi(raw_data.size());
       dbvec_t dM2K_QED(raw_data.size());
       dbvec_t FVE_dM2K(raw_data.size());
       
@@ -203,7 +203,7 @@ int main(int narg,char **arg)
 	  size_t ibeta=raw_data[iens].ibeta;
 	  
 	  dboot_t a=1.0/lat_par[ia].ainv[ibeta];
-	  dboot_t L=raw_data[iens].L*a;
+	  dboot_t Lphys=raw_data[iens].L*a;
 	  ml[iens]=raw_data[iens].aml/lat_par[ia].Z[ibeta]/a;
 	  
 	  boot_init_t &bi=jack_index[ia][ens_id];
@@ -212,12 +212,12 @@ int main(int narg,char **arg)
 	  dboot_t Deltam_cr_u=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(eu)/a;
 	  dboot_t Deltam_cr_d=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(ed)/a;
 	  
-	  dboot_t MPi=dboot_t(bi,raw_data[iens].pi_mass)/a;
-	  dboot_t MPi_sl=dboot_t(bi,raw_data[iens].pi_SL)/a;
+	  dboot_t aMPi=dboot_t(bi,raw_data[iens].pi_mass);
+	  dboot_t aMPi_sl=dboot_t(bi,raw_data[iens].pi_SL);
 	  
-	  M2Pi[iens]=MPi*MPi;
-	  dM2Pi[iens]=MPi*sqr(eu-ed)*e2*MPi_sl;
-	  FVE_dM2Pi[iens]=FVE_d2M(MPi,L);
+	  a2M2Pi[iens]=aMPi*aMPi;
+	  da2M2Pi[iens]=aMPi*sqr(eu-ed)*e2*aMPi_sl;
+	  FVE_da2M2Pi[iens]=FVE_d2M(aMPi,raw_data[iens].L);
 	  
 	  dboot_t MK=dboot_t(bi,raw_data[iens].k_mass)/a;
 	  dboot_t MK_sl_exch=dboot_t(bi,raw_data[iens].k_SL_exch)/a;
@@ -230,11 +230,9 @@ int main(int narg,char **arg)
 	    -(Deltam_cr_u-Deltam_cr_d)*MK_sl_p
 	    +(sqr(eu)-sqr(ed))*e2*(MK_sl_exch-MK_sl_selftad);
 	  dM2K_QED[iens]=dMK_QED*2*MK;
-	  FVE_dM2K[iens]=FVE_d2M(MK,L);
+	  FVE_dM2K[iens]=FVE_d2M(MK,Lphys);
 	}
       
-      plot_ens_data(combine("plots/dM2Pi_an%zu.xmg",ia),ml,dM2Pi);
-      plot_ens_data(combine("plots/dM2Pi_FVEcorr_an%zu.xmg",ia),ml,dM2Pi-FVE_dM2Pi);
       plot_ens_data(combine("plots/dM2K_QED_an%zu.xmg",ia),ml,dM2K_QED);
       plot_ens_data(combine("plots/dM2K_QED_FVEcorr_an%zu.xmg",ia),ml,dM2K_QED-FVE_dM2K);
       
@@ -252,12 +250,10 @@ int main(int narg,char **arg)
 	data.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
 					    raw_data[iens].ibeta,
 					    raw_data[iens].L,
-					    (dM2Pi[iens]-FVE_dM2Pi[iens])/sqr(lat_par[ia].ainv[raw_data[iens].ibeta])));
+					    da2M2Pi[iens]-FVE_da2M2Pi[iens]));
       
       cont_chir_fit(alist,zlist,data,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ia));
     }
-  
-
   
   return 0;
 }

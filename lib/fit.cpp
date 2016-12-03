@@ -27,56 +27,25 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
   vector<boot_fit_data_t> fit_data;
   
   //set a
-  size_t ipar=0;
-  for(size_t ia=0;ia<a.size();ia++)
+  for(size_t ibeta=0;ibeta<a.size();ibeta++)
     {
-      pars.Add(combine("a[%zu]",ia).c_str(),a[ia][0],a[ia].err());
-      fit_data.push_back(boot_fit_data_t(//numerical data
-					 [a,ia]
-					 (vector<double> p,int iel)
-					 {return a[ia][iel];},
-					 //ansatz
-					 [ipar]
-					 (vector<double> p,int iel)
-					 {return p[ipar];},
-					 //error
-					 a[ia].err()));
-      ipar++;
-    }
-  
-  //set zp
-  size_t offs_z=ipar;
-  for(size_t iz=0;iz<z.size();iz++)
-    {
-      pars.Add(combine("z[%zu]",iz).c_str(),z[iz][0],z[iz].err());
-      fit_data.push_back(boot_fit_data_t(//numerical data
-					 [z,iz]
-					 (vector<double> p,int iel)
-					 {return z[iz][iel];},
-					 //ansatz
-					 [ipar]
-					 (vector<double> p,int iel)
-					 {return p[ipar];},
-					 //error
-					 z[iz].err()));
-      ipar++;
+      add_self_fitted_point(pars,combine("a[%zu]",ibeta),fit_data,a[ibeta]);
+      add_self_fitted_point(pars,combine("z[%zu]",ibeta),fit_data,z[ibeta]);
     }
   
   //lec
-  size_t if0=ipar++;
+  //
   //pars.Add("f0",0.121,0.001);
-  pars.Add("f0",0.0011,0.001);
-  size_t ib0=ipar++;
+  size_t if0=add_fit_par(pars,"f0",0.0011,0.001);
   //pars.Add("b0",2.57,0.01);
-  pars.Add("b0",0.02,0.001);
+  size_t ib0=add_fit_par(pars,"b0",0.02,0.001);
   // size_t ic=ipar++;
   // pars.Add("c",1,1);
   // size_t iK=ipar++;
   // pars.Add("K",1,1);
   
-  size_t iadep=ipar++;
-  pars.Add("adep",1.8,1);
-  
+  size_t iadep=add_fit_par(pars,"adep",1.8,1);
+  cout<<pars<<endl;
   //set data
   for(size_t idata=0;idata<ext_data.size();idata++)
     fit_data.push_back(boot_fit_data_t(//numerical data
@@ -84,12 +53,13 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
   				       (vector<double> p,int iel) //dimension 2
   				       {return ext_data[idata].y[iel]/sqr(p[ext_data[idata].ib]);},
   				       //ansatz
-  				       [idata,&ext_data,offs_z,iadep,ib0,if0]
+  				       [idata,&ext_data,iadep,ib0,if0]
   				       (vector<double> p,int iel)
   				       {
-  					 double a=p[ext_data[idata].ib];
-  					 double z=p[ext_data[idata].ib+offs_z];
+  					 double a=p[2*ext_data[idata].ib+0];
+  					 double z=p[2*ext_data[idata].ib+1];
   					 double ml=ext_data[idata].aml/a/z;
+					 cout<<"ml: "<<ml<<endl;
   					 return cont_chir_ansatz(p[if0],p[ib0],ml,a,p[iadep]);
   				       },
   				       //error
@@ -110,13 +80,15 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
       MinimumParameters par_min=min.Parameters();
       ch2[iel]=par_min.Fval();
       
+      cout<<min<<endl;
+      
       //get back pars
-      ipar=0;
-      for(size_t ia=0;ia<a.size();ia++) fit_a[ia][iel]=par_min.Vec()[ipar++];
-      for(size_t iz=0;iz<z.size();iz++) fit_z[iz][iel]=par_min.Vec()[ipar++];
-      f0[iel]=par_min.Vec()[if0];
-      b0[iel]=par_min.Vec()[ib0];
-      adep[iel]=par_min.Vec()[iadep];
+      f0[iel]=par_min.Vec()[if0-6];
+      b0[iel]=par_min.Vec()[ib0-6];
+      adep[iel]=par_min.Vec()[iadep-6];
+      
+      // for(size_t ibeta=0;ibeta<a.size();ibeta++) fit_a[ibeta][iel]=par_min.Vec()[2*ibeta+0];
+      // for(size_t ibeta=0;ibeta<z.size();ibeta++) fit_z[ibeta][iel]=par_min.Vec()[2*ibeta+1];
     }
   
   //write ch2
