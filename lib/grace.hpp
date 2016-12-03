@@ -21,7 +21,7 @@ namespace grace
   enum line_type_t{NO_LINE_TYPE,STRAIGHT_LINE};
   enum line_style_t{NO_LINE,CONTINUOUS_LINE,SHORT_DASHED_LINE,DASHED_LINE};
   enum fill_type_t{NO_FILL,AS_POLYGON,TO_BASELINE};
-  enum settype_t{XY,XYDY};
+  enum settype_t{XY,XYDY,XYDXDY};
   
   EXTERN_GRACE symbol_t default_symbol INIT_TO(SQUARE);
   EXTERN_GRACE double default_symbol_size INIT_TO(0.8);
@@ -268,6 +268,7 @@ public:
       {
       case grace::XY: how_s="xy";break;
       case grace::XYDY: how_s="xydy";break;
+      case grace::XYDXDY: how_s="xydxdy";break;
       default: CRASH("Unknown type %d",settype);
       }
     (*this)<<"@type "<<how_s<<endl;
@@ -380,6 +381,16 @@ public:
     (*this)<<x<<" "<<data<<endl;
   }
   void write_ave_err(const double x,const ave_err_t &data)
+  {write_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
+  
+  //write a single data
+  void write_ave_err(const ave_err_t x,const ave_err_t &data,grace::color_t col,grace::symbol_t sym)
+  {
+    new_data_set(col,sym);
+    set_settype(grace::XYDXDY);
+    (*this)<<x.ave<<" "<<data.ave<<" "<<x.err<<" "<<data.err<<endl;
+  }
+  void write_ave_err(const ave_err_t x,const ave_err_t &data)
   {write_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
   
   //! close the file

@@ -158,7 +158,7 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
 	   test<<dboot_t(ext_data[idata].aml/z[ib]/a[ib]).ave()<<" "<<dboot_t(ext_data[idata].y/sqr(a[ib])).ave_err()<<endl;
     }
   //data of the continuum-chiral limit
-  test.write_ave_err(ml_phys.ave(),phys_res.ave_err());
+  test.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
   
   
 }
