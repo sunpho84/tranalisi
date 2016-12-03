@@ -235,10 +235,26 @@ int main(int narg,char **arg)
 	  FVE_dM2K[iens]=FVE_d2M(MK,Lphys);
 	}
       
-      plot_ens_data(combine("plots/dM2Pi_an%zu.xmg",ia),ml,dM2Pi);
-      plot_ens_data(combine("plots/dM2Pi_FVEcorr_an%zu.xmg",ia),ml,dM2Pi-FVE_dM2Pi);
       plot_ens_data(combine("plots/dM2K_QED_an%zu.xmg",ia),ml,dM2K_QED);
-      plot_ens_data(combine("plots/dM2K_QED_FVEC_corr_an%zu.xmg",ia),ml,dM2K_QED-FVE_dM2K);
+      plot_ens_data(combine("plots/dM2K_QED_FVEcorr_an%zu.xmg",ia),ml,dM2K_QED-FVE_dM2K);
+      
+      //prepare the list of a and z
+      dbvec_t alist(nbeta),zlist(nbeta);
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	{
+	  alist[ibeta]=1.0/lat_par[ia].ainv[ibeta];
+	  zlist[ibeta]=lat_par[ia].Z[ibeta];
+	}
+      
+      //data to fit
+      vector<cont_chir_fit_data_t> data;
+      for(size_t iens=0;iens<raw_data.size();iens++)
+	data.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
+					    raw_data[iens].ibeta,
+					    raw_data[iens].L,
+					    da2M2Pi[iens]-FVE_da2M2Pi[iens]));
+      
+      cont_chir_fit(alist,zlist,data,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ia));
     }
   
   return 0;
