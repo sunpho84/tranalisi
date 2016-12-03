@@ -10,7 +10,7 @@ template <class T> T uminus(const T &in)
 {return -in;}
 
 //! define the square of a double, float or integer
-template <class T,class=typename enable_if<is_arithmetic<T>::value>::type> T sqr(T x)
+template <class T> T sqr(T x)
 {return x*x;}
 
 #endif
