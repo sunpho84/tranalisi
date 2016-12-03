@@ -205,16 +205,16 @@ int main(int narg,char **arg)
 	  dboot_t a=1.0/lat_par[ia].ainv[ibeta];
 	  dboot_t L=raw_data[iens].L*a;
 	  ml[iens]=raw_data[iens].aml/lat_par[ia].Z[ibeta]/a;
-
+	  
 	  boot_init_t &bi=jack_index[ia][ens_id];
 	  
 	  dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*lat_par[ia].Z[ibeta]*(6*log(2*a)-22.596)/(32*sqr(M_PI)));
 	  dboot_t Deltam_cr_u=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(eu)/a;
 	  dboot_t Deltam_cr_d=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(ed)/a;
-
+	  
 	  dboot_t MPi=dboot_t(bi,raw_data[iens].pi_mass)/a;
 	  dboot_t MPi_sl=dboot_t(bi,raw_data[iens].pi_SL)/a;
-
+	  
 	  M2Pi[iens]=MPi*MPi;
 	  dM2Pi[iens]=MPi*sqr(eu-ed)*e2*MPi_sl;
 	  FVE_dM2Pi[iens]=FVE_d2M(MPi,L);
@@ -224,26 +224,29 @@ int main(int narg,char **arg)
 	  dboot_t MK_sl_selftad=dboot_t(bi,raw_data[iens].k_SL_selftad)/a;
 	  dboot_t MK_sl_s=dboot_t(bi,raw_data[iens].k_SL_s);
 	  dboot_t MK_sl_p=dboot_t(bi,raw_data[iens].k_SL_p);
-
+	  
 	  dboot_t dMK_QED=
 	    -2*ml[iens]*MK_sl_s/Z_QED
 	    -(Deltam_cr_u-Deltam_cr_d)*MK_sl_p
 	    +(sqr(eu)-sqr(ed))*e2*(MK_sl_exch-MK_sl_selftad);
 	  dM2K_QED[iens]=dMK_QED*2*MK;
-	  FVE_dM2K[iens]=FVE_d2M(MK,L);	  
+	  FVE_dM2K[iens]=FVE_d2M(MK,L);
 	}
       
       plot_ens_data(combine("plots/dM2Pi_an%zu.xmg",ia),ml,dM2Pi);
       plot_ens_data(combine("plots/dM2Pi_FVEcorr_an%zu.xmg",ia),ml,dM2Pi-FVE_dM2Pi);
       plot_ens_data(combine("plots/dM2K_QED_an%zu.xmg",ia),ml,dM2K_QED);
-      plot_ens_data(combine("plots/dM2K_QED_FVEC_corr_an%zu.xmg",ia),ml,dM2K_QED-FVE_dM2K);
-
+      plot_ens_data(combine("plots/dM2K_QED_FVEcorr_an%zu.xmg",ia),ml,dM2K_QED-FVE_dM2K);
+      
+      //prepare the list of a and z
       dbvec_t alist(nbeta),zlist(nbeta);
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
 	{
 	  alist[ibeta]=1.0/lat_par[ia].ainv[ibeta];
 	  zlist[ibeta]=lat_par[ia].Z[ibeta];
 	}
+      
+      //data to fit
       vector<cont_chir_fit_data_t> data;
       for(size_t iens=0;iens<raw_data.size();iens++)
 	data.push_back(cont_chir_fit_data_t(raw_data[iens].aml,

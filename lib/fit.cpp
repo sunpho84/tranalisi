@@ -138,27 +138,25 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
   cout<<"Physical result: "<<phys_res.ave_err()<<endl;
   
   //prepare plot
-  grace_file_t test(path);
-  test.set_title("Continuum and chiral limit");
-  test.set_xaxis_label("$$ml^{\\overline{MS},2 GeV} [GeV]");
-  test.set_yaxis_label("$$(M^2_{\\pi^+}-M^2_{\\pi^0})/e^2 [GeV^2]");
-  test.set_xaxis_max(ml_max);
+  grace_file_t fit_file(path);
+  fit_file.set_title("Continuum and chiral limit");
+  fit_file.set_xaxis_label("$$ml^{\\overline{MS},2 GeV} [GeV]");
+  fit_file.set_yaxis_label("$$(M^2_{\\pi^+}-M^2_{\\pi^0})/e^2 [GeV^2]");
+  fit_file.set_xaxis_max(ml_max);
   
   //band of the fit to individual beta
   for(size_t ib=0;ib<a.size();ib++)
-    test.write_polygon(bind(cont_chir_ansatz<dboot_t,double,dboot_t>,f0,b0,_1,a[ib],adep),0,ml_max);
+    fit_file.write_polygon(bind(cont_chir_ansatz<dboot_t,double,dboot_t>,f0,b0,_1,a[ib],adep),0,ml_max);
   //band of the continuum limit
-  test.write_polygon(bind(cont_chir_ansatz<dboot_t,double,double>,f0,b0,_1,0.0,adep),0,ml_max);
+  fit_file.write_polygon(bind(cont_chir_ansatz<dboot_t,double,double>,f0,b0,_1,0.0,adep),0,ml_max);
   //data
   for(size_t ib=0;ib<a.size();ib++)
     {
-      test.new_data_set();
+      fit_file.new_data_set();
        for(size_t idata=0;idata<ext_data.size();idata++)
 	 if(ext_data[idata].ib==ib)
-	   test<<dboot_t(ext_data[idata].aml/z[ib]/a[ib]).ave()<<" "<<dboot_t(ext_data[idata].y/sqr(a[ib])).ave_err()<<endl;
+	   fit_file<<dboot_t(ext_data[idata].aml/z[ib]/a[ib]).ave()<<" "<<dboot_t(ext_data[idata].y/sqr(a[ib])).ave_err()<<endl;
     }
   //data of the continuum-chiral limit
-  test.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
-  
-  
+  fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
 }
