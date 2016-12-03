@@ -98,20 +98,24 @@ public:
   boot_t() : boot_t(def_nboots) {}
   
   //! move constructor
-  boot_t(boot_t&& oth) : valarray<T>(forward<valarray<T>>(oth)) {cout<<"move const"<<endl;}
+  boot_t(boot_t&& oth) : valarray<T>(forward<valarray<T>>(oth)) {
+    //cout<<"move const"<<endl;
+  }
   
   //! construct from expr
   template<class _Dom> boot_t(const _Expr<_Dom,T> &oth) : valarray<T>(oth) {}
   
   //! copy constructor
-  boot_t(const boot_t &oth) : valarray<T>(oth) {cout<<"copy const"<<endl;}
+  boot_t(const boot_t &oth) : valarray<T>(oth) {
+    //cout<<"copy const"<<endl;
+  }
   
   //! move assignement
   boot_t &operator=(boot_t &&oth)=default;
   
   //! copy assignement
   boot_t &operator=(const boot_t &oth)// =default;
-  {valarray<T>::operator=(oth);cout<<"copy"<<endl;return *this;}
+  {valarray<T>::operator=(oth);/*cout<<"copy"<<endl;*/return *this;}
   
   //! assignement
   template<class oth_t> boot_t &operator=(const oth_t &oth) {valarray<T>::operator=(oth);return *this;}
