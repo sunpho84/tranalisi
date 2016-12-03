@@ -45,13 +45,13 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
   // pars.Add("K",1,1);
   
   size_t iadep=add_fit_par(pars,"adep",1.8,1);
-  cout<<pars<<endl;
+
   //set data
   for(size_t idata=0;idata<ext_data.size();idata++)
     fit_data.push_back(boot_fit_data_t(//numerical data
   				       [ext_data,idata]
   				       (vector<double> p,int iel) //dimension 2
-  				       {return ext_data[idata].y[iel]/sqr(p[ext_data[idata].ib]);},
+  				       {return ext_data[idata].y[iel]/sqr(p[2*ext_data[idata].ib+0]);},
   				       //ansatz
   				       [idata,&ext_data,iadep,ib0,if0]
   				       (vector<double> p,int iel)
@@ -59,7 +59,6 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
   					 double a=p[2*ext_data[idata].ib+0];
   					 double z=p[2*ext_data[idata].ib+1];
   					 double ml=ext_data[idata].aml/a/z;
-					 cout<<"ml: "<<ml<<endl;
   					 return cont_chir_ansatz(p[if0],p[ib0],ml,a,p[iadep]);
   				       },
   				       //error
@@ -80,15 +79,13 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
       MinimumParameters par_min=min.Parameters();
       ch2[iel]=par_min.Fval();
       
-      cout<<min<<endl;
-      
       //get back pars
-      f0[iel]=par_min.Vec()[if0-6];
-      b0[iel]=par_min.Vec()[ib0-6];
-      adep[iel]=par_min.Vec()[iadep-6];
+      f0[iel]=par_min.Vec()[if0];
+      b0[iel]=par_min.Vec()[ib0];
+      adep[iel]=par_min.Vec()[iadep];
       
-      // for(size_t ibeta=0;ibeta<a.size();ibeta++) fit_a[ibeta][iel]=par_min.Vec()[2*ibeta+0];
-      // for(size_t ibeta=0;ibeta<z.size();ibeta++) fit_z[ibeta][iel]=par_min.Vec()[2*ibeta+1];
+      for(size_t ibeta=0;ibeta<a.size();ibeta++) fit_a[ibeta][iel]=par_min.Vec()[2*ibeta+0];
+      for(size_t ibeta=0;ibeta<z.size();ibeta++) fit_z[ibeta][iel]=par_min.Vec()[2*ibeta+1];
     }
   
   //write ch2

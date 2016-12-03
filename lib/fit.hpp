@@ -279,8 +279,6 @@ inline void add_self_fitted_point(MnUserParameters &pars,string name,vector<boot
 				 {return p[ipar];},
 				 //error
 				 point.err()));
-  cout<<"ipar: "<<ipar<<" "<<pars.Parameters().size()<<endl;
-  pars.Fix(ipar);
 }
 
 //! perform a bootstrap fit
@@ -306,7 +304,7 @@ public:
 	double e=data[ix].err;
 	double contr=sqr((n-t)/e);
 	ch2+=contr;
-	cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	//cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
       }
     return ch2;
   }
