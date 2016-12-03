@@ -1,6 +1,13 @@
 #ifndef _GRACE_HPP
 #define _GRACE_HPP
 
+#ifndef EXTERN_GRACE
+ #define EXTERN_GRACE extern
+ #define INIT_TO(A)
+#else
+ #define INIT_TO(A) =A
+#endif
+
 #include <fstream>
 #include <ave_err.hpp>
 #include <tools.hpp>
@@ -9,70 +16,324 @@ using namespace std;
 
 namespace grace
 {
-  enum{WHITE,BLACK,RED,GREEN,BLUE,YELLOW,BROWN,GREY,VIOLET,CYAN,MAGENTA,ORANGE,INDIGO,MAROON,TURQUOISE,GREEN4};
-  enum{NO_SYMBOL,CIRCLE,SQUARE,DIAMOND,TRIUP,TRILEFT,TRIDOWN,TRIRIGHT,PLUS,X,STAR};
-  enum{NO_LINE,STRAIGHT_LINE};
+  enum color_t{WHITE,BLACK,RED,GREEN,BLUE,YELLOW,BROWN,GREY,VIOLET,CYAN,MAGENTA,ORANGE,INDIGO,MAROON,TURQUOISE,GREEN4};
+  enum symbol_t{NO_SYMBOL,CIRCLE,SQUARE,DIAMOND,TRIUP,TRILEFT,TRIDOWN,TRIRIGHT,PLUS,X,STAR};
+  enum line_type_t{NO_LINE_TYPE,STRAIGHT_LINE};
+  enum line_style_t{NO_LINE,CONTINUOUS_LINE,SHORT_DASHED_LINE,DASHED_LINE};
+  enum fill_type_t{NO_FILL,AS_POLYGON,TO_BASELINE};
+  enum settype_t{XY,XYDY};
+  
+  EXTERN_GRACE symbol_t default_symbol INIT_TO(SQUARE);
+  EXTERN_GRACE double default_symbol_size INIT_TO(0.8);
+  EXTERN_GRACE color_t default_colour INIT_TO(RED);
+  EXTERN_GRACE double default_widths INIT_TO(2);
+  EXTERN_GRACE double default_label_size INIT_TO(1.5);
 };
 
 //! class to write a grace file
 class grace_file_t : public ofstream
 {
-  size_t iset;
-public:
-  //! default constructor
-  grace_file_t(const string &path) : ofstream(path),iset(0) {if(!this->good()) CRASH("Unable to open grace file %s",path.c_str());}
+  bool need_close_set;
   
-  //! move constructor
-  grace_file_t(grace_file_t&& oth) =default;
+  vector<grace::color_t> color_scheme;
+  vector<grace::symbol_t> symbol_scheme;
+  //! get a property and increment it
+  template <class T> T get_and_increment(const vector<T> &list,size_t &i)
+  {
+    T out=list[i];
+    i=(i+1)%list.size();
+    return out;
+  }
+  
+  size_t cur_col; //<! current color for set (auto-incremented)
+  grace::color_t get_col_and_increment()
+  {return get_and_increment(color_scheme,cur_col);}
+  size_t cur_poly_col; //<! current color for polygon
+  grace::color_t get_poly_col_and_increment()
+  {return get_and_increment(color_scheme,cur_poly_col);}
+  size_t cur_symbol; //<! current symbol
+  grace::symbol_t get_symbol_and_increment()
+  {return get_and_increment(symbol_scheme,cur_symbol);}
+  
+  size_t iset; //<! set id
+  string legend; //! legend of the set
+  
+  grace::symbol_t symbol; //<! symbol
+  grace::color_t symbol_color; //<! color for symbol
+  grace::color_t symbol_fill_color; //<! color for symbol filling
+  double symbol_size; //<! size of the symbol
+  double symbol_linewidth; //<! width of the symbol line
+  
+  grace::line_type_t line_type; //<! no line, straight
+  grace::line_style_t line_linestyle; //<! empty or continuous, or dashed in various way
+  grace::color_t line_color; //<! color for line
+  double linewidth; //<! width of the line
+  
+  grace::fill_type_t fill_type; //<! filling type
+  grace::color_t fill_color; //<! filling type
+  
+  grace::color_t errorbar_color; //<! color for errorbar
+  double errorbar_size; //<! size of the errorbar
+  double errorbar_linewidth; //<! width of the bar of therror
+  double errorbar_riser_linewidth; //<! width of the bar of the error-riser
+  
+  string title; //<! title of the plot
+  double title_size; //! size of the title
+  string xaxis_label; //<! label of the x-axis
+  string yaxis_label; //<! lable of the y-axis
+  double xaxis_min,xaxis_max; //<! min and max for x-axis
+  double yaxis_min,yaxis_max; //<! min and max for y-axis
+  double xaxis_label_size; //<! size of the font of the x-axis
+  double yaxis_label_size; //<! size of the font of the y-axis
+  
+  unsigned short int transparency; //<! transparency of all fillings
+  
+public:
+  //! set a color scheme
+  void set_color_scheme(const initializer_list<grace::color_t> &oth)
+  {color_scheme.assign(oth.begin(),oth.end());}
+  
+  //! set a symbol scheme
+  void set_symbol_scheme(const initializer_list<grace::symbol_t> &oth)
+  {symbol_scheme.assign(oth.begin(),oth.end());}
+  
+  //! reset all props after creating a new set
+  void reset_props()
+  {
+    line_type=grace::STRAIGHT_LINE;
+    line_linestyle=grace::CONTINUOUS_LINE;
+    fill_type=grace::NO_FILL;
+    symbol=grace::default_symbol;
+    symbol_size=grace::default_symbol_size;
+    set_all_colors(grace::default_colour);
+    transparency=255;
+    errorbar_size=0.5;
+    set_all_widths(grace::default_widths);
+  }
+  
+  //! default constructor
+  grace_file_t(const string &path) :
+    ofstream(path),
+    need_close_set(false),
+    color_scheme({grace::RED,grace::BLUE,grace::GREEN4,grace::VIOLET,grace::ORANGE}),
+    symbol_scheme({grace::CIRCLE,grace::SQUARE,grace::DIAMOND}),
+    cur_col(0),
+    cur_poly_col(0),
+    cur_symbol(0),
+    iset(0),
+    xaxis_min(0),
+    xaxis_max(1),
+    yaxis_min(0),
+    yaxis_max(1)
+  {
+    title_size=
+      xaxis_label_size=
+      yaxis_label_size=
+      grace::default_label_size;
+    
+    reset_props();
+    if(!this->good()) CRASH("Unable to open grace file %s",path.c_str());
+  }
+  
+  //! set title of the graph
+  void set_title(string label)
+  {title=label;}
+  
+  //! set the size of the title of the graph
+  void set_title_size(double size)
+  {title_size=size;}
+  
+  //! set title of x-axis
+  void set_xaxis_label(string label)
+  {xaxis_label=label;}
+  
+  //! set size of the label of the x-axis
+  void set_xaxis_label_size(double size)
+  {xaxis_label_size=size;}
+  
+  //! set title of y-axis
+  void set_yaxis_label(string label)
+  {yaxis_label=label;}
+  
+  //! set size of the label of the y-axis
+  void set_yaxis_label_size(double size)
+  {yaxis_label_size=size;}
+  
+  //! set the size of all labels
+  void set_all_axis_label_size(double size)
+  {
+    set_xaxis_label_size(size);
+    set_yaxis_label_size(size);
+  }
+  
+  //! set min for x-axis
+  void set_xaxis_min(double xmin)
+  {xaxis_min=xmin;}
+  
+  //! set min for y-axis
+  void set_yaxis_min(double ymin)
+  {yaxis_min=ymin;}
+  
+  //! set max for x-axis
+  void set_xaxis_max(double xmax)
+  {xaxis_max=xmax;}
+  
+  //! set max for y-axis
+  void set_yaxis_max(double ymax)
+  {yaxis_max=ymax;}
+  
+  //! set both min and max for x-axis
+  void set_xaxis_min_max(double xmin,double xmax)
+  {
+    set_xaxis_min(xmin);
+    set_xaxis_max(xmax);
+  }
+  
+  //! set both min and max for y-axis
+  void set_yaxis_min_max(double ymin,double ymax)
+  {
+    set_yaxis_min(ymin);
+    set_yaxis_max(ymax);
+  }
+  
+  //! set the legend of current set
+  void set_legend(const string &ext_legend)
+  {legend=ext_legend;}
   
   //! shift iset
   void shift_iset(size_t how_many=1)
   {iset+=how_many;}
   
-  //! start a new set
-  void new_set()
+  //! write all props and start a new set
+  void close_cur_set()
   {
-    (*this)<<"&"<<endl;
-    shift_iset();
-    (*this)<<"@target G0.S"<<iset<<endl;
+    if(need_close_set)
+      {
+	//line props
+	write_prop("line type "+to_string(line_type));
+	write_prop("linewidth "+to_string(linewidth));
+	write_prop("line linestyle "+to_string(line_linestyle));
+	write_prop("line color "+to_string(line_color));
+	//fill props
+	write_prop("fill color "+to_string(fill_color));
+	write_prop("fill type "+to_string(fill_type));
+	//symbol props
+	write_prop("symbol "+to_string(symbol));
+	write_prop("symbol size "+to_string(symbol_size));
+	write_prop("symbol linewidth "+to_string(symbol_linewidth));
+	write_prop("symbol color "+to_string(symbol_color));
+	write_prop("symbol fill color "+to_string(symbol_fill_color));
+	//error props
+	write_prop("errorbar color "+to_string(errorbar_color));
+	write_prop("errorbar size "+to_string(errorbar_size));
+	write_prop("errorbar linewidth "+to_string(errorbar_linewidth));
+	write_prop("errorbar riser linewidth "+to_string(errorbar_riser_linewidth));
+	//transparency
+	(*this)<<"#QTGRACE_ADDITIONAL_PARAMETER: G 0 S "<<iset<<" ALPHA_CHANNELS {"<<transparency<<";"<<transparency<<";255;255;255;255}"<<endl;
+	//point to the next set
+	(*this)<<"&"<<endl;
+	shift_iset();
+	(*this)<<"@target G0.S"<<iset<<endl;
+	//write legend
+	write_prop("legend \""+legend+"\"");
+	//reset all props and force next call to ignore
+	reset_props();
+	need_close_set=false;
+      }
   }
   
-  //! set a property
-  void set_prop(string what) {(*this)<<"@s"<<iset<<" "<<what<<endl;}
+  //! start a new set of data type
+  void new_data_set(grace::color_t col,grace::symbol_t sym)
+  {
+    close_cur_set();
+    
+    set_settype(grace::XYDY);
+    set_line_style(grace::NO_LINE);
+    set_all_colors(col);
+    set_symbol(sym);
+    
+    need_close_set=true;
+  }
+  void new_data_set() //<! no color and symbol given
+  {new_data_set(get_col_and_increment(),get_symbol_and_increment());}
   
-  //! set line style
-  void line_style(size_t how) {set_prop("line type "+to_string(how));}
-  void no_line() {line_style(grace::NO_LINE);}
+  //! set a property
+  void write_prop(string what) {(*this)<<"@s"<<iset<<" "<<what<<endl;}
+  
+  //! symbol type
+  void set_settype(grace::settype_t settype)
+  {
+    string how_s;
+    switch(settype)
+      {
+      case grace::XY: how_s="xy";break;
+      case grace::XYDY: how_s="xydy";break;
+      default: CRASH("Unknown type %d",settype);
+      }
+    (*this)<<"@type "<<how_s<<endl;
+  }
+  
+  //! set line style and filling
+  void set_line_type(grace::line_type_t lt) {line_type=lt;}
+  void set_line_style(grace::line_style_t ls) {line_linestyle=ls;}
+  void set_no_line() {set_line_style(grace::NO_LINE);}
+  void set_fill_type(grace::fill_type_t ft) {fill_type=ft;}
   
   //! set colors
-  void symbol_color(int col) {set_prop("symbol color "+to_string(col));}
-  void symbol_fill_color(int col) {set_prop("symbol fill color "+to_string(col));}
-  void line_color(int col) {set_prop("line color "+to_string(col));}
-  void errorbar_color(int col) {set_prop("errorbar color "+to_string(col));}
-  void color(int col)
+  void set_symbol_color(grace::color_t col) {symbol_color=col;}
+  void set_symbol_fill_color(grace::color_t col) {symbol_fill_color=col;}
+  void set_line_color(grace::color_t col) {line_color=col;}
+  void set_fill_color(grace::color_t col) {fill_color=col;}
+  void set_errorbar_color(grace::color_t col) {errorbar_color=col;}
+  void set_all_colors(grace::color_t col)
   {
-    symbol_color(col);
-    symbol_fill_color(col);
-    line_color(col);
-    errorbar_color(col);
+    set_symbol_color(col);
+    set_symbol_fill_color(col);
+    set_fill_color(col);
+    set_line_color(col);
+    set_errorbar_color(col);
+  }
+  
+  //! set all widths altogether
+  void set_all_widths(double w)
+  {
+    linewidth=
+      symbol_linewidth=
+      errorbar_linewidth=
+      errorbar_riser_linewidth=
+      w;
+  }
+  
+  //! set the transparency
+  void set_transparency(double f)
+  {
+    if(f>1 or f<0) CRASH("f=%lg, must be within [0;1]",f);
+    transparency=(unsigned short int)(f*255);
   }
   
   //! set symbols
-  void set_symbol(int sym) {set_prop("symbol "+to_string(sym));}
-  void no_set_symbol() {set_symbol(grace::NO_SYMBOL);}
+  void set_symbol(grace::symbol_t sym) {symbol=sym;}
+  void set_no_symbol() {set_symbol(grace::NO_SYMBOL);}
   
   //! form a closed polygon
-  void closed_polygon(int fill_col)
+  void closed_polygon(grace::color_t col)
   {
-    set_prop("fill type 1");
-    set_prop("fill color "+to_string(fill_col));
-    line_color(fill_col);
-    line_style(grace::STRAIGHT_LINE);
+    set_settype(grace::XY);
+    set_fill_type(grace::AS_POLYGON);
+    set_no_line();
+    set_all_colors(col);
+    set_transparency(0.4);
+    set_no_symbol();
   }
   
   //! write a polygon
-  template <class fun_t> void write_polygon(fun_t fun,double xmin,double xmax,size_t npoints=100,int col=grace::BLACK)
+  template <class fun_t> void write_polygon(fun_t fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
   {
+    close_cur_set();
+    
+    //mark a closed polygon
+    this->closed_polygon(col);
+    
     if(npoints==0) CRASH("NPoints must be different from 0");
     //! x coordinate
     vector<double> x(npoints);
@@ -88,16 +349,58 @@ public:
 	y[ipoint]=fun(x[ipoint]).ave_err();
       }
     
-    //mark a closed polygon
-    this->closed_polygon(col);
     //write forward and backward
     for(size_t ipoint=0;ipoint<npoints;ipoint++)         (*this)<<x[ipoint]<<" "<<y[ipoint].ave_minus_err()<<endl;
     for(size_t ipoint=npoints-1;ipoint<npoints;ipoint--) (*this)<<x[ipoint]<<" "<<y[ipoint].ave_plus_err()<<endl;
+    
+    need_close_set=true;
   }
+  template <class fun_t> void write_polygon(fun_t fun,double xmin,double xmax,size_t npoints=100)
+  {write_polygon(fun,xmin,xmax,get_poly_col_and_increment(),npoints);}
   
   //! write a constant band
-  template <class T> void write_constant_band(int xmin,int xmax,const T &c,int col=grace::BLACK)
-  {this->write_polygon([&c](double x) -> T {return c;},xmin,xmax,2,col);}
+  template <class T> void write_constant_band(int xmin,int xmax,const T &c,grace::color_t col)
+  {this->write_polygon([&c](double x) -> T {return c;},xmin,xmax,col,2);}
+  template <class T> void write_constant_band(int xmin,int xmax,const T &c)
+  {write_constant_band(xmin,xmax,c,get_col_and_increment());}
+  
+  //write a vector of data
+  void write_vec_ave_err(const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
+  {
+    new_data_set(col,sym);
+    for(size_t i=0;i<data.size();i++) (*this)<<i<<" "<<data<<endl;
+  }
+  void write_vec_ave_err(const vec_ave_err_t &data)
+  {write_vec_ave_err(data,get_col_and_increment(),get_symbol_and_increment());}
+  
+  //write a single data
+  void write_ave_err(const double x,const ave_err_t &data,grace::color_t col,grace::symbol_t sym)
+  {
+    new_data_set(col,sym);
+    (*this)<<x<<" "<<data<<endl;
+  }
+  void write_ave_err(const double x,const ave_err_t &data)
+  {write_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
+  
+  //! close the file
+  void close()
+  {
+    close_cur_set();
+    
+    (*this)<<"@title \""<<title<<"\""<<endl;
+    (*this)<<"@title size "<<title_size<<endl;
+    (*this)<<"@xaxis label \""<<xaxis_label<<"\""<<endl;
+    (*this)<<"@xaxis label char size "<<xaxis_label_size<<endl;
+    (*this)<<"@yaxis label \""<<yaxis_label<<"\""<<endl;
+    (*this)<<"@yaxis label char size "<<yaxis_label_size<<endl;
+    (*this)<<"@world "<<xaxis_min<<","<<yaxis_min<<","<<xaxis_max<<","<<yaxis_max<<endl;
+    
+    this->ofstream::close();
+  }
+  
+  //! destruct
+  ~grace_file_t()
+  {close();}
 };
 
 //! prepare a plot with a constant
@@ -105,13 +408,11 @@ template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(
 {
   grace_file_t out(path);
   out.write_constant_band(xmin,xmax,c);
-  out.new_set();
-  
-  out.no_line();
-  out<<v.ave_err();
+  out.new_data_set();
+  out.write_vec_ave_err(v.ave_err());
 }
 
-//! write a vector of average and error
-grace_file_t &operator<<(grace_file_t &out,const vec_ave_err_t &data);
+#undef INIT_TO
+#undef EXTERN_GRACE
 
 #endif

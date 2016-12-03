@@ -2,6 +2,7 @@
 #define _FIT_HPP
 
 #include <grace.hpp>
+#include <meas_vec.hpp>
 #include <Minuit2/FCNBase.h>
 #include <Minuit2/MnMigrad.h>
 #include <Minuit2/MnUserParameters.h>
@@ -15,7 +16,7 @@ using namespace ROOT::Minuit2;
 
 //! set the level of verbosity
 inline void set_printlevel(int lev)
-{ROOT::Math::MinimizerOptions::SetDefaultPrintLevel(lev);}
+{MnPrint::SetLevel(lev);}
 
 ///////////////////////////////////////////////////////////////// fake fits /////////////////////////////////////////////////////
 
@@ -153,7 +154,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &
   if(path!="") write_constant_fit_plot(path,tmin,tmax,M,effective_mass(corr,TH,par));
 }
 
-//! perform a simple fit using x, a function and data
+//! perform a fit using multiple x, functions and data
 template <class TV,class TS=typename TV::base_type>
 class multi_ch2_t : public FCNBase
 {
@@ -240,5 +241,62 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
   if(path!="") write_constant_fit_plot(path,tmin,tmax,M,eff_mass);
   if(path_ins!="") write_constant_fit_plot(path_ins,tmin,tmax,SL,effective_slope(TV(corr_ins/corr),TV(TH,M),TH));
 }
+
+/////////////////////////////////////////////////////////////// multi x fit ///////////////////////////////////////////////////////////
+
+
+class boot_fit_data_t
+{
+  using fun_t=function<double(const vector<double> &p,size_t iel)>;
+public:
+  fun_t fun_val;
+  fun_t fun_ansatz;
+  double err;
+  
+  boot_fit_data_t(const fun_t &fun_val,const fun_t &fun_ansatz,double err) : fun_val(fun_val),fun_ansatz(fun_ansatz),err(err) {}
+};
+
+//! perform a bootstrap fit
+class boot_fit_t : public FCNBase
+{
+  //! data to be fitted
+  const vector<boot_fit_data_t> &data;
+  //! element of the data-dstribution
+  size_t &iel;
+  
+public:
+  //! constructor
+  boot_fit_t(const vector<boot_fit_data_t> &data,size_t &iel) : data(data),iel(iel) {}
+  
+  //! compute the function
+  double operator()(const vector<double> &p) const
+  {
+    double ch2=0;
+    for(size_t ix=0;ix<data.size();ix++)
+      {
+	double n=data[ix].fun_val(p,iel);
+	double t=data[ix].fun_ansatz(p,iel);
+	double e=data[ix].err;
+	double contr=sqr((n-t)/e);
+	ch2+=contr;
+	//cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+      }
+    return ch2;
+  }
+  
+  double Up() const {return 1;}
+};
+
+class cont_chir_fit_data_t
+{
+public:
+  double aml;
+  size_t ib,L;
+  dboot_t y;
+  cont_chir_fit_data_t(double aml,size_t ib,size_t L,dboot_t y) : aml(aml),ib(ib),L(L),y(y) {}
+};
+
+//! perform a fit to the continuum and chiral
+void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &data);
 
 #endif

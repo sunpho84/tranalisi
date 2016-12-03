@@ -58,18 +58,17 @@ template <class Tx,class Ty> void plot_ens_data(grace_file_t &file,const Tx &x,c
 {
   for(size_t ibeta=0;ibeta<nbeta;ibeta++)
     {
-      file.no_line();
-      file.set_symbol(symbol[ibeta]);
-      file.color(color[ibeta]);
-      file<<"@type xydy"<<endl;
+      file.new_data_set();
       for(size_t iens=0;iens<raw_data.size();iens++)
 	if(raw_data[iens].ibeta==ibeta)
 	  file<<x[iens].ave()<<" "<<y[iens].ave_err()<<endl;
-      file.new_set();
     }
 }
-template <class Tx,class Ty> void plot_ens_data(grace_file_t &&file,const Tx &x,const Ty &y)
-{plot_ens_data(file,x,y);}
+template <class Tx,class Ty> void plot_ens_data(string path,const Tx &x,const Ty &y)
+{
+  grace_file_t file(path);
+  plot_ens_data(file,x,y);
+}
 
 int main(int narg,char **arg)
 {
@@ -238,7 +237,24 @@ int main(int narg,char **arg)
       plot_ens_data(combine("plots/dM2Pi_FVEcorr_an%zu.xmg",ia),ml,dM2Pi-FVE_dM2Pi);
       plot_ens_data(combine("plots/dM2K_QED_an%zu.xmg",ia),ml,dM2K_QED);
       plot_ens_data(combine("plots/dM2K_QED_FVEC_corr_an%zu.xmg",ia),ml,dM2K_QED-FVE_dM2K);
-    }
 
+      dbvec_t alist(nbeta),zlist(nbeta);
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	{
+	  alist[ibeta]=1.0/lat_par[ia].ainv[ibeta];
+	  zlist[ibeta]=lat_par[ia].Z[ibeta];
+	}
+      vector<cont_chir_fit_data_t> data;
+      for(size_t iens=0;iens<raw_data.size();iens++)
+	data.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
+					    raw_data[iens].ibeta,
+					    raw_data[iens].L,
+					    (dM2Pi[iens]-FVE_dM2Pi[iens])/sqr(lat_par[ia].ainv[raw_data[iens].ibeta])));
+      
+      cont_chir_fit(alist,zlist,data,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ia));
+    }
+  
+
+  
   return 0;
 }
