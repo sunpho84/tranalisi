@@ -6,7 +6,6 @@
 
 size_t noa=8,nbeta=3,nboots=100;
 
-const double e2=4*M_PI/137.;
 const double eu=2.0/3;
 const double ed=-1.0/3;
 
