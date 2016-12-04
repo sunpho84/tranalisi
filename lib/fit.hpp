@@ -266,7 +266,7 @@ inline size_t add_fit_par(MnUserParameters &pars,string name,double ans,double e
 }
 
 //! add a parameter that gets self-fitted (useful to propagate erorr on x)
-inline void add_self_fitted_point(MnUserParameters &pars,string name,vector<boot_fit_data_t> &data,const dboot_t &point)
+inline int add_self_fitted_point(MnUserParameters &pars,string name,vector<boot_fit_data_t> &data,const dboot_t &point)
 {
   int ipar=add_fit_par(pars,name.c_str(),point[0],point.err());
   data.push_back(boot_fit_data_t(//numerical data
@@ -279,6 +279,7 @@ inline void add_self_fitted_point(MnUserParameters &pars,string name,vector<boot
 				 {return p[ipar];},
 				 //error
 				 point.err()));
+  return ipar;
 }
 
 //! perform a bootstrap fit
@@ -322,6 +323,6 @@ public:
 };
 
 //! perform a fit to the continuum and chiral
-void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &data);
+void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path);
 
 #endif

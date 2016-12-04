@@ -15,7 +15,7 @@ const vector<size_t> color={grace::GREEN4,grace::RED,grace::BLUE};
 class lat_par_t
 {
 public:
-  dboot_t ml,ms,mc,r0,f0,dB0;
+  dboot_t ml,ms,mc,r0,f0,B0;
   dbvec_t ainv,Z;
  
   lat_par_t() : ainv(nbeta),Z(nbeta) {}
@@ -178,7 +178,7 @@ int main(int narg,char **arg)
   for(size_t ia=0;ia<noa;ia++) lat_par[ia].f0=read_boot(file);
   file.expect({"2*B0","(GeV)"});
   file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].dB0=read_boot(file);
+  for(size_t ia=0;ia<noa;ia++) lat_par[ia].B0=read_boot(file)/2.0;
   
   // for(size_t iens=0;iens<nens_used;iens++)
   //   cout<<jack_index[0][iens][0]<<endl;
@@ -253,7 +253,7 @@ int main(int narg,char **arg)
 					    raw_data[iens].L,
 					    da2M2Pi[iens]-FVE_da2M2Pi[iens]));
       
-      cont_chir_fit(alist,zlist,data,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ia));
+      cont_chir_fit(alist,zlist,lat_par[ia].f0,lat_par[ia].B0,data,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ia));
     }
   
   return 0;

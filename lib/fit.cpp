@@ -9,10 +9,15 @@ using namespace placeholders;
 
 //! ansatz fit
 template <class Tpars,class Tml,class Ta>
-Tpars cont_chir_ansatz(const Tpars &f0,const Tpars &b0,const Tml &ml,const Ta &a,const Tpars &adep)
-{return (f0+b0*ml)*(1.0+sqr(a)*adep);}
+Tpars cont_chir_ansatz(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &K,const Tml &ml,const Ta &a,const Tpars &adep)
+{
+  Tpars Cf04=C/(f0*f0*f0*f0),
+    M2=2*B0*ml,
+    den=sqr(Tpars(4*M_PI*f0));
+  return e2*sqr(f0)*(4*Cf04-(3+16*Cf04)*M2/den*log(M2)+K*M2/den+sqr(a)*adep);
+}
 
-void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path)
+void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path)
 {
   //set_printlevel(3);
   
@@ -35,17 +40,13 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
   
   //lec
   //
-  //pars.Add("f0",0.121,0.001);
-  size_t if0=add_fit_par(pars,"f0",0.0011,0.001);
-  //pars.Add("b0",2.57,0.01);
-  size_t ib0=add_fit_par(pars,"b0",0.02,0.001);
-  // size_t ic=ipar++;
-  // pars.Add("c",1,1);
-  // size_t iK=ipar++;
-  // pars.Add("K",1,1);
+  size_t if0=add_self_fitted_point(pars,"f0",fit_data,f0);
+  size_t iB0=add_self_fitted_point(pars,"B0",fit_data,B0);
+  size_t iC=add_fit_par(pars,"C",0.0,0.001);
+  size_t iK=add_fit_par(pars,"K",0.0,0.001);
   
-  size_t iadep=add_fit_par(pars,"adep",1.8,1);
-
+  size_t iadep=add_fit_par(pars,"adep",0.6,1);
+  
   //set data
   for(size_t idata=0;idata<ext_data.size();idata++)
     fit_data.push_back(boot_fit_data_t(//numerical data
@@ -53,13 +54,13 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
   				       (vector<double> p,int iel) //dimension 2
   				       {return ext_data[idata].y[iel]/sqr(p[2*ext_data[idata].ib+0]);},
   				       //ansatz
-  				       [idata,&ext_data,iadep,ib0,if0]
+  				       [idata,&ext_data,iadep,iB0,if0,iC,iK]
   				       (vector<double> p,int iel)
   				       {
   					 double a=p[2*ext_data[idata].ib+0];
   					 double z=p[2*ext_data[idata].ib+1];
   					 double ml=ext_data[idata].aml/a/z;
-  					 return cont_chir_ansatz(p[if0],p[ib0],ml,a,p[iadep]);
+  					 return cont_chir_ansatz(p[if0],p[iB0],p[iC],p[iK],ml,a,p[iadep]);
   				       },
   				       //error
   				       dboot_t(ext_data[idata].y/sqr(a[ext_data[idata].ib])).err()));
@@ -70,7 +71,7 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
   MnMigrad migrad(boot_fit,pars);
   
   dbvec_t fit_a(a.size()),fit_z(z.size());
-  dboot_t f0,b0,adep;
+  dboot_t fit_f0,fit_B0,C,K,adep;
   dboot_t ch2;
   for(iel=0;iel<100;iel++)
     {
@@ -80,8 +81,10 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
       ch2[iel]=par_min.Fval();
       
       //get back pars
-      f0[iel]=par_min.Vec()[if0];
-      b0[iel]=par_min.Vec()[ib0];
+      fit_f0[iel]=par_min.Vec()[if0];
+      fit_B0[iel]=par_min.Vec()[iB0];
+      C[iel]=par_min.Vec()[iC];
+      K[iel]=par_min.Vec()[iK];
       adep[iel]=par_min.Vec()[iadep];
       
       for(size_t ibeta=0;ibeta<a.size();ibeta++) fit_a[ibeta][iel]=par_min.Vec()[2*ibeta+0];
@@ -98,12 +101,14 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
     cout<<"Zp["<<iz<<"]: "<<fit_z[iz].ave_err()<<", orig: "<<z[iz].ave_err()<<", ratio: "<<dboot_t(z[iz]/fit_z[iz]-1.0).ave_err()<<endl;
   
   //print parameters
-  cout<<"f0: "<<f0.ave_err()<<endl;
-  cout<<"B0: "<<b0.ave_err()<<endl;
+  cout<<"f0: "<<fit_f0.ave_err()<<endl;
+  cout<<"B0: "<<fit_B0.ave_err()<<endl;
+  cout<<"C: "<<C.ave_err()<<endl;
+  cout<<"K: "<<K.ave_err()<<endl;
   cout<<"Adep: "<<adep.ave_err()<<endl;
   
   //compute physical result
-  dboot_t phys_res=cont_chir_ansatz(f0, b0, ml_phys,0.0,adep);
+  dboot_t phys_res=cont_chir_ansatz(f0,B0,C,K,ml_phys,0.0,adep);
   cout<<"Physical result: "<<phys_res.ave_err()<<endl;
   
   //prepare plot
@@ -115,9 +120,9 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_
   
   //band of the fit to individual beta
   for(size_t ib=0;ib<a.size();ib++)
-    fit_file.write_polygon(bind(cont_chir_ansatz<dboot_t,double,dboot_t>,f0,b0,_1,a[ib],adep),0,ml_max);
+    fit_file.write_polygon(bind(cont_chir_ansatz<dboot_t,double,dboot_t>,f0,B0,C,K,_1,a[ib],adep),1e-6,ml_max);
   //band of the continuum limit
-  fit_file.write_polygon(bind(cont_chir_ansatz<dboot_t,double,double>,f0,b0,_1,0.0,adep),0,ml_max);
+  fit_file.write_polygon(bind(cont_chir_ansatz<dboot_t,double,double>,f0,B0,C,K,_1,0.0,adep),1e-6,ml_max);
   //data
   for(size_t ib=0;ib<a.size();ib++)
     {
