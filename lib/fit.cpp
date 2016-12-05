@@ -57,7 +57,7 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dbo
     fit_data.push_back(boot_fit_data_t(//numerical data
   				       [ext_data,idata]
   				       (vector<double> p,int iel) //dimension 2
-  				       {return ext_data[idata].y[iel]/sqr(p[2*ext_data[idata].ib+0]);},
+  				       {return (ext_data[idata].y[iel]-ext_data[idata].fse[iel])/sqr(p[2*ext_data[idata].ib+0]);},
   				       //ansatz
   				       [idata,&ext_data,iadep,iB0,if0,iC,iK,chir_an]
   				       (vector<double> p,int iel)
@@ -68,7 +68,7 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dbo
   					 return cont_chir_ansatz(p[if0],p[iB0],p[iC],p[iK],ml,a,p[iadep],chir_an);
   				       },
   				       //error
-  				       dboot_t(ext_data[idata].y/sqr(a[ext_data[idata].ib])).err()));
+  				       dboot_t((ext_data[idata].y-ext_data[idata].fse)/sqr(a[ext_data[idata].ib])).err()));
   
   //! fit
   size_t iel=0;
@@ -123,7 +123,7 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dbo
   grace_file_t fit_file(path);
   fit_file.set_title("Continuum and chiral limit");
   fit_file.set_xaxis_label("$$ml^{\\overline{MS},2 GeV} [GeV]");
-  fit_file.set_yaxis_label("$$(M^2_{\\pi^+}-M^2_{\\pi^0})/e^2 [GeV^2]");
+  fit_file.set_yaxis_label("$$(M^2_{\\pi^+}-M^2_{\\pi^0}) [GeV^2]");
   fit_file.set_xaxis_max(ml_max);
   
   //band of the fit to individual beta
@@ -131,13 +131,23 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dbo
     fit_file.write_line(bind(cont_chir_ansatz<double,double,double>,f0.ave(),B0.ave(),C.ave(),K.ave(),_1,a[ib].ave(),adep.ave(),chir_an),1e-6,ml_max);
   //band of the continuum limit
   fit_file.write_polygon(bind(cont_chir_ansatz<dboot_t,double,double>,f0,B0,C,K,_1,0.0,adep,chir_an),1e-6,ml_max);
-  //data
-  for(size_t ib=0;ib<a.size();ib++)
+  //data without and with fse
+  grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
+  for(int without_with_fse=0;without_with_fse<2;without_with_fse++)
     {
-      fit_file.new_data_set();
-       for(size_t idata=0;idata<ext_data.size();idata++)
-	 if(ext_data[idata].ib==ib)
-	   fit_file<<dboot_t(ext_data[idata].aml/z[ib]/a[ib]).ave()<<" "<<dboot_t(ext_data[idata].y/sqr(a[ib])).ave_err()<<endl;
+      for(size_t ib=0;ib<a.size();ib++)
+	{
+	  fit_file.new_data_set();
+	  //put data without fse to brown
+	  if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
+	  
+	  for(size_t idata=0;idata<ext_data.size();idata++)
+	    if(ext_data[idata].ib==ib)
+	      fit_file<<dboot_t(ext_data[idata].aml/z[ib]/a[ib]).ave()<<" "<<
+		dboot_t((ext_data[idata].y-without_with_fse*ext_data[idata].fse)/sqr(a[ib])).ave_err()<<endl;
+	}
+      //put back colors for data with fse
+      if(without_with_fse==0) fit_file.reset_cur_col();
     }
   //data of the continuum-chiral limit
   fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());

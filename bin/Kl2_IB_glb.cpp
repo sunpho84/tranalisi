@@ -250,9 +250,10 @@ int main(int narg,char **arg)
       //vector<cont_chir_fit_data_t> data_k;
       for(size_t iens=0;iens<raw_data.size();iens++)
 	data_pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
-					    raw_data[iens].ibeta,
-					    raw_data[iens].L,
-					    da2M2Pi[iens]-FVE_da2M2Pi[iens]));
+					       raw_data[iens].ibeta,
+					       raw_data[iens].L,
+					       da2M2Pi[iens],
+					       FVE_da2M2Pi[iens]));
       
       cont_chir_fit(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_pi,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ian),chir_an_flag(ian));
       
@@ -261,9 +262,10 @@ int main(int narg,char **arg)
       //vector<cont_chir_fit_data_t> data_k;
       for(size_t iens=0;iens<raw_data.size();iens++)
 	data_K.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
-					    raw_data[iens].ibeta,
-					    raw_data[iens].L,
-					    da2M2K_QED[iens]-FVE_da2M2K[iens]));
+					      raw_data[iens].ibeta,
+					      raw_data[iens].L,
+					      da2M2K_QED[iens],
+					      FVE_da2M2K[iens]));
       
       cont_chir_fit(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_K,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2K_an%zu.xmg",ian),chir_an_flag(ian));
       

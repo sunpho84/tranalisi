@@ -21,10 +21,12 @@ namespace grace
   enum line_type_t{NO_LINE_TYPE,STRAIGHT_LINE};
   enum line_style_t{NO_LINE,CONTINUOUS_LINE,SHORT_DASHED_LINE,DASHED_LINE};
   enum fill_type_t{NO_FILL,AS_POLYGON,TO_BASELINE};
+  enum symbol_fill_pattern_t{EMPTY_SYMBOL,FILLED_SYMBOL};
   enum settype_t{XY,XYDY,XYDXDY};
   
   EXTERN_GRACE symbol_t default_symbol INIT_TO(SQUARE);
   EXTERN_GRACE double default_symbol_size INIT_TO(0.8);
+  EXTERN_GRACE double default_symbol_fill_pattern INIT_TO(grace::EMPTY_SYMBOL);
   EXTERN_GRACE color_t default_colour INIT_TO(RED);
   EXTERN_GRACE double default_widths INIT_TO(2);
   EXTERN_GRACE double default_label_size INIT_TO(1.5);
@@ -63,6 +65,7 @@ class grace_file_t : public ofstream
   
   grace::symbol_t symbol; //<! symbol
   grace::color_t symbol_color; //<! color for symbol
+  bool symbol_fill_pattern; //<! wmty or filled symbols
   grace::color_t symbol_fill_color; //<! color for symbol filling
   double symbol_size; //<! size of the symbol
   double symbol_linewidth; //<! width of the symbol line
@@ -95,6 +98,8 @@ public:
   //! set a color scheme
   void set_color_scheme(const initializer_list<grace::color_t> &oth)
   {color_scheme.assign(oth.begin(),oth.end());}
+  void reset_cur_col()
+  {cur_col=0;}
   
   //! set a symbol scheme
   void set_symbol_scheme(const initializer_list<grace::symbol_t> &oth)
@@ -108,6 +113,7 @@ public:
     fill_type=grace::NO_FILL;
     symbol=grace::default_symbol;
     symbol_size=grace::default_symbol_size;
+    symbol_fill_pattern=grace::default_symbol_fill_pattern;
     set_all_colors(grace::default_colour);
     transparency=255;
     errorbar_size=0.5;
@@ -227,6 +233,7 @@ public:
 	write_prop("symbol linewidth "+to_string(symbol_linewidth));
 	write_prop("symbol color "+to_string(symbol_color));
 	write_prop("symbol fill color "+to_string(symbol_fill_color));
+	write_prop("symbol fill pattern "+to_string(symbol_fill_pattern));
 	//error props
 	write_prop("errorbar color "+to_string(errorbar_color));
 	write_prop("errorbar size "+to_string(errorbar_size));
