@@ -196,6 +196,8 @@ int main(int narg,char **arg)
       dbvec_t FVE_da2M2Pi(raw_data.size());
       dbvec_t dM2K_QED(raw_data.size());
       dbvec_t FVE_dM2K(raw_data.size());
+      dbvec_t da2M2K_QED(raw_data.size());
+      dbvec_t FVE_da2M2K(raw_data.size());
       dbvec_t epsilon_gamma(raw_data.size());
       dbvec_t epsilon_gamma_minusFVE(raw_data.size());
       
@@ -226,13 +228,17 @@ int main(int narg,char **arg)
 	  dboot_t MK_sl_selftad=dboot_t(bi,raw_data[iens].k_SL_selftad)/a;
 	  dboot_t MK_sl_s=dboot_t(bi,raw_data[iens].k_SL_s);
 	  dboot_t MK_sl_p=dboot_t(bi,raw_data[iens].k_SL_p);
-	  
+
+	  dboot_t aMK=MK*a;
+
 	  dboot_t dMK_QED=
 	    -2*ml[iens]*MK_sl_s/Z_QED
 	    -(Deltam_cr_u-Deltam_cr_d)*MK_sl_p
 	    +(sqr(eu)-sqr(ed))*e2*(MK_sl_exch-MK_sl_selftad);
 	  dM2K_QED[iens]=dMK_QED*2*MK;
+	  da2M2K_QED[iens]=sqr(a)*dM2K_QED[iens];
 	  FVE_dM2K[iens]=FVE_d2M(MK,Lphys);
+	  FVE_da2M2K[iens]=FVE_d2M(aMK,raw_data[iens].L);
 	}
       
       plot_ens_data(combine("plots/dM2K_QED_an%zu.xmg",ia),ml,dM2K_QED);
@@ -247,14 +253,22 @@ int main(int narg,char **arg)
 	}
       
       //data to fit
-      vector<cont_chir_fit_data_t> data;
+      vector<cont_chir_fit_data_t> data_pi;
+      vector<cont_chir_fit_data_t> data_k;
       for(size_t iens=0;iens<raw_data.size();iens++)
-	data.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
-					    raw_data[iens].ibeta,
-					    raw_data[iens].L,
-					    da2M2Pi[iens]-FVE_da2M2Pi[iens]));
+	{
+	  data_pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
+						 raw_data[iens].ibeta,
+						 raw_data[iens].L,
+						 da2M2Pi[iens]-FVE_da2M2Pi[iens]));
+	  data_k.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
+						 raw_data[iens].ibeta,
+						 raw_data[iens].L,
+						 da2M2K_QED[iens]-FVE_da2M2K[iens]));
+	}
       
-      cont_chir_fit(alist,zlist,data,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ia));
+      cont_chir_fit(alist,zlist,data_pi,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ia));
+      cont_chir_fit(alist,zlist,data_k,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2K_QED_an%zu.xmg",ia));
     }
   
   return 0;
