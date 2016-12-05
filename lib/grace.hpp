@@ -51,6 +51,9 @@ class grace_file_t : public ofstream
   size_t cur_poly_col; //<! current color for polygon
   grace::color_t get_poly_col_and_increment()
   {return get_and_increment(color_scheme,cur_poly_col);}
+  size_t cur_line_col; //<! current color for line
+  grace::color_t get_line_col_and_increment()
+  {return get_and_increment(color_scheme,cur_line_col);}
   size_t cur_symbol; //<! current symbol
   grace::symbol_t get_symbol_and_increment()
   {return get_and_increment(symbol_scheme,cur_symbol);}
@@ -119,6 +122,7 @@ public:
     symbol_scheme({grace::CIRCLE,grace::SQUARE,grace::DIAMOND}),
     cur_col(0),
     cur_poly_col(0),
+    cur_line_col(0),
     cur_symbol(0),
     iset(0),
     xaxis_min(0),
@@ -358,6 +362,35 @@ public:
   }
   template <class fun_t> void write_polygon(fun_t fun,double xmin,double xmax,size_t npoints=100)
   {write_polygon(fun,xmin,xmax,get_poly_col_and_increment(),npoints);}
+  
+  //! mark as a continuos line
+  void continuous_line(grace::color_t col)
+  {
+    set_settype(grace::XY);
+    set_all_colors(col);
+    set_no_symbol();
+  }
+  
+  //! write a line
+  template <class fun_t> void write_line(fun_t fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  {
+    close_cur_set();
+    
+    if(npoints==0) CRASH("NPoints must be different from 0");
+    
+    //mark a continuous line
+    this->continuous_line(col);
+    
+    for(size_t ipoint=0;ipoint<npoints;ipoint++)
+      {
+	double x=xmin+(xmax-xmin)/(npoints-1)*ipoint;
+	double y=fun(x);
+	(*this)<<x<<" "<<y<<endl;
+      }
+    need_close_set=true;
+  }
+  template <class fun_t> void write_line(fun_t fun,double xmin,double xmax,size_t npoints=100)
+  {write_line(fun,xmin,xmax,get_line_col_and_increment(),npoints);}
   
   //! write a constant band
   template <class T> void write_constant_band(int xmin,int xmax,const T &c,grace::color_t col)
