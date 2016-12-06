@@ -253,22 +253,18 @@ int main(int narg,char **arg)
       
       //data to fit
       vector<cont_chir_fit_data_t> data_pi;
-      //vector<cont_chir_fit_data_t> data_k;
+      vector<cont_chir_fit_data_t> data_k;
       for(size_t iens=0;iens<raw_data.size();iens++)
 	{
 	  data_pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
 						 raw_data[iens].ibeta,
 						 raw_data[iens].L,
 						 da2M2Pi[iens]-FVE_da2M2Pi[iens]));
-	  // data_k.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
-	  // 					 raw_data[iens].ibeta,
-	  // 					 raw_data[iens].L,
-	  // 					 da2M2K_QED[iens]-FVE_da2M2K[iens]));
+	  data_k.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
+						raw_data[iens].ibeta,
+						raw_data[iens].L,
+						da2M2K_QED[iens]-FVE_da2M2K[iens]));
 	}
-      
-
-      // cont_chir_fit(alist,zlist,data_pi,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ia));
-      // cont_chir_fit(alist,zlist,data_k,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2K_QED_an%zu.xmg",ia));
       cont_chir_fit(alist,zlist,lat_par[ia].f0,lat_par[ia].B0,data_pi,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ia));
     }
   
