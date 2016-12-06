@@ -21,10 +21,12 @@ namespace grace
   enum line_type_t{NO_LINE_TYPE,STRAIGHT_LINE};
   enum line_style_t{NO_LINE,CONTINUOUS_LINE,SHORT_DASHED_LINE,DASHED_LINE};
   enum fill_type_t{NO_FILL,AS_POLYGON,TO_BASELINE};
+  enum symbol_fill_pattern_t{EMPTY_SYMBOL,FILLED_SYMBOL};
   enum settype_t{XY,XYDY,XYDXDY};
   
   EXTERN_GRACE symbol_t default_symbol INIT_TO(SQUARE);
   EXTERN_GRACE double default_symbol_size INIT_TO(0.8);
+  EXTERN_GRACE double default_symbol_fill_pattern INIT_TO(grace::EMPTY_SYMBOL);
   EXTERN_GRACE color_t default_colour INIT_TO(RED);
   EXTERN_GRACE double default_widths INIT_TO(2);
   EXTERN_GRACE double default_label_size INIT_TO(1.5);
@@ -51,6 +53,9 @@ class grace_file_t : public ofstream
   size_t cur_poly_col; //<! current color for polygon
   grace::color_t get_poly_col_and_increment()
   {return get_and_increment(color_scheme,cur_poly_col);}
+  size_t cur_line_col; //<! current color for line
+  grace::color_t get_line_col_and_increment()
+  {return get_and_increment(color_scheme,cur_line_col);}
   size_t cur_symbol; //<! current symbol
   grace::symbol_t get_symbol_and_increment()
   {return get_and_increment(symbol_scheme,cur_symbol);}
@@ -60,6 +65,7 @@ class grace_file_t : public ofstream
   
   grace::symbol_t symbol; //<! symbol
   grace::color_t symbol_color; //<! color for symbol
+  bool symbol_fill_pattern; //<! wmty or filled symbols
   grace::color_t symbol_fill_color; //<! color for symbol filling
   double symbol_size; //<! size of the symbol
   double symbol_linewidth; //<! width of the symbol line
@@ -92,6 +98,8 @@ public:
   //! set a color scheme
   void set_color_scheme(const initializer_list<grace::color_t> &oth)
   {color_scheme.assign(oth.begin(),oth.end());}
+  void reset_cur_col()
+  {cur_col=0;}
   
   //! set a symbol scheme
   void set_symbol_scheme(const initializer_list<grace::symbol_t> &oth)
@@ -105,6 +113,7 @@ public:
     fill_type=grace::NO_FILL;
     symbol=grace::default_symbol;
     symbol_size=grace::default_symbol_size;
+    symbol_fill_pattern=grace::default_symbol_fill_pattern;
     set_all_colors(grace::default_colour);
     transparency=255;
     errorbar_size=0.5;
@@ -119,6 +128,7 @@ public:
     symbol_scheme({grace::CIRCLE,grace::SQUARE,grace::DIAMOND}),
     cur_col(0),
     cur_poly_col(0),
+    cur_line_col(0),
     cur_symbol(0),
     iset(0),
     xaxis_min(0),
@@ -223,6 +233,7 @@ public:
 	write_prop("symbol linewidth "+to_string(symbol_linewidth));
 	write_prop("symbol color "+to_string(symbol_color));
 	write_prop("symbol fill color "+to_string(symbol_fill_color));
+	write_prop("symbol fill pattern "+to_string(symbol_fill_pattern));
 	//error props
 	write_prop("errorbar color "+to_string(errorbar_color));
 	write_prop("errorbar size "+to_string(errorbar_size));
@@ -358,6 +369,35 @@ public:
   }
   template <class fun_t> void write_polygon(fun_t fun,double xmin,double xmax,size_t npoints=100)
   {write_polygon(fun,xmin,xmax,get_poly_col_and_increment(),npoints);}
+  
+  //! mark as a continuos line
+  void continuous_line(grace::color_t col)
+  {
+    set_settype(grace::XY);
+    set_all_colors(col);
+    set_no_symbol();
+  }
+  
+  //! write a line
+  template <class fun_t> void write_line(fun_t fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  {
+    close_cur_set();
+    
+    if(npoints==0) CRASH("NPoints must be different from 0");
+    
+    //mark a continuous line
+    this->continuous_line(col);
+    
+    for(size_t ipoint=0;ipoint<npoints;ipoint++)
+      {
+	double x=xmin+(xmax-xmin)/(npoints-1)*ipoint;
+	double y=fun(x);
+	(*this)<<x<<" "<<y<<endl;
+      }
+    need_close_set=true;
+  }
+  template <class fun_t> void write_line(fun_t fun,double xmin,double xmax,size_t npoints=100)
+  {write_line(fun,xmin,xmax,get_line_col_and_increment(),npoints);}
   
   //! write a constant band
   template <class T> void write_constant_band(int xmin,int xmax,const T &c,grace::color_t col)

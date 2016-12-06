@@ -69,6 +69,9 @@ template <class Tx,class Ty> void plot_ens_data(string path,const Tx &x,const Ty
   plot_ens_data(file,x,y);
 }
 
+const bool chir_an_flag(size_t ia)
+{return ia%2==0;}
+
 int main(int narg,char **arg)
 {
   set_njacks(15);
@@ -134,51 +137,51 @@ int main(int narg,char **arg)
   double dum;
   file.expect({"ml","(GeV)"});
   file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].ml=read_boot(file);
+  for(size_t ian=0;ian<noa;ian++) lat_par[ian].ml=read_boot(file);
   file.expect({"ms","(GeV)"});
   file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].ms=read_boot(file);
+  for(size_t ian=0;ian<noa;ian++) lat_par[ian].ms=read_boot(file);
   file.expect({"mc(2","GeV)","(GeV)"});
   file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].mc=read_boot(file);
+  for(size_t ian=0;ian<noa;ian++) lat_par[ian].mc=read_boot(file);
   file.expect({"a^-1","(GeV)","(1.90","1.95","2.10)"});
   for(size_t ibeta=0;ibeta<nbeta;ibeta++)
     file.read(dum);
-  for(size_t ia=0;ia<noa;ia++)
+  for(size_t ian=0;ian<noa;ian++)
     for(size_t iboot=0;iboot<nboots;iboot++)
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	file.read(lat_par[ia].ainv[ibeta][iboot]);
+	file.read(lat_par[ian].ainv[ibeta][iboot]);
   file.expect({"r0","(GeV^-1)"});
   file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].r0=read_boot(file);
+  for(size_t ian=0;ian<noa;ian++) lat_par[ian].r0=read_boot(file);
   file.expect({"Zp","(1.90","1.95","2.10)"});
   for(size_t ibeta=0;ibeta<nbeta;ibeta++)
     file.read(dum);
-  for(size_t ia=0;ia<noa/2;ia++)
+  for(size_t ian=0;ian<noa/2;ian++)
     for(size_t iboot=0;iboot<nboots;iboot++)
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	file.read(lat_par[ia].Z[ibeta][iboot]);
+	file.read(lat_par[ian].Z[ibeta][iboot]);
   for(size_t ibeta=0;ibeta<nbeta;ibeta++)
     file.read(dum);
-  for(size_t ia=noa/2;ia<noa;ia++)
+  for(size_t ian=noa/2;ian<noa;ian++)
     for(size_t iboot=0;iboot<nboots;iboot++)
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	file.read(lat_par[ia].Z[ibeta][iboot]);
+	file.read(lat_par[ian].Z[ibeta][iboot]);
   file.expect({"Jackknife","numbers","(","0.0030(32),0.0040(32),","0.0050(32),","0.0040(24)","...)"});
-  for(size_t ia=0;ia<noa;ia++)
+  for(size_t ian=0;ian<noa;ian++)
     for(size_t iboot=0;iboot<nboots;iboot++)
       for(size_t iens=0;iens<nens_used;iens++)
 	{
 	  size_t ijack_plus_one;
 	  file.read(ijack_plus_one);
-	  jack_index[ia][iens][iboot]=ijack_plus_one-1;
+	  jack_index[ian][iens][iboot]=ijack_plus_one-1;
 	}
   file.expect({"f0","(GeV)"});
   file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].f0=read_boot(file);
+  for(size_t ian=0;ian<noa;ian++) lat_par[ian].f0=read_boot(file);
   file.expect({"2*B0","(GeV)"});
   file.read(dum);
-  for(size_t ia=0;ia<noa;ia++) lat_par[ia].B0=read_boot(file)/2.0;
+  for(size_t ian=0;ian<noa;ian++) lat_par[ian].B0=read_boot(file)/2.0;
   
   // for(size_t iens=0;iens<nens_used;iens++)
   //   cout<<jack_index[0][iens][0]<<endl;
@@ -187,14 +190,12 @@ int main(int narg,char **arg)
 
   //loop
   cout<<endl;
-  for(size_t ia=0;ia<noa;ia++)
+  for(size_t ian=0;ian<noa;ian++)
     {
       dbvec_t ml(raw_data.size());
       dbvec_t a2M2Pi(raw_data.size());
       dbvec_t da2M2Pi(raw_data.size());
       dbvec_t FVE_da2M2Pi(raw_data.size());
-      dbvec_t dM2K_QED(raw_data.size());
-      dbvec_t FVE_dM2K(raw_data.size());
       dbvec_t da2M2K_QED(raw_data.size());
       dbvec_t FVE_da2M2K(raw_data.size());
       dbvec_t epsilon_gamma(raw_data.size());
@@ -205,13 +206,13 @@ int main(int narg,char **arg)
 	  size_t ens_id=raw_data[iens].iult;
 	  size_t ibeta=raw_data[iens].ibeta;
 	  
-	  dboot_t a=1.0/lat_par[ia].ainv[ibeta];
+	  dboot_t a=1.0/lat_par[ian].ainv[ibeta];
 	  dboot_t Lphys=raw_data[iens].L*a;
-	  ml[iens]=raw_data[iens].aml/lat_par[ia].Z[ibeta]/a;
+	  ml[iens]=raw_data[iens].aml/lat_par[ian].Z[ibeta]/a;
 	  
-	  boot_init_t &bi=jack_index[ia][ens_id];
+	  boot_init_t &bi=jack_index[ian][ens_id];
 	  
-	  dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*lat_par[ia].Z[ibeta]*(6*log(2*a)-22.596)/(32*sqr(M_PI)));
+	  dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*lat_par[ian].Z[ibeta]*(6*log(2*a)-22.596)/(32*sqr(M_PI)));
 	  dboot_t Deltam_cr_u=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(eu)/a;
 	  dboot_t Deltam_cr_d=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(ed)/a;
 	  
@@ -222,50 +223,51 @@ int main(int narg,char **arg)
 	  da2M2Pi[iens]=aMPi*sqr(eu-ed)*e2*aMPi_sl;
 	  FVE_da2M2Pi[iens]=FVE_d2M(aMPi,raw_data[iens].L);
 	  
-	  dboot_t MK=dboot_t(bi,raw_data[iens].k_mass)/a;
-	  dboot_t MK_sl_exch=dboot_t(bi,raw_data[iens].k_SL_exch)/a;
-	  dboot_t MK_sl_selftad=dboot_t(bi,raw_data[iens].k_SL_selftad)/a;
+	  dboot_t aMK=dboot_t(bi,raw_data[iens].k_mass);
+	  dboot_t aMK_sl_exch=dboot_t(bi,raw_data[iens].k_SL_exch)/a;
+	  dboot_t aMK_sl_selftad=dboot_t(bi,raw_data[iens].k_SL_selftad)/a;
 	  dboot_t MK_sl_s=dboot_t(bi,raw_data[iens].k_SL_s);
 	  dboot_t MK_sl_p=dboot_t(bi,raw_data[iens].k_SL_p);
-
-	  dboot_t aMK=MK*a;
-
-	  dboot_t dMK_QED=
+	  
+	  dboot_t daMK_QED=
 	    -2*ml[iens]*MK_sl_s/Z_QED
 	    -(Deltam_cr_u-Deltam_cr_d)*MK_sl_p
-	    +(sqr(eu)-sqr(ed))*e2*(MK_sl_exch-MK_sl_selftad);
-	  dM2K_QED[iens]=dMK_QED*2*MK;
-	  da2M2K_QED[iens]=sqr(a)*dM2K_QED[iens];
-	  FVE_dM2K[iens]=FVE_d2M(MK,Lphys);
+	    +(sqr(eu)-sqr(ed))*e2*(aMK_sl_exch-aMK_sl_selftad);
+	  da2M2K_QED[iens]=daMK_QED*2*aMK;
 	  FVE_da2M2K[iens]=FVE_d2M(aMK,raw_data[iens].L);
 	}
-      
-      plot_ens_data(combine("plots/dM2K_QED_an%zu.xmg",ia),ml,dM2K_QED);
-      plot_ens_data(combine("plots/dM2K_QED_FVEcorr_an%zu.xmg",ia),ml,dM2K_QED-FVE_dM2K);
       
       //prepare the list of a and z
       dbvec_t alist(nbeta),zlist(nbeta);
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
 	{
-	  alist[ibeta]=1.0/lat_par[ia].ainv[ibeta];
-	  zlist[ibeta]=lat_par[ia].Z[ibeta];
+	  alist[ibeta]=1.0/lat_par[ian].ainv[ibeta];
+	  zlist[ibeta]=lat_par[ian].Z[ibeta];
 	}
       
       //data to fit
       vector<cont_chir_fit_data_t> data_pi;
       vector<cont_chir_fit_data_t> data_k;
       for(size_t iens=0;iens<raw_data.size();iens++)
-	{
-	  data_pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
-						 raw_data[iens].ibeta,
-						 raw_data[iens].L,
-						 da2M2Pi[iens]-FVE_da2M2Pi[iens]));
-	  data_k.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
-						raw_data[iens].ibeta,
-						raw_data[iens].L,
-						da2M2K_QED[iens]-FVE_da2M2K[iens]));
-	}
-      cont_chir_fit(alist,zlist,lat_par[ia].f0,lat_par[ia].B0,data_pi,lat_par[ia].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ia));
+	data_pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
+					       raw_data[iens].ibeta,
+					       raw_data[iens].L,
+					       da2M2Pi[iens],
+					       FVE_da2M2Pi[iens]));
+      
+      cont_chir_fit(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_pi,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ian),chir_an_flag(ian));
+      
+      //data to fit
+      vector<cont_chir_fit_data_t> data_K;
+      //vector<cont_chir_fit_data_t> data_k;
+      for(size_t iens=0;iens<raw_data.size();iens++)
+	data_K.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
+					      raw_data[iens].ibeta,
+					      raw_data[iens].L,
+					      da2M2K_QED[iens],
+					      FVE_da2M2K[iens]));
+      
+      cont_chir_fit(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_K,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2K_an%zu.xmg",ian),chir_an_flag(ian));
     }
   
   return 0;

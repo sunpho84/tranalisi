@@ -319,10 +319,11 @@ public:
   double aml;
   size_t ib,L;
   dboot_t y;
-  cont_chir_fit_data_t(double aml,size_t ib,size_t L,dboot_t y) : aml(aml),ib(ib),L(L),y(y) {}
+  dboot_t fse;
+  cont_chir_fit_data_t(double aml,size_t ib,size_t L,dboot_t y,dboot_t fse) : aml(aml),ib(ib),L(L),y(y),fse(fse) {}
 };
 
 //! perform a fit to the continuum and chiral
-void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path);
+void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,bool chir_an);
 
 #endif
