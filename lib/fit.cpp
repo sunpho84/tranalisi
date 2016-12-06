@@ -9,7 +9,7 @@ using namespace placeholders;
 
 //! ansatz fit
 template <class Tpars,class Tml,class Ta>
-Tpars cont_chir_ansatz(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &K,const Tml &ml,const Ta &a,const Tpars &adep,const bool chir_an)
+Tpars cont_chir_ansatz(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &K,const Tml &ml,const Ta &a,const Tpars &adep,size_t L,const Tpars &D,const bool chir_an)
 {
   if(chir_an)
     {
@@ -18,7 +18,7 @@ Tpars cont_chir_ansatz(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpar
 	M2=2*B0*ml,
 	den=sqr(Tpars(4*M_PI*f0));
       
-      return e2*sqr(f0)*(4*Cf04-(3+16*Cf04)*M2/den*log(M2)+K*M2/den+sqr(a)*adep);
+      return e2*sqr(f0)*(4*Cf04-(3+16*Cf04)*M2/den*log(M2)+K*M2/den)+sqr(a)*adep+D/(L*L*L);
     }
   else return (C+ml*K)*(1+adep*sqr(a));
 }
@@ -51,6 +51,7 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dbo
   size_t iK=add_fit_par(pars,"K",0,1);
   
   size_t iadep=add_fit_par(pars,"adep",0.6,1);
+  size_t iD=add_fit_par(pars,"D",0,1);
   
   //set data
   for(size_t idata=0;idata<ext_data.size();idata++)
@@ -59,13 +60,14 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dbo
   				       (vector<double> p,int iel) //dimension 2
   				       {return (ext_data[idata].y[iel]-ext_data[idata].fse[iel])/sqr(p[2*ext_data[idata].ib+0]);},
   				       //ansatz
-  				       [idata,&ext_data,iadep,iB0,if0,iC,iK,chir_an]
+  				       [idata,&ext_data,iD,iadep,iB0,if0,iC,iK,chir_an]
   				       (vector<double> p,int iel)
   				       {
   					 double a=p[2*ext_data[idata].ib+0];
   					 double z=p[2*ext_data[idata].ib+1];
   					 double ml=ext_data[idata].aml/a/z;
-  					 return cont_chir_ansatz(p[if0],p[iB0],p[iC],p[iK],ml,a,p[iadep],chir_an);
+					 size_t L=ext_data[idata].L;
+  					 return cont_chir_ansatz(p[if0],p[iB0],p[iC],p[iK],ml,a,p[iadep],L,p[iD],chir_an);
   				       },
   				       //error
   				       dboot_t((ext_data[idata].y-ext_data[idata].fse)/sqr(a[ext_data[idata].ib])).err()));
@@ -76,7 +78,7 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dbo
   MnMigrad migrad(boot_fit,pars);
   
   dbvec_t fit_a(a.size()),fit_z(z.size());
-  dboot_t fit_f0,fit_B0,C,K,adep;
+  dboot_t fit_f0,fit_B0,C,K,adep,D;
   dboot_t ch2;
   for(iel=0;iel<ml_phys.size();iel++)
     {
@@ -91,6 +93,7 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dbo
       C[iel]=par_min.Vec()[iC];
       K[iel]=par_min.Vec()[iK];
       adep[iel]=par_min.Vec()[iadep];
+      D[iel]=par_min.Vec()[iD];
       
       for(size_t ibeta=0;ibeta<a.size();ibeta++) fit_a[ibeta][iel]=par_min.Vec()[2*ibeta+0];
       for(size_t ibeta=0;ibeta<z.size();ibeta++) fit_z[ibeta][iel]=par_min.Vec()[2*ibeta+1];
@@ -111,9 +114,10 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dbo
   cout<<"C: "<<C.ave_err()<<endl;
   cout<<"K: "<<K.ave_err()<<endl;
   cout<<"Adep: "<<adep.ave_err()<<endl;
+  cout<<"D: "<<D.ave_err()<<endl;
   
   //compute physical result
-  dboot_t phys_res=cont_chir_ansatz(f0,B0,C,K,ml_phys,0.0,adep,chir_an);
+  dboot_t phys_res=cont_chir_ansatz(f0,B0,C,K,ml_phys,0.0,adep,1,0.0,chir_an);
   cout<<"Physical result: "<<phys_res.ave_err()<<endl;
   const double mpi0=0.1349766;
   //const double mpip=0.13957018;
@@ -128,9 +132,10 @@ void cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dbo
   
   //band of the fit to individual beta
   for(size_t ib=0;ib<a.size();ib++)
-    fit_file.write_line(bind(cont_chir_ansatz<double,double,double>,f0.ave(),B0.ave(),C.ave(),K.ave(),_1,a[ib].ave(),adep.ave(),chir_an),1e-6,ml_max);
+    for(auto &data : ext_data)
+      fit_file.write_line(bind(cont_chir_ansatz<double,double,double>,f0.ave(),B0.ave(),C.ave(),K.ave(),_1,a[ib].ave(),adep.ave(),data.L,D.ave(),chir_an),1e-6,ml_max);
   //band of the continuum limit
-  fit_file.write_polygon(bind(cont_chir_ansatz<dboot_t,double,double>,f0,B0,C,K,_1,0.0,adep,chir_an),1e-6,ml_max);
+  fit_file.write_polygon(bind(cont_chir_ansatz<dboot_t,double,double>,f0,B0,C,K,_1,0.0,adep,1,0.0,chir_an),1e-6,ml_max);
   //data without and with fse
   grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
   for(int without_with_fse=0;without_with_fse<2;without_with_fse++)
