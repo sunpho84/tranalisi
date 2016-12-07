@@ -16,12 +16,12 @@ template <class Tpars,class Tml,class Ta>
 Tpars cont_chir_ansatz(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &K,const Tml &ml,const Ta &a,const Tpars &adep,double L,const Tpars &D,const Tpars &adep_ml,const bool chir_an)
 {
   Tpars
-    Cf04=C/(f0*f0*f0*f0),
+    Cf04=C/sqr(sqr(f0)),
     M2=2*B0*ml,
     den=sqr(Tpars(4*M_PI*f0));
   
   Tpars chir_log;
-  if(!chir_an) chir_log=-(3+16*Cf04)*M2/den*log(M2);
+  if(chir_an) chir_log=-(3+16*Cf04)*M2/den*log(M2);
   else        chir_log=0;
   
   Tpars fitted_FSE=FSE_dep(D,a,L);
