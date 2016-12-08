@@ -323,7 +323,7 @@ void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,c
   for(size_t ib=0;ib<a.size();ib++)
     fit_file.write_line(bind(cont_chir_ansatz_epsilon<double,double,double>,fit_f0.ave(),fit_B0.ave(),C.ave(),Kpi.ave(),Kk.ave(),_1,ms_phys.ave(),fit_a[ib].ave(),adep.ave(),inf_vol,D.ave(),adep_ml.ave(),chir_an),1e-6,ml_max);
   //band of the continuum limit
-  fit_file.write_polygon(bind(cont_chir_ansatz_epsilon<dboot_t,double,double>,fit_f0,fit_B0,C,Kpi,Kk,_1,ms_phys,a_cont,adep,inf_vol,D,adep_ml,chir_an),1e-6,ml_max);
+  fit_file.write_polygon(bind(cont_chir_ansatz_epsilon<dboot_t,double,double>,fit_f0,fit_B0,C,Kpi,Kk,_1,ms_phys.ave(),a_cont,adep,inf_vol,D,adep_ml,chir_an),1e-6,ml_max);
   //data without and with fse
   grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
   for(int without_with_fse=0;without_with_fse<2;without_with_fse++)
