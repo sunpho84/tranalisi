@@ -19,7 +19,7 @@ using namespace std;
 #define NAME3(s1,s2,s3) NAME2(CONCAT3(s1,_,s2),s3)
 #define NAME4(s1,s2,s3,s4) NAME3(CONCAT3(s1,_,s2),s3,s4)
 
-const double alpha_em=1/137.0;
+const double alpha_em=1.0/137;
 const double e2=4*M_PI*alpha_em;
 const double mu=2.0;
 
