@@ -45,11 +45,10 @@ template< class T> T fit_delta_pion_square()
 vector<lat_par_t> lat_par(noa);
 vector<ens_data_t> raw_data;
 
-template <class T1,class T2> T1 FVE_d2M(const T1 &M,const T2 &Lphys)
+template <class T1,class T2> T1 FVE_d2M(const T1 &M,const T2 &L)
 {
   const double FVE_k=2.837297;
-  double alpha=1.0/137;
-  return -FVE_k*alpha/Lphys*(M+2.0/Lphys);
+  return -FVE_k*alpha_em/L*(M+2.0/L);
 }
 
 //! plot the three ensemble separately
@@ -212,9 +211,9 @@ int main(int narg,char **arg)
 	  
 	  boot_init_t &bi=jack_index[ian][ens_id];
 	  
-	  dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*lat_par[ian].Z[ibeta]*(6*log(2*a)-22.596)/(32*sqr(M_PI)));
-	  dboot_t Deltam_cr_u=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(eu)/a;
-	  dboot_t Deltam_cr_d=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(ed)/a;
+	  dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*lat_par[ian].Z[ibeta]*(6*log(mu*a)-22.596)/(32*sqr(M_PI)));
+	  dboot_t aDeltam_cr_u=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(eu);
+	  dboot_t aDeltam_cr_d=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(ed);
 	  
 	  dboot_t aMPi=dboot_t(bi,raw_data[iens].pi_mass);
 	  dboot_t aMPi_sl=dboot_t(bi,raw_data[iens].pi_SL);
@@ -224,17 +223,20 @@ int main(int narg,char **arg)
 	  FVE_da2M2Pi[iens]=FVE_d2M(aMPi,raw_data[iens].L);
 	  
 	  dboot_t aMK=dboot_t(bi,raw_data[iens].k_mass);
-	  dboot_t aMK_sl_exch=dboot_t(bi,raw_data[iens].k_SL_exch)/a;
-	  dboot_t aMK_sl_selftad=dboot_t(bi,raw_data[iens].k_SL_selftad)/a;
+	  dboot_t aMK_sl_exch=dboot_t(bi,raw_data[iens].k_SL_exch);
+	  dboot_t aMK_sl_selftad=dboot_t(bi,raw_data[iens].k_SL_selftad);
 	  dboot_t MK_sl_s=dboot_t(bi,raw_data[iens].k_SL_s);
 	  dboot_t MK_sl_p=dboot_t(bi,raw_data[iens].k_SL_p);
 	  
 	  dboot_t daMK_QED=
-	    -2*ml[iens]*MK_sl_s/Z_QED
-	    -(Deltam_cr_u-Deltam_cr_d)*MK_sl_p
+	    -2*ml[iens]*a*MK_sl_s/Z_QED
+	    -(aDeltam_cr_u-aDeltam_cr_d)*MK_sl_p
 	    +(sqr(eu)-sqr(ed))*e2*(aMK_sl_exch-aMK_sl_selftad);
 	  da2M2K_QED[iens]=daMK_QED*2*aMK;
 	  FVE_da2M2K[iens]=FVE_d2M(aMK,raw_data[iens].L);
+	  
+	  epsilon_gamma[iens]=(da2M2K_QED[iens]/da2M2Pi[iens])-1.0;
+	  epsilon_gamma_minusFVE[iens]=((da2M2K_QED[iens]-FVE_da2M2K[iens])/(da2M2Pi[iens]-FVE_da2M2Pi[iens]))-1.0;
 	}
       
       //prepare the list of a and z
@@ -246,29 +248,20 @@ int main(int narg,char **arg)
 	}
       
       //data to fit
-      vector<cont_chir_fit_data_t> data_pi;
+      vector<cont_chir_fit_data_t_pi> data_pi;
       for(size_t iens=0;iens<raw_data.size();iens++)
-	data_pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
-					       raw_data[iens].ibeta,
-					       raw_data[iens].L,
-					       da2M2Pi[iens],
-					       FVE_da2M2Pi[iens]));
+	data_pi.push_back(cont_chir_fit_data_t_pi(raw_data[iens].aml,
+						  raw_data[iens].ibeta,
+						  raw_data[iens].L,
+						  da2M2Pi[iens],
+						  FVE_da2M2Pi[iens]));
       
-      cont_chir_fit(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_pi,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ian),chir_an_flag(ian));
+      cont_chir_fit_pi(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_pi,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ian),chir_an_flag(ian));
 
       cout<<"-----------------------------------------------"<<endl;
-      
-      // //data to fit
-      // vector<cont_chir_fit_data_t> data_K;
-      // for(size_t iens=0;iens<raw_data.size();iens++)
-      // 	data_K.push_back(cont_chir_fit_data_t(raw_data[iens].aml,
-      // 					      raw_data[iens].ibeta,
-      // 					      raw_data[iens].L,
-      // 					      da2M2K_QED[iens],
-      // 					      FVE_da2M2K[iens]));
-      
-      // cont_chir_fit(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_K,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2K_an%zu.xmg",ian),chir_an_flag(ian));
 
+      plot_ens_data(combine("plots/epsilon_gamma_an%zu.xmg",ian),ml,epsilon_gamma);
+      plot_ens_data(combine("plots/epsilon_gamma_FVEcorr_an%zu.xmg",ian),ml,epsilon_gamma_minusFVE);
     }
   
   return 0;
