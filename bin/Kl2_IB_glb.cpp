@@ -38,10 +38,7 @@ public:
   djack_t pi_mass,pi_SL,k_mass,k_SL_exch,k_SL_selftad,k_SL_s,k_SL_p,D_mass,D_SL_exch,D_SL_selftad,D_SL_s,D_SL_p;
   djack_t deltam_cr;
 };
-/*
-template< class T> T fit_delta_pion_square()
-{return e2*sqr(f0)*(2*par[0]/pow(f0,4)-(3+4*par[0]/pow(f0,4))*dB0*aml/a/Z*log(dB0*aml/a/Z/4)/sqr(4*M_PI*f0)+par[1]*dB0*aml/a/Z/sqr(4*M_PI*f0))+par[2]*sqr(a);}
-*/
+
 vector<lat_par_t> lat_par(noa);
 vector<ens_data_t> raw_data;
 
@@ -255,7 +252,7 @@ int main(int narg,char **arg)
 						  raw_data[iens].L,
 						  da2M2Pi[iens],
 						  FVE_da2M2Pi[iens]));
-      
+      cout<<"ian: "<<ian<<endl;
       cont_chir_fit_pi(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_pi,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ian),chir_an_flag(ian));
 
       cout<<"-----------------------------------------------"<<endl;
@@ -271,8 +268,21 @@ int main(int narg,char **arg)
 							    raw_data[iens].L,
 							    epsilon_gamma_minusFVE[iens],
 							    epsilon_gamma[iens]));
-      
+      cout<<"ian: "<<ian<<endl;
       cont_chir_fit_epsilon(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_epsilon,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_epsilon_gamma_an%zu.xmg",ian),chir_an_flag(ian));
+
+      cout<<"-----------------------------------------------"<<endl;
+
+      vector<cont_chir_fit_data_t_k> data_k;
+      for(size_t iens=0;iens<raw_data.size();iens++)
+	data_k.push_back(cont_chir_fit_data_t_k(raw_data[iens].aml,
+						raw_data[iens].ams,
+						raw_data[iens].ibeta,
+						raw_data[iens].L,
+						da2M2K_QED[iens],
+						FVE_da2M2K[iens]));
+      cout<<"ian: "<<ian<<endl;
+      cont_chir_fit_k(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_k,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_dM2K_QED_an%zu.xmg",ian),chir_an_flag(ian));
 
       cout<<"-----------------------------------------------"<<endl;
     }
