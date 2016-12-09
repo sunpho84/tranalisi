@@ -262,6 +262,19 @@ int main(int narg,char **arg)
 
       plot_ens_data(combine("plots/epsilon_gamma_an%zu.xmg",ian),ml,epsilon_gamma);
       plot_ens_data(combine("plots/epsilon_gamma_FVEcorr_an%zu.xmg",ian),ml,epsilon_gamma_minusFVE);
+
+      vector<cont_chir_fit_data_t_epsilon> data_epsilon;
+      for(size_t iens=0;iens<raw_data.size();iens++)
+	data_epsilon.push_back(cont_chir_fit_data_t_epsilon(raw_data[iens].aml,
+							    raw_data[iens].ams,
+							    raw_data[iens].ibeta,
+							    raw_data[iens].L,
+							    epsilon_gamma_minusFVE[iens],
+							    epsilon_gamma[iens]));
+      
+      cont_chir_fit_epsilon(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_epsilon,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_epsilon_gamma_an%zu.xmg",ian),chir_an_flag(ian));
+
+      cout<<"-----------------------------------------------"<<endl;
     }
   
   return 0;
