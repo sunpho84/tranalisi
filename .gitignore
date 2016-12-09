@@ -26,3 +26,5 @@ build_clang
 build_opt
 build*
 /lib/#fit.hpp#
+/bin/#Kl2_IB_glb.cpp#
+/bin/.#Kl2_IB_glb.cpp
