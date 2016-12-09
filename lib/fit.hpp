@@ -324,7 +324,7 @@ public:
 
 //! perform a fit to the continuum and chiral
 void cont_chir_fit_pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_pi> &ext_data,const dboot_t &ml_phys,const string &path,bool chir_an);
-/*
+
 class cont_chir_fit_data_t_epsilon
 {
 public:
@@ -336,5 +336,5 @@ public:
 
 //! perform a fit to the continuum and chiral
 void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_epsilon> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const string &path,bool chir_an);
-*/
+
 #endif

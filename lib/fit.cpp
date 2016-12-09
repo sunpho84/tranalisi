@@ -176,7 +176,7 @@ void cont_chir_fit_pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const 
   //data of the continuum-chiral limit
   fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
 }
-/*
+
 //epsilon_gamma
 
 //! ansatz fit
@@ -226,8 +226,8 @@ void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,c
   size_t if0=add_self_fitted_point(pars,"f0",fit_data,f0);
   size_t iB0=add_self_fitted_point(pars,"B0",fit_data,B0);
   size_t iC=add_fit_par(pars,"C",1e-5,1e-5);
-  size_t iKpi=add_fit_par(pars,"Kpi",0,1);
-  size_t iKk=add_fit_par(pars,"Kk",0,1);
+  size_t iKpi=add_fit_par(pars,"Kpi",0,10);
+  size_t iKk=add_fit_par(pars,"Kk",0,10);
   
   size_t iadep=add_fit_par(pars,"adep",0.6,1);
   size_t iD=add_fit_par(pars,"D",0,1);
@@ -323,7 +323,7 @@ void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,c
   for(size_t ib=0;ib<a.size();ib++)
     fit_file.write_line(bind(cont_chir_ansatz_epsilon<double,double,double>,fit_f0.ave(),fit_B0.ave(),C.ave(),Kpi.ave(),Kk.ave(),_1,ms_phys.ave(),fit_a[ib].ave(),adep.ave(),inf_vol,D.ave(),adep_ml.ave(),chir_an),1e-6,ml_max);
   //band of the continuum limit
-  fit_file.write_polygon(bind(cont_chir_ansatz_epsilon<dboot_t,double,double>,fit_f0,fit_B0,C,Kpi,Kk,_1,ms_phys,a_cont,adep,inf_vol,D,adep_ml,chir_an),1e-6,ml_max);
+  fit_file.write_polygon(bind(cont_chir_ansatz_epsilon<dboot_t,double,double>,fit_f0,fit_B0,C,Kpi,Kk,_1,ms_phys.ave(),a_cont,adep,inf_vol,D,adep_ml,chir_an),1e-6,ml_max);
   //data without and with fse
   grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
   for(int without_with_fse=0;without_with_fse<2;without_with_fse++)
@@ -345,4 +345,4 @@ void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,c
   //data of the continuum-chiral limit
   fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
 }
-*/
+
