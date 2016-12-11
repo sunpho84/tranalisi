@@ -100,19 +100,19 @@ void cont_chir_fit_pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const 
       MinimumParameters par_min=min.Parameters();
       ch2[iel]=par_min.Fval();
       
-      if(!min.HasValidParameters()) CRASH("Minimization failed");
+      if(!min.IsValid()) CRASH("Minimization failed");
       
       //get back pars
-      fit_f0[iel]=par_min.Vec()[if0];
-      fit_B0[iel]=par_min.Vec()[iB0];
-      C[iel]=par_min.Vec()[iC];
-      K[iel]=par_min.Vec()[iK];
-      adep[iel]=par_min.Vec()[iadep];
-      D[iel]=par_min.Vec()[iD];
-      adep_ml[iel]=par_min.Vec()[iadep_ml];
+      fit_f0[iel]=migrad.Value(if0);
+      fit_B0[iel]=migrad.Value(iB0);
+      C[iel]=migrad.Value(iC);
+      K[iel]=migrad.Value(iK);
+      adep[iel]=migrad.Value(iadep);
+      D[iel]=migrad.Value(iD);
+      adep_ml[iel]=migrad.Value(iadep_ml);
       
-      for(size_t ibeta=0;ibeta<a.size();ibeta++) fit_a[ibeta][iel]=par_min.Vec()[ipara[ibeta]];
-      for(size_t ibeta=0;ibeta<z.size();ibeta++) fit_z[ibeta][iel]=par_min.Vec()[iparz[ibeta]];
+      for(size_t ibeta=0;ibeta<a.size();ibeta++) fit_a[ibeta][iel]=migrad.Value(ipara[ibeta]);
+      for(size_t ibeta=0;ibeta<z.size();ibeta++) fit_z[ibeta][iel]=migrad.Value(iparz[ibeta]);
     }
   
   //write ch2
@@ -196,7 +196,7 @@ Tpars cont_chir_ansatz_epsilon(const Tpars &f0,const Tpars &B0,const Tpars &C,co
   Tpars fitted_FSE=FSE_dep(D,a,L);
   Tpars disc_eff=adep*sqr(a)+adep_ml*sqr(a)*ml;
   
-  return (2+3/(4*Cf04))*(chir_log+Kpi*M2Pi/den-Kk*M2K/den+disc_eff)+fitted_FSE;
+  return (2+3/(4*Cf04))*(chir_log+Kpi*M2Pi/den+Kk*M2K/den+disc_eff)+fitted_FSE;
 }
 
 void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_epsilon> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const string &path,bool chir_an)
@@ -219,7 +219,9 @@ void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,c
   for(size_t ibeta=0;ibeta<nbeta;ibeta++)
     {
       ipara[ibeta]=add_self_fitted_point(pars,combine("a[%zu]",ibeta),fit_data,a[ibeta]);
+      //pars.Fix(ipara[ibeta]);
       iparz[ibeta]=add_self_fitted_point(pars,combine("z[%zu]",ibeta),fit_data,z[ibeta]);
+      //pars.Fix(iparz[ibeta]);
     }
   
   //lec
@@ -229,9 +231,11 @@ void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,c
   size_t iKpi=add_fit_par(pars,"Kpi",20,4);
   size_t iKk=add_fit_par(pars,"Kk",50,10);
   
-  size_t iadep=add_fit_par(pars,"adep",2.24,1);
-  size_t iD=add_fit_par(pars,"D",0.23,0.05);
-  size_t iadep_ml=add_fit_par(pars,"adep_ml",25,40);
+  size_t iadep=add_fit_par(pars,"adep",0.6,1);
+  size_t iD=add_fit_par(pars,"D",0,1);
+  //pars.Fix(iD);
+  size_t iadep_ml=add_fit_par(pars,"adep_ml",0,10);
+  //pars.Fix(iadep_ml);
   
   //set data
   for(size_t idata=0;idata<ext_data.size();idata++)
@@ -269,20 +273,20 @@ void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,c
       MinimumParameters par_min=min.Parameters();
       ch2[iel]=par_min.Fval();
       
-      if(!min.HasValidParameters()) CRASH("Minimization failed");
+      if(!min.IsValid()) CRASH("Minimization failed");
       
       //get back pars
-      fit_f0[iel]=par_min.Vec()[if0];
-      fit_B0[iel]=par_min.Vec()[iB0];
-      C[iel]=par_min.Vec()[iC];
-      Kpi[iel]=par_min.Vec()[iKpi];
-      Kk[iel]=par_min.Vec()[iKk];
-      adep[iel]=par_min.Vec()[iadep];
-      D[iel]=par_min.Vec()[iD];
-      adep_ml[iel]=par_min.Vec()[iadep_ml];
+      fit_f0[iel]=migrad.Value(if0);
+      fit_B0[iel]=migrad.Value(iB0);
+      C[iel]=migrad.Value(iC);
+      Kpi[iel]=migrad.Value(iKpi);
+      Kk[iel]=migrad.Value(iKk);
+      adep[iel]=migrad.Value(iadep);
+      D[iel]=migrad.Value(iD);
+      adep_ml[iel]=migrad.Value(iadep_ml);
       
-      for(size_t ibeta=0;ibeta<a.size();ibeta++) fit_a[ibeta][iel]=par_min.Vec()[ipara[ibeta]];
-      for(size_t ibeta=0;ibeta<z.size();ibeta++) fit_z[ibeta][iel]=par_min.Vec()[iparz[ibeta]];
+      for(size_t ibeta=0;ibeta<a.size();ibeta++) fit_a[ibeta][iel]=migrad.Value(ipara[ibeta]);
+      for(size_t ibeta=0;ibeta<z.size();ibeta++) fit_z[ibeta][iel]=migrad.Value(iparz[ibeta]);
     }
   
   //write ch2
@@ -438,20 +442,20 @@ void cont_chir_fit_k(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const d
       MinimumParameters par_min=min.Parameters();
       ch2[iel]=par_min.Fval();
       
-      if(!min.HasValidParameters()) CRASH("Minimization failed");
+      if(!min.IsValid()) CRASH("Minimization failed");
       
       //get back pars
-      fit_f0[iel]=par_min.Vec()[if0];
-      fit_B0[iel]=par_min.Vec()[iB0];
-      C[iel]=par_min.Vec()[iC];
-      Kpi[iel]=par_min.Vec()[iKpi];
-      Kk[iel]=par_min.Vec()[iKk];
-      adep[iel]=par_min.Vec()[iadep];
-      D[iel]=par_min.Vec()[iD];
-      adep_ml[iel]=par_min.Vec()[iadep_ml];
+      fit_f0[iel]=migrad.Value(if0);
+      fit_B0[iel]=migrad.Value(iB0);
+      C[iel]=migrad.Value(iC);
+      Kpi[iel]=migrad.Value(iKpi);
+      Kk[iel]=migrad.Value(iKk);
+      adep[iel]=migrad.Value(iadep);
+      D[iel]=migrad.Value(iD);
+      adep_ml[iel]=migrad.Value(iadep_ml);
       
-      for(size_t ibeta=0;ibeta<a.size();ibeta++) fit_a[ibeta][iel]=par_min.Vec()[ipara[ibeta]];
-      for(size_t ibeta=0;ibeta<z.size();ibeta++) fit_z[ibeta][iel]=par_min.Vec()[iparz[ibeta]];
+      for(size_t ibeta=0;ibeta<a.size();ibeta++) fit_a[ibeta][iel]=migrad.Value(ipara[ibeta]);
+      for(size_t ibeta=0;ibeta<z.size();ibeta++) fit_z[ibeta][iel]=migrad.Value(iparz[ibeta]);
     }
   
   //write ch2
