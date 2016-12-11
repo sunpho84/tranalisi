@@ -196,7 +196,7 @@ Tpars cont_chir_ansatz_epsilon(const Tpars &f0,const Tpars &B0,const Tpars &C,co
   Tpars fitted_FSE=FSE_dep(D,a,L);
   Tpars disc_eff=adep*sqr(a)+adep_ml*sqr(a)*ml;
   
-  return (2+3/(4*Cf04))*(chir_log+Kpi*M2Pi/den+Kk*M2K/den+disc_eff)+fitted_FSE;
+  return (2+3/(4*Cf04))*(chir_log+Kpi*M2Pi/den-Kk*M2K/den+disc_eff)+fitted_FSE;
 }
 
 void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_epsilon> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const string &path,bool chir_an)
@@ -226,12 +226,12 @@ void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,c
   size_t if0=add_self_fitted_point(pars,"f0",fit_data,f0);
   size_t iB0=add_self_fitted_point(pars,"B0",fit_data,B0);
   size_t iC=add_fit_par(pars,"C",1e-5,1e-5);
-  size_t iKpi=add_fit_par(pars,"Kpi",0,10);
-  size_t iKk=add_fit_par(pars,"Kk",0,10);
+  size_t iKpi=add_fit_par(pars,"Kpi",20,4);
+  size_t iKk=add_fit_par(pars,"Kk",50,10);
   
-  size_t iadep=add_fit_par(pars,"adep",0.6,1);
-  size_t iD=add_fit_par(pars,"D",0,1);
-  size_t iadep_ml=add_fit_par(pars,"adep_ml",0,10);
+  size_t iadep=add_fit_par(pars,"adep",2.24,1);
+  size_t iD=add_fit_par(pars,"D",0.23,0.05);
+  size_t iadep_ml=add_fit_par(pars,"adep_ml",25,40);
   
   //set data
   for(size_t idata=0;idata<ext_data.size();idata++)
@@ -395,12 +395,12 @@ void cont_chir_fit_k(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const d
   size_t if0=add_self_fitted_point(pars,"f0",fit_data,f0);
   size_t iB0=add_self_fitted_point(pars,"B0",fit_data,B0);
   size_t iC=add_fit_par(pars,"C",1e-4,1e-5);
-  size_t iKpi=add_fit_par(pars,"Kpi",4,10);
-  size_t iKk=add_fit_par(pars,"Kk",-20,10);
+  size_t iKpi=add_fit_par(pars,"Kpi",20,4);
+  size_t iKk=add_fit_par(pars,"Kk",-50,10);
   
-  size_t iadep=add_fit_par(pars,"adep",2,1);
-  size_t iD=add_fit_par(pars,"D",0,1);
-  size_t iadep_ml=add_fit_par(pars,"adep_ml",50,40);
+  size_t iadep=add_fit_par(pars,"adep",2.24,1);
+  size_t iD=add_fit_par(pars,"D",0.23,0.05);
+  size_t iadep_ml=add_fit_par(pars,"adep_ml",25,40);
   
   //set data
   for(size_t idata=0;idata<ext_data.size();idata++)
