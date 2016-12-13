@@ -39,9 +39,10 @@ int main(int narg,char **arg)
     {
     case 0: input.open("../../input_t_A_32.txt","r"); break;
     case 1: input.open("../../input_t_A_24.txt","r"); break;
-    case 2: input.open("../../input_t_B_32.txt","r"); break;
-    case 3: input.open("../../input_t_B_24.txt","r"); break;
-    case 4: input.open("../../input_t_D.txt","r"); break;
+    case 2: input.open("../../input_t_A_20.txt","r"); break;
+    case 3: input.open("../../input_t_B_32.txt","r"); break;
+    case 4: input.open("../../input_t_B_24.txt","r"); break;
+    case 5: input.open("../../input_t_D.txt","r"); break;
     default: CRASH("Undefined ibeta"); break;
     }
  
@@ -51,6 +52,8 @@ int main(int narg,char **arg)
   size_t k_tmax=input.read<int>("k_tmax");
   size_t D_tmin=input.read<int>("D_tmin");
   size_t D_tmax=input.read<int>("D_tmax");
+  size_t Ds_tmin=input.read<int>("Ds_tmin");
+  size_t Ds_tmax=input.read<int>("Ds_tmax");
   size_t ud_tmin=input.read<int>("ud_tmin");
   size_t ud_tmax=input.read<int>("ud_tmax");
   size_t s_tmin=input.read<int>("s_tmin");
@@ -119,7 +122,7 @@ int main(int narg,char **arg)
   djvec_t D_ratio_self=load_P5P5("0M",2,0)/load_P5P5("00",2,0);
   djvec_t D_ratio_tad=load_P5P5("0T",2,0)/load_P5P5("00",2,0);
   djvec_t D_ratio_s=load_P5P5("0S",2,0)/load_P5P5("00",2,0);
-  djvec_t D_ratio_p=load_P5P5("0P",2,0,IM,-1)/load_P5P5("00",2,0);
+  djvec_t D_ratio_p=-load_P5P5("0P",2,0,IM,-1)/load_P5P5("00",2,0);
 
   D_ratio_exch.ave_err().write("D_ratio_exch.xmg");
   D_ratio_self.ave_err().write("D_ratio_self.xmg");
@@ -138,7 +141,7 @@ int main(int narg,char **arg)
   
   two_pts_with_ins_ratio_fit(D_M,D_A_exch,D_SL_exch,load_P5P5("00",2,0),load_P5P5("LL",0,2),TH,D_tmin,D_tmax,"D_mass.xmg","D_exch.xmg");
   two_pts_with_ins_ratio_fit(D_M,D_A_s,D_SL_s,load_P5P5("00",2,0),load_P5P5("0S",2,0),TH,D_tmin,D_tmax,"D_mass.xmg","D_s.xmg");
-  two_pts_with_ins_ratio_fit(D_M,D_A_p,D_SL_p,load_P5P5("00",2,0),load_P5P5("0P",2,0,IM,-1),TH,D_tmin,D_tmax,"D_mass.xmg","D_p.xmg");
+  two_pts_with_ins_ratio_fit(D_M,D_A_p,D_SL_p,load_P5P5("00",2,0),djvec_t(-load_P5P5("0P",2,0,IM,-1)),TH,D_tmin,D_tmax,"D_mass.xmg","D_p.xmg");
   two_pts_with_ins_ratio_fit(D_M,D_A_selftad,D_SL_selftad,load_P5P5("00",2,0),djvec_t(load_P5P5("0M",2,0)+load_P5P5("0T",2,0)),TH,D_tmin,D_tmax,"D_mass.xmg","D_selftad.xmg");
   
   cout<<"D_M: "<<D_M.ave_err()<<endl;
@@ -157,6 +160,39 @@ int main(int narg,char **arg)
   D_obs_file.bin_write(D_SL_selftad);
   D_obs_file.bin_write(D_SL_s);
   D_obs_file.bin_write(D_SL_p);
+
+  //Ds meson
+
+  djvec_t Ds_plain=load_P5P5("00",2,1);
+  djvec_t Ds_exch=load_P5P5("LL",1,2);
+  djvec_t Ds_self=load_P5P5("0M",2,1);
+  djvec_t Ds_tad=load_P5P5("0T",2,1);
+  djvec_t Ds_s=load_P5P5("0S",2,1);
+  djvec_t Ds_p=-load_P5P5("0P",2,1,IM,-1);
+
+  djack_t Ds_M,Ds_A_exch,Ds_SL_exch,Ds_A_selftad,Ds_SL_selftad,Ds_A_s,Ds_SL_s,Ds_A_p,Ds_SL_p;
+  
+  two_pts_with_ins_ratio_fit(Ds_M,Ds_A_exch,Ds_SL_exch,Ds_plain,Ds_exch,TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg","Ds_exch.xmg");
+  two_pts_with_ins_ratio_fit(Ds_M,Ds_A_s,Ds_SL_s,Ds_plain,Ds_s,TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg","Ds_s.xmg");
+  two_pts_with_ins_ratio_fit(Ds_M,Ds_A_p,Ds_SL_p,Ds_plain,Ds_p,TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg","Ds_p.xmg");
+  two_pts_with_ins_ratio_fit(Ds_M,Ds_A_selftad,Ds_SL_selftad,Ds_plain,djvec_t(Ds_self+Ds_tad),TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg","Ds_selftad.xmg");
+  
+  cout<<"Ds_M: "<<Ds_M.ave_err()<<endl;
+  cout<<"Ds_A_exch: "<<Ds_A_exch.ave_err()<<endl;
+  cout<<"Ds_SL_exch: "<<Ds_SL_exch.ave_err()<<endl;
+  cout<<"Ds_A_selftad: "<<Ds_A_selftad.ave_err()<<endl;
+  cout<<"Ds_SL_selftad: "<<Ds_SL_selftad.ave_err()<<endl;
+  cout<<"Ds_A_s: "<<Ds_A_s.ave_err()<<endl;
+  cout<<"Ds_SL_s: "<<Ds_SL_s.ave_err()<<endl;
+  cout<<"Ds_A_p: "<<Ds_A_p.ave_err()<<endl;
+  cout<<"Ds_SL_p: "<<Ds_SL_p.ave_err()<<endl;
+
+  raw_file_t Ds_obs_file("Ds_obs","w");
+  Ds_obs_file.bin_write(Ds_M);
+  Ds_obs_file.bin_write(Ds_SL_exch);
+  Ds_obs_file.bin_write(Ds_SL_selftad);
+  Ds_obs_file.bin_write(Ds_SL_s);
+  Ds_obs_file.bin_write(Ds_SL_p);
 
   ///////////////////////Delta m critico/////////////////////
 
