@@ -409,7 +409,7 @@ public:
   void write_vec_ave_err(const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
   {
     new_data_set(col,sym);
-    for(size_t i=0;i<data.size();i++) (*this)<<i<<" "<<data<<endl;
+    for(size_t i=0;i<data.size();i++) (*this)<<i<<" "<<data[i]<<endl;
   }
   void write_vec_ave_err(const vec_ave_err_t &data)
   {write_vec_ave_err(data,get_col_and_increment(),get_symbol_and_increment());}
