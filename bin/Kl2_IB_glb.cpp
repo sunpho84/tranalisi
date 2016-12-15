@@ -35,7 +35,7 @@ public:
   double aml,ams,amc;
   string path;
   
-  djack_t pi_mass,pi_SL,k_mass,k_SL_exch,k_SL_selftad,k_SL_s,k_SL_p,D_mass,D_SL_exch,D_SL_selftad,D_SL_s,D_SL_p;
+  djack_t pi_mass,pi_SL,k_mass,k_SL_exch,k_SL_selftad,k_SL_s,k_SL_p,D_mass,D_SL_exch,D_SL_selftad,D_SL_s,D_SL_p,Ds_mass;
   djack_t deltam_cr;
 };
 
@@ -67,6 +67,28 @@ template <class Tx,class Ty> void plot_ens_data(string path,const Tx &x,const Ty
 
 const bool chir_an_flag(size_t ia)
 {return ia%2==0;}
+
+ave_err_t ave_err_analyses(const dbvec_t &v)
+{
+  ave_err_t ae;
+  double sigma;
+  
+  for(size_t i=0;i<v.size();i++)
+    {
+      double a=v[i].ave();
+      double e=v[i].err();
+      ae.ave+=a;
+      ae.err+=sqr(a);
+      sigma+=sqr(e);
+    }
+  ae.ave/=v.size();
+  ae.err/=v.size();
+  sigma/=v.size();
+  ae.err-=sqr(ae.ave);
+  ae.err=sqrt(fabs(ae.err)+sigma);
+    
+  return ae;
+}
 
 int main(int narg,char **arg)
 {
@@ -115,6 +137,10 @@ int main(int narg,char **arg)
       obs_D_file.bin_read(temp.D_SL_s);
       obs_D_file.bin_read(temp.D_SL_p);
 
+      //read the observable of the Ds meson
+      raw_file_t obs_Ds_file(combine("%s/Ds_obs",temp.path.c_str()),"r");
+      obs_Ds_file.bin_read(temp.Ds_mass);
+
       //read deltam_cr (ud)
       raw_file_t deltam_cr_file(combine("%s/ud_fit_deltam_cr",temp.path.c_str()),"r");
       deltam_cr_file.bin_read(temp.deltam_cr);
@@ -127,8 +153,9 @@ int main(int narg,char **arg)
   //cout<<raw_data[0].pi_mass.ave_err()<<endl;
 
   raw_file_t file(ens_pars,"r");
-  
-  boot_init_t jack_index[noa][nens_used];
+
+  const int nens_total=15;
+  boot_init_t jack_index[noa][nens_total];
 
   double dum;
   file.expect({"ml","(GeV)"});
@@ -166,12 +193,14 @@ int main(int narg,char **arg)
   file.expect({"Jackknife","numbers","(","0.0030(32),0.0040(32),","0.0050(32),","0.0040(24)","...)"});
   for(size_t ian=0;ian<noa;ian++)
     for(size_t iboot=0;iboot<nboots;iboot++)
-      for(size_t iens=0;iens<nens_used;iens++)
-	{
-	  size_t ijack_plus_one;
-	  file.read(ijack_plus_one);
-	  jack_index[ian][iens][iboot]=ijack_plus_one-1;
-	}
+      {
+	for(size_t iens=0;iens<nens_total;iens++)
+	  {
+	    size_t ijack_plus_one;
+	    file.read(ijack_plus_one);
+	    jack_index[ian][iens][iboot]=ijack_plus_one-1;
+	  }
+      }
   file.expect({"f0","(GeV)"});
   file.read(dum);
   for(size_t ian=0;ian<noa;ian++) lat_par[ian].f0=read_boot(file);
@@ -179,11 +208,16 @@ int main(int narg,char **arg)
   file.read(dum);
   for(size_t ian=0;ian<noa;ian++) lat_par[ian].B0=read_boot(file)/2.0;
   
-  // for(size_t iens=0;iens<nens_used;iens++)
+  // for(size_t iens=0;iens<nens_total;iens++)
   //   cout<<jack_index[0][iens][0]<<endl;
-
   //cout<<lat_par[0].ml.ave_err()<<endl;
 
+  //output
+  dbvec_t output_dM2Pi(noa);
+  dbvec_t output_dM2K_QED(noa);
+  dbvec_t output_dM2K_QCD_over_minus_two_Deltamud(noa);
+  dbvec_t output_epsilon_gamma(noa);
+  
   //loop
   cout<<endl;
   for(size_t ian=0;ian<noa;ian++)
@@ -194,6 +228,11 @@ int main(int narg,char **arg)
       dbvec_t FVE_da2M2Pi(raw_data.size());
       dbvec_t da2M2K_QED(raw_data.size());
       dbvec_t FVE_da2M2K(raw_data.size());
+      dbvec_t dM2K_QCD_over_minus_two_Deltamud(raw_data.size());
+      dbvec_t dM2D_QED(raw_data.size());
+      dbvec_t FVE_dM2D(raw_data.size());
+      dbvec_t MD(raw_data.size());
+      dbvec_t MDs(raw_data.size());
       dbvec_t epsilon_gamma(raw_data.size());
       dbvec_t epsilon_gamma_minusFVE(raw_data.size());
       
@@ -224,13 +263,31 @@ int main(int narg,char **arg)
 	  dboot_t aMK_sl_selftad=dboot_t(bi,raw_data[iens].k_SL_selftad);
 	  dboot_t MK_sl_s=dboot_t(bi,raw_data[iens].k_SL_s);
 	  dboot_t MK_sl_p=dboot_t(bi,raw_data[iens].k_SL_p);
-	  
+
 	  dboot_t daMK_QED=
 	    -2*ml[iens]*a*MK_sl_s/Z_QED
 	    -(aDeltam_cr_u-aDeltam_cr_d)*MK_sl_p
 	    +(sqr(eu)-sqr(ed))*e2*(aMK_sl_exch-aMK_sl_selftad);
 	  da2M2K_QED[iens]=daMK_QED*2*aMK;
 	  FVE_da2M2K[iens]=FVE_d2M(aMK,raw_data[iens].L);
+	  dM2K_QCD_over_minus_two_Deltamud[iens]=2*aMK*lat_par[ian].Z[ibeta]*MK_sl_s/a;
+
+	  dboot_t aMD=dboot_t(bi,raw_data[iens].D_mass);
+	  dboot_t aMD_sl_exch=dboot_t(bi,raw_data[iens].D_SL_exch);
+	  dboot_t aMD_sl_selftad=dboot_t(bi,raw_data[iens].D_SL_selftad);
+	  dboot_t MD_sl_s=dboot_t(bi,raw_data[iens].D_SL_s);
+	  dboot_t MD_sl_p=dboot_t(bi,raw_data[iens].D_SL_p);
+	  MD[iens]=aMD/a;
+
+	  dboot_t daMD_QED=
+	    -2*ml[iens]*a*MD_sl_s/Z_QED
+	    -(aDeltam_cr_u-aDeltam_cr_d)*MD_sl_p
+	    +(sqr(eu)-sqr(ed))*e2*(aMD_sl_exch-aMD_sl_selftad);
+	  dM2D_QED[iens]=daMD_QED*2*aMD/sqr(a);
+	  FVE_dM2D[iens]=FVE_d2M(dboot_t(aMD/a),dboot_t(Lphys));
+
+	  dboot_t aMDs=dboot_t(bi,raw_data[iens].Ds_mass);
+	  MDs[iens]=aMDs/a;
 	  
 	  epsilon_gamma[iens]=(da2M2K_QED[iens]/da2M2Pi[iens])-1.0;
 	  epsilon_gamma_minusFVE[iens]=((da2M2K_QED[iens]-FVE_da2M2K[iens])/(da2M2Pi[iens]-FVE_da2M2Pi[iens]))-1.0;
@@ -253,12 +310,9 @@ int main(int narg,char **arg)
 						  da2M2Pi[iens],
 						  FVE_da2M2Pi[iens]));
       cout<<"ian: "<<ian<<endl;
-      cont_chir_fit_pi(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_pi,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ian),chir_an_flag(ian));
+      cont_chir_fit_pi(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_pi,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ian),chir_an_flag(ian),output_dM2Pi[ian]);
 
       cout<<"-----------------------------------------------"<<endl;
-
-      plot_ens_data(combine("plots/epsilon_gamma_an%zu.xmg",ian),ml,epsilon_gamma);
-      plot_ens_data(combine("plots/epsilon_gamma_FVEcorr_an%zu.xmg",ian),ml,epsilon_gamma_minusFVE);
 
       vector<cont_chir_fit_data_t_epsilon> data_epsilon;
       for(size_t iens=0;iens<raw_data.size();iens++)
@@ -269,23 +323,52 @@ int main(int narg,char **arg)
 							    epsilon_gamma_minusFVE[iens],
 							    epsilon_gamma[iens]));
       cout<<"ian: "<<ian<<endl;
-      cont_chir_fit_epsilon(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_epsilon,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_epsilon_gamma_an%zu.xmg",ian),chir_an_flag(ian));
+      cont_chir_fit_epsilon(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_epsilon,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_epsilon_gamma_an%zu.xmg",ian),output_epsilon_gamma[ian]);
 
       cout<<"-----------------------------------------------"<<endl;
 
-      vector<cont_chir_fit_data_t_k> data_k;
+      vector<cont_chir_fit_data_t_k> data_k_QED;
       for(size_t iens=0;iens<raw_data.size();iens++)
-	data_k.push_back(cont_chir_fit_data_t_k(raw_data[iens].aml,
-						raw_data[iens].ams,
-						raw_data[iens].ibeta,
-						raw_data[iens].L,
-						da2M2K_QED[iens],
-						FVE_da2M2K[iens]));
+	data_k_QED.push_back(cont_chir_fit_data_t_k(raw_data[iens].aml,
+						    raw_data[iens].ams,
+						    raw_data[iens].ibeta,
+						    raw_data[iens].L,
+						    da2M2K_QED[iens],
+						    FVE_da2M2K[iens]));
       cout<<"ian: "<<ian<<endl;
-      cont_chir_fit_k(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_k,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_dM2K_QED_an%zu.xmg",ian),chir_an_flag(ian));
+      cont_chir_fit_k(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_k_QED,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_dM2K_QED_an%zu.xmg",ian),chir_an_flag(ian),output_dM2K_QED[ian]);
 
       cout<<"-----------------------------------------------"<<endl;
+
+      vector<cont_chir_fit_data_t_pol> data_k_QCD;
+      for(size_t iens=0;iens<raw_data.size();iens++)
+	data_k_QCD.push_back(cont_chir_fit_data_t_pol(raw_data[iens].aml,
+						      raw_data[iens].ibeta,
+						      dM2K_QCD_over_minus_two_Deltamud[iens]));
+      cout<<"ian: "<<ian<<endl;
+      cont_chir_fit_pol(alist,zlist,data_k_QCD,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2K_QCD_over_minus_two_Deltamud_an%zu.xmg",ian),output_dM2K_QCD_over_minus_two_Deltamud[ian]);
+
+      cout<<"-----------------------------------------------"<<endl;
+
+      plot_ens_data(combine("plots/MD_an%zu.xmg",ian),ml,MD);
+      plot_ens_data(combine("plots/dM2D_QED_an%zu.xmg",ian),ml,dM2D_QED);
+      plot_ens_data(combine("plots/dM2D_FVEcorr_an%zu.xmg",ian),ml,dM2D_QED-FVE_dM2D);
+      plot_ens_data(combine("plots/MDs_an%zu.xmg",ian),ml,MDs);
     }
+
+  dbvec_t dM2K_QCD(noa);
+  dbvec_t Deltamud(noa);
+  dboot_t dM2K_exp;
+  for(size_t iboot=0;iboot<nboots;iboot++)
+    dM2K_exp[iboot]=-3.903;
+
+  for(size_t ian=0;ian<noa;ian++)
+    {
+      dM2K_QCD[ian]=dM2K_exp-dboot_t(output_dM2K_QED[ian]*1000);
+      Deltamud[ian]=dboot_t(-dM2K_QCD[ian]/output_dM2K_QCD_over_minus_two_Deltamud[ian]/2.0);
+    }
+
+  cout<<"Deltamud: "<<ave_err_analyses(Deltamud)<<endl;
   
   return 0;
 }
