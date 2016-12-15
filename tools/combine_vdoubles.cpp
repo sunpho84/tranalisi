@@ -17,10 +17,10 @@ int main(int narg,char **arg)
     {
       //convert the coefficient
       double c;
-      if(sscanf(arg[2+ifile_in*2+1],"%lg",&c)!=1) CRASH("Unable to convert to double \"%s\"",arg[2+ifile_in*2+1]);
+      if(sscanf(arg[2+ifile_in*2],"%lg",&c)!=1) CRASH("Unable to convert to double \"%s\"",arg[2+ifile_in*2]);
       
       //open the file and read it
-      raw_file_t files_in(arg[2+ifile_in*2],"r");
+      raw_file_t files_in(arg[3+ifile_in*2],"r");
       for(size_t idouble=0;idouble<ndoubles;idouble++)
 	{
 	  double d;
