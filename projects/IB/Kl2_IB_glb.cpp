@@ -301,13 +301,16 @@ int main(int narg,char **arg)
 	  zlist[ibeta]=lat_par[ian].Z[ibeta];
 	}
       
+      cout<<"-----------------------------------------------"<<endl;
+      cout<<"                    ian: "<<ian<<endl;
+      cout<<"-----------------------------------------------"<<endl;
+      
       //data to fit
       vector<cont_chir_fit_data_t> data_dM2Pi;
       for(size_t iens=0;iens<raw_data.size();iens++)
 	data_dM2Pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,
 						  raw_data[iens].ibeta,raw_data[iens].L,
 						  da2M2Pi[iens]-FVE_da2M2Pi[iens],da2M2Pi[iens]));
-      cout<<"ian: "<<ian<<endl;
       cont_chir_fit_dM2Pi(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_dM2Pi,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ian),chir_an_flag(ian));
       
       cout<<"-----------------------------------------------"<<endl;
@@ -317,24 +320,21 @@ int main(int narg,char **arg)
       	data_epsilon.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,
       							    raw_data[iens].ibeta,raw_data[iens].L,
       							    epsilon_gamma_minusFVE[iens],epsilon_gamma[iens]));
-      cout<<"ian: "<<ian<<endl;
       cont_chir_fit_epsilon(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_epsilon,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_epsilon_gamma_an%zu.xmg",ian),chir_an_flag(ian));
-
-      // cout<<"-----------------------------------------------"<<endl;
-
-      // vector<cont_chir_fit_data_t_k> data_k;
-      // for(size_t iens=0;iens<raw_data.size();iens++)
-      // 	data_k.push_back(cont_chir_fit_data_t_k(raw_data[iens].aml,
-      // 						raw_data[iens].ams,
-      // 						raw_data[iens].ibeta,
-      // 						raw_data[iens].L,
-      // 						da2M2K_QED[iens],
-      // 						FVE_da2M2K[iens]));
-      // cout<<"ian: "<<ian<<endl;
-
-      // cout<<"-----------------------------------------------"<<endl;
+      
+      cout<<"-----------------------------------------------"<<endl;
+      
+      vector<cont_chir_fit_data_t> data_dM2K_QED;
+      for(size_t iens=0;iens<raw_data.size();iens++)
+      	data_dM2K_QED.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,
+						     raw_data[iens].ibeta,raw_data[iens].L,
+						     da2M2K_QED[iens]-FVE_da2M2K[iens],da2M2K_QED[iens]));
+      
+      output_dM2K_QED[ian]=cont_chir_fit_dM2K_QED(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_dM2K_QED,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_dM2K_QED_an%zu.xmg",ian),chir_an_flag(ian));
+      
+      cout<<"-----------------------------------------------"<<endl;
     }
-
+  
   dbvec_t dM2K_QCD(noa);
   dbvec_t Deltamud(noa);
   dboot_t dM2K_exp;
