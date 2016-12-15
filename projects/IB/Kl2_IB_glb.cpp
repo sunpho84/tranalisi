@@ -3,6 +3,7 @@
 #endif
 
 #include <tranalisi.hpp>
+#include <Kl2_IB_fit.hpp>
 
 size_t noa=8,nbeta=3,nboots=100;
 
@@ -71,7 +72,7 @@ const bool chir_an_flag(size_t ia)
 ave_err_t ave_err_analyses(const dbvec_t &v)
 {
   ave_err_t ae;
-  double sigma;
+  double sigma=0;
   
   for(size_t i=0;i<v.size();i++)
     {

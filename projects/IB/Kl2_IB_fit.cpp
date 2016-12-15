@@ -4,8 +4,18 @@
 
 #include <fit.hpp>
 #include <functional>
+#include <Kl2_IB_fit.hpp>
 
 using namespace placeholders;
+
+namespace
+{
+  double a_cont=1e-5;
+  double inf_vol=1e10;
+  
+  double mpi0=0.1349766;
+  double mpip=0.13957018;
+}
 
 //! compute fitted piece of FSE
 template <class TL,class Ta,class TD> TD FSE_dep(const TD &D,const Ta &a,const TL &L)
@@ -24,7 +34,7 @@ public:
   dboot_t adep,adep_ml,L3dep;
   
   cont_chir_fit_pars_base_t(size_t nbeta) : nbeta(nbeta),ipara(nbeta),iparz(nbeta),fit_a(nbeta),fit_z(nbeta) {}
-
+  
   //! add all common pars
   void add_common_pars(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,
 		       const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &L3dep_guess,boot_fit_t &boot_fit)
@@ -60,6 +70,52 @@ public:
     cout<<"L3dep: "<<L3dep.ave_err()<<endl;
   }
 };
+
+//! plot the continuum-chiral extrapolation
+void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t_pi> &ext_data,const cont_chir_fit_pars_base_t &pars,
+		   const function<double(double x,size_t ib)> &fun_line_per_beta,
+		   const function<dboot_t(double x)> &fun_poly_cont_lin,
+		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
+		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label)
+{
+  //search max renormalized mass
+  double ml_max=0;
+  for(auto &data : ext_data)
+    ml_max=max(ml_max,dboot_t(data.aml/pars.fit_a[data.ib]/pars.fit_z[data.ib]).ave());
+  ml_max*=1.1;
+  
+  //prepare plot
+  grace_file_t fit_file(path);
+  fit_file.set_title("Continuum and chiral limit");
+  fit_file.set_xaxis_label("$$ml^{\\overline{MS},2 GeV} [GeV]");
+  fit_file.set_yaxis_label(yaxis_label);
+  fit_file.set_xaxis_max(ml_max);
+
+  //band of the fit to individual beta
+  for(size_t ib=0;ib<pars.fit_a.size();ib++) fit_file.write_line(bind(fun_line_per_beta,_1,ib),1e-6,ml_max);
+  //band of the continuum limit
+  fit_file.write_polygon(fun_poly_cont_lin,1e-6,ml_max);
+  //data without and with fse
+  grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
+  for(int without_with_fse=0;without_with_fse<2;without_with_fse++)
+    {
+      for(size_t ib=0;ib<pars.fit_a.size();ib++)
+	{
+	  fit_file.new_data_set();
+	  //put data without fse to brown
+	  if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
+	  
+	  for(size_t idata=0;idata<ext_data.size();idata++)
+	    if(ext_data[idata].ib==ib)
+	      fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
+		fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+	}
+      //put back colors for data with fse
+      if(without_with_fse==0) fit_file.reset_cur_col();
+    }
+  //data of the continuum-chiral limit
+  fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
+}
 
 //! dervived class for pion fit
 class cont_chir_fit_pars_pi_t : public cont_chir_fit_pars_base_t
@@ -106,12 +162,11 @@ Tpars cont_chir_ansatz_pi(const Tpars &f0,const Tpars &B0,const Tpars &C,const T
 }
 
 //! perform the fit to the continuum limit
-void cont_chir_fit_pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_pi> &ext_data,const dboot_t &ml_phys,const string &path,bool chir_an)
+cont_chir_fit_pars_pi_t cont_chir_fit_pi_minimize(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_pi> &ext_data,bool chir_an)
 {
   //set_printlevel(3);
   
   boot_fit_t boot_fit;
-
   size_t nbeta=a.size();
   cont_chir_fit_pars_pi_t pars(nbeta);
   
@@ -145,81 +200,55 @@ void cont_chir_fit_pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const 
   pars.print_common_pars(a,z,f0,B0);
   pars.print_LEC_pars();
   
-  //compute physical result
-  const double a_cont=1e-5;
-  const double inf_vol=1e10;
+  return pars;
+}
+
+//! perform the fit to the continuum limit
+void cont_chir_fit_pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_pi> &ext_data,const dboot_t &ml_phys,const string &path,bool chir_an)
+{
+  cont_chir_fit_pars_pi_t pars=cont_chir_fit_pi_minimize(a,z,f0,B0,ext_data,chir_an);
   
   dboot_t phys_res=cont_chir_ansatz_pi(pars.fit_f0,B0,pars.C,pars.K,ml_phys,a_cont,pars.adep,inf_vol,pars.L3dep,pars.adep_ml,chir_an);
   cout<<"Physical result: "<<phys_res.ave_err()<<endl;
-  const double mpi0=0.1349766;
-  const double mpip=0.13957018;
   cout<<"MP+-MP0: "<<(dboot_t(phys_res/(mpi0+mpip))*1000).ave_err()<<", exp: 4.5936"<<endl;
   
-  //search max renormalized mass
-  double ml_max=0;
-  for(auto &data : ext_data)
-    ml_max=max(ml_max,dboot_t(data.aml/a[data.ib]/z[data.ib]).ave());
-  ml_max*=1.1;
-  
-  //prepare plot
-  grace_file_t fit_file(path);
-  fit_file.set_title("Continuum and chiral limit");
-  fit_file.set_xaxis_label("$$ml^{\\overline{MS},2 GeV} [GeV]");
-  fit_file.set_yaxis_label("$$(M^2_{\\pi^+}-M^2_{\\pi^0}) [GeV^2]");
-  fit_file.set_xaxis_max(ml_max);
-
-  //band of the fit to individual beta
-  for(size_t ib=0;ib<a.size();ib++)
-    fit_file.write_line(bind(cont_chir_ansatz_pi<double,double,double>,pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.K.ave(),_1,
-			     pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.adep_ml.ave(),chir_an),1e-6,ml_max);
-  //band of the continuum limit
-  fit_file.write_polygon(bind(cont_chir_ansatz_pi<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.K,_1,a_cont,pars.adep,inf_vol,pars.L3dep,
-			      pars.adep_ml,chir_an),1e-6,ml_max);
-  //data without and with fse
-  grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
-  for(int without_with_fse=0;without_with_fse<2;without_with_fse++)
-    {
-      for(size_t ib=0;ib<a.size();ib++)
-	{
-	  fit_file.new_data_set();
-	  //put data without fse to brown
-	  if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
-	  
-	  for(size_t idata=0;idata<ext_data.size();idata++)
-	    if(ext_data[idata].ib==ib)
-	      fit_file<<dboot_t(ext_data[idata].aml/z[ib]/a[ib]).ave()<<" "<<
-		dboot_t((ext_data[idata].y-without_with_fse*ext_data[idata].fse)/sqr(pars.fit_a[ib])-
-			without_with_fse*FSE_dep(pars.L3dep,pars.fit_a[ib],ext_data[idata].L)).ave_err()<<endl;
-	}
-      //put back colors for data with fse
-      if(without_with_fse==0) fit_file.reset_cur_col();
-    }
-  //data of the continuum-chiral limit
-  fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
+  plot_chir_fit(path,ext_data,pars,
+		[&pars,chir_an]
+		(double x,size_t ib)
+		{return cont_chir_ansatz_pi<double,double,double>
+		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.K.ave(),x,
+		     pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.adep_ml.ave(),chir_an);},
+		bind(cont_chir_ansatz_pi<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.K,_1,a_cont,pars.adep,inf_vol,pars.L3dep,
+		     pars.adep_ml,chir_an),
+		[&ext_data,&pars]
+		(size_t idata,bool without_with_fse,size_t ib)
+		{return dboot_t((ext_data[idata].y-without_with_fse*ext_data[idata].fse)/sqr(pars.fit_a[ib])-
+				without_with_fse*FSE_dep(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));},
+		ml_phys,phys_res,"$$(M^2_{\\pi^+}-M^2_{\\pi^0}) [GeV^2]");
 }
 
 //epsilon_gamma
 
 //! ansatz fit
-template <class Tpars,class Tm,class Ta>
-Tpars cont_chir_ansatz_epsilon(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &Kk,const Tm &ml,const Tm &ms,const Ta &a,const Tpars &adep,double L,const Tpars &D,const Tpars &adep_ml,const bool chir_an)
-{
-  Tpars
-    Cf04=C/sqr(sqr(f0)),
-    M2Pi=2*B0*ml,
-    M2K=B0*(ml+ms),
-    den=sqr(Tpars(4*M_PI*f0));
+// template <class Tpars,class Tm,class Ta>
+// Tpars cont_chir_ansatz_epsilon(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &Kk,const Tm &ml,const Tm &ms,const Ta &a,const Tpars &adep,double L,const Tpars &D,const Tpars &adep_ml,const bool chir_an)
+// {
+//   Tpars
+//     Cf04=C/sqr(sqr(f0)),
+//     M2Pi=2*B0*ml,
+//     M2K=B0*(ml+ms),
+//     den=sqr(Tpars(4*M_PI*f0));
   
-  Tpars chir_log;
-  // if(chir_an)
-  chir_log=M2Pi/den*log(M2Pi/sqr(mu))-M2K/den*log(M2K/sqr(mu));
-  // else        chir_log=0;
+//   Tpars chir_log;
+//   // if(chir_an)
+//   chir_log=M2Pi/den*log(M2Pi/sqr(mu))-M2K/den*log(M2K/sqr(mu));
+//   // else        chir_log=0;
   
-  Tpars fitted_FSE=FSE_dep(D,a,L);
-  Tpars disc_eff=adep*sqr(a)+adep_ml*sqr(a)*ml;
+//   Tpars fitted_FSE=FSE_dep(D,a,L);
+//   Tpars disc_eff=adep*sqr(a)+adep_ml*sqr(a)*ml;
   
-  return (2+3/(4*Cf04))*(chir_log+Kpi*M2Pi/den+Kk*M2K/den+disc_eff)+fitted_FSE;
-}
+//   return (2+3/(4*Cf04))*(chir_log+Kpi*M2Pi/den+Kk*M2K/den+disc_eff)+fitted_FSE;
+// }
 
 // void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_epsilon> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const string &path,bool chir_an)
 // {
