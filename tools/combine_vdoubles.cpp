@@ -8,11 +8,13 @@ int main(int narg,char **arg)
   if(narg%2) CRASH("Specify one coefficient for each file");
 
   //read the number of doubles and initialize the output vector
-  size_t ndoubles=file_size(arg[2])/sizeof(double);
+  size_t ndoubles=file_size(arg[3])/sizeof(double);
+  cout<<"NDoubles: "<<ndoubles<<endl;;
   vector<double> out(ndoubles,0.0);
-  
+    
   //loop over in files
   size_t nfiles_in=(narg-2)/2;
+  cout<<"NFiles: "<<nfiles_in<<endl;
   for(size_t ifile_in=0;ifile_in<nfiles_in;ifile_in++)
     {
       //convert the coefficient
