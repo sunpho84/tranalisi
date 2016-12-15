@@ -1,4 +1,5 @@
 SUBDIRS= \
 	include \
 	lib \
-	bin
+	projects \
+	tools

@@ -80,5 +80,10 @@ case "$debug" in
 esac
 AC_MSG_RESULT([Enabling debug... $debug])
 
-AC_CONFIG_FILES(Makefile bin/Makefile include/Makefile lib/Makefile)
+AC_CONFIG_FILES(Makefile
+	include/Makefile
+	lib/Makefile
+	projects/Makefile
+	projects/IB/Makefile
+	tools/Makefile)
 AC_OUTPUT

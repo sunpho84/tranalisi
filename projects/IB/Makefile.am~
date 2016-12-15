@@ -1,0 +1,14 @@
+ACLOCAL_AMFLAGS=-I m4
+AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
+
+LDADD=$(top_builddir)/lib/libtran.a
+
+bin_PROGRAMS= \
+	Kl2_IB \
+	Kl2_IB_glb \
+	gm2_IB
+
+Kl2_IB_SOURCES=../projects/IB/Kl2_IB.cpp
+Kl2_IB_glb_SOURCES=../projects/IB/Kl2_IB_glb.cpp
+gm2_IB_SOURCES=../projects/IB/gm2_IB.cpp
+
