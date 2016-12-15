@@ -163,36 +163,15 @@ int main(int narg,char **arg)
 
   //Ds meson
 
-  djvec_t Ds_plain=load_P5P5("00",2,1);
-  djvec_t Ds_exch=load_P5P5("LL",1,2);
-  djvec_t Ds_self=load_P5P5("0M",2,1);
-  djvec_t Ds_tad=load_P5P5("0T",2,1);
-  djvec_t Ds_s=load_P5P5("0S",2,1);
-  djvec_t Ds_p=-load_P5P5("0P",2,1,IM,-1);
+  djack_t Ds_M,Ds_Z;
 
-  djack_t Ds_M,Ds_A_exch,Ds_SL_exch,Ds_A_selftad,Ds_SL_selftad,Ds_A_s,Ds_SL_s,Ds_A_p,Ds_SL_p;
-  
-  two_pts_with_ins_ratio_fit(Ds_M,Ds_A_exch,Ds_SL_exch,Ds_plain,Ds_exch,TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg","Ds_exch.xmg");
-  two_pts_with_ins_ratio_fit(Ds_M,Ds_A_s,Ds_SL_s,Ds_plain,Ds_s,TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg","Ds_s.xmg");
-  two_pts_with_ins_ratio_fit(Ds_M,Ds_A_p,Ds_SL_p,Ds_plain,Ds_p,TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg","Ds_p.xmg");
-  two_pts_with_ins_ratio_fit(Ds_M,Ds_A_selftad,Ds_SL_selftad,Ds_plain,djvec_t(Ds_self+Ds_tad),TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg","Ds_selftad.xmg");
-  
+  djvec_t Ds_corr_00=load_P5P5("00",2,1);
+  two_pts_migrad_fit(Ds_Z,Ds_M,Ds_corr_00,TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg");
+  cout<<"Ds_Z: "<<Ds_Z.ave_err()<<endl;
   cout<<"Ds_M: "<<Ds_M.ave_err()<<endl;
-  cout<<"Ds_A_exch: "<<Ds_A_exch.ave_err()<<endl;
-  cout<<"Ds_SL_exch: "<<Ds_SL_exch.ave_err()<<endl;
-  cout<<"Ds_A_selftad: "<<Ds_A_selftad.ave_err()<<endl;
-  cout<<"Ds_SL_selftad: "<<Ds_SL_selftad.ave_err()<<endl;
-  cout<<"Ds_A_s: "<<Ds_A_s.ave_err()<<endl;
-  cout<<"Ds_SL_s: "<<Ds_SL_s.ave_err()<<endl;
-  cout<<"Ds_A_p: "<<Ds_A_p.ave_err()<<endl;
-  cout<<"Ds_SL_p: "<<Ds_SL_p.ave_err()<<endl;
 
   raw_file_t Ds_obs_file("Ds_obs","w");
   Ds_obs_file.bin_write(Ds_M);
-  Ds_obs_file.bin_write(Ds_SL_exch);
-  Ds_obs_file.bin_write(Ds_SL_selftad);
-  Ds_obs_file.bin_write(Ds_SL_s);
-  Ds_obs_file.bin_write(Ds_SL_p);
 
   ///////////////////////Delta m critico/////////////////////
 
