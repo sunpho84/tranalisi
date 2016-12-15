@@ -341,13 +341,16 @@ public:
 	MinimumParameters par_min=min.Parameters();
 	ch2[iboot]=par_min.Fval();
 	
-	if(!min.IsValid()) CRASH("Minimization failed");
+	if(!min.IsValid()) cerr<<"WARNING! Minimization failed"<<endl;
 	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[iboot]=migrad.Value(ipar);
     }
     
     //write ch2
     cout<<"Ch2: "<<ch2.ave_err()<<" / "<<data.size()-npars<<endl;
   }
+  
+  //! fix a single parameter
+  void fix_par(size_t ipar) {pars.Fix(ipar);}
 };
 
 class cont_chir_fit_data_t_pol
