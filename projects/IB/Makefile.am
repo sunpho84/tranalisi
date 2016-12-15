@@ -9,6 +9,6 @@ bin_PROGRAMS= \
 	$(top_builddir)/bin/gm2_IB
 
 __top_builddir__bin_Kl2_IB_SOURCES=Kl2_IB.cpp
-__top_builddir__bin_Kl2_IB_glb_SOURCES=Kl2_IB_glb.cpp
+__top_builddir__bin_Kl2_IB_glb_SOURCES=Kl2_IB_glb.cpp Kl2_IB_fit.cpp
 __top_builddir__bin_gm2_IB_SOURCES=gm2_IB.cpp
 
