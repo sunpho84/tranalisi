@@ -302,31 +302,23 @@ int main(int narg,char **arg)
 	}
       
       //data to fit
-      vector<cont_chir_fit_data_t_pi> data_pi;
+      vector<cont_chir_fit_data_t> data_dM2Pi;
       for(size_t iens=0;iens<raw_data.size();iens++)
-	data_pi.push_back(cont_chir_fit_data_t_pi(raw_data[iens].aml,
-						  raw_data[iens].ibeta,
-						  raw_data[iens].L,
-						  da2M2Pi[iens],
-						  FVE_da2M2Pi[iens]));
+	data_dM2Pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,
+						  raw_data[iens].ibeta,raw_data[iens].L,
+						  da2M2Pi[iens]-FVE_da2M2Pi[iens],da2M2Pi[iens]));
       cout<<"ian: "<<ian<<endl;
-      cont_chir_fit_pi(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_pi,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ian),chir_an_flag(ian));
-
+      cont_chir_fit_dM2Pi(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_dM2Pi,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ian),chir_an_flag(ian));
+      
       cout<<"-----------------------------------------------"<<endl;
-
-      plot_ens_data(combine("plots/epsilon_gamma_an%zu.xmg",ian),ml,epsilon_gamma);
-      plot_ens_data(combine("plots/epsilon_gamma_FVEcorr_an%zu.xmg",ian),ml,epsilon_gamma_minusFVE);
-
-      // vector<cont_chir_fit_data_t_epsilon> data_epsilon;
-      // for(size_t iens=0;iens<raw_data.size();iens++)
-      // 	data_epsilon.push_back(cont_chir_fit_data_t_epsilon(raw_data[iens].aml,
-      // 							    raw_data[iens].ams,
-      // 							    raw_data[iens].ibeta,
-      // 							    raw_data[iens].L,
-      // 							    epsilon_gamma_minusFVE[iens],
-      // 							    epsilon_gamma[iens]));
-      // cout<<"ian: "<<ian<<endl;
-      // cont_chir_fit_epsilon(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_epsilon,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_epsilon_gamma_an%zu.xmg",ian),chir_an_flag(ian));
+      
+      vector<cont_chir_fit_data_t> data_epsilon;
+      for(size_t iens=0;iens<raw_data.size();iens++)
+      	data_epsilon.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,
+      							    raw_data[iens].ibeta,raw_data[iens].L,
+      							    epsilon_gamma_minusFVE[iens],epsilon_gamma[iens]));
+      cout<<"ian: "<<ian<<endl;
+      cont_chir_fit_epsilon(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_epsilon,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_epsilon_gamma_an%zu.xmg",ian),chir_an_flag(ian));
 
       // cout<<"-----------------------------------------------"<<endl;
 
