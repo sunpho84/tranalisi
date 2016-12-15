@@ -386,4 +386,16 @@ void cont_chir_fit_pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const 
 // //! perform a fit to the continuum and chiral
 // void cont_chir_fit_k(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_k> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const string &path,bool chir_an);
 
+class cont_chir_fit_data_t_pol
+{
+public:
+  double aml;
+  size_t ib;
+  dboot_t y;
+  cont_chir_fit_data_t_pol(double aml,size_t ib,dboot_t y) : aml(aml),ib(ib),y(y) {}
+};
+
+//! perform a fit to the continuum and chiral
+void cont_chir_fit_pol(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t_pol> &ext_data,const dboot_t &ml_phys,const string &path,dboot_t &output);
+
 #endif
