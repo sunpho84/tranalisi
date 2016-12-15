@@ -38,7 +38,7 @@ template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data
       auto ele=data[iel];
       double err=data[iel].err();
       double weight=1/(err*err);
-      if(!std::isnan(err)&&err!=0)
+      if(!std::isnan(err) and err!=0)
         {
           res+=ele*weight;
           norm+=weight;
