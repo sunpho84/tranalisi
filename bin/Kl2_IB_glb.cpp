@@ -127,8 +127,8 @@ int main(int narg,char **arg)
   //cout<<raw_data[0].pi_mass.ave_err()<<endl;
 
   raw_file_t file(ens_pars,"r");
-  
-  boot_init_t jack_index[noa][nens_used];
+  const int nens_total=15;
+  boot_init_t jack_index[noa][nens_total];
 
   double dum;
   file.expect({"ml","(GeV)"});
@@ -166,7 +166,7 @@ int main(int narg,char **arg)
   file.expect({"Jackknife","numbers","(","0.0030(32),0.0040(32),","0.0050(32),","0.0040(24)","...)"});
   for(size_t ian=0;ian<noa;ian++)
     for(size_t iboot=0;iboot<nboots;iboot++)
-      for(size_t iens=0;iens<nens_used;iens++)
+      for(size_t iens=0;iens<nens_total;iens++)
 	{
 	  size_t ijack_plus_one;
 	  file.read(ijack_plus_one);
@@ -199,6 +199,7 @@ int main(int narg,char **arg)
       
       for(size_t iens=0;iens<raw_data.size();iens++)
 	{
+	  cout<<" --ens "<<iens<<endl;
 	  size_t ens_id=raw_data[iens].iult;
 	  size_t ibeta=raw_data[iens].ibeta;
 	  
@@ -260,31 +261,30 @@ int main(int narg,char **arg)
       plot_ens_data(combine("plots/epsilon_gamma_an%zu.xmg",ian),ml,epsilon_gamma);
       plot_ens_data(combine("plots/epsilon_gamma_FVEcorr_an%zu.xmg",ian),ml,epsilon_gamma_minusFVE);
 
-      vector<cont_chir_fit_data_t_epsilon> data_epsilon;
-      for(size_t iens=0;iens<raw_data.size();iens++)
-	data_epsilon.push_back(cont_chir_fit_data_t_epsilon(raw_data[iens].aml,
-							    raw_data[iens].ams,
-							    raw_data[iens].ibeta,
-							    raw_data[iens].L,
-							    epsilon_gamma_minusFVE[iens],
-							    epsilon_gamma[iens]));
-      cout<<"ian: "<<ian<<endl;
-      cont_chir_fit_epsilon(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_epsilon,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_epsilon_gamma_an%zu.xmg",ian),chir_an_flag(ian));
+      // vector<cont_chir_fit_data_t_epsilon> data_epsilon;
+      // for(size_t iens=0;iens<raw_data.size();iens++)
+      // 	data_epsilon.push_back(cont_chir_fit_data_t_epsilon(raw_data[iens].aml,
+      // 							    raw_data[iens].ams,
+      // 							    raw_data[iens].ibeta,
+      // 							    raw_data[iens].L,
+      // 							    epsilon_gamma_minusFVE[iens],
+      // 							    epsilon_gamma[iens]));
+      // cout<<"ian: "<<ian<<endl;
+      // cont_chir_fit_epsilon(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_epsilon,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_epsilon_gamma_an%zu.xmg",ian),chir_an_flag(ian));
 
-      cout<<"-----------------------------------------------"<<endl;
+      // cout<<"-----------------------------------------------"<<endl;
 
-      vector<cont_chir_fit_data_t_k> data_k;
-      for(size_t iens=0;iens<raw_data.size();iens++)
-	data_k.push_back(cont_chir_fit_data_t_k(raw_data[iens].aml,
-						raw_data[iens].ams,
-						raw_data[iens].ibeta,
-						raw_data[iens].L,
-						da2M2K_QED[iens],
-						FVE_da2M2K[iens]));
-      cout<<"ian: "<<ian<<endl;
-      cont_chir_fit_k(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_k,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_dM2K_QED_an%zu.xmg",ian),chir_an_flag(ian));
+      // vector<cont_chir_fit_data_t_k> data_k;
+      // for(size_t iens=0;iens<raw_data.size();iens++)
+      // 	data_k.push_back(cont_chir_fit_data_t_k(raw_data[iens].aml,
+      // 						raw_data[iens].ams,
+      // 						raw_data[iens].ibeta,
+      // 						raw_data[iens].L,
+      // 						da2M2K_QED[iens],
+      // 						FVE_da2M2K[iens]));
+      // cout<<"ian: "<<ian<<endl;
 
-      cout<<"-----------------------------------------------"<<endl;
+      // cout<<"-----------------------------------------------"<<endl;
     }
   
   return 0;

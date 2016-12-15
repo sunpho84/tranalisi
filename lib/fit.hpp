@@ -245,45 +245,20 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
 
 /////////////////////////////////////////////////////////////// multi x fit ///////////////////////////////////////////////////////////
 
-
+//! hold a single element to be minimized
 class boot_fit_data_t
 {
-  using fun_t=function<double(const vector<double> &p,size_t iel)>;
 public:
-  fun_t fun_val;
-  fun_t fun_ansatz;
+  using fun_t=function<double(const vector<double> &p,size_t iel)>;
+  fun_t num;
+  fun_t teo;
   double err;
   
-  boot_fit_data_t(const fun_t &fun_val,const fun_t &fun_ansatz,double err) : fun_val(fun_val),fun_ansatz(fun_ansatz),err(err) {}
+  boot_fit_data_t(const fun_t &num,const fun_t &teo,double err) : num(num),teo(teo),err(err) {}
 };
 
-//! add a parameter to the fit
-inline size_t add_fit_par(MnUserParameters &pars,string name,double ans,double err)
-{
-  size_t ipar=pars.Parameters().size();
-  pars.Add(name.c_str(),ans,err);
-  return ipar;
-}
-
-//! add a parameter that gets self-fitted (useful to propagate erorr on x)
-inline int add_self_fitted_point(MnUserParameters &pars,string name,vector<boot_fit_data_t> &data,const dboot_t &point)
-{
-  int ipar=add_fit_par(pars,name.c_str(),point[0],point.err());
-  data.push_back(boot_fit_data_t(//numerical data
-				 [point]
-				 (vector<double> p,int iel)
-				 {return point[iel];},
-				 //ansatz
-				 [ipar]
-				 (vector<double> p,int iel)
-				 {return p[ipar];},
-				 //error
-				 point.err()));
-  return ipar;
-}
-
-//! perform a bootstrap fit
-class boot_fit_t : public FCNBase
+//! functor to minimize
+class boot_fit_FCN_t : public FCNBase
 {
   //! data to be fitted
   vector<boot_fit_data_t> data;
@@ -292,7 +267,7 @@ class boot_fit_t : public FCNBase
   
 public:
   //! constructor
-  boot_fit_t(const vector<boot_fit_data_t> &data,size_t &iel) : data(data),iel(iel) {}
+  boot_fit_FCN_t(const vector<boot_fit_data_t> &data,size_t &iel) : data(data),iel(iel) {}
   
   //! compute the function
   double operator()(const vector<double> &p) const
@@ -300,8 +275,8 @@ public:
     double ch2=0;
     for(size_t ix=0;ix<data.size();ix++)
       {
-	double n=data[ix].fun_val(p,iel);
-	double t=data[ix].fun_ansatz(p,iel);
+	double n=data[ix].num(p,iel);
+	double t=data[ix].teo(p,iel);
 	double e=data[ix].err;
 	double contr=sqr((n-t)/e);
 	ch2+=contr;
@@ -311,6 +286,68 @@ public:
   }
   
   double Up() const {return 1;}
+};
+
+//! class to fit
+class boot_fit_t
+{
+  vector<boot_fit_data_t> data;
+  MnUserParameters pars;
+  vector<dboot_t*> out_pars;
+public:
+  //! add a point
+  void add_point(const boot_fit_data_t::fun_t &num,const boot_fit_data_t::fun_t &teo,double err)
+  {data.push_back(boot_fit_data_t(num,teo,err));}
+  
+  //! add a parameter to the fit
+  size_t add_fit_par(dboot_t &out_par,string name,double ans,double err)
+  {
+    size_t ipar=pars.Parameters().size();
+    pars.Add(name.c_str(),ans,err);
+    out_pars.push_back(&out_par);
+    return ipar;
+  }
+  
+  //! add a parameter that gets self-fitted (useful to propagate erorr on x)
+  size_t add_self_fitted_point(dboot_t &out_par,string name,const dboot_t &point)
+  {
+    size_t ipar=add_fit_par(out_par,name.c_str(),point[0],point.err());
+    add_point(//numerical data
+	      [point]
+	      (vector<double> p,int iel)
+	      {return point[iel];},
+	      //ansatz
+	      [ipar]
+	      (vector<double> p,int iel)
+	      {return p[ipar];},
+	      //error
+	      point.err());
+    return ipar;
+  }
+  
+  //! perform the fit
+  void fit()
+  {
+    size_t npars=pars.Parameters().size();
+    size_t iboot=0;
+    boot_fit_FCN_t boot_fit_FCN(data,iboot);
+    MnMigrad migrad(boot_fit_FCN,pars);
+    
+    dboot_t ch2;
+    for(iboot=0;iboot<=out_pars[0]->nboots();iboot++)
+      {
+	//minimize and print the result
+	FunctionMinimum min=migrad();
+	MinimumParameters par_min=min.Parameters();
+	ch2[iboot]=par_min.Fval();
+	
+	if(!min.IsValid()) CRASH("Minimization failed");
+	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[iboot]=migrad.Value(ipar);
+    }
+    
+    //write ch2
+    cout<<"Ch2: "<<ch2.ave_err()<<" / "<<data.size()-npars<<endl;
+  }
 };
 
 class cont_chir_fit_data_t_pi
@@ -325,28 +362,28 @@ public:
 //! perform a fit to the continuum and chiral
 void cont_chir_fit_pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_pi> &ext_data,const dboot_t &ml_phys,const string &path,bool chir_an);
 
-class cont_chir_fit_data_t_epsilon
-{
-public:
-  double aml,ams;
-  size_t ib,L;
-  dboot_t wfse,wofse;
-  cont_chir_fit_data_t_epsilon(double aml,double ams,size_t ib,size_t L,dboot_t wfse,dboot_t wofse) : aml(aml),ams(ams),ib(ib),L(L),wfse(wfse),wofse(wofse) {}
-};
+// class cont_chir_fit_data_t_epsilon
+// {
+// public:
+//   double aml,ams;
+//   size_t ib,L;
+//   dboot_t wfse,wofse;
+//   cont_chir_fit_data_t_epsilon(double aml,double ams,size_t ib,size_t L,dboot_t wfse,dboot_t wofse) : aml(aml),ams(ams),ib(ib),L(L),wfse(wfse),wofse(wofse) {}
+// };
 
-//! perform a fit to the continuum and chiral
-void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_epsilon> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const string &path,bool chir_an);
+// //! perform a fit to the continuum and chiral
+// void cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_epsilon> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const string &path,bool chir_an);
 
-class cont_chir_fit_data_t_k
-{
-public:
-  double aml,ams;
-  size_t ib,L;
-  dboot_t y,fse;;
-  cont_chir_fit_data_t_k(double aml,double ams,size_t ib,size_t L,dboot_t y,dboot_t fse) : aml(aml),ams(ams),ib(ib),L(L),y(y),fse(fse) {}
-};
+// class cont_chir_fit_data_t_k
+// {
+// public:
+//   double aml,ams;
+//   size_t ib,L;
+//   dboot_t y,fse;;
+//   cont_chir_fit_data_t_k(double aml,double ams,size_t ib,size_t L,dboot_t y,dboot_t fse) : aml(aml),ams(ams),ib(ib),L(L),y(y),fse(fse) {}
+// };
 
-//! perform a fit to the continuum and chiral
-void cont_chir_fit_k(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_k> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const string &path,bool chir_an);
+// //! perform a fit to the continuum and chiral
+// void cont_chir_fit_k(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t_k> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const string &path,bool chir_an);
 
 #endif
