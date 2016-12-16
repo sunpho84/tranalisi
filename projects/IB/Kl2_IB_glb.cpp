@@ -69,7 +69,8 @@ template <class Tx,class Ty> void plot_ens_data(string path,const Tx &x,const Ty
 const bool chir_an_flag(size_t ia)
 {return ia%2==0;}
 
-ave_err_t ave_err_analyses(const dbvec_t &v)
+//! perform the analysis according to eq.28
+ave_err_t eq_28_analysis(const dbvec_t &v)
 {
   ave_err_t ae;
   double sigma=0;
@@ -87,7 +88,7 @@ ave_err_t ave_err_analyses(const dbvec_t &v)
   sigma/=v.size();
   ae.err-=sqr(ae.ave);
   ae.err=sqrt(fabs(ae.err)+sigma);
-    
+  
   return ae;
 }
 
@@ -220,6 +221,7 @@ int main(int narg,char **arg)
   
   //loop
   cout<<endl;
+  vector<dbvec_t> silv_dM2Pi(nens_used,dbvec_t(noa));
   for(size_t ian=0;ian<noa;ian++)
     {
       dbvec_t ml(raw_data.size());
@@ -257,6 +259,7 @@ int main(int narg,char **arg)
 	  
 	  a2M2Pi[iens]=aMPi*aMPi;
 	  da2M2Pi[iens]=aMPi*sqr(eu-ed)*e2*aMPi_sl;
+	  silv_dM2Pi[iens][ian]=da2M2Pi[iens]/sqr(a);
 	  FVE_da2M2Pi[iens]=FVE_d2M(aMPi,raw_data[iens].L);
 	  
 	  dboot_t aMK=dboot_t(bi,raw_data[iens].k_mass);
@@ -336,6 +339,13 @@ int main(int narg,char **arg)
       cout<<"-----------------------------------------------"<<endl;
     }
   
+  ofstream silv_out("silv_d2MPi");
+  for(size_t iens=0;iens<nens_used;iens++)
+    {
+      //for(int ian=0;ian<noa;ian++) cout<<silv_dM2Pi[iens][ian].ave_err()<<endl;
+      silv_out<<raw_data[iens].path<<" "<<eq_28_analysis(silv_dM2Pi[iens])<<endl;
+    }
+  
   dbvec_t dM2K_QCD(noa);
   dbvec_t Deltamud(noa);
   dboot_t dM2K_exp;
@@ -348,7 +358,7 @@ int main(int narg,char **arg)
       Deltamud[ian]=dboot_t(-dM2K_QCD[ian]/output_dM2K_QCD_over_minus_two_Deltamud[ian]/2.0);
     }
 
-  cout<<"Deltamud: "<<ave_err_analyses(Deltamud)<<endl;
+  cout<<"Deltamud: "<<eq_28_analysis(Deltamud)<<endl;
   
   return 0;
 }

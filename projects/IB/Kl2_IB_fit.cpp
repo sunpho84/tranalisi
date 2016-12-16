@@ -33,12 +33,36 @@ public:
   size_t if0,iB0;
   size_t iadep,iadep_ml,iL3dep;
   size_t iC,iKPi,iKK;
+  bool fitting_a,fitting_z;
   dbvec_t fit_a,fit_z;
   dboot_t fit_f0,fit_B0;
   dboot_t adep,adep_ml,L3dep;
   dboot_t C,KPi,KK;
   
-  cont_chir_fit_pars_t(size_t nbeta) : nbeta(nbeta),ipara(nbeta),iparz(nbeta),fit_a(nbeta),fit_z(nbeta) {}
+  cont_chir_fit_pars_t(size_t nbeta)
+    :
+    nbeta(nbeta),
+    ipara(nbeta),
+    iparz(nbeta),
+    fitting_a(true),
+    fitting_z(true),
+    fit_a(nbeta),
+    fit_z(nbeta)
+  {}
+  
+  //! return a
+  double get_a(const vector<double> &p,size_t ib,const dbvec_t &a,size_t iel)
+  {
+    if(fitting_a) return p[ipara[ib]];
+    else          return a[ib][iel];
+  }
+  
+  //! return z
+  double get_z(const vector<double> &p,size_t ib,const dbvec_t &z,size_t iel)
+  {
+    if(fitting_z) return p[iparz[ib]];
+    else          return z[ib][iel];
+  }
   
   //! add all common pars
   void add_common_pars(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,
@@ -159,6 +183,9 @@ Tpars cont_chir_ansatz_dM2Pi(const Tpars &f0,const Tpars &B0,const Tpars &C,cons
   return e2*sqr(f0)*(4*Cf04+chir_log+K*M2/den+disc_eff)+fitted_FSE;
 }
 
+double cont_chir_ansatz(const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L,bool chir_an)
+{return cont_chir_ansatz_dM2Pi(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],ml,ac,p[pars.iadep],L,p[pars.iL3dep],p[pars.iadep_ml],chir_an);}
+
 //! perform the fit to the continuum limit
 cont_chir_fit_pars_t cont_chir_fit_dM2Pi_minimize(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,bool chir_an)
 {
@@ -175,22 +202,23 @@ cont_chir_fit_pars_t cont_chir_fit_dM2Pi_minimize(const dbvec_t &a,const dbvec_t
   //set data
   for(size_t idata=0;idata<ext_data.size();idata++)
     boot_fit.add_point(//numerical data
-		       [&ext_data,&pars,idata]
+		       [&ext_data,&pars,&a,idata]
 		       (vector<double> p,int iel) //dimension 2
-		       {return ext_data[idata].wfse[iel]/sqr(p[pars.ipara[ext_data[idata].ib]]);},
+		       {return ext_data[idata].wfse[iel]/pow(pars.get_a(p,ext_data[idata].ib,a,iel),2);},
 		       //ansatz
-		       [idata,&pars,&ext_data,chir_an]
+		       [idata,&pars,&ext_data,&a,&z,chir_an]
 		       (vector<double> p,int iel)
 		       {
 			 size_t ib=ext_data[idata].ib;
-			 double a=p[pars.ipara[ib]];
-			 double z=p[pars.iparz[ib]];
-			 double ml=ext_data[idata].aml/a/z;
+			 double ac=pars.get_a(p,ib,a,iel);
+			 double zc=pars.get_z(p,ib,z,iel);
+			 double ml=ext_data[idata].aml/ac/zc;
+			 double ms=ext_data[idata].ams/ac/zc;
 			 double L=ext_data[idata].L;
-			 return cont_chir_ansatz_dM2Pi(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],ml,a,p[pars.iadep],L,p[pars.iL3dep],p[pars.iadep_ml],chir_an);
+			 return cont_chir_ansatz(p,pars,ml,ms,ac,L,chir_an);
 		       },
 		       //error
-		       dboot_t(ext_data[idata].wfse/sqr(a[ext_data[idata].ib])).err());
+		       dboot_t(ext_data[idata].wfse/pow(a[ext_data[idata].ib].ave(),2)).err());
   
   //! fit
   boot_fit.fit();
@@ -256,7 +284,7 @@ Tpars cont_chir_ansatz_epsilon(const Tpars &f0,const Tpars &B0,const Tpars &C,co
 //! perform the fit to the continuum limit
 cont_chir_fit_pars_t cont_chir_fit_epsilon_minimize(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,bool chir_an)
 {
-  //set_printlevel(3);
+  set_printlevel(3);
   
   boot_fit_t boot_fit;
   size_t nbeta=a.size();

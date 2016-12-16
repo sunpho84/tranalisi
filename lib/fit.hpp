@@ -3,6 +3,7 @@
 
 #include <grace.hpp>
 #include <meas_vec.hpp>
+#include <Math/MinimizerOptions.h>
 #include <Minuit2/FCNBase.h>
 #include <Minuit2/MnMigrad.h>
 #include <Minuit2/MnUserParameters.h>
@@ -13,6 +14,7 @@
 
 using namespace std;
 using namespace ROOT::Minuit2;
+using namespace ROOT::Math;
 
 //! set the level of verbosity
 inline void set_printlevel(int lev)
@@ -331,7 +333,15 @@ public:
     size_t npars=pars.Parameters().size();
     size_t iboot=0;
     boot_fit_FCN_t boot_fit_FCN(data,iboot);
-    MnMigrad migrad(boot_fit_FCN,pars);
+    
+    //set strategy and default maximum function calls
+    MnStrategy strategy;
+    strategy.SetLowStrategy();
+    MinimizerOptions::SetDefaultMaxFunctionCalls(10000000);
+    
+    //define minimizator
+    MnMigrad migrad(boot_fit_FCN,pars,strategy);
+    cout<<"Strategy: "<<migrad.Strategy().Strategy()<<endl;
     
     dboot_t ch2;
     for(iboot=0;iboot<=out_pars[0]->nboots();iboot++)
@@ -339,9 +349,23 @@ public:
 	//minimize and print the result
 	FunctionMinimum min=migrad();
 	MinimumParameters par_min=min.Parameters();
+	MnUserParameterState par_state=min.UserState();
 	ch2[iboot]=par_min.Fval();
 	
-	if(!min.IsValid()) cerr<<"WARNING! Minimization failed"<<endl;
+	if(!min.IsValid())
+	  {
+	    cerr<<"WARNING! Minimization failed"<<endl;
+	    cerr<<"Has accurate cov: "<<min.HasAccurateCovar()<<endl;
+	    cerr<<"Has positive definite cov: "<<min.HasPosDefCovar()<<endl;
+	    cerr<<"Has valid covariance"<<min.HasValidCovariance()<<endl;
+	    cerr<<"Has valid parameters: "<<min.HasValidParameters()<<endl;
+	    cerr<<"Has reached call limit: "<<min.HasReachedCallLimit()<<endl;
+	    cerr<<"Hesse failed: "<<min.HesseFailed()<<endl;
+	    cerr<<"Has cov: "<<min.HasCovariance()<<endl;
+	    cerr<<"Is above max edm: "<<min.IsAboveMaxEdm()<<endl;
+	    cout<<"FunctionCalls: "<<migrad.NumOfCalls()<<endl;
+	    cerr<<par_state<<endl;
+	  }
 	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[iboot]=migrad.Value(ipar);
     }
     
