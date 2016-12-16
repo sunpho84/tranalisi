@@ -21,7 +21,6 @@ using namespace std;
 
 const double alpha_em=1.0/137;
 const double e2=4*M_PI*alpha_em;
-const double mu=2.0;
 
 enum{RE,IM};
 

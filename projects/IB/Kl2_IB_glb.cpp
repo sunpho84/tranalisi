@@ -247,6 +247,7 @@ int main(int narg,char **arg)
 	  
 	  boot_init_t &bi=jack_index[ian][ens_id];
 	  
+	  const double mu=2.0;
 	  dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*lat_par[ian].Z[ibeta]*(6*log(mu*a)-22.596)/(32*sqr(M_PI)));
 	  dboot_t aDeltam_cr_u=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(eu);
 	  dboot_t aDeltam_cr_d=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(ed);
