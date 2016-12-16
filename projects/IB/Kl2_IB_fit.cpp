@@ -150,7 +150,7 @@ Tpars cont_chir_ansatz_dM2Pi(const Tpars &f0,const Tpars &B0,const Tpars &C,cons
     den=sqr(Tpars(4*M_PI*f0));
   
   Tpars chir_log;
-  if(chir_an) chir_log=-(3+16*Cf04)*M2/den*log(M2/sqr(mu));
+  if(chir_an) chir_log=-(3+16*Cf04)*M2/den*log(M2);
   else        chir_log=0;
   
   Tpars fitted_FSE=FSE_dep(L3dep,a,L);
@@ -244,7 +244,7 @@ Tpars cont_chir_ansatz_epsilon(const Tpars &f0,const Tpars &B0,const Tpars &C,co
   
   Tpars chir_log;
   // if(chir_an)
-  chir_log=M2Pi/den*log(M2Pi/sqr(mu))-M2K/den*log(M2K/sqr(mu));
+  chir_log=M2Pi/den*log(M2Pi)-M2K/den*log(M2K);
   // else        chir_log=0;
   
   Tpars fitted_FSE=FSE_dep(L3dep,a,L);
@@ -337,7 +337,7 @@ Tpars cont_chir_ansatz_dM2K_QED(const Tpars &f0,const Tpars &B0,const Tpars &C,c
     den=sqr(Tpars(4*M_PI*f0));
   
   Tpars chir_log;
-  if(chir_an) chir_log=-(3+8*Cf04)*M2K/den*log(M2K/sqr(mu))-8*Cf04*M2Pi/den*log(M2Pi/sqr(mu));
+  if(chir_an) chir_log=-(3+8*Cf04)*M2K/den*log(M2K)-8*Cf04*M2Pi/den*log(M2Pi);
   else        chir_log=0;
   
   Tpars fitted_FSE=FSE_dep(L3dep,a,L);
