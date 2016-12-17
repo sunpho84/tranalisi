@@ -218,7 +218,7 @@ cont_chir_fit_pars_t cont_chir_fit_dM2Pi_minimize(const dbvec_t &a,const dbvec_t
 			 return cont_chir_ansatz(p,pars,ml,ms,ac,L,chir_an);
 		       },
 		       //error
-		       dboot_t(ext_data[idata].wfse/pow(a[ext_data[idata].ib].ave(),2)).err());
+		       dboot_t(ext_data[idata].wfse/pow(a[ext_data[idata].ib],2.0)).err());
   
   //! fit
   boot_fit.fit();
