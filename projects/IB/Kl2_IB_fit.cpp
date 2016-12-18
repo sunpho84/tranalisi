@@ -66,9 +66,8 @@ public:
     else          return ori_z[ib][iel];
   }
   
-  //! add all common pars
-  void add_common_pars(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,
-		       const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &L3dep_guess,boot_fit_t &boot_fit)
+  //! add a and az to be self-fitted
+  void add_az_pars(const dbvec_t &a,const dbvec_t &z,boot_fit_t &boot_fit)
   {
     ori_a=a;
     ori_z=z;
@@ -77,14 +76,28 @@ public:
 	ipara[ibeta]=boot_fit.add_self_fitted_point(fit_a[ibeta],combine("a[%zu]",ibeta),a[ibeta]);
 	iparz[ibeta]=boot_fit.add_self_fitted_point(fit_z[ibeta],combine("z[%zu]",ibeta),z[ibeta]);
       }
+  }
+  
+  //! add adep and adep_ml
+  void add_adep_pars(const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,boot_fit_t &boot_fit)
+  {
+    // adep, adep_ml and L3 dep
+    iadep=boot_fit.add_fit_par(adep,"adep",adep_guess.ave,adep_guess.err);
+    iadep_ml=boot_fit.add_fit_par(adep_ml,"adep_ml",adep_ml_guess.ave,adep_ml_guess.err);
+  }
+  
+  //! add all common pars
+  void add_common_pars(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,
+		       const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &L3dep_guess,boot_fit_t &boot_fit)
+  {
+    add_az_pars(a,z,boot_fit);
+    add_adep_pars(adep_guess,adep_ml_guess,boot_fit);
     //f0 and B0
     ori_f0=f0;
     ori_B0=B0;
     if0=boot_fit.add_self_fitted_point(fit_f0,"f0",f0);
     iB0=boot_fit.add_self_fitted_point(fit_B0,"B0",B0);
-    // adep, adep_ml and L3 dep
-    iadep=boot_fit.add_fit_par(adep,"adep",adep_guess.ave,adep_guess.err);
-    iadep_ml=boot_fit.add_fit_par(adep_ml,"adep_ml",adep_ml_guess.ave,adep_ml_guess.err);
+    
     iL3dep=boot_fit.add_fit_par(L3dep,"L3dep",L3dep_guess.ave,L3dep_guess.err);
   }
   
@@ -376,6 +389,44 @@ dboot_t cont_chir_fit_dM2K_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &
 		{return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)/sqr(pars.fit_a[ib])-
 				without_with_fse*FSE_dep(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));},
 		ml_phys,phys_res,"$$(M^2_{K^+}-M^2_{K^0})^{QED} [GeV^2]");
+  
+  return phys_res;
+}
+
+/////////////////////////////////////////////////////////////// generic linear fit ////////////////////////////////////////////////////////////////////////
+
+//! ansatz fit
+template <class Tpars,class Tm,class Ta>
+Tpars cont_chir_linear_ansatz(const Tpars &C0_ml,const Tpars &C1_ml,const Tm &ml,const Ta &a,const Tpars &adep,const Tpars &adep_ml)
+{return C0_ml+C1_ml*ml+a*a*(adep+adep_ml*ml);}
+
+//! perform the fit to the continuum limit
+dboot_t cont_chir_linear_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,const string &yaxis_label,double apow,bool fix_adep_ml)
+{
+  //set_printlevel(3);
+  
+  boot_fit_t boot_fit;
+  size_t nbeta=a.size();
+  cont_chir_fit_pars_t pars(nbeta);
+  pars.add_az_pars(a,z,boot_fit);
+  pars.add_LEC_pars({0,1},{0,1},{0,0},boot_fit);
+  boot_fit.fix_par(pars.iKK);
+  pars.add_adep_pars({0,1},{0,0},boot_fit);
+  if(fix_adep_ml) boot_fit.fix_par(pars.iadep_ml);
+  
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,apow,[](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
+			 {return cont_chir_linear_ansatz(p[pars.iC],p[pars.iKPi],ml,ac,p[pars.iadep],p[pars.iadep_ml]);});
+  
+  dboot_t phys_res=cont_chir_linear_ansatz(pars.C,pars.KPi,ml_phys,a_cont,pars.adep,pars.adep_ml);
+  
+  plot_chir_fit(path,ext_data,pars,[&pars](double x,size_t ib){return cont_chir_linear_ansatz<double,double,double>
+	(pars.C.ave(),pars.KPi.ave(),x,pars.fit_a[ib].ave(),pars.adep.ave(),pars.adep_ml.ave());},
+    bind(cont_chir_linear_ansatz<dboot_t,double,double>,pars.C,pars.KPi,_1,a_cont,pars.adep,pars.adep_ml),
+    [&ext_data,apow,&pars]
+    (size_t idata,bool without_with_fse,size_t ib)
+    {return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)/pow(pars.fit_a[ib],apow)-
+    		    without_with_fse*FSE_dep(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));},
+    ml_phys,phys_res,yaxis_label);
   
   return phys_res;
 }
