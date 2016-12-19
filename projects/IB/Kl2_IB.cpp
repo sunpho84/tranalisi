@@ -65,17 +65,34 @@ int main(int narg,char **arg)
 
   djvec_t pi_plain=load_P5P5("00",0,0);
   djvec_t pi_exch=load_P5P5("LL",0,0);
+  djvec_t pi_self=load_P5P5("0M",0,0);
+  djvec_t pi_tad=load_P5P5("0T",0,0);
+  djvec_t pi_s=load_P5P5("0S",0,0);
+  djvec_t pi_p=-load_P5P5("0P",0,0,IM,-1);
 
-  djack_t pi_M,pi_A,pi_SL;
-  two_pts_with_ins_ratio_fit(pi_M,pi_A,pi_SL,pi_plain,pi_exch,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_ins.xmg");
+  djack_t pi_M,pi_A_exch,pi_SL_exch,pi_A_selftad,pi_SL_selftad,pi_A_s,pi_SL_s,pi_A_p,pi_SL_p;
+  two_pts_with_ins_ratio_fit(pi_M,pi_A_s,pi_SL_s,pi_plain,pi_s,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_s.xmg");
+  two_pts_with_ins_ratio_fit(pi_M,pi_A_p,pi_SL_p,pi_plain,pi_p,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_p.xmg");
+  two_pts_with_ins_ratio_fit(pi_M,pi_A_selftad,pi_SL_selftad,pi_plain,djvec_t(pi_self+pi_tad),TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_selftad.xmg");
+  two_pts_with_ins_ratio_fit(pi_M,pi_A_exch,pi_SL_exch,pi_plain,pi_exch,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_exch.xmg");
+
   cout<<"pi_M: "<<pi_M.ave_err()<<endl;
-  cout<<"pi_A: "<<pi_A.ave_err()<<endl;
-  cout<<"pi_SL: "<<pi_SL.ave_err()<<endl;
+  cout<<"pi_A_exch: "<<pi_A_exch.ave_err()<<endl;
+  cout<<"pi_SL_exch: "<<pi_SL_exch.ave_err()<<endl;
+  cout<<"pi_A_selftad: "<<pi_A_selftad.ave_err()<<endl;
+  cout<<"pi_SL_selftad: "<<pi_SL_selftad.ave_err()<<endl;
+  cout<<"pi_A_s: "<<pi_A_s.ave_err()<<endl;
+  cout<<"pi_SL_s: "<<pi_SL_s.ave_err()<<endl;
+  cout<<"pi_A_p: "<<pi_A_p.ave_err()<<endl;
+  cout<<"pi_SL_p: "<<pi_SL_p.ave_err()<<endl;
 
   raw_file_t pi_obs_file("pi_obs","w");
   pi_obs_file.bin_write(pi_M);
-  pi_obs_file.bin_write(pi_SL);
-
+  pi_obs_file.bin_write(pi_SL_exch);
+  pi_obs_file.bin_write(pi_SL_selftad);
+  pi_obs_file.bin_write(pi_SL_s);
+  pi_obs_file.bin_write(pi_SL_p);
+  
   //kaon
 
   djvec_t k_plain=load_P5P5("00",0,1);
