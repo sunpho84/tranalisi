@@ -6,6 +6,7 @@
 
 int T;
 index_t<4> ind;
+index_t<7> ind_hl;
 
 djvec_t load(string path,size_t im1,size_t im2,size_t reim,int rpar,int spat_par)
 {
@@ -30,7 +31,9 @@ int main(int narg,char **arg)
   ibeta=atoi(arg[2]);
   int TH=T/2;
   
-  ind.set_ranges({3,3,2,2});  
+  ind.set_ranges({3,3,2,2});
+  const size_t nrl=2,norie=2,nrq=2,nqrev=2,nqins=3,nleptons=6;
+  ind_hl.set_ranges({nrl,norie,nrq,nqrev,nqins,nleptons,2/*reim*/});
   set_njacks(15);
   
   raw_file_t input;

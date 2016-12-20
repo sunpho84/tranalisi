@@ -418,7 +418,7 @@ dboot_t cont_chir_linear_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont
 			 {return cont_chir_linear_ansatz(p[pars.iC],p[pars.iKPi],ml,ac,p[pars.iadep],p[pars.iadep_ml]);});
   
   dboot_t phys_res=cont_chir_linear_ansatz(pars.C,pars.KPi,ml_phys,a_cont,pars.adep,pars.adep_ml);
-  
+  cout<<"phys res: "<<phys_res.ave_err()<<endl;
   plot_chir_fit(path,ext_data,pars,[&pars](double x,size_t ib){return cont_chir_linear_ansatz<double,double,double>
 	(pars.C.ave(),pars.KPi.ave(),x,pars.fit_a[ib].ave(),pars.adep.ave(),pars.adep_ml.ave());},
     bind(cont_chir_linear_ansatz<dboot_t,double,double>,pars.C,pars.KPi,_1,a_cont,pars.adep,pars.adep_ml),
