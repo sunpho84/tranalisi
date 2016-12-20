@@ -397,8 +397,8 @@ dboot_t cont_chir_fit_dM2K_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &
 
 //! ansatz fit
 template <class Tpars,class Tm,class Ta>
-Tpars cont_chir_linear_ansatz(const Tpars &C0_ml,const Tpars &C1_ml,const Tm &ml,const Ta &a,const Tpars &adep,const Tpars &adep_ml)
-{return C0_ml+C1_ml*ml+a*a*(adep+adep_ml*ml);}
+Tpars cont_chir_linear_ansatz(const Tpars &C0,const Tpars &C1,const Tm &ml,const Ta &a,const Tpars &adep,const Tpars &adep_ml)
+{return C0+C1*ml+a*a*(adep+adep_ml*ml);}
 
 //! perform the fit to the continuum limit
 dboot_t cont_chir_linear_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,const string &yaxis_label,double apow,bool fix_adep_ml)
