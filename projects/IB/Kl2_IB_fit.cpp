@@ -207,7 +207,7 @@ void cont_chir_fit_minimize
 			 return cont_chir_ansatz(p,pars,ml,ms,ac,L);
 		       },
 		       //error
-		       dboot_t(ext_data[idata].wfse/pow(pars.ori_a[ext_data[idata].ib],apow)).err());
+		       dboot_t(ext_data[idata].wfse/pow(pars.ori_a[ext_data[idata].ib],apow)));
   
   //! fit
   boot_fit.fit();

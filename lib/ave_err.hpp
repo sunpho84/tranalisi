@@ -4,7 +4,6 @@
 #include <cmath>
 #include <fstream>
 #include <math.hpp>
-#include <oper.hpp>
 #include <valarray>
 #include <vector>
 
@@ -79,6 +78,5 @@ public:
 
 //! output of ave_err_t
 ostream& operator<<(ostream &out,const ave_err_t &ae);
-
 
 #endif

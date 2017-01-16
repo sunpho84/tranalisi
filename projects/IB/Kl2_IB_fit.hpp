@@ -2,6 +2,7 @@
 #define _KL2_IB_FIT_HPP
 
 #include <fit.hpp>
+#include <oper.hpp>
 
 class cont_chir_fit_data_t
 {

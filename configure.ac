@@ -80,6 +80,11 @@ case "$debug" in
 esac
 AC_MSG_RESULT([Enabling debug... $debug])
 
+#check eigen
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADERS([Eigen/Dense],,AC_MSG_ERROR([Error! Eigen required]))
+AC_LANG_POP([C++])
+
 AC_CONFIG_FILES(Makefile
 	include/Makefile
 	lib/Makefile

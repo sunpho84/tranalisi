@@ -6,6 +6,7 @@
 #include <functions.hpp>
 #include <functional>
 #include <iostream>
+#include <jack.hpp>
 #include <macros.hpp>
 #include <solve.hpp>
 #include <tools.hpp>
@@ -127,4 +128,14 @@ template <class T> T subset(const T &v,size_t beg,size_t end)
   check_ordered({beg,end,v.size()});
   return T(&v[beg],&v[end]);
 }
+
+//! compute the covariance
+template <class T> double cov(const T &x,const T &y)
+{return (T(x*y).ave()-x.ave()*y.ave())*(njacks-1);}
+
+//! variance
+template <class T> double var(const T &x)
+{return cov(x,x);}
+
+
 #endif

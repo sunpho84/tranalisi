@@ -1,8 +1,11 @@
 #ifndef _FIT_HPP
 #define _FIT_HPP
 
+#include <Eigen/Dense>
+#include <functions.hpp>
 #include <grace.hpp>
 #include <meas_vec.hpp>
+#include <oper.hpp>
 #include <Math/MinimizerOptions.h>
 #include <Minuit2/FCNBase.h>
 #include <Minuit2/MnMigrad.h>
@@ -15,6 +18,9 @@
 using namespace std;
 using namespace ROOT::Minuit2;
 using namespace ROOT::Math;
+using namespace Eigen;
+
+typedef Matrix<double,Dynamic,Dynamic> matr_t;
 
 //! set the level of verbosity
 inline void set_printlevel(int lev)
@@ -95,12 +101,15 @@ class simple_ch2_t : public FCNBase
   fun_t fun;
   //! error
   vector<double> err;
+  //! covariance matrix
+  vector<double> inv_cov_matr;
   //! element of the data-dstribution
   size_t &iel;
   
 public:
   //! constructor
-  simple_ch2_t(const vector<double> &x,size_t xmin,size_t xmax,const TV &data,fun_t fun,size_t &iel) : x(x),xmin(xmin),xmax(xmax),data(data),fun(fun),iel(iel)
+  simple_ch2_t(const vector<double> &x,size_t xmin,size_t xmax,const TV &data,fun_t fun,size_t &iel) :
+    x(x),xmin(xmin),xmax(xmax),data(data),fun(fun),iel(iel)
   {
     check_ordered({xmin,xmax,data.size()});
     
@@ -183,7 +192,8 @@ public:
   double operator()(const vector<double> &p) const
   {
     double ch2=0;
-    for(size_t icontr=0;icontr<contrs.size();icontr++) ch2+=contrs[icontr](fun_shuf(p,icontr));
+      for(size_t icontr=0;icontr<contrs.size();icontr++)
+	ch2+=contrs[icontr](fun_shuf(p,icontr));
     
     return ch2;
   }
@@ -262,29 +272,93 @@ public:
 //! functor to minimize
 class boot_fit_FCN_t : public FCNBase
 {
+  //! covariance flag
+  bool cov_flag;
   //! data to be fitted
   vector<boot_fit_data_t> data;
+  //! inverse covariance
+  vector<double> inv_cov;
   //! element of the data-dstribution
   size_t &iel;
   
 public:
   //! constructor
-  boot_fit_FCN_t(const vector<boot_fit_data_t> &data,size_t &iel) : data(data),iel(iel) {}
+  boot_fit_FCN_t(const vector<boot_fit_data_t> &data,size_t &iel) : cov_flag(false),data(data),iel(iel){}
+  
+  //! add the covariance matrix
+  bool add_cov(const vector<dboot_t> &pro_cov)
+  {
+    cov_flag=true;
+    const size_t &n=pro_cov.size();
+    
+    //fill the covariance matrix
+    matr_t cov_matr(n,n);
+    for(size_t i=0;i<n;i++)
+      for(size_t j=0;j<n;j++)
+	cov_matr(i,j)=cov(pro_cov[i],pro_cov[j]);
+    
+    //compute eigenvalues
+    SelfAdjointEigenSolver<matr_t> es;
+    auto e=es.compute(cov_matr);
+    auto ei=e.eigenvalues();
+    auto ev=e.eigenvectors();
+
+    //get the epsilon
+    double eps=1e-8-ei(0);
+    if(eps<0) eps=0;
+    cout<<"Epsilon: "<<eps<<endl;
+    // //debug
+    // eps=0;
+    
+    //fill the inverse
+    inv_cov.resize(n*n);
+    for(size_t i=0;i<n;i++)
+      for(size_t j=0;j<n;j++)
+	{
+	  inv_cov[i*n+j]=0;
+	  for(size_t k=0;k<n;k++) inv_cov[i*n+j]+=ev(i,k)*(1/(ei(k)+eps))*ev(j,k);
+      }
+    
+    // //test inverse
+    // for(size_t i=0;i<n;i++)
+    //   for(size_t j=0;j<n;j++)
+    // 	{
+    // 	  double a=0;
+    // 	  for(size_t k=0;k<n;k++) a+=cov_matr(i,k)*inv_cov[k*n+j];
+    // 	  cout<<" wkehnfwjihoefwfeih "<<i<<" "<<j<<" "<<a<<endl;
+    // 	}
+    
+    return cov_flag;
+  }
   
   //! compute the function
   double operator()(const vector<double> &p) const
   {
     double ch2=0;
-    for(size_t ix=0;ix<data.size();ix++)
-      {
-	double n=data[ix].num(p,iel);
-	double t=data[ix].teo(p,iel);
-	double e=data[ix].err;
-	double contr=sqr((n-t)/e);
-	ch2+=contr;
+     if(cov_flag)
+        for(size_t ix=0;ix<data.size();ix++)
+	  for(size_t iy=0;iy<data.size();iy++)
+	    {
+      	    double nx=data[ix].num(p,iel);
+      	    double tx=data[ix].teo(p,iel);
+      	    double ny=data[iy].num(p,iel);
+      	    double ty=data[iy].teo(p,iel);
+      	    double contr=(nx-tx)*inv_cov[ix*data.size()+iy]*(ny-ty);
+      	    ch2+=contr;
+      	  //cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+      	}
+    else
+      for(size_t ix=0;ix<data.size();ix++)
+	{
+	  double n=data[ix].num(p,iel);
+	  double t=data[ix].teo(p,iel);
+	  double e=data[ix].err;
+	  double contr=sqr((n-t)/e);
+	  ch2+=contr;
 	//cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
-      }
-    return ch2;
+	}
+     
+     return ch2;
   }
   
   double Up() const {return 1;}
@@ -293,13 +367,19 @@ public:
 //! class to fit
 class boot_fit_t
 {
+  vector<dboot_t> pro_cov;
+  
   vector<boot_fit_data_t> data;
   MnUserParameters pars;
   vector<dboot_t*> out_pars;
 public:
+  
   //! add a point
-  void add_point(const boot_fit_data_t::fun_t &num,const boot_fit_data_t::fun_t &teo,double err)
-  {data.push_back(boot_fit_data_t(num,teo,err));}
+  void add_point(const boot_fit_data_t::fun_t &num,const boot_fit_data_t::fun_t &teo,const dboot_t &pro_err)
+  {
+    data.push_back(boot_fit_data_t(num,teo,pro_err.err()));
+    pro_cov.push_back(pro_err);
+  }
   
   //! add a parameter to the fit
   size_t add_fit_par(dboot_t &out_par,string name,double ans,double err)
