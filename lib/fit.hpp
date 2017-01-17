@@ -403,16 +403,17 @@ public:
 	      (vector<double> p,int iel)
 	      {return p[ipar];},
 	      //error
-	      point.err());
+	      point);
     return ipar;
   }
   
   //! perform the fit
-  void fit()
+  void fit(bool cov_flag=false)
   {
     size_t npars=pars.Parameters().size();
     size_t iboot=0;
     boot_fit_FCN_t boot_fit_FCN(data,iboot);
+    //boot_fit_FCN.add_cov(pro_cov);
     
     //set strategy and default maximum function calls
     MnStrategy strategy;
