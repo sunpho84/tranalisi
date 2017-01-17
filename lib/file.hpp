@@ -118,6 +118,19 @@ public:
   //! reset the position to the end
   void go_to_end() {fseek(file,0,SEEK_END);}
   
+  //! get the size of the file
+  long size()
+  {
+    long ori=get_pos();
+    //go to the end and get position
+    go_to_end();
+    long length=get_pos();
+    //return
+    set_pos(ori);
+    
+    return length;
+  }
+  
   //! named or unnamed read
   template <class T> typename return_type<T>::type read(const char *name=NULL) const
   {
@@ -164,6 +177,9 @@ public:
   bool feof()
   {return std::feof(file);}
 };
+
+//! return the size of the passed path
+inline long file_size(string path) {return raw_file_t(path,"r").size();}
 
 ///////////////////////////////////////////////////// file reading observables /////////////////////////////////////
 

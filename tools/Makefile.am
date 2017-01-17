@@ -4,9 +4,12 @@ AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
 LDADD=$(top_builddir)/lib/libtran.a
 
 bin_PROGRAMS= \
+	combine_vdoubles \
 	djvec_load \
 	effective_mass \
 	prepare_jackknives
+
+combine_vdoubles_SOURCES=combine_vdoubles.cpp
 
 djvec_load_SOURCES=djvec_load.cpp
 
