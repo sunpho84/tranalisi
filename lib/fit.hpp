@@ -12,7 +12,6 @@
 #include <Minuit2/MnUserParameters.h>
 #include <Minuit2/FunctionMinimum.h>
 #include <Minuit2/MnPrint.h>
-#include <Math/MinimizerOptions.h>
 #include <vector>
 
 using namespace std;
@@ -433,20 +432,20 @@ public:
 	MnUserParameterState par_state=min.UserState();
 	ch2[iboot]=par_min.Fval();
 	
-	if(!min.IsValid())
-	  {
-	    cerr<<"WARNING! Minimization failed"<<endl;
-	    cerr<<"Has accurate cov: "<<min.HasAccurateCovar()<<endl;
-	    cerr<<"Has positive definite cov: "<<min.HasPosDefCovar()<<endl;
-	    cerr<<"Has valid covariance"<<min.HasValidCovariance()<<endl;
-	    cerr<<"Has valid parameters: "<<min.HasValidParameters()<<endl;
-	    cerr<<"Has reached call limit: "<<min.HasReachedCallLimit()<<endl;
-	    cerr<<"Hesse failed: "<<min.HesseFailed()<<endl;
-	    cerr<<"Has cov: "<<min.HasCovariance()<<endl;
-	    cerr<<"Is above max edm: "<<min.IsAboveMaxEdm()<<endl;
-	    cout<<"FunctionCalls: "<<migrad.NumOfCalls()<<endl;
-	    cerr<<par_state<<endl;
-	  }
+	// if(!min.IsValid())
+	//   {
+	//     cerr<<"WARNING! Minimization failed"<<endl;
+	//     cerr<<"Has accurate cov: "<<min.HasAccurateCovar()<<endl;
+	//     cerr<<"Has positive definite cov: "<<min.HasPosDefCovar()<<endl;
+	//     cerr<<"Has valid covariance"<<min.HasValidCovariance()<<endl;
+	//     cerr<<"Has valid parameters: "<<min.HasValidParameters()<<endl;
+	//     cerr<<"Has reached call limit: "<<min.HasReachedCallLimit()<<endl;
+	//     cerr<<"Hesse failed: "<<min.HesseFailed()<<endl;
+	//     cerr<<"Has cov: "<<min.HasCovariance()<<endl;
+	//     cerr<<"Is above max edm: "<<min.IsAboveMaxEdm()<<endl;
+	//     cout<<"FunctionCalls: "<<migrad.NumOfCalls()<<endl;
+	//     cerr<<par_state<<endl;
+	//   }
 	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[iboot]=migrad.Value(ipar);
     }
     
@@ -457,5 +456,17 @@ public:
   //! fix a single parameter
   void fix_par(size_t ipar) {pars.Fix(ipar);}
 };
+
+class cont_chir_fit_data_t_pol
+{
+public:
+  double aml;
+  size_t ib;
+  dboot_t y;
+  cont_chir_fit_data_t_pol(double aml,size_t ib,dboot_t y) : aml(aml),ib(ib),y(y) {}
+};
+
+//! perform a fit to the continuum and chiral
+void cont_chir_fit_pol(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t_pol> &ext_data,const dboot_t &ml_phys,const string &path,dboot_t &output);
 
 #endif

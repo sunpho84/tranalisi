@@ -68,27 +68,47 @@ int main(int narg,char **arg)
 
   djvec_t pi_plain=load_P5P5("00",0,0);
   djvec_t pi_exch=load_P5P5("LL",0,0);
+  djvec_t pi_self=load_P5P5("0M",0,0);
+  djvec_t pi_tad=load_P5P5("0T",0,0);
+  djvec_t pi_s=load_P5P5("0S",0,0);
+  djvec_t pi_p=-load_P5P5("0P",0,0,IM,-1);
 
-  djack_t pi_M,pi_A,pi_SL;
-  two_pts_with_ins_ratio_fit(pi_M,pi_A,pi_SL,pi_plain,pi_exch,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_ins.xmg");
+  djack_t pi_M,pi_A_exch,pi_SL_exch,pi_A_selftad,pi_SL_selftad,pi_A_s,pi_SL_s,pi_A_p,pi_SL_p;
+  two_pts_with_ins_ratio_fit(pi_M,pi_A_s,pi_SL_s,pi_plain,pi_s,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_s.xmg");
+  two_pts_with_ins_ratio_fit(pi_M,pi_A_p,pi_SL_p,pi_plain,pi_p,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_p.xmg");
+  two_pts_with_ins_ratio_fit(pi_M,pi_A_selftad,pi_SL_selftad,pi_plain,djvec_t(pi_self+pi_tad),TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_selftad.xmg");
+  two_pts_with_ins_ratio_fit(pi_M,pi_A_exch,pi_SL_exch,pi_plain,pi_exch,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_exch.xmg");
+
   cout<<"pi_M: "<<pi_M.ave_err()<<endl;
-  cout<<"pi_A: "<<pi_A.ave_err()<<endl;
-  cout<<"pi_SL: "<<pi_SL.ave_err()<<endl;
+  cout<<"pi_A_exch: "<<pi_A_exch.ave_err()<<endl;
+  cout<<"pi_SL_exch: "<<pi_SL_exch.ave_err()<<endl;
+  cout<<"pi_A_selftad: "<<pi_A_selftad.ave_err()<<endl;
+  cout<<"pi_SL_selftad: "<<pi_SL_selftad.ave_err()<<endl;
+  cout<<"pi_A_s: "<<pi_A_s.ave_err()<<endl;
+  cout<<"pi_SL_s: "<<pi_SL_s.ave_err()<<endl;
+  cout<<"pi_A_p: "<<pi_A_p.ave_err()<<endl;
+  cout<<"pi_SL_p: "<<pi_SL_p.ave_err()<<endl;
 
   raw_file_t pi_obs_file("pi_obs","w");
   pi_obs_file.bin_write(pi_M);
-  pi_obs_file.bin_write(pi_SL);
-
+  pi_obs_file.bin_write(pi_SL_exch);
+  pi_obs_file.bin_write(pi_SL_selftad);
+  pi_obs_file.bin_write(pi_SL_s);
+  pi_obs_file.bin_write(pi_SL_p);
+  
   //kaon
 
   djvec_t k_plain=load_P5P5("00",0,1);
   djvec_t k_exch=load_P5P5("LL",0,1);
   djvec_t k_self=load_P5P5("0M",1,0);
   djvec_t k_tad=load_P5P5("0T",1,0);
+  djvec_t k_self_revins=load_P5P5("0M",0,1);
+  djvec_t k_tad_revins=load_P5P5("0T",0,1);
   djvec_t k_s=load_P5P5("0S",1,0);
   djvec_t k_p=-load_P5P5("0P",1,0,IM,-1);
-
-  djack_t k_M,k_A_exch,k_SL_exch,k_A_selftad,k_SL_selftad,k_A_s,k_SL_s,k_A_p,k_SL_p;
+  djvec_t k_p_revins=-load_P5P5("0P",0,1,IM,-1);
+  
+  djack_t k_M,k_A_exch,k_SL_exch,k_A_selftad,k_SL_selftad,k_A_selftad_revins,k_SL_selftad_revins,k_A_s,k_SL_s,k_A_p,k_SL_p,k_A_p_revins,k_SL_p_revins;
   
   // djack_t M_k,Z_k;
 
@@ -100,6 +120,8 @@ int main(int narg,char **arg)
   two_pts_with_ins_ratio_fit(k_M,k_A_exch,k_SL_exch,k_plain,k_exch,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_exch.xmg");
   two_pts_with_ins_ratio_fit(k_M,k_A_s,k_SL_s,k_plain,k_s,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_s.xmg");
   two_pts_with_ins_ratio_fit(k_M,k_A_p,k_SL_p,k_plain,k_p,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_p.xmg");
+  two_pts_with_ins_ratio_fit(k_M,k_A_selftad_revins,k_SL_selftad_revins,k_plain,djvec_t(k_self_revins+k_tad_revins),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_selftad_revins.xmg");
+  two_pts_with_ins_ratio_fit(k_M,k_A_p_revins,k_SL_p_revins,k_plain,k_p_revins,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_p_revins.xmg");
   two_pts_with_ins_ratio_fit(k_M,k_A_selftad,k_SL_selftad,k_plain,djvec_t(k_self+k_tad),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_selftad.xmg");
   
   cout<<"k_M: "<<k_M.ave_err()<<endl;
@@ -107,10 +129,14 @@ int main(int narg,char **arg)
   cout<<"k_SL_exch: "<<k_SL_exch.ave_err()<<endl;
   cout<<"k_A_selftad: "<<k_A_selftad.ave_err()<<endl;
   cout<<"k_SL_selftad: "<<k_SL_selftad.ave_err()<<endl;
+  cout<<"k_A_selftad_revins: "<<k_A_selftad_revins.ave_err()<<endl;
+  cout<<"k_SL_selftad_revins: "<<k_SL_selftad_revins.ave_err()<<endl;
   cout<<"k_A_s: "<<k_A_s.ave_err()<<endl;
   cout<<"k_SL_s: "<<k_SL_s.ave_err()<<endl;
   cout<<"k_A_p: "<<k_A_p.ave_err()<<endl;
   cout<<"k_SL_p: "<<k_SL_p.ave_err()<<endl;
+  cout<<"k_A_p_revins: "<<k_A_p_revins.ave_err()<<endl;
+  cout<<"k_SL_p_revins: "<<k_SL_p_revins.ave_err()<<endl;
 
   raw_file_t k_obs_file("k_obs","w");
   k_obs_file.bin_write(k_M);
@@ -118,6 +144,8 @@ int main(int narg,char **arg)
   k_obs_file.bin_write(k_SL_selftad);
   k_obs_file.bin_write(k_SL_s);
   k_obs_file.bin_write(k_SL_p);
+  k_obs_file.bin_write(k_SL_selftad_revins);
+  k_obs_file.bin_write(k_SL_p_revins);
 
   //D meson
 
