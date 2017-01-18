@@ -417,7 +417,7 @@ public:
     size_t npars=pars.Parameters().size();
     size_t iboot=0;
     boot_fit_FCN_t boot_fit_FCN(data,iboot);
-    //boot_fit_FCN.add_cov(pro_cov);
+    if(cov_flag) boot_fit_FCN.add_cov(pro_cov,cov_block_label);
     
     //set strategy and default maximum function calls
     MnStrategy strategy;
