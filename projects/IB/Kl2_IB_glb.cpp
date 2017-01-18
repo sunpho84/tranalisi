@@ -340,6 +340,9 @@ int main(int narg,char **arg)
       cout<<"-----------------------------------------------"<<endl;
       cout<<"                    ian: "<<ian<<endl;
       cout<<"-----------------------------------------------"<<endl;
+      cout<<endl;
+      cout<<"                         Pi "<<endl;
+      cout<<endl;
       
       //data to fit
       vector<cont_chir_fit_data_t> data_dM2Pi;
@@ -349,6 +352,9 @@ int main(int narg,char **arg)
       output_dM2Pi[ian]=cont_chir_fit_dM2Pi(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_dM2Pi,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2Pi_an%zu.xmg",ian),chir_an_flag(ian));
       
       cout<<"-----------------------------------------------"<<endl;
+      cout<<endl;
+      cout<<"                     Epsilon "<<endl;
+      cout<<endl;
       
       vector<cont_chir_fit_data_t> data_epsilon;
       for(size_t iens=0;iens<raw_data.size();iens++)
@@ -357,6 +363,9 @@ int main(int narg,char **arg)
       output_epsilon[ian]=cont_chir_fit_epsilon(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_epsilon,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_epsilon_gamma_an%zu.xmg",ian),chir_an_flag(ian));
       
       cout<<"-----------------------------------------------"<<endl;
+      cout<<endl;
+      cout<<"                      QED K "<<endl;
+      cout<<endl;
       
       vector<cont_chir_fit_data_t> data_dM2K_QED;
       for(size_t iens=0;iens<raw_data.size();iens++)
@@ -366,6 +375,9 @@ int main(int narg,char **arg)
       output_dM2K_QED[ian]=cont_chir_fit_dM2K_QED(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_dM2K_QED,lat_par[ian].ml,lat_par[ian].ms,combine("plots/cont_chir_fit_dM2K_QED_an%zu.xmg",ian),chir_an_flag(ian));
       
       cout<<"-----------------------------------------------"<<endl;
+      cout<<endl;
+      cout<<"                      QCD K "<<endl;
+      cout<<endl;
 
       vector<cont_chir_fit_data_t> data_dM2K_QCD_over_minus_two_Deltamud;
       for(size_t iens=0;iens<raw_data.size();iens++)
@@ -375,6 +387,9 @@ int main(int narg,char **arg)
       output_dM2K_QCD_over_minus_two_Deltamud[ian]=cont_chir_quad_fit(alist,zlist,data_dM2K_QCD_over_minus_two_Deltamud,lat_par[ian].ml,combine("plots/cont_chir_fit_dM2K_QCD_over_minus_two_Deltamud_an%zu.xmg",ian),"$$(M^2_{K^+}-M^2_{K^0})^{QCD}/(-2*Deltamud)[GeV]",1.0,1.0,true);
       
       cout<<"-----------------------------------------------"<<endl;
+      cout<<endl;
+      cout<<"                         QED D "<<endl;
+      cout<<endl;
 
       vector<cont_chir_fit_data_t> data_dMD_QED;
       for(size_t iens=0;iens<raw_data.size();iens++)
@@ -384,6 +399,9 @@ int main(int narg,char **arg)
       output_dMD_QED[ian]=cont_chir_linear_fit(alist,zlist,data_dMD_QED,lat_par[ian].ml,combine("plots/cont_chir_fit_dMD_QED_an%zu.xmg",ian),"$$(M_{D^+}-M_{D^0})^{QED}[GeV]",1.0,0.0,true);
       
       cout<<"-----------------------------------------------"<<endl;
+      cout<<endl;
+      cout<<"                        EpsilonPi0 "<<endl;
+      cout<<endl;
 
       plot_ens_data(combine("plots/MD_an%zu.xmg",ian),ml,MD);
       plot_ens_data(combine("plots/MDs_an%zu.xmg",ian),ml,MDs);
@@ -395,6 +413,9 @@ int main(int narg,char **arg)
       output_epsilon_Pi0[ian]=cont_chir_fit_epsilon_Pi0(alist,zlist,lat_par[ian].f0,lat_par[ian].B0,data_epsilon_Pi0,lat_par[ian].ml,combine("plots/cont_chir_fit_epsilon_Pi0_an%zu.xmg",ian),chir_an_flag(ian));
       
       cout<<"-----------------------------------------------"<<endl;
+      cout<<endl;
+      cout<<"                         EpsilonK0 "<<endl;
+      cout<<endl;
 
       vector<cont_chir_fit_data_t> data_epsilon_K0;
       for(size_t iens=0;iens<raw_data.size();iens++)

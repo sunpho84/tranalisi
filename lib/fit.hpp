@@ -25,6 +25,8 @@ typedef Matrix<double,Dynamic,Dynamic> matr_t;
 inline void set_printlevel(int lev)
 {MnPrint::SetLevel(lev);}
 
+#define DO_NOT_CORRELATE -1
+
 ///////////////////////////////////////////////////////////////// fake fits /////////////////////////////////////////////////////
 
 //! perform a fit to constant (uncorrelated)
@@ -285,7 +287,7 @@ public:
   boot_fit_FCN_t(const vector<boot_fit_data_t> &data,size_t &iel) : cov_flag(false),data(data),iel(iel){}
   
   //! add the covariance matrix
-  bool add_cov(const vector<dboot_t> &pro_cov)
+  bool add_cov(const vector<dboot_t> &pro_cov,const vector<int> &cov_block)
   {
     cov_flag=true;
     const size_t &n=pro_cov.size();
@@ -294,7 +296,8 @@ public:
     matr_t cov_matr(n,n);
     for(size_t i=0;i<n;i++)
       for(size_t j=0;j<n;j++)
-	cov_matr(i,j)=cov(pro_cov[i],pro_cov[j]);
+	if(i==j or (cov_block[i]==cov_block[j] and cov_block[i]>=0))
+	  cov_matr(i,j)=cov(pro_cov[i],pro_cov[j]);
     
     //compute eigenvalues
     SelfAdjointEigenSolver<matr_t> es;
@@ -367,6 +370,7 @@ public:
 class boot_fit_t
 {
   vector<dboot_t> pro_cov;
+  vector<int> cov_block_label; //<! contains the block index for whcih to fill the covariance matrix
   
   vector<boot_fit_data_t> data;
   MnUserParameters pars;
@@ -374,10 +378,11 @@ class boot_fit_t
 public:
   
   //! add a point
-  void add_point(const boot_fit_data_t::fun_t &num,const boot_fit_data_t::fun_t &teo,const dboot_t &pro_err)
+  void add_point(const boot_fit_data_t::fun_t &num,const boot_fit_data_t::fun_t &teo,const dboot_t &pro_err,int block_label)
   {
     data.push_back(boot_fit_data_t(num,teo,pro_err.err()));
     pro_cov.push_back(pro_err);
+    cov_block_label.push_back(block_label);
   }
   
   //! add a parameter to the fit
@@ -390,7 +395,7 @@ public:
   }
   
   //! add a parameter that gets self-fitted (useful to propagate erorr on x)
-  size_t add_self_fitted_point(dboot_t &out_par,string name,const dboot_t &point)
+  size_t add_self_fitted_point(dboot_t &out_par,string name,const dboot_t &point,int block_label)
   {
     size_t ipar=add_fit_par(out_par,name.c_str(),point[0],point.err());
     add_point(//numerical data
@@ -402,7 +407,7 @@ public:
 	      (vector<double> p,int iel)
 	      {return p[ipar];},
 	      //error
-	      point);
+	      point,block_label);
     return ipar;
   }
   

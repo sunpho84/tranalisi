@@ -76,8 +76,8 @@ public:
     ori_z=z;
     for(size_t ibeta=0;ibeta<nbeta;ibeta++)
       {
-	ipara[ibeta]=boot_fit.add_self_fitted_point(fit_a[ibeta],combine("a[%zu]",ibeta),a[ibeta]);
-	iparz[ibeta]=boot_fit.add_self_fitted_point(fit_z[ibeta],combine("z[%zu]",ibeta),z[ibeta]);
+	ipara[ibeta]=boot_fit.add_self_fitted_point(fit_a[ibeta],combine("a[%zu]",ibeta),a[ibeta],DO_NOT_CORRELATE);
+	iparz[ibeta]=boot_fit.add_self_fitted_point(fit_z[ibeta],combine("z[%zu]",ibeta),z[ibeta],DO_NOT_CORRELATE);
       }
   }
   
@@ -104,8 +104,8 @@ public:
     //f0 and B0
     ori_f0=f0;
     ori_B0=B0;
-    if0=boot_fit.add_self_fitted_point(fit_f0,"f0",f0);
-    iB0=boot_fit.add_self_fitted_point(fit_B0,"B0",B0);
+    if0=boot_fit.add_self_fitted_point(fit_f0,"f0",f0,DO_NOT_CORRELATE);
+    iB0=boot_fit.add_self_fitted_point(fit_B0,"B0",B0,DO_NOT_CORRELATE);
     
     add_L3dep_par(L3dep_guess,boot_fit);
   }
@@ -215,8 +215,8 @@ void cont_chir_fit_minimize
 			 double L=ext_data[idata].L;
 			 return cont_chir_ansatz(p,pars,ml,ms,ac,L);
 		       },
-		       //error
-		       dboot_t(ext_data[idata].wfse/pow(pars.ori_a[ext_data[idata].ib],apow)));
+		       //for covariance/error
+		       dboot_t(ext_data[idata].wfse/pow(pars.ori_a[ext_data[idata].ib],apow)),1/*correlate*/);
   
   //! fit
   boot_fit.fit();
