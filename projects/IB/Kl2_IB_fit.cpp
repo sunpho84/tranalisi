@@ -514,7 +514,7 @@ dboot_t cont_chir_fit_epsilon_Pi0(const dbvec_t &a,const dbvec_t &z,const dboot_
   boot_fit_t boot_fit;
   size_t nbeta=a.size();
   cont_chir_fit_pars_t pars(nbeta);
-  pars.add_common_pars(a,z,f0,B0,{0.6,10},{0.0,10},{0.0,1},boot_fit);
+  pars.add_common_pars(a,z,f0,B0,{2,10},{0.0,10},{80,10},boot_fit);
   pars.add_LEC_pars({5e-5,1e-5},{6,1},{0.0,10},boot_fit);
   //boot_fit.fix_par(pars.iadep_ml);
   //boot_fit.fix_par(pars.iL3dep_ml);
@@ -573,7 +573,7 @@ dboot_t cont_chir_fit_epsilon_K0(const dbvec_t &a,const dbvec_t &z,const dboot_t
   boot_fit_t boot_fit;
   size_t nbeta=a.size();
   cont_chir_fit_pars_t pars(nbeta);
-  pars.add_common_pars(a,z,f0,B0,{0.6,10},{0.0,10},{0.0,1},boot_fit);
+  pars.add_common_pars(a,z,f0,B0,{0.6,2},{0.0,10},{0.0,1},boot_fit);
   pars.add_LEC_pars({5e-5,1e-5},{6,1},{0.0,10},boot_fit);
   //boot_fit.fix_par(pars.iadep_ml);
   
