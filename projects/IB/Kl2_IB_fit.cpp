@@ -14,7 +14,7 @@ namespace
 {
   const double a_cont=1.0e-5;
   const double inf_vol=1.0e10;
-
+  
   const double hslashc=0.197327;
   const double c_minus1_savage=-0.266596;
   const double pion_charge_radius=0.672/hslashc;
@@ -146,6 +146,12 @@ public:
     iKK=boot_fit.add_fit_par(KK,"KK",KK_guess.ave,KK_guess.err);
     iK2Pi=boot_fit.add_fit_par(K2Pi,"K2Pi",K2Pi_guess.ave,K2Pi_guess.err);
     iK2K=boot_fit.add_fit_par(K2K,"K2K",K2K_guess.ave,K2K_guess.err);
+  }
+  
+  //! add the dependency from ml_phys
+  void add_ml_phys_par(const dboot_t &ml_phys,boot_fit_t &boot_fit)
+  {
+    iml_phys=boot_fit.add_self_fitted_point(fit_ml_phys,"ml_phys",ml_phys,DO_NOT_CORRELATE);
   }
   
   //////////////////////////////////////////////////////////////////////
@@ -310,6 +316,8 @@ dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
   pars.add_common_pars(a,z,f0,B0,{0.6,1.0},{0.0,10.0},boot_fit);
   pars.add_fsedep_pars({1.0,1.0},{1.0,1.0},{1.0,1.0},boot_fit);
   pars.add_LEC_pars({1.0e-5,1.0e-5},{6.0,1.0},{0.0,0.0},{0.0,10.0},{0.0,0.0},boot_fit);
+  pars.add_ml_phys_par(ml_phys,boot_fit);
+  
   boot_fit.fix_par(pars.iKK);
   boot_fit.fix_par(pars.iK2K);
   
@@ -321,11 +329,11 @@ dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
   cout<<"MP+-MP0: "<<(dboot_t(phys_res/(mpi0+mpip))*1000).ave_err()<<", exp: 4.5936"<<endl;
   
   plot_chir_fit(path,ext_data,pars,
-		[&pars,ml_phys,an_flag]
+		[&pars,an_flag]
 		(double x,size_t ib)
 		{return cont_chir_ansatz_dM2Pi<double,double,double>
 		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),x,
-		     pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.L4dep.ave(),pars.ML4dep.ave(),pars.adep_ml.ave(),ml_phys,an_flag);},
+		     pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.L4dep.ave(),pars.ML4dep.ave(),pars.adep_ml.ave(),pars.fit_ml_phys.ave(),an_flag);},
 		bind(cont_chir_ansatz_dM2Pi<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,a_cont,pars.adep,inf_vol,pars.L3dep,pars.L4dep,pars.ML4dep,pars.adep_ml,ml_phys,an_flag),
 		[&ext_data,&pars,&ml_phys]
 		(size_t idata,bool without_with_fse,size_t ib)
