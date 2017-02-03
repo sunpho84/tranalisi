@@ -306,7 +306,7 @@ public:
     auto ev=e.eigenvectors();
 
     //get the epsilon
-    double eps=1e-8-ei(0);
+    double eps=0.0;//-ei(0);
     if(eps<0) eps=0;
     cout<<"Epsilon: "<<eps<<endl;
     // //debug
@@ -437,20 +437,20 @@ public:
 	MnUserParameterState par_state=min.UserState();
 	ch2[iboot]=par_min.Fval();
 	
-	// if(!min.IsValid())
-	//   {
-	//     cerr<<"WARNING! Minimization failed"<<endl;
-	//     cerr<<"Has accurate cov: "<<min.HasAccurateCovar()<<endl;
-	//     cerr<<"Has positive definite cov: "<<min.HasPosDefCovar()<<endl;
-	//     cerr<<"Has valid covariance"<<min.HasValidCovariance()<<endl;
-	//     cerr<<"Has valid parameters: "<<min.HasValidParameters()<<endl;
-	//     cerr<<"Has reached call limit: "<<min.HasReachedCallLimit()<<endl;
-	//     cerr<<"Hesse failed: "<<min.HesseFailed()<<endl;
-	//     cerr<<"Has cov: "<<min.HasCovariance()<<endl;
-	//     cerr<<"Is above max edm: "<<min.IsAboveMaxEdm()<<endl;
-	//     cout<<"FunctionCalls: "<<migrad.NumOfCalls()<<endl;
-	//     cerr<<par_state<<endl;
-	//   }
+	if(!min.IsValid())
+	  {
+	    cerr<<"WARNING! Minimization failed"<<endl;
+	    cerr<<"Has accurate cov: "<<min.HasAccurateCovar()<<endl;
+	    cerr<<"Has positive definite cov: "<<min.HasPosDefCovar()<<endl;
+	    cerr<<"Has valid covariance"<<min.HasValidCovariance()<<endl;
+	    cerr<<"Has valid parameters: "<<min.HasValidParameters()<<endl;
+	    cerr<<"Has reached call limit: "<<min.HasReachedCallLimit()<<endl;
+	    cerr<<"Hesse failed: "<<min.HesseFailed()<<endl;
+	    cerr<<"Has cov: "<<min.HasCovariance()<<endl;
+	    cerr<<"Is above max edm: "<<min.IsAboveMaxEdm()<<endl;
+	    cout<<"FunctionCalls: "<<migrad.NumOfCalls()<<endl;
+	    cerr<<par_state<<endl;
+	  }
 	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[iboot]=migrad.Value(ipar);
     }
     
