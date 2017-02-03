@@ -114,15 +114,15 @@ public:
       }
     else
       {
-	iL3dep=boot_fit.add_self_fitted_point(fit_L3dep,"L3dep",{1.0,10.0},DO_NOT_CORRELATE);
-	iL4dep=boot_fit.add_self_fitted_point(fit_L4dep,"L4dep",{1.0,10.0},DO_NOT_CORRELATE);
-	iML4dep=boot_fit.add_self_fitted_point(fit_ML4dep,"ML4dep",{1.0,10.0},DO_NOT_CORRELATE);
+	iL3dep=boot_fit.add_self_fitted_point(fit_L3dep,"L3dep",{1.0,10.0});
+	iL4dep=boot_fit.add_self_fitted_point(fit_L4dep,"L4dep",{1.0,10.0});
+	iML4dep=boot_fit.add_self_fitted_point(fit_ML4dep,"ML4dep",{1.0,10.0});
       }
   }
   
   //! add all common pars
   void add_common_pars(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,
-		       const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &L3dep_guess,const ave_err_t &L4dep_guess,const ave_err_t &ML4dep_guess,boot_fit_t &boot_fit)
+		       const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,boot_fit_t &boot_fit)
   {
     add_az_pars(a,z,boot_fit);
     add_adep_pars(adep_guess,adep_ml_guess,boot_fit);
@@ -131,8 +131,6 @@ public:
     ori_B0=B0;
     if0=boot_fit.add_self_fitted_point(fit_f0,"f0",f0,DO_NOT_CORRELATE);
     iB0=boot_fit.add_self_fitted_point(fit_B0,"B0",B0,DO_NOT_CORRELATE);
-    
-    //add_fsedep_pars(L3dep_guess,L4dep_guess,ML4dep_guess,boot_fit);
   }
   
   //! add the low energy constants
@@ -305,7 +303,7 @@ dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
   size_t nbeta=a.size();
   cont_chir_fit_pars_t pars(nbeta);
   pars.add_common_pars(a,z,f0,B0,{0.6,1.0},{0.0,10.0},boot_fit);
-  pars.add_fse_pars({1.0,1.0},{1.0,1.0},{1.0,1.0},boot_fit);
+  pars.add_fsedep_pars({1.0,1.0},{1.0,1.0},{1.0,1.0},boot_fit);
   pars.add_LEC_pars({1.0e-5,1.0e-5},{6.0,1.0},{0.0,0.0},{0.0,10.0},{0.0,0.0},boot_fit);
   boot_fit.fix_par(pars.iKK);
   boot_fit.fix_par(pars.iK2K);
@@ -373,7 +371,7 @@ dboot_t cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   cont_chir_fit_pars_t pars(nbeta);
   
   pars.add_common_pars(a,z,f0,B0,{0.0,1.0},{0.0,0.0},boot_fit);
-  pars.add_fse_pars({-78.0,14.0},{0.0,10.0},{0.0,0.0},boot_fit);
+  pars.add_fsedep_pars({-78.0,14.0},{0.0,10.0},{0.0,0.0},boot_fit);
   pars.add_LEC_pars({5.0e-5,1.0e-5},{1.5,0.18},{-1.2,0.16},{0.0,10.0},{0.0,10.0},boot_fit);
   boot_fit.fix_par(pars.iadep);
   boot_fit.fix_par(pars.iadep_ml);
@@ -438,8 +436,8 @@ dboot_t cont_chir_fit_dM2K_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &
   boot_fit_t boot_fit;
   size_t nbeta=a.size();
   cont_chir_fit_pars_t pars(nbeta);
-  pars.add_common_pars(a,z,f0,B0,{2.24,1.0},{25.0,40.0},{0.23,0.05},{0.0,10.0},{0.0,0.0},boot_fit);
-  pars.add_fse_pars({0.23,0.05},{1.0,1.0},{1.0,1.0},boot_fit);
+  pars.add_common_pars(a,z,f0,B0,{2.24,1.0},{25.0,40.0},boot_fit);
+  pars.add_fsedep_pars({0.23,0.05},{0.0,10.0},{0.0,0.0},boot_fit);
   pars.add_LEC_pars({1.0e-4,1.0e-5},{20.0,4.0},{-50.0,10.0},{0.0,10.0},{0.0,10.0},boot_fit);
   boot_fit.fix_par(pars.iadep);
   boot_fit.fix_par(pars.iadep_ml);
@@ -629,7 +627,8 @@ dboot_t cont_chir_fit_epsilon_Pi0(const dbvec_t &a,const dbvec_t &z,const dboot_
   boot_fit_t boot_fit;
   size_t nbeta=a.size();
   cont_chir_fit_pars_t pars(nbeta);
-  pars.add_common_pars(a,z,f0,B0,{0.0,0.0},{-15.0,1.0},{0.0,0.0},{0.0,1.0},{0.0,0.0},boot_fit);
+  pars.add_common_pars(a,z,f0,B0,{0.0,0.0},{-15.0,1.0},boot_fit);
+  pars.add_fsedep_pars({0.0,0.0},{0.0,1.0},{0.0,0.0},boot_fit);
   pars.add_LEC_pars({5.0e-5,1.0e-5},{10.0,1.0},{0.0,0.0},{10.0,1.0},{-25.0,1.0},boot_fit);
   boot_fit.fix_par(pars.iadep);
   //boot_fit.fix_par(pars.iadep_ml);
@@ -698,7 +697,8 @@ dboot_t cont_chir_fit_epsilon_K0(const dbvec_t &a,const dbvec_t &z,const dboot_t
   boot_fit_t boot_fit;
   size_t nbeta=a.size();
   cont_chir_fit_pars_t pars(nbeta);
-  pars.add_common_pars(a,z,f0,B0,{-1.0,1.0},{0.0,0.0},{0.0,0.0},{0.0,1.0},{0.0,0.0},boot_fit);
+  pars.add_common_pars(a,z,f0,B0,{-1.0,1.0},{0.0,0.0},boot_fit);
+  pars.add_fsedep_pars({0.0,0.0},{0.0,1.0},{0.0,0.0},boot_fit);
   pars.add_LEC_pars({5.0e-5,1.0e-5},{1.0,0.0},{5.0,1.0},{0.0,10.0},{0.0,2.0},boot_fit);
   //boot_fit.fix_par(pars.iadep);
   boot_fit.fix_par(pars.iadep_ml);
