@@ -304,7 +304,7 @@ public:
     auto e=es.compute(cov_matr);
     auto ei=e.eigenvalues();
     auto ev=e.eigenvectors();
-
+    
     //get the epsilon
     double eps=1e-8-ei(0);
     if(eps<0) eps=0;
