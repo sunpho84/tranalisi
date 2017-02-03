@@ -328,17 +328,18 @@ dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
   cout<<"Physical result: "<<phys_res.ave_err()<<endl;
   cout<<"MP+-MP0: "<<(dboot_t(phys_res/(mpi0+mpip))*1000).ave_err()<<", exp: 4.5936"<<endl;
   
-  plot_chir_fit(path,ext_data,pars,
+  for(int univ_full_sub=0;univ_full_sub<2;univ_full_sub++)
+    plot_chir_fit(combine(path.c_str(),(univ_full_sub==0)?"_univ":"full"),ext_data,pars,
 		[&pars,an_flag]
 		(double x,size_t ib)
 		{return cont_chir_ansatz_dM2Pi<double,double,double>
 		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),x,
 		     pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.L4dep.ave(),pars.ML4dep.ave(),pars.adep_ml.ave(),pars.fit_ml_phys.ave(),an_flag);},
 		bind(cont_chir_ansatz_dM2Pi<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,a_cont,pars.adep,inf_vol,pars.L3dep,pars.L4dep,pars.ML4dep,pars.adep_ml,ml_phys,an_flag),
-		[&ext_data,&pars,&ml_phys]
+		  [&ext_data,&pars,&ml_phys,univ_full_sub]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)/sqr(pars.fit_a[ib])-
-				without_with_fse*FSE_dep_pion_savage(pars.L3dep,pars.L4dep,pars.ML4dep,dboot_t(pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)),dboot_t(ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib]),ml_phys,pars.fit_f0,pars.fit_a[ib],ext_data[idata].L));
+				univ_full_sub*without_with_fse*FSE_dep_pion_savage(pars.L3dep,pars.L4dep,pars.ML4dep,dboot_t(pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)),dboot_t(ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib]),ml_phys,pars.fit_f0,pars.fit_a[ib],ext_data[idata].L));
 		},
 		ml_phys,phys_res,"$$(M^2_{\\pi^+}-M^2_{\\pi^0}) [GeV^2]");
   

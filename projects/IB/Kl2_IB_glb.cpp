@@ -398,7 +398,7 @@ int main(int narg,char **arg)
 	for(size_t iens=0;iens<raw_data.size();iens++)
 	  data_dM2Pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
 						    da2M2Pi[iens]-FVE_da2M2Pi[iens],da2M2Pi[iens]));
-	output_dM2Pi[input_an_id+an_flag*ninput_an]=cont_chir_fit_dM2Pi(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_dM2Pi,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2Pi_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag);
+	output_dM2Pi[input_an_id+an_flag*ninput_an]=cont_chir_fit_dM2Pi(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_dM2Pi,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2Pi_flag%zu_an%zu_sub%s.xmg",an_flag,input_an_id,"%s"),an_flag,cov_flag);
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
