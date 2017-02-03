@@ -385,6 +385,14 @@ public:
     cov_block_label.push_back(block_label);
   }
   
+  //! add a point without error distribution
+  void add_point(const boot_fit_data_t::fun_t &num,const boot_fit_data_t::fun_t &teo,const double &err)
+  {
+    data.push_back(boot_fit_data_t(num,teo,err));
+    pro_cov.push_back(dboot_t(gauss_filler_t(0,err,234234)));
+    cov_block_label.push_back(DO_NOT_CORRELATE);
+  }
+  
   //! add a parameter to the fit
   size_t add_fit_par(dboot_t &out_par,string name,double ans,double err)
   {
@@ -412,7 +420,7 @@ public:
   }
   
   //! same, but with ave and error only
-  size_t add_self_fitted_point(dboot_t &out_par,string name,const ave_err_t &ae,int block_label)
+  size_t add_self_fitted_point(dboot_t &out_par,string name,const ave_err_t &ae)
   {
     size_t ipar=add_fit_par(out_par,name.c_str(),ae.ave,ae.err);
     add_point(//numerical data
@@ -424,7 +432,7 @@ public:
 	      (vector<double> p,int iel)
 	      {return p[ipar];},
 	      //error
-	      ae.err,block_label);
+	      ae.err);
     return ipar;
   }
   
