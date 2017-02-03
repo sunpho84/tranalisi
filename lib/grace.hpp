@@ -65,7 +65,7 @@ class grace_file_t : public ofstream
   
   grace::symbol_t symbol; //<! symbol
   grace::color_t symbol_color; //<! color for symbol
-  bool symbol_fill_pattern; //<! wmty or filled symbols
+  bool symbol_fill_pattern; //<! epmty or filled symbols
   grace::color_t symbol_fill_color; //<! color for symbol filling
   double symbol_size; //<! size of the symbol
   double symbol_linewidth; //<! width of the symbol line
@@ -294,6 +294,7 @@ public:
   //! set colors
   void set_symbol_color(grace::color_t col) {symbol_color=col;}
   void set_symbol_fill_color(grace::color_t col) {symbol_fill_color=col;}
+  void set_symbol_fill_pattern(grace::symbol_fill_pattern_t pat) {symbol_fill_pattern=pat;}
   void set_line_color(grace::color_t col) {line_color=col;}
   void set_fill_color(grace::color_t col) {fill_color=col;}
   void set_errorbar_color(grace::color_t col) {errorbar_color=col;}
