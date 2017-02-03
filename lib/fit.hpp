@@ -411,6 +411,23 @@ public:
     return ipar;
   }
   
+  //! same, but with ave and error only
+  size_t add_self_fitted_point(dboot_t &out_par,string name,const ave_err_t &ae,int block_label)
+  {
+    size_t ipar=add_fit_par(out_par,name.c_str(),ae.ave,ae.err);
+    add_point(//numerical data
+	      [ae]
+	      (vector<double> p,int iel)
+	      {return ae.ave;},
+	      //ansatz
+	      [ipar]
+	      (vector<double> p,int iel)
+	      {return p[ipar];},
+	      //error
+	      ae.err,block_label);
+    return ipar;
+  }
+  
   //! perform the fit
   void fit(bool cov_flag=false)
   {
