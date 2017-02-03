@@ -389,7 +389,7 @@ int main(int narg,char **arg)
 	cout<<"                    input_an_id: "<<input_an_id<<endl;
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
-	/*
+	
 	cout<<"                         Pi "<<endl;
 	cout<<endl;
 	
@@ -402,7 +402,8 @@ int main(int narg,char **arg)
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
-	
+      }
+  /*
         cout<<"                     Epsilon "<<endl;
 	cout<<endl;
 	
@@ -468,7 +469,7 @@ int main(int narg,char **arg)
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
-	*/
+	
 	cout<<"                         EpsilonK0 "<<endl;
 	cout<<endl;
 	
@@ -480,7 +481,7 @@ int main(int narg,char **arg)
 	
 	cout<<"-----------------------------------------------"<<endl;
 	}  
-  /*
+  
   dbvec_t dM2K_QCD(ninput_an*nan_syst);
   dbvec_t Deltamud(ninput_an*nan_syst);
   vector<ave_err_t> v_ave_an_Deltamud(nan_syst);
@@ -529,12 +530,12 @@ int main(int narg,char **arg)
       }
   */
   ////////////////////output//////////////////
-  // v_ave_an_dM2Pi=ave_analyses(output_dM2Pi);
-  // cout<<"dM2Pi: "<<v_ave_an_dM2Pi[7]<<" "<<syst_analysis(v_ave_an_dM2Pi)<<endl;
+  v_ave_an_dM2Pi=ave_analyses(output_dM2Pi);
+  cout<<"dM2Pi: "<<v_ave_an_dM2Pi[7]<<" "<<syst_analysis(v_ave_an_dM2Pi)<<endl;
   // v_ave_an_epsilon_Pi0=ave_analyses(output_epsilon_Pi0);
   // cout<<"Epsilon_Pi0: "<<v_ave_an_epsilon_Pi0[7]<<" "<<syst_analysis(v_ave_an_epsilon_Pi0)<<endl;
-  v_ave_an_epsilon_K0=ave_analyses(output_epsilon_K0);
-  cout<<"Epsilon_K0: "<<v_ave_an_epsilon_K0[7]<<" "<<syst_analysis(v_ave_an_epsilon_K0)<<endl;
+  // v_ave_an_epsilon_K0=ave_analyses(output_epsilon_K0);
+  // cout<<"Epsilon_K0: "<<v_ave_an_epsilon_K0[7]<<" "<<syst_analysis(v_ave_an_epsilon_K0)<<endl;
 
   /*
   //////////////////D meson//////////////////

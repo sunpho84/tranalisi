@@ -9,7 +9,7 @@
 #include <Kl2_IB_fit.hpp>
 
 using namespace placeholders;
-
+ 
 namespace
 {
   const double a_cont=1.0e-5;
@@ -23,6 +23,8 @@ namespace
   const double kaon_pol_savage=0.0;
   const double pol_savage_pi0=-1.1e-4/pow(hslashc,3.0);
   const double pol_savage_k0=-1.0e-4/pow(hslashc,3.0);
+  const double l6=14.6;
+  const double A_pion_charge_radius=-50.0;
   
   const double mpi0=0.1349766;
   const double mpip=0.13957018;
@@ -41,6 +43,9 @@ template <class TL,class Ta,class TD> TD FSE_dep_L4(const TD &D,const Ta &a,cons
 template <class TL,class Ta,class TD> TD FSE_dep_savage(const TD &D1,const TD &D2, const TD &D3,const TD &M,double charge_radius,double pol_savage,const Ta &a,const TL &L)
 {return e2*pow(charge_radius,2.0)/(L*a*L*a*L*a)/3.0*(D1*M+D2*4*M_PI*c_minus1_savage/(L*a))+D3*8*pow(M_PI,2.0)*M*c_minus1_savage*pol_savage/(L*a*L*a*L*a*L*a);}
 
+template <class TL,class Ta,class Tml,class TD> TD FSE_dep_pion_savage(const TD &D1,const TD &D2, const TD &D3,const TD &M,const Tml &ml,const TD &ml_phys,const TD &f0,const Ta &a,const TL &L)
+{return e2*2/pow(4*M_PI*f0,2.0)*(l6-1-log(ml/ml_phys)+A_pion_charge_radius*(ml-ml_phys))/(L*a*L*a*L*a)/3.0*(D1*M+D2*4*M_PI*c_minus1_savage/(L*a))+D3*8*pow(M_PI,2.0)*M*c_minus1_savage*pion_pol_savage/(L*a*L*a*L*a*L*a);}
+
 //! holds index and out pars
 class cont_chir_fit_pars_t
 {
@@ -49,12 +54,12 @@ public:
   dboot_t ori_f0,ori_B0;
   size_t nbeta;
   vector<size_t> ipara,iparz;
-  size_t if0,iB0;
+  size_t if0,iB0,iml_phys;
   size_t iadep,iadep_ml,iL3dep,iL4dep,iML4dep;
   size_t iC,iKPi,iKK,iK2Pi,iK2K;
   bool fitting_a,fitting_z;
   dbvec_t fit_a,fit_z;
-  dboot_t fit_f0,fit_B0,fit_L3dep,fit_L4dep,fit_ML4dep;
+  dboot_t fit_f0,fit_B0,fit_ml_phys,fit_L3dep,fit_L4dep,fit_ML4dep;
   dboot_t adep,adep_ml,L3dep,L4dep,ML4dep;
   dboot_t C,KPi,KK,K2Pi,K2K;
   
@@ -270,7 +275,7 @@ void cont_chir_fit_minimize
 
 //! ansatz fit
 template <class Tpars,class Tml,class Ta>
-Tpars cont_chir_ansatz_dM2Pi(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &K,const Tpars &quad_dep,const Tml &ml,const Ta &a,const Tpars &adep,double L,const Tpars &L3dep,const Tpars &L4dep,const Tpars &ML4dep,const Tpars &adep_ml,const size_t an_flag)
+Tpars cont_chir_ansatz_dM2Pi(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &K,const Tpars &quad_dep,const Tml &ml,const Ta &a,const Tpars &adep,double L,const Tpars &L3dep,const Tpars &L4dep,const Tpars &ML4dep,const Tpars &adep_ml,const Tpars &ml_phys,const size_t an_flag)
 {
   Tpars
     Cf04=C/sqr(sqr(f0)),
@@ -287,7 +292,7 @@ Tpars cont_chir_ansatz_dM2Pi(const Tpars &f0,const Tpars &B0,const Tpars &C,cons
   else                 disc_eff=adep*sqr(a);
 
   Tpars fitted_FSE;
-  if(FSE_an(an_flag))  fitted_FSE=FSE_dep_savage(L3dep,L4dep,ML4dep,sqrtM2,pion_charge_radius,pion_pol_savage,a,L);
+  if(FSE_an(an_flag))  fitted_FSE=FSE_dep_pion_savage(L3dep,L4dep,ML4dep,sqrtM2,ml,ml_phys,f0,a,L);
   else                 fitted_FSE=0;
   
   return e2*sqr(f0)*(4*Cf04+chir_dep+K*M2/den+disc_eff)+fitted_FSE;
@@ -308,24 +313,24 @@ dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
   boot_fit.fix_par(pars.iKK);
   boot_fit.fix_par(pars.iK2K);
   
-  cont_chir_fit_minimize(ext_data,pars,boot_fit,2.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
-			 {return cont_chir_ansatz_dM2Pi(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],ml,ac,p[pars.iadep],L,p[pars.iL3dep],p[pars.iL4dep],p[pars.iML4dep],p[pars.iadep_ml],an_flag);},cov_flag);
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,2.0,0.0,[an_flag,ml_phys](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
+			 {return cont_chir_ansatz_dM2Pi(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],ml,ac,p[pars.iadep],L,p[pars.iL3dep],p[pars.iL4dep],p[pars.iML4dep],p[pars.iadep_ml],p[pars.iml_phys],an_flag);},cov_flag);
   
-  dboot_t phys_res=cont_chir_ansatz_dM2Pi(pars.fit_f0,B0,pars.C,pars.KPi,pars.K2Pi,ml_phys,a_cont,pars.adep,inf_vol,pars.L3dep,pars.L4dep,pars.ML4dep,pars.adep_ml,an_flag);
+  dboot_t phys_res=cont_chir_ansatz_dM2Pi(pars.fit_f0,B0,pars.C,pars.KPi,pars.K2Pi,ml_phys,a_cont,pars.adep,inf_vol,pars.L3dep,pars.L4dep,pars.ML4dep,pars.adep_ml,ml_phys,an_flag);
   cout<<"Physical result: "<<phys_res.ave_err()<<endl;
   cout<<"MP+-MP0: "<<(dboot_t(phys_res/(mpi0+mpip))*1000).ave_err()<<", exp: 4.5936"<<endl;
   
   plot_chir_fit(path,ext_data,pars,
-		[&pars,an_flag]
+		[&pars,ml_phys,an_flag]
 		(double x,size_t ib)
 		{return cont_chir_ansatz_dM2Pi<double,double,double>
 		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),x,
-		     pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.L4dep.ave(),pars.ML4dep.ave(),pars.adep_ml.ave(),an_flag);},
-		bind(cont_chir_ansatz_dM2Pi<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,a_cont,pars.adep,inf_vol,pars.L3dep,pars.L4dep,pars.ML4dep,pars.adep_ml,an_flag),
-		[&ext_data,&pars]
+		     pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.L4dep.ave(),pars.ML4dep.ave(),pars.adep_ml.ave(),ml_phys,an_flag);},
+		bind(cont_chir_ansatz_dM2Pi<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,a_cont,pars.adep,inf_vol,pars.L3dep,pars.L4dep,pars.ML4dep,pars.adep_ml,ml_phys,an_flag),
+		[&ext_data,&pars,&ml_phys]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)/sqr(pars.fit_a[ib])-
-				without_with_fse*FSE_dep_savage(pars.L3dep,pars.L4dep,pars.ML4dep,dboot_t(pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)),pion_charge_radius,pion_pol_savage,pars.fit_a[ib],ext_data[idata].L));
+				without_with_fse*FSE_dep_pion_savage(pars.L3dep,pars.L4dep,pars.ML4dep,dboot_t(pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)),dboot_t(ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib]),ml_phys,pars.fit_f0,pars.fit_a[ib],ext_data[idata].L));
 		},
 		ml_phys,phys_res,"$$(M^2_{\\pi^+}-M^2_{\\pi^0}) [GeV^2]");
   
