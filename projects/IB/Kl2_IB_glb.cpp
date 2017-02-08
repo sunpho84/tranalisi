@@ -410,7 +410,7 @@ int main(int narg,char **arg)
 	for(size_t iens=0;iens<raw_data.size();iens++)
 	  data_epsilon.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
 						      epsilon_gamma_minusFVE[iens],epsilon_gamma[iens]));
-	output_epsilon[input_an_id+an_flag*ninput_an]=cont_chir_fit_epsilon(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_epsilon,lat_par[input_an_id].ml,lat_par[input_an_id].ms,combine("plots/cont_chir_fit_epsilon_gamma_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag);
+	output_epsilon[input_an_id+an_flag*ninput_an]=cont_chir_fit_epsilon(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_epsilon,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_epsilon_gamma_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag);
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
