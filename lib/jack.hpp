@@ -105,7 +105,7 @@ public:
   }
   
   //! clusterize
-  void clusterize(size_t clust_size)
+  void clusterize(size_t clust_size=1)
   {
     //fill clusters and compute avarages
     (*this)[njacks]=0;

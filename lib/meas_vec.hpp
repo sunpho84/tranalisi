@@ -92,6 +92,10 @@ public:
   void bin_read(const string &path)
   {bin_read(path.c_str());}
   
+  //! clusterize each element
+  void clusterize(size_t clust_size=1)
+  {for(auto &a : *this) a.clusterize(clust_size);}
+  
   //! assign from a scalar
   vmeas_t& operator=(const meas_t &oth) {for(auto &it : *this) it=oth;return *this;}
   
@@ -123,7 +127,7 @@ public:
   }
   
   //! return the averaged
-  vmeas_t symmetrized(int par)
+  vmeas_t symmetrized(int par=1)
   {
     size_t nel=this->size();
     size_t nelh=nel/2;

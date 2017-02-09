@@ -4,32 +4,9 @@
 
 #include <tranalisi.hpp>
 #include <Kl2_IB_fit.hpp>
-
-size_t ninput_an=8,nbeta=3,nboots=100;
+#include <common.hpp>
 
 index_t<2> ind_an;
-
-const double eu=2.0/3;
-const double ed=-1.0/3;
-
-const vector<size_t> symbol={grace::SQUARE,grace::CIRCLE,grace::DIAMOND};
-const vector<size_t> color={grace::GREEN4,grace::RED,grace::BLUE};
-
-class lat_par_t
-{
-public:
-  dboot_t ml,ms,mc,r0,f0,B0;
-  dbvec_t ainv,Z;
- 
-  lat_par_t() : ainv(nbeta),Z(nbeta) {}
-};
-
-dboot_t read_boot(const raw_file_t &file)
-{
-  dboot_t out;
-  for(size_t ib=0;ib<nboots;ib++) file.read(out[ib]);
-  return out;
-}
 
 class ens_data_t
 {
@@ -42,7 +19,6 @@ public:
   djack_t deltam_cr;
 };
 
-vector<lat_par_t> lat_par(ninput_an);
 vector<ens_data_t> raw_data;
 
 template <class T1,class T2> T1 FVE_d2M(const T1 &M,const T2 &L)
@@ -74,44 +50,6 @@ template <class Tx,class Ty> void plot_ens_data(string path,const Tx &x,const Ty
   plot_ens_data(file,x,y);
 }
 
-//! perform the analysis according to eq.28
-ave_err_t eq_28_analysis(const dbvec_t &v)
-{
-  ave_err_t ae;
-  double sigma=0;
-  
-  for(size_t i=0;i<v.size();i++)
-    {
-      double a=v[i].ave();
-      double e=v[i].err();
-      ae.ave+=a;
-      ae.err+=sqr(a);
-      sigma+=sqr(e);
-    }
-  ae.ave/=v.size();
-  ae.err/=v.size();
-  sigma/=v.size();
-  ae.err-=sqr(ae.ave);
-  ae.err=sqrt(fabs(ae.err)+sigma);
-  
-  return ae;
-}
-
-vector<ave_err_t> ave_analyses(const dbvec_t &v)
-{
-  vector<ave_err_t> input_an_ave_err(nan_syst);
-  dbvec_t v_an(ninput_an);
-
-  for(size_t i=0;i<nan_syst;i++)
-    {
-      for(size_t j=0;j<ninput_an;j++)
-	v_an[j]=v[j+i*ninput_an];
-      input_an_ave_err[i]=eq_28_analysis(v_an);
-    }
-
-  return input_an_ave_err;
-}
-  
 double syst_analysis(const vector<ave_err_t> &v)
 {
   ave_err_t ae;
@@ -130,9 +68,23 @@ double syst_analysis(const vector<ave_err_t> &v)
   return ae.err;
 }
 
+vector<ave_err_t> ave_analyses(const dbvec_t &v)
+{
+  vector<ave_err_t> input_an_ave_err(nan_syst);
+  dbvec_t v_an(ninput_an);
+  
+  for(size_t i=0;i<nan_syst;i++)
+    {
+      for(size_t j=0;j<ninput_an;j++)
+	v_an[j]=v[j+i*ninput_an];
+      input_an_ave_err[i]=eq_28_analysis(v_an);
+    }
+  
+  return input_an_ave_err;
+}
+
 int main(int narg,char **arg)
 {
-  set_njacks(15);
   ind_an.set_ranges({ninput_an,nan_syst});
   
   //open input file
@@ -142,6 +94,7 @@ int main(int narg,char **arg)
   
   //read where to read input and how many ensemble
   string ens_pars=input.read<string>("UltimatePath");
+  init_common_IB(ens_pars);
   size_t nens_used=input.read<int>("NEnsamble");
   
   for(size_t iens=0;iens<nens_used;iens++)
@@ -198,59 +151,6 @@ int main(int narg,char **arg)
   //test the inputx
   //cout<<raw_data[0].pi_mass.ave_err()<<endl;
 
-  raw_file_t file(ens_pars,"r");
-
-  const int nens_total=15;
-  boot_init_t jack_index[ninput_an][nens_total];
-
-  double dum;
-  file.expect({"ml","(GeV)"});
-  file.read(dum);
-  for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++) lat_par[input_an_id].ml=read_boot(file);
-  file.expect({"ms","(GeV)"});
-  file.read(dum);
-  for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++) lat_par[input_an_id].ms=read_boot(file);
-  file.expect({"mc(2","GeV)","(GeV)"});
-  file.read(dum);
-  for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++) lat_par[input_an_id].mc=read_boot(file);
-  file.expect({"a^-1","(GeV)","(1.90","1.95","2.10)"});
-  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-    file.read(dum);
-  for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
-    for(size_t iboot=0;iboot<nboots;iboot++)
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	file.read(lat_par[input_an_id].ainv[ibeta][iboot]);
-  file.expect({"r0","(GeV^-1)"});
-  file.read(dum);
-  for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++) lat_par[input_an_id].r0=read_boot(file);
-  file.expect({"Zp","(1.90","1.95","2.10)"});
-  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-    file.read(dum);
-  for(size_t input_an_id=0;input_an_id<ninput_an/2;input_an_id++)
-    for(size_t iboot=0;iboot<nboots;iboot++)
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	file.read(lat_par[input_an_id].Z[ibeta][iboot]);
-  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-    file.read(dum);
-  for(size_t input_an_id=ninput_an/2;input_an_id<ninput_an;input_an_id++)
-    for(size_t iboot=0;iboot<nboots;iboot++)
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	file.read(lat_par[input_an_id].Z[ibeta][iboot]);
-  file.expect({"Jackknife","numbers","(","0.0030(32),0.0040(32),","0.0050(32),","0.0040(24)","...)"});
-  for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
-    for(size_t iboot=0;iboot<nboots;iboot++)
-      for(size_t iens=0;iens<nens_total;iens++)
-	{
-	  size_t ijack_plus_one;
-	  file.read(ijack_plus_one);
-	  jack_index[input_an_id][iens][iboot]=ijack_plus_one-1;
-	}
-  file.expect({"f0","(GeV)"});
-  file.read(dum);
-  for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++) lat_par[input_an_id].f0=read_boot(file);
-  file.expect({"2*B0","(GeV)"});
-  file.read(dum);
-  for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++) lat_par[input_an_id].B0=read_boot(file)/2.0;
   
   // for(size_t iens=0;iens<nens_total;iens++)
   //   cout<<jack_index[0][iens][0]<<endl;

@@ -68,6 +68,7 @@ int main(int narg,char **arg)
 
   djvec_t pi_plain=load_P5P5("00",0,0);
   djvec_t pi_exch=load_P5P5("LL",0,0);
+  djvec_t(pi_exch/pi_plain).ave_err().write("/tmp/ex.xmg");
   djvec_t pi_self=load_P5P5("0M",0,0);
   djvec_t pi_tad=load_P5P5("0T",0,0);
   djvec_t pi_s=load_P5P5("0S",0,0);
