@@ -38,6 +38,7 @@ class grace_file_t : public ofstream
   bool need_close_set;
   
   vector<grace::color_t> color_scheme;
+  vector<grace::color_t> line_color_scheme;
   vector<grace::symbol_t> symbol_scheme;
   //! get a property and increment it
   template <class T> T get_and_increment(const vector<T> &list,size_t &i)
@@ -55,7 +56,7 @@ class grace_file_t : public ofstream
   {return get_and_increment(color_scheme,cur_poly_col);}
   size_t cur_line_col; //<! current color for line
   grace::color_t get_line_col_and_increment()
-  {return get_and_increment(color_scheme,cur_line_col);}
+  {return get_and_increment(line_color_scheme,cur_line_col);}
   size_t cur_symbol; //<! current symbol
   grace::symbol_t get_symbol_and_increment()
   {return get_and_increment(symbol_scheme,cur_symbol);}
@@ -100,6 +101,12 @@ public:
   {color_scheme.assign(oth.begin(),oth.end());}
   void reset_cur_col()
   {cur_col=0;}
+
+  //! set a line color scheme
+  void set_line_color_scheme(const initializer_list<grace::color_t> &oth)
+  {line_color_scheme.assign(oth.begin(),oth.end());}
+  void reset_cur_line_col()
+  {cur_line_col=0;}
   
   //! set a symbol scheme
   void set_symbol_scheme(const initializer_list<grace::symbol_t> &oth)
@@ -124,8 +131,9 @@ public:
   grace_file_t(const string &path) :
     ofstream(path),
     need_close_set(false),
-    color_scheme({grace::RED,grace::BLUE,grace::GREEN4,grace::VIOLET,grace::ORANGE}),
-    symbol_scheme({grace::CIRCLE,grace::SQUARE,grace::DIAMOND}),
+    color_scheme({grace::RED,grace::RED,grace::RED,grace::BLUE,grace::BLUE,grace::GREEN4,grace::VIOLET}),
+    line_color_scheme({grace::RED,grace::BLUE,grace::GREEN4}),
+    symbol_scheme({grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND}),
     cur_col(0),
     cur_poly_col(0),
     cur_line_col(0),
