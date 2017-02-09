@@ -17,10 +17,15 @@
 double effective_mass(double ct,double ct_p_dt,size_t t,size_t TH,double guess=1,int par=1,int dt=1);
 
 //! return the effective mass of a whole vector
-template <class T> T effective_mass(const T &data,size_t TH,int par=1,int dt=1)
+template <class T> T effective_mass(const T &data,size_t TH=0,int par=1,int dt=1)
 {
   //check data size
   if(data.size()==0) CRASH("Empty data vector");
+  if(data.size()%2!=1) CRASH("Ill-defined effective mass for %zu (even) long vector",data.size());
+  
+  //set TH and
+  if(TH==0) TH=data.size()-1;
+  if(TH%2) CRASH("Ill-defined effective mass for TH=%zu",TH);
   
   //! output data
   T out(data.size()-dt);

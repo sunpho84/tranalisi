@@ -470,6 +470,7 @@ template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(
   out.write_constant_band(xmin,xmax,c);
   out.new_data_set();
   out.write_vec_ave_err(v.ave_err());
+  out.new_data_set();
 }
 
 #undef INIT_TO
