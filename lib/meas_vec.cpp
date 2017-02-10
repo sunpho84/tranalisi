@@ -38,7 +38,7 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
       else cout<<"Skipping unavailable file "<<path<<endl;
       icheck_file++;
     }
-  while(icheck_file<navail_files && ifile<nfiles);
+  while(icheck_file<navail_files and ifile<nfiles);
   
   //check that all files have been opened
   if(ifile<nfiles) CRASH("Unable to open all files, opened %zu instead of %zu",ifile,nfiles);
