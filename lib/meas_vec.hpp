@@ -19,6 +19,10 @@ public:
   //! constructor specifying nel and an element
   explicit vmeas_t(size_t nel,const meas_t &in) : valarray<meas_t>(in,nel) {}
   
+  //! construct from jvec_t
+  explicit vmeas_t(const boot_init_t &bi,const vmeas_t<jack_t<typename base_type::base_type>> &oth) : vmeas_t(oth.size())
+  {for(size_t it=0;it<this->size();it++) (*this)[it]=boot_t<typename base_type::base_type>(bi,oth[it]);}
+  
   //! init from vector of vector
   vmeas_t(const vector<vector<base_type>> &o) : vmeas_t(o.size())
   {
