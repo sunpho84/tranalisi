@@ -13,7 +13,7 @@
  #define INIT_ARGS(...) (__VA_ARGS__)
 #endif
 
-//totoal number of possible ensemble
+//total number of possible ensemble
 const size_t nens_total=15;
 
 //number of input analysis
@@ -33,6 +33,12 @@ const double ed=-1.0/3;
 const double es=ed;
 //! charge of charm
 const double ec=eu;
+
+//! continuum limit
+const double a_cont=1e-5;
+
+//! infinite volum limit
+const double inf_vol=1e10;
 
 //! hold the jacknife index for the given bootstrap
 EXTERN_COMMON boot_init_t jack_index[ninput_an][nens_total];
@@ -105,13 +111,13 @@ public:
   size_t nbeta;
   vector<size_t> ipara,iparz;
   size_t if0,iB0;
-  size_t iadep,iadep_ml,iL3dep,iL4dep,iML4dep;
+  size_t iadep,iadep_ml,iL2dep,iL3dep,iL4dep,iML4dep;
   size_t iC,iKPi,iKK,iK2Pi,iK2K;
   size_t iml_phys;
   bool fitting_a,fitting_z;
   dbvec_t fit_a,fit_z;
-  dboot_t fit_f0,fit_B0,fit_L3dep,fit_L4dep,fit_ML4dep;
-  dboot_t adep,adep_ml,L3dep,L4dep,ML4dep;
+  dboot_t fit_f0,fit_B0,fit_L2dep,fit_L3dep,fit_L4dep,fit_ML4dep;
+  dboot_t adep,adep_ml,L2dep,L3dep,L4dep,ML4dep;
   dboot_t C,KPi,KK,K2Pi,K2K;
   dboot_t fit_ml_phys;
   
@@ -222,6 +228,7 @@ public:
     //
     cout<<"Adep: "<<adep.ave_err()<<endl;
     cout<<"Adep_ml: "<<adep_ml.ave_err()<<endl;
+    cout<<"L2dep: "<<L2dep.ave_err()<<endl;
     cout<<"L3dep: "<<L3dep.ave_err()<<endl;
     cout<<"L4dep: "<<L4dep.ave_err()<<endl;
     cout<<"ML4dep: "<<ML4dep.ave_err()<<endl;
