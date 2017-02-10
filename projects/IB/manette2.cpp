@@ -1,7 +1,7 @@
 #include <tranalisi.hpp>
 
 const size_t T=48,L=24,VSPAT=L*L*L,V=VSPAT*T;
-const int nconfs=121;
+const int nconfs=138;
 
 djvec_t load(string path)
 {
@@ -42,10 +42,10 @@ djvec_t load(string path)
   
   for(size_t t=0;t<T;t++) out[t]/=n[t];
   
-  // double dum;
-  // if(in>>dum) CRASH("Should have reached EOF, obtained %lg",dum);
+   double dum;
+   if(in>>dum) CRASH("Should have reached EOF, obtained %lg",dum);
   
-  return out;//.symmetrized(1);
+  return -out.symmetrized(1);
 }
 
 int main()
