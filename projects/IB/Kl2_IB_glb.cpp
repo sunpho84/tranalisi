@@ -336,7 +336,7 @@ int main(int narg,char **arg)
 	  data_dM2K_QCD_over_minus_two_Deltamud.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
 									       daM2K_QCD_over_minus_two_Deltamud[iens],daM2K_QCD_over_minus_two_Deltamud[iens]));
 	
-	output_dM2K_QCD_over_minus_two_Deltamud[input_an_id+an_flag*ninput_an]=cont_chir_fit_dM2K_QCD(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_dM2K_QCD_over_minus_two_Deltamud,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2K_QCD_over_minus_two_Deltamud_flag%zu_an%zu_sub%s.xmg",an_flag,input_an_id,"%s"),an_flag,cov_flag);
+	output_dM2K_QCD_over_minus_two_Deltamud[input_an_id+an_flag*ninput_an]=cont_chir_fit_dM2K_QCD(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_dM2K_QCD_over_minus_two_Deltamud,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2K_QCD_over_minus_two_Deltamud_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag);
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
@@ -452,6 +452,22 @@ int main(int narg,char **arg)
   
   v_ave_an_dMD=ave_analyses(dMD);
   cout<<"M_{D^+}-M_{D^0}: "<<v_ave_an_dMD[7]<<endl;
-  
+
+  /////////////////R,Q2/////////////////////
+  dbvec_t R(ninput_an*nan_syst);
+  dbvec_t Q2(ninput_an*nan_syst);
+  // vector<ave_err_t> R(nan_syst);
+  // vector<ave_err_t> Q2(nan_syst);
+  for(size_t an_flag=0;an_flag<nan_syst;an_flag++)
+    for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
+      {
+	R[input_an_id+an_flag*ninput_an]=dboot_t((lat_par[input_an_id].ms-lat_par[input_an_id].ml)/(2*Deltamud[input_an_id+an_flag*ninput_an]));
+	Q2[input_an_id+an_flag*ninput_an]=dboot_t((pow(lat_par[input_an_id].ms,2.0)-pow(lat_par[input_an_id].ml,2.0))/(4*Deltamud[input_an_id+an_flag*ninput_an]*lat_par[input_an_id].ml));
+      }
+  // v_ave_an_R=ave_analyses(R);
+  // cout<<"R: "<<v_ave_an_R[7]<<" "<<syst_analysis(v_ave_an_R)<<endl;
+  // v_ave_an_Q2=ave_analyses(Q2);
+  // cout<<"Q2: "<<v_ave_an_Q2[7]<<" "<<syst_analysis(v_ave_an_Q2)<<endl;
+	
   return 0;
 }

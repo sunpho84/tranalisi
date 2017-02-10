@@ -794,28 +794,19 @@ dboot_t cont_chir_fit_dM2K_QCD(const dbvec_t &a,const dbvec_t &z,const dboot_t &
   dboot_t phys_res=cont_chir_ansatz_dM2K_QCD(pars.fit_f0,pars.fit_B0,pars.KPi,pars.K2Pi,ml_phys,a_cont,pars.adep,inf_vol,pars.L3dep,pars.adep_ml,an_flag);
   cout<<"epsilon_K0: "<<phys_res.ave_err()<<", exp: 0.3"<<endl;
 
-  for(int univ_full_sub=0;univ_full_sub<2;univ_full_sub++)
-    plot_chir_fit(combine(path.c_str(),(univ_full_sub==0)?"_univ":"_full"),ext_data,pars,
-		  [&pars,an_flag]
-		  (double x,size_t ib)
-		  {return cont_chir_ansatz_dM2K_QCD<double,double,double>
-		      (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.KPi.ave(),pars.K2Pi.ave(),x,
-		       pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.adep_ml.ave(),an_flag);},
-		  bind(cont_chir_ansatz_dM2K_QCD<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.KPi,pars.K2Pi,_1,
-		       a_cont,pars.adep,inf_vol,pars.L3dep,pars.adep_ml,an_flag),
-		  [&ext_data,&pars,univ_full_sub]
-		  (size_t idata,bool without_with_fse,size_t ib)
-		  {if(univ_full_sub==0)
-		      {
-			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)*pars.fit_z[ib]/sqr(pars.fit_a[ib]));
-		      }
-		    else
-		      {
-			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wfse)*pars.fit_z[ib]/sqr(pars.fit_a[ib])-
-				       without_with_fse*pars.L3dep*dboot_t(pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.25)/pow(4*M_PI*pars.fit_f0,2.0)*exp(-pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)*ext_data[idata].L)/pow(ext_data[idata].L,1.5)));
-		      }
-		  },
-		  ml_phys,phys_res,"$$(M^2_{K^+}-M^2_{K^0})^{QCD}/(-2*Deltamud)[GeV]");
+  plot_chir_fit(path,ext_data,pars,
+		[&pars,an_flag]
+		(double x,size_t ib)
+		{return cont_chir_ansatz_dM2K_QCD<double,double,double>
+		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.KPi.ave(),pars.K2Pi.ave(),x,
+		     pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.adep_ml.ave(),an_flag);},
+		bind(cont_chir_ansatz_dM2K_QCD<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.KPi,pars.K2Pi,_1,
+		     a_cont,pars.adep,inf_vol,pars.L3dep,pars.adep_ml,an_flag),
+		[&ext_data,&pars]
+		(size_t idata,bool without_with_fse,size_t ib)
+		{return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)*pars.fit_z[ib]/sqr(pars.fit_a[ib])-
+				without_with_fse*pars.L3dep*dboot_t(pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.25)/pow(4*M_PI*pars.fit_f0,2.0)*exp(-pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)*ext_data[idata].L)/pow(ext_data[idata].L,1.5)));},
+		ml_phys,phys_res,"$$(M^2_{K^+}-M^2_{K^0})^{QCD}/(-2*Deltamud)[GeV]");
   
   return phys_res;
 }
