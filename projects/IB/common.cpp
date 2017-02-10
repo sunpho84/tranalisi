@@ -5,6 +5,8 @@
 #define EXTERN_COMMON
 #include <common.hpp>
 
+#include <set>
+
 dboot_t read_boot(const raw_file_t &file)
 {
   dboot_t out;
@@ -16,7 +18,7 @@ void init_common_IB(string ens_pars)
 {
   set_njacks(15);
   
-    raw_file_t file(ens_pars,"r");
+  raw_file_t file(ens_pars,"r");
   
   double dum;
   file.expect({"ml","(GeV)"});
@@ -98,3 +100,93 @@ ave_err_t eq_28_analysis(const dbvec_t &v)
   return ae;
 }
 
+void cont_chir_fit_minimize
+(const vector<cont_chir_fit_data_t> &ext_data,const cont_chir_fit_pars_t &pars,boot_fit_t &boot_fit,double apow,double zpow,
+ const function<double(const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)> &cont_chir_ansatz,bool cov_flag)
+{
+  //set_printlevel(3);
+  
+  //set data
+  for(size_t idata=0;idata<ext_data.size();idata++)
+    boot_fit.add_point(//numerical data
+		       [&ext_data,&pars,idata,apow,zpow]
+		       (vector<double> p,int iel) //dimension 2
+		       {return ext_data[idata].wfse[iel]*pow(pars.get_z(p,ext_data[idata].ib,iel),zpow)/pow(pars.get_a(p,ext_data[idata].ib,iel),apow);},
+		       //ansatz
+		       [idata,&pars,&ext_data,&cont_chir_ansatz]
+		       (vector<double> p,int iel)
+		       {
+			 size_t ib=ext_data[idata].ib;
+			 double ac=pars.get_a(p,ib,iel);
+			 double zc=pars.get_z(p,ib,iel);
+			 double ml=ext_data[idata].aml/ac/zc;
+			 double ms=ext_data[idata].ams/ac/zc;
+			 double L=ext_data[idata].L;
+			 return cont_chir_ansatz(p,pars,ml,ms,ac,L);
+		       },
+		       //for covariance/error
+		       dboot_t(ext_data[idata].wfse*pow(pars.ori_z[ext_data[idata].ib],zpow)/pow(pars.ori_a[ext_data[idata].ib],apow)),1/*correlate*/);
+  
+  //! fit
+  boot_fit.fit(cov_flag);
+  
+  //print parameters
+  pars.print_common_pars();
+  pars.print_LEC_pars();
+}
+
+void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_data,const cont_chir_fit_pars_t &pars,
+		   const function<double(double x,size_t ib)> &fun_line_per_beta,
+		   const function<dboot_t(double x)> &fun_poly_cont_lin,
+		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
+		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label)
+{
+  //search max renormalized mass
+  double ml_max=0;
+  for(auto &data : ext_data)
+    ml_max=max(ml_max,dboot_t(data.aml/pars.fit_a[data.ib]/pars.fit_z[data.ib]).ave());
+  ml_max*=1.1;
+  
+  //prepare plot
+  grace_file_t fit_file(path);
+  fit_file.set_title("Continuum and chiral limit");
+  fit_file.set_xaxis_label("$$ml^{\\overline{MS},2 GeV} [GeV]");
+  fit_file.set_yaxis_label(yaxis_label);
+  fit_file.set_xaxis_max(ml_max);
+  
+  //band of the fit to individual beta
+  for(size_t ib=0;ib<pars.fit_a.size();ib++) fit_file.write_line(bind(fun_line_per_beta,_1,ib),1e-6,ml_max);
+  //band of the continuum limit
+  fit_file.write_polygon(fun_poly_cont_lin,1e-6,ml_max);
+  //data without and with fse
+  grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
+  for(int without_with_fse=0;without_with_fse<2;without_with_fse++)
+    {
+      for(size_t ib=0;ib<pars.fit_a.size();ib++)
+	{
+	  //make the list of volumes
+	  set<size_t> L_list;
+	  for(size_t idata=0;idata<ext_data.size();idata++)
+	    if(ext_data[idata].ib==ib)
+	      L_list.insert(ext_data[idata].L);
+	  
+	  //loop over the list of volumes
+	  for(auto &L : L_list)
+	    {
+	      fit_file.new_data_set();
+	      //put data without fse to brown
+	      if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
+	      
+	      for(size_t idata=0;idata<ext_data.size();idata++)
+		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
+		  fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
+		    fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+	    }
+	}
+	  
+      //put back colors for data with fse
+      if(without_with_fse==0) fit_file.reset_cur_col();
+    }
+  //data of the continuum-chiral limit
+  fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
+}
