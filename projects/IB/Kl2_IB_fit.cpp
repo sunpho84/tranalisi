@@ -13,9 +13,6 @@ using namespace placeholders;
  
 namespace
 {
-  const double a_cont=1.0e-5;
-  const double inf_vol=1.0e10;
-  
   const double hslashc=0.197327;
   const double c_minus1_savage=-0.266596;
   const double pion_charge_radius=0.672/hslashc;

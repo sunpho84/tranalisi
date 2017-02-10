@@ -7,17 +7,19 @@
 
 const size_t ilight=0,istrange=1,icharm=2;
 
-const size_t nm=3,nr=2;
+size_t nm,nr;
 index_t<4> ind;
 
-double Za_ave[nbeta]={0.731,0.740,0.762};
-double Za_err[nbeta]={0.001,0.001,0.001};
+double Za_ave[nbeta]={0.731,0.737,0.762}; //M1
+double Za_err[nbeta]={0.008,0.005,0.004};
+// double Za_ave[nbeta]={0.703,0.714,0.752}; //M2
+// double Za_err[nbeta]={0.002,0.002,0.002};
 int Za_seed[nbeta]={13124,862464,76753};
 dbvec_t Za(nbeta);
 boot_init_t bi;
 
 const int im=2;
-const double eq[3]={0,es,ec};
+const double eq[3]={eu,es,ec};
 
 //! hold the data for a single ensemble
 class ens_data_t
@@ -50,10 +52,11 @@ dbvec_t read(const char *what,const ens_data_t &ens,int tpar,size_t im,int rpar,
 //! read VV averaging the three channels
 dbvec_t read_VV_ren(const char *what,const ens_data_t &ens,int tpar,size_t im,int rpar,size_t reim)
 {
-  return (read(combine("%s_V1V1",what).c_str(),ens,tpar,im,rpar,reim)+
-	  read(combine("%s_V2V2",what).c_str(),ens,tpar,im,rpar,reim)+
-	  read(combine("%s_V3V3",what).c_str(),ens,tpar,im,rpar,reim)
-	  )*dboot_t(sqr(Za[ens.ib])/3.0);
+  return
+    dbvec_t(read(combine("%s_V1V1",what).c_str(),ens,tpar,im,rpar,reim)+
+	    read(combine("%s_V2V2",what).c_str(),ens,tpar,im,rpar,reim)+
+	    read(combine("%s_V3V3",what).c_str(),ens,tpar,im,rpar,reim))*
+    dboot_t(sqr(Za[ens.ib])/3.0);
 }
 
 //! integrate
@@ -108,8 +111,8 @@ dbvec_t load_QED(const ens_data_t &ens,const int im,const dboot_t &deltam_cr,con
 
 //! ansatz fit
 template <class Tpars,class Tm,class Ta>
-Tpars cont_chir_ansatz(const Tpars &C,const Tpars &Kpi,const Tm &ml,const Ta &a,const Tpars &adep,const Tpars &adep_ml,const size_t an_flag)
-{return C+Kpi*ml+a*a*(adep+ml*adep_ml);}
+Tpars cont_chir_ansatz(const Tpars &C,const Tpars &Kpi,const Tm &ml,const Ta &a,const Tpars &adep,const Tpars &adep_ml,double L,const Tpars &L2dep,const size_t an_flag)
+{return C+Kpi*ml+a*a*(adep+ml*adep_ml)+L2dep/sqr(L);}
 
 //! perform the fit to the continuum limit
 dboot_t cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t an_flag,bool cov_flag)
@@ -120,31 +123,36 @@ dboot_t cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_f
   size_t nbeta=a.size();
   cont_chir_fit_pars_t pars(nbeta);
   
-  ave_err_t adep_guess({0.0,1e-9});
+  ave_err_t adep_guess({6e-4,1e-4});
   ave_err_t adep_ml_guess({0.0,0.0});
   pars.add_az_pars(a,z,boot_fit);
+  
   pars.add_adep_pars(adep_guess,adep_ml_guess,boot_fit);
   pars.iC=boot_fit.add_fit_par(pars.C,"C",1e-9,1e-9);
   pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",0,1e-9);
+  pars.iL2dep=boot_fit.add_fit_par(pars.L2dep,"L2dep",0.0,0.07);
+  
   //boot_fit.fix_par(pars.iadep);
+  boot_fit.fix_par(pars.iL2dep);
+  //boot_fit.fix_par(pars.iKPi);
   boot_fit.fix_par(pars.iadep_ml);
   
   cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
-			 {return cont_chir_ansatz(p[pars.iC],p[pars.iKPi],ml,ac,p[pars.iadep],p[pars.iadep_ml],an_flag);},cov_flag);
+			 {return cont_chir_ansatz(p[pars.iC],p[pars.iKPi],ml,ac,p[pars.iadep],p[pars.iadep_ml],L,p[pars.iL2dep],an_flag);},cov_flag);
   
   double a_cont=0;
-  dboot_t phys_res=cont_chir_ansatz(pars.C,pars.KPi,ml_phys,a_cont,pars.adep,pars.adep_ml,an_flag);
+  dboot_t phys_res=cont_chir_ansatz(pars.C,pars.KPi,ml_phys,a_cont,pars.adep,pars.adep_ml,inf_vol,pars.L2dep,an_flag);
   cout<<"result: "<<phys_res.ave_err()<<endl;
-
+  
   plot_chir_fit(path,ext_data,pars,
 		[&pars,an_flag]
 		(double x,size_t ib)
 		{return cont_chir_ansatz<double,double,double>
-		    (pars.C.ave(),pars.KPi.ave(),x,pars.fit_a[ib].ave(),pars.adep.ave(),pars.adep_ml.ave(),an_flag);},
-		bind(cont_chir_ansatz<dboot_t,double,double>,pars.C,pars.KPi,_1,a_cont,pars.adep,pars.adep_ml,an_flag),
+		    (pars.C.ave(),pars.KPi.ave(),x,pars.fit_a[ib].ave(),pars.adep.ave(),pars.adep_ml.ave(),inf_vol,pars.L2dep.ave(),an_flag);},
+		bind(cont_chir_ansatz<dboot_t,double,double>,pars.C,pars.KPi,_1,a_cont,pars.adep,pars.adep_ml,inf_vol,pars.L2dep,an_flag),
 		[&ext_data,&pars]
 		(size_t idata,bool without_with_fse,size_t ib)
-		{return dboot_t(without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse);},
+		{return dboot_t(without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse-without_with_fse*pars.L2dep/sqr(ext_data[idata].L));},
 		ml_phys,phys_res,"$$a_\\mu");
   
   return phys_res;
@@ -159,10 +167,12 @@ int main(int narg,char **arg)
   raw_file_t input(name,"r");
   
   cout.precision(16);
-  ind.set_ranges({nm,nm,nr,2});
   
   //read where to read input and how many ensemble
   string ens_pars=input.read<string>("UltimatePath");
+  nm=input.read<size_t>("NMass");
+  nr=input.read<size_t>("NR");
+  ind.set_ranges({nm,nm,nr,2});
   init_common_IB(ens_pars);
   size_t nens_used=input.read<int>("NEnsemble");
   
@@ -175,6 +185,7 @@ int main(int narg,char **arg)
   int input_an_id=0;
   dbvec_t LO(ens_data.size());
   dbvec_t QED(ens_data.size());
+  dbvec_t ratio(ens_data.size());
   dbvec_t alist(nbeta),zlist(nbeta);
   for(size_t iens=0;iens<nens_used;iens++)
     {
@@ -200,9 +211,8 @@ int main(int narg,char **arg)
       dboot_t deltam_cr=compute_deltam_cr(ens,ilight);
       
       dbvec_t VV_LO=load_LO(ens,im);
+      effective_mass(VV_LO).ave_err().write(combine("%s/plots/VV_LO.xmg",ens.path.c_str()));
       dbvec_t VV_QED=load_QED(ens,im,deltam_cr,VV_LO);
-      
-      //effective_mass(VV_LO).ave_err().write("plots/VV_LO.xmg");
       
       // dbvec_t c=2.0*dbvec_t(VV_0T+VV_0M)+VV_LL;
       // c=c.subset(0,T/2-1);
@@ -216,7 +226,8 @@ int main(int narg,char **arg)
       QED[iens]=integrate(VV_QED,ens.T,a);
       cout<<"amu_QED: "<<QED[iens].ave_err()<<endl;
       
-      cout<<" Ratio: "<<dboot_t(QED[iens]/LO[iens]).ave_err()<<endl;
+      ratio[iens]=QED[iens]/LO[iens];
+      cout<<" Ratio: "<<dboot_t(ratio[iens]).ave_err()<<endl;
     }
   
   //prepare the list of a and z
@@ -225,12 +236,11 @@ int main(int narg,char **arg)
       alist[ibeta]=1.0/lat_par[input_an_id].ainv[ibeta];
       zlist[ibeta]=lat_par[input_an_id].Z[ibeta];
     }
-
+  
   const size_t an_flag=0;
   vector<cont_chir_fit_data_t> data_LO;
   for(size_t iens=0;iens<ens_data.size();iens++)
-    data_LO.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,ens_data[iens].ib,ens_data[iens].L,
-					      LO[iens],LO[iens]));
+    data_LO.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,ens_data[iens].ib,ens_data[iens].L,ratio[iens],ratio[iens]));
   cont_chir_fit(alist,zlist,data_LO,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2Pi_flag%zu_an%zu.xmg",an_flag,input_an_id,"%s"),an_flag,false);
   close_integrators();
   
