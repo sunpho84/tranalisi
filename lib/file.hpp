@@ -149,6 +149,9 @@ public:
   //! read with check
   template <class T,class=enable_if_t<is_pod<T>::value>> void read(T &out,const char *name=NULL) const
   {out=read<T>(name);}
+  //! read a string
+  void read(string &out,const char *name=NULL) const
+  {out=read<string>(name);}
   
   //! read a vector
   template <class TV,class TS=typename TV::base_type,class=enable_if_t<is_vector<TV>::value>> void read(TV &out,const char *name=NULL) const
@@ -269,7 +272,7 @@ public:
 	if(rc!=NULL) tok=strtok_r(line," \t",&saveptr);
 	
 	//skip blank line and comments
-	if(tok!=NULL && strcasecmp(tok,"#"))
+	if(tok!=NULL and strcasecmp(tok,"#"))
 	  {
 	    //parse the line
 	    size_t nread_col=0;
