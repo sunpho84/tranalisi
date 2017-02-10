@@ -32,9 +32,16 @@ void init_common_IB(string ens_pars)
   for(size_t ibeta=0;ibeta<nbeta;ibeta++)
     file.read(dum);
   for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
-    for(size_t iboot=0;iboot<nboots;iboot++)
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	file.read(lat_par[input_an_id].ainv[ibeta][iboot]);
+    {
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++) lat_par[input_an_id].ainv[ibeta][nboots]=0;
+      for(size_t iboot=0;iboot<nboots;iboot++)
+	for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	  {
+	    file.read(lat_par[input_an_id].ainv[ibeta][iboot]);
+	    lat_par[input_an_id].ainv[ibeta][nboots]+=lat_par[input_an_id].ainv[ibeta][iboot];
+	  }
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++) lat_par[input_an_id].ainv[ibeta][nboots]/=nboots;
+    }
   file.expect({"r0","(GeV^-1)"});
   file.read(dum);
   for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++) lat_par[input_an_id].r0=read_boot(file);

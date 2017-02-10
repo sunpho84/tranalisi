@@ -29,6 +29,10 @@ const size_t nboots=100;
 const double eu=2.0/3;
 //! charge of down quark
 const double ed=-1.0/3;
+//! charge of strange quark
+const double es=ed;
+//! charge of charm
+const double ec=eu;
 
 //! hold the jacknife index for the given bootstrap
 EXTERN_COMMON boot_init_t jack_index[ninput_an][nens_total];
