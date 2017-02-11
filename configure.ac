@@ -20,6 +20,10 @@ AC_CANONICAL_HOST
 #silent automake
 AM_SILENT_RULES([yes])
 
+AC_CHECK_LIB([m],[cos])
+AC_CHECK_LIB([gslcblas],[cblas_dgemm])
+AC_CHECK_LIB([gsl],[gsl_blas_dgemm])
+
 AC_PROG_RANLIB
 AC_PROG_CXX
 AC_PROG_CXXCPP

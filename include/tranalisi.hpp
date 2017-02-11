@@ -2,8 +2,8 @@
 #define _TRANALISI_HPP
 
 #include <boot.hpp>
-#include <file.hpp>
 #include <effective.hpp>
+#include <file.hpp>
 #include <fit.hpp>
 #include <grace.hpp>
 #include <index.hpp>

@@ -1,7 +1,7 @@
 #include <tranalisi.hpp>
 
 const size_t T=48;
-const int nconfs=140;
+const int nconfs=150;
 
 djvec_t load(string path)
 {

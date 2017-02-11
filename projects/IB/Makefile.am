@@ -14,5 +14,4 @@ __top_builddir__bin_manette_SOURCES=manette.cpp
 __top_builddir__bin_manette2_SOURCES=manette2.cpp
 __top_builddir__bin_Kl2_IB_SOURCES=Kl2_IB.cpp
 __top_builddir__bin_Kl2_IB_glb_SOURCES=common.cpp Kl2_IB_glb.cpp Kl2_IB_fit.cpp
-__top_builddir__bin_gm2_IB_SOURCES=common.cpp gm2_IB.cpp
-
+__top_builddir__bin_gm2_IB_SOURCES=common.cpp gm2_IB.cpp gm2_IB_integrators.cpp
