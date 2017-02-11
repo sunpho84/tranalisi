@@ -353,7 +353,7 @@ int main(int narg,char **arg)
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
-
+	
 	plot_ens_data(combine("plots/MD_an%zu.xmg",input_an_id),ml,MD);
 	plot_ens_data(combine("plots/MDs_an%zu.xmg",input_an_id),ml,MDs);
 	
@@ -365,7 +365,7 @@ int main(int narg,char **arg)
 	  data_epsilon_Pi0.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
 							  epsilon_Pi0_minusFVE[iens],epsilon_Pi0[iens]));
 	output_epsilon_Pi0[input_an_id+an_flag*ninput_an]=cont_chir_fit_epsilon_Pi0(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_epsilon_Pi0,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_epsilon_Pi0_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag);
-	
+
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
 	
@@ -379,8 +379,8 @@ int main(int narg,char **arg)
 	output_epsilon_K0[input_an_id+an_flag*ninput_an]=cont_chir_fit_epsilon_K0(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_epsilon_K0,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_epsilon_K0_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag);
 	
 	cout<<"-----------------------------------------------"<<endl;
-	}
 	
+	}
   
   dbvec_t dM2K_QCD(ninput_an*nan_syst);
   dbvec_t Deltamud(ninput_an*nan_syst);
@@ -399,7 +399,7 @@ int main(int narg,char **arg)
   /////////////////Deltamud///////////////////
   v_ave_an_Deltamud=ave_analyses(Deltamud);
   cout<<"Deltamud: "<<v_ave_an_Deltamud[7]<<" "<<syst_analysis(v_ave_an_Deltamud)<<endl;
-
+  
   for(size_t an_flag=0;an_flag<nan_syst;an_flag++)
     for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
       {
@@ -430,17 +430,22 @@ int main(int narg,char **arg)
       }
   
   ////////////////////output//////////////////
-  // v_ave_an_dM2Pi=ave_analyses(output_dM2Pi);
-  // cout<<"dM2Pi: "<<v_ave_an_dM2Pi[7]<<" "<<syst_analysis(v_ave_an_dM2Pi)<<endl;
-  // v_ave_an_epsilon_Pi0=ave_analyses(output_epsilon_Pi0);
-  // cout<<"Epsilon_Pi0: "<<v_ave_an_epsilon_Pi0[7]<<" "<<syst_analysis(v_ave_an_epsilon_Pi0)<<endl;
-  // v_ave_an_epsilon=ave_analyses(output_epsilon);
-  // cout<<"Epsilon: "<<v_ave_an_epsilon[7]<<" "<<syst_analysis(v_ave_an_epsilon)<<endl;
+  v_ave_an_dM2Pi=ave_analyses(output_dM2Pi);
+  cout<<"dM2Pi: "<<v_ave_an_dM2Pi[7]<<" "<<syst_analysis(v_ave_an_dM2Pi)<<endl;
+  v_ave_an_epsilon_Pi0=ave_analyses(output_epsilon_Pi0);
+  cout<<"Epsilon_Pi0: "<<v_ave_an_epsilon_Pi0[7]<<" "<<syst_analysis(v_ave_an_epsilon_Pi0)<<endl;
+  v_ave_an_epsilon=ave_analyses(output_epsilon);
+  cout<<"Epsilon: "<<v_ave_an_epsilon[7]<<" "<<syst_analysis(v_ave_an_epsilon)<<endl;
   v_ave_an_dM2K_QED=ave_analyses(output_dM2K_QED);
   cout<<"dM2K_QED: "<<v_ave_an_dM2K_QED[7]<<" "<<syst_analysis(v_ave_an_dM2K_QED)<<endl;
-  // v_ave_an_epsilon_K0=ave_analyses(output_epsilon_K0);
-  // cout<<"Epsilon_K0: "<<v_ave_an_epsilon_K0[7]<<" "<<syst_analysis(v_ave_an_epsilon_K0)<<endl;
-
+  v_ave_an_epsilon_K0=ave_analyses(output_epsilon_K0);
+  cout<<"Epsilon_K0: "<<v_ave_an_epsilon_K0[7]<<" "<<syst_analysis(v_ave_an_epsilon_K0)<<endl;
+  v_ave_an_dM2K_QCD_over_minus_two_Deltamud=ave_analyses(output_dM2K_QCD_over_minus_two_Deltamud);
+  cout<<"dM2K_QCD_over_minus_two_Deltamud: "<<v_ave_an_dM2K_QCD_over_minus_two_Deltamud[7]<<" "<<syst_analysis(v_ave_an_dM2K_QCD_over_minus_two_Deltamud)<<endl;
+  v_ave_an_dMD_QED=ave_analyses(output_dMD_QED);
+  cout<<"dMD_QED: "<<v_ave_an_dMD_QED[7]<<" "<<syst_analysis(v_ave_an_dMD_QED)<<endl;
+  v_ave_an_dMD_QCD=ave_analyses(output_dMD_QCD);
+  cout<<"dMD_QCD: "<<v_ave_an_dMD_QCD[7]<<" "<<syst_analysis(v_ave_an_dMD_QCD)<<endl;
   
   //////////////////D meson//////////////////
   dbvec_t dMD(ninput_an*nan_syst);
@@ -452,22 +457,37 @@ int main(int narg,char **arg)
   
   v_ave_an_dMD=ave_analyses(dMD);
   cout<<"M_{D^+}-M_{D^0}: "<<v_ave_an_dMD[7]<<endl;
-
-  /////////////////R,Q2/////////////////////
+  
+  /////////////////R,Q2,mu/md/////////////////////
   dbvec_t R(ninput_an*nan_syst);
   dbvec_t Q2(ninput_an*nan_syst);
-  // vector<ave_err_t> R(nan_syst);
-  // vector<ave_err_t> Q2(nan_syst);
+  dbvec_t Deltamud_over_mud(ninput_an*nan_syst);
+  dbvec_t ratio_mu_md(ninput_an*nan_syst);
+  vector<ave_err_t> v_ave_an_R(nan_syst);
+  vector<ave_err_t> v_ave_an_Q2(nan_syst);
+  vector<ave_err_t> v_ave_an_ratio_mu_md(nan_syst);
   for(size_t an_flag=0;an_flag<nan_syst;an_flag++)
     for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
       {
-	R[input_an_id+an_flag*ninput_an]=dboot_t((lat_par[input_an_id].ms-lat_par[input_an_id].ml)/(2*Deltamud[input_an_id+an_flag*ninput_an]));
-	Q2[input_an_id+an_flag*ninput_an]=dboot_t((pow(lat_par[input_an_id].ms,2.0)-pow(lat_par[input_an_id].ml,2.0))/(4*Deltamud[input_an_id+an_flag*ninput_an]*lat_par[input_an_id].ml));
+	R[input_an_id+an_flag*ninput_an]=dboot_t((lat_par[input_an_id].ms-lat_par[input_an_id].ml)/(2*Deltamud[input_an_id+an_flag*ninput_an]*1.0e-3));
+	Q2[input_an_id+an_flag*ninput_an]=dboot_t((pow(lat_par[input_an_id].ms,2.0)-pow(lat_par[input_an_id].ml,2.0))/(4*Deltamud[input_an_id+an_flag*ninput_an]*lat_par[input_an_id].ml*1.0e-3));
+	Deltamud_over_mud[input_an_id+an_flag*ninput_an]=dboot_t(Deltamud[input_an_id+an_flag*ninput_an]*1.0e-3/lat_par[input_an_id].ml);
+	ratio_mu_md[input_an_id+an_flag*ninput_an]=dboot_t((1-Deltamud_over_mud[input_an_id+an_flag*ninput_an])/(1+Deltamud_over_mud[input_an_id+an_flag*ninput_an]));
       }
-  // v_ave_an_R=ave_analyses(R);
-  // cout<<"R: "<<v_ave_an_R[7]<<" "<<syst_analysis(v_ave_an_R)<<endl;
-  // v_ave_an_Q2=ave_analyses(Q2);
-  // cout<<"Q2: "<<v_ave_an_Q2[7]<<" "<<syst_analysis(v_ave_an_Q2)<<endl;
-	
+  v_ave_an_R=ave_analyses(R);
+  cout<<"R: "<<v_ave_an_R[7]<<" "<<syst_analysis(v_ave_an_R)<<endl;
+  v_ave_an_Q2=ave_analyses(Q2);
+  cout<<"Q2: "<<v_ave_an_Q2[7]<<" "<<syst_analysis(v_ave_an_Q2)<<endl;
+  v_ave_an_ratio_mu_md=ave_analyses(ratio_mu_md);
+  cout<<"mu/md: "<<v_ave_an_ratio_mu_md[7]<<" "<<syst_analysis(v_ave_an_ratio_mu_md)<<endl;
+
+  /////////////////pion QCD//////////////
+  const double mpi0=134.9766;
+  const double mpip=139.57018;
+
+  double M_pion_QCD=mpi0-v_ave_an_epsilon_Pi0[7].ave*(mpip-mpi0);
+
+  cout<<"pion QCD: "<<M_pion_QCD<<endl;
+  
   return 0;
 }
