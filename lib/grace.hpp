@@ -348,7 +348,7 @@ public:
   }
   
   //! write a polygon
-  template <class fun_t> void write_polygon(fun_t fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  template <class fun_t> void write_polygon(fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
   {
     close_cur_set();
     
@@ -376,7 +376,7 @@ public:
     
     need_close_set=true;
   }
-  template <class fun_t> void write_polygon(fun_t fun,double xmin,double xmax,size_t npoints=100)
+  template <class fun_t> void write_polygon(fun_t &fun,double xmin,double xmax,size_t npoints=100)
   {write_polygon(fun,xmin,xmax,get_poly_col_and_increment(),npoints);}
   
   //! mark as a continuos line
@@ -418,7 +418,9 @@ public:
   void write_vec_ave_err(const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
   {
     new_data_set(col,sym);
-    for(size_t i=0;i<data.size();i++) (*this)<<i<<" "<<data[i]<<endl;
+    for(size_t i=0;i<data.size();i++)
+      if(!isnan(data[i].err))
+	(*this)<<i<<" "<<data[i]<<endl;
   }
   void write_vec_ave_err(const vec_ave_err_t &data)
   {write_vec_ave_err(data,get_col_and_increment(),get_symbol_and_increment());}
@@ -463,15 +465,18 @@ public:
   {close();}
 };
 
-//! prepare a plot with a constant
-template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &v)
+//! prepare a plot with a band
+template <class TV,class T=typename TV::base_type,class fun_t> void write_fit_plot(const string &path,double xmin,double xmax,fun_t fun,const TV &v)
 {
   grace_file_t out(path);
-  out.write_constant_band(xmin,xmax,c);
+  out.write_polygon(fun,xmin,xmax);
   out.new_data_set();
   out.write_vec_ave_err(v.ave_err());
   out.new_data_set();
 }
+//! prepare a plot with a constant
+template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &v)
+{write_fit_plot(path,xmin,xmax,[&c](double x) -> T {return c;},v);}
 
 #undef INIT_TO
 #undef EXTERN_GRACE

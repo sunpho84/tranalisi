@@ -205,13 +205,13 @@ public:
 //////////////////////////////////////////////////////////// slope /////////////////////////////////////////////////////
 
 //! perform a fit to determine the slope
-template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &M,TS &A,TS &SL,const TV &corr,const TV &corr_ins,size_t TH,size_t tmin,size_t tmax,string path="",string path_ins="",int par=1)
+template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &Z,TS &M,TS &A,TS &SL,const TV &corr,const TV &corr_ins,size_t TH,size_t tmin,size_t tmax,string path="",string path_ins="",int par=1)
 {
   //perform a preliminary fit
   TV eff_mass=effective_mass(corr,TH,par);
   M=constant_fit(eff_mass,tmin,tmax,"/tmp/test_mass.xmg");
   TV eff_coupling=effective_coupling(corr,eff_mass,TH,par);
-  TS Z=constant_fit(eff_coupling,tmin,tmax,"/tmp/test_coupling.xmg");
+  Z=constant_fit(eff_coupling,tmin,tmax,"/tmp/test_coupling.xmg");
   TV eff_slope=effective_slope(TV(corr_ins/corr),eff_mass,TH);
   SL=constant_fit(eff_slope,tmin,tmax,"/tmp/test_slope.xmg");
   TV eff_slope_offset=effective_slope_offset(TV(corr_ins/corr),eff_mass,eff_slope,TH);
@@ -253,7 +253,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
   
   //write plots
   if(path!="") write_constant_fit_plot(path,tmin,tmax,M,eff_mass);
-  if(path_ins!="") write_constant_fit_plot(path_ins,tmin,tmax,SL,effective_slope(TV(corr_ins/corr),TV(TH,M),TH));
+  if(path_ins!="") write_fit_plot(path_ins,tmin,tmax,[M,A,SL,TH,par](double x)->TS{return two_pts_corr_with_ins_ratio_fun(M,A,SL,TH,x,par);},TV(corr_ins/corr));
 }
 
 /////////////////////////////////////////////////////////////// multi x fit ///////////////////////////////////////////////////////////
@@ -370,7 +370,7 @@ public:
 class boot_fit_t
 {
   vector<dboot_t> pro_cov;
-  vector<int> cov_block_label; //<! contains the block index for whcih to fill the covariance matrix
+  vector<int> cov_block_label; //<! contains the block index for which to fill the covariance matrix
   
   vector<boot_fit_data_t> data;
   MnUserParameters pars;
