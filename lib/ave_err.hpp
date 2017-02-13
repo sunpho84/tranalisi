@@ -73,7 +73,7 @@ public:
   explicit vec_ave_err_t(size_t in) : vector<ave_err_t>(in) {}
   
   //! write to a grace file
-  void write(const string &path);
+  void write(const string &path) const;
 };
 
 //! output of ave_err_t
