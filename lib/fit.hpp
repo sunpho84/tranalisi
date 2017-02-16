@@ -485,6 +485,13 @@ public:
   
   //! fix a single parameter
   void fix_par(size_t ipar) {pars.Fix(ipar);}
+  
+  //! fix a single parameter to a given value
+  void fix_par_to(size_t ipar,double val)
+  {
+    pars.SetValue(ipar,val);
+    pars.Fix(ipar);
+  }
 };
 
 class cont_chir_fit_data_t_pol
