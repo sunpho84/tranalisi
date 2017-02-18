@@ -114,7 +114,7 @@ int main(int narg,char **arg)
   // djack_t M_k,Z_k;
 
   // djvec_t k_corr_00=load_P5P5("00",1,0);
-  // two_pts_migrad_fit(Z_k,M_k,k_corr_00,TH,k_tmin,k_tmax,"Mk.xmg");
+  // two_pts_true_fit(Z_k,M_k,k_corr_00,TH,k_tmin,k_tmax,"Mk.xmg");
   // cout<<"k_Z: "<<Z_k.ave_err()<<endl;
   // cout<<"k_M: "<<M_k.ave_err()<<endl;
   
@@ -167,7 +167,7 @@ int main(int narg,char **arg)
   // djack_t M_D,Z_D;
   
   // djvec_t D_corr_00=load_P5P5("00",2,0);
-  // two_pts_migrad_fit(Z_D,M_D,D_corr_00,TH,D_tmin,D_tmax,"MD.xmg");
+  // two_pts_true_fit(Z_D,M_D,D_corr_00,TH,D_tmin,D_tmax,"MD.xmg");
   // cout<<"D_Z: "<<Z_D.ave_err()<<endl;
   // cout<<"D_M: "<<M_D.ave_err()<<endl;
   
@@ -198,7 +198,7 @@ int main(int narg,char **arg)
   djack_t Ds_M,Ds_Z;
 
   djvec_t Ds_corr_00=load_P5P5("00",2,1);
-  two_pts_migrad_fit(Ds_Z,Ds_M,Ds_corr_00,TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg");
+  two_pts_true_fit(Ds_Z,Ds_M,Ds_corr_00,TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg");
   cout<<"Ds_Z: "<<Ds_Z.ave_err()<<endl;
   cout<<"Ds_M: "<<Ds_M.ave_err()<<endl;
 

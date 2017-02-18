@@ -269,13 +269,13 @@ int main(int narg,char **arg)
       
       //parameters to fit
       {
-      	MnUserParameters pars;
-      	size_t i_Z_V=0;pars.Add("Z_V",Z_V[0],Z_V.err());
-      	size_t i_sqrt_Z_T_Z_V=1;pars.Add("sqrt_Z_T_Z_V",sqrt_Z_T_Z_V[0],sqrt_Z_T_Z_V.err());
-      	size_t i_M=2;pars.Add("M_V",M_V[0],M_V.err());
-      	size_t i_A_V=3;pars.Add("A_V",A_V[0],A_V.err());
-      	size_t i_A_T=4;pars.Add("A_T",A_T[0],A_T.err());
-      	size_t i_SL=5;pars.Add("SL",SL_V[0],SL_V.err());
+	minimizer_pars_t pars;
+      	size_t i_Z_V=0;pars.add("Z_V",Z_V[0],Z_V.err());
+      	size_t i_sqrt_Z_T_Z_V=1;pars.add("sqrt_Z_T_Z_V",sqrt_Z_T_Z_V[0],sqrt_Z_T_Z_V.err());
+      	size_t i_M=2;pars.add("M_V",M_V[0],M_V.err());
+      	size_t i_A_V=3;pars.add("A_V",A_V[0],A_V.err());
+      	size_t i_A_T=4;pars.add("A_T",A_T[0],A_T.err());
+      	size_t i_SL=5;pars.add("SL",SL_V[0],SL_V.err());
 	
       	size_t iel=0;
 	const size_t dcT=size_t(2.0*TH/24);
@@ -297,21 +297,20 @@ int main(int narg,char **arg)
       					      }
       					  },iel);
 	
-      	MnMigrad migrad(four_fit_obj,pars);
+      	minimizer_t minimizer(four_fit_obj,pars);
 	
       	dboot_t Z_V_bis,Z_T_Z_V_bis,M,A_V_bis,A_T_bis,SL,ch2;
       	for(iel=0;iel<=nboots;iel++)
       	  {
       	    //minimize and print the result
-      	    FunctionMinimum min=migrad();
-      	    MinimumParameters par_min=min.Parameters();
-      	    Z_V_bis[iel]=par_min.Vec()[i_Z_V];
-      	    Z_T_Z_V_bis[iel]=par_min.Vec()[i_sqrt_Z_T_Z_V];
-      	    M[iel]=par_min.Vec()[i_M];
-      	    A_V_bis[iel]=par_min.Vec()[i_A_V];
-      	    A_T_bis[iel]=par_min.Vec()[i_A_T];
-      	    SL[iel]=par_min.Vec()[i_SL];
-      	    ch2[iel]=min.Fval();
+	    vector<double> par_min=minimizer.minimize();
+      	    Z_V_bis[iel]=par_min[i_Z_V];
+      	    Z_T_Z_V_bis[iel]=par_min[i_sqrt_Z_T_Z_V];
+      	    M[iel]=par_min[i_M];
+      	    A_V_bis[iel]=par_min[i_A_V];
+      	    A_T_bis[iel]=par_min[i_A_T];
+      	    SL[iel]=par_min[i_SL];
+      	    ch2[iel]=minimizer.eval(par_min);
       	  }
 	
       	cout<<"Z: "<<Z_V.ave_err()<<" "<<Z_V_bis.ave_err()<<endl;

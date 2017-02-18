@@ -75,7 +75,7 @@ template <class TV,class T=typename TV::base_type> void two_pts_fit(T &Z,T &M,co
 
 //! perform a simple fit using x, a function and data
 template <class TV,class TS=typename TV::base_type>
-class simple_ch2_t : public FCNBase
+class simple_ch2_t : public minimizer_base_t
 {
   //! type of function to be passed
   using fun_t=function<double(const vector<double> &p,double x)>;
@@ -127,7 +127,7 @@ public:
 };
 
 //! perform a fit to the usual 2pts ansatz
-template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &Z,TS &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
+template <class TV,class TS=typename TV::base_type> void two_pts_true_fit(TS &Z,TS &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
 {
   //perform a preliminary fit
   two_pts_fit(Z,M,corr,TH,tmin,tmax);
@@ -137,19 +137,17 @@ template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &
   simple_ch2_t<TV> two_pts_fit_obj(vector_up_to<double>(corr.size()),tmin,tmax,corr,two_pts_corr_fun_t(TH,par),iel);
   
   //parameters to fit
-  MnUserParameters pars;
-  pars.Add("Z",Z[0],Z.err());
-  pars.Add("M",M[0],M.err());
+  minimizer_pars_t pars;
+  pars.add("Z",Z[0],Z.err());
+  pars.add("M",M[0],M.err());
   
-  MnMigrad migrad(two_pts_fit_obj,pars);
-  
+  minimizer_t minimizer(two_pts_fit_obj,pars);
   for(iel=0;iel<corr[0].size();iel++)
     {
       //minimize and print the result
-      FunctionMinimum min=migrad();
-      MinimumParameters par_min=min.Parameters();
-      Z[iel]=par_min.Vec()[0];
-      M[iel]=par_min.Vec()[1];
+      vector<double> pars=minimizer.minimize();
+      Z[iel]=pars[0];
+      M[iel]=pars[1];
     }
   
   if(path!="") write_constant_fit_plot(path,tmin,tmax,M,effective_mass(corr,TH,par));
@@ -157,7 +155,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_migrad_fit(TS &
 
 //! perform a fit using multiple x, functions and data
 template <class TV,class TS=typename TV::base_type>
-class multi_ch2_t : public FCNBase
+class multi_ch2_t : public minimizer_base_t
 {
   //! type of function to be passed
   using fun_t=function<double(const vector<double> &p,double x)>;
@@ -221,22 +219,21 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
     },iel);
   
   //parameters to fit
-  MnUserParameters pars;
-  pars.Add("Z",Z[0],Z.err());
-  pars.Add("M",M[0],M.err());
-  pars.Add("A",A[0],A.err());
-  pars.Add("SL",SL[0],SL.err());
+  minimizer_pars_t pars;
+  pars.add("Z",Z[0],Z.err());
+  pars.add("M",M[0],M.err());
+  pars.add("A",A[0],A.err());
+  pars.add("SL",SL[0],SL.err());
   
-  MnMigrad migrad(two_pts_fit_obj,pars);
+  minimizer_t minimizer(two_pts_fit_obj,pars);
   
   for(iel=0;iel<corr[0].size();iel++)
     {
       //minimize and print the result
-      FunctionMinimum min=migrad();
-      MinimumParameters par_min=min.Parameters();
-      M[iel]=par_min.Vec()[1];
-      A[iel]=par_min.Vec()[2];
-      SL[iel]=par_min.Vec()[3];
+      vector<double> par_min=minimizer.minimize();
+      M[iel]=par_min[1];
+      A[iel]=par_min[2];
+      SL[iel]=par_min[3];
     }
   
   //write plots
@@ -259,7 +256,7 @@ public:
 };
 
 //! functor to minimize
-class boot_fit_FCN_t : public FCNBase
+class boot_fit_FCN_t : public minimizer_base_t
 {
   //! covariance flag
   bool cov_flag;
@@ -361,7 +358,7 @@ class boot_fit_t
   vector<int> cov_block_label; //<! contains the block index for which to fill the covariance matrix
   
   vector<boot_fit_data_t> data;
-  MnUserParameters pars;
+  minimizer_pars_t pars;
   vector<dboot_t*> out_pars;
 public:
   
@@ -384,8 +381,8 @@ public:
   //! add a parameter to the fit
   size_t add_fit_par(dboot_t &out_par,string name,double ans,double err)
   {
-    size_t ipar=pars.Parameters().size();
-    pars.Add(name.c_str(),ans,err);
+    size_t ipar=pars.size();
+    pars.add(name.c_str(),ans,err);
     out_pars.push_back(&out_par);
     return ipar;
   }
@@ -427,44 +424,22 @@ public:
   //! perform the fit
   void fit(bool cov_flag=false)
   {
-    size_t npars=pars.Parameters().size();
+    size_t npars=pars.size();
     size_t iboot=0;
     boot_fit_FCN_t boot_fit_FCN(data,iboot);
     if(cov_flag) boot_fit_FCN.add_cov(pro_cov,cov_block_label);
     
-    //set strategy and default maximum function calls
-    MnStrategy strategy;
-    strategy.SetLowStrategy();
-    MinimizerOptions::SetDefaultMaxFunctionCalls(10000000);
-    
     //define minimizator
-    MnMigrad migrad(boot_fit_FCN,pars,strategy);
-    cout<<"Strategy: "<<migrad.Strategy().Strategy()<<endl;
+    minimizer_t minimizer(boot_fit_FCN,pars);
     
     dboot_t ch2;
     for(iboot=0;iboot<=out_pars[0]->nboots();iboot++)
       {
 	//minimize and print the result
-	FunctionMinimum min=migrad();
-	MinimumParameters par_min=min.Parameters();
-	MnUserParameterState par_state=min.UserState();
-	ch2[iboot]=par_min.Fval();
+	vector<double> pars=minimizer.minimize();
+	ch2[iboot]=minimizer.eval(pars);
 	
-	if(!min.IsValid())
-	  {
-	    cerr<<"WARNING! Minimization failed"<<endl;
-	    cerr<<"Has accurate cov: "<<min.HasAccurateCovar()<<endl;
-	    cerr<<"Has positive definite cov: "<<min.HasPosDefCovar()<<endl;
-	    cerr<<"Has valid covariance"<<min.HasValidCovariance()<<endl;
-	    cerr<<"Has valid parameters: "<<min.HasValidParameters()<<endl;
-	    cerr<<"Has reached call limit: "<<min.HasReachedCallLimit()<<endl;
-	    cerr<<"Hesse failed: "<<min.HesseFailed()<<endl;
-	    cerr<<"Has cov: "<<min.HasCovariance()<<endl;
-	    cerr<<"Is above max edm: "<<min.IsAboveMaxEdm()<<endl;
-	    cout<<"FunctionCalls: "<<migrad.NumOfCalls()<<endl;
-	    cerr<<par_state<<endl;
-	  }
-	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[iboot]=migrad.Value(ipar);
+	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[iboot]=pars[ipar];
     }
     
     //write ch2
@@ -472,14 +447,10 @@ public:
   }
   
   //! fix a single parameter
-  void fix_par(size_t ipar) {pars.Fix(ipar);}
+  void fix_par(size_t ipar) {pars.fix(ipar);}
   
   //! fix a single parameter to a given value
-  void fix_par_to(size_t ipar,double val)
-  {
-    pars.SetValue(ipar,val);
-    pars.Fix(ipar);
-  }
+  void fix_par_to(size_t ipar,double val) {pars.fix_to(ipar,val);}
 };
 
 class cont_chir_fit_data_t_pol
