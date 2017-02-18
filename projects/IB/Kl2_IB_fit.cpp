@@ -70,7 +70,7 @@ Tpars cont_chir_ansatz_dM2Pi(const Tpars &f0,const Tpars &B0,const Tpars &C,cons
   if(FSE_an(an_flag))  fitted_FSE=FSE_dep_pion_savage(L3dep,L4dep,ML4dep,sqrtM2,f0,ml,ml_phys,a,L);
   else                 fitted_FSE=0;
   
-  return e2*sqr(f0)*(4*Cf04+chir_dep+K*M2/den+disc_eff)+fitted_FSE;
+  return e2*sqr(f0)*(4*Cf04+chir_dep+K*M2/den)+disc_eff+fitted_FSE;
 }
 
 //! perform the fit to the continuum limit
