@@ -61,16 +61,57 @@ AC_DEFINE_UNQUOTED([MEAN_TYPE],[$mean_type],[How to compute mean])
 AC_MSG_RESULT([Enable mean type... ${enable_mean}])
 
 #search Minuit2
+AC_ARG_WITH(Minuit2,
+        AS_HELP_STRING([--with-Minuit2[=dir]], [Specify where to find Minuit2]),
+        with_Minuit2="${withval}"
+        LDFLAGS="-L${with_Minuit2}/lib/ $LDFLAGS",
+        with_Minuit2=no)
 AC_CHECK_HEADERS([Minuit2/MinimumBuilder.h],[],AC_MSG_ERROR(["Unable to find headers of Minuit2! Install it using the script config/install_minuit2.sh"]))
-LIBS="$LIBS -lMinuit2"
 AC_MSG_CHECKING([for libMinuit2])
 AC_LINK_IFELSE(
 		[AC_LANG_PROGRAM([[#include <Minuit2/FCNBase.h>
 		]],
 		   [[class test : public ROOT::Minuit2::FCNBase {};]])],
-  	       [AC_MSG_RESULT([yes])],
-	       [AC_MSG_RESULT([no])
-	        AC_MSG_ERROR([libMinuit2 is not installed.])])
+  	       [AC_MSG_RESULT([yes]);Minuit2_found=true],
+	       [AC_MSG_RESULT([no]);Minuit2_found=false])
+
+#find the default minimizer
+default_minimizer=none
+#take Minuit if available
+if test "$Minuit_found" == true
+then
+	default_minimizer=Minuit
+fi
+#overwrite with Minuit2 if available
+if test "${Minuit2_found}" == true
+then
+	default_minimizer=Minuit2
+fi
+#check that we have a valid default otherwise crash
+if test "$default_minimizer" == none
+then
+	AC_MSG_ERROR(["No minimizer tool found"])
+fi
+
+#decide whether to propagate or not the average
+AC_DEFINE_UNQUOTED([MINUIT],[0],["Use Minuit"])
+AC_DEFINE_UNQUOTED([MINUIT2],[1],["Use Minuit2"])
+AC_ARG_ENABLE(minimizer,
+	AS_HELP_STRING([--enable-minimizer],[Choose the minimizer]),
+	enable_minimizer="${enableval}",
+	enable_minimizer="${default_minimizer}")
+case "$enable_minimizer" in
+     Minuit)
+       minimizer_type=MINUIT
+       ;;
+     Minuit2)
+       minimizer_type=MINUIT2
+       LIBS="$LIBS -lMinuit2"
+       ;;
+     *) AC_MSG_ERROR(["Unkwnown minimizer tool ${enableval}"])
+esac
+AC_DEFINE_UNQUOTED([MINIMIZER_TYPE],[$minimizer_type],[How to minimize])
+AC_MSG_RESULT([Enable minimizer... ${enable_minimizer}])
 
 #activate debug or not bootstrap
 AC_ARG_ENABLE(debug,

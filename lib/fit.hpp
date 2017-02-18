@@ -5,25 +5,13 @@
 #include <functions.hpp>
 #include <grace.hpp>
 #include <meas_vec.hpp>
+#include <minimizer.hpp>
 #include <oper.hpp>
-#include <Math/MinimizerOptions.h>
-#include <Minuit2/FCNBase.h>
-#include <Minuit2/MnMigrad.h>
-#include <Minuit2/MnUserParameters.h>
-#include <Minuit2/FunctionMinimum.h>
-#include <Minuit2/MnPrint.h>
-#include <vector>
 
 using namespace std;
-using namespace ROOT::Minuit2;
-using namespace ROOT::Math;
 using namespace Eigen;
 
 typedef Matrix<double,Dynamic,Dynamic> matr_t;
-
-//! set the level of verbosity
-inline void set_printlevel(int lev)
-{MnPrint::SetLevel(lev);}
 
 #define DO_NOT_CORRELATE -1
 
