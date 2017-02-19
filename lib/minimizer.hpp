@@ -71,26 +71,28 @@ public:
   {return pars.size();}
 };
 
+//! pointer used by fcn
+EXTERN_MINIMIZER const minimizer_fun_t *fun_ptr;
+//! wrapper to the function
+EXTERN_MINIMIZER void fcn(int &npar,double *fuf,double &ch,double *p,int flag);
+
 //! wrapper against minimization class
 class minimizer_t
 {
+  //! function to be minimized
+  const minimizer_fun_t &fun;
+  
   //! root minimizer
   TMinuit minu;
   minimizer_t();
   
  public:
   //construct from migrad
-  minimizer_t(const minimizer_fun_t &ext_fun,const minimizer_pars_t &pars)
+  minimizer_t(const minimizer_fun_t &fun,const minimizer_pars_t &pars) : fun(fun)
   {
-    //! function to minimize
-    minu.SetFCN(cify<void(*)(int &npar,double *fuf,double &ch,double *p,int flag)>
-     		([&ext_fun](int &npar,double *fuf,double &ch,double *p,int flag)
-		 {
-		   vector<double> pars(npar);
-		   pars.assign(p,p+npar);
-		   ch=ext_fun(pars);
-		 }
-		 ));
+    //set the external pointer
+    fun_ptr=&fun;
+    minu.SetFCN(fcn);
     for(size_t ipar=0;ipar<pars.size();ipar++)
       {
 	minu.DefineParameter(ipar,pars.pars[ipar].name.c_str(),pars.pars[ipar].val,pars.pars[ipar].err,0.0,0.0);

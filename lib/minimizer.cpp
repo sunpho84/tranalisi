@@ -3,16 +3,19 @@
 #endif
 
 #define EXTERN_MINIMIZER
-//#include <minimizer.hpp>
+#include <minimizer.hpp>
 
 #if MINIMIZER_TYPE == MINUIT
 
-// //! c wrapper
-// void fcn(int &npar,double *fuf,double &ch,double *p,int flag)
-// {
-//   vector<double> pars(npar);
-//   pars.assign(p,p+npar);
-//   ch=(*fun_ptr)(pars);
-// }
+//! c wrapper
+void fcn(int &npar,double *fuf,double &ch,double *p,int flag)
+{
+  //! put the parameters into a c++ vector
+  vector<double> pars(npar);
+  pars.assign(p,p+npar);
+  
+  //call and return
+  ch=(*fun_ptr)(pars);
+}
 
 #endif
