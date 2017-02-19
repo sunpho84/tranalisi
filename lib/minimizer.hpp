@@ -24,6 +24,11 @@ using namespace std;
 #include <cify.hpp>
 #include <TMinuit.h>
 
+//! set the level of verbosity
+EXTERN_MINIMIZER int glb_print_level;
+inline void set_printlevel(int level)
+{glb_print_level=level;}
+
 //! host a single par
 class par_t
 {
@@ -90,9 +95,13 @@ class minimizer_t
   //construct from migrad
   minimizer_t(const minimizer_fun_t &fun,const minimizer_pars_t &pars) : fun(fun)
   {
+    //set verbosity
+    minu.SetPrintLevel(glb_print_level);
+    
     //set the external pointer
     fun_ptr=&fun;
     minu.SetFCN(fcn);
+    
     for(size_t ipar=0;ipar<pars.size();ipar++)
       {
 	minu.DefineParameter(ipar,pars.pars[ipar].name.c_str(),pars.pars[ipar].val,pars.pars[ipar].err,0.0,0.0);
@@ -122,12 +131,6 @@ class minimizer_t
     return res;
   }
 };
-
-//! set the level of verbosity
-
-inline void set_printlevel(int lev)
-{// glb_print_level=lev;
-}
 
 #endif
 
