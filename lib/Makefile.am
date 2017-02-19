@@ -10,5 +10,6 @@ libtran_a_SOURCES= \
 	grace.cpp \
 	jack.cpp \
 	meas_vec.cpp \
+	minimizer.cpp \
 	oper.cpp \
 	tools.cpp

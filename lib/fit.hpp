@@ -75,7 +75,7 @@ template <class TV,class T=typename TV::base_type> void two_pts_fit(T &Z,T &M,co
 
 //! perform a simple fit using x, a function and data
 template <class TV,class TS=typename TV::base_type>
-class simple_ch2_t : public minimizer_base_t
+class simple_ch2_t : public minimizer_fun_t
 {
   //! type of function to be passed
   using fun_t=function<double(const vector<double> &p,double x)>;
@@ -155,7 +155,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_true_fit(TS &Z,
 
 //! perform a fit using multiple x, functions and data
 template <class TV,class TS=typename TV::base_type>
-class multi_ch2_t : public minimizer_base_t
+class multi_ch2_t : public minimizer_fun_t
 {
   //! type of function to be passed
   using fun_t=function<double(const vector<double> &p,double x)>;
@@ -256,7 +256,7 @@ public:
 };
 
 //! functor to minimize
-class boot_fit_FCN_t : public minimizer_base_t
+class boot_fit_FCN_t : public minimizer_fun_t
 {
   //! covariance flag
   bool cov_flag;

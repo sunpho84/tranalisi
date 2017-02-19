@@ -60,25 +60,60 @@ esac
 AC_DEFINE_UNQUOTED([MEAN_TYPE],[$mean_type],[How to compute mean])
 AC_MSG_RESULT([Enable mean type... ${enable_mean}])
 
+#search Minuit
+AC_ARG_WITH(Minuit,
+        AS_HELP_STRING([--with-Minuit[=dir]], [Specify where to find Minuit]),
+        with_Minuit="${withval}"
+        CPPFLAGS="-I${with_Minuit}/include/ $CPPFLAGS"
+        LDFLAGS="-L${with_Minuit}/lib/ $LDFLAGS",
+        with_Minuit=no)
+AC_CHECK_HEADERS([TMinuit.h],[],dnl AC_MSG_ERROR(["Unable to find headers of Minuit, good luck!"])
+)
+AC_MSG_CHECKING([for libMinuit])
+SAVED_LIBS=$LIBS
+LIBS="$LIBS -lMinuit -lCore"
+AC_LINK_IFELSE(
+		[AC_LANG_PROGRAM([[#include <TMinuit.h>
+		]],
+		   [[TMinuit minu;]])],
+  	       [AC_MSG_RESULT([yes]);Minuit_found=true],
+	       [AC_MSG_RESULT([no]);Minuit_found=false])
+LIB=$SAVED_LIB
+
 #search Minuit2
 AC_ARG_WITH(Minuit2,
         AS_HELP_STRING([--with-Minuit2[=dir]], [Specify where to find Minuit2]),
         with_Minuit2="${withval}"
         LDFLAGS="-L${with_Minuit2}/lib/ $LDFLAGS",
         with_Minuit2=no)
-AC_CHECK_HEADERS([Minuit2/MinimumBuilder.h],[],AC_MSG_ERROR(["Unable to find headers of Minuit2! Install it using the script config/install_minuit2.sh"]))
+AC_CHECK_HEADERS([Minuit2/MinimumBuilder.h],[],dnl AC_MSG_ERROR(["Unable to find headers of Minuit2! Install it using the script config/install_minuit2.sh"])
+)
 AC_MSG_CHECKING([for libMinuit2])
+SAVED_LIBS=$LIBS
+LIBS="$LIBS -lMinuit2"
 AC_LINK_IFELSE(
-		[AC_LANG_PROGRAM([[#include <Minuit2/FCNBase.h>
+		[AC_LANG_PROGRAM([[
+		#include <Minuit2/FCNBase.h>
+		#include <Minuit2/MnPrint.h>
 		]],
-		   [[class test : public ROOT::Minuit2::FCNBase {};]])],
+		   [[class test_t : public ROOT::Minuit2::FCNBase
+		   {
+		   public:
+			double operator()(const std::vector<double>&) const{return 0;}
+			double Up() const {return 1;}
+		   };
+		test_t test;
+		ROOT::Minuit2::MnPrint::SetLevel(0);
+		]])],
   	       [AC_MSG_RESULT([yes]);Minuit2_found=true],
 	       [AC_MSG_RESULT([no]);Minuit2_found=false])
+LIB=$SAVED_LIB
 
 #find the default minimizer
 default_minimizer=none
 #take Minuit if available
-if test "$Minuit_found" == true
+AC_MSG_RESULT([Minuit_found: ${Minuit_found}])
+if test "${Minuit_found}" == true
 then
 	default_minimizer=Minuit
 fi
@@ -92,6 +127,7 @@ if test "$default_minimizer" == none
 then
 	AC_MSG_ERROR(["No minimizer tool found"])
 fi
+AC_MSG_RESULT([Default minimizer: ${default_minimizer}])
 
 #decide whether to propagate or not the average
 AC_DEFINE_UNQUOTED([MINUIT],[0],["Use Minuit"])
@@ -102,9 +138,18 @@ AC_ARG_ENABLE(minimizer,
 	enable_minimizer="${default_minimizer}")
 case "$enable_minimizer" in
      Minuit)
+       if test $Minuit_found != true
+       then
+	   AC_MSG_ERROR([Cannot select not found minimizer Minuit])
+       fi
        minimizer_type=MINUIT
+       LIBS="$LIBS -lMinuit -lCore"
        ;;
      Minuit2)
+       if test $Minuit2_found != true
+       then
+	   AC_MSG_ERROR([Cannot select not found minimizer Minuit2])
+       fi
        minimizer_type=MINUIT2
        LIBS="$LIBS -lMinuit2"
        ;;
