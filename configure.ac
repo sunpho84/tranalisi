@@ -78,7 +78,7 @@ AC_LINK_IFELSE(
 		   [[TMinuit minu;]])],
   	       [AC_MSG_RESULT([yes]);Minuit_found=true],
 	       [AC_MSG_RESULT([no]);Minuit_found=false])
-LIB=$SAVED_LIB
+LIBS=$SAVED_LIBS
 
 #search Minuit2
 AC_ARG_WITH(Minuit2,
@@ -107,7 +107,7 @@ AC_LINK_IFELSE(
 		]])],
   	       [AC_MSG_RESULT([yes]);Minuit2_found=true],
 	       [AC_MSG_RESULT([no]);Minuit2_found=false])
-LIB=$SAVED_LIB
+LIBS=$SAVED_LIBS
 
 #find the default minimizer
 default_minimizer=none
