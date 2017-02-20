@@ -21,8 +21,8 @@ AC_CANONICAL_HOST
 AM_SILENT_RULES([yes])
 
 AC_CHECK_LIB([m],[cos])
-AC_CHECK_LIB([gslcblas],[cblas_dgemm])
-AC_CHECK_LIB([gsl],[gsl_blas_dgemm])
+AC_CHECK_LIB([gslcblas],[cblas_dgemm],,AC_MSG_ERROR([Unable to find gslcblas]))
+AC_CHECK_LIB([gsl],[gsl_blas_dgemm],,AC_MSG_ERROR([Unable to find gsl]))
 
 AC_PROG_RANLIB
 AC_PROG_CXX
