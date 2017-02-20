@@ -289,7 +289,7 @@ int main(int narg,char **arg)
 	cout<<"                    input_an_id: "<<input_an_id<<endl;
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
-	/*
+
 	cout<<"                         Pi "<<endl;
 	cout<<endl;
 	
@@ -303,6 +303,7 @@ int main(int narg,char **arg)
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
 	
+	/*
         cout<<"                     Epsilon "<<endl;
 	cout<<endl;
 	
@@ -356,7 +357,7 @@ int main(int narg,char **arg)
 	
 	plot_ens_data(combine("plots/MD_an%zu.xmg",input_an_id),ml,MD);
 	plot_ens_data(combine("plots/MDs_an%zu.xmg",input_an_id),ml,MDs);
-	*/
+	
 	cout<<"                        EpsilonPi0 "<<endl;
 	cout<<endl;
 	
@@ -365,10 +366,10 @@ int main(int narg,char **arg)
 	  data_epsilon_Pi0.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
 							  epsilon_Pi0_minusFVE[iens],epsilon_Pi0[iens]));
 	output_epsilon_Pi0[input_an_id+an_flag*ninput_an]=cont_chir_fit_epsilon_Pi0(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_epsilon_Pi0,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_epsilon_Pi0_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag);
-
+	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
-	/*
+	
 	cout<<"                         EpsilonK0 "<<endl;
 	cout<<endl;
 	
@@ -430,13 +431,13 @@ int main(int narg,char **arg)
       }
   
   ////////////////////output//////////////////
-  
+  */
   v_ave_an_dM2Pi=ave_analyses(output_dM2Pi);
   cout<<"dM2Pi: "<<v_ave_an_dM2Pi[7]<<" "<<syst_analysis(v_ave_an_dM2Pi)<<endl;
-  */
+  /*
   v_ave_an_epsilon_Pi0=ave_analyses(output_epsilon_Pi0);
   cout<<"Epsilon_Pi0: "<<v_ave_an_epsilon_Pi0[7]<<" "<<syst_analysis(v_ave_an_epsilon_Pi0)<<endl;
-  /*
+
   v_ave_an_epsilon=ave_analyses(output_epsilon);
   cout<<"Epsilon: "<<v_ave_an_epsilon[7]<<" "<<syst_analysis(v_ave_an_epsilon)<<endl;
   

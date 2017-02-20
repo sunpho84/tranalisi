@@ -66,7 +66,7 @@ public:
   
   //! fix a parameter
   void fix(int ipar)
-  {pars[ipar].is_fixed=false;}
+  {pars[ipar].is_fixed=true;}
   
   //! fix a parameter to a given value
   void fix_to(int ipar,double val);
@@ -78,6 +78,8 @@ public:
 
 //! pointer used by fcn
 EXTERN_MINIMIZER const minimizer_fun_t *fun_ptr;
+//! number of parameters
+EXTERN_MINIMIZER int fun_npars;
 //! wrapper to the function
 EXTERN_MINIMIZER void fcn(int &npar,double *fuf,double &ch,double *p,int flag);
 
@@ -102,6 +104,8 @@ class minimizer_t
     fun_ptr=&fun;
     minu.SetFCN(fcn);
     
+    //set the pars
+    fun_npars=pars.size();
     for(size_t ipar=0;ipar<pars.size();ipar++)
       {
 	minu.DefineParameter(ipar,pars.pars[ipar].name.c_str(),pars.pars[ipar].val,pars.pars[ipar].err,0.0,0.0);

@@ -125,6 +125,15 @@ public:
     cout<<"Configured on "<<CONFIG_TIME<<endl;
     cout<<"Configured with flags: "<<CONFIG_FLAGS<<endl;
     cout<<"Compiled at "<<__TIME__<<" of "<<__DATE__<<endl;
+    cout<<"Configured to use ";
+#if MINIMIZER_TYPE == MINUIT
+    cout<<"Minuit1 ";
+#endif
+#if MINIMIZER_TYPE == MINUIT2
+    cout<<"Minuit2 ";
+#endif
+    cout<<"to minimize"<<endl;
+    
     cout<<endl;
   }
 };

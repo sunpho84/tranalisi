@@ -83,8 +83,8 @@ dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
   cont_chir_fit_pars_t pars(nbeta);
   
   pars.add_common_pars(a,z,f0,B0,{1.2e-3,1.0e-3},{0.1,0.01},boot_fit);
-  pars.add_fsedep_pars({0.0,1.0},{0.0,0.0},{0.0,0.0},boot_fit);
-  pars.add_LEC_pars({4.0e-5,2.5e-6},{6.0,1.0},{0.0,0.0},{0.0,10.0},{0.0,0.0},boot_fit);
+  pars.add_fsedep_pars({0.0,1.0},{0.0,1.0},{0.0,1.0},boot_fit);
+  pars.add_LEC_pars({4.0e-5,2.5e-6},{6.0,1.0},{0.0,1.0},{0.0,1.0},{0.0,1.0},boot_fit);
   if(chir_an(an_flag)==1) boot_fit.fix_par_to(pars.iK2Pi,0.0);
   if(cont_an(an_flag)==0) boot_fit.fix_par_to(pars.iadep_ml,0.0);
   if(FSE_an(an_flag)==0)  boot_fit.fix_par_to(pars.iL3dep,0.0);
