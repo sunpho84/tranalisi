@@ -70,6 +70,14 @@ public:
   //! assignement
   template<class oth_t> jack_t &operator=(const oth_t &oth) {valarray<T>::operator=(oth);return *this;}
   
+  //! fill the central with the average
+  void fill_ave_with_components_ave()
+  {
+    (*this)[njacks]=0;
+    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[njacks]+=(*this)[ijack];
+    (*this)[njacks]/=njacks;
+  }
+  
   //! compute average and error
   ave_err_t ave_err() const
   {

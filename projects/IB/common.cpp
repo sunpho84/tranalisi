@@ -11,6 +11,7 @@ dboot_t read_boot(const raw_file_t &file)
 {
   dboot_t out;
   for(size_t ib=0;ib<nboots;ib++) file.read(out[ib]);
+  out.fill_ave_with_components_ave();
   return out;
 }
 
@@ -35,31 +36,30 @@ void init_common_IB(string ens_pars)
     file.read(dum);
   for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
     {
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++) lat_par[input_an_id].ainv[ibeta][nboots]=0;
       for(size_t iboot=0;iboot<nboots;iboot++)
 	for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	  {
-	    file.read(lat_par[input_an_id].ainv[ibeta][iboot]);
-	    lat_par[input_an_id].ainv[ibeta][nboots]+=lat_par[input_an_id].ainv[ibeta][iboot];
-	  }
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++) lat_par[input_an_id].ainv[ibeta][nboots]/=nboots;
+	  file.read(lat_par[input_an_id].ainv[ibeta][iboot]);
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++) lat_par[input_an_id].ainv[ibeta].fill_ave_with_components_ave();
     }
   file.expect({"r0","(GeV^-1)"});
   file.read(dum);
   for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++) lat_par[input_an_id].r0=read_boot(file);
   file.expect({"Zp","(1.90","1.95","2.10)"});
-  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-    file.read(dum);
-  for(size_t input_an_id=0;input_an_id<ninput_an/2;input_an_id++)
-    for(size_t iboot=0;iboot<nboots;iboot++)
+  for(int ihalf=0;ihalf<2;ihalf++)
+    {
+      //skip average of the half
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	file.read(lat_par[input_an_id].Z[ibeta][iboot]);
-  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-    file.read(dum);
-  for(size_t input_an_id=ninput_an/2;input_an_id<ninput_an;input_an_id++)
-    for(size_t iboot=0;iboot<nboots;iboot++)
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	file.read(lat_par[input_an_id].Z[ibeta][iboot]);
+	file.read(dum);
+      
+      size_t batch=ninput_an/2;
+      for(size_t input_an_id=batch*ihalf;input_an_id<batch*(ihalf+1);input_an_id++)
+	{
+	  for(size_t iboot=0;iboot<nboots;iboot++)
+	    for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	      file.read(lat_par[input_an_id].Z[ibeta][iboot]);
+	  for(size_t ibeta=0;ibeta<nbeta;ibeta++) lat_par[input_an_id].Z[ibeta].fill_ave_with_components_ave();
+	}
+    }
   file.expect({"Jackknife","numbers","(","0.0030(32),0.0040(32),","0.0050(32),","0.0040(24)","...)"});
   for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
     for(size_t iboot=0;iboot<nboots;iboot++)

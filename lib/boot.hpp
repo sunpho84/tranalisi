@@ -120,6 +120,14 @@ public:
   //! assignement
   template<class oth_t> boot_t &operator=(const oth_t &oth) {valarray<T>::operator=(oth);return *this;}
   
+  //! fill the central with the average
+  void fill_ave_with_components_ave()
+  {
+    (*this)[nboots()]=0;
+    for(size_t iboot=0;iboot<nboots();iboot++) (*this)[nboots()]+=(*this)[iboot];
+    (*this)[nboots()]/=nboots();
+  }
+  
   //! compute average and error
   ave_err_t ave_err() const
   {
