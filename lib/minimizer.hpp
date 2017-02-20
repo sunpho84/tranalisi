@@ -17,7 +17,7 @@
 
 using namespace std;
 
-//////////////////////////////////////////////// Minuit2 implementation //////////////////////////
+//////////////////////////////////////////////// Minuit1 implementation //////////////////////////
 
 #if MINIMIZER_TYPE == MINUIT
 
@@ -138,7 +138,7 @@ class minimizer_t
 
 #endif
 
-//////////////////////////////////////////////// minuit2 ///////////////////////////////////////////
+//////////////////////////////////////////////// Minuit2 implementation ///////////////////////////////////////////
 
 #if MINIMIZER_TYPE == MINUIT2
 
@@ -173,7 +173,7 @@ public:
   void fix_to(int ipar,double val);
   
   //! return the number of parameters
-  size_t size()
+  size_t size() const
   {return pars.Parameters().size();}
 };
 
@@ -181,23 +181,37 @@ public:
 class minimizer_t
 {
   ROOT::Minuit2::MnMigrad migrad;
+  size_t npars;
   minimizer_t();
   
  public:
   //construct from migrad
-  minimizer_t(const minimizer_fun_t &fun,const minimizer_pars_t &pars) : migrad(fun,pars.pars) {}
+  minimizer_t(const minimizer_fun_t &fun,const minimizer_pars_t &pars) : migrad(fun,pars.pars),npars(pars.size()) {}
   
   //! minimizer
   vector<double> minimize()
   {
     //call minimizer
     ROOT::Minuit2::FunctionMinimum min=migrad();
-    ROOT::Minuit2::MinimumParameters par_min=min.Parameters();
+    ROOT::Minuit2::MnUserParameterState par_state=min.UserState();
+    if(!min.IsValid())
+      {
+	cerr<<"WARNING! Minimization failed"<<endl;
+	cerr<<"Has accurate cov: "<<min.HasAccurateCovar()<<endl;
+	cerr<<"Has positive definite cov: "<<min.HasPosDefCovar()<<endl;
+	cerr<<"Has valid covariance"<<min.HasValidCovariance()<<endl;
+	cerr<<"Has valid parameters: "<<min.HasValidParameters()<<endl;
+	cerr<<"Has reached call limit: "<<min.HasReachedCallLimit()<<endl;
+	cerr<<"Hesse failed: "<<min.HesseFailed()<<endl;
+	cerr<<"Has cov: "<<min.HasCovariance()<<endl;
+	cerr<<"Is above max edm: "<<min.IsAboveMaxEdm()<<endl;
+	cout<<"FunctionCalls: "<<migrad.NumOfCalls()<<endl;
+	cerr<<par_state<<endl;
+      }
     
     //copy the result
-    size_t size=par_min.Vec().size();
-    vector<double> pars(size);
-    for(size_t it=0;it<size;it++) pars[it]=par_min.Vec()[it];
+    vector<double> pars(npars);
+    for(size_t ipar=0;ipar<npars;ipar++) pars[ipar]=migrad.Value(ipar);
     
     return pars;
   }
