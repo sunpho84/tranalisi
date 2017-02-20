@@ -8,6 +8,13 @@
 #include <minimizer.hpp>
 #include <oper.hpp>
 
+#ifndef EXTERN_FIT
+ #define EXTERN_FIT extern
+ #define INIT_TO(A)
+#else
+ #define INIT_TO(A) =A
+#endif
+
 using namespace std;
 using namespace Eigen;
 
@@ -255,6 +262,8 @@ public:
   boot_fit_data_t(const fun_t &num,const fun_t &teo,double err) : num(num),teo(teo),err(err) {}
 };
 
+EXTERN_FIT bool boot_fit_debug INIT_TO(false);
+
 //! functor to minimize
 class boot_fit_FCN_t : public minimizer_fun_t
 {
@@ -332,7 +341,7 @@ public:
       	    double ty=data[iy].teo(p,iel);
       	    double contr=(nx-tx)*inv_cov[ix*data.size()+iy]*(ny-ty);
       	    ch2+=contr;
-      	  //cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	    //if(boot_fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
       	}
     else
       for(size_t ix=0;ix<data.size();ix++)
@@ -342,7 +351,7 @@ public:
 	  double e=data[ix].err;
 	  double contr=sqr((n-t)/e);
 	  ch2+=contr;
-	//cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	  if(boot_fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
 	}
      
      return ch2;
@@ -435,11 +444,15 @@ public:
     dboot_t ch2;
     for(iboot=0;iboot<=out_pars[0]->nboots();iboot++)
       {
+	// boot_fit_debug=false;
+	// if(iboot==out_pars[0]->nboots()) boot_fit_debug=true;
+	
 	//minimize and print the result
 	vector<double> pars=minimizer.minimize();
 	ch2[iboot]=minimizer.eval(pars);
 	
 	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[iboot]=pars[ipar];
+	// boot_fit_debug=false;
     }
     
     //write ch2
@@ -464,5 +477,8 @@ public:
 
 //! perform a fit to the continuum and chiral
 void cont_chir_fit_pol(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t_pol> &ext_data,const dboot_t &ml_phys,const string &path,dboot_t &output);
+
+#undef EXTERN_FIT
+#undef INIT_TO
 
 #endif

@@ -2,4 +2,6 @@
  #include "config.hpp"
 #endif
 
+#define EXTERN_FIT
+#include <fit.hpp>
 
