@@ -20,6 +20,14 @@ AC_CANONICAL_HOST
 #silent automake
 AM_SILENT_RULES([yes])
 
+#gsl
+AC_ARG_WITH(gsl,
+        AS_HELP_STRING([--with-gsl[=dir]], [Specify where to find gsl]),
+        with_gsl="${withval}"
+        CPPFLAGS="-I${with_gsl}/include/ $CPPFLAGS"
+        LDFLAGS="-L${with_gsl}/lib/ $LDFLAGS",
+        with_gsl=no)
+
 AC_CHECK_LIB([m],[cos])
 AC_CHECK_LIB([gslcblas],[cblas_dgemm],,AC_MSG_ERROR([Unable to find gslcblas]))
 AC_CHECK_LIB([gsl],[gsl_blas_dgemm],,AC_MSG_ERROR([Unable to find gsl]))
