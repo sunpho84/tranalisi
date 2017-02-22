@@ -448,6 +448,8 @@ public:
 	// if(iboot==out_pars[0]->nboots()) boot_fit_debug=true;
 	
 	//minimize and print the result
+	
+	cout<<"----------------------- "<<iboot<<" ----------------------- "<<endl;
 	vector<double> pars=minimizer.minimize();
 	ch2[iboot]=minimizer.eval(pars);
 	
