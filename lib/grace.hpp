@@ -419,7 +419,7 @@ public:
   {
     new_data_set(col,sym);
     for(size_t i=0;i<data.size();i++)
-      if(!isnan(data[i].err))
+      if(!std::isnan(data[i].err))
 	(*this)<<i<<" "<<data[i]<<endl;
   }
   void write_vec_ave_err(const vec_ave_err_t &data)
