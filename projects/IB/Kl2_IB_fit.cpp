@@ -446,6 +446,7 @@ dboot_t cont_chir_fit_M2K0g(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
   if(chir_an(an_flag)==0) boot_fit.fix_par_to(pars.iK2K,0.0);
   if(cont_an(an_flag)==0) boot_fit.fix_par_to(pars.iadep,0.0);
   boot_fit.fix_par(pars.iadep_ml);
+  boot_fit.fix_par(pars.iC);
   boot_fit.fix_par(pars.iK2Pi);
   
   cont_chir_fit_minimize(ext_data,pars,boot_fit,2.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
@@ -706,6 +707,7 @@ dboot_t cont_chir_fit_epsilon_K0(const dbvec_t &a,const dbvec_t &z,const dboot_t
   if(cont_an(an_flag)==0) boot_fit.fix_par_to(pars.iadep,0.0);
   if(FSE_an(an_flag)==0)  boot_fit.fix_par_to(pars.iL3dep,0.0);
   boot_fit.fix_par(pars.iadep_ml);
+  boot_fit.fix_par(pars.iC);
   boot_fit.fix_par(pars.iL4dep);
   boot_fit.fix_par(pars.iML4dep);
   
@@ -778,6 +780,8 @@ dboot_t cont_chir_linear_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont
   ave_err_t adep_ml_Guess={0.0,0.1};
   ave_err_t C_Guess={0.0,1.0};
   ave_err_t KPi_Guess={0.0,1.0};
+  //for QCD D
+  //ave_err_t KPi_Guess={0.0,0.1};
   ave_err_t KK_Guess={0.0,0.1};
   ave_err_t K2Pi_Guess={0.0,0.1};
   ave_err_t K2K_Guess={0.0,0.1};
@@ -790,6 +794,8 @@ dboot_t cont_chir_linear_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont
   pars.add_LEC_pars(C_Guess,KPi_Guess,KK_Guess,K2Pi_Guess,K2K_Guess,boot_fit);
   pars.add_fsedep_pars(L3dep_Guess,L4dep_Guess,ML4dep_Guess,boot_fit);
   if(chir_an(an_flag)==0) boot_fit.fix_par_to(pars.iKPi,0.0);
+  //for QCD D
+  //if(chir_an(an_flag)==0) boot_fit.fix_par_to(pars.iKPi,0.0);
   if(cont_an(an_flag)==0) boot_fit.fix_par_to(pars.iadep,0.0);
   if(with_without_FSE==0)
     {
@@ -800,6 +806,8 @@ dboot_t cont_chir_linear_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont
       if(FSE_an(an_flag)==0)  boot_fit.fix_par_to(pars.iL3dep,0.0);
     }
   boot_fit.fix_par(pars.iadep_ml);
+  //for QCD D
+  //boot_fit.fix_par(pars.iKPi);
   boot_fit.fix_par(pars.iKK);
   boot_fit.fix_par(pars.iK2Pi);
   boot_fit.fix_par(pars.iK2K);
@@ -826,7 +834,7 @@ dboot_t cont_chir_linear_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont
 		      }
 		    else
 		      {
-			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)*pow(pars.fit_z[ib],zpow)/pow(pars.fit_a[ib],apow)-
+			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wfse)*pow(pars.fit_z[ib],zpow)/pow(pars.fit_a[ib],apow)-
 				       without_with_fse*FSE_dep_L3(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));
 		      }
 		  },
@@ -919,7 +927,101 @@ dboot_t cont_chir_quad_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_c
 		      }
 		    else
 		      {
-			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)*pow(pars.fit_z[ib],zpow)/pow(pars.fit_a[ib],apow)-
+			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wfse)*pow(pars.fit_z[ib],zpow)/pow(pars.fit_a[ib],apow)-
+				       without_with_fse*FSE_dep_L3(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));
+		      }
+		  },
+		  ml_phys,phys_res,yaxis_label);
+  
+  return phys_res;
+}
+/////////////////////////////////////////////////////////////// generic constant fit ////////////////////////////////////////////////////////////////////////
+
+//! ansatz fit
+template <class Tpars,class Tm,class Ta>
+Tpars cont_chir_constant_ansatz(const Tpars &C0,const Tpars &C1,const Tm &ml,const Ta &a,const Tpars &adep,double L,const Tpars &L3dep,const size_t an_flag,bool with_without_FSE)
+{
+  Tpars chir_dep;
+  if(chir_an(an_flag)) chir_dep=C1*ml;
+  else                 chir_dep=0;
+  
+  Tpars disc_eff;
+  if(cont_an(an_flag)) disc_eff=adep*sqr(a);
+  else                 disc_eff=0;
+  
+  Tpars fitted_FSE;
+  if(with_without_FSE==1)
+    {
+      if(FSE_an(an_flag))  fitted_FSE=FSE_dep_L3(L3dep,a,L);
+      else                 fitted_FSE=0;
+    }
+  
+  return C0+chir_dep+disc_eff+fitted_FSE;
+}
+
+//! perform the fit to the continuum limit
+dboot_t cont_chir_constant_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,const string &yaxis_label,double apow,double zpow,size_t an_flag,bool with_without_FSE,bool cov_flag)
+{
+  //set_printlevel(3);
+ 
+  boot_fit_t boot_fit;
+  size_t nbeta=a.size();
+  cont_chir_fit_pars_t pars(nbeta);
+
+  ave_err_t adep_Guess={0.0,1.0};
+  ave_err_t adep_ml_Guess={0.0,0.1};
+  ave_err_t C_Guess={0.0,1.0};
+  ave_err_t KPi_Guess={0.0,0.1};
+  ave_err_t KK_Guess={0.0,0.1};
+  ave_err_t K2Pi_Guess={0.0,0.1};
+  ave_err_t K2K_Guess={0.0,0.1};
+  ave_err_t L3dep_Guess={0.0,1.0};
+  ave_err_t L4dep_Guess={0.0,0.1};
+  ave_err_t ML4dep_Guess={0.0,0.1};
+  
+  pars.add_az_pars(a,z,boot_fit);
+  pars.add_adep_pars(adep_Guess,adep_ml_Guess,boot_fit);
+  pars.add_LEC_pars(C_Guess,KPi_Guess,KK_Guess,K2Pi_Guess,K2K_Guess,boot_fit);
+  pars.add_fsedep_pars(L3dep_Guess,L4dep_Guess,ML4dep_Guess,boot_fit);
+  //if(chir_an(an_flag)==0) boot_fit.fix_par_to(pars.iKPi,0.0);
+  if(cont_an(an_flag)==0) boot_fit.fix_par_to(pars.iadep,0.0);
+  if(with_without_FSE==0)
+    {
+      boot_fit.fix_par_to(pars.iL3dep,0.0);
+    }
+  else
+    {
+      if(FSE_an(an_flag)==0)  boot_fit.fix_par_to(pars.iL3dep,0.0);
+    }
+  boot_fit.fix_par(pars.iadep_ml);
+  boot_fit.fix_par(pars.iKPi);
+  boot_fit.fix_par(pars.iKK);
+  boot_fit.fix_par(pars.iK2Pi);
+  boot_fit.fix_par(pars.iK2K);
+  boot_fit.fix_par(pars.iL4dep);
+  boot_fit.fix_par(pars.iML4dep);
+  
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,apow,zpow,[an_flag,with_without_FSE](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
+			 {return cont_chir_constant_ansatz(p[pars.iC],p[pars.iKPi],ml,ac,p[pars.iadep],L,p[pars.iL3dep],an_flag,with_without_FSE);},cov_flag);
+  
+  dboot_t phys_res=cont_chir_constant_ansatz(pars.C,pars.KPi,ml_phys,a_cont,pars.adep,inf_vol,pars.L3dep,an_flag,with_without_FSE);
+
+  for(int univ_full_sub=0;univ_full_sub<2;univ_full_sub++)
+    plot_chir_fit(combine(path.c_str(),(univ_full_sub==0)?"_univ":"_full"),ext_data,pars,
+		  [&pars,an_flag,with_without_FSE]
+		  (double x,size_t ib)
+		  {return cont_chir_constant_ansatz<double,double,double>
+		      (pars.C.ave(),pars.KPi.ave(),x,pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),an_flag,with_without_FSE);},
+		  bind(cont_chir_constant_ansatz<dboot_t,double,double>,pars.C,pars.KPi,_1,a_cont,pars.adep,inf_vol,pars.L3dep,an_flag,with_without_FSE),
+		  [&ext_data,apow,zpow,&pars,univ_full_sub]
+		  (size_t idata,bool without_with_fse,size_t ib)
+		  {if(univ_full_sub==0)
+		      {
+			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)*pow(pars.fit_z[ib],zpow)/pow(pars.fit_a[ib],apow));
+		      }
+		    else
+		      {
+			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wfse)*pow(pars.fit_z[ib],zpow)/pow(pars.fit_a[ib],apow)-
 				       without_with_fse*FSE_dep_L3(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));
 		      }
 		  },
