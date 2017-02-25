@@ -30,3 +30,4 @@ build*
 /bin/.#Kl2_IB_glb.cpp
 bin
 default
+/include/git_hash.hpp
