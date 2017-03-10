@@ -66,7 +66,7 @@ template <class T> T kern_QED_num(const T &corr_t,double t,const T &a)
 {return kern_num(corr_t,t,a);}
 
 //! integrate
-inline djack_t integrate_corr_up_to(const djvec_t &corr,size_t T,const djack_t &a,size_t im,size_t &upto,int ord=3)
+inline djack_t integrate_corr_up_to(const djvec_t &corr,size_t &upto,int ord=3)
 {
   valarray<double> weight;
   switch(ord)
@@ -80,22 +80,28 @@ inline djack_t integrate_corr_up_to(const djvec_t &corr,size_t T,const djack_t &
   
   size_t len=weight.size()-1;
   double norm=weight.sum()/len;
-
-  //store the kernel
-  djvec_t kern(T/2);
-  for(size_t t=1;t<T/2;t++) kern[t]=kern_num(corr[t],t,a);
-  kern[0]=0.0;
   
   djack_t out;
   out=0.0;
   upto=int(upto/len)*len;
   for(size_t t=0;t<upto;t+=len)
     for(size_t j=0;j<=len;j++)
-      out+=kern[t+j]*weight[j];
+      out+=corr[t+j]*weight[j];
   
-  out*=4*sqr(alpha_em)*sqr(eq[im])/norm;
+  out/=norm;
   
   return out;
+}
+
+//! integrate the kernel
+inline djack_t integrate_corr_times_kern_up_to(const djvec_t &corr,size_t T,const djack_t &a,size_t im,size_t &upto,int ord=3)
+{
+  //store the kernel
+  djvec_t kern(T/2);
+  for(size_t t=1;t<T/2;t++) kern[t]=kern_num(corr[t],t,a);
+  kern[0]=0.0;
+  
+  return 4*sqr(alpha_em)*sqr(eq[im])*integrate_corr_up_to(kern,upto);
 }
 
 //! parameters of LO corr
@@ -120,26 +126,41 @@ double kern_QED_reco_gsl(double t,void *params);
 //! integrate the reconstructed kernel from a given point
 template <class TS,class Pars_wr> TS integrate_reco_from(double (*kern_gsl)(double,void*),const vector<TS> &p,size_t im,double from)
 {
+  const bool use_gsl=false;
+  
   djack_t result;
   int workspace_size=1000;
-  gsl_integration_workspace *workspace=gsl_integration_workspace_alloc(workspace_size);
+  gsl_integration_workspace *workspace=NULL;
+  if(use_gsl) workspace=gsl_integration_workspace_alloc(workspace_size);
   
-  for(size_t i=0;i<p[0].size();i++)
+  if(use_gsl)
+    for(size_t i=0;i<p[0].size();i++)
+      {
+	Pars_wr params(p,i);
+	
+	//! function structure
+	gsl_function f;
+	f.function=kern_gsl;
+	f.params=&params;
+	
+	//integrate
+	double abserr;
+	double epsabs=0,epsrel=1e-6;
+	gsl_integration_qagiu(&f,from,epsabs,epsrel,workspace_size,workspace,&result[i],&abserr);
+      }
+  else
     {
-      Pars_wr params(p,i);
-      
-      //! function structure
-      gsl_function f;
-      f.function=kern_gsl;
-      f.params=&params;
-      
-      //integrate
-      double abserr;
-      double epsabs=0,epsrel=1e-6;
-      gsl_integration_qagiu(&f,from,epsabs,epsrel,workspace_size,workspace,&result[i],&abserr);
+      size_t np=500;
+      djvec_t corr_reco(np);
+      for(size_t i=0;i<p[0].size();i++)
+	{
+	  Pars_wr params(p,i);
+	  for(size_t dt=0;dt<np;dt++) corr_reco[dt]=kern_gsl(dt+from,&params);
+	}
+      result=integrate_corr_up_to(corr_reco,np);
     }
   
-  gsl_integration_workspace_free(workspace);
+  if(use_gsl) gsl_integration_workspace_free(workspace);
   
   return 4*sqr(alpha_em)*sqr(eq[im])*result;
 }

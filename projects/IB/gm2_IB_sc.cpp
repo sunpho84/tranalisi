@@ -13,7 +13,7 @@ Tpars cont_chir_ansatz(const Tpars &C,const Tpars &Kpi,const Tm &ml,const Ta &a,
 {return C+Kpi*ml+a*a*(adep+ml*adep_ml)+L2dep/sqr(L);}
 
 //! perform the fit to the continuum limit
-dboot_t cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t an_flag,bool cov_flag)
+dboot_t cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t an_flag,bool cov_flag,const vector<string> &beta_list)
 {
   //set_printlevel(3);
   
@@ -55,7 +55,7 @@ dboot_t cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_f
 		[&ext_data,&pars]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t(without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse-without_with_fse*pars.L2dep/sqr(ext_data[idata].L));},
-		ml_phys,phys_res,"$$a_\\mu");
+		ml_phys,phys_res,"$$a_\\mu",beta_list);
   
   return phys_res;
 }
@@ -90,16 +90,17 @@ int main(int narg,char **arg)
       
       //lattice spacing obtained from V
       djack_t resc_a=M_V/M_V_phys[im];
-      cout<<"a: "<<resc_a.ave_err()<<endl;
       
       size_t upto=TH-DT;
-      
-      djack_t LO_correl=integrate_corr_up_to(VV_LO,ens.T,resc_a,im,upto);
+      cout<<"Upto: "<<upto;
+      djack_t LO_correl=integrate_corr_times_kern_up_to(VV_LO,ens.T,resc_a,im,upto);
+      cout<<", after: "<<upto<<endl;
       djack_t LO_remaind=integrate_LO_reco_from(Z_V,M_V,resc_a,im,upto);
+      LO[iens]=LO_correl+LO_remaind;
       compare_LO_num_reco(combine("%s/plots/kern_LO_num_reco.xmg",ens.path.c_str()),VV_LO,Z_V,M_V,resc_a);
-      cout<<"amu: "<< LO_correl.ave_err()<<" + "<<LO_remaind.ave_err()<<endl;
+      cout<<"amu: "<< LO_correl.ave_err()<<" + "<<LO_remaind.ave_err()<<" = "<<LO[iens].ave_err()<<endl;
       
-      djack_t QED_correl=integrate_corr_up_to(VV_QED,ens.T,resc_a,im,upto);
+      djack_t QED_correl=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a,im,upto);
       djack_t QED_remaind=integrate_QED_reco_from(A_V,Z_V,SL_V,M_V,resc_a,im,upto);
       compare_QED_num_reco(combine("%s/plots/kern_QED_num_reco.xmg",ens.path.c_str()),VV_QED,A_V,Z_V,SL_V,M_V,resc_a);
       cout<<"amu_QED: "<<QED_correl.ave_err()<<" + "<<QED_remaind.ave_err()<<endl;
