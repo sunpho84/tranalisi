@@ -12,6 +12,8 @@
  #define INIT_TO(A) =A
 #endif
 
+#include <ave_err.hpp>
+
 using namespace std;
 
 //! random generator
@@ -36,6 +38,29 @@ public:
 private:
   //! init without a seed
   gen_t() : mt19937_64() {}
+};
+
+///////////////////////////////////////////////////////////// gauss_filler_t /////////////////////////////////////////////////////
+
+//! allows to fill from gauss
+class gauss_filler_t : pair<ave_err_t,int>
+{
+public:
+  //! fill from ave_err and seed
+  gauss_filler_t(const ave_err_t &ext_ae,int ext_seed)
+  {
+    ae=ext_ae;
+    seed=ext_seed;
+  }
+  
+  //! fill from ave, err and seed
+  gauss_filler_t(double ave,double err,int ext_seed) : gauss_filler_t(ave_err_t(ave,err),ext_seed) {}
+  
+  //! rebind ave_err
+  ave_err_t &ae=first;
+  
+  //! rebind seed
+  int &seed=second;
 };
 
 //! if we ever needed a global generator...

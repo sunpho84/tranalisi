@@ -90,7 +90,7 @@ template <class TV> TV effective_slope_offset(const TV &data,const TV &M,const T
   //initial guess is taken from aperiodic effective mass
   for(size_t t=0;t<data.size()-dt;t++)
     for(size_t i=0;i<data[0].size();i++)
-      out[t][i]=data[t][i]-two_pts_corr_with_ins_ratio_fun(0.0,SL[t][i],M[t][i],TH,(double)t,par);
+      out[t][i]=data[t][i]-two_pts_corr_with_ins_ratio_fun(M[t][i],0.0,SL[t][i],TH,t,par);
   
   return out;
 }

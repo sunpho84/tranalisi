@@ -14,28 +14,40 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
   if(range.end<range.start) CRASH("End=%d must be larger than Start=%d",range.end,range.start);
   if(range.each==0) CRASH("Each=0");
   
-  //compute nfiles and clust size
+  //compute nfiles
   size_t navail_files=(range.end-range.start)/range.each+1;
-  size_t clust_size=navail_files/njacks;
-  size_t nfiles=clust_size*njacks;
-  if(navail_files!=nfiles) cout<<"Reducing nfiles from available "<<navail_files<<" to "<<nfiles<<" to be multiple of njacks="<<njacks<<endl;
   
   //allocate files and open them
-  vector<obs_file_t> files(nfiles,obs_file_t(ntot_col));
+  size_t nfiles=navail_files,clust_size;
+  vector<obs_file_t> files;
   size_t icheck_file=0,ifile=0;
   do
     {
+      //compute clust size
+      clust_size=navail_files/njacks;
+      size_t nprop_files=clust_size*njacks;
+      if(nprop_files!=nfiles)
+	{
+	  cout<<"Reducing nfiles from "<<nfiles<<" to "<<nprop_files<<" to be multiple of njacks="<<njacks<<endl;
+	  nfiles=nprop_files;
+	}
+      
       //! full path
       string path=combine(template_path.c_str(),icheck_file*range.each+range.start);
       
       //if file exists open it, otherwise skip it
       if(file_exists(path))
 	{
+	  files.push_back(obs_file_t(ntot_col));
 	  files[ifile].open(path);
 	  files[ifile].set_col_view(cols);
 	  ifile++;
 	}
-      else cout<<"Skipping unavailable file "<<path<<endl;
+      else
+	{
+	  cout<<"Skipping unavailable file "<<path<<endl;
+	  navail_files--;
+	}
       icheck_file++;
     }
   while(icheck_file<navail_files and ifile<nfiles);

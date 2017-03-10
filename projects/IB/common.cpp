@@ -139,7 +139,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const function<double(double x,size_t ib)> &fun_line_per_beta,
 		   const function<dboot_t(double x)> &fun_poly_cont_lin,
 		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
-		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label)
+		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list)
 {
   //search max renormalized mass
   double ml_max=0;
@@ -177,13 +177,18 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 	      //put data without fse to brown
 	      if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
 	      
+	      bool leg_print=false;
 	      for(size_t idata=0;idata<ext_data.size();idata++)
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
-		  fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-		    fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+		  {
+		    fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
+		      fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+		    if(not leg_print) fit_file.set_legend(combine("$$\beta=%s, L=%d\n",beta_list[ib].c_str(),L).c_str());
+		    leg_print=true;
+		  }
 	    }
 	}
-	  
+      
       //put back colors for data with fse
       if(without_with_fse==0) fit_file.reset_cur_col();
     }

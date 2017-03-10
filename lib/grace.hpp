@@ -3,9 +3,9 @@
 
 #ifndef EXTERN_GRACE
  #define EXTERN_GRACE extern
- #define INIT_TO(A)
+ #define INIT_TO(...)
 #else
- #define INIT_TO(A) =A
+ #define INIT_TO(...) =__VA_ARGS__
 #endif
 
 #include <fstream>
@@ -30,6 +30,9 @@ namespace grace
   EXTERN_GRACE color_t default_colour INIT_TO(RED);
   EXTERN_GRACE double default_widths INIT_TO(2);
   EXTERN_GRACE double default_label_size INIT_TO(1.5);
+  EXTERN_GRACE vector<grace::color_t> default_color_scheme INIT_TO({grace::RED,grace::RED,grace::RED,grace::BLUE,grace::BLUE,grace::GREEN4,grace::VIOLET});
+  EXTERN_GRACE vector<grace::color_t> default_line_color_scheme INIT_TO({grace::RED,grace::BLUE,grace::GREEN4});
+  EXTERN_GRACE vector<grace::symbol_t> default_symbol_scheme INIT_TO({grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND});
 };
 
 //! class to write a grace file
@@ -131,11 +134,9 @@ public:
   grace_file_t(const string &path) :
     ofstream(path),
     need_close_set(false),
-    color_scheme({grace::RED,grace::RED,grace::RED,grace::BLUE,grace::BLUE,grace::GREEN4,grace::VIOLET}),
-    //color_scheme({grace::RED,grace::BLUE,grace::GREEN4,grace::VIOLET}),
-    line_color_scheme({grace::RED,grace::BLUE,grace::GREEN4}),
-    symbol_scheme({grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND}),
-    //symbol_scheme({grace::DIAMOND,grace::DIAMOND,grace::DIAMOND}),
+    color_scheme(grace::default_color_scheme),
+    line_color_scheme(grace::default_line_color_scheme),
+    symbol_scheme(grace::default_symbol_scheme),
     cur_col(0),
     cur_poly_col(0),
     cur_line_col(0),

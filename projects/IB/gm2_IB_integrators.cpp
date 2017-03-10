@@ -3,25 +3,14 @@
 #endif
 
 #include <common.hpp>
-#include <gsl/gsl_integration.h>
 
-double mass_muon=0.1056583745;
-
-//allocate the table
-int workspace_size=1000;
-gsl_integration_workspace *workspace=gsl_integration_workspace_alloc(workspace_size);
-
-//! parameters to solve
-struct params_t
-{
-  double t;
-  double a;
-  params_t(size_t t,double a) : t(t),a(a) {}
-};
+#define EXTERN_GM2IB
+#include <gm2_IB_integrators.hpp>
 
 //! compute the kernel f(Q)
 double f_Q(double Q,double a)
 {
+  const double mass_muon=0.1056583745;
   double am=mass_muon*a;
   double w=Q/am;
   double s=sqr(w);
@@ -40,29 +29,26 @@ double kern_Q(double Q,void *params)
   return 4*Q*f_Q(Q,a)*((cos(Q*t)-1)/(Q*Q)+t*t/2);
 }
 
-//! compute the ftilde(t)
-dboot_t ftilde_t(size_t t,const dboot_t& a)
+//! return the LO
+double kern_LO_reco_gsl(double t,void *_params)
 {
-  params_t param(t,0);
+  params_LO_t *params=(params_LO_t*)_params;
+  double &M=params->M;
+  double &Z=params->Z;
+  double &a=params->a;
   
-  //function structure
-  gsl_function f;
-  f.function=kern_Q;
-  f.params=&param;
-  
-  //integrate
-  dboot_t result;
-  double abserr;
-  double start=0,epsabs=0,epsrel=1e-6;
-  for(size_t iboot=0;iboot<=nboots;iboot++)
-    {
-      param.a=a[iboot];
-      gsl_integration_qagiu(&f,start,epsabs,epsrel,workspace_size,workspace,&result[iboot],&abserr);
-    }
-  
-  return result;
+  return ftilde_t(t,a)*Z*Z*exp(-M*t)/(2*M);
 }
 
-//! close the integrators
-void close_integrators()
-{gsl_integration_workspace_free(workspace);}
+//! return the QED
+double kern_QED_reco_gsl(double t,void *_params)
+{
+  params_QED_t *params=(params_QED_t*)_params;
+  double &A=params->A;
+  double &M=params->M;
+  double &SL=params->SL;
+  double &Z=params->Z;
+  double &a=params->a;
+  
+  return ftilde_t(t,a)*nonperiodic_two_pts_corr_with_ins_ratio_fun(M,A,SL,t)*nonperiodic_two_pts_corr_fun(Z,M,t);
+}

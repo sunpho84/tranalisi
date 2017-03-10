@@ -64,7 +64,7 @@ public:
   raw_file_t(const raw_file_t& oth)=default;
   
   //! move constructor
-  raw_file_t(raw_file_t&& oth)=default;
+  raw_file_t(raw_file_t&& oth) : file(NULL) {swap(file,oth.file);};
   
   //! creator with name
   raw_file_t(string s,string mode)

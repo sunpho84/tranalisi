@@ -269,7 +269,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const function<double(double x,size_t ib)> &fun_line_per_beta,
 		   const function<dboot_t(double x)> &fun_poly_cont_lin,
 		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
-		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label);
+		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list);
 
 #undef INIT_TO
 #undef EXTERN_COMMON
