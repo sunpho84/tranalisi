@@ -28,7 +28,7 @@ typedef Matrix<double,Dynamic,Dynamic> matr_t;
 template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data,size_t xmin,size_t xmax,string path="")
 {
   //fix max and min, check order
-  xmin=max(xmin,0ul);
+  //xmin=max(xmin,0ul);
   xmax=min(xmax,data.size()-1);
   check_ordered({xmin,xmax,data.size()});
   
@@ -51,7 +51,7 @@ template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data
   
   //take simply average if error was zero
   if(norm==0)
-    for(size_t iel=max(xmin,0ul);iel<=min(xmax,data.size()-1);iel++)
+    for(size_t iel=/*max(xmin,0ul)*/ xmin;iel<=min(xmax,data.size()-1);iel++)
       {
         norm++;
         res+=data[iel];
@@ -251,7 +251,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
 /////////////////////////////////////////////////////////////// multi x fit ///////////////////////////////////////////////////////////
 
 //! hold a single element to be minimized
-class boot_fit_data_t
+class distr_fit_data_t
 {
 public:
   using fun_t=function<double(const vector<double> &p,size_t iel)>;
@@ -259,18 +259,18 @@ public:
   fun_t teo;
   double err;
   
-  boot_fit_data_t(const fun_t &num,const fun_t &teo,double err) : num(num),teo(teo),err(err) {}
+  distr_fit_data_t(const fun_t &num,const fun_t &teo,double err) : num(num),teo(teo),err(err) {}
 };
 
-EXTERN_FIT bool boot_fit_debug INIT_TO(false);
+EXTERN_FIT bool distr_fit_debug INIT_TO(false);
 
 //! functor to minimize
-class boot_fit_FCN_t : public minimizer_fun_t
+template <class TS> class distr_fit_FCN_t : public minimizer_fun_t
 {
   //! covariance flag
   bool cov_flag;
   //! data to be fitted
-  vector<boot_fit_data_t> data;
+  vector<distr_fit_data_t> data;
   //! inverse covariance
   vector<double> inv_cov;
   //! element of the data-dstribution
@@ -278,10 +278,10 @@ class boot_fit_FCN_t : public minimizer_fun_t
   
 public:
   //! constructor
-  boot_fit_FCN_t(const vector<boot_fit_data_t> &data,size_t &iel) : cov_flag(false),data(data),iel(iel){}
+  distr_fit_FCN_t(const vector<distr_fit_data_t> &data,size_t &iel) : cov_flag(false),data(data),iel(iel){}
   
   //! add the covariance matrix
-  bool add_cov(const vector<dboot_t> &pro_cov,const vector<int> &cov_block)
+  bool add_cov(const vector<TS> &pro_cov,const vector<int> &cov_block)
   {
     cov_flag=true;
     const size_t &n=pro_cov.size();
@@ -341,7 +341,7 @@ public:
       	    double ty=data[iy].teo(p,iel);
       	    double contr=(nx-tx)*inv_cov[ix*data.size()+iy]*(ny-ty);
       	    ch2+=contr;
-	    //if(boot_fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	    //if(distr_fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
       	}
     else
       for(size_t ix=0;ix<data.size();ix++)
@@ -351,7 +351,7 @@ public:
 	  double e=data[ix].err;
 	  double contr=sqr((n-t)/e);
 	  ch2+=contr;
-	  if(boot_fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	  if(distr_fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
 	}
      
      return ch2;
@@ -361,34 +361,34 @@ public:
 };
 
 //! class to fit
-class boot_fit_t
+template <class TV,class TS=typename TV::base_type> class distr_fit_t
 {
-  vector<dboot_t> pro_cov;
+  vector<TS> pro_cov;
   vector<int> cov_block_label; //<! contains the block index for which to fill the covariance matrix
   
-  vector<boot_fit_data_t> data;
+  vector<distr_fit_data_t> data;
   minimizer_pars_t pars;
-  vector<dboot_t*> out_pars;
+  vector<TS*> out_pars;
 public:
   
   //! add a point
-  void add_point(const boot_fit_data_t::fun_t &num,const boot_fit_data_t::fun_t &teo,const dboot_t &pro_err,int block_label)
+  void add_point(const distr_fit_data_t::fun_t &num,const distr_fit_data_t::fun_t &teo,const TS &pro_err,int block_label)
   {
-    data.push_back(boot_fit_data_t(num,teo,pro_err.err()));
+    data.push_back(distr_fit_data_t(num,teo,pro_err.err()));
     pro_cov.push_back(pro_err);
     cov_block_label.push_back(block_label);
   }
   
   //! add a point without error distribution
-  void add_point(const boot_fit_data_t::fun_t &num,const boot_fit_data_t::fun_t &teo,const double &err)
+  void add_point(const distr_fit_data_t::fun_t &num,const distr_fit_data_t::fun_t &teo,const double &err)
   {
-    data.push_back(boot_fit_data_t(num,teo,err));
-    pro_cov.push_back(dboot_t(gauss_filler_t(0,err,234234)));
+    data.push_back(distr_fit_data_t(num,teo,err));
+    pro_cov.push_back(TS(gauss_filler_t(0,err,234234)));
     cov_block_label.push_back(DO_NOT_CORRELATE);
   }
   
   //! add a parameter to the fit
-  size_t add_fit_par(dboot_t &out_par,string name,double ans,double err)
+  size_t add_fit_par(TS &out_par,string name,double ans,double err)
   {
     size_t ipar=pars.size();
     pars.add(name.c_str(),ans,err);
@@ -397,7 +397,7 @@ public:
   }
   
   //! add a parameter that gets self-fitted (useful to propagate erorr on x)
-  size_t add_self_fitted_point(dboot_t &out_par,string name,const dboot_t &point,int block_label)
+  size_t add_self_fitted_point(TS &out_par,string name,const TS &point,int block_label)
   {
     size_t ipar=add_fit_par(out_par,name.c_str(),point[0],point.err());
     add_point(//numerical data
@@ -414,7 +414,7 @@ public:
   }
   
   //! same, but with ave and error only
-  size_t add_self_fitted_point(dboot_t &out_par,string name,const ave_err_t &ae)
+  size_t add_self_fitted_point(TS &out_par,string name,const ave_err_t &ae)
   {
     size_t ipar=add_fit_par(out_par,name.c_str(),ae.ave,ae.err);
     add_point(//numerical data
@@ -434,27 +434,27 @@ public:
   void fit(bool cov_flag=false)
   {
     size_t npars=pars.size();
-    size_t iboot=0;
-    boot_fit_FCN_t boot_fit_FCN(data,iboot);
-    if(cov_flag) boot_fit_FCN.add_cov(pro_cov,cov_block_label);
+    size_t idistr=0;
+    distr_fit_FCN_t<TS> distr_fit_FCN(data,idistr);
+    if(cov_flag) distr_fit_FCN.add_cov(pro_cov,cov_block_label);
     
     //define minimizator
-    minimizer_t minimizer(boot_fit_FCN,pars);
+    minimizer_t minimizer(distr_fit_FCN,pars);
     
-    dboot_t ch2;
-    for(iboot=0;iboot<=out_pars[0]->nboots();iboot++)
+    TS ch2;
+    for(idistr=0;idistr<out_pars[0]->size();idistr++)
       {
-	// boot_fit_debug=false;
-	// if(iboot==out_pars[0]->nboots()) boot_fit_debug=true;
+	// distr_fit_debug=false;
+	// if(idistr==out_pars[0]->size()-1) distr_fit_debug=true;
 	
 	//minimize and print the result
 	
-	cout<<"----------------------- "<<iboot<<" ----------------------- "<<endl;
+	//cout<<"----------------------- "<<idistr<<" ----------------------- "<<endl;
 	vector<double> pars=minimizer.minimize();
-	ch2[iboot]=minimizer.eval(pars);
+	ch2[idistr]=minimizer.eval(pars);
 	
-	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[iboot]=pars[ipar];
-	// boot_fit_debug=false;
+	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[idistr]=pars[ipar];
+	// distr_fit_debug=false;
     }
     
     //write ch2
@@ -467,6 +467,8 @@ public:
   //! fix a single parameter to a given value
   void fix_par_to(size_t ipar,double val) {pars.fix_to(ipar,val);}
 };
+using boot_fit_t=distr_fit_t<dbvec_t>;
+using jack_fit_t=distr_fit_t<djvec_t>;
 
 class cont_chir_fit_data_t_pol
 {
@@ -479,6 +481,134 @@ public:
 
 //! perform a fit to the continuum and chiral
 void cont_chir_fit_pol(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t_pol> &ext_data,const dboot_t &ml_phys,const string &path,dboot_t &output);
+
+//! solve a linear system
+template <class TV> TV lin_solve(vector<double> A,TV b)
+{
+  if(A.size()!=sqr(b.size())) CRASH("A has different size from b^2, size A = %zu, size b = %zu",A.size(),b.size());
+  
+  int d=b.size();
+  
+  // for(int i=0;i<d;i++)
+  //   {
+  //     for(int j=0;j<d;j++) cout<<A[i*d+j]<<" ";
+  //     cout<<endl;
+  //   }
+  // for(int i=0;i<d;i++) cout<<b[i].ave_err()<<endl;
+  
+  for(int i=0;i<d;i++)
+    {
+      double C=A[i*d+i];
+      for(int j=i;j<d;j++) A[i*d+j]/=C;
+      b[i]/=C;
+      
+      for(int k=i+1;k<d;k++)
+        {
+          double C=A[k*d+i];
+          for(int j=i;j<d;j++) A[k*d+j]-=A[i*d+j]*C;
+          b[k]-=C*b[i];
+        }
+    }
+  
+  TV x(d);
+  for(int k=d-1;k>=0;k--)
+    {
+      typename TV::base_type S;
+      S=0.0;
+      
+      for(int i=k+1;i<d;i++) S+=A[k*d+i]*x[i];
+      x[k]=b[k]-S;
+    }
+  
+  return x;
+}
+
+//! perform polynomial fit
+template <class TV> TV poly_fit(const vector<double> &x,const TV &y,int d,double xmin=-1e300,double xmax=1e300)
+{
+  if(x.size()!=y.size()) CRASH("x and y have different sizes, %zu %zu",x.size(),y.size());
+  
+  cout<<x<<endl;
+  cout<<y.ave_err()<<endl;
+  
+  vector <double> Al(2*d+1,0.0);
+  TV c(d+1);
+  c=0.0;
+  
+  for(int p=0;p<(int)y.size();p++)
+    if(x[p]<=xmax and x[p]>=xmin)
+      {
+        //calculate the weight
+        double w=pow(y[p].err(),-2);
+	cout<<w<<endl;
+        //compute Al and c
+        for(int f=0;f<=2*d;f++)
+          {
+            Al[f]+=w;
+            if(f<=d) c[f]+=y[p]*w;
+            w*=x[p];
+          }
+      }
+  
+  vector<double> A((d+1)*(d+1));
+  for(int i=0;i<=d;i++)
+    for(int j=0;j<=d;j++)
+      A[i*(d+1)+j]=Al[i+j];
+  
+  return lin_solve(A,c);
+}
+//! perform a polynomial fit assuming x are ranging from 0 to y.size()
+template <class TV> TV poly_fit(const TV &y,int d)
+{return poly_fit(vector_up_to<double>(y.size()),y,d,-0.5,y.size()+0.5);}
+
+//! perform the polynomial fit and integrate
+template <class TV> typename TV::base_type poly_integrate(const vector<double> &x,const TV &y)
+{
+  int d=y.size()-1;
+  TV pars=poly_fit(x,y,d);
+  typename TV::base_type out;
+  
+  double xmin=x[0],xmax=x[x.size()-1];
+  for(int i=0;i<d;i++)
+    out+=(pow(xmax,i+1)-pow(xmin,i+1))*pars[i]/(i+1);
+  
+  return out;
+}
+template <class TV> typename TV::base_type poly_integrate(const TV &y)
+{return poly_integrate(vector_up_to<double>(y.size()),y);}
+
+//! compute the value of the  polynomial in the point
+template <class TV,class TS=typename TV::base_type> TS poly_eval(const TV &pars,double x)
+{
+  TS t=pars[0];
+  double R=x;
+  for(int ipow=1;ipow<(int)pars.size();ipow++)
+    {
+      t+=pars[ipow]*R;
+      R*=x;
+    }
+  return t;
+}
+
+//! compute the ch2 of a polynomial fit
+template <class TV,class TS=typename TV::base_type> TS chi2_poly_fit(const vector<double> &x,const TV &y,int d,double xmin,double xmax,const TV &pars)
+{
+  TS ch2;
+  int ndof=-pars.size();
+  
+  ch2=0.0;
+  for(int ip=0;ip<(int)y.size();ip++)
+    if(x[ip]<=xmax and x[ip]>=xmin)
+      {
+	ch2+=sqr(TS((poly_eval(pars,x[ip])-y[ip])/y[ip].err()));
+        ndof++;
+      }
+  ch2/=max(1,ndof);
+  
+  return ch2;
+}
+template <class TV,class TS=typename TV::base_type> TS chi2_poly_fit(const TV &y,int d,const TV &pars)
+{return chi2_poly_fit(vector_up_to<double>(y.size()+1),y,d,-0.5,y.size()+0.5,pars);}
 
 #undef EXTERN_FIT
 #undef INIT_TO
