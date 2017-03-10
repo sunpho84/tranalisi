@@ -117,7 +117,7 @@ inline int to_int(string s)
   return out;
 }
 
-//! return a filled vector of double ranging from 0 to max
+//! return a filled vector of double ranging from 0 to max (excluded)
 template <class T> vector<T> vector_up_to(size_t max)
 {
   vector<T> x(max);
