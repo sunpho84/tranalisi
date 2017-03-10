@@ -2,129 +2,9 @@
  #include <config.hpp>
 #endif
 
-#include <common.hpp>
-#include <gm2_IB_integrators.hpp>
+#include <gm2_IB_common.hpp>
 
-const size_t ilight=0,istrange=1,icharm=2;
-
-size_t nm,nr;
-index_t<4> ind;
-
-double Za_ave[nbeta]={0.731,0.737,0.762}; //M1
-double Za_err[nbeta]={0.008,0.005,0.004};
-// double Za_ave[nbeta]={0.703,0.714,0.774}; //M2
-// double Za_err[nbeta]={0.002,0.002,0.004};
-double Zt_ave[nbeta]={0.711,0.724,0.762}; //M1
-double Zt_err[nbeta]={0.005,0.004,0.004};
-// double Zt_ave[nbeta]={0.700,0.711,0.767}; //M2
-// double Zt_err[nbeta]={0.003,0.002,0.002};
-int Za_seed[nbeta]={13124,862464,76753};
-int Zt_seed[nbeta]={5634,917453,324338};
-dbvec_t Za(nbeta),Zt(nbeta);
-boot_init_t bi;
-
-const int im=0;
-const double eq[3]={eu,es,ec};
-
-//! hold the data for a single ensemble
-class ens_data_t
-{
-public:
-  size_t iult; //< input in the ultimate file
-  size_t ib,T,L;
-  double aml;
-  string path;
-  
-  size_t tmin[3],tmax[3];
-  djack_t deltam_cr;
-};
-vector<ens_data_t> ens_data;
-
-//! read a single vector, for a specific mass and r, real or imaginary
-dbvec_t read(const char *what,const ens_data_t &ens,size_t im,size_t r,size_t reim)
-{return dbvec_t(bi,read_djvec(combine("%s/data/corr%s",ens.path.c_str(),what),ens.T,ind({im,im,r,reim})));}
-
-//! read a combination of r and return appropriately simmetrized
-dbvec_t read(const char *what,const ens_data_t &ens,int tpar,size_t im,int rpar,size_t reim)
-{
-  dbvec_t o(ens.T);
-  o=0.0;
-  
-  for(size_t r=0;r<nr;r++) o+=read(what,ens,im,r,reim)*(r==0?1:rpar);
-  return o.symmetrized(tpar)/(1+abs(rpar));
-}
-
-//! read averaging the three channels
-dbvec_t read(const char *what,const char *pat,const ens_data_t &ens,int tpar,size_t im,int rpar,size_t reim)
-{
-  return
-    dbvec_t(read(combine("%s_%c1%c1",what,pat[0],pat[1]).c_str(),ens,tpar,im,rpar,reim)+
-	    read(combine("%s_%c2%c2",what,pat[0],pat[1]).c_str(),ens,tpar,im,rpar,reim)+
-	    read(combine("%s_%c3%c3",what,pat[0],pat[1]).c_str(),ens,tpar,im,rpar,reim))
-    /3.0;
-}
-
-//! read PP
-dbvec_t read_PP(const char *what,const ens_data_t &ens,size_t im,int rpar,size_t reim)
-{return read(combine("%s_%s",what,"P5P5").c_str(),ens,1,im,rpar,reim);}
-
-//! read VV
-dbvec_t read_VV(const char *what,const ens_data_t &ens,size_t im,int rpar,size_t reim)
-{return sqr(Za[ens.ib])*read(what,"VV",ens,1,im,rpar,reim);}
-
-//! read TV
-dbvec_t read_TV(const char *what,const ens_data_t &ens,size_t im,int rpar,size_t reim)
-{return dboot_t(-Za[ens.ib]*Zt[ens.ib])*read(what,"TV",ens,-1,im,rpar,reim);}
-
-//! read VT
-dbvec_t read_VT(const char *what,const ens_data_t &ens,size_t im,int rpar,size_t reim)
-{return dboot_t(Zt[ens.ib]*Za[ens.ib])*read(what,"VT",ens,-1,im,rpar,reim);}
-
-//! integrate
-dboot_t integrate(const dbvec_t &corr,size_t T,const dboot_t &a)
-{
-  dboot_t out;
-  out=0.0;
-  for(size_t t=1;t<T/2-4;t++) out+=corr[t]*ftilde_t(t,a);
-  out*=4*sqr(alpha_em)*sqr(eq[im]);
-  
-  return out;
-}
-
-//! compute the critical deltam
-dboot_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
-{
-  dbvec_t V0P5_LL=read("LL_V0P5",ens,-1,iq,-1,IM);
-  dbvec_t V0P5_0M=read("0M_V0P5",ens,-1,iq,-1,IM);
-  dbvec_t V0P5_0T=read("0T_V0P5",ens,-1,iq,-1,IM);
-  dbvec_t num_deltam_cr=forward_derivative(dbvec_t(V0P5_LL+2.0*dbvec_t(V0P5_0M+V0P5_0T)));
-  num_deltam_cr.ave_err().write(combine("%s/plots/num_deltam_cr.xmg",ens.path.c_str()));
-  
-  dbvec_t V0P5_0P=read("0P_V0P5",ens,-1,iq,+1,RE);
-  dbvec_t den_deltam_cr=forward_derivative(V0P5_0P);
-  den_deltam_cr.ave_err().write(combine("%s/plots/den_deltam_cr.xmg",ens.path.c_str()));
-  
-  dboot_t deltam_cr=constant_fit(dbvec_t(-num_deltam_cr/(2.0*den_deltam_cr)),ens.tmin[iq],ens.tmax[iq],combine("%s/plots/deltam_cr_t.xmg",ens.path.c_str()));
-  
-  return deltam_cr;
-}
-
-//! read QED corrections
-dbvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,const int im,const dboot_t &deltam_cr,const dbvec_t &c_LO)
-{
-  dbvec_t c_0T=read("0T",pat,ens,tpar,im,1,RE);
-  dbvec_t c_0M=read("0M",pat,ens,tpar,im,1,RE);
-  dbvec_t c_LL=read("LL",pat,ens,tpar,im,1,RE);
-  dbvec_t(c_0T/c_LO).ave_err().write(combine("%s/plots/%s_0T.xmg",ens.path.c_str(),pat));
-  dbvec_t(c_0M/c_LO).ave_err().write(combine("%s/plots/%s_0M.xmg",ens.path.c_str(),pat));
-  dbvec_t(c_LL/c_LO).ave_err().write(combine("%s/plots/%s_LL.xmg",ens.path.c_str(),pat));
-  dbvec_t c=dbvec_t(c_LL+2.0*dbvec_t(c_0T+c_0M));
-  
-  dbvec_t c_0P=read("0P",pat,ens,tpar,im,-1,IM);
-  dbvec_t(c_0P/c_LO).ave_err().write(combine("%s/plots/%s_0P.xmg",ens.path.c_str(),pat));
-  dbvec_t d=-(deltam_cr*c_0P);
-  return dbvec_t(c+2.0*d)*e2*sqr(eq[im]);
-}
+const int im=istrange;
 
 //! ansatz fit
 template <class Tpars,class Tm,class Ta>
@@ -181,52 +61,16 @@ dboot_t cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_f
 
 int main(int narg,char **arg)
 {
-  //open input file
-  string name="input_global.txt";
-  if(narg>=2) name=arg[1];
-  raw_file_t input(name,"r");
-  
-  cout.precision(16);
-  
-  //read where to read input and how many ensemble
-  string ens_pars=input.read<string>("UltimatePath");
-  nm=input.read<size_t>("NMass");
-  nr=input.read<size_t>("NR");
-  ind.set_ranges({nm,nm,nr,2});
-  init_common_IB(ens_pars);
-  size_t nens_used=input.read<int>("NEnsemble");
-  
-  //fill Za,Zt
-  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-    {
-      Za[ibeta].fill_gauss(Za_ave[ibeta],Za_err[ibeta],Za_seed[ibeta]);
-      Zt[ibeta].fill_gauss(Zt_ave[ibeta],Zt_err[ibeta],Zt_seed[ibeta]);
-    }
-  
-  input.expect({"Ens","beta","L","T","aml","tint_cr","tint_ss","tint_cc","path"});
-  ens_data.resize(nens_used);
   int input_an_id=0;
   dbvec_t LO(ens_data.size());
   dbvec_t QED(ens_data.size());
   dbvec_t ratio(ens_data.size());
-  dbvec_t alist(nbeta),zlist(nbeta);
+  
   for(size_t iens=0;iens<nens_used;iens++)
     {
-      cout<<"----------------------- "<<iens<<" ---------------------"<<endl;
       ens_data_t &ens=ens_data[iens];
-      
-      input.read(ens.iult);
-      input.read(ens.ib);
-      input.read(ens.L);
-      input.read(ens.T);
       size_t TH=ens.T/2;
-      input.read(ens.aml);
-      for(size_t iq=0;iq<3;iq++)
-	{
-	  input.read(ens.tmin[iq]);
-	  input.read(ens.tmax[iq]);
-	}
-      input.read(ens.path);
+      cout<<"----------------------- "<<iens<<" "<<ens.path<<" ---------------------"<<endl;
       
       size_t ib=ens.ib;
       bi=jack_index[input_an_id][ens.iult];
@@ -243,8 +87,8 @@ int main(int narg,char **arg)
       dbvec_t TV_LO=read_TV("00",ens,im,1,RE),eff_TV_LO=effective_mass(TV_LO,TH,-1);
       eff_TV_LO.ave_err().write(combine("%s/plots/TV_LO_emass.xmg",ens.path.c_str()));
       //load QED
-      dbvec_t VV_QED=read_QED("VV",ens,1,im,deltam_cr,VV_LO),VV_rat=VV_QED/VV_LO;
-      dbvec_t TV_QED=-read_QED("TV",ens,-1,im,deltam_cr,TV_LO),TV_rat=TV_QED/TV_LO;
+      dbvec_t VV_QED=read_QED_VV(ens,1,im,deltam_cr,VV_LO),VV_rat=VV_QED/VV_LO;
+      dbvec_t TV_QED=-read_QED_TV(ens,-1,im,deltam_cr,TV_LO),TV_rat=TV_QED/TV_LO;
       dbvec_t(VV_rat).ave_err().write(combine("%s/plots/VV_QED_ratio.xmg",ens.path.c_str()));
       dbvec_t(TV_rat).ave_err().write(combine("%s/plots/TV_QED_ratio.xmg",ens.path.c_str()));
       dbvec_t(VV_rat/TV_rat).ave_err().write(combine("%s/plots/VV_TV_ratio.xmg",ens.path.c_str()));
@@ -258,14 +102,25 @@ int main(int narg,char **arg)
 				 combine("%s/plots/TV_LO.xmg",ens.path.c_str()),
 				 combine("%s/plots/TV_QED.xmg",ens.path.c_str()));
       
-      LO[iens]=integrate(VV_LO,ens.T,a);
+      dboot_t resc_a=M_V/M_V_phys[im];
+      
+      LO[iens]=integrate(VV_LO,ens.T,a,im);
       cout<<"amu: "<<LO[iens].ave_err()<<endl;
       
-      QED[iens]=integrate(VV_QED,ens.T,a);
+      dboot_t LO_resc=integrate(VV_LO,ens.T,resc_a,im);
+      cout<<"amu_scaled_with_V: "<<LO_resc.ave_err()<<endl;
+      
+      QED[iens]=integrate(VV_QED,ens.T,a,im);
       cout<<"amu_QED: "<<QED[iens].ave_err()<<endl;
       
+      dboot_t QED_resc=integrate(VV_QED,ens.T,resc_a,im);
+      cout<<"amu_QED_scaled_with_V: "<<QED_resc.ave_err()<<endl;
+      
       ratio[iens]=QED[iens]/LO[iens];
-      cout<<" Ratio: "<<dboot_t(ratio[iens]).ave_err()<<endl;
+      cout<<" Ratio: "<<ratio[iens].ave_err()<<endl;
+      
+      dboot_t ratio_resc=QED_resc/LO_resc;
+      cout<<" Ratio_scaled_with_V: "<<ratio_resc.ave_err()<<endl;
       
       //parameters to fit
       {
@@ -327,11 +182,11 @@ int main(int narg,char **arg)
 	write_fit_plot(combine("%s/plots/TV_QED_bis.xmg",ens.path.c_str()),ens.tmin[im]-dcT,ens.tmax[im],[M,A_T_bis,SL,TH](double x)->dboot_t{return two_pts_corr_with_ins_ratio_fun(M,A_T_bis,SL,TH,x,1);},dbvec_t(TV_QED/TV_LO));
 	
 	for(size_t t=ens.tmin[im];t<=TH;t++) VV_LO[t]=two_pts_corr_fun(Z_V_bis,M,TH,t,1);
-	LO[iens]=integrate(VV_LO,ens.T,a);
+	LO[iens]=integrate(VV_LO,ens.T,a,im);
 	cout<<"amu: "<<LO[iens].ave_err()<<endl;
 	
 	for(size_t t=ens.tmin[im];t<=TH;t++) VV_QED[t]=two_pts_corr_with_ins_ratio_fun(M,A_V_bis,SL,TH,t,1)*VV_LO[t];
-	QED[iens]=integrate(VV_QED,ens.T,a);
+	QED[iens]=integrate(VV_QED,ens.T,a,im);
 	cout<<"amu_QED: "<<QED[iens].ave_err()<<endl;
 	
 	ratio[iens]=QED[iens]/LO[iens];
@@ -339,18 +194,11 @@ int main(int narg,char **arg)
       }
     }
   
-  //prepare the list of a and z
-  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-    {
-      alist[ibeta]=1.0/lat_par[input_an_id].ainv[ibeta];
-      zlist[ibeta]=lat_par[input_an_id].Z[ibeta];
-    }
-  
   const size_t an_flag=0;
   vector<cont_chir_fit_data_t> data_LO;
   for(size_t iens=0;iens<ens_data.size();iens++)
     data_LO.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,ens_data[iens].ib,ens_data[iens].L,ratio[iens],ratio[iens]));
-  cont_chir_fit(alist,zlist,data_LO,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2Pi_flag%zu_an%zu.xmg",an_flag,input_an_id,"%s"),an_flag,false);
+  cont_chir_fit(alist,zlist,data_LO,lat_par[input_an_id].ml,combine("plots/cont_chir_LO_flag%zu_an%zu.xmg",an_flag,input_an_id,"%s"),an_flag,false);
   close_integrators();
   
   return 0;
