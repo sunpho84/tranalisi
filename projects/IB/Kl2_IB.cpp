@@ -68,7 +68,6 @@ int main(int narg,char **arg)
 
   djvec_t pi_plain=load_P5P5("00",0,0);
   djvec_t pi_exch=load_P5P5("LL",0,0);
-  djvec_t(pi_exch/pi_plain).ave_err().write("/tmp/ex.xmg");
   djvec_t pi_self=load_P5P5("0M",0,0);
   djvec_t pi_tad=load_P5P5("0T",0,0);
   djvec_t pi_s=load_P5P5("0S",0,0);
@@ -150,19 +149,17 @@ int main(int narg,char **arg)
 
   //D meson
 
-  djvec_t D_ratio_exch=load_P5P5("LL",0,2)/load_P5P5("00",2,0);
-  djvec_t D_ratio_self=load_P5P5("0M",2,0)/load_P5P5("00",2,0);
-  djvec_t D_ratio_tad=load_P5P5("0T",2,0)/load_P5P5("00",2,0);
-  djvec_t D_ratio_s=load_P5P5("0S",2,0)/load_P5P5("00",2,0);
-  djvec_t D_ratio_p=-load_P5P5("0P",2,0,IM,-1)/load_P5P5("00",2,0);
+  djvec_t D_plain=load_P5P5("00",2,0);
+  djvec_t D_exch=load_P5P5("LL",0,2);
+  djvec_t D_self=load_P5P5("0M",2,0);
+  djvec_t D_tad=load_P5P5("0T",2,0);
+  djvec_t D_self_revins=load_P5P5("0M",0,2);
+  djvec_t D_tad_revins=load_P5P5("0T",0,2);
+  djvec_t D_s=load_P5P5("0S",2,0);
+  djvec_t D_p=-load_P5P5("0P",2,0,IM,-1);
+  djvec_t D_p_revins=-load_P5P5("0P",0,2,IM,-1);
 
-  D_ratio_exch.ave_err().write("D_ratio_exch.xmg");
-  D_ratio_self.ave_err().write("D_ratio_self.xmg");
-  D_ratio_tad.ave_err().write("D_ratio_tad.xmg");
-  D_ratio_s.ave_err().write("D_ratio_s.xmg");
-  D_ratio_p.ave_err().write("D_ratio_p.xmg");
-  
-  djack_t D_Z,D_M,D_A_exch,D_SL_exch,D_A_selftad,D_SL_selftad,D_A_s,D_SL_s,D_A_p,D_SL_p;
+  djack_t D_Z,D_M,D_A_exch,D_SL_exch,D_A_selftad,D_SL_selftad,D_A_selftad_revins,D_SL_selftad_revins,D_A_s,D_SL_s,D_A_p,D_SL_p,D_A_p_revins,D_SL_p_revins;
   
   // djack_t M_D,Z_D;
   
@@ -171,20 +168,26 @@ int main(int narg,char **arg)
   // cout<<"D_Z: "<<Z_D.ave_err()<<endl;
   // cout<<"D_M: "<<M_D.ave_err()<<endl;
   
-  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_exch,D_SL_exch,load_P5P5("00",2,0),load_P5P5("LL",0,2),TH,D_tmin,D_tmax,"D_mass.xmg","D_exch.xmg");
-  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_s,D_SL_s,load_P5P5("00",2,0),load_P5P5("0S",2,0),TH,D_tmin,D_tmax,"D_mass.xmg","D_s.xmg");
-  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_p,D_SL_p,load_P5P5("00",2,0),djvec_t(-load_P5P5("0P",2,0,IM,-1)),TH,D_tmin,D_tmax,"D_mass.xmg","D_p.xmg");
-  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_selftad,D_SL_selftad,load_P5P5("00",2,0),djvec_t(load_P5P5("0M",2,0)+load_P5P5("0T",2,0)),TH,D_tmin,D_tmax,"D_mass.xmg","D_selftad.xmg");
+  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_exch,D_SL_exch,D_plain,D_exch,TH,D_tmin,D_tmax,"D_mass.xmg","D_exch.xmg");
+  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_s,D_SL_s,D_plain,D_s,TH,D_tmin,D_tmax,"D_mass.xmg","D_s.xmg");
+  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_p,D_SL_p,D_plain,D_p,TH,D_tmin,D_tmax,"D_mass.xmg","D_p.xmg");
+  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_selftad_revins,D_SL_selftad_revins,D_plain,djvec_t(D_self_revins+D_tad_revins),TH,D_tmin,D_tmax,"D_mass.xmg","D_selftad_revins.xmg");
+  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_p_revins,D_SL_p_revins,D_plain,D_p_revins,TH,D_tmin,D_tmax,"D_mass.xmg","D_p_revins.xmg");
+  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_selftad,D_SL_selftad,D_plain,djvec_t(D_self+D_tad),TH,D_tmin,D_tmax,"D_mass.xmg","D_selftad.xmg");
   
   cout<<"D_M: "<<D_M.ave_err()<<endl;
   cout<<"D_A_exch: "<<D_A_exch.ave_err()<<endl;
   cout<<"D_SL_exch: "<<D_SL_exch.ave_err()<<endl;
   cout<<"D_A_selftad: "<<D_A_selftad.ave_err()<<endl;
   cout<<"D_SL_selftad: "<<D_SL_selftad.ave_err()<<endl;
+  cout<<"D_A_selftad_revins: "<<D_A_selftad_revins.ave_err()<<endl;
+  cout<<"D_SL_selftad_revins: "<<D_SL_selftad_revins.ave_err()<<endl;
   cout<<"D_A_s: "<<D_A_s.ave_err()<<endl;
   cout<<"D_SL_s: "<<D_SL_s.ave_err()<<endl;
   cout<<"D_A_p: "<<D_A_p.ave_err()<<endl;
   cout<<"D_SL_p: "<<D_SL_p.ave_err()<<endl;
+  cout<<"D_A_p_revins: "<<D_A_p_revins.ave_err()<<endl;
+  cout<<"D_SL_p_revins: "<<D_SL_p_revins.ave_err()<<endl;
 
   raw_file_t D_obs_file("D_obs","w");
   D_obs_file.bin_write(D_M);
@@ -192,6 +195,8 @@ int main(int narg,char **arg)
   D_obs_file.bin_write(D_SL_selftad);
   D_obs_file.bin_write(D_SL_s);
   D_obs_file.bin_write(D_SL_p);
+  D_obs_file.bin_write(D_SL_selftad_revins);
+  D_obs_file.bin_write(D_SL_p_revins);
 
   //Ds meson
 

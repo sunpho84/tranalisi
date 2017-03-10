@@ -116,7 +116,7 @@ public:
   size_t iml_phys;
   bool fitting_a,fitting_z;
   dbvec_t fit_a,fit_z;
-  dboot_t fit_f0,fit_B0,fit_L2dep,fit_L3dep,fit_L4dep,fit_ML4dep;
+  dboot_t fit_C,fit_f0,fit_B0,fit_L2dep,fit_L3dep,fit_L4dep,fit_ML4dep;
   dboot_t adep,adep_ml,L2dep,L3dep,L4dep,ML4dep;
   dboot_t C,KPi,KK,K2Pi,K2K;
   dboot_t fit_ml_phys;
@@ -177,9 +177,9 @@ public:
       }
     else
       {
-	iL3dep=boot_fit.add_self_fitted_point(fit_L3dep,"L3dep_prior",{1.0,10.0});
-	iL4dep=boot_fit.add_self_fitted_point(fit_L4dep,"L4dep_prior",{1.0,10.0});
-	iML4dep=boot_fit.add_self_fitted_point(fit_ML4dep,"ML4dep_prior",{1.0,10.0});
+	iL3dep=boot_fit.add_self_fitted_point(fit_L3dep,"L3dep_prior",{3.0,2.0});
+	iL4dep=boot_fit.add_self_fitted_point(fit_L4dep,"L4dep_prior",{0.0,0.1});
+	iML4dep=boot_fit.add_self_fitted_point(fit_ML4dep,"ML4dep_prior",{0.0,0.1});
       }
   }
   
@@ -197,13 +197,23 @@ public:
   }
   
   //! add the low energy constants
-  void add_LEC_pars(const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &KK_guess,const ave_err_t &K2Pi_guess,const ave_err_t &K2K_guess,boot_fit_t &boot_fit)
+  void add_LEC_pars(const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &KK_guess,const ave_err_t &K2Pi_guess,const ave_err_t &K2K_guess,boot_fit_t &boot_fit,const bool flag_prior=true)
   {
-    iC=boot_fit.add_fit_par(C,"C",C_guess.ave,C_guess.err);
+    if(flag_prior)
+      {
+	iC=boot_fit.add_fit_par(C,"C",C_guess.ave,C_guess.err);
+	
+      }
+    else
+      {
+	iC=boot_fit.add_self_fitted_point(fit_C,"C_prior",{3.54e-5,1.0e-5});
+      }
+    
     iKPi=boot_fit.add_fit_par(KPi,"KPi",KPi_guess.ave,KPi_guess.err);
     iKK=boot_fit.add_fit_par(KK,"KK",KK_guess.ave,KK_guess.err);
     iK2Pi=boot_fit.add_fit_par(K2Pi,"K2Pi",K2Pi_guess.ave,K2Pi_guess.err);
     iK2K=boot_fit.add_fit_par(K2K,"K2K",K2K_guess.ave,K2K_guess.err);
+    
   }
   
   //! add the dependency from ml_phys
@@ -241,6 +251,7 @@ public:
   void print_LEC_pars() const
   {
     cout<<"C: "<<C.ave_err()<<endl;
+    cout<<"C_prior: "<<fit_C.ave_err()<<endl;
     cout<<"KPi: "<<KPi.ave_err()<<endl;
     cout<<"KK: "<<KK.ave_err()<<endl;
     cout<<"K2Pi: "<<K2Pi.ave_err()<<endl;
