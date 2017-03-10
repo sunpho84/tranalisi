@@ -330,7 +330,7 @@ int main(int narg,char **arg)
 	      cout<<"ens: "<<raw_data[iens].iult<<" "<<"aml: "<<raw_data[iens].aml<<" "<<"ams: "<<raw_data[iens].ams<<" "<<"beta: "<<raw_data[iens].ibeta<<" "<<"L: "<<raw_data[iens].L<<" "<<"dataFVE: "<<dboot_t(da2M2Pi[iens]-FVE_da2M2Pi[iens]).ave_err()<<" "<<"data: "<<da2M2Pi[iens].ave_err()<<endl;
 	    }
 	
-	output_dM2Pi[input_an_id+an_flag*ninput_an]=cont_chir_fit_dM2Pi(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_dM2Pi,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2Pi_flag%zu_an%zu_sub%s.xmg",an_flag,input_an_id,"%s"),an_flag,cov_flag);
+	output_dM2Pi[input_an_id+an_flag*ninput_an]=cont_chir_fit_dM2Pi(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_dM2Pi,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2Pi_flag%zu_an%zu_sub%s.xmg",an_flag,input_an_id,"%s"),an_flag,cov_flag,beta_list);
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
