@@ -252,12 +252,12 @@ public:
 	write_prop("errorbar riser linewidth "+to_string(errorbar_riser_linewidth));
 	//transparency
 	(*this)<<"#QTGRACE_ADDITIONAL_PARAMETER: G 0 S "<<iset<<" ALPHA_CHANNELS {"<<transparency<<";"<<transparency<<";255;255;255;255}"<<endl;
+	//write legend
+	write_prop("legend \""+legend+"\"");
 	//point to the next set
 	(*this)<<"&"<<endl;
 	shift_iset();
 	(*this)<<"@target G0.S"<<iset<<endl;
-	//write legend
-	write_prop("legend \""+legend+"\"");
 	//reset all props and force next call to ignore
 	reset_props();
 	need_close_set=false;

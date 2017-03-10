@@ -74,6 +74,14 @@ public:
   //! return the number of parameters
   size_t size() const
   {return pars.size();}
+  
+  //! return the number of parameters
+  size_t nfree_pars() const
+  {
+    size_t n=0;
+    for(size_t i=0;i<pars.size();i++) if(not pars[i].is_fixed) n++;
+    return n;
+  }
 };
 
 //! pointer used by fcn
@@ -175,6 +183,14 @@ public:
   //! return the number of parameters
   size_t size() const
   {return pars.Parameters().size();}
+  
+  //! return the number of parameters
+  size_t nfree_pars() const
+  {
+    size_t n=0;
+    for(size_t i=0;i<size();i++) if(not pars.Parameter(i).IsFixed()) n++;
+    return n;
+  }
 };
 
 //! wrapper against minimization class

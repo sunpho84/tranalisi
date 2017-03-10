@@ -434,6 +434,7 @@ public:
   void fit(bool cov_flag=false)
   {
     size_t npars=pars.size();
+    size_t nfree_pars=pars.nfree_pars();
     size_t idistr=0;
     distr_fit_FCN_t<TS> distr_fit_FCN(data,idistr);
     if(cov_flag) distr_fit_FCN.add_cov(pro_cov,cov_block_label);
@@ -458,7 +459,7 @@ public:
     }
     
     //write ch2
-    cout<<"Ch2: "<<ch2.ave_err()<<" / "<<data.size()-npars<<endl;
+    cout<<"Ch2: "<<ch2.ave_err()<<" / "<<data.size()-nfree_pars<<endl;
   }
   
   //! fix a single parameter
