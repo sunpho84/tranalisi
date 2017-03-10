@@ -176,15 +176,14 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 	      fit_file.new_data_set();
 	      //put data without fse to brown
 	      if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
+	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
 	      
-	      bool leg_print=false;
 	      for(size_t idata=0;idata<ext_data.size();idata++)
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		  {
+		    
 		    fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
 		      fun_data(idata,without_with_fse,ib).ave_err()<<endl;
-		    if(not leg_print) fit_file.set_legend(combine("$$\beta=%s, L=%d\n",beta_list[ib].c_str(),L).c_str());
-		    leg_print=true;
 		  }
 	    }
 	}
