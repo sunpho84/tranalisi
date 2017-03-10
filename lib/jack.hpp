@@ -5,6 +5,7 @@
 #include <file.hpp>
 #include <fstream>
 #include <iostream>
+#include <random.hpp>
 #include <tools.hpp>
 #include <valarray>
 
@@ -57,6 +58,9 @@ public:
   //! construct from expr
   template<class _Dom> jack_t(const _Expr<_Dom,T> &oth) : valarray<T>(oth) {}
   
+  //! constrcutor specifying gauss_filler
+  explicit jack_t(const gauss_filler_t &gf) : jack_t() {fill_gauss(gf);}
+  
   //! copy constructor
   jack_t(const jack_t &oth) : valarray<T>(oth) {// cout<<"copy const"<<endl;
   }
@@ -100,6 +104,20 @@ public:
   
   //! return only the error
   double err() const {return ave_err().err;}
+  
+  //! initialize from aver_err_t and a seed
+  void fill_gauss(const gauss_filler_t &gf)
+  {
+    check_njacks_init();
+    gen_t gen(gf.seed);
+    for(size_t ijack=0;ijack<njacks;ijack++)
+      (*this)[ijack]=gen.get_gauss(gf.ae.ave,gf.ae.err/sqrt(njacks-1));
+    (*this)[njacks]=gf.ae.ave;
+  }
+  
+  //! initialize from ave and err
+  void fill_gauss(double ave,double err,int seed)
+  {fill_gauss(gauss_filler_t(ave,err,seed));}
   
   //! fill the clusters
   size_t fill_clusters(const valarray<T> &data)
