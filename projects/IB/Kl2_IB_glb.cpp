@@ -324,56 +324,23 @@ int main(int narg,char **arg)
 	vector<cont_chir_fit_data_t> data_dM2Pi;
 	for(size_t iens=0;iens<raw_data.size();iens++)
 	  if(FSE_an(an_flag)==1 or raw_data[iens].useforL)
-	    {
-	      data_dM2Pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
-							da2M2Pi[iens]-FVE_da2M2Pi[iens],da2M2Pi[iens]));
-	      cout<<"ens: "<<raw_data[iens].iult<<" "<<"aml: "<<raw_data[iens].aml<<" "<<"ams: "<<raw_data[iens].ams<<" "<<"beta: "<<raw_data[iens].ibeta<<" "<<"L: "<<raw_data[iens].L<<" "<<"dataFVE: "<<dboot_t(da2M2Pi[iens]-FVE_da2M2Pi[iens]).ave_err()<<" "<<"data: "<<da2M2Pi[iens].ave_err()<<endl;
-	    }
-	
+	    data_dM2Pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
+						      da2M2Pi[iens]-FVE_da2M2Pi[iens],da2M2Pi[iens]));
 	output_dM2Pi[input_an_id+an_flag*ninput_an]=cont_chir_fit_dM2Pi(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_dM2Pi,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2Pi_flag%zu_an%zu_sub%s.xmg",an_flag,input_an_id,"%s"),an_flag,cov_flag,beta_list);
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
-	/*
-	cout<<"                         Pi "<<endl;
-	cout<<endl;
-	
-	//data to fit
-	vector<cont_chir_fit_data_t> data_dM2Pi;
-	for(size_t iens=0;iens<raw_data.size();iens++)
-	  {
-	    data_dM2Pi.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
-						      da2M2Pi[iens]-FVE_da2M2Pi[iens],da2M2Pi[iens]));
-	    cout<<"ens: "<<raw_data[iens].iult<<" "<<"aml: "<<raw_data[iens].aml<<" "<<"ams: "<<raw_data[iens].ams<<" "<<"beta: "<<raw_data[iens].ibeta<<" "<<"L: "<<raw_data[iens].L<<" "<<"dataFVE: "<<dboot_t(da2M2Pi[iens]-FVE_da2M2Pi[iens]).ave_err()<<" "<<"data: "<<da2M2Pi[iens].ave_err()<<endl;
-	  }
-	
-	output_dM2Pi[input_an_id+an_flag*ninput_an]=cont_chir_fit_dM2Pi(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_dM2Pi,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2Pi_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag);
-	
-	cout<<"-----------------------------------------------"<<endl;
-	cout<<endl;
-	
+	/*	
 	cout<<"                      QED K "<<endl;
 	cout<<endl;
 	
 	vector<cont_chir_fit_data_t> data_dM2K_QED;
 	for(size_t iens=0;iens<raw_data.size();iens++)
-	  data_dM2K_QED.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
-						       da2M2K_QED[iens]-FVE_da2M2K[iens],da2M2K_QED[iens]));
+	  if(FSE_an(an_flag)==1 or raw_data[iens].useforL)
+	    data_dM2K_QED.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
+							 da2M2K_QED[iens]-FVE_da2M2K[iens],da2M2K_QED[iens]));
 	
-	output_dM2K_QED[input_an_id+an_flag*ninput_an]=cont_chir_fit_dM2K_QED(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_dM2K_QED,lat_par[input_an_id].ml,lat_par[input_an_id].ms,combine("plots/cont_chir_fit_dM2K_QED_flag%zu_an%zu_sub%s.xmg",an_flag,input_an_id,"%s"),an_flag,cov_flag);
-	
-	cout<<"-----------------------------------------------"<<endl;
-	cout<<endl;
-	
-	cout<<"                      QED K "<<endl;
-	cout<<endl;
-	
-	vector<cont_chir_fit_data_t> data_dM2K_QED;
-	for(size_t iens=0;iens<raw_data.size();iens++)
-	  data_dM2K_QED.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
-						       da2M2K_QED[iens]-FVE_da2M2K[iens],da2M2K_QED[iens]));
-	
-	output_dM2K_QED[input_an_id+an_flag*ninput_an]=cont_chir_fit_dM2K_QED(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_dM2K_QED,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2K_QED_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag);
+	output_dM2K_QED[input_an_id+an_flag*ninput_an]=cont_chir_fit_dM2K_QED(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_dM2K_QED,lat_par[input_an_id].ml,lat_par[input_an_id].ms,combine("plots/cont_chir_fit_dM2K_QED_flag%zu_an%zu_sub%s.xmg",an_flag,input_an_id,"%s"),an_flag,cov_flag,beta_list);
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
@@ -451,28 +418,28 @@ int main(int narg,char **arg)
 	cout<<"                         QED D "<<endl;
 	cout<<endl;
 	
-	vector<cont_chir_fit_data_t> data_dMD_QED;
+	vector<cont_chir_fit_data_t> data_dM2D_QED;
 	for(size_t iens=0;iens<raw_data.size();iens++)
-	  data_dMD_QED.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
-						      daMD_QED[iens],daMD_QED[iens]));
+	  data_dM2D_QED.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,raw_data[iens].ibeta,raw_data[iens].L,
+						      da2M2D_QED[iens],da2M2D_QED[iens]));
 	
-	output_dMD_QED[input_an_id+an_flag*ninput_an]=cont_chir_constant_fit(alist,zlist,data_dMD_QED,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dMD_QED_flag%zu_an%zu.xmg",an_flag,input_an_id),"$$(M_{D^+}-M_{D^0})^{QED}[GeV]",1.0,0.0,an_flag,0,cov_flag);
+	output_dM2D_QED[input_an_id+an_flag*ninput_an]=cont_chir_constant_fit(alist,zlist,data_dM2D_QED,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dMD_QED_flag%zu_an%zu.xmg",an_flag,input_an_id),"$$[M^2_{D^+}-M^2_{D^0})_{QED}[GeV]",2.0,0.0,an_flag,1,cov_flag,beta_list);
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
 	
-	plot_ens_data(combine("plots/MD_an%zu.xmg",input_an_id),ml,MD);
-	plot_ens_data(combine("plots/MDs_an%zu.xmg",input_an_id),ml,MDs);
+	// plot_ens_data(combine("plots/MD_an%zu.xmg",input_an_id),ml,MD);
+	// plot_ens_data(combine("plots/MDs_an%zu.xmg",input_an_id),ml,MDs);
 	*/	
 	}
-  
+  /*
   ////////////////////output//////////////////
   
   v_ave_an_dM2Pi=ave_analyses(output_dM2Pi);
   cout<<"dM2Pi: "<<stat_analysis(v_ave_an_dM2Pi)<<" "<<syst_analysis(v_ave_an_dM2Pi)<<endl;
   for(size_t i=0;i<8;i++)
     cout<<"an_dM2Pi: "<<v_ave_an_dM2Pi[i]<<endl;
-  /*
+  
   v_ave_an_dM2K_QED=ave_analyses(output_dM2K_QED);
   cout<<"dM2K_QED: "<<stat_analysis(v_ave_an_dM2K_QED)<<" "<<syst_analysis(v_ave_an_dM2K_QED)<<endl;
   for(size_t i=0;i<8;i++)
@@ -683,6 +650,6 @@ int main(int narg,char **arg)
       
 	cout<<"-----------------------------------------------"<<endl;
       }
-  */
+	*/
   return 0;
 }
