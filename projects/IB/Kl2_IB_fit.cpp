@@ -55,78 +55,7 @@ template <class TL,class Ta,class TD> TD FSE_dep_pion_savage_new_exp(const TD &D
 
 template <class TL,class Ta,class TD> TD FSE_dep_kaon_savage(const TD &D1,const TD &M,const Ta &a,const TL &L)
 {return e2*pow(kaon_charge_radius,2.0)/(L*a*L*a*L*a)/3.0*D1*M;}
-/*
-//////////////////////////////////////////////////// pion /////////////////////////////////////////////////////////////
 
-//! ansatz fit
-template <class Tpars,class Tml,class Ta>
-Tpars cont_chir_ansatz_dM2Pi(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &K,const Tpars &quad_dep,const Tml &ml,
-			     const Ta &a,const Tpars &adep,const Tpars &adep_ml,const size_t an_flag)
-{
-  Tpars
-    Cf04=C/sqr(sqr(f0)),
-    M2=2*B0*ml,
-    den=sqr(Tpars(4*M_PI*f0));
-  
-  Tpars chir_dep;
-  if(chir_an(an_flag)) chir_dep=-(3+16*Cf04)*M2/den*log(M2/pow(mu_MS,2.0));
-  else                 chir_dep=quad_dep*pow(M2/den,2.0);
-  
-  Tpars disc_eff;
-  if(cont_an(an_flag)) disc_eff=adep*sqr(a)+adep_ml*sqr(a)*ml;
-  else                 disc_eff=adep*sqr(a);
-
-  return e2*sqr(f0)*(4*Cf04+chir_dep+K*M2/den)+disc_eff;
-}
-
-//! perform the fit to the continuum limit
-dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,
-			    const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t an_flag,bool cov_flag)
-{
-  //set_printlevel(3);
-  
-  boot_fit_t boot_fit;
-  size_t nbeta=a.size();
-  cont_chir_fit_pars_t pars(nbeta);
-
-  
-  ave_err_t adep_Guess={1.2e-3,1.0e-3};
-  ave_err_t adep_ml_Guess={0.1,0.01};
-  ave_err_t C_Guess={4.0e-5,2.5e-6};
-  ave_err_t KPi_Guess={6.0,1.0};
-  ave_err_t KK_Guess={0.0,0.1};
-  ave_err_t K2Pi_Guess={0.0,1.0};
-  ave_err_t K2K_Guess={0.0,0.1};
-  
-  pars.add_common_pars(a,z,f0,B0,adep_Guess,adep_ml_Guess,boot_fit);
-  pars.add_LEC_pars(C_Guess,KPi_Guess,KK_Guess,K2Pi_Guess,K2K_Guess,boot_fit);
-  if(chir_an(an_flag)==1) boot_fit.fix_par_to(pars.iK2Pi,0.0);
-  if(cont_an(an_flag)==0) boot_fit.fix_par_to(pars.iadep_ml,0.0);
-  boot_fit.fix_par(pars.iKK);
-  boot_fit.fix_par(pars.iK2K);
-    
-  cont_chir_fit_minimize(ext_data,pars,boot_fit,2.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
-			 {return cont_chir_ansatz_dM2Pi(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],ml,ac,p[pars.iadep],p[pars.iadep_ml],an_flag);},cov_flag);
-  dboot_t phys_res=cont_chir_ansatz_dM2Pi(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,ml_phys,a_cont,pars.adep,pars.adep_ml,an_flag);
-  cout<<"Physical result: "<<phys_res.ave_err()<<endl;
-  cout<<"MP+-MP0: "<<(dboot_t(phys_res/(mpi0+mpip))*1000).ave_err()<<", exp: 4.5936"<<endl;
-  
-  plot_chir_fit(path,ext_data,pars,
-		[&pars,an_flag]
-		(double x,size_t ib)
-		{return cont_chir_ansatz_dM2Pi<double,double,double>
-		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),x,
-		     pars.fit_a[ib].ave(),pars.adep.ave(),pars.adep_ml.ave(),an_flag);},
-		bind(cont_chir_ansatz_dM2Pi<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,
-		     a_cont,pars.adep,pars.adep_ml,an_flag),
-		[&ext_data,&pars]
-		(size_t idata,bool without_with_fse,size_t ib)
-		{return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)/sqr(pars.fit_a[ib]));},
-		ml_phys,phys_res,"$$(M^2_{\\pi^+}-M^2_{\\pi^0}) [GeV^2]");
-  
-  return phys_res;
-}
-*/
 //////////////////////////////////////////////////// pion /////////////////////////////////////////////////////////////
 
 //! ansatz fit
@@ -215,7 +144,7 @@ dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
 				       without_with_fse*FSE_dep_pion_savage_new_exp(pars.L3dep,dboot_t(pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)),pars.fit_a[ib],ext_data[idata].L));
 		      }
 		  },
-		  ml_phys,phys_res,"$$(M^2_{\\pi^+}-M^2_{\\pi^0}) [GeV^2]",beta_list);
+		  ml_phys,phys_res,"$$M^2_{\\pi^+}-M^2_{\\pi^0} [GeV^2]",beta_list);
   
   return phys_res;
 }
@@ -307,7 +236,7 @@ dboot_t cont_chir_fit_dM2K_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &
 				       without_with_fse*FSE_dep_kaon_savage(pars.L3dep,dboot_t(pow(pars.fit_B0*(ext_data[idata].aml+ext_data[idata].ams)/pars.fit_a[ib]/pars.fit_z[ib],0.5)),pars.fit_a[ib],ext_data[idata].L));
 		      }
 		  },
-		  ml_phys,phys_res,"$$(M^2_{K^+}-M^2_{K^0})^{QED} [GeV^2]",beta_list);
+		  ml_phys,phys_res,"$$[M^2_{K^+}-M^2_{K^0}]_{QED} [GeV^2]",beta_list);
   
   return phys_res;
 }
@@ -390,7 +319,7 @@ dboot_t cont_chir_fit_dM2K_QCD(const dbvec_t &a,const dbvec_t &z,const dboot_t &
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)*pars.fit_z[ib]/pars.fit_a[ib]-
 				without_with_fse*pars.L3dep*dboot_t(pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.25)/pow(4*M_PI*pars.fit_f0,2.0)*exp(-pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)*ext_data[idata].L)/pow(ext_data[idata].L,1.5)));},
-		ml_phys,phys_res,"$$(M^2_{K^+}-M^2_{K^0})^{QCD}/(-2*Deltamud)[GeV]",beta_list);
+		ml_phys,phys_res,"$$[M^2_{K^+}-M^2_{K^0}]_{QCD}/(-2\\Delta m_{ud})[GeV]",beta_list);
   
   return phys_res;
 }
@@ -400,7 +329,7 @@ dboot_t cont_chir_fit_dM2K_QCD(const dbvec_t &a,const dbvec_t &z,const dboot_t &
 //! ansatz fit
 template <class Tpars,class Tm,class Ta>
 Tpars cont_chir_ansatz_M2Pi0g(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi0,const Tpars &K,const Tpars &quad_dep,const Tm &ml,
-			      const Ta &a,const Tpars &adep,double L,const Tpars &L3dep,const Tpars &adep_ml,const size_t an_flag)
+			      const Ta &a,const Tpars &adep,const Tpars &adep_ml,const size_t an_flag)
 {
   Tpars
     Cf04=C/sqr(sqr(f0)),
@@ -415,11 +344,7 @@ Tpars cont_chir_ansatz_M2Pi0g(const Tpars &f0,const Tpars &B0,const Tpars &C,con
   if(cont_an(an_flag)) disc_eff=adep*sqr(a)+adep_ml*sqr(a)*ml;
   else                 disc_eff=adep*sqr(a);
 
-  Tpars fitted_FSE;
-  if(FSE_an(an_flag))  fitted_FSE=FSE_dep_L3(L3dep,a,L);
-  else                 fitted_FSE=0;
-  
-  return Kpi0/(4*Cf04)*M2/den*(1+chir_dep)+disc_eff+fitted_FSE;
+  return Kpi0/(4*Cf04)*M2/den*(1+chir_dep)+disc_eff;
 }
 
 //! perform the fit to the continuum limit
@@ -438,50 +363,33 @@ dboot_t cont_chir_fit_M2Pi0g(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0
   ave_err_t KK_Guess={0.0,1.0};
   ave_err_t K2Pi_Guess={0.8,0.5};
   ave_err_t K2K_Guess={0.0,0.1};
-  ave_err_t L3dep_Guess={0.0,1.0};
-  ave_err_t L4dep_Guess={0.0,0.1};
-  ave_err_t ML4dep_Guess={0.0,0.1};
   
   pars.add_common_pars(a,z,f0,B0,adep_Guess,adep_ml_Guess,boot_fit);
   pars.add_LEC_pars(C_Guess,KPi_Guess,KK_Guess,K2Pi_Guess,K2K_Guess,boot_fit);
-  pars.add_fsedep_pars(L3dep_Guess,L4dep_Guess,ML4dep_Guess,boot_fit);
   if(chir_an(an_flag)==1) boot_fit.fix_par_to(pars.iK2Pi,0.0);
   if(chir_an(an_flag)==0) boot_fit.fix_par_to(pars.iKK,0.0);
   if(cont_an(an_flag)==0) boot_fit.fix_par_to(pars.iadep_ml,0.0);
-  if(FSE_an(an_flag)==0)  boot_fit.fix_par_to(pars.iL3dep,0.0);
   boot_fit.fix_par(pars.iC);
   boot_fit.fix_par(pars.iK2K);
-  boot_fit.fix_par(pars.iL4dep);
-  boot_fit.fix_par(pars.iML4dep);
   
   cont_chir_fit_minimize(ext_data,pars,boot_fit,2.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
-			 {return cont_chir_ansatz_M2Pi0g(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iKK],p[pars.iK2Pi],ml,ac,p[pars.iadep],L,p[pars.iL3dep],p[pars.iadep_ml],an_flag);},cov_flag);
+			 {return cont_chir_ansatz_M2Pi0g(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iKK],p[pars.iK2Pi],ml,ac,p[pars.iadep],p[pars.iadep_ml],an_flag);},cov_flag);
   
-  dboot_t phys_res=cont_chir_ansatz_M2Pi0g(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,ml_phys,a_cont,pars.adep,inf_vol,pars.L3dep,pars.adep_ml,an_flag);
+  dboot_t phys_res=cont_chir_ansatz_M2Pi0g(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,ml_phys,a_cont,pars.adep,pars.adep_ml,an_flag);
   cout<<"M2Pi0g: "<<phys_res.ave_err()<<endl;
 
-  for(int univ_full_sub=0;univ_full_sub<2;univ_full_sub++)
-    plot_chir_fit(combine(path.c_str(),(univ_full_sub==0)?"_univ":"_full"),ext_data,pars,
-		  [&pars,an_flag]
-		  (double x,size_t ib)
-		  {return cont_chir_ansatz_M2Pi0g<double,double,double>
-		      (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.KK.ave(),pars.K2Pi.ave(),x,
-		       pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.adep_ml.ave(),an_flag);},
-		  bind(cont_chir_ansatz_M2Pi0g<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,_1,
-		       a_cont,pars.adep,inf_vol,pars.L3dep,pars.adep_ml,an_flag),
-		  [&ext_data,&pars,univ_full_sub]
-		  (size_t idata,bool without_with_fse,size_t ib)
-		  {if(univ_full_sub==0)
-		      {
-			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)/sqr(pars.fit_a[ib]));
-		      }
-		    else
-		      {
-			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wfse)/sqr(pars.fit_a[ib])-
-				       without_with_fse*FSE_dep_L3(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));
-		      }
-		  },
-		  ml_phys,phys_res,"$$\\M2Pi0g",beta_list);
+  plot_chir_fit(path,ext_data,pars,
+		[&pars,an_flag]
+		(double x,size_t ib)
+		{return cont_chir_ansatz_M2Pi0g<double,double,double>
+		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.KK.ave(),pars.K2Pi.ave(),x,
+		     pars.fit_a[ib].ave(),pars.adep.ave(),pars.adep_ml.ave(),an_flag);},
+		bind(cont_chir_ansatz_M2Pi0g<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,_1,
+		     a_cont,pars.adep,pars.adep_ml,an_flag),
+		[&ext_data,&pars]
+		(size_t idata,bool without_with_fse,size_t ib)
+		{return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)/sqr(pars.fit_a[ib]));},
+		ml_phys,phys_res,"$$[\\delta M^2_{\\pi^0}]_{QED} [GeV^2]",beta_list);
   
   return phys_res;
 }
@@ -551,7 +459,7 @@ dboot_t cont_chir_fit_M2K0g(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
 		[&ext_data,&pars]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)/sqr(pars.fit_a[ib]));},
-		ml_phys,phys_res,"$$\\M2K0g",beta_list);
+		ml_phys,phys_res,"$$[\\delta M^2_{K^0}]_{QED} [GeV^2]",beta_list);
   
   return phys_res;
 }
@@ -657,6 +565,7 @@ Tpars cont_chir_ansatz_epsilon_Pi0(const Tpars &f0,const Tpars &B0,const Tpars &
   Tpars
     Cf04=C/sqr(sqr(f0)),
     M2=2*B0*ml,
+    sqrtM2=pow(M2,0.5),
     den=sqr(Tpars(4*M_PI*f0));
   
   Tpars chir_dep;
@@ -668,10 +577,10 @@ Tpars cont_chir_ansatz_epsilon_Pi0(const Tpars &f0,const Tpars &B0,const Tpars &
   else                 disc_eff=adep*sqr(a);
 
   Tpars fitted_FSE;
-  if(FSE_an(an_flag))  fitted_FSE=FSE_dep_L3(L3dep,a,L);
+  if(FSE_an(an_flag))  fitted_FSE=FSE_dep_pion_savage_new_exp(L3dep,sqrtM2,a,L);
   else                 fitted_FSE=0;
   
-  return Kpi0/(4*Cf04)*M2/den*(1+chir_dep)+disc_eff+fitted_FSE;
+  return Kpi0/(4*Cf04)*M2/den*(1+chir_dep)*(1-fitted_FSE)+disc_eff;
 }
 
 //! perform the fit to the continuum limit
@@ -729,11 +638,11 @@ dboot_t cont_chir_fit_epsilon_Pi0(const dbvec_t &a,const dbvec_t &z,const dboot_
 		      }
 		    else
 		      {
-			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wfse)-
-				       without_with_fse*FSE_dep_L3(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));
+			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wfse)*
+				       (1+without_with_fse*FSE_dep_pion_savage_new_exp(pars.L3dep,dboot_t(pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)),pars.fit_a[ib],ext_data[idata].L)));
 		      }
 		  },
-		  ml_phys,phys_res,"$$\\varepsilon_\\Pi0",beta_list);
+		  ml_phys,phys_res,"$$\\varepsilon_\\pi^0",beta_list);
   
   return phys_res;
 }
@@ -748,6 +657,7 @@ Tpars cont_chir_ansatz_epsilon_K0(const Tpars &f0,const Tpars &B0,const Tpars &C
   Tpars
     Cf04=C/sqr(sqr(f0)),
     M2=2*B0*ml,
+    sqrtM2=pow(M2,0.5),
     den=sqr(Tpars(4*M_PI*f0));
 
   Tpars chir_dep;
@@ -759,10 +669,10 @@ Tpars cont_chir_ansatz_epsilon_K0(const Tpars &f0,const Tpars &B0,const Tpars &C
   else                 disc_eff=0;
 
   Tpars fitted_FSE;
-  if(FSE_an(an_flag))  fitted_FSE=FSE_dep_L3(L3dep,a,L);
+  if(FSE_an(an_flag))  fitted_FSE=FSE_dep_pion_savage_new_exp(L3dep,sqrtM2,a,L);
   else                 fitted_FSE=0;
-
-  return Kk0/(4*Cf04)*(1+chir_dep+K*M2/den)+disc_eff+fitted_FSE;
+  
+  return Kk0/(4*Cf04)*(1+chir_dep+K*M2/den)*(1-fitted_FSE)+disc_eff;
 }
 
 //! perform the fit to the continuum limit
@@ -820,11 +730,11 @@ dboot_t cont_chir_fit_epsilon_K0(const dbvec_t &a,const dbvec_t &z,const dboot_t
 		      }
 		    else
 		      {
-			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wfse)-
-				       without_with_fse*FSE_dep_L3(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));
+			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wfse)*
+				       (1+without_with_fse*FSE_dep_pion_savage_new_exp(pars.L3dep,dboot_t(pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)),pars.fit_a[ib],ext_data[idata].L)));
 		      }
 		  },
-		  ml_phys,phys_res,"$$\\varepsilon_\\K0",beta_list);
+		  ml_phys,phys_res,"$$\\varepsilon_\\K^0",beta_list);
   
   return phys_res;
 }
@@ -1200,7 +1110,7 @@ dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
 				       without_with_fse*FSE_dep_pion_savage_new(pars.L3dep,dboot_t(pow(2*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)),pars.fit_f0,dboot_t(ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib]),pars.fit_ml_phys,pars.fit_a[ib],ext_data[idata].L));
 		      }
 		  },
-		  ml_phys,phys_res,"$$(M^2_{\\pi^+}-M^2_{\\pi^0}) [GeV^2]");
+		  ml_phys,phys_res,"$$M^2_{\\pi^+}-M^2_{\\pi^0} [GeV^2]");
   
   return phys_res;
 }
@@ -1292,7 +1202,7 @@ dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
 				       without_with_fse*FSE_dep_L6(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));
 		      }
 		  },
-		  ml_phys,phys_res,"$$(M^2_{\\pi^+}-M^2_{\\pi^0}) [GeV^2]");
+		  ml_phys,phys_res,"$$M^2_{\\pi^+}-M^2_{\\pi^0} [GeV^2]");
   
   return phys_res;
 }
@@ -1382,7 +1292,7 @@ dboot_t cont_chir_fit_dM2K_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &
 				       without_with_fse*FSE_dep_L6(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));
 		      }
 		  },
-		  ml_phys,phys_res,"$$(M^2_{K^+}-M^2_{K^0})^{QED} [GeV^2]");
+		  ml_phys,phys_res,"$$[M^2_{K^+}-M^2_{K^0}]_{QED} [GeV^2]");
   
   return phys_res;
 }
@@ -1453,6 +1363,97 @@ dboot_t cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t(without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse);},
 		ml_phys,phys_res,"$$\\varepsilon_\\gamma");
+  
+  return phys_res;
+}
+
+///////////////////////////////////////////////////////// M2Pi0g ////////////////////////////////////////////////////////////////////////////
+
+//! ansatz fit
+template <class Tpars,class Tm,class Ta>
+Tpars cont_chir_ansatz_M2Pi0g(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi0,const Tpars &K,const Tpars &quad_dep,const Tm &ml,
+			      const Ta &a,const Tpars &adep,double L,const Tpars &L3dep,const Tpars &adep_ml,const size_t an_flag)
+{
+  Tpars
+    Cf04=C/sqr(sqr(f0)),
+    M2=2*B0*ml,
+    den=sqr(Tpars(4*M_PI*f0));
+  
+  Tpars chir_dep;
+  if(chir_an(an_flag)) chir_dep=K*M2/den*log(M2/pow(mu_MS,2.0));
+  else                 chir_dep=quad_dep*M2/den;
+
+  Tpars disc_eff;
+  if(cont_an(an_flag)) disc_eff=adep*sqr(a)+adep_ml*sqr(a)*ml;
+  else                 disc_eff=adep*sqr(a);
+
+  Tpars fitted_FSE;
+  if(FSE_an(an_flag))  fitted_FSE=FSE_dep_L3(L3dep,a,L);
+  else                 fitted_FSE=0;
+  
+  return Kpi0/(4*Cf04)*M2/den*(1+chir_dep)+disc_eff+fitted_FSE;
+}
+
+//! perform the fit to the continuum limit
+dboot_t cont_chir_fit_M2Pi0g(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t an_flag,bool cov_flag,const vector<string> &beta_list)
+{
+  //set_printlevel(3);
+  
+  boot_fit_t boot_fit;
+  size_t nbeta=a.size();
+  cont_chir_fit_pars_t pars(nbeta);
+
+  ave_err_t adep_Guess={1.5e-4,1.0e-4};
+  ave_err_t adep_ml_Guess={0.015,0.01};
+  ave_err_t C_Guess={5.0e-5,1.0e-5};
+  ave_err_t KPi_Guess={6.2e-3,4.0e-3};
+  ave_err_t KK_Guess={0.0,1.0};
+  ave_err_t K2Pi_Guess={0.8,0.5};
+  ave_err_t K2K_Guess={0.0,0.1};
+  ave_err_t L3dep_Guess={0.0,1.0};
+  ave_err_t L4dep_Guess={0.0,0.1};
+  ave_err_t ML4dep_Guess={0.0,0.1};
+  
+  pars.add_common_pars(a,z,f0,B0,adep_Guess,adep_ml_Guess,boot_fit);
+  pars.add_LEC_pars(C_Guess,KPi_Guess,KK_Guess,K2Pi_Guess,K2K_Guess,boot_fit);
+  pars.add_fsedep_pars(L3dep_Guess,L4dep_Guess,ML4dep_Guess,boot_fit);
+  if(chir_an(an_flag)==1) boot_fit.fix_par_to(pars.iK2Pi,0.0);
+  if(chir_an(an_flag)==0) boot_fit.fix_par_to(pars.iKK,0.0);
+  if(cont_an(an_flag)==0) boot_fit.fix_par_to(pars.iadep_ml,0.0);
+  if(FSE_an(an_flag)==0)  boot_fit.fix_par_to(pars.iL3dep,0.0);
+  boot_fit.fix_par(pars.iC);
+  boot_fit.fix_par(pars.iK2K);
+  boot_fit.fix_par(pars.iL4dep);
+  boot_fit.fix_par(pars.iML4dep);
+  
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,2.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
+			 {return cont_chir_ansatz_M2Pi0g(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iKK],p[pars.iK2Pi],ml,ac,p[pars.iadep],L,p[pars.iL3dep],p[pars.iadep_ml],an_flag);},cov_flag);
+  
+  dboot_t phys_res=cont_chir_ansatz_M2Pi0g(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,ml_phys,a_cont,pars.adep,inf_vol,pars.L3dep,pars.adep_ml,an_flag);
+  cout<<"M2Pi0g: "<<phys_res.ave_err()<<endl;
+
+  for(int univ_full_sub=0;univ_full_sub<2;univ_full_sub++)
+    plot_chir_fit(combine(path.c_str(),(univ_full_sub==0)?"_univ":"_full"),ext_data,pars,
+		  [&pars,an_flag]
+		  (double x,size_t ib)
+		  {return cont_chir_ansatz_M2Pi0g<double,double,double>
+		      (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.KK.ave(),pars.K2Pi.ave(),x,
+		       pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.adep_ml.ave(),an_flag);},
+		  bind(cont_chir_ansatz_M2Pi0g<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,_1,
+		       a_cont,pars.adep,inf_vol,pars.L3dep,pars.adep_ml,an_flag),
+		  [&ext_data,&pars,univ_full_sub]
+		  (size_t idata,bool without_with_fse,size_t ib)
+		  {if(univ_full_sub==0)
+		      {
+			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)/sqr(pars.fit_a[ib]));
+		      }
+		    else
+		      {
+			return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wfse)/sqr(pars.fit_a[ib])-
+				       without_with_fse*FSE_dep_L3(pars.L3dep,pars.fit_a[ib],ext_data[idata].L));
+		      }
+		  },
+		  ml_phys,phys_res,"$$[\\delta M^2_{\\pi^0}]_{QED} [GeV^2]",beta_list);
   
   return phys_res;
 }
