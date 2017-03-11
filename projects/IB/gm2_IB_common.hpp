@@ -19,7 +19,7 @@ const double Zt_err[nbeta]={0.005,0.004,0.004};
 // double Zt_err[nbeta]={0.003,0.002,0.002};
 const int Za_seed[nbeta]={13124,862464,76753};
 const int Zt_seed[nbeta]={5634,917453,324338};
-djvec_t Za,Zt;
+dbvec_t Za,Zt;
 boot_init_t bi;
 
 dbvec_t alist(nbeta),zlist(nbeta);
@@ -69,15 +69,15 @@ inline djvec_t read_PP(const char *what,const ens_data_t &ens,size_t im,int rpar
 
 //! read VV
 inline djvec_t read_VV(const char *what,const ens_data_t &ens,size_t im,int rpar,size_t reim)
-{return sqr(Za[ens.ib])*read(what,"VV",ens,1,im,rpar,reim);}
+{return read(what,"VV",ens,1,im,rpar,reim);}
 
 //! read TV
 inline djvec_t read_TV(const char *what,const ens_data_t &ens,size_t im,int rpar,size_t reim)
-{return djack_t(-Za[ens.ib]*Zt[ens.ib])*read(what,"TV",ens,-1,im,rpar,reim);}
+{return -read(what,"TV",ens,-1,im,rpar,reim);}
 
 //! read VT
 inline djvec_t read_VT(const char *what,const ens_data_t &ens,size_t im,int rpar,size_t reim)
-{return djack_t(Zt[ens.ib]*Za[ens.ib])*read(what,"VT",ens,-1,im,rpar,reim);}
+{return read(what,"VT",ens,-1,im,rpar,reim);}
 
 //! compute the critical deltam
 inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
@@ -116,11 +116,11 @@ inline djvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,con
 
 //! read for VV case
 inline djvec_t read_QED_VV(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO)
-{return sqr(Za[ens.ib])*read_QED("VV",ens,tpar,im,deltam_cr,c_LO);}
+{return read_QED("VV",ens,tpar,im,deltam_cr,c_LO);}
 
 //! read for TV case
 inline djvec_t read_QED_TV(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO)
-{return djack_t(Za[ens.ib]*Zt[ens.ib])*read_QED("VV",ens,tpar,im,deltam_cr,c_LO);}
+{return read_QED("VV",ens,tpar,im,deltam_cr,c_LO);}
 
 //! initialize gm2 calculation
 void gm2_initialize(int narg,char **arg)

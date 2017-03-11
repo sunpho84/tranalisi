@@ -32,6 +32,7 @@ public:
     return out;
   }
   
+  //! return the maximal index+1
   size_t size()
   {
     size_t out=1;

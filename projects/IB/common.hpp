@@ -34,6 +34,9 @@ const double es=ed;
 //! charge of charm
 const double ec=eu;
 
+//! index of flag and input_an
+EXTERN_COMMON index_t<2> ind_an;
+
 //! continuum limit
 const double a_cont=1e-5;
 
@@ -270,6 +273,11 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const function<dboot_t(double x)> &fun_poly_cont_lin,
 		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
 		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list);
+
+
+double syst_analysis(const vector<ave_err_t> &v);
+ave_err_t stat_analysis(const vector<ave_err_t> &v);
+vector<ave_err_t> ave_analyses(const dbvec_t &v);
 
 #undef INIT_TO
 #undef EXTERN_COMMON

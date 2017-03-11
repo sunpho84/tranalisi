@@ -21,6 +21,8 @@ void init_common_IB(string ens_pars)
   
   raw_file_t file(ens_pars,"r");
   
+  ind_an.set_ranges({ninput_an,nan_syst});
+  
   double dum;
   file.expect({"ml","(GeV)"});
   file.read(dum);
@@ -193,4 +195,54 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
     }
   //data of the continuum-chiral limit
   fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
+}
+
+double syst_analysis(const vector<ave_err_t> &v)
+{
+  ave_err_t ae;
+  
+  for(size_t i=0;i<v.size();i++)
+    {
+      double a=v[i].ave;
+      ae.ave+=a;
+      ae.err+=sqr(a);
+    }
+  ae.ave/=v.size();
+  ae.err/=v.size();
+  ae.err-=sqr(ae.ave);
+  ae.err=sqrt(fabs(ae.err));
+  
+  return ae.err;
+}
+
+ave_err_t stat_analysis(const vector<ave_err_t> &v)
+{
+  ave_err_t ae;
+  
+  for(size_t i=0;i<v.size();i++)
+    {
+      double a=v[i].ave;
+      double e=v[i].err;
+      ae.ave+=a;
+      ae.err+=sqr(e);
+    }
+  ae.ave/=v.size();
+  ae.err/=v.size();
+  ae.err=sqrt(fabs(ae.err));
+  
+  return ae;
+}
+
+vector<ave_err_t> ave_analyses(const dbvec_t &v)
+{
+  vector<ave_err_t> input_an_ave_err(nan_syst);
+  
+  for(size_t isyst=0;isyst<nan_syst;isyst++)
+    {
+      dbvec_t v_an(ninput_an);
+      for(size_t inpan=0;inpan<ninput_an;inpan++) v_an[inpan]=v[ind_an({inpan,isyst})];
+      input_an_ave_err[isyst]=eq_28_analysis(v_an);
+    }
+  
+  return input_an_ave_err;
 }
