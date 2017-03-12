@@ -5,19 +5,27 @@
 #include <gm2_IB_common.hpp>
 
 const int DT=4; //!< number of points to eliminate from corr
-////const int im=istrange;
+//const int im=istrange;
 const int im=icharm;
+
+template <class T,class Tm> T M2_fun(const T &B0,const Tm &aml)
+{return 2*B0*aml;}
+
+template <class T,class Tm> T M_fun(const T &B0,const Tm &aml)
+{return sqrt(M2_fun(B0,aml));}
+
+template <class T,class Tm> T xi_fun(const T &B0,const Tm &aml,const T &f0)
+{return M2_fun(B0,aml)/sqr(T(4*M_PI*f0));}
+
+template <class Tpars> Tpars FSE_LO(const Tpars &C,const Tpars &L3dep,const Tpars &xi,const Tpars &ML)
+{return C*L3dep*xi*exp(-ML)/(ML);}
 
 //! ansatz fit
 template <class Tpars,class Tm,class Ta>
-Tpars cont_chir_ansatz_LO(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tpars &KK,const Tm &ml,const Ta &a,const Tpars &adep,const Tpars &adep_ml,double L,const Tpars &L3dep,const size_t an_flag)
+Tpars cont_chir_ansatz_LO(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tpars &KK,const Tm &aml,const Ta &a,const Tpars &adep,const Tpars &adep_ml,double L,const Tpars &L3dep,const size_t an_flag)
 {
-    Tpars
-      M2=2*B0*ml,M=sqrt(M2),
-      den=sqr(Tpars(4*M_PI*f0)),
-      xi=M2/den;
-    
-    return C*(1+Kpi*xi+K2pi*xi*xi+KK*xi*log(xi)+a*a*(adep+ml*adep_ml)+L3dep*xi*exp(-M*L)/(M*L));
+  Tpars xi=xi_fun(B0,aml,f0),M=M_fun(B0,aml),ML=M*L;
+  return C*(1+Kpi*xi+K2pi*xi*xi+KK*xi*log(xi)+a*a*(adep+xi*adep_ml))+FSE_LO(C,L3dep,xi,ML);
 }
 
 //! perform the fit to the continuum limit of LO
@@ -37,7 +45,7 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
   pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave,L3dep_guess.err);
   
   //boot_fit.fix_par(pars.iadep);
-  if(FSE_an(an_flag)) boot_fit.fix_par(pars.iL3dep);
+  if(not FSE_an(an_flag)) boot_fit.fix_par(pars.iL3dep);
   if(chir_an(an_flag))
     {
       boot_fit.fix_par(pars.iKPi);
@@ -59,10 +67,12 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
 		{return cont_chir_ansatz_LO<double,double,double>
 		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),pars.KK.ave(),x,pars.fit_a[ib].ave(),pars.adep.ave(),pars.adep_ml.ave(),inf_vol,pars.L3dep.ave(),an_flag);},
 		bind(cont_chir_ansatz_LO<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,_1,a_cont,pars.adep,pars.adep_ml,inf_vol,pars.L3dep,an_flag),
-		[&ext_data,&pars]
+		[&ext_data,&pars,&B0,&f0]
 		(size_t idata,bool without_with_fse,size_t ib)
-		{return dboot_t(without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse// -without_with_fse*pars.L2dep/sqr(ext_data[idata].L)
-				);},
+		{
+		  auto aml=ext_data[idata].aml;
+		  auto xi=xi_fun(B0,aml,f0),ML=M_fun(B0,aml)*ext_data[idata].L;
+		  return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_LO(pars.C,pars.L3dep,xi,ML));},
 		ml_phys,phys_res,title,beta_list);
   
   return phys_res;
@@ -84,9 +94,9 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
 
 dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t an_flag,bool cov_flag,const vector<string> &beta_list)
 {
-  const ave_err_t adep_guess={0,0};
+  const ave_err_t adep_guess={-6,3};
   const ave_err_t adep_ml_guess={0,0};
-  const ave_err_t C_guess={0,0};
+  const ave_err_t C_guess={-7e-12,2e-12};
   const ave_err_t KPi_guess={0,0};
   const ave_err_t K2Pi_guess={0,0};
   const ave_err_t KK_guess={0,0};
@@ -138,12 +148,33 @@ int main(int narg,char **arg)
     }
   
   vector<string> beta_list={"1.90","1.95","2.10"};
+
+  string res_path=combine("integr_results_%s",qname[im].c_str());
+  enum an_mode_t{compute_everything,read_integrals};
+  an_mode_t an_mode=compute_everything;
+  
+  //files for in/out
+  raw_file_t results_in;
+  raw_file_t results_out;
+  
+  //check if the results exists
+  if(file_exists(res_path))
+    {
+      an_mode=read_integrals;
+      results_in.open(res_path,"r");
+      cout<<"Reading integrals from the file "<<res_path<<endl;
+    }
+  else
+    {
+      an_mode=compute_everything;
+      results_out.open(res_path,"w");
+      cout<<"File "<<res_path<<" absent, computing everything"<<endl;
+    }
   
   //loop over analysis flags and input scale determination
   dbvec_t cLO(ninput_an*nan_syst);
   dbvec_t cQED(ninput_an*nan_syst);
   dbvec_t cRAT(ninput_an*nan_syst);
-  string res_path=combine("integr_results_%zu",im); //da modificare coi risultati dell\'integrale
   for(size_t an_flag=0;an_flag<nan_syst;an_flag++)
     for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
       {
@@ -161,6 +192,8 @@ int main(int narg,char **arg)
 	    grace::default_color_scheme={grace::RED, grace::BLUE, grace::GREEN4,grace::VIOLET};
 	    grace::default_symbol_scheme={grace::DIAMOND,grace::DIAMOND,grace::DIAMOND};
 	  }
+	
+	dboot_t LO_correl,LO_remaind,LO,QED_correl,QED_remaind,QED;
 	
 	vector<cont_chir_fit_data_t> data_LO;
 	vector<cont_chir_fit_data_t> data_QED;
@@ -187,25 +220,39 @@ int main(int narg,char **arg)
 	      if(cont_an(an_flag)) resc_a=M_V/M_V_phys[im];
 	      else                 resc_a=1/lat_par[input_an_id].ainv[ib];
 	      
-	      dboot_t LO_correl,LO_remaind,LO,QED_correl,QED_remaind,QED;
-	      
+	      if(an_mode==compute_everything)
+		{
 #pragma omp parallel sections
-	      {
+		  {
 #pragma omp section
-		{
-		  size_t upto=TH-DT;
-		  LO_correl=integrate_corr_times_kern_up_to(VV_LO,ens.T,resc_a,im,upto)*sqr(Za[ib]);
-		  LO_remaind=integrate_LO_reco_from(Z_V,M_V,resc_a,im,upto)*sqr(Za[ib]);
-		  LO=LO_correl+LO_remaind;
-		}
+		    {
+		      size_t upto=TH-DT;
+		      LO_correl=integrate_corr_times_kern_up_to(VV_LO,ens.T,resc_a,im,upto)*sqr(Za[ib]);
+		      LO_remaind=integrate_LO_reco_from(Z_V,M_V,resc_a,im,upto)*sqr(Za[ib]);
+		    }
 #pragma omp section
-		{
-		  size_t upto=TH-DT;
-		  QED_correl=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a,im,upto)*sqr(Za[ib]);
-		  QED_remaind=integrate_QED_reco_from(A_V,Z_V,SL_V,M_V,resc_a,im,upto)*sqr(Za[ib]);
-		  QED=QED_correl+QED_remaind;
+		    {
+		      size_t upto=TH-DT;
+		      QED_correl=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a,im,upto)*sqr(Za[ib]);
+		      QED_remaind=integrate_QED_reco_from(A_V,Z_V,SL_V,M_V,resc_a,im,upto)*sqr(Za[ib]);
+		    }
+		  }
+		  
+		  LO_correl.bin_write(results_out);
+		  LO_remaind.bin_write(results_out);
+		  QED_correl.bin_write(results_out);
+		  QED_remaind.bin_write(results_out);
 		}
-	      }
+	      else
+		{
+		  LO_correl.bin_read(results_in);
+		  LO_remaind.bin_read(results_in);
+		  QED_correl.bin_read(results_in);
+		  QED_remaind.bin_read(results_in);
+		}
+	      
+	      LO=LO_correl+LO_remaind;
+	      QED=QED_correl+QED_remaind;
 	      
 	      compare_LO_num_reco(combine("%s/plots/kern_LO_num_reco.xmg",ens.path.c_str()),VV_LO,Z_V,M_V,resc_a);
 	      cout<<"amu: "<< LO_correl.ave_err()<<" + "<<LO_remaind.ave_err()<<" = "<<LO.ave_err()<<endl;
@@ -225,13 +272,14 @@ int main(int narg,char **arg)
 	
 	int iai=ind_an({input_an_id,an_flag});
 	
-	cLO[iai]=cont_chir_fit_LO(alist,zlist,f0,B0,data_LO,lat_par[input_an_id].ml,combine("plots/cont_chir_LO_flag%zu_an%zu.xmg",an_flag,input_an_id,"%s"),an_flag,false,beta_list);
+	cLO[iai]=cont_chir_fit_LO(alist,zlist,f0,B0,data_LO,lat_par[input_an_id].ml,combine("plots_%s/cont_chir_LO_flag%zu_an%zu.xmg",qname[im].c_str(),an_flag,input_an_id,"%s"),an_flag,false,beta_list);
 	cout<<cLO[iai].ave_err()<<endl;
-	cQED[iai]=cont_chir_fit_QED(alist,zlist,f0,B0,data_QED,lat_par[input_an_id].ml,combine("plots/cont_chir_QED_flag%zu_an%zu.xmg",an_flag,input_an_id,"%s"),an_flag,false,beta_list);
-	//cRAT[iai]=cont_chir_fit_ratio(alist,zlist,data_ratio,lat_par[input_an_id].ml,combine("plots/cont_chir_rat_flag%zu_an%zu.xmg",an_flag,input_an_id,"%s"),an_flag,false,beta_list);
+	cQED[iai]=cont_chir_fit_QED(alist,zlist,f0,B0,data_QED,lat_par[input_an_id].ml,combine("plots_%s/cont_chir_QED_flag%zu_an%zu.xmg",qname[im].c_str(),an_flag,input_an_id,"%s"),an_flag,false,beta_list);
+	//cRAT[iai]=cont_chir_fit_ratio(alist,zlist,data_ratio,lat_par[input_an_id].ml,combine("plots_%s/cont_chir_rat_flag%zu_an%zu.xmg",qname[im].c_str(),an_flag,input_an_id,"%s"),an_flag,false,beta_list);
       }
 
    perform_analysis(cLO,"LO");
+   perform_analysis(cQED,"QED");
    //cout<<crat.ave_err()<<endl;
    //cout<<cQED.ave_err()<<endl;
    

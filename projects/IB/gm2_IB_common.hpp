@@ -5,6 +5,7 @@
 #include <gm2_IB_integrators.hpp>
 
 const size_t ilight=0,istrange=1,icharm=2;
+const vector<string> qname({"light","strange","charm"});
 const double M_V_phys[3]={0.775,1.0195,3.0969};
 size_t nm,nr;
 index_t<4> ind;
