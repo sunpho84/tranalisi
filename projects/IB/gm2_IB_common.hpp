@@ -8,15 +8,8 @@ const size_t ilight=0,istrange=1,icharm=2;
 const double M_V_phys[3]={0.775,1.0195,3.0969};
 size_t nm,nr;
 index_t<4> ind;
-
-const double Za_ave[nbeta]={0.731,0.737,0.762}; //M1
-const double Za_err[nbeta]={0.008,0.005,0.004};
-// double Za_ave[nbeta]={0.703,0.714,0.774}; //M2
-// double Za_err[nbeta]={0.002,0.002,0.004};
-const double Zt_ave[nbeta]={0.711,0.724,0.762}; //M1
-const double Zt_err[nbeta]={0.005,0.004,0.004};
-// double Zt_ave[nbeta]={0.700,0.711,0.767}; //M2
-// double Zt_err[nbeta]={0.003,0.002,0.002};
+const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.774,0.004}}});
+const vector<vector<ave_err_t>> Zt_ae({{{0.711,0.005},{0.724,0.004},{0.762,0.004}},{{0.700,0.003},{0.711,0.002},{0.767,0.002}}});
 const int Za_seed[nbeta]={13124,862464,76753};
 const int Zt_seed[nbeta]={5634,917453,324338};
 dbvec_t Za,Zt;
@@ -30,6 +23,7 @@ class ens_data_t
 public:
   size_t iult; //< input in the ultimate file
   size_t ib,T,L;
+  int use_for_L;
   double aml;
   string path;
   
@@ -142,14 +136,7 @@ void gm2_initialize(int narg,char **arg)
   Za.resize(nbeta);
   Zt.resize(nbeta);
   
-  //fill Za,Zt
-  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-    {
-      Za[ibeta].fill_gauss(Za_ave[ibeta],Za_err[ibeta],Za_seed[ibeta]);
-      Zt[ibeta].fill_gauss(Zt_ave[ibeta],Zt_err[ibeta],Zt_seed[ibeta]);
-    }
-  
-  input.expect({"Ens","beta","L","T","aml","tint_cr","tint_ss","tint_cc","path"});
+  input.expect({"Ens","beta","L","UseForL","T","aml","tint_cr","tint_ss","tint_cc","path"});
   ens_data.resize(nens_used);
   for(size_t iens=0;iens<nens_used;iens++)
     {
@@ -158,6 +145,7 @@ void gm2_initialize(int narg,char **arg)
       input.read(ens.iult);
       input.read(ens.ib);
       input.read(ens.L);
+      input.read(ens.use_for_L);
       input.read(ens.T);
       input.read(ens.aml);
       for(size_t iq=0;iq<3;iq++)
@@ -174,8 +162,11 @@ inline void prepare_az(int input_an_id)
 {
   for(size_t ibeta=0;ibeta<nbeta;ibeta++)
     {
+      const int imet=input_an_id/4;
       alist[ibeta]=1.0/lat_par[input_an_id].ainv[ibeta];
       zlist[ibeta]=lat_par[input_an_id].Z[ibeta];
+      Za[ibeta].fill_gauss(Za_ae[imet][ibeta],Za_seed[ibeta]);
+      Zt[ibeta].fill_gauss(Zt_ae[imet][ibeta],Zt_seed[ibeta]);
     }
 }
 

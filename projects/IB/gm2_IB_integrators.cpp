@@ -37,7 +37,7 @@ double kern_LO_reco_gsl(double t,void *_params)
   double &Z=params->Z;
   double &a=params->a;
   
-  return ftilde_t(t,a)*Z*Z*exp(-M*t)/(2*M);
+  return ftilde_t(t,a)*nonperiodic_two_pts_corr_fun(Z,M,t);
 }
 
 //! return the QED
