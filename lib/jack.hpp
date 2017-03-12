@@ -152,6 +152,30 @@ public:
     check_njacks_init();
     clusterize(fill_clusters(data));
   }
+
+  //! write to a stream
+  void bin_write(const raw_file_t &out)
+  {out.bin_write(*this);}
+  
+  //! wrapper with name
+  void bin_write(const char *path)
+  {bin_write(raw_file_t(path,"w"));}
+  
+  //! wrapper with name
+  void bin_write(const string &path)
+  {bin_write(path.c_str());}
+  
+  //! read from a stream
+  void bin_read(const raw_file_t &in)
+  {in.bin_read(*this);}
+  
+  //! wrapper with name
+  void bin_read(const char *path)
+  {bin_read(raw_file_t(path,"r"));}
+  
+  //! wrapper with name
+  void bin_read(const string &path)
+  {bin_read(path.c_str());}
 };
 
 //! typically we use jackknives of double

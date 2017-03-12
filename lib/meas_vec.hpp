@@ -84,7 +84,7 @@ public:
   void bin_write(const string &path)
   {bin_write(path.c_str());}
   
-  //! read to a stream
+  //! read from a stream
   void bin_read(const raw_file_t &in)
   {in.bin_read(*this);}
   
