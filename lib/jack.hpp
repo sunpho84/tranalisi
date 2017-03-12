@@ -119,6 +119,10 @@ public:
   void fill_gauss(double ave,double err,int seed)
   {fill_gauss(gauss_filler_t(ave,err,seed));}
   
+  //! intialize froma ave_err_t and seed
+  void fill_gauss(const ave_err_t &ae,int seed)
+  {fill_gauss(gauss_filler_t(ae,seed));}
+  
   //! fill the clusters
   size_t fill_clusters(const valarray<T> &data)
   {

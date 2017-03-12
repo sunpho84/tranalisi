@@ -142,6 +142,10 @@ public:
   void fill_gauss(double ave,double err,int seed)
   {fill_gauss(gauss_filler_t(ave,err,seed));}
   
+  //! intialize froma ave_err_t and seed
+  void fill_gauss(const ave_err_t &ae,int seed)
+  {fill_gauss(gauss_filler_t(ae,seed));}
+  
   //! initialize from a jackknife
   void fill_from_jack(const boot_init_t &iboot_ind,const jack_t<T> &jack)
   {
