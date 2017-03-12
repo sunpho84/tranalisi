@@ -38,7 +38,7 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
   //boot_fit.fix_par(pars.iadep);
   if(FSE_an(an_flag)) boot_fit.fix_par(pars.iL3dep);
   boot_fit.fix_par(pars.iKPi);
-  if(cont_an(an_flag)) boot_fit.fix_par(pars.iadep_ml);
+  boot_fit.fix_par(pars.iadep_ml);
   
   cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
 			 {return cont_chir_ansatz_LO(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],ml,ac,p[pars.iadep],p[pars.iadep_ml],L,p[pars.iL3dep],an_flag);},cov_flag);
@@ -110,50 +110,21 @@ int main(int narg,char **arg)
 {
   gm2_initialize(narg,arg);
   
-  djvec_t bare_LO(ens_data.size());
-  djvec_t bare_QED(ens_data.size());
-  djvec_t ratio(ens_data.size());
-  
+  vector<djvec_t> jPP_LO(nens_used),jVV_LO(nens_used),jVV_QED(nens_used);
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_data_t &ens=ens_data[iens];
       size_t TH=ens.T/2;
-      cout<<"----------------------- "<<iens<<" "<<ens.path<<" ---------------------"<<endl;
-      
       djack_t deltam_cr=compute_deltam_cr(ens,ilight);
       
       //load LO for PP
-      djvec_t PP_LO=read_PP("00",ens,im,1,RE);
+      jPP_LO[iens]=read_PP("00",ens,im,1,RE);
       djack_t Z_P,M_P;
-      two_pts_fit(Z_P,M_P,PP_LO,TH,ens.tmin[im], ens.tmax[im],combine("%s/plots/PP_LO_emass.xmg",ens.path.c_str()));
+      two_pts_fit(Z_P,M_P,jPP_LO[iens],TH,ens.tmin[im],ens.tmax[im],combine("%s/plots/PP_LO_emass.xmg",ens.path.c_str()));
       
       //load LO and QED for VV
-      djvec_t VV_LO=read_VV("00",ens,im,1,RE),eff_VV_LO=effective_mass(VV_LO,TH);
-      djvec_t VV_QED=read_QED_VV(ens,1,im,deltam_cr,VV_LO),VV_rat=VV_QED/VV_LO;
-      djack_t Z_V,M_V,A_V,SL_V;
-      two_pts_with_ins_ratio_fit(Z_V,M_V,A_V,SL_V,VV_LO,VV_QED,TH,ens.tmin[im],ens.tmax[im],
-				 combine("%s/plots/VV_LO.xmg",ens.path.c_str()),combine("%s/plots/VV_QED.xmg",ens.path.c_str()));
-      
-      //lattice spacing obtained from V
-      djack_t resc_a=M_V/M_V_phys[im];
-      
-      size_t upto=TH-DT;
-      //cout<<"Upto: "<<upto;
-      djack_t bare_LO_correl=integrate_corr_times_kern_up_to(VV_LO,ens.T,resc_a,im,upto);
-      //cout<<", after: "<<upto<<endl;
-      djack_t bare_LO_remaind=integrate_LO_reco_from(Z_V,M_V,resc_a,im,upto);
-      bare_LO[iens]=bare_LO_correl+bare_LO_remaind;
-      compare_LO_num_reco(combine("%s/plots/kern_LO_num_reco.xmg",ens.path.c_str()),VV_LO,Z_V,M_V,resc_a);
-      cout<<"bare amu: "<< bare_LO_correl.ave_err()<<" + "<<bare_LO_remaind.ave_err()<<" = "<<bare_LO[iens].ave_err()<<endl;
-      
-      djack_t bare_QED_correl=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a,im,upto);
-      djack_t bare_QED_remaind=integrate_QED_reco_from(A_V,Z_V,SL_V,M_V,resc_a,im,upto);
-      bare_QED[iens]=bare_QED_correl+bare_QED_remaind;
-      compare_QED_num_reco(combine("%s/plots/kern_QED_num_reco.xmg",ens.path.c_str()),VV_QED,A_V,Z_V,SL_V,M_V,resc_a);
-      cout<<"bare amu_QED: "<<bare_QED_correl.ave_err()<<" + "<<bare_QED_remaind.ave_err()<<" = "<<bare_QED[iens].ave_err()<<endl;
-      
-      ratio[iens]=bare_QED[iens]/bare_LO[iens];
-      cout<<" Ratio: "<<ratio[iens].ave_err()<<endl;
+      jVV_LO[iens]=read_VV("00",ens,im,1,RE);
+      jVV_QED[iens]=read_QED_VV(ens,1,im,deltam_cr,jVV_LO[iens]);
     }
   
   vector<string> beta_list={"1.90","1.95","2.10"};
@@ -171,23 +142,51 @@ int main(int narg,char **arg)
 	
 	vector<cont_chir_fit_data_t> data_LO;
 	vector<cont_chir_fit_data_t> data_QED;
-	vector<cont_chir_fit_data_t> data_ratio;
+	vector<cont_chir_fit_data_t> data_RAT;
 	for(size_t iens=0;iens<ens_data.size();iens++)
 	  {
 	    ens_data_t &ens=ens_data[iens];
+	    cout<<"----------------------- "<<iens<<" "<<ens.path<<" ---------------------"<<endl;
 	    int ib=ens.ib;
+	    size_t TH=ens.T/2;
 	    
 	    //set bootstrap
 	    bi=jack_index[input_an_id][ens.iult];
+	    dbvec_t VV_LO(bi,jVV_LO[iens]);
+	    dbvec_t VV_QED(bi,jVV_QED[iens]);
 	    
-	    dboot_t LO=dboot_t(bi,bare_LO[iens])*sqr(Za[ib]);
+	    dboot_t Z_V,M_V,A_V,SL_V;
+	    two_pts_with_ins_ratio_fit(Z_V,M_V,A_V,SL_V,VV_LO,VV_QED,TH,ens.tmin[im],ens.tmax[im],
+				       combine("%s/plots/VV_LO.xmg",ens.path.c_str()),combine("%s/plots/VV_QED.xmg",ens.path.c_str()));
+	    
+	    //lattice spacing obtained from V
+	    dboot_t resc_a;
+	    if(cont_an(an_flag)) resc_a=M_V/M_V_phys[im];
+	    else                 resc_a=1/lat_par[input_an_id].ainv[ib];
+	    
+	    size_t upto=TH-DT;
+	    //cout<<"Upto: "<<upto;
+	    dboot_t LO_correl=integrate_corr_times_kern_up_to(VV_LO,ens.T,resc_a,im,upto)*sqr(Za[ib]);
+	    //cout<<", after: "<<upto<<endl;
+	    dboot_t LO_remaind=integrate_LO_reco_from(Z_V,M_V,resc_a,im,upto)*sqr(Za[ib]);
+	    dboot_t LO=LO_correl+LO_remaind;
+	    compare_LO_num_reco(combine("%s/plots/kern_LO_num_reco.xmg",ens.path.c_str()),VV_LO,Z_V,M_V,resc_a);
+	    cout<<"amu: "<< LO_correl.ave_err()<<" + "<<LO_remaind.ave_err()<<" = "<<LO.ave_err()<<endl;
+	    
+	    dboot_t QED_correl=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a,im,upto)*sqr(Za[ib]);
+	    dboot_t QED_remaind=integrate_QED_reco_from(A_V,Z_V,SL_V,M_V,resc_a,im,upto)*sqr(Za[ib]);
+	    dboot_t QED=QED_correl+QED_remaind;
+	    compare_QED_num_reco(combine("%s/plots/kern_QED_num_reco.xmg",ens.path.c_str()),VV_QED,A_V,Z_V,SL_V,M_V,resc_a);
+	    cout<<"amu_QED: "<<QED_correl.ave_err()<<" + "<<QED_remaind.ave_err()<<" = "<<QED.ave_err()<<endl;
+	    
+	    dboot_t RAT=QED/LO;
+	    cout<<" Ratio: "<<RAT.ave_err()<<endl;
+	    
 	    data_LO.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,ens_data[iens].ib,ens_data[iens].L,LO,LO));
 	    
-	    dboot_t QED=dboot_t(bi,bare_QED[iens])*sqr(Za[ib]);
 	    data_QED.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,ens_data[iens].ib,ens_data[iens].L,QED,QED));
 	    
-	    dboot_t RAT=dboot_t(bi,ratio[iens]);
-	    data_ratio.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,ens_data[iens].ib,ens_data[iens].L,RAT,RAT));
+	    data_RAT.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,ens_data[iens].ib,ens_data[iens].L,RAT,RAT));
 	  }
 	
 	int iai=ind_an({input_an_id,an_flag});

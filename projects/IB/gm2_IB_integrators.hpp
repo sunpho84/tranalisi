@@ -49,7 +49,7 @@ inline double ftilde_t(size_t t,double a)
   return result;
 }
 
-//! wrapper for jack
+//! wrapper
 template <class T> T ftilde_t(size_t t,const T& a)
 {
   T result;
@@ -66,7 +66,7 @@ template <class T> T kern_QED_num(const T &corr_t,double t,const T &a)
 {return kern_num(corr_t,t,a);}
 
 //! integrate
-inline djack_t integrate_corr_up_to(const djvec_t &corr,size_t &upto,int ord=3)
+template <class TS> TS integrate_corr_up_to(const valarray<TS> &corr,size_t &upto,int ord=3)
 {
   valarray<double> weight;
   switch(ord)
@@ -81,7 +81,7 @@ inline djack_t integrate_corr_up_to(const djvec_t &corr,size_t &upto,int ord=3)
   size_t len=weight.size()-1;
   double norm=weight.sum()/len;
   
-  djack_t out;
+  TS out;
   out=0.0;
   upto=int(upto/len)*len;
   for(size_t t=0;t<upto;t+=len)
@@ -94,10 +94,10 @@ inline djack_t integrate_corr_up_to(const djvec_t &corr,size_t &upto,int ord=3)
 }
 
 //! integrate the kernel
-inline djack_t integrate_corr_times_kern_up_to(const djvec_t &corr,size_t T,const djack_t &a,size_t im,size_t &upto,int ord=3)
+template <class TV,class TS=typename TV::base_type> TS integrate_corr_times_kern_up_to(const TV &corr,size_t T,const TS &a,size_t im,size_t &upto,int ord=3)
 {
   //store the kernel
-  djvec_t kern(T/2);
+  TV kern(T/2);
   for(size_t t=1;t<T/2;t++) kern[t]=kern_num(corr[t],t,a);
   kern[0]=0.0;
   
@@ -128,7 +128,7 @@ template <class TS,class Pars_wr> TS integrate_reco_from(double (*kern_gsl)(doub
 {
   const bool use_gsl=false;
   
-  djack_t result;
+  TS result;
   int workspace_size=1000;
   gsl_integration_workspace *workspace=NULL;
   if(use_gsl) workspace=gsl_integration_workspace_alloc(workspace_size);
@@ -151,7 +151,7 @@ template <class TS,class Pars_wr> TS integrate_reco_from(double (*kern_gsl)(doub
   else
     {
       size_t np=500;
-      djvec_t corr_reco(np);
+      valarray<TS> corr_reco(np);
       for(size_t i=0;i<p[0].size();i++)
 	{
 	  Pars_wr params(p,i);
