@@ -85,8 +85,8 @@ public:
   {bin_write(path.c_str());}
   
   //! read to a stream
-  void bin_read(const raw_file_t &out)
-  {out.bin_read(*this);}
+  void bin_read(const raw_file_t &in)
+  {in.bin_read(*this);}
   
   //! wrapper with name
   void bin_read(const char *path)
