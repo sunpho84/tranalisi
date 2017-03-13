@@ -39,7 +39,7 @@ dboot_t cont_chir_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_f
   //boot_fit.fix_par(pars.iKPi);
   boot_fit.fix_par(pars.iadep_ml);
   
-  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double MD,double ac,double L)
 			 {return cont_chir_ansatz(p[pars.iC],p[pars.iKPi],ml,ac,p[pars.iadep],p[pars.iadep_ml],L,p[pars.iL2dep],an_flag);},cov_flag);
   
   double a_cont=0;

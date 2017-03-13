@@ -96,9 +96,10 @@ class cont_chir_fit_data_t
 {
 public:
   double aml,ams;
+  dboot_t aMD;
   size_t ib,L;
   dboot_t wfse,wofse;
-  cont_chir_fit_data_t(double aml,double ams,size_t ib,size_t L,dboot_t wfse,dboot_t wofse) : aml(aml),ams(ams),ib(ib),L(L),wfse(wfse),wofse(wofse) {}
+  cont_chir_fit_data_t(double aml,double ams,dboot_t aMD,size_t ib,size_t L,dboot_t wfse,dboot_t wofse) : aml(aml),ams(ams),aMD(aMD),ib(ib),L(L),wfse(wfse),wofse(wofse) {}
 };
 
 //! holds index and out pars
@@ -262,7 +263,7 @@ public:
 //! perform the fit to the continuum limit
 void cont_chir_fit_minimize
 (const vector<cont_chir_fit_data_t> &ext_data,const cont_chir_fit_pars_t &pars,boot_fit_t &boot_fit,double apow,double zpow,
- const function<double(const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)> &cont_chir_ansatz,bool cov_flag);
+ const function<double(const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double MD,double ac,double L)> &cont_chir_ansatz,bool cov_flag);
 
 //! plot the continuum-chiral extrapolation
 void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_data,const cont_chir_fit_pars_t &pars,
@@ -270,6 +271,18 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const function<dboot_t(double x)> &fun_poly_cont_lin,
 		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
 		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list);
+
+void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_data,const cont_chir_fit_pars_t &pars,
+		   const function<double(double x,size_t ib)> &fun_line_per_beta,
+		   const function<dboot_t(double x)> &fun_poly_cont_lin,
+		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
+		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,size_t univ_full_sub);
+
+void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_data,const cont_chir_fit_pars_t &pars,
+		   const function<double(double x,size_t ib)> &fun_line_per_beta,
+		   const function<dboot_t(double x)> &fun_poly_cont_lin,
+		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
+		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,size_t univ_full_sub,size_t an_flag);
 
 #undef INIT_TO
 #undef EXTERN_COMMON
