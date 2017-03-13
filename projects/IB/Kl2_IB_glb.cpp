@@ -385,7 +385,7 @@ int main(int narg,char **arg)
 	  data_dM2D_QED.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMD[iens],raw_data[iens].ibeta,raw_data[iens].L,
 						      da2M2D_QED[iens]-FVE_da2M2D[iens],da2M2D_QED[iens]));
 	
-	output_dM2D_QED[ind_an({input_an_id,an_flag})]=cont_chir_constant_fit(alist,zlist,data_dM2D_QED,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dMD_QED_flag%zu_an%zu.xmg",an_flag,input_an_id),"$$[M^2_{D^+}-M^2_{D^0})_{QED}[GeV]",2.0,0.0,an_flag,1,cov_flag,beta_list);
+	output_dM2D_QED[ind_an({input_an_id,an_flag})]=cont_chir_linear_fit(alist,zlist,data_dM2D_QED,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_dM2D_QED_flag%zu_an%zu_sub%s.xmg",an_flag,input_an_id,"%s"),"$$[M^2_{D^+}-M^2_{D^0})_{QED} [GeV^2]",2.0,0.0,an_flag,1,cov_flag,beta_list);
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
