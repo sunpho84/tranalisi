@@ -11,6 +11,7 @@
 #include <jack.hpp>
 #include <utility>
 #include <random.hpp>
+#include <sstream>
 #include <vector>
 
 using namespace std;
@@ -159,15 +160,15 @@ public:
   }
   
     //! write to a stream
-  void bin_write(const raw_file_t &out)
+  void bin_write(const raw_file_t &out) const
   {out.bin_write(*this);}
   
   //! wrapper with name
-  void bin_write(const char *path)
+  void bin_write(const char *path) const
   {bin_write(raw_file_t(path,"w"));}
   
   //! wrapper with name
-  void bin_write(const string &path)
+  void bin_write(const string &path) const
   {bin_write(path.c_str());}
   
   //! read from a stream
@@ -189,6 +190,15 @@ using dboot_t=boot_t<double>;
 //! return the size needed to init a boot_t
 template <class T> size_t init_nel(const boot_t<T> &obj)
 {return obj.nboots();}
+
+//! return a string
+template <class T> string to_string(const boot_t<T> &obj)
+{
+  ave_err_t ae=obj.ave_err();
+  ostringstream os;
+  os<<ae.ave<<" "<<ae.err;
+  return os.str();
+} 
 
 #undef EXTERN_BOOT
 #undef INIT_TO

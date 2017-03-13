@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <random.hpp>
+#include <sstream>
 #include <tools.hpp>
 #include <valarray>
 
@@ -154,15 +155,15 @@ public:
   }
 
   //! write to a stream
-  void bin_write(const raw_file_t &out)
+  void bin_write(const raw_file_t &out) const
   {out.bin_write(*this);}
   
   //! wrapper with name
-  void bin_write(const char *path)
+  void bin_write(const char *path) const
   {bin_write(raw_file_t(path,"w"));}
   
   //! wrapper with name
-  void bin_write(const string &path)
+  void bin_write(const string &path) const
   {bin_write(path.c_str());}
   
   //! read from a stream
@@ -180,6 +181,15 @@ public:
 
 //! typically we use jackknives of double
 using djack_t=jack_t<double>;
+
+//! return a string
+template <class T> string to_string(const jack_t<T> &obj)
+{
+  ave_err_t ae=obj.ave_err();
+  ostringstream os;
+  os<<ae.ave<<" "<<ae.err;
+  return os.str();
+} 
 
 //! get the size needed to init a jack_t
 template <class T> size_t init_nel(const jack_t<T> &obj)
