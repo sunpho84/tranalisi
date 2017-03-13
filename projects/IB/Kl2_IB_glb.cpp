@@ -662,7 +662,7 @@ output_dM2D_QCD[ind_an({input_an_id,an_flag})]=cont_chir_linear_fit(alist,zlist,
     for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
       {
        dM2D[ind_an({input_an_id,an_flag})]=output_dM2D_QCD[ind_an({input_an_id,an_flag})]+output_dM2D_QED[ind_an({input_an_id,an_flag})];
-       dM2D_ind[ind_an({input_an_id,an_flag})]=output_dM2D_QCD_ind[input_an_id+an_flag*ninput_an]+output_dM2D_QED[ind_an({input_an_id,an_flag})];
+       dM2D_ind[ind_an({input_an_id,an_flag})]=output_dM2D_QCD_ind[ind_an({input_an_id,an_flag})]+output_dM2D_QED[ind_an({input_an_id,an_flag})];
       }
   
   v_ave_an_dM2D=ave_analyses(dM2D);
