@@ -49,7 +49,7 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
   if(chir_an(an_flag)) boot_fit.fix_par_to(pars.iK2Pi,0.0);
   boot_fit.fix_par_to(pars.iadep_ml,0.0);
   
-  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double dum,double ac,double L)
 			 {return cont_chir_ansatz_LO(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],ml,ac,p[pars.iadep],p[pars.iadep_ml],L,p[pars.iL3dep],an_flag);},cov_flag);
   
   double a_cont=0;
@@ -136,7 +136,7 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   if(chir_an(an_flag)) boot_fit.fix_par(pars.iK2Pi);
   boot_fit.fix_par(pars.iadep_ml);
   
-  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double dum,double ac,double L)
 			 {return cont_chir_ansatz_QED(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],ml,ac,p[pars.iadep],p[pars.iadep_ml],L,p[pars.iL3dep],an_flag);},cov_flag);
   
   double a_cont=0;
@@ -214,7 +214,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   if(chir_an(an_flag)) boot_fit.fix_par(pars.iK2Pi);
   boot_fit.fix_par(pars.iadep_ml);
   
-  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double ac,double L)
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double dum,double ac,double L)
 			 {return cont_chir_ansatz_RAT(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],ml,ac,p[pars.iadep],p[pars.iadep_ml],L,p[pars.iL3dep],an_flag);},cov_flag);
   
   double a_cont=0;
@@ -412,10 +412,13 @@ int main(int narg,char **arg)
 	      
 	      dboot_t RAT=QED/LO;
 	      cout<<" Ratio: "<<RAT.ave_err()<<endl;
-	      
-	      data_LO.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,ens_data[iens].ib,ens_data[iens].L,LO,LO));
-	      data_QED.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,ens_data[iens].ib,ens_data[iens].L,QED,QED));
-	      data_RAT.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,ens_data[iens].ib,ens_data[iens].L,RAT,RAT));
+
+	      //to avoid D
+	      dboot_t dum;
+	      dum=0.0;
+	      data_LO.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,dum,ens_data[iens].ib,ens_data[iens].L,LO,LO));
+	      data_QED.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,dum,ens_data[iens].ib,ens_data[iens].L,QED,QED));
+	      data_RAT.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,dum,ens_data[iens].ib,ens_data[iens].L,RAT,RAT));
 	    }
 	
 	int iai=ind_an({input_an_id,an_flag});
