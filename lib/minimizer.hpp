@@ -108,6 +108,12 @@ class minimizer_t
     //set verbosity
     minu.SetPrintLevel(glb_print_level);
     
+    //set tolerance
+    //double tol=1e-16;
+    //int iflag;
+    minu.SetMaxIterations(10000000);
+    //minu.mnexcm("SET ERR",&tol,1,iflag);
+    
     //set the external pointer
     fun_ptr=&fun;
     minu.SetFCN(fcn);
