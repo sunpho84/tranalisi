@@ -517,6 +517,7 @@ int main(int narg,char **arg)
     for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
       {
 	dM2K_QCD[ind_an({input_an_id,an_flag})]=dM2K_exp-dboot_t(output_dM2K_QED[ind_an({input_an_id,an_flag})]*1000);
+	dM2K_QCD_ind[ind_an({input_an_id,an_flag})]=dM2K_exp-dboot_t(dM2K_QED_ind[ind_an({input_an_id,an_flag})]*1000.0);
 	Deltamud[ind_an({input_an_id,an_flag})]=dboot_t(-dM2K_QCD[ind_an({input_an_id,an_flag})]/output_dM2K_QCD_over_minus_two_Deltamud[ind_an({input_an_id,an_flag})]/2.0);
 	Deltamud_ind[ind_an({input_an_id,an_flag})]=dboot_t(-dM2K_QCD_ind[ind_an({input_an_id,an_flag})]/output_dM2K_QCD_over_minus_two_Deltamud[ind_an({input_an_id,an_flag})]/2.0);
       }
