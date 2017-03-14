@@ -20,7 +20,7 @@ public:
   }
   
   //! get an element
-  size_t operator()(const initializer_list<size_t> &oth)
+  size_t operator()(const initializer_list<size_t> &oth) const
   {
     if(oth.size()!=rank) CRASH("Calling index operator of rank %zu with the wrong size %zu",rank,oth.size());
     size_t out=0;
