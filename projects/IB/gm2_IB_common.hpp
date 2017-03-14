@@ -8,7 +8,7 @@ const size_t ilight=0,istrange=1,icharm=2;
 const vector<string> qname({"light","strange","charm"});
 const double M_V_phys[3]={0.775,1.0195,3.0969};
 size_t nm,nr;
-index_t<4> ind;
+index_t<4> ind_base,ind_extra;
 const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
 const vector<vector<ave_err_t>> Zt_ae({{{0.711,0.005},{0.724,0.004},{0.774,0.004}},{{0.700,0.003},{0.711,0.002},{0.767,0.002}}});
 const int Za_seed[nbeta]={13124,862464,76753};
@@ -36,9 +36,22 @@ size_t nens_used;
 
 //! read a single vector, for a specific mass and r, real or imaginary
 inline djvec_t read(const char *what,const ens_data_t &ens,size_t im,size_t r,size_t reim)
-{return read_djvec(combine("%s/data/corr%s",ens.path.c_str(),what),ens.T,ind({im,im,r,reim}));}
+{
+  string path=combine("%s/data/corr%s",ens.path.c_str(),what);
+  string path_extra=path+"_"+qname[im][0]+qname[im][0];
+  
+  djvec_t out=read_djvec(path,ens.T,ind_base({im,im,r,reim}));
+  if(file_exists(path_extra))
+    {
+      //cout<<"Improving with "<<path_extra<<endl;
+      
+      out+=4*read_djvec(path_extra,ens.T,ind_extra({0,0,r,reim}));
+      out/=5.0;
+    }
+  return out;
+}
 
-//! read a combination of r and return appropriately simmetrized
+//! read a combination of r and return appropriately symmetrized
 inline djvec_t read(const char *what,const ens_data_t &ens,int tpar,size_t im,int rpar,size_t reim)
 {
   djvec_t o(ens.T);
@@ -131,7 +144,8 @@ void gm2_initialize(int narg,char **arg)
   string ens_pars=input.read<string>("UltimatePath");
   nm=input.read<size_t>("NMass");
   nr=input.read<size_t>("NR");
-  ind.set_ranges({nm,nm,nr,2});
+  ind_base.set_ranges({nm,nm,nr,2});
+  ind_extra.set_ranges({1,1,nr,2});
   init_common_IB(ens_pars);
   nens_used=input.read<int>("NEnsemble");
   Za.resize(nbeta);
