@@ -21,8 +21,6 @@ void init_common_IB(string ens_pars)
   
   raw_file_t file(ens_pars,"r");
   
-  ind_an.set_ranges({ninput_an,nan_syst});
-  
   double dum;
   file.expect({"ml","(GeV)"});
   file.read(dum);
@@ -320,7 +318,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const function<double(double x,size_t ib)> &fun_line_per_beta,
 		   const function<dboot_t(double x)> &fun_poly_cont_lin,
 		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
-		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,size_t univ_full_sub,size_t an_flag)
+		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,size_t univ_full_sub,size_t FSE_flag)
 {
   //search max renormalized mass
   double ml_max=0;
@@ -342,7 +340,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
   if(univ_full_sub==1)
     fit_file.write_polygon(fun_poly_cont_lin,1e-6,ml_max);
   //data without and with fse
-  if(FSE_an(an_flag)==0)
+  if(FSE_flag==0)
     {
       grace::default_color_scheme={grace::RED,grace::BLUE,grace::GREEN4,grace::VIOLET};
       grace::default_symbol_scheme={grace::DIAMOND,grace::DIAMOND,grace::DIAMOND};
@@ -363,10 +361,10 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 	      for(size_t idata=0;idata<ext_data.size();idata++)
 		if(ext_data[idata].ib==ib)
 		  L_list.insert(ext_data[idata].L);
-	  
+	      
 	      //loop over the list of volumes
-	      for(auto &L : L_list)	      
-		{
+	      for(auto &L : L_list)
+		{		
 		  fit_file.new_data_set();
 		  //put data without fse to brown
 		  if(without_with_fse==0)
@@ -439,82 +437,42 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
     }
 }
 
-double syst_analysis(const vector<ave_err_t> &v)
+vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const vector<size_t> &fact)
 {
-  ave_err_t ae;
+  index_t ind(fact);
+  if(ind.max()!=v.size()) CRASH("v has size %zu, fact has product %zu",v.size(),ind.max());
   
-  for(size_t i=0;i<v.size();i++)
-    {
-      double a=v[i].ave;
-      ae.ave+=a;
-      ae.err+=sqr(a);
-    }
-  ae.ave/=v.size();
-  ae.err/=v.size();
-  ae.err-=sqr(ae.ave);
-  ae.err=sqrt(fabs(ae.err));
+  vector<double> out(ind.rank(),0.0);
+  vector<double> partials=out; //<! ignoring mixed terms
   
-  return ae.err;
-}
-
-ave_err_t stat_analysis(const vector<ave_err_t> &v)
-{
-  ave_err_t ae;
+  for(int iter=0;iter<2;iter++)
+    for(size_t i=0;i<v.size();i++)
+      for(size_t j=0;j<v.size();j++)
+	{
+	  vector<size_t> ci=ind(i);
+	  vector<size_t> cj=ind(j);
+	  // cout<<ci[0]<<" "<<ci[1]<<" "<<ci[2]<<endl;
+	  // cout<<cj[0]<<" "<<cj[1]<<" "<<cj[2]<<endl;
+	  double delta=v[i].ave*(v[i].ave-v[j].ave);
+	  
+	  //get the list of different components
+	  vector<size_t> mudiff;
+	  for(size_t mu=0;mu<fact.size();mu++)
+	    if(ci[mu]!=cj[mu])
+	      mudiff.push_back(mu);
+	  //cout<<ndiff<<endl;
+	  if(iter==0) {if(mudiff.size()==1) partials[mudiff[0]]+=delta;}
+	  else
+	    if(mudiff.size()!=0)
+	      {
+		double norm=0;
+		for(auto &mu : mudiff) norm+=partials[mu];
+		if(norm) for(auto &mu : mudiff) out[mu]+=delta*partials[mu]/norm;
+	      }
+	}
   
-  for(size_t i=0;i<v.size();i++)
-    {
-      double a=v[i].ave;
-      double e=v[i].err;
-      ae.ave+=a;
-      ae.err+=sqr(e);
-    }
-  ae.ave/=v.size();
-  ae.err/=v.size();
-  ae.err=sqrt(fabs(ae.err));
+  //normalize
+  for(size_t mu=0;mu<fact.size();mu++) out[mu]=sqrt(out[mu]/(v.size()*(v.size()-1)));
   
-  return ae;
-}
-
-vector<ave_err_t> ave_analyses(const dbvec_t &v)
-{
-  vector<ave_err_t> input_an_ave_err(nan_syst);
-  
-  for(size_t isyst=0;isyst<nan_syst;isyst++)
-    {
-      dbvec_t v_an(ninput_an);
-      for(size_t inpan=0;inpan<ninput_an;inpan++) v_an[inpan]=v[ind_an({inpan,isyst})];
-      input_an_ave_err[isyst]=eq_28_analysis(v_an);
-    }
-  
-  return input_an_ave_err;
-}
-
-void syst_analysis_sep(const vector<ave_err_t> &v)
-{
-  double db[12];
-  
-  db[0]=(v[0].ave-v[1].ave)/2.0;
-  db[1]=(v[2].ave-v[3].ave)/2.0;
-  db[2]=(v[4].ave-v[5].ave)/2.0;
-  db[3]=(v[6].ave-v[7].ave)/2.0;
-  db[4]=(v[0].ave-v[2].ave)/2.0;
-  db[5]=(v[1].ave-v[3].ave)/2.0;
-  db[6]=(v[4].ave-v[6].ave)/2.0;
-  db[7]=(v[5].ave-v[7].ave)/2.0;
-  db[8]=(v[0].ave-v[4].ave)/2.0;
-  db[9]=(v[1].ave-v[5].ave)/2.0;
-  db[10]=(v[2].ave-v[6].ave)/2.0;
-  db[11]=(v[3].ave-v[7].ave)/2.0;
-  
-  double S2cont,S2chir,S2fse;
-  
-  S2cont=1.0/24.0*(pow(db[0],2.0)+pow(db[1],2.0)+pow(db[2],2.0)+pow(db[3],2.0)+pow(db[0]+db[1],2.0)+pow(db[0]+db[2],2.0)+pow(db[1]+db[3],2.0)+pow(db[2]+db[3],2.0))+1.0/48.0*(pow(db[0]+db[3],2.0)+pow(db[1]+db[2],2.0));
-  
-  S2chir=1.0/24.0*(pow(db[8],2.0)+pow(db[9],2.0)+pow(db[10],2.0)+pow(db[11],2.0)+pow(db[8]+db[9],2.0)+pow(db[8]+db[10],2.0)+pow(db[9]+db[11],2.0)+pow(db[10]+db[11],2.0))+1.0/48.0*(pow(db[8]+db[11],2.0)+pow(db[9]+db[10],2.0));
-  
-  S2fse=1.0/24.0*(pow(db[4],2.0)+pow(db[5],2.0)+pow(db[6],2.0)+pow(db[7],2.0)+pow(db[4]+db[5],2.0)+pow(db[4]+db[6],2.0)+pow(db[5]+db[7],2.0)+pow(db[6]+db[7],2.0))+1.0/48.0*(pow(db[4]+db[7],2.0)+pow(db[5]+db[6],2.0));
-  
-  cout<<"cont: "<<sqrt(S2cont)<<endl;
-  cout<<"chir: "<<sqrt(S2chir)<<endl;
-  cout<<"fse: "<<sqrt(S2fse)<<endl;
+  return out;
 }

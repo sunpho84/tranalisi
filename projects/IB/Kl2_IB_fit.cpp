@@ -9,6 +9,7 @@
 #include <functional>
 #include <Kl2_IB_fit.hpp>
 
+index_t ind_an;
 using namespace placeholders;
  
 namespace
@@ -132,7 +133,7 @@ dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
 		  (double x,size_t ib)
 		  {return cont_chir_ansatz_dM2Pi<double,double,double>
 		      (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),x,
-		       pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.adep_ml.ave(),an_flag);},
+		       pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),pars.adep_ml.ave(),FSE_an(an_flag));},
 		  bind(cont_chir_ansatz_dM2Pi<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,
 		       a_cont,pars.adep,inf_vol,pars.L3dep,pars.adep_ml,an_flag),
 		  [&ext_data,&pars,univ_full_sub]
@@ -147,7 +148,7 @@ dboot_t cont_chir_fit_dM2Pi(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,
 				       without_with_fse*FSE_dep_pion_savage_new_exp(pars.L3dep,dboot_t(pow(2.0*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)),pars.fit_a[ib],ext_data[idata].L));
 		      }
 		  },
-		  ml_phys,phys_res,"$$M^2_{\\pi^+}-M^2_{\\pi^0} [GeV^2]",beta_list,univ_full_sub,an_flag);
+		  ml_phys,phys_res,"$$M^2_{\\pi^+}-M^2_{\\pi^0} [GeV^2]",beta_list,univ_full_sub,FSE_an(an_flag));
   
   return phys_res;
 }
@@ -239,7 +240,7 @@ dboot_t cont_chir_fit_dM2K_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &
 				       without_with_fse*FSE_dep_kaon_savage(pars.L3dep,dboot_t(pow(pars.fit_B0*(ext_data[idata].aml+ext_data[idata].ams)/pars.fit_a[ib]/pars.fit_z[ib],0.5)),pars.fit_a[ib],ext_data[idata].L));
 		      }
 		  },
-		  ml_phys,phys_res,"$$[M^2_{K^+}-M^2_{K^0}]_{QED} [GeV^2]",beta_list,univ_full_sub,an_flag);
+		  ml_phys,phys_res,"$$[M^2_{K^+}-M^2_{K^0}]_{QED} [GeV^2]",beta_list,univ_full_sub,FSE_an(an_flag));
   
   return phys_res;
 }

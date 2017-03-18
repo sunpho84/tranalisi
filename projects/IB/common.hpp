@@ -34,9 +34,6 @@ const double es=ed;
 //! charge of charm
 const double ec=eu;
 
-//! index of flag and input_an
-EXTERN_COMMON index_t<2> ind_an;
-
 //! continuum limit
 const double a_cont=1e-5;
 
@@ -72,27 +69,6 @@ dboot_t read_boot(const raw_file_t &file);
 
 //! perform the analysis according to eq.28
 ave_err_t eq_28_analysis(const dbvec_t &v);
-
-//! number of analysis to evaluate systematic effects
-const size_t nan_syst=8;
-//! flag for lattice systematics
-const size_t asyst_mask=1;
-//! flag for FSE systematics
-const size_t fsyst_mask=2;
-//! flag for chiral systematics
-const size_t csyst_mask=4;
-
-//! get flag for FSE systematics
-inline bool FSE_an(size_t an_flag)
-{return an_flag & fsyst_mask;}
-
-//! get flag for continuum systematics
-inline bool cont_an(size_t an_flag)
-{return an_flag & asyst_mask;}
-
-//! get flag for chiral systematics
-inline bool chir_an(size_t an_flag)
-{return an_flag & csyst_mask;}
 
 //! hold data for continuum chiral infvol extrapolation
 class cont_chir_fit_data_t
@@ -285,12 +261,9 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const function<double(double x,size_t ib)> &fun_line_per_beta,
 		   const function<dboot_t(double x)> &fun_poly_cont_lin,
 		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
-		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,size_t univ_full_sub,size_t an_flag);
+		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,size_t univ_full_sub,size_t FSE_flag);
 
-double syst_analysis(const vector<ave_err_t> &v);
-ave_err_t stat_analysis(const vector<ave_err_t> &v);
-vector<ave_err_t> ave_analyses(const dbvec_t &v);
-void syst_analysis_sep(const vector<ave_err_t> &v);
+vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const vector<size_t> &fact);
 
 #undef INIT_TO
 #undef EXTERN_COMMON

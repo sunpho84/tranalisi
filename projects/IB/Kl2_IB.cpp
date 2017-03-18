@@ -5,8 +5,8 @@
 #include <tranalisi.hpp>
 
 int T;
-index_t<4> ind;
-index_t<7> ind_hl;
+index_t ind;
+index_t ind_hl;
 
 djvec_t load(string path,size_t im1,size_t im2,size_t reim,int rpar,int spat_par)
 {

@@ -6,9 +6,17 @@
 
 const size_t ilight=0,istrange=1,icharm=2;
 const vector<string> qname({"light","strange","charm"});
+const double M_P_phys[3]={0.775,0.686,2.9834};
 const double M_V_phys[3]={0.775,1.0195,3.0969};
-size_t nm,nr;
-index_t<4> ind_base,ind_extra;
+int use_extra_sources;
+size_t nm,im,nr;
+index_t ind_base,ind_extra;
+
+//! systematic
+index_t ind_syst({8,2,2,2,2});
+enum syst{c_input,c_chir,c_FSE,c_cont,c_fit_range};
+template <syst comp> int case_of(int isyst){return ind_syst(isyst)[comp];}
+
 const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
 const vector<vector<ave_err_t>> Zt_ae({{{0.711,0.005},{0.724,0.004},{0.774,0.004}},{{0.700,0.003},{0.711,0.002},{0.767,0.002}}});
 const int Za_seed[nbeta]={13124,862464,76753};
@@ -41,9 +49,9 @@ inline djvec_t read(const char *what,const ens_data_t &ens,size_t im,size_t r,si
   string path_extra=path+"_"+qname[im][0]+qname[im][0];
   
   djvec_t out=read_djvec(path,ens.T,ind_base({im,im,r,reim}));
-  if(file_exists(path_extra))
+  if(use_extra_sources and file_exists(path_extra))
     {
-      //cout<<"Improving with "<<path_extra<<endl;
+      cout<<"Improving with "<<path_extra<<endl;
       
       out+=4*read_djvec(path_extra,ens.T,ind_extra({0,0,r,reim}));
       out/=5.0;
@@ -64,11 +72,13 @@ inline djvec_t read(const char *what,const ens_data_t &ens,int tpar,size_t im,in
 //! read averaging the three channels
 inline djvec_t read(const char *what,const char *pat,const ens_data_t &ens,int tpar,size_t im,int rpar,size_t reim)
 {
-  return
-    djvec_t(read(combine("%s_%c1%c1",what,pat[0],pat[1]).c_str(),ens,tpar,im,rpar,reim)+
-	    read(combine("%s_%c2%c2",what,pat[0],pat[1]).c_str(),ens,tpar,im,rpar,reim)+
-	    read(combine("%s_%c3%c3",what,pat[0],pat[1]).c_str(),ens,tpar,im,rpar,reim))
-    /3.0;
+  if(string(pat)=="VV")
+    return
+      djvec_t(read(combine("%s_%c1%c1",what,pat[0],pat[1]).c_str(),ens,tpar,im,rpar,reim)+
+	      read(combine("%s_%c2%c2",what,pat[0],pat[1]).c_str(),ens,tpar,im,rpar,reim)+
+	      read(combine("%s_%c3%c3",what,pat[0],pat[1]).c_str(),ens,tpar,im,rpar,reim))
+      /3.0;
+  else return read(combine("%s_%s",what,pat).c_str(),ens,tpar,im,rpar,reim);
 }
 
 //! read PP
@@ -90,17 +100,19 @@ inline djvec_t read_VT(const char *what,const ens_data_t &ens,size_t im,int rpar
 //! compute the critical deltam
 inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
 {
+  string ens_qpath=ens.path+"/plots_"+qname[iq];
+  
   djvec_t V0P5_LL=read("LL_V0P5",ens,-1,iq,-1,IM);
   djvec_t V0P5_0M=read("0M_V0P5",ens,-1,iq,-1,IM);
   djvec_t V0P5_0T=read("0T_V0P5",ens,-1,iq,-1,IM);
   djvec_t num_deltam_cr=forward_derivative(djvec_t(V0P5_LL+2.0*djvec_t(V0P5_0M+V0P5_0T)));
-  num_deltam_cr.ave_err().write(combine("%s/plots/num_deltam_cr.xmg",ens.path.c_str()));
+  num_deltam_cr.ave_err().write(combine("%s/num_deltam_cr.xmg",ens_qpath.c_str()));
   
   djvec_t V0P5_0P=read("0P_V0P5",ens,-1,iq,+1,RE);
   djvec_t den_deltam_cr=forward_derivative(V0P5_0P);
-  den_deltam_cr.ave_err().write(combine("%s/plots/den_deltam_cr.xmg",ens.path.c_str()));
+  den_deltam_cr.ave_err().write(combine("%s/den_deltam_cr.xmg",ens_qpath.c_str()));
   
-  djack_t deltam_cr=constant_fit(djvec_t(-num_deltam_cr/(2.0*den_deltam_cr)),ens.tmin[iq],ens.tmax[iq],combine("%s/plots/deltam_cr_t.xmg",ens.path.c_str()));
+  djack_t deltam_cr=constant_fit(djvec_t(-num_deltam_cr/(2.0*den_deltam_cr)),ens.tmin[iq],ens.tmax[iq],combine("%s/deltam_cr_t.xmg",ens_qpath.c_str()));
   
   return deltam_cr;
 }
@@ -108,19 +120,25 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
 //! read QED corrections
 inline djvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO)
 {
+  string ens_qpath=ens.path+"/plots_"+qname[im];
+  
   djvec_t c_0T=read("0T",pat,ens,tpar,im,1,RE);
   djvec_t c_0M=read("0M",pat,ens,tpar,im,1,RE);
   djvec_t c_LL=read("LL",pat,ens,tpar,im,1,RE);
-  djvec_t(c_0T/c_LO).ave_err().write(combine("%s/plots/%s_0T.xmg",ens.path.c_str(),pat));
-  djvec_t(c_0M/c_LO).ave_err().write(combine("%s/plots/%s_0M.xmg",ens.path.c_str(),pat));
-  djvec_t(c_LL/c_LO).ave_err().write(combine("%s/plots/%s_LL.xmg",ens.path.c_str(),pat));
+  djvec_t(c_0T/c_LO).ave_err().write(combine("%s/%s_0T.xmg",ens_qpath.c_str(),pat));
+  djvec_t(c_0M/c_LO).ave_err().write(combine("%s/%s_0M.xmg",ens_qpath.c_str(),pat));
+  djvec_t(c_LL/c_LO).ave_err().write(combine("%s/%s_LL.xmg",ens_qpath.c_str(),pat));
   djvec_t c=djvec_t(c_LL+2.0*djvec_t(c_0T+c_0M));
   
   djvec_t c_0P=read("0P",pat,ens,tpar,im,-1,IM);
-  djvec_t(c_0P/c_LO).ave_err().write(combine("%s/plots/%s_0P.xmg",ens.path.c_str(),pat));
+  djvec_t(c_0P/c_LO).ave_err().write(combine("%s/%s_0P.xmg",ens_qpath.c_str(),pat));
   djvec_t d=-(deltam_cr*c_0P);
   return djvec_t(c+2.0*d)*e2*sqr(eq[im]);
 }
+
+//! read for PP case
+inline djvec_t read_QED_PP(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO)
+{return read_QED("P5P5",ens,tpar,im,deltam_cr,c_LO);}
 
 //! read for VV case
 inline djvec_t read_QED_VV(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO)
@@ -142,7 +160,9 @@ void gm2_initialize(int narg,char **arg)
   
   //read where to read input and how many ensemble
   string ens_pars=input.read<string>("UltimatePath");
+  use_extra_sources=input.read<int>("UseExtraSources");
   nm=input.read<size_t>("NMass");
+  im=input.read<size_t>("IMass");
   nr=input.read<size_t>("NR");
   ind_base.set_ranges({nm,nm,nr,2});
   ind_extra.set_ranges({1,1,nr,2});

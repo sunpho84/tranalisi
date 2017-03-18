@@ -6,6 +6,86 @@
 #include <Kl2_IB_fit.hpp>
 #include <common.hpp>
 
+vector<ave_err_t> ave_analyses(const dbvec_t &v)
+{
+  vector<ave_err_t> input_an_ave_err(nan_syst);
+  
+  for(size_t isyst=0;isyst<nan_syst;isyst++)
+    {
+      dbvec_t v_an(ninput_an);
+      for(size_t inpan=0;inpan<ninput_an;inpan++) v_an[inpan]=v[ind_an({inpan,isyst})];
+      input_an_ave_err[isyst]=eq_28_analysis(v_an);
+    }
+  
+  return input_an_ave_err;
+}
+
+double syst_analysis(const vector<ave_err_t> &v)
+{
+  ave_err_t ae;
+  
+  for(size_t i=0;i<v.size();i++)
+    {
+      double a=v[i].ave;
+      ae.ave+=a;
+      ae.err+=sqr(a);
+    }
+  ae.ave/=v.size();
+  ae.err/=v.size();
+  ae.err-=sqr(ae.ave);
+  ae.err=sqrt(fabs(ae.err));
+  
+  return ae.err;
+}
+
+ave_err_t stat_analysis(const vector<ave_err_t> &v)
+{
+  ave_err_t ae;
+  
+  for(size_t i=0;i<v.size();i++)
+    {
+      double a=v[i].ave;
+      double e=v[i].err;
+      ae.ave+=a;
+      ae.err+=sqr(e);
+    }
+  ae.ave/=v.size();
+  ae.err/=v.size();
+  ae.err=sqrt(fabs(ae.err));
+  
+  return ae;
+}
+
+void syst_analysis_sep(const vector<ave_err_t> &v)
+{
+  double db[12];
+  
+  db[0]=(v[0].ave-v[1].ave)/2.0;
+  db[1]=(v[2].ave-v[3].ave)/2.0;
+  db[2]=(v[4].ave-v[5].ave)/2.0;
+  db[3]=(v[6].ave-v[7].ave)/2.0;
+  db[4]=(v[0].ave-v[2].ave)/2.0;
+  db[5]=(v[1].ave-v[3].ave)/2.0;
+  db[6]=(v[4].ave-v[6].ave)/2.0;
+  db[7]=(v[5].ave-v[7].ave)/2.0;
+  db[8]=(v[0].ave-v[4].ave)/2.0;
+  db[9]=(v[1].ave-v[5].ave)/2.0;
+  db[10]=(v[2].ave-v[6].ave)/2.0;
+  db[11]=(v[3].ave-v[7].ave)/2.0;
+  
+  double S2cont,S2chir,S2fse;
+  
+  S2cont=1.0/24.0*(pow(db[0],2.0)+pow(db[1],2.0)+pow(db[2],2.0)+pow(db[3],2.0)+pow(db[0]+db[1],2.0)+pow(db[0]+db[2],2.0)+pow(db[1]+db[3],2.0)+pow(db[2]+db[3],2.0))+1.0/48.0*(pow(db[0]+db[3],2.0)+pow(db[1]+db[2],2.0));
+  
+  S2chir=1.0/24.0*(pow(db[8],2.0)+pow(db[9],2.0)+pow(db[10],2.0)+pow(db[11],2.0)+pow(db[8]+db[9],2.0)+pow(db[8]+db[10],2.0)+pow(db[9]+db[11],2.0)+pow(db[10]+db[11],2.0))+1.0/48.0*(pow(db[8]+db[11],2.0)+pow(db[9]+db[10],2.0));
+  
+  S2fse=1.0/24.0*(pow(db[4],2.0)+pow(db[5],2.0)+pow(db[6],2.0)+pow(db[7],2.0)+pow(db[4]+db[5],2.0)+pow(db[4]+db[6],2.0)+pow(db[5]+db[7],2.0)+pow(db[6]+db[7],2.0))+1.0/48.0*(pow(db[4]+db[7],2.0)+pow(db[5]+db[6],2.0));
+  
+  cout<<"chir: "<<sqrt(S2chir)<<endl;
+  cout<<"fse: "<<sqrt(S2fse)<<endl;
+  cout<<"cont: "<<sqrt(S2cont)<<endl;
+}
+
 class ens_data_t
 {
 public:
@@ -51,6 +131,8 @@ template <class Tx,class Ty> void plot_ens_data(string path,const Tx &x,const Ty
 
 int main(int narg,char **arg)
 {
+  ind_an.set_ranges({ninput_an,nan_syst});
+  
   //open input file
   string name="input_global.txt";
   if(narg>=2) name=arg[1];
