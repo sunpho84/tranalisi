@@ -13,7 +13,9 @@ size_t nm,im,nr;
 index_t ind_base,ind_extra;
 
 //! systematic
-index_t ind_syst({8,2,2,2,2});
+const int nfit_range_variations=2;
+const int ncont_extrap=2;
+index_t ind_syst({ninput_an,2,2,ncont_extrap,nfit_range_variations});
 enum syst{c_input,c_chir,c_FSE,c_cont,c_fit_range};
 template <syst comp> int case_of(int isyst){return ind_syst(isyst)[comp];}
 
