@@ -15,7 +15,7 @@ index_t ind_base,ind_extra;
 //! systematic
 const int nfit_range_variations=2;
 const int ncont_extrap=2;
-index_t ind_syst({ninput_an,2,2,ncont_extrap,nfit_range_variations});
+index_t ind_syst({{"Input",ninput_an},{"Chir",2},{"FSE",2},{"Cont",ncont_extrap},{"FitRn",nfit_range_variations}});
 enum syst{c_input,c_chir,c_FSE,c_cont,c_fit_range};
 template <syst comp> int case_of(int isyst){return ind_syst(isyst)[comp];}
 
@@ -166,8 +166,8 @@ void gm2_initialize(int narg,char **arg)
   nm=input.read<size_t>("NMass");
   im=input.read<size_t>("IMass");
   nr=input.read<size_t>("NR");
-  ind_base.set_ranges({nm,nm,nr,2});
-  ind_extra.set_ranges({1,1,nr,2});
+  ind_base.set_ranges ({{"NMass",nm},{"NMass",nm},{"Nr",nr},{"RI",2}});
+  ind_extra.set_ranges({{"NMass", 1},{"NMass", 1},{"Nr",nr},{"RI",2}});
   init_common_IB(ens_pars);
   nens_used=input.read<int>("NEnsemble");
   Za.resize(nbeta);

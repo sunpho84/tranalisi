@@ -9,15 +9,22 @@
 using namespace std;
 
 //! build index
-class index_t : vector<size_t>
+class index_t : vector<pair<string,size_t>>
 {
 public:
   //! return the rank
   const size_t rank() const
   {return size();}
   
+  //! return the name of the  index
+  string name(size_t comp) const
+  {
+    if(comp>=rank()) CRASH("Aksing for the name of component %zu greater or equal to rank %zu",comp,rank());
+    return (*this)[comp].first;
+  }
+  
   //! set the range
-  void set_ranges(const vector<size_t> &list)
+  void set_ranges(const vector<pair<string,size_t>> &list)
   {
     this->resize(list.size());
     copy(list.begin(),list.end(),this->begin());
@@ -30,8 +37,8 @@ public:
     size_t out=0;
     for(size_t i=0;i<rank();i++)
       {
-	if((*this)[i]<=oth.begin()[i]) CRASH("Calling rank %zu with value %zu greater or equal to max %zu",i,oth.begin()[i],(*this)[i]);
-	out=out*(*this)[i]+oth.begin()[i];
+	if((*this)[i].second<=oth.begin()[i]) CRASH("Calling rank %zu with value %zu greater or equal to max %zu",i,oth.begin()[i],(*this)[i].second);
+	out=out*(*this)[i].second+oth.begin()[i];
       }
     return out;
   }
@@ -46,8 +53,8 @@ public:
     for(size_t invi=0;invi<rank();invi++)
       {
 	int i=rank()-1-invi;
-	out[i]=temp%(*this)[i];
-	temp/=(*this)[i];
+	out[i]=temp%(*this)[i].second;
+	temp/=(*this)[i].second;
       }
     return out;
   }
@@ -56,13 +63,13 @@ public:
   size_t max() const
   {
     size_t out=1;
-    for(size_t i=0;i<rank();i++) out*=((*this)[i]);
+    for(size_t i=0;i<rank();i++) out*=((*this)[i]).second;
     return out;
   }
   
-  index_t() : vector<size_t>() {}
+  index_t() : vector<pair<string,size_t>>() {}
   
-  index_t(const vector<size_t> &list) : vector<size_t>(list) {}
+  index_t(const vector<pair<string,size_t>> &list) : vector<pair<string,size_t>>(list) {}
 };
 
 #endif

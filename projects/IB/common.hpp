@@ -263,7 +263,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
 		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,size_t univ_full_sub,size_t FSE_flag);
 
-vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const vector<size_t> &fact);
+vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const index_t &fact);
 
 #undef INIT_TO
 #undef EXTERN_COMMON

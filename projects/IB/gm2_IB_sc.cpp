@@ -456,19 +456,33 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 
 void perform_analysis(const dbvec_t &data,const string &name)
 {
-  CRASH("");
-  vector<ave_err_t> partial_ave;//=ave_analyses(data);
-  ave_err_t ae;//=stat_analysis(partial_ave);
-  vector<double> syst=syst_analysis_sep_bis(data.ave_err(),{8,2,2,2});
+  double ave=0,err=0,wave=0,werr=0,weight=0;
+  for(auto &d : data)
+    {
+      double a=d.ave(),e=d.err(),w=1/sqr(e);
+      ave+=a;
+      err+=e;
+      wave+=a*w;
+      werr+=e*w;
+      weight+=w;
+    }
+  ave/=data.size();
+  err/=data.size();
+  wave/=weight;
+  werr/=weight;
+  vector<double> syst=syst_analysis_sep_bis(data.ave_err(),ind_syst);
   
   cout<<" ================== "<<name<<" ================== "<<endl;
-  cout<<" aver:\t"<<ae.ave<<endl;
-  for(auto &el : vector<pair<basic_string<char>,double>>({{"stat",ae.err},{"scale",syst[0]},{"chir",syst[1]},{"fse",syst[2]},{"cont",syst[3]}}))
+  cout<<" aver:\t"<<ave<<endl;
+  cout<<" waver:\t"<<wave<<endl;
+  vector<pair<basic_string<char>,double>> res({{"stat",err},{"combd",werr}});
+  for(size_t isyst=0;isyst<ind_syst.rank();isyst++) res.push_back({ind_syst.name(isyst),syst[isyst]});
+  for(auto &el : res)
     {
       streamsize prec=cout.precision();
-      cout<<" "<<el.first<<":\t"<<el.second<<" = ";
+      cout<<" "<<el.first.substr(0,6)<<":\t"<<el.second<<" = ";
       cout.precision(3);
-      cout<<fabs(el.second/ae.ave)*100<<"% "<<endl;
+      cout<<fabs(el.second/ave)*100<<"% "<<endl;
       cout.precision(prec);
     }
   // for(auto x : data.ave_err()) cout<<" "<<x<<endl;
@@ -538,98 +552,113 @@ int main(int narg,char **arg)
     }
   
   //fit 2pts
-  index_t ind_2pts_fit({nfit_range_variations,nens_used});
+  index_t ind_2pts_fit({{"NFitRanges",nfit_range_variations},{"Ens",nens_used}});
   size_t n2pts_fit_max=ind_2pts_fit.max();
-  dbvec_t Z_V(n2pts_fit_max),M_V(n2pts_fit_max),A_V(n2pts_fit_max),SL_V(n2pts_fit_max);
-  dbvec_t Z_P(n2pts_fit_max),M_P(n2pts_fit_max),A_P(n2pts_fit_max),SL_P(n2pts_fit_max);
-  cout<<" ********************************************* fitting 2pts *******************************************"<<endl;
-  if(an_mode==compute_everything)
-    for(size_t ind=0;ind<n2pts_fit_max;ind++)
-      {
-	vector<size_t> comp=ind_2pts_fit(ind);
-	size_t ifit_range=comp[0],iens=comp[1];
-	write_ens_header(iens);
-	cout<<"Flags: ifit_range="<<ifit_range<<", iens="<<iens<<endl;
-	
-	//set malus for fitting
-	int malus_fitting=0;
-	if(ifit_range) malus_fitting=1;
-	
-	ens_data_t &ens=ens_data[iens];
-	size_t TH=ens.T/2;
-	string ens_qpath=ens.path+"/plots_"+qname[im];
-	
-	two_pts_with_ins_ratio_fit(Z_V[ind],M_V[ind],A_V[ind],SL_V[ind],jVV_LO[iens],jVV_QED[iens],TH,ens.tmin[im]+malus_fitting,ens.tmax[im],
-				   combine("%s/VV_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/VV_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
-	two_pts_with_ins_ratio_fit(Z_P[ind],M_P[ind],A_P[ind],SL_P[ind],jPP_LO[iens],jPP_QED[iens],TH,ens.tmin[im]+malus_fitting,ens.tmax[im],
-				   combine("%s/PP_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/PP_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
-	cout<<"M_V: "<<M_V[ind].ave_err()<<endl;
-	cout<<"M_P: "<<M_P[ind].ave_err()<<endl;
-      }
+  djvec_t jZ_V(n2pts_fit_max),jM_V(n2pts_fit_max),jA_V(n2pts_fit_max),jSL_V(n2pts_fit_max);
+  djvec_t jZ_P(n2pts_fit_max),jM_P(n2pts_fit_max),jA_P(n2pts_fit_max),jSL_P(n2pts_fit_max);
   
-  //read or write
-  for(auto &obj : {&Z_P,&M_P,&A_P,&SL_P,&Z_V,&M_V,&A_V,&SL_V})
+  //read if avail
+  for(auto &obj : {&jZ_P,&jM_P,&jA_P,&jSL_P,&jZ_V,&jM_V,&jA_V,&jSL_V})
+    if(an_mode!=compute_everything) obj->bin_read(results_in);
+  
+  cout<<" ********************************************* fitting 2pts *******************************************"<<endl;
+  for(size_t ind=0;ind<n2pts_fit_max;ind++)
+    {
+      vector<size_t> comp=ind_2pts_fit(ind);
+      size_t ifit_range=comp[0],iens=comp[1];
+      write_ens_header(iens);
+      cout<<"Flags: ifit_range="<<ifit_range<<", iens="<<iens<<endl;
+      
+      //set malus for fitting
+      int malus_fitting=0;
+      if(ifit_range) malus_fitting=1;
+      
+      ens_data_t &ens=ens_data[iens];
+      size_t TH=ens.T/2;
+      string ens_qpath=ens.path+"/plots_"+qname[im];
+      
+      if(an_mode==compute_everything)
+	{
+	  two_pts_with_ins_ratio_fit(jZ_V[ind],jM_V[ind],jA_V[ind],jSL_V[ind],jVV_LO[iens],jVV_QED[iens],TH,ens.tmin[im]+malus_fitting,ens.tmax[im],
+				     combine("%s/VV_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/VV_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
+	  two_pts_with_ins_ratio_fit(jZ_P[ind],jM_P[ind],jA_P[ind],jSL_P[ind],jPP_LO[iens],jPP_QED[iens],TH,ens.tmin[im]+malus_fitting,ens.tmax[im],
+				     combine("%s/PP_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/PP_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
+	}
+      
+      cout<<"M_V: "<<jM_V[ind].ave_err()<<endl;
+      cout<<"M_P: "<<jM_P[ind].ave_err()<<endl;
+    }
+  
+  //write if computed
+  for(auto &obj : {&jZ_P,&jM_P,&jA_P,&jSL_P,&jZ_V,&jM_V,&jA_V,&jSL_V})
     if(an_mode==compute_everything) obj->bin_write(results_out);
-    else 	                    obj->bin_read(results_in);
   
   //perform the integrations
   cout<<endl;
   cout<<" ********************************************* integrating *******************************************"<<endl;
-  index_t ind_integr({ninput_an,ncont_extrap,nfit_range_variations,nens_used});
+  index_t ind_integr({{"Input",ninput_an},{"Cont",ncont_extrap},{"FitRange",nfit_range_variations},{"Ens",nens_used}});
   size_t nintegr_max=ind_integr.max();
   dbvec_t resc_a(nintegr_max);
   dbvec_t  LO_correl(nintegr_max), LO_remaind(nintegr_max), LO(nintegr_max);
   dbvec_t QED_correl(nintegr_max),QED_remaind(nintegr_max),QED(nintegr_max);
-  if(an_mode==compute_everything)
-    for(size_t ind=0;ind<nintegr_max;ind++)
-      {
-	vector<size_t> comp=ind_integr(ind);
-	size_t input_an_id=comp[0],icont_extrap=comp[1],ifit_range=comp[2],iens=comp[3];
-	ens_data_t &ens=ens_data[iens];
-	string ens_qpath=ens.path+"/plots_"+qname[im];
-	size_t ib=ens.ib,TH=ens.T/2;
-	write_ens_header(iens);
-	cout<<"Flags: input_an_id="<<input_an_id<<", icont_extrap="<<icont_extrap<<", ifit_range="<<ifit_range<<", iens="<<iens<<endl;
-	
-	size_t i2pts=ind_2pts_fit({ifit_range,iens});
-	
-	//set bootstrap
-	bi=jack_index[input_an_id][ens.iult];
-	prepare_az(input_an_id);
-	dbvec_t VV_LO(bi,jVV_LO[iens]),PP_LO(bi,jPP_LO[iens]);
-	dbvec_t VV_QED(bi,jVV_QED[iens]),PP_QED(bi,jPP_QED[iens]);
-	
-	//lattice spacing obtained from V
-	switch(icont_extrap)
-	  {
-	  case 0:resc_a[ind]=1/lat_par[input_an_id].ainv[ib];break;
-	  case 1:resc_a[ind]=M_V[i2pts]/M_V_phys[im];break;
-	  }
-	cout<<"a: "<<resc_a[ind].ave_err()<<endl;
-	
-	size_t upto=TH-DT;
-	LO_correl[ind]=integrate_corr_times_kern_up_to(VV_LO,ens.T,resc_a[ind],im,upto)*sqr(Za[ib]);
-	LO_remaind[ind]=integrate_LO_reco_from(Z_V[i2pts],M_V[i2pts],resc_a[ind],im,upto)*sqr(Za[ib]);
-	
-	QED_correl[ind]=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a[ind],im,upto)*sqr(Za[ib]);
-	QED_remaind[ind]=integrate_QED_reco_from(A_V[i2pts],Z_V[i2pts],SL_V[i2pts],M_V[i2pts],resc_a[ind],im,upto)*sqr(Za[ib]);
-	
-	LO[ind]=LO_correl[ind]+LO_remaind[ind];
-	QED[ind]=QED_correl[ind]+QED_remaind[ind];
-	
-	index_t ind_rest({ninput_an,ncont_extrap,nfit_range_variations});
-	size_t irest=ind_rest({input_an_id,icont_extrap,ifit_range});
-	
-	compare_LO_num_reco(combine("%s/kern_LO_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_LO,Z_V[i2pts],M_V[i2pts],resc_a[iens]);
-	cout<<"amu: "<< LO_correl[ind].ave_err()<<" + "<<LO_remaind[ind].ave_err()<<" = "<<LO[ind].ave_err()<<endl;
-	
-	compare_QED_num_reco(combine("%s/kern_QED_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_QED,A_V[i2pts],Z_V[i2pts],SL_V[i2pts],M_V[i2pts],resc_a[iens]);
-	cout<<"amu_QED: "<<QED_correl[ind].ave_err()<<" + "<<QED_remaind[ind].ave_err()<<" = "<<QED[ind].ave_err()<<endl;
-      }
   
+  //read if avail
+  for(auto &obj : {&resc_a,&LO_correl,&LO_remaind,&QED_correl,&QED_remaind})
+    if(an_mode!=compute_everything) obj->bin_read(results_in);
+  
+  for(size_t ind=0;ind<nintegr_max;ind++)
+    {
+      vector<size_t> comp=ind_integr(ind);
+      size_t input_an_id=comp[0],icont_extrap=comp[1],ifit_range=comp[2],iens=comp[3];
+      ens_data_t &ens=ens_data[iens];
+      string ens_qpath=ens.path+"/plots_"+qname[im];
+      size_t ib=ens.ib,TH=ens.T/2;
+      write_ens_header(iens);
+      cout<<"Flags: input_an_id="<<input_an_id<<", icont_extrap="<<icont_extrap<<", ifit_range="<<ifit_range<<", iens="<<iens<<endl;
+      
+      size_t i2pts=ind_2pts_fit({ifit_range,iens});
+      
+      //set bootstrap
+      bi=jack_index[input_an_id][ens.iult];
+      prepare_az(input_an_id);
+      dbvec_t VV_LO(bi,jVV_LO[iens]),PP_LO(bi,jPP_LO[iens]);
+      dbvec_t VV_QED(bi,jVV_QED[iens]),PP_QED(bi,jPP_QED[iens]);
+      dboot_t Z_V(bi,jZ_V[i2pts]),M_V(bi,jM_V[i2pts]),A_V(bi,jA_V[i2pts]),SL_V(bi,jSL_V[i2pts]);
+      
+      if(an_mode==compute_everything)
+	{
+	  //lattice spacing obtained from V
+	  switch(icont_extrap)
+	    {
+	    case 0:resc_a[ind]=1/lat_par[input_an_id].ainv[ib];break;
+	    case 1:resc_a[ind]=M_V/M_V_phys[im];break;
+	    }
+	  cout<<"a: "<<resc_a[ind].ave_err()<<endl;
+	  
+	  size_t upto=TH-DT;
+	  LO_correl[ind]=integrate_corr_times_kern_up_to(VV_LO,ens.T,resc_a[ind],im,upto)*sqr(Za[ib]);
+	  LO_remaind[ind]=integrate_LO_reco_from(Z_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib]);
+	  
+	  QED_correl[ind]=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a[ind],im,upto)*sqr(Za[ib]);
+	  QED_remaind[ind]=integrate_QED_reco_from(A_V,Z_V,SL_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib]);
+	}
+      
+      LO[ind]=LO_correl[ind]+LO_remaind[ind];
+      QED[ind]=QED_correl[ind]+QED_remaind[ind];
+      
+      index_t ind_rest({{"Input",ninput_an},{"Cont",ncont_extrap},{"FitRange",nfit_range_variations}});
+      size_t irest=ind_rest({input_an_id,icont_extrap,ifit_range});
+      
+      compare_LO_num_reco(combine("%s/kern_LO_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_LO,Z_V,M_V,resc_a[iens]);
+      cout<<"amu: "<< LO_correl[ind].ave_err()<<" + "<<LO_remaind[ind].ave_err()<<" = "<<LO[ind].ave_err()<<endl;
+      
+      compare_QED_num_reco(combine("%s/kern_QED_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_QED,A_V,Z_V,SL_V,M_V,resc_a[iens]);
+      cout<<"amu_QED: "<<QED_correl[ind].ave_err()<<" + "<<QED_remaind[ind].ave_err()<<" = "<<QED[ind].ave_err()<<endl;
+    }
+  
+  //write if computed
   for(auto &obj : {&resc_a,&LO_correl,&LO_remaind,&QED_correl,&QED_remaind})
     if(an_mode==compute_everything) obj->bin_write(results_out);
-    else 	                    obj->bin_read(results_in);
   
   //loop over analysis flags and input scale determination
   dbvec_t cLO(ind_syst.max());
@@ -639,12 +668,17 @@ int main(int narg,char **arg)
   for(size_t isyst=0;isyst<ind_syst.max();isyst++)
     {
       vector<size_t> comp=ind_syst(isyst);
-      cout<<"Flags: "<<comp<<endl;
+      cout<<"Analysis: "<<isyst<<endl;
       size_t input_an_id=case_of<c_input>(isyst);
-      // size_t chir_an_id=case_of<c_chir>(isyst);
-      // size_t FSE_an_id=case_of<c_FSE>(isyst);
+      size_t chir_an_id=case_of<c_chir>(isyst);
+      size_t FSE_an_id=case_of<c_FSE>(isyst);
       size_t cont_an_id=case_of<c_cont>(isyst);
       size_t fit_range_an_id=case_of<c_fit_range>(isyst);
+      cout<<"InputAn:\t"<<input_an_id<<endl;
+      cout<<"ChirAn: \t"<<chir_an_id<<endl;
+      cout<<"FSE:    \t"<<FSE_an_id<<endl;
+      cout<<"ContAn: \t"<<cont_an_id<<endl;
+      cout<<"FitRange:\t"<<fit_range_an_id<<endl;
       
       prepare_az(input_an_id);
       dboot_t &f0=lat_par[input_an_id].f0;

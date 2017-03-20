@@ -437,9 +437,8 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
     }
 }
 
-vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const vector<size_t> &fact)
+vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const index_t &ind)
 {
-  index_t ind(fact);
   if(ind.max()!=v.size()) CRASH("v has size %zu, fact has product %zu",v.size(),ind.max());
   
   vector<double> out(ind.rank(),0.0);
@@ -457,7 +456,7 @@ vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const vector<siz
 	  
 	  //get the list of different components
 	  vector<size_t> mudiff;
-	  for(size_t mu=0;mu<fact.size();mu++)
+	  for(size_t mu=0;mu<ind.rank();mu++)
 	    if(ci[mu]!=cj[mu])
 	      mudiff.push_back(mu);
 	  //cout<<ndiff<<endl;
@@ -472,7 +471,7 @@ vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const vector<siz
 	}
   
   //normalize
-  for(size_t mu=0;mu<fact.size();mu++) out[mu]=sqrt(out[mu]/(v.size()*(v.size()-1)));
+  for(size_t mu=0;mu<ind.rank();mu++) out[mu]=sqrt(out[mu]/(v.size()*(v.size()-1)));
   
   return out;
 }

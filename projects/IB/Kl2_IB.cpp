@@ -31,9 +31,9 @@ int main(int narg,char **arg)
   ibeta=atoi(arg[2]);
   int TH=T/2;
   
-  ind.set_ranges({3,3,2,2});
+  ind.set_ranges({{"NMass",3},{"NMass",3},{"NR",2},{"RI",2}});
   const size_t nrl=2,norie=2,nrq=2,nqrev=2,nqins=3,nleptons=6;
-  ind_hl.set_ranges({nrl,norie,nrq,nqrev,nqins,nleptons,2/*reim*/});
+  ind_hl.set_ranges({{"nel",nrl},{"Norie",norie},{"NRQ",nrq},{"NRQrev",nqrev},{"NQins",nqins},{"NLeptons",nleptons},{"RI",2}});
   set_njacks(15);
   
   raw_file_t input;

@@ -131,7 +131,7 @@ template <class Tx,class Ty> void plot_ens_data(string path,const Tx &x,const Ty
 
 int main(int narg,char **arg)
 {
-  ind_an.set_ranges({ninput_an,nan_syst});
+  ind_an.set_ranges({{"Input",ninput_an},{"Syst",nan_syst}});
   
   //open input file
   string name="input_global.txt";
