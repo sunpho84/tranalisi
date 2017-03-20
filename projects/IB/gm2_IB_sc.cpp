@@ -471,20 +471,26 @@ void perform_analysis(const dbvec_t &data,const string &name)
   wave/=weight;
   werr/=weight;
   vector<double> syst=syst_analysis_sep_bis(data.ave_err(),ind_syst);
+  double tot=0;
+  for(auto &s : syst) tot+=s*s;
+  tot=sqrt(tot);
   
   cout<<" ================== "<<name<<" ================== "<<endl;
-  cout<<" aver:\t"<<ave<<endl;
-  cout<<" waver:\t"<<wave<<endl;
-  vector<pair<basic_string<char>,double>> res({{"stat",err},{"combd",werr}});
+  cout<<" Aver:\t"<<ave<<endl;
+  cout<<" Waver:\t"<<wave<<endl;
+  vector<pair<basic_string<char>,double>> res({{"Stat",err},{"Combd",werr}});
   for(size_t isyst=0;isyst<ind_syst.rank();isyst++) res.push_back({ind_syst.name(isyst),syst[isyst]});
+  res.push_back({"Tot",tot});
   for(auto &el : res)
     {
       streamsize prec=cout.precision();
       cout<<" "<<el.first.substr(0,6)<<":\t"<<el.second<<" = ";
       cout.precision(3);
       cout<<fabs(el.second/ave)*100<<"% "<<endl;
+      tot+=sqr(el.second);
       cout.precision(prec);
     }
+  
   // for(auto x : data.ave_err()) cout<<" "<<x<<endl;
 }
 
