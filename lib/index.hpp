@@ -9,7 +9,7 @@
 using namespace std;
 
 //! build index
-class index_t : vector<pair<string,size_t>>
+class index_t : public vector<pair<string,size_t>>
 {
 public:
   //! return the rank
