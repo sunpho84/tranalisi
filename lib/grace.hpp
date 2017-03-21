@@ -88,7 +88,9 @@ class grace_file_t : public ofstream
   double errorbar_riser_linewidth; //<! width of the bar of the error-riser
   
   string title; //<! title of the plot
+  string subtitle; //<! subtitle of the plot
   double title_size; //! size of the title
+  double subtitle_size; //! size of the subtitle
   string xaxis_label; //<! label of the x-axis
   string yaxis_label; //<! lable of the y-axis
   double xaxis_min,xaxis_max; //<! min and max for x-axis
@@ -148,6 +150,7 @@ public:
     yaxis_max(1)
   {
     title_size=
+      subtitle_size=
       xaxis_label_size=
       yaxis_label_size=
       grace::default_label_size;
@@ -160,9 +163,17 @@ public:
   void set_title(string label)
   {title=label;}
   
+  //! set subtitle of the graph
+  void set_subtitle(string label)
+  {subtitle=label;}
+  
   //! set the size of the title of the graph
   void set_title_size(double size)
   {title_size=size;}
+  
+  //! set the size of the subtitle of the graph
+  void set_subtitle_size(double size)
+  {subtitle_size=size;}
   
   //! set title of x-axis
   void set_xaxis_label(string label)
@@ -453,7 +464,9 @@ public:
     close_cur_set();
     
     (*this)<<"@title \""<<title<<"\""<<endl;
+    (*this)<<"@subtitle \""<<subtitle<<"\""<<endl;
     (*this)<<"@title size "<<title_size<<endl;
+    (*this)<<"@subtitle size "<<subtitle_size<<endl;
     (*this)<<"@xaxis label \""<<xaxis_label<<"\""<<endl;
     (*this)<<"@xaxis label char size "<<xaxis_label_size<<endl;
     (*this)<<"@yaxis label \""<<yaxis_label<<"\""<<endl;
