@@ -26,8 +26,13 @@ struct params_t
 };
 
 //! compute tilde for double
+EXTERN_GM2IB map<pair<size_t,double>,double> looktab;
 inline double ftilde_t(size_t t,double a)
 {
+  pair<size_t,double> key(t,a);
+  auto it=looktab.find(key);
+  if(it!=looktab.end()) return it->second;
+  
   int workspace_size=1000;
   gsl_integration_workspace *workspace=gsl_integration_workspace_alloc(workspace_size);
   
@@ -45,6 +50,8 @@ inline double ftilde_t(size_t t,double a)
   gsl_integration_qagiu(&f,start,epsabs,epsrel,workspace_size,workspace,&result,&abserr);
   
   gsl_integration_workspace_free(workspace);
+  
+  looktab[key]=result;
   
   return result;
 }
