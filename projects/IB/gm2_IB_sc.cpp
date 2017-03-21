@@ -18,6 +18,18 @@ template <class T,class Tm> T xi_fun(const T &B0,const Tm &aml,const T &f0)
 template <class Tpars> Tpars FSE_LO(const Tpars &C,const Tpars &L3dep,const Tpars &xi,const Tpars &ML)
 {return C*L3dep*xi*exp(-ML)/(ML);}
 
+//return the tmin for the fit
+size_t tmin_fit(size_t iens,size_t ifit_range)
+{
+  //set malus for fitting
+  int malus_fitting=0;
+  if(ifit_range) malus_fitting=2;
+  
+  ens_data_t &ens=ens_data[iens];
+  
+  return ens.tmin[im]+malus_fitting;
+}
+
 //! write an intestation line for asked ensemble
 void write_ens_header(size_t iens)
 {
@@ -577,19 +589,15 @@ int main(int narg,char **arg)
       write_ens_header(iens);
       cout<<"Flags: ifit_range="<<ifit_range<<", iens="<<iens<<endl;
       
-      //set malus for fitting
-      int malus_fitting=0;
-      if(ifit_range) malus_fitting=1;
-      
       ens_data_t &ens=ens_data[iens];
       size_t TH=ens.T/2;
       string ens_qpath=ens.path+"/plots_"+qname[im];
       
       if(an_mode==compute_everything)
 	{
-	  two_pts_with_ins_ratio_fit(jZ_V[ind],jM_V[ind],jA_V[ind],jSL_V[ind],jVV_LO[iens],jVV_QED[iens],TH,ens.tmin[im]+malus_fitting,ens.tmax[im],
+	  two_pts_with_ins_ratio_fit(jZ_V[ind],jM_V[ind],jA_V[ind],jSL_V[ind],jVV_LO[iens],jVV_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
 				     combine("%s/VV_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/VV_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
-	  two_pts_with_ins_ratio_fit(jZ_P[ind],jM_P[ind],jA_P[ind],jSL_P[ind],jPP_LO[iens],jPP_QED[iens],TH,ens.tmin[im]+malus_fitting,ens.tmax[im],
+	  two_pts_with_ins_ratio_fit(jZ_P[ind],jM_P[ind],jA_P[ind],jSL_P[ind],jPP_LO[iens],jPP_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
 				     combine("%s/PP_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/PP_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
 	}
       
@@ -604,7 +612,7 @@ int main(int narg,char **arg)
   //perform the integrations
   cout<<endl;
   cout<<" ********************************************* integrating *******************************************"<<endl;
-  index_t ind_integr({{"Input",ninput_an},{"Cont",ncont_extrap},{"FitRange",nfit_range_variations},{"Ens",nens_used}});
+  index_t ind_integr({{"Input",ninput_an},{"Cont",ncont_extrap},{"FitRange",nfit_range_variations},{"Ens",nens_used},{"IntNum",nint_num_variations}});
   size_t nintegr_max=ind_integr.max();
   dbvec_t resc_a(nintegr_max);
   dbvec_t  LO_correl(nintegr_max), LO_remaind(nintegr_max), LO(nintegr_max);
@@ -617,12 +625,12 @@ int main(int narg,char **arg)
   for(size_t ind=0;ind<nintegr_max;ind++)
     {
       vector<size_t> comp=ind_integr(ind);
-      size_t input_an_id=comp[0],icont_extrap=comp[1],ifit_range=comp[2],iens=comp[3];
+      size_t input_an_id=comp[0],icont_extrap=comp[1],ifit_range=comp[2],iens=comp[3],iint=comp[4];
       ens_data_t &ens=ens_data[iens];
       string ens_qpath=ens.path+"/plots_"+qname[im];
       size_t ib=ens.ib,TH=ens.T/2;
       write_ens_header(iens);
-      cout<<"Flags: input_an_id="<<input_an_id<<", icont_extrap="<<icont_extrap<<", ifit_range="<<ifit_range<<", iens="<<iens<<endl;
+      cout<<"Flags: input_an_id="<<input_an_id<<", icont_extrap="<<icont_extrap<<", ifit_range="<<ifit_range<<", iens="<<iens<<", iint="<<iint<<endl;
       
       size_t i2pts=ind_2pts_fit({ifit_range,iens});
       
@@ -643,7 +651,10 @@ int main(int narg,char **arg)
 	    }
 	  cout<<"a: "<<resc_a[ind].ave_err()<<endl;
 	  
-	  size_t upto=TH-DT;
+	  //decide the point where to stop the numerical integration
+	  size_t tmin=tmin_fit(iens,ifit_range),tmax=ens.tmax[im];
+	  size_t upto=vector<size_t>({tmin+2,(tmin+tmax)/2,tmax-2,TH-DT})[iint];
+	  
 	  LO_correl[ind]=integrate_corr_times_kern_up_to(VV_LO,ens.T,resc_a[ind],im,upto)*sqr(Za[ib]);
 	  LO_remaind[ind]=integrate_LO_reco_from(Z_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib]);
 	  
@@ -678,15 +689,12 @@ int main(int narg,char **arg)
       vector<size_t> comp=ind_syst(isyst);
       cout<<"Analysis: "<<isyst<<endl;
       size_t input_an_id=case_of<c_input>(isyst);
-      size_t chir_an_id=case_of<c_chir>(isyst);
-      size_t FSE_an_id=case_of<c_FSE>(isyst);
+      // size_t chir_an_id=case_of<c_chir>(isyst);
+      // size_t FSE_an_id=case_of<c_FSE>(isyst);
       size_t cont_an_id=case_of<c_cont>(isyst);
       size_t fit_range_an_id=case_of<c_fit_range>(isyst);
-      cout<<"InputAn:\t"<<input_an_id<<endl;
-      cout<<"ChirAn: \t"<<chir_an_id<<endl;
-      cout<<"FSE:    \t"<<FSE_an_id<<endl;
-      cout<<"ContAn: \t"<<cont_an_id<<endl;
-      cout<<"FitRange:\t"<<fit_range_an_id<<endl;
+      size_t int_num_an_id=case_of<c_int_num>(isyst);
+      for(size_t i=0;i<ind_syst.size();i++) cout<<ind_syst[i].first<<":\t"<<comp[i]<<endl;
       
       prepare_az(input_an_id);
       dboot_t &f0=lat_par[input_an_id].f0;
@@ -716,7 +724,7 @@ int main(int narg,char **arg)
 	    ens_data_t &ens=ens_data[iens];
 	    string ens_qpath=ens.path+"/plots_"+qname[im];
 	    
-	    size_t iintegr=ind_integr({input_an_id,cont_an_id,fit_range_an_id,iens});
+	    size_t iintegr=ind_integr({input_an_id,cont_an_id,fit_range_an_id,iens,int_num_an_id});
 	    
 	    double rat_perturb=-0.01835*sqr(eq[im]);
 	    dboot_t RAT=QED[iintegr]/LO[iintegr]+rat_perturb;

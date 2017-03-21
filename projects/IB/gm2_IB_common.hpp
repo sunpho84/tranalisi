@@ -13,10 +13,11 @@ size_t nm,im,nr;
 index_t ind_base,ind_extra;
 
 //! systematic
+const int nint_num_variations=4;
 const int nfit_range_variations=2;
 const int ncont_extrap=2;
-index_t ind_syst({{"Input",ninput_an},{"Chir",2},{"FSE",2},{"Cont",ncont_extrap},{"FitRn",nfit_range_variations}});
-enum syst{c_input,c_chir,c_FSE,c_cont,c_fit_range};
+index_t ind_syst({{"Input",ninput_an},{"Chir",2},{"FSE",2},{"Cont",ncont_extrap},{"FitRn",nfit_range_variations},{"IntNu",nint_num_variations}});
+enum syst{c_input,c_chir,c_FSE,c_cont,c_fit_range,c_int_num};
 template <syst comp> int case_of(int isyst){return ind_syst(isyst)[comp];}
 
 const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
