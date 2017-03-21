@@ -9,7 +9,7 @@
 using namespace std;
 
 //! build index
-class index_t : public vector<pair<string,size_t>>
+class index_t : vector<pair<string,size_t>>
 {
 public:
   //! return the rank
@@ -21,6 +21,19 @@ public:
   {
     if(comp>=rank()) CRASH("Aksing for the name of component %zu greater or equal to rank %zu",comp,rank());
     return (*this)[comp].first;
+  }
+  
+  //! get the full description
+  string descr(size_t i)
+  {
+    vector<size_t> comp=(*this)(i);
+    string out="";
+    for(size_t i=0;i<rank();i++)
+      {
+	out+=name(i)+"="+to_string(comp[i]);
+	if(i!=rank()-1) out+=", ";
+      }
+    return out;
   }
   
   //! set the range
