@@ -51,6 +51,7 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
   
   if(case_of<c_FSE>(isyst)==0) boot_fit.fix_par_to(pars.iL3dep,0.0);
   boot_fit.fix_par_to(pars.iadep_ml,0.0);
+  
   boot_fit.fix_par_to(pars.iK2Pi,0.0);
   if(case_of<c_chir>(isyst)==1) boot_fit.fix_par_to(pars.iKPi,0.0);
   
@@ -99,8 +100,8 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
       C_guess=ave_err_t({1.44e-9,1e-10});
       switch(case_of<c_cont>(isyst))
 	{
-	case 0:adep_guess={0.0,0.5};break;
-	case 1:adep_guess={0.5,0.08};break;
+	case 0:adep_guess={1.0,0.5};break;
+	case 1:adep_guess={0,0.1};break;
 	}
       break;
     default:
@@ -477,14 +478,15 @@ void perform_analysis(const dbvec_t &data,const string &name)
   
   cout<<" ================== "<<name<<" ================== "<<endl;
   cout<<" Aver:\t"<<ave<<endl;
-  cout<<" Waver:\t"<<wave<<endl;
-  vector<pair<basic_string<char>,double>> res({{"Stat",err},{"Combd",werr}});
+  cout<<"  Weig:\t"<<wave<<endl;
+  vector<pair<basic_string<char>,double>> res({{"Stat",err},{" Weig",werr}});
   for(size_t isyst=0;isyst<ind_syst.rank();isyst++) res.push_back({ind_syst.name(isyst),syst[isyst]});
-  res.push_back({"Tot",tot});
+  res.push_back({"TotSy",tot});
+  res.push_back({"Tot",sqrt(sqr(tot)+sqr(err))});
   for(auto &el : res)
     {
       streamsize prec=cout.precision();
-      cout<<" "<<el.first.substr(0,6)<<":\t"<<el.second<<" = ";
+      cout<<" "<<el.first.substr(0,6)<<":\t"<<el.second<<"\t=\t";
       cout.precision(3);
       cout<<fabs(el.second/ave)*100<<"% "<<endl;
       tot+=sqr(el.second);
@@ -647,18 +649,18 @@ int main(int narg,char **arg)
 	  
 	  QED_correl[ind]=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a[ind],im,upto)*sqr(Za[ib]);
 	  QED_remaind[ind]=integrate_QED_reco_from(A_V,Z_V,SL_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib]);
+	  
+	  index_t ind_rest({{"Input",ninput_an},{"Cont",ncont_extrap},{"FitRange",nfit_range_variations}});
+	  size_t irest=ind_rest({input_an_id,icont_extrap,ifit_range});
+	  
+	  compare_LO_num_reco(combine("%s/kern_LO_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_LO,Z_V,M_V,resc_a[iens]);
+	  compare_QED_num_reco(combine("%s/kern_QED_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_QED,A_V,Z_V,SL_V,M_V,resc_a[iens]);
 	}
       
       LO[ind]=LO_correl[ind]+LO_remaind[ind];
       QED[ind]=QED_correl[ind]+QED_remaind[ind];
       
-      index_t ind_rest({{"Input",ninput_an},{"Cont",ncont_extrap},{"FitRange",nfit_range_variations}});
-      size_t irest=ind_rest({input_an_id,icont_extrap,ifit_range});
-      
-      compare_LO_num_reco(combine("%s/kern_LO_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_LO,Z_V,M_V,resc_a[iens]);
       cout<<"amu: "<< LO_correl[ind].ave_err()<<" + "<<LO_remaind[ind].ave_err()<<" = "<<LO[ind].ave_err()<<endl;
-      
-      compare_QED_num_reco(combine("%s/kern_QED_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_QED,A_V,Z_V,SL_V,M_V,resc_a[iens]);
       cout<<"amu_QED: "<<QED_correl[ind].ave_err()<<" + "<<QED_remaind[ind].ave_err()<<" = "<<QED[ind].ave_err()<<endl;
     }
   
