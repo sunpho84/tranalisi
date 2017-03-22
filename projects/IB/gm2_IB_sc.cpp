@@ -6,6 +6,9 @@
 
 const int DT=4; //!< number of points to eliminate from corr
 
+enum an_mode_t{compute_everything,read_integrals};
+an_mode_t an_mode=compute_everything;
+
 template <class T,class Tm> T M2_fun(const T &B0,const Tm &aml)
 {return 2*B0*aml;}
 
@@ -42,12 +45,11 @@ template <class Tpars,class Tm,class Ta>
 Tpars cont_chir_ansatz_LO(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tm &aml,const Ta &a,const Tpars &adep,const Tpars &adep_ml,double L,const Tpars &L3dep,const size_t an_flag)
 {
   Tpars xi=xi_fun(B0,aml,f0),M=M_fun(B0,aml),ML=M*L;
-  
   return C*(1+Kpi*xi+K2pi*xi*xi+a*a*(adep+xi*adep_ml))+FSE_LO(C,L3dep,xi,ML);
 }
 
 //! perform the fit to the continuum limit of LO
-dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t isyst,bool cov_flag,const vector<string> &beta_list,const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &K2Pi_guess,const ave_err_t &L3dep_guess,const string &title)
+dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t isyst,bool cov_flag,const vector<string> &beta_list,const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &K2Pi_guess,const ave_err_t &L3dep_guess,const string &yaxis_title)
 {
   //set_printlevel(3);
   //if(an_flag==1) distr_fit_debug=1;
@@ -78,15 +80,17 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
 		[&pars,isyst]
 		(double x,size_t ib)
 		{return cont_chir_ansatz_LO<double,double,double>
-		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),x,pars.fit_a[ib].ave(),pars.adep.ave(),pars.adep_ml.ave(),inf_vol,pars.L3dep.ave(),isyst);},
-		bind(cont_chir_ansatz_LO<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,a_cont,pars.adep,pars.adep_ml,inf_vol,pars.L3dep,isyst),
+		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),x,pars.fit_a[ib].ave(),
+		     pars.adep.ave(),pars.adep_ml.ave(),inf_vol,pars.L3dep.ave(),isyst);},
+		bind(cont_chir_ansatz_LO<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,a_cont,
+		     pars.adep,pars.adep_ml,inf_vol,pars.L3dep,isyst),
 		[&ext_data,&pars,&B0,&f0]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{
-		  auto aml=ext_data[idata].aml;
-		  auto xi=xi_fun(B0,aml,f0),ML=M_fun(B0,aml)*ext_data[idata].L;
+		  dboot_t aml=ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib];
+		  dboot_t xi=xi_fun(pars.fit_B0,aml,pars.fit_f0),ML=M_fun(pars.fit_B0,aml)*ext_data[idata].L;
 		  return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_LO(pars.C,pars.L3dep,xi,ML));},
-		ml_phys,phys_res,title,beta_list);
+		ml_phys,phys_res,yaxis_title,beta_list,ind_syst.descr(isyst));
   
   return phys_res;
 }
@@ -97,7 +101,7 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
   const ave_err_t KPi_guess={0.0,0.1};
   const ave_err_t K2Pi_guess={0,001};
   const ave_err_t L3dep_guess={0,0.001};
-  const string title="$$a_\\mu";
+  const string yaxis_title="$$a_\\mu";
   
   //set C
   ave_err_t C_guess;
@@ -121,8 +125,7 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
     }
   
   cout<<"===================================================== LEADING ORDER ====================================================="<<endl;
-  
-  return cont_chir_fit_LO(a,z,f0,B0,ext_data,ml_phys,path,isyst,cov_flag,beta_list,adep_guess,adep_ml_guess,C_guess,KPi_guess,K2Pi_guess,L3dep_guess,title);
+  return cont_chir_fit_LO(a,z,f0,B0,ext_data,ml_phys,path,isyst,cov_flag,beta_list,adep_guess,adep_ml_guess,C_guess,KPi_guess,K2Pi_guess,L3dep_guess,yaxis_title);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +142,7 @@ Tpars cont_chir_ansatz_QED(const Tpars &f0,const Tpars &B0,const Tpars &C,const 
 }
 
 //! perform the fit to the continuum limit of QED
-dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t isyst,bool cov_flag,const vector<string> &beta_list,const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &K2Pi_guess,const ave_err_t &L3dep_guess,const string &title)
+dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t isyst,bool cov_flag,const vector<string> &beta_list,const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &K2Pi_guess,const ave_err_t &L3dep_guess,const string &yaxis_title)
 {
   //set_printlevel(3);
   
@@ -174,7 +177,7 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 		[&ext_data,&pars,&B0,&f0]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_QED(pars.C,pars.L3dep,ext_data[idata].L));},
-		ml_phys,phys_res,title,beta_list);
+		ml_phys,phys_res,yaxis_title,beta_list);
   
   return phys_res;
 }
@@ -184,7 +187,7 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   const ave_err_t adep_ml_guess={0,0.001};
   const ave_err_t K2Pi_guess={-0.001,0.001};
   const ave_err_t L3dep_guess={0,0.001};
-  const string title="$$a^{QED}_\\mu";
+  const string yaxis_title="$$a^{QED}_\\mu";
   
   ave_err_t C_guess;
   ave_err_t adep_guess;
@@ -206,8 +209,8 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
     }
   
   cout<<"===================================================== QED CORR ====================================================="<<endl;
-  
-  return cont_chir_fit_QED(a,z,f0,B0,ext_data,ml_phys,path,an_flag,cov_flag,beta_list,adep_guess,adep_ml_guess,C_guess,KPi_guess,K2Pi_guess,L3dep_guess,title);
+
+  return cont_chir_fit_QED(a,z,f0,B0,ext_data,ml_phys,path,an_flag,cov_flag,beta_list,adep_guess,adep_ml_guess,C_guess,KPi_guess,K2Pi_guess,L3dep_guess,yaxis_title);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,7 +227,7 @@ Tpars cont_chir_ansatz_RAT(const Tpars &f0,const Tpars &B0,const Tpars &C,const 
 }
 
 //! perform the fit to the continuum limit of RAT
-dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t isyst,bool cov_flag,const vector<string> &beta_list,const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &K2Pi_guess,const ave_err_t &L3dep_guess,const string &title)
+dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t isyst,bool cov_flag,const vector<string> &beta_list,const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &K2Pi_guess,const ave_err_t &L3dep_guess,const string &yaxis_title)
 {
   //set_printlevel(3);
   
@@ -259,7 +262,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 		[&ext_data,&pars,&B0,&f0]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_RAT(pars.C,pars.L3dep,ext_data[idata].L));},
-		ml_phys,phys_res,title,beta_list);
+		ml_phys,phys_res,yaxis_title,beta_list);
   
   return phys_res;
 }
@@ -270,7 +273,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   const ave_err_t KPi_guess={-0.001,0.001};
   const ave_err_t K2Pi_guess={-0.001,0.001};
   const ave_err_t L3dep_guess={0,0.001};
-  const string title="$$\\delta a_\\mu /a_\\mu";
+  const string yaxis_title="$$\\delta a_\\mu /a_\\mu";
   
   ave_err_t C_guess;
   ave_err_t adep_guess;
@@ -290,7 +293,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   
   cout<<"===================================================== RATIO ====================================================="<<endl;
   
-  return cont_chir_fit_RAT(a,z,f0,B0,ext_data,ml_phys,path,isyst,cov_flag,beta_list,adep_guess,adep_ml_guess,C_guess,KPi_guess,K2Pi_guess,L3dep_guess,title);
+  return cont_chir_fit_RAT(a,z,f0,B0,ext_data,ml_phys,path,isyst,cov_flag,beta_list,adep_guess,adep_ml_guess,C_guess,KPi_guess,K2Pi_guess,L3dep_guess,yaxis_title);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -308,7 +311,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 // }
 
 // //! perform the fit to the continuum limit of m_rat
-// dboot_t cont_chir_fit_m_rat(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t isyst,bool cov_flag,const vector<string> &beta_list,const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &K2Pi_guess,const ave_err_t &L3dep_guess,const string &title)
+// dboot_t cont_chir_fit_m_rat(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t isyst,bool cov_flag,const vector<string> &beta_list,const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &K2Pi_guess,const ave_err_t &L3dep_guess,const string &yaxis_title)
 // {
 //   //set_printlevel(3);
   
@@ -343,11 +346,11 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 // 		[&ext_data,&pars,&B0,&f0]
 // 		(size_t idata,bool without_with_fse,size_t ib)
 // 		{
-// 		  auto aml=ext_data[idata].aml;
-// 		  auto xi=xi_fun(B0,aml,f0),ML=M_fun(B0,aml)*ext_data[idata].L;
+//		  dboot_t aml=ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib];
+// 		  dboot_t xi=xi_fun(B0,aml,f0),ML=M_fun(B0,aml)*ext_data[idata].L;
 // 		  return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_m_rat(pars.C,pars.L3dep,xi,ML));
 // 		},
-// 		ml_phys,phys_res,title,beta_list);
+// 		ml_phys,phys_res,yaxis_title,beta_list);
   
 //   return phys_res;
 // }
@@ -358,7 +361,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 //   const ave_err_t KPi_guess={0.000,0.001};
 //   const ave_err_t K2Pi_guess={-0.000,0.001};
 //   const ave_err_t L3dep_guess={0,0.001};
-//   const string title="$$m_{rat}-1";
+//   const string yaxis_title="$$m_{rat}-1";
   
 //   ave_err_t C_guess;
 //   ave_err_t adep_guess;
@@ -378,7 +381,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   
 //   cout<<"===================================================== MASS RATIO ====================================================="<<endl;
   
-//   return cont_chir_fit_m_rat(a,z,f0,B0,ext_data,ml_phys,path,isyst,cov_flag,beta_list,adep_guess,adep_ml_guess,C_guess,KPi_guess,K2Pi_guess,L3dep_guess,title);
+//   return cont_chir_fit_m_rat(a,z,f0,B0,ext_data,ml_phys,path,isyst,cov_flag,beta_list,adep_guess,adep_ml_guess,C_guess,KPi_guess,K2Pi_guess,L3dep_guess,yaxis_title);
 // }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -396,7 +399,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 // }
 
 // //! perform the fit to the continuum limit of mass correction
-// dboot_t cont_chir_fit_dM(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t isyst,bool cov_flag,const vector<string> &beta_list,const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &K2Pi_guess,const ave_err_t &L3dep_guess,const string &title)
+// dboot_t cont_chir_fit_dM(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t isyst,bool cov_flag,const vector<string> &beta_list,const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &K2Pi_guess,const ave_err_t &L3dep_guess,const string &yaxis_title)
 // {
 //   //set_printlevel(3);
   
@@ -431,7 +434,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 // 		[&ext_data,&pars,&B0,&f0]
 // 		(size_t idata,bool without_with_fse,size_t ib)
 // 		{return dboot_t(ext_data[idata].wfse/pars.fit_a[ib]-without_with_fse*FSE_dM(pars.C,pars.L3dep,ext_data[idata].L));},
-// 		ml_phys,phys_res,title,beta_list);
+// 		ml_phys,phys_res,yaxis_title,beta_list);
   
 //   return phys_res;
 // }
@@ -442,7 +445,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 //   const ave_err_t KPi_guess={0.000,0.001};
 //   const ave_err_t K2Pi_guess={-0.000,0.001};
 //   const ave_err_t L3dep_guess={0,0.001};
-//   const string title="dm";
+//   const string yaxis_title="dm";
   
 //   ave_err_t C_guess;
 //   ave_err_t adep_guess;
@@ -462,7 +465,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   
 //   cout<<"===================================================== MASS CORRECTION ====================================================="<<endl;
   
-//   return cont_chir_fit_dM(a,z,f0,B0,ext_data,ml_phys,path,isyst,cov_flag,beta_list,adep_guess,adep_ml_guess,C_guess,KPi_guess,K2Pi_guess,L3dep_guess,title);
+//   return cont_chir_fit_dM(a,z,f0,B0,ext_data,ml_phys,path,isyst,cov_flag,beta_list,adep_guess,adep_ml_guess,C_guess,KPi_guess,K2Pi_guess,L3dep_guess,yaxis_title);
 // }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -550,8 +553,6 @@ int main(int narg,char **arg)
   vector<string> beta_list={"1.90","1.95","2.10"};
   
   string res_path=combine("integr_results_%s",qname[im].c_str());
-  enum an_mode_t{compute_everything,read_integrals};
-  an_mode_t an_mode=compute_everything;
   
   //files for in/out
   raw_file_t results_in;
@@ -694,7 +695,7 @@ int main(int narg,char **arg)
       size_t cont_an_id=case_of<c_cont>(isyst);
       size_t fit_range_an_id=case_of<c_fit_range>(isyst);
       size_t int_num_an_id=case_of<c_int_num>(isyst);
-      for(size_t i=0;i<ind_syst.size();i++) cout<<ind_syst[i].first<<":\t"<<comp[i]<<endl;
+      for(size_t i=0;i<ind_syst.rank();i++) cout<<ind_syst.name(i)<<":\t"<<comp[i]<<endl;
       
       prepare_az(input_an_id);
       dboot_t &f0=lat_par[input_an_id].f0;

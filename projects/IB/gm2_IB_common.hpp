@@ -16,7 +16,13 @@ index_t ind_base,ind_extra;
 const int nint_num_variations=4;
 const int nfit_range_variations=2;
 const int ncont_extrap=2;
-index_t ind_syst({{"Input",ninput_an},{"Chir",2},{"FSE",2},{"Cont",ncont_extrap},{"FitRn",nfit_range_variations},{"IntNu",nint_num_variations}});
+index_t ind_syst({
+		  {"Input",ninput_an},
+		  {"Chir",2},
+		  {"FSE",2},
+		  {"Cont",ncont_extrap},
+		  {"FitRn",nfit_range_variations},
+		  {"IntNu",nint_num_variations}});
 enum syst{c_input,c_chir,c_FSE,c_cont,c_fit_range,c_int_num};
 template <syst comp> int case_of(int isyst){return ind_syst(isyst)[comp];}
 
