@@ -7,7 +7,8 @@ bin_PROGRAMS= \
 	combine_vdoubles \
 	djvec_load \
 	effective_mass \
-	prepare_jackknives
+	prepare_jackknives \
+	simple_effective_mass
 
 combine_vdoubles_SOURCES=combine_vdoubles.cpp
 
@@ -16,3 +17,5 @@ djvec_load_SOURCES=djvec_load.cpp
 effective_mass_SOURCES=effective_mass.cpp
 
 prepare_jackknives_SOURCES=prepare_jackknives.cpp
+
+simple_effective_mass_SOURCES=simple_effective_mass.cpp

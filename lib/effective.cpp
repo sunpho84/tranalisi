@@ -48,7 +48,7 @@ double effective_mass(double ct,double ct_p_dt,size_t t,size_t TH,double guess,i
 	else
 	  cout<<"Limit "<<il<<" corresponding to "<<trial_lims[il]<<" not finte: "<<trial_funs[il]<<endl;
       #endif
-
+      
       bracketted=!same_sign(funs[0],funs[1]);
 #ifdef DEBUG
       cout<<"Isdiff: "<<isdiff<<", increasing range, searching target "<<target<<" in range: ["<<lims[0]<<", "<<lims[1]<<"] ,extreme values: "<<funs[0]<<", "<<funs[1]<<endl;
