@@ -16,10 +16,14 @@ index_t ind_base,ind_extra;
 const int nint_num_variations=4;
 const int nfit_range_variations=2;
 const int ncont_extrap=2;
+const int nchir_variations=2;
+const vector<size_t> FSE_variations({0,3});
+const int nFSE_variations=FSE_variations.size();
+
 index_t ind_syst({
 		  {"Input",ninput_an},
-		  {"Chir",2},
-		  {"FSE",2},
+		  {"Chir",nchir_variations},
+		  {"FSE",nFSE_variations},
 		  {"Cont",ncont_extrap},
 		  {"FitRn",nfit_range_variations},
 		  {"IntNu",nint_num_variations}});
