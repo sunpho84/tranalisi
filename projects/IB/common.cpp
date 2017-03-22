@@ -140,7 +140,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const function<double(double x,size_t ib)> &fun_line_per_beta,
 		   const function<dboot_t(double x)> &fun_poly_cont_lin,
 		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
-		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list)
+		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,const string &subtitle)
 {
   //search max renormalized mass
   double ml_max=0;
@@ -151,6 +151,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
   //prepare plot
   grace_file_t fit_file(path);
   //fit_file.set_title("Continuum and chiral limit");
+  fit_file.set_subtitle(subtitle);
   fit_file.set_xaxis_label("$$m_{light} (\\overline{MS},2 GeV) [GeV]");
   fit_file.set_yaxis_label(yaxis_label);
   fit_file.set_xaxis_max(ml_max);
