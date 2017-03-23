@@ -12,39 +12,32 @@ using namespace std;
 /////////////////////////////////////////////////////////////// average and error /////////////////////////////////////////////////
 
 //! average and error
-class ave_err_t : pair<double,double>
+class ave_err_t : public pair<double,double>
 {
 public:
   //! rebind base constructor
-  ave_err_t(double a=0,double b=0) : pair<double,double>(a,b) {};
-  
-  //! move constructor
-  ave_err_t(ave_err_t&& oth)=default;
-  
-  //! copy constructor
-  ave_err_t(const ave_err_t &oth)=default;
-  
-  //! move assignement
-  ave_err_t &operator=(ave_err_t &&)=default;
-  
-  //! copy assignement
-  ave_err_t &operator=(const ave_err_t &oth)
-  {pair<double,double>::operator=(oth);return *this;}
+  ave_err_t(const double &a=0,const double &b=0) : pair<double,double>(a,b) {};
   
   //! rebind average
-  double &ave=first;
+  const double ave() const {return first;}
   
   //! rebind error
-  double &err=second;
+  const double err() const {return second;}
+  
+  //! rebind average
+  double &ave() {return first;}
+  
+  //! rebind error
+  double &err() {return second;}
   
   //! return average-error
-  double ave_minus_err(){return ave-err;}
+  double ave_minus_err() const {return ave()-err();}
   
   //! return average+error
-  double ave_plus_err(){return ave+err;}
+  double ave_plus_err() const {return ave()+err();}
   
   //! check that is printable
-  bool is_printable() const {return isfinite(ave) and isfinite(err);}
+  bool is_printable() const {return isfinite(ave()) and isfinite(err());}
 };
 
 //! compute average and stddev of a vector
@@ -55,13 +48,13 @@ template <class T> ave_err_t range_ave_stddev(const valarray<T> &v,size_t size)
   for(size_t i=0;i<size;i++)
     {
       double x=v[i];
-      ae.ave+=x;
-      ae.err+=sqr(x);
+      ae.ave()+=x;
+      ae.err()+=sqr(x);
     }
-    ae.ave/=size;
-    ae.err/=size;
-    ae.err-=sqr(ae.ave);
-    ae.err=sqrt(fabs(ae.err));
+  ae.ave()/=size;
+  ae.err()/=size;
+  ae.err()-=sqr(ae.ave());
+  ae.err()=sqrt(fabs(ae.err()));
     
     return ae;
 }

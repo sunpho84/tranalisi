@@ -26,16 +26,16 @@ double syst_analysis(const vector<ave_err_t> &v)
   
   for(size_t i=0;i<v.size();i++)
     {
-      double a=v[i].ave;
-      ae.ave+=a;
-      ae.err+=sqr(a);
+      double a=v[i].ave();
+      ae.ave()+=a;
+      ae.err()+=sqr(a);
     }
-  ae.ave/=v.size();
-  ae.err/=v.size();
-  ae.err-=sqr(ae.ave);
-  ae.err=sqrt(fabs(ae.err));
+  ae.ave()/=v.size();
+  ae.err()/=v.size();
+  ae.err()-=sqr(ae.ave());
+  ae.err()=sqrt(fabs(ae.err()));
   
-  return ae.err;
+  return ae.err();
 }
 
 ave_err_t stat_analysis(const vector<ave_err_t> &v)
@@ -44,14 +44,14 @@ ave_err_t stat_analysis(const vector<ave_err_t> &v)
   
   for(size_t i=0;i<v.size();i++)
     {
-      double a=v[i].ave;
-      double e=v[i].err;
-      ae.ave+=a;
-      ae.err+=sqr(e);
+      double a=v[i].ave();
+      double e=v[i].err();
+      ae.ave()+=a;
+      ae.err()+=sqr(e);
     }
-  ae.ave/=v.size();
-  ae.err/=v.size();
-  ae.err=sqrt(fabs(ae.err));
+  ae.ave()/=v.size();
+  ae.err()/=v.size();
+  ae.err()=sqrt(fabs(ae.err()));
   
   return ae;
 }
@@ -60,18 +60,18 @@ void syst_analysis_sep(const vector<ave_err_t> &v)
 {
   double db[12];
   
-  db[0]=(v[0].ave-v[1].ave)/2.0;
-  db[1]=(v[2].ave-v[3].ave)/2.0;
-  db[2]=(v[4].ave-v[5].ave)/2.0;
-  db[3]=(v[6].ave-v[7].ave)/2.0;
-  db[4]=(v[0].ave-v[2].ave)/2.0;
-  db[5]=(v[1].ave-v[3].ave)/2.0;
-  db[6]=(v[4].ave-v[6].ave)/2.0;
-  db[7]=(v[5].ave-v[7].ave)/2.0;
-  db[8]=(v[0].ave-v[4].ave)/2.0;
-  db[9]=(v[1].ave-v[5].ave)/2.0;
-  db[10]=(v[2].ave-v[6].ave)/2.0;
-  db[11]=(v[3].ave-v[7].ave)/2.0;
+  db[0]=(v[0].ave()-v[1].ave())/2.0;
+  db[1]=(v[2].ave()-v[3].ave())/2.0;
+  db[2]=(v[4].ave()-v[5].ave())/2.0;
+  db[3]=(v[6].ave()-v[7].ave())/2.0;
+  db[4]=(v[0].ave()-v[2].ave())/2.0;
+  db[5]=(v[1].ave()-v[3].ave())/2.0;
+  db[6]=(v[4].ave()-v[6].ave())/2.0;
+  db[7]=(v[5].ave()-v[7].ave())/2.0;
+  db[8]=(v[0].ave()-v[4].ave())/2.0;
+  db[9]=(v[1].ave()-v[5].ave())/2.0;
+  db[10]=(v[2].ave()-v[6].ave())/2.0;
+  db[11]=(v[3].ave()-v[7].ave())/2.0;
   
   double S2cont,S2chir,S2fse;
   
@@ -571,8 +571,8 @@ int main(int narg,char **arg)
   const double mpi0=134.9766;
   const double mpip=139.57018;
 
-  double M_pion_QCD=mpi0-v_ave_an_epsilon_Pi0[7].ave*(mpip-mpi0);
-  double M_pion_QCD_ind=mpi0-v_ave_an_epsilon_Pi0_ind[7].ave*(mpip-mpi0);
+  double M_pion_QCD=mpi0-v_ave_an_epsilon_Pi0[7].ave()*(mpip-mpi0);
+  double M_pion_QCD_ind=mpi0-v_ave_an_epsilon_Pi0_ind[7].ave()*(mpip-mpi0);
 
   cout<<"pion QCD: "<<M_pion_QCD<<endl;
   cout<<"pion QCD_ind: "<<M_pion_QCD_ind<<endl;

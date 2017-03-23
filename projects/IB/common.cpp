@@ -87,15 +87,15 @@ ave_err_t eq_28_analysis(const dbvec_t &v)
     {
       double a=v[i].ave();
       double e=v[i].err();
-      ae.ave+=a;
-      ae.err+=sqr(a);
+      ae.ave()+=a;
+      ae.err()+=sqr(a);
       sigma+=sqr(e);
     }
-  ae.ave/=v.size();
-  ae.err/=v.size();
+  ae.ave()/=v.size();
+  ae.err()/=v.size();
   sigma/=v.size();
-  ae.err-=sqr(ae.ave);
-  ae.err=sqrt(fabs(ae.err)+sigma);
+  ae.err()-=sqr(ae.ave());
+  ae.err()=sqrt(fabs(ae.err())+sigma);
   
   return ae;
 }
@@ -110,11 +110,11 @@ void cont_chir_fit_minimize
   for(size_t idata=0;idata<ext_data.size();idata++)
     boot_fit.add_point(//numerical data
 		       [&ext_data,&pars,idata,apow,zpow]
-		       (vector<double> p,int iel) //dimension 2
+		       (const vector<double> &p,int iel) //dimension 2
 		       {return ext_data[idata].wfse[iel]*pow(pars.get_z(p,ext_data[idata].ib,iel),zpow)/pow(pars.get_a(p,ext_data[idata].ib,iel),apow);},
 		       //ansatz
 		       [idata,&pars,&ext_data,&cont_chir_ansatz]
-		       (vector<double> p,int iel)
+		       (const vector<double> &p,int iel)
 		       {
 			 size_t ib=ext_data[idata].ib;
 			 double ac=pars.get_a(p,ib,iel);
@@ -453,7 +453,7 @@ vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const index_t &i
 	  vector<size_t> cj=ind(j);
 	  // cout<<ci[0]<<" "<<ci[1]<<" "<<ci[2]<<endl;
 	  // cout<<cj[0]<<" "<<cj[1]<<" "<<cj[2]<<endl;
-	  double delta=v[i].ave*(v[i].ave-v[j].ave);
+	  double delta=v[i].ave()*(v[i].ave()-v[j].ave());
 	  
 	  //get the list of different components
 	  vector<size_t> mudiff;

@@ -6,7 +6,7 @@
 
 ostream& operator<<(ostream &out,const ave_err_t &ae)
 {
-  if(ae.is_printable()) out<<ae.ave<<" "<<ae.err;
+  if(ae.is_printable()) out<<ae.ave()<<" "<<ae.err();
   
   return out;
 }

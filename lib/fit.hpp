@@ -387,6 +387,10 @@ public:
     cov_block_label.push_back(DO_NOT_CORRELATE);
   }
   
+  //! add a simple point
+  void add_point(const TS &num,const distr_fit_data_t::fun_t &teo)
+  {add_point([num](const vector<double> &p,int iel){return num[iel];},teo,num.err());}
+  
   //! add a parameter to the fit
   size_t add_fit_par(TS &out_par,string name,double ans,double err)
   {
@@ -416,17 +420,17 @@ public:
   //! same, but with ave and error only
   size_t add_self_fitted_point(TS &out_par,string name,const ave_err_t &ae)
   {
-    size_t ipar=add_fit_par(out_par,name.c_str(),ae.ave,ae.err);
+    size_t ipar=add_fit_par(out_par,name.c_str(),ae.ave(),ae.err());
     add_point(//numerical data
 	      [ae]
 	      (vector<double> p,int iel)
-	      {return ae.ave;},
+	      {return ae.ave();},
 	      //ansatz
 	      [ipar]
 	      (vector<double> p,int iel)
 	      {return p[ipar];},
 	      //error
-	      ae.err);
+	      ae.err());
     return ipar;
   }
   

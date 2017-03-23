@@ -58,10 +58,10 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
   cont_chir_fit_pars_t pars(nbeta);
   
   pars.add_common_pars(a,z,f0,B0,adep_guess,adep_ml_guess,boot_fit);
-  pars.iC=boot_fit.add_fit_par(pars.C,"C_LO",C_guess.ave,C_guess.err);
-  pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess.ave,KPi_guess.err);
-  pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave,K2Pi_guess.err);
-  pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave,L3dep_guess.err);
+  pars.iC=boot_fit.add_fit_par(pars.C,"C_LO",C_guess.ave(),C_guess.err());
+  pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess.ave(),KPi_guess.err());
+  pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
+  pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
   
   if(case_of<c_FSE>(isyst)%2==0) boot_fit.fix_par_to(pars.iL3dep,0.0);
   boot_fit.fix_par_to(pars.iadep_ml,0.0);
@@ -153,11 +153,11 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   cont_chir_fit_pars_t pars(nbeta);
   
   pars.add_common_pars(a,z,f0,B0,adep_guess,adep_ml_guess,boot_fit);
-  pars.iC=boot_fit.add_fit_par(pars.C,"C_QED",C_guess.ave,C_guess.err);
-  pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess.ave,KPi_guess.err);
-  pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave,K2Pi_guess.err);
-  pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave,L3dep_guess.err);
-  pars.iL4dep=boot_fit.add_fit_par(pars.L4dep,"powL",powL_guess.ave,powL_guess.err);
+  pars.iC=boot_fit.add_fit_par(pars.C,"C_QED",C_guess.ave(),C_guess.err());
+  pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess.ave(),KPi_guess.err());
+  pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
+  pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
+  pars.iL4dep=boot_fit.add_fit_par(pars.L4dep,"powL",powL_guess.ave(),powL_guess.err());
   boot_fit.fix_par_to(pars.iL4dep,-2.0);
   
   if(case_of<c_FSE>(isyst)==0) boot_fit.fix_par_to(pars.iL3dep,0.0);
@@ -243,11 +243,11 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   cont_chir_fit_pars_t pars(nbeta);
   
   pars.add_common_pars(a,z,f0,B0,adep_guess,adep_ml_guess,boot_fit);
-  pars.iC=boot_fit.add_fit_par(pars.C,"C_RAT",C_guess.ave,C_guess.err);
-  pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess.ave,KPi_guess.err);
-  pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave,K2Pi_guess.err);
-  pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave,L3dep_guess.err);
-  pars.iL4dep=boot_fit.add_fit_par(pars.L4dep,"powL",powL_guess.ave,powL_guess.err);
+  pars.iC=boot_fit.add_fit_par(pars.C,"C_RAT",C_guess.ave(),C_guess.err());
+  pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess.ave(),KPi_guess.err());
+  pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
+  pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
+  pars.iL4dep=boot_fit.add_fit_par(pars.L4dep,"powL",powL_guess.ave(),powL_guess.err());
   boot_fit.fix_par_to(pars.iL4dep,-2.0);
 
   if(case_of<c_FSE>(isyst)==0) boot_fit.fix_par_to(pars.iL3dep,0.0);
@@ -334,10 +334,10 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 //   cont_chir_fit_pars_t pars(nbeta);
   
 //   pars.add_common_pars(a,z,f0,B0,adep_guess,adep_ml_guess,boot_fit);
-//   pars.iC=boot_fit.add_fit_par(pars.C,"C_m_rat",C_guess.ave,C_guess.err);
-//   pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess.ave,KPi_guess.err);
-//   pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave,K2Pi_guess.err);
-//   pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave,L3dep_guess.err);
+//   pars.iC=boot_fit.add_fit_par(pars.C,"C_m_rat",C_guess.ave(),C_guess.err());
+//   pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess.ave(),KPi_guess.err());
+//   pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
+//   pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
   
 //   if(not FSE_an(isyst)) boot_fit.fix_par_to(pars.iL3dep,0.0);
 //   boot_fit.fix_par_to(pars.iK2Pi,0.0);
@@ -422,10 +422,10 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 //   cont_chir_fit_pars_t pars(nbeta);
   
 //   pars.add_common_pars(a,z,f0,B0,adep_guess,adep_ml_guess,boot_fit);
-//   pars.iC=boot_fit.add_fit_par(pars.C,"C_dM",C_guess.ave,C_guess.err);
-//   pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess.ave,KPi_guess.err);
-//   pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave,K2Pi_guess.err);
-//   pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave,L3dep_guess.err);
+//   pars.iC=boot_fit.add_fit_par(pars.C,"C_dM",C_guess.ave(),C_guess.err());
+//   pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess.ave(),KPi_guess.err());
+//   pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
+//   pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
   
 //   if(not FSE_an(isyst)) boot_fit.fix_par_to(pars.iL3dep,0.0);
 //   boot_fit.fix_par_to(pars.iK2Pi,0.0);
@@ -652,6 +652,90 @@ int main(int narg,char **arg)
   for(auto &obj : {&resc_a,&LO_correl,&LO_remaind,&QED_correl,&QED_remaind})
     if(an_mode!=compute_everything) obj->bin_read(results_in);
   
+  {
+    djvec_t A40_QED_data;
+    A40_QED_data.resize(3);
+    double A40_x[3];
+    size_t iA40_L=0;
+    for(size_t iens=0;iens<nens_used;iens++)
+      {
+	ens_data_t &ens=ens_data[iens];
+	if(fabs(ens.aml-0.0040)<0.001 and ens.ib==0)
+	  {
+	    double Za=Za_ae[0][0].ave();
+	    djack_t a;a=1/lat_par[0].ainv[0].ave();
+	    size_t upto=ens.T/2-DT;
+	    size_t i2pts=ind_2pts_fit({0,iens});
+	    djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za);
+	    djack_t c2_QED=integrate_QED_reco_from(jA_V[i2pts],jZ_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
+	    A40_QED_data[iA40_L]=c1_QED+c2_QED;
+	    
+	    A40_x[iA40_L]=1.0/ens.L;
+	    
+	    iA40_L++;
+	  }
+      }
+    
+    {
+      ofstream tab_four(combine("plots_%s/table_four.txt",qname[im].c_str()));
+      for(size_t iens=0;iens<nens_used;iens++)
+	{
+	  ens_data_t &ens=ens_data[iens];
+	  
+	  size_t ib=ens.ib;
+	  double Za=Za_ae[0][ib].ave();
+	  djack_t a;a=1/lat_par[0].ainv[ib].ave();
+	  size_t i2pts=ind_2pts_fit({0,iens});
+	  size_t tmin=tmin_fit(iens,0),tmax=ens.tmax[im];
+	  vector<size_t> possupto({tmin+2,(tmin+tmax)/2,tmax-2,ens.T/2-DT});
+	  for(size_t iint=0;iint<nint_num_variations;iint++)
+	    {
+	      size_t upto=possupto[iint];
+	      djack_t c1_LO=integrate_corr_times_kern_up_to(jVV_LO[iens],ens.T,a,im,upto)*sqr(Za);
+	      djack_t c2_LO=integrate_LO_reco_from(jZ_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
+	      djack_t c_LO=c1_LO+c2_LO;
+	      tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_LO.ave_err()<<"\t"<<c2_LO.ave_err()<<"\t"<<c_LO.ave_err()<<endl;
+	    }
+	  tab_four<<endl;
+	  for(size_t iint=0;iint<nint_num_variations;iint++)
+	    {
+	      size_t upto=possupto[iint];
+	      djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za);
+	      djack_t c2_QED=integrate_QED_reco_from(jA_V[i2pts],jZ_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
+	      djack_t c_QED=c1_QED+c2_QED;
+	      tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_QED.ave_err()<<"\t"<<c2_QED.ave_err()<<"\t"<<c_QED.ave_err()<<endl;
+	    }
+	  tab_four<<"============================================================================"<<endl;
+	}
+      }
+    
+    
+    djvec_t C_QED(3),C_dMV(3);
+    {
+      djvec_t &C=C_QED;
+      double Xa=1/A40_x[0],Xb=1/A40_x[1],Xc=1/A40_x[2];
+      djack_t Ya=A40_QED_data[0],Yb=A40_QED_data[1],Yc=A40_QED_data[2];
+      
+      djack_t Y=(Ya-Yb)/(Ya-Yc);
+      C[2]=Brent_solve<djack_t>([&Y,Xa,Xb,Xc](double nu,size_t ijack){return Y[ijack]-(pow(Xa,nu)-pow(Xb,nu))/(pow(Xa,nu)-pow(Xc,nu));},-6,6.0);
+      C[1]=(Ya-Yb)/(pow(Xa,C[2])-pow(Xb,C[2]));
+      C[0]=Ya-C[1]*pow(Xa,C[2]);
+    }
+    
+    cout<<"Exponent QED: "<<C_QED[2].ave_err()<<endl;
+    cout<<"Exponent dMV: "<<C_dMV[2].ave_err()<<endl;
+    
+    grace_file_t fit_file(combine("plots_%s/A40_QED.xmg",qname[im].c_str()));
+    fit_file.set_xaxis_label("1/L");
+    
+    //band of the fit
+    fit_file.write_polygon([&C_QED](double x) -> dboot_t {return C_QED[0]+C_QED[1]*pow(x,C_QED[2]);},0.0001,0.055);
+    fit_file.new_data_set();
+    fit_file.set_settype(grace::XYDY);
+    fit_file.new_data_set();
+    for(size_t iL=0;iL<3;iL++) fit_file<<A40_x[iL]<<" "<<A40_QED_data[iL].ave_err()<<endl;
+  }
+  
   for(size_t ind=0;ind<nintegr_max;ind++)
     {
       vector<size_t> comp=ind_integr(ind);
@@ -696,25 +780,6 @@ int main(int narg,char **arg)
 	  
 	  compare_LO_num_reco(combine("%s/kern_LO_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_LO,Z_V,M_V,resc_a[iens]);
 	  compare_QED_num_reco(combine("%s/kern_QED_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_QED,A_V,Z_V,SL_V,M_V,resc_a[iens]);
-	}
-      
-      if(fabs(ens.aml-0.0040)<0.001 and ib==0 and input_an_id+icont_extrap+ifit_range+iint==0 and an_mode==compute_everything)
-	{
-	  static string path_QED=combine("plots_%s/dataA40.QED.txt",qname[im].c_str());
-	  static ofstream dataA40_QED(path_QED);
-	  
-	  static string path_dMV=combine("plots_%s/dataA40.dMV.txt",qname[im].c_str());
-	  static ofstream dataA40_dMV(path_dMV);
-	  
-	  dataA40_QED.precision(16);
-	  dataA40_dMV.precision(16);
-	  dboot_t a;
-	  a=resc_a[ind].ave();
-	  size_t upto=TH-DT;
-	  dboot_t c1_QED=integrate_corr_times_kern_up_to(VV_QED,ens.T,a,im,upto)*sqr(Za[ib].ave());
-	  dboot_t c2_QED=integrate_QED_reco_from(A_V,Z_V,SL_V,M_V,a,im,upto)*sqr(Za[ib].ave());
-	  dataA40_QED<<1.0/ens.L<<" "<<dboot_t(c1_QED+c2_QED).ave_err()<<endl;
-	  dataA40_dMV<<1.0/ens.L<<" "<<SL_V.ave_err()<<endl;
 	}
       
       LO[ind]=LO_correl[ind]+LO_remaind[ind];

@@ -390,7 +390,7 @@ public:
     
     need_close_set=true;
   }
-  template <class fun_t> void write_polygon(fun_t &fun,double xmin,double xmax,size_t npoints=100)
+  template <class fun_t> void write_polygon(const fun_t &fun,double xmin,double xmax,size_t npoints=100)
   {write_polygon(fun,xmin,xmax,get_poly_col_and_increment(),npoints);}
   
   //! mark as a continuos line
@@ -433,7 +433,7 @@ public:
   {
     new_data_set(col,sym);
     for(size_t i=0;i<data.size();i++)
-      if(!std::isnan(data[i].err))
+      if(!std::isnan(data[i].err()))
 	(*this)<<i<<" "<<data[i]<<endl;
   }
   void write_vec_ave_err(const vec_ave_err_t &data)
@@ -453,7 +453,7 @@ public:
   {
     new_data_set(col,sym);
     set_settype(grace::XYDXDY);
-    (*this)<<x.ave<<" "<<data.ave<<" "<<x.err<<" "<<data.err<<endl;
+    (*this)<<x.ave()<<" "<<data.ave()<<" "<<x.err()<<" "<<data.err()<<endl;
   }
   void write_ave_err(const ave_err_t x,const ave_err_t &data)
   {write_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}

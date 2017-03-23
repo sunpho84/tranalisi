@@ -975,6 +975,7 @@ Tpars cont_chir_linear_ansatz(const Tpars &C0,const Tpars &C1,const Tm &ml,const
       if(FSE_an(an_flag))  fitted_FSE=FSE_dep_ML3(L3dep,MD,a,L);
       else                 fitted_FSE=0.0;
     }
+else                 fitted_FSE=0.0;
   
   return C0+chir_dep+disc_eff+fitted_FSE;
 }
@@ -1069,6 +1070,7 @@ Tpars cont_chir_quad_ansatz(const Tpars &C0,const Tpars &C1,const Tpars &C2,cons
       if(FSE_an(an_flag))  fitted_FSE=FSE_dep_L3(L3dep,a,L);
       else                 fitted_FSE=0.0;
     }
+    else                   fitted_FSE=0.0;
   
   return C0+chir_dep+disc_eff+fitted_FSE;
 }
@@ -1162,6 +1164,7 @@ Tpars cont_chir_constant_ansatz(const Tpars &C0,const Tpars &C1,const Tm &ml,con
       if(FSE_an(an_flag))  fitted_FSE=FSE_dep_L3(L3dep,a,L);
       else                 fitted_FSE=0.0;
     }
+    else                   fitted_FSE=0.0;
   
   return C0+chir_dep+disc_eff+fitted_FSE;
 }

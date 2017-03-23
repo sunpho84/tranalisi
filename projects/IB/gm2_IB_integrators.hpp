@@ -73,8 +73,10 @@ template <class T> T kern_QED_num(const T &corr_t,double t,const T &a)
 {return kern_num(corr_t,t,a);}
 
 //! integrate
-template <class TS> TS integrate_corr_up_to(const valarray<TS> &corr,size_t &upto,int ord=3)
+template <class TS> TS integrate_corr_up_to(const valarray<TS> &corr,size_t &upto,size_t ord=1)
 {
+  if(upto>=corr.size()) CRASH("Upto=%zu >= corr.size()=%zu",upto,corr.size());
+  
   valarray<double> weight;
   switch(ord)
     {
@@ -90,7 +92,7 @@ template <class TS> TS integrate_corr_up_to(const valarray<TS> &corr,size_t &upt
   
   TS out;
   out=0.0;
-  upto=int(upto/len)*len;
+  upto=size_t(upto/len)*len;
   for(size_t t=0;t<upto;t+=len)
     for(size_t j=0;j<=len;j++)
       out+=corr[t+j]*weight[j];
@@ -101,7 +103,7 @@ template <class TS> TS integrate_corr_up_to(const valarray<TS> &corr,size_t &upt
 }
 
 //! integrate the kernel
-template <class TV,class TS=typename TV::base_type> TS integrate_corr_times_kern_up_to(const TV &corr,size_t T,const TS &a,size_t im,size_t &upto,int ord=3)
+template <class TV,class TS=typename TV::base_type> TS integrate_corr_times_kern_up_to(const TV &corr,size_t T,const TS &a,size_t im,size_t &upto,size_t ord=1)
 {
   //store the kernel
   TV kern(T/2);
@@ -162,9 +164,10 @@ template <class TS,class Pars_wr> TS integrate_reco_from(double (*kern_gsl)(doub
       for(size_t i=0;i<p[0].size();i++)
 	{
 	  Pars_wr params(p,i);
-	  for(size_t dt=0;dt<np;dt++) corr_reco[dt]=kern_gsl(dt+from,&params);
+	  for(size_t dt=0;dt<np;dt++) corr_reco[dt][i]=kern_gsl(dt+from,&params);
 	}
-      result=integrate_corr_up_to(corr_reco,np);
+      size_t extr=np-1;
+      result=integrate_corr_up_to(corr_reco,extr);
     }
   
   if(use_gsl) gsl_integration_workspace_free(workspace);

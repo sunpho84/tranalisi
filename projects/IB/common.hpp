@@ -142,8 +142,8 @@ public:
   void add_adep_pars(const ave_err_t &adep_guess,const ave_err_t &adep_ml_guess,boot_fit_t &boot_fit)
   {
     // adep, adep_ml
-    iadep=boot_fit.add_fit_par(adep,"adep",adep_guess.ave,adep_guess.err);
-    iadep_ml=boot_fit.add_fit_par(adep_ml,"adep_ml",adep_ml_guess.ave,adep_ml_guess.err);
+    iadep=boot_fit.add_fit_par(adep,"adep",adep_guess.ave(),adep_guess.err());
+    iadep_ml=boot_fit.add_fit_par(adep_ml,"adep_ml",adep_ml_guess.ave(),adep_ml_guess.err());
   }
   
   //! add fsedep
@@ -151,9 +151,9 @@ public:
   {
     if(flag_prior)
       {
-	iL3dep=boot_fit.add_fit_par(L3dep,"L3dep",L3dep_guess.ave,L3dep_guess.err);
-	iL4dep=boot_fit.add_fit_par(L4dep,"L4dep",L4dep_guess.ave,L4dep_guess.err);
-	iML4dep=boot_fit.add_fit_par(ML4dep,"ML4dep",ML4dep_guess.ave,ML4dep_guess.err);
+	iL3dep=boot_fit.add_fit_par(L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
+	iL4dep=boot_fit.add_fit_par(L4dep,"L4dep",L4dep_guess.ave(),L4dep_guess.err());
+	iML4dep=boot_fit.add_fit_par(ML4dep,"ML4dep",ML4dep_guess.ave(),ML4dep_guess.err());
       }
     else
       {
@@ -181,7 +181,7 @@ public:
   {
     if(flag_prior)
       {
-	iC=boot_fit.add_fit_par(C,"C",C_guess.ave,C_guess.err);
+	iC=boot_fit.add_fit_par(C,"C",C_guess.ave(),C_guess.err());
 	
       }
     else
@@ -189,10 +189,10 @@ public:
 	iC=boot_fit.add_self_fitted_point(fit_C,"C_prior",{3.54e-5,1.0e-5});
       }
     
-    iKPi=boot_fit.add_fit_par(KPi,"KPi",KPi_guess.ave,KPi_guess.err);
-    iKK=boot_fit.add_fit_par(KK,"KK",KK_guess.ave,KK_guess.err);
-    iK2Pi=boot_fit.add_fit_par(K2Pi,"K2Pi",K2Pi_guess.ave,K2Pi_guess.err);
-    iK2K=boot_fit.add_fit_par(K2K,"K2K",K2K_guess.ave,K2K_guess.err);
+    iKPi=boot_fit.add_fit_par(KPi,"KPi",KPi_guess.ave(),KPi_guess.err());
+    iKK=boot_fit.add_fit_par(KK,"KK",KK_guess.ave(),KK_guess.err());
+    iK2Pi=boot_fit.add_fit_par(K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
+    iK2K=boot_fit.add_fit_par(K2K,"K2K",K2K_guess.ave(),K2K_guess.err());
     
   }
   

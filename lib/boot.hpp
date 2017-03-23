@@ -110,12 +110,12 @@ public:
   ave_err_t ave_err() const
   {
     ave_err_t ae=range_ave_stddev(*this,nboots());
-    ae.err*=sqrt(njacks-1);
+    ae.err()*=sqrt(njacks-1);
     
 #if MEAN_TYPE==DISTR_MEAN
     //do nothing, the previously computed is already correct
 #elif MEAN_TYPE==PROP_MEAN
-    ae.ave=(*this)[nboots()];
+    ae.ave()=(*this)[nboots()];
 #else
      #error Unknown mean propagation
 #endif
@@ -124,10 +124,10 @@ public:
   }
   
   //! return only the average
-  double ave() const {return ave_err().ave;}
+  double ave() const {return ave_err().ave();}
   
   //! return only the error
-  double err() const {return ave_err().err;}
+  double err() const {return ave_err().err();}
   
   //! initialize from aver_err_t and a seed
   void fill_gauss(const gauss_filler_t &gf)
@@ -135,8 +135,8 @@ public:
     check_njacks_init();
     gen_t gen(gf.seed);
     for(size_t iboot=0;iboot<nboots();iboot++)
-      (*this)[iboot]=gen.get_gauss(gf.ae.ave,gf.ae.err/sqrt(njacks-1));
-    (*this)[nboots()]=gf.ae.ave;
+      (*this)[iboot]=gen.get_gauss(gf.ae.ave(),gf.ae.err()/sqrt(njacks-1));
+    (*this)[nboots()]=gf.ae.ave();
   }
   
   //! initialize from ave and err
@@ -196,7 +196,7 @@ template <class T> string to_string(const boot_t<T> &obj)
 {
   ave_err_t ae=obj.ave_err();
   ostringstream os;
-  os<<ae.ave<<" "<<ae.err;
+  os<<ae.ave()<<" "<<ae.err();
   return os.str();
 } 
 
