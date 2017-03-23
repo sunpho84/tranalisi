@@ -55,7 +55,7 @@ public:
   
   //! close the file
   void close()
-  {if(file) fclose(file);}
+  {if(file) fclose(file);file=NULL;}
   
   //! default constructor
   raw_file_t() {file=NULL;}

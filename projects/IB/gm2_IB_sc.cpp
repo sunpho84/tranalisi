@@ -707,6 +707,7 @@ int main(int narg,char **arg)
   //write if computed
   for(auto &obj : {&resc_a,&LO_correl,&LO_remaind,&QED_correl,&QED_remaind})
     if(an_mode==compute_everything) obj->bin_write(results_out);
+  results_out.close();
   
   //loop over analysis flags and input scale determination
   dbvec_t cLO(ind_syst.max());
