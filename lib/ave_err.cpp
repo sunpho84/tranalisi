@@ -16,3 +16,34 @@ void vec_ave_err_t::write(const string &path) const
   gr.new_data_set();
 }
 
+//! shift by 10 left(if positive) or right(if negative)
+double shift_by_10(double x,int digit)
+{
+  double fact=(digit>0)?10.0:0.1;
+  for(int i=0;i<abs(digit);i++) x*=fact;
+  return x;
+}
+
+//! return x rounded to the digit: (18.32,-1)=18.3, (18.32,1)=20
+double round_to_digit(double x,int digit)
+{return shift_by_10(floor(shift_by_10(x,-digit)+0.5),digit);}
+
+//! print the average and errors considering all rounding
+string smart_print(double ave,const vector<double> &errors,int ndigits)
+{
+  //set fixed precision
+  ostringstream out;
+  out<<std::fixed;
+  
+  //get the negative of pow of 10 needed to make all syst have at least 1 digit
+  int lem=(int)ceil(log(*max_element(errors.begin(),errors.end()))/M_LN10);
+  int digit_to_round=lem-ndigits;
+  out.precision((lem<ndigits)*max(-digit_to_round,0));
+  
+  //truncate
+  out<<round_to_digit(ave,digit_to_round);
+  if(digit_to_round<=-ndigits) out.precision(0);
+  for(auto err : errors) out<<"("<<shift_by_10(round_to_digit(err,digit_to_round),(lem<=0)*(ndigits-lem))<<")";
+  
+  return out.str();
+}

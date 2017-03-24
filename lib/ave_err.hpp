@@ -72,4 +72,13 @@ public:
 //! output of ave_err_t
 ostream& operator<<(ostream &out,const ave_err_t &ae);
 
+//! print the average and errors considering all rounding
+string smart_print(double ave,const vector<double> &errors,int ndigits=2);
+
+inline string smart_print(double ave,double error,int ndigits=2)
+{return smart_print(ave,vector<double>({error}),ndigits);}
+
+inline string smart_print(const ave_err_t &ae,int ndigits=2)
+{return smart_print(ae.ave(),vector<double>({ae.err()}),ndigits);}
+
 #endif
