@@ -9,6 +9,8 @@
 #endif
 
 #include <fstream>
+#include <functional>
+
 #include <ave_err.hpp>
 #include <tools.hpp>
 
@@ -362,7 +364,7 @@ public:
   }
   
   //! write a polygon
-  template <class fun_t> void write_polygon(fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  template <class fun_t> void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
   {
     close_cur_set();
     
@@ -402,7 +404,7 @@ public:
   }
   
   //! write a line
-  template <class fun_t> void write_line(fun_t fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  void write_line(const function<double(double)> &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
   {
     close_cur_set();
     
@@ -419,13 +421,13 @@ public:
       }
     need_close_set=true;
   }
-  template <class fun_t> void write_line(fun_t fun,double xmin,double xmax,size_t npoints=100)
+  void write_line(const function<double(double)> &fun,double xmin,double xmax,size_t npoints=100)
   {write_line(fun,xmin,xmax,get_line_col_and_increment(),npoints);}
   
   //! write a constant band
-  template <class T> void write_constant_band(int xmin,int xmax,const T &c,grace::color_t col)
+  template <class T> void write_constant_band(double xmin,double xmax,const T &c,grace::color_t col)
   {this->write_polygon([&c](double x) -> T {return c;},xmin,xmax,col,2);}
-  template <class T> void write_constant_band(int xmin,int xmax,const T &c)
+  template <class T> void write_constant_band(double xmin,double xmax,const T &c)
   {write_constant_band(xmin,xmax,c,get_col_and_increment());}
   
   //write a vector of data
