@@ -484,9 +484,17 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-vector<pair<string,double>> perform_analysis(const dbvec_t &data,const index_t &ind)
+class syst_t
 {
-  double ave=0,err=0,wave=0,werr=0,weight=0;
+public:
+  double ave,wave,stat,wstat,totsy,tot;
+  vector<double> syst;
+};
+
+syst_t perform_analysis(const dbvec_t &data,const index_t &ind)
+{
+  syst_t r;
+  double &ave=r.ave=0,&err=r.stat=0,&wave=r.wave=0,&werr=r.wstat=0,weight=0;
   for(auto &d : data)
     {
       double a=d.ave(),e=d.err(),w=1/sqr(e);
@@ -501,66 +509,80 @@ vector<pair<string,double>> perform_analysis(const dbvec_t &data,const index_t &
   wave/=weight;
   werr/=weight;
   
-  vector<double> syst=syst_analysis_sep_bis(data.ave_err(),ind);
-  double totsy=0,tot=0;
-  for(auto &s : syst) totsy+=s*s;
+  r.syst=syst_analysis_sep_bis(data.ave_err(),ind);
+  double &totsy=r.totsy=0,&tot=r.tot=0;
+  for(auto &s : r.syst) totsy+=s*s;
   totsy=sqrt(totsy);
   tot=sqrt(sqr(totsy)+sqr(err));
   
-  vector<pair<string,double>> out;
-  out.push_back({"Ave",ave});
-  out.push_back({" Weig",wave});
-  out.push_back({"Stat",err});
-  out.push_back({" Werr",werr});
-  for(size_t i=0;i<ind.rank();i++) out.push_back({ind.name(i),syst[i]});
-  out.push_back({"TotSy",totsy});
-  out.push_back({"Tot",tot});
-  
-  return out;
+  return r;
 }
 
+//! prepare the table for a given quantity
+void prepare_table(const string &tag,const dbvec_t &quantity,const index_t &ind,double fact)
+{
+  index_t ind_table({{"Input",ninput_an},{"HLP",ncont_extrap},{"Fran",nfit_range_variations},{"Inte",nint_num_variations}});
+  string path=combine("%s/tables/%s.txt",qname[im].c_str(),tag.c_str());
+  ofstream out(path);
+  if(!(out.good())) CRASH("Opening %s",path.c_str());
+  
+  for(size_t iens=0;iens<nens_used;iens++)
+    {
+      dbvec_t data(ind_table.max());
+      for(size_t itable=0;itable<ind_table.max();itable++)
+	{
+	  vector<size_t> comp=ind_table(itable);
+	  size_t input_an_id=comp[0],icont_extrap=comp[1],ifit_range=comp[2],iint=comp[3];
+	  size_t iintegr=ind({input_an_id,icont_extrap,ifit_range,iens,iint});
+	  data[itable]=quantity[iintegr];
+	}
+      
+      syst_t r=perform_analysis(data,ind_table);
+      double ave=r.ave*fact;
+      vector<double> systs;
+      systs.push_back(r.syst[0]*fact);
+      systs.push_back(r.syst[1]*fact);
+      systs.push_back(sqrt(sqr(r.syst[2])+sqr(r.syst[3]))*fact);
+      
+      //out<<ens_data[iens].path<<" "<<ave<<endl<<systs<<endl;
+      out<<ens_data[iens].path<<" "<<smart_print(ave,systs)<<endl;
+    }
+}
+
+//! write average, errors and systematics
 void perform_analysis(const dbvec_t &data,const index_t &ind,const string &name)
 {
   cout<<" ================== "<<name<<" ================== "<<endl;
-  auto out=perform_analysis(data,ind);
+  auto r=perform_analysis(data,ind);
+
+  for(auto el : vector<pair<string,double>>{{" Ave",r.ave},{"Weig",r.wave}})
+    cout<<el.first.substr(0,6)<<":\t"<<el.second<<endl;
   
-  for(size_t i=0;i<out.size();i++)
+  vector<pair<string,double>> top;
+  top.push_back({" Stat",r.stat});
+  top.push_back({"Werr",r.wstat});
+  for(size_t i=0;i<ind.rank();i++) top.push_back({ind.name(i),r.syst[i]});
+  top.push_back({"TotSy",r.totsy});
+  top.push_back({" Tot",r.tot});
+  
+  for(auto t : top)
     {
-      cout<<" "<<out[i].first.substr(0,6)<<":\t"<<out[i].second;
-      if(i>=2)
-	{
-	  cout<<"\t=\t";
-	  streamsize prec=cout.precision();
-	  cout.precision(3);
-	  cout<<fabs(out[i].second/out[0].second)*100<<" %";
-	  cout.precision(prec);
-	}
+      cout<<t.first.substr(0,6);
+      cout<<"\t=\t";
+      cout<<t.second;
+      cout<<"\t=\t";
+      streamsize prec=cout.precision();
+      cout.precision(3);
+      cout<<fabs(t.second/r.ave)*100<<" %";
+      cout.precision(prec);
       cout<<endl;
     }
+  cout<<endl;
 }
 
 int main(int narg,char **arg)
 {
   int start=time(0);
-  // vector<ave_err_t> v({{-0.001518092727373818,0},{-0.001563828393244764,0},{-0.001570134136155057,0},{-0.001555232660649148,0},{-0.001385082821679269,0},{-0.001473247256814399,0},{-0.001367408317152487,0},{-0.001448039412439519,0}});
-  
-  // vector<ave_err_t> v1({
-  // 			{-0.001518092727373818,0},
-  // 			{-0.001518092727373818,0},
-  // 			{-0.001518092727373818,0},
-  // 			{-0.001518092727373818,0},
-  // 			{-0.001385082821679269,0},
-  // 			{-0.001385082821679269,0},
-  // 			{-0.001385082821679269,0},
-  // 			{-0.001385082821679269,0}}
-  //   );
-  // syst_analysis_sep(v1);
-   
-  //  vector<double> res=syst_analysis_sep_bis(v1,{2,2,2});
-  //  cout<<endl;
-   
-  //  for(auto x : res) cout<<"     "<<x<<endl;
-  //  cout<<endl;
   
   gm2_initialize(narg,arg);
   
@@ -579,9 +601,7 @@ int main(int narg,char **arg)
       jVV_QED[iens]=read_QED_VV(ens,1,im,deltam_cr,jVV_LO[iens]);
     }
   
-  vector<string> beta_list={"1.90","1.95","2.10"};
-  
-  string res_path=combine("integr_results_%s",qname[im].c_str());
+  string res_path=combine("%s/integr_results",qname[im].c_str());
   
   //files for in/out
   raw_file_t results_in;
@@ -647,6 +667,7 @@ int main(int narg,char **arg)
   dbvec_t resc_a(nintegr_max);
   dbvec_t  LO_correl(nintegr_max), LO_remaind(nintegr_max), LO(nintegr_max);
   dbvec_t QED_correl(nintegr_max),QED_remaind(nintegr_max),QED(nintegr_max);
+  dbvec_t                                                  RAT(nintegr_max);
   
   //read if avail
   for(auto &obj : {&resc_a,&LO_correl,&LO_remaind,&QED_correl,&QED_remaind})
@@ -662,10 +683,10 @@ int main(int narg,char **arg)
 	ens_data_t &ens=ens_data[iens];
 	if(fabs(ens.aml-0.0040)<0.001 and ens.ib==0)
 	  {
-	    double Za=Za_ae[0][0].ave();
-	    djack_t a;a=1/lat_par[0].ainv[0].ave();
-	    size_t upto=ens.T/2-DT;
 	    size_t i2pts=ind_2pts_fit({0,iens});
+	    double Za=Za_ae[0][0].ave();
+	    djack_t a=jM_V[i2pts]/M_V_phys[im];
+	    size_t upto=ens.T/2-DT;
 	    djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za);
 	    djack_t c2_QED=integrate_QED_reco_from(jA_V[i2pts],jZ_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
 	    A40_QED_data[iA40_L]=c1_QED+c2_QED;
@@ -677,7 +698,9 @@ int main(int narg,char **arg)
       }
     
     {
-      ofstream tab_four(combine("plots_%s/table_four.txt",qname[im].c_str()));
+      string path=combine("%s/tables/four.txt",qname[im].c_str());
+      ofstream tab_four(path);
+      if(!(tab_four.good())) CRASH("Opening %s",path.c_str());
       for(size_t iens=0;iens<nens_used;iens++)
 	{
 	  ens_data_t &ens=ens_data[iens];
@@ -709,23 +732,37 @@ int main(int narg,char **arg)
 	}
       }
     
-    
     djvec_t C_QED(3),C_dMV(3);
     {
-      djvec_t &C=C_QED;
+      // djvec_t &C=C_QED;
       double Xa=1/A40_x[0],Xb=1/A40_x[1],Xc=1/A40_x[2];
       djack_t Ya=A40_QED_data[0],Yb=A40_QED_data[1],Yc=A40_QED_data[2];
       
       djack_t Y=(Ya-Yb)/(Ya-Yc);
-      C[2]=Brent_solve<djack_t>([&Y,Xa,Xb,Xc](double nu,size_t ijack){return Y[ijack]-(pow(Xa,nu)-pow(Xb,nu))/(pow(Xa,nu)-pow(Xc,nu));},-6,6.0);
-      C[1]=(Ya-Yb)/(pow(Xa,C[2])-pow(Xb,C[2]));
-      C[0]=Ya-C[1]*pow(Xa,C[2]);
+      grace_file_t fuff(combine("%s/plots/fuff.xmg",qname[im].c_str()));
+      fuff.write_line([Xa,Xb,Xc](double x){return (pow(Xa,x)-pow(Xb,x))/(pow(Xa,x)-pow(Xc,x));},-36.05,36.05);
+      fuff.new_data_set();
+      fuff.write_constant_band(-36.05,36.05,Y);
+      
+      string path_triplet=combine("%s/triplet.txt",qname[im].c_str());
+      ofstream triplet(path_triplet);
+      if(!(triplet.good())) CRASH("Opening %s",path_triplet.c_str());
+      for(size_t i=0;i<njacks;i++)
+	{
+	  triplet<<Ya[i]<<endl;
+	  triplet<<Yb[i]<<endl;
+	  triplet<<Yc[i]<<endl;
+	  triplet<<endl;
+	}
+      // C[2]=Brent_solve<djack_t>([&Y,Xa,Xb,Xc](double nu,size_t ijack){return Y[ijack]-(pow(Xa,nu)-pow(Xb,nu))/(pow(Xa,nu)-pow(Xc,nu));},-36.05,36.05);
+      // C[1]=(Ya-Yb)/(pow(Xa,C[2])-pow(Xb,C[2]));
+      // C[0]=Ya-C[1]*pow(Xa,C[2]);
     }
     
     cout<<"Exponent QED: "<<C_QED[2].ave_err()<<endl;
     cout<<"Exponent dMV: "<<C_dMV[2].ave_err()<<endl;
     
-    grace_file_t fit_file(combine("plots_%s/A40_QED.xmg",qname[im].c_str()));
+    grace_file_t fit_file(combine("%s/plots/A40_QED.xmg",qname[im].c_str()));
     fit_file.set_xaxis_label("1/L");
     
     //band of the fit
@@ -736,6 +773,7 @@ int main(int narg,char **arg)
     for(size_t iL=0;iL<3;iL++) fit_file<<A40_x[iL]<<" "<<A40_QED_data[iL].ave_err()<<endl;
   }
   
+  const double rat_perturb=-0.01835*sqr(eq[im]);
   for(size_t ind=0;ind<nintegr_max;ind++)
     {
       vector<size_t> comp=ind_integr(ind);
@@ -784,6 +822,9 @@ int main(int narg,char **arg)
       
       LO[ind]=LO_correl[ind]+LO_remaind[ind];
       QED[ind]=QED_correl[ind]+QED_remaind[ind];
+      RAT[ind]=QED[ind]/LO[ind]+rat_perturb;
+      cout<<" Ratio: "<<RAT[ind].ave_err()<<endl;
+	  
       
       cout<<"amu: "<< LO_correl[ind].ave_err()<<" + "<<LO_remaind[ind].ave_err()<<" = "<<LO[ind].ave_err()<<endl;
       cout<<"amu_QED: "<<QED_correl[ind].ave_err()<<" + "<<QED_remaind[ind].ave_err()<<" = "<<QED[ind].ave_err()<<endl;
@@ -793,6 +834,10 @@ int main(int narg,char **arg)
   for(auto &obj : {&resc_a,&LO_correl,&LO_remaind,&QED_correl,&QED_remaind})
     if(an_mode==compute_everything) obj->bin_write(results_out);
   results_out.close();
+  
+  prepare_table("LO",LO,ind_integr,1e10);
+  prepare_table("QED",QED,ind_integr,1e12);
+  prepare_table("RAT",RAT,ind_integr,1e5);
   
   //loop over analysis flags and input scale determination
   dbvec_t cLO(ind_syst.max());
@@ -834,7 +879,6 @@ int main(int narg,char **arg)
       // vector<cont_chir_fit_data_t> data_m_rat;
       for(size_t iens=0;iens<ens_data.size();iens++)
 	{
-	  write_ens_header(iens);
 	  ens_data_t &ens=ens_data[iens];
 	  string ens_qpath=ens.path+"/plots_"+qname[im];
 	  
@@ -844,16 +888,12 @@ int main(int narg,char **arg)
 	  dboot_t dum;
 	  dum=0.0;
 	  
-	  double rat_perturb=-0.01835*sqr(eq[im]);
-	  dboot_t RAT=QED[iintegr]/LO[iintegr]+rat_perturb;
-	  cout<<" Ratio: "<<RAT.ave_err()<<endl;
-	  
 	  if(case_of<c_FSE>(isyst)%2!=0 or ens_data[iens].use_for_L)
 	    data_LO.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,dum,ens_data[iens].ib,ens_data[iens].L,LO[iintegr],LO[iintegr]));
 	  if(case_of<c_FSE>(isyst) or ens_data[iens].use_for_L)
 	    {
 	      data_QED.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,dum,ens_data[iens].ib,ens_data[iens].L,QED[iintegr],QED[iintegr]));
-	      data_RAT.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,dum,ens_data[iens].ib,ens_data[iens].L,RAT,RAT));
+	      data_RAT.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,dum,ens_data[iens].ib,ens_data[iens].L,RAT[iintegr],RAT[iintegr]));
 	      
 	      // //cc ratio
 	      // dboot_t m_rat=M_V/M_P[iens]-1.0;
@@ -865,14 +905,14 @@ int main(int narg,char **arg)
 	    }
 	}
       
-      cLO[isyst]=cont_chir_fit_LO(alist,zlist,f0,B0,data_LO,lat_par[input_an_id].ml,combine("plots_%s/cont_chir_LO_an%zu.xmg",qname[im].c_str(),isyst),isyst,false,beta_list);
-      cQED[isyst]=cont_chir_fit_QED(alist,zlist,f0,B0,data_QED,lat_par[input_an_id].ml,combine("plots_%s/cont_chir_QED_an%zu.xmg",qname[im].c_str(),isyst),isyst,false,beta_list);
-      cRAT[isyst]=cont_chir_fit_RAT(alist,zlist,f0,B0,data_RAT,lat_par[input_an_id].ml,combine("plots_%s/cont_chir_RAT_an%zu.xmg",qname[im].c_str(),isyst),isyst,false,beta_list);
+      cLO[isyst]=cont_chir_fit_LO(alist,zlist,f0,B0,data_LO,lat_par[input_an_id].ml,combine("%s/plots/cont_chir_LO_an%zu.xmg",qname[im].c_str(),isyst),isyst,false,beta_list);
+      cQED[isyst]=cont_chir_fit_QED(alist,zlist,f0,B0,data_QED,lat_par[input_an_id].ml,combine("%s/plots/cont_chir_QED_an%zu.xmg",qname[im].c_str(),isyst),isyst,false,beta_list);
+      cRAT[isyst]=cont_chir_fit_RAT(alist,zlist,f0,B0,data_RAT,lat_par[input_an_id].ml,combine("%s/plots/cont_chir_RAT_an%zu.xmg",qname[im].c_str(),isyst),isyst,false,beta_list);
       
-      // c_m_rat[iai]=cont_chir_fit_m_rat(alist,zlist,f0,B0,data_m_rat,lat_par[input_an_id].ml,combine("plots_%s/cont_chir_m_rat_flag%zu_an%zu.xmg",qname[im].c_str(),isyst,input_an_id),isyst,false,beta_list);
+      // c_m_rat[iai]=cont_chir_fit_m_rat(alist,zlist,f0,B0,data_m_rat,lat_par[input_an_id].ml,combine("%s/plots/cont_chir_m_rat_flag%zu_an%zu.xmg",qname[im].c_str(),isyst,input_an_id),isyst,false,beta_list);
       
-      // c_dMP[iai]=cont_chir_fit_dM(alist,zlist,f0,B0,data_dMP,lat_par[input_an_id].ml,combine("plots_%s/cont_chir_dMP_flag%zu_an%zu.xmg",qname[im].c_str(),isyst,input_an_id),isyst,false,beta_list);
-      // c_dMV[iai]=cont_chir_fit_dM(alist,zlist,f0,B0,data_dMV,lat_par[input_an_id].ml,combine("plots_%s/cont_chir_dMV_flag%zu_an%zu.xmg",qname[im].c_str(),isyst,input_an_id),isyst,false,beta_list);
+      // c_dMP[iai]=cont_chir_fit_dM(alist,zlist,f0,B0,data_dMP,lat_par[input_an_id].ml,combine("%s/plots/cont_chir_dMP_flag%zu_an%zu.xmg",qname[im].c_str(),isyst,input_an_id),isyst,false,beta_list);
+      // c_dMV[iai]=cont_chir_fit_dM(alist,zlist,f0,B0,data_dMV,lat_par[input_an_id].ml,combine("%s/plots/cont_chir_dMV_flag%zu_an%zu.xmg",qname[im].c_str(),isyst,input_an_id),isyst,false,beta_list);
     }
   
   perform_analysis(cLO,ind_syst,"LO");

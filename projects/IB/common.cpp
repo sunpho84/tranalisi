@@ -15,6 +15,20 @@ dboot_t read_boot(const raw_file_t &file)
   return out;
 }
 
+// //! truncate to next most significative digit
+double get_ml_max()
+{
+// //must be fixed because before commenting it was not getting data
+// double ml_max=0;
+// for(auto &data : ext_data)
+//   ml_max=max(ml_max,dboot_t(data.aml/pars.fit_a[data.ib]/pars.fit_z[data.ib]).ave());
+//   double l=floor(log(ml_max)/log(10));
+//   double pad=pow(10,l);
+//   ml_max=ceil(ml_max/pad)*pad;
+//   return ml_max;
+  return 0.05;
+}
+
 void init_common_IB(string ens_pars)
 {
   set_njacks(15);
@@ -143,10 +157,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,const string &subtitle)
 {
   //search max renormalized mass
-  double ml_max=0;
-  for(auto &data : ext_data)
-    ml_max=max(ml_max,dboot_t(data.aml/pars.fit_a[data.ib]/pars.fit_z[data.ib]).ave());
-  ml_max*=1.1;
+  double ml_max=get_ml_max();
   
   //prepare plot
   grace_file_t fit_file(path);
@@ -207,10 +218,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,size_t univ_full_sub)
 {
   //search max renormalized mass
-  double ml_max=0;
-  for(auto &data : ext_data)
-    ml_max=max(ml_max,dboot_t(data.aml/pars.fit_a[data.ib]/pars.fit_z[data.ib]).ave());
-  ml_max*=1.1;
+  double ml_max=get_ml_max();
   
   //prepare plot
   grace_file_t fit_file(path);
@@ -322,10 +330,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,size_t univ_full_sub,size_t FSE_flag)
 {
   //search max renormalized mass
-  double ml_max=0;
-  for(auto &data : ext_data)
-    ml_max=max(ml_max,dboot_t(data.aml/pars.fit_a[data.ib]/pars.fit_z[data.ib]).ave());
-  ml_max*=1.1;
+  double ml_max=get_ml_max();
   
   //prepare plot
   grace_file_t fit_file(path);

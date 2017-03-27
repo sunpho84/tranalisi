@@ -22,6 +22,9 @@ const size_t ninput_an=8;
 //! number of beta
 const size_t nbeta=3;
 
+//betas
+const vector<string> beta_list={"1.90","1.95","2.10"};
+
 //! number of boostrap
 const size_t nboots=100;
 
@@ -36,6 +39,20 @@ const double ec=eu;
 
 //! continuum limit
 const double a_cont=1e-5;
+
+//! renormalization constants
+const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
+const vector<vector<ave_err_t>> Zt_ae({{{0.711,0.005},{0.724,0.004},{0.774,0.004}},{{0.700,0.003},{0.711,0.002},{0.767,0.002}}});
+const int Za_seed[nbeta]={13124,862464,76753};
+const int Zt_seed[nbeta]={5634,917453,324338};
+
+EXTERN_COMMON dbvec_t Za,Zt;
+
+//! boot initializer
+EXTERN_COMMON boot_init_t bi;
+
+//! list of a
+EXTERN_COMMON dbvec_t alist INIT_ARGS(nbeta),zlist INIT_ARGS(nbeta);
 
 //! infinite volum limit
 const double inf_vol=1e10;

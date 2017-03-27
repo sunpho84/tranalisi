@@ -30,15 +30,6 @@ index_t ind_syst({
 enum syst{c_input,c_chir,c_FSE,c_cont,c_fit_range,c_int_num};
 template <syst comp> int case_of(int isyst){return ind_syst(isyst)[comp];}
 
-const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
-const vector<vector<ave_err_t>> Zt_ae({{{0.711,0.005},{0.724,0.004},{0.774,0.004}},{{0.700,0.003},{0.711,0.002},{0.767,0.002}}});
-const int Za_seed[nbeta]={13124,862464,76753};
-const int Zt_seed[nbeta]={5634,917453,324338};
-dbvec_t Za,Zt;
-boot_init_t bi;
-
-dbvec_t alist(nbeta),zlist(nbeta);
-
 //! hold the data for a single ensemble
 class ens_data_t
 {
@@ -58,6 +49,7 @@ size_t nens_used;
 //! read a single vector, for a specific mass and r, real or imaginary
 inline djvec_t read(const char *what,const ens_data_t &ens,size_t im,size_t r,size_t reim)
 {
+  double add_fact[3]={40,4,4};
   string path=combine("%s/data/corr%s",ens.path.c_str(),what);
   string path_extra=path+"_"+qname[im][0]+qname[im][0];
   
@@ -66,8 +58,8 @@ inline djvec_t read(const char *what,const ens_data_t &ens,size_t im,size_t r,si
     {
       cout<<"Improving with "<<path_extra<<endl;
       
-      out+=4*read_djvec(path_extra,ens.T,ind_extra({0,0,r,reim}));
-      out/=5.0;
+      out+=add_fact[im]*read_djvec(path_extra,ens.T,ind_extra({0,0,r,reim}));
+      out/=1+add_fact[im];
     }
   return out;
 }
