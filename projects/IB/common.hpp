@@ -13,29 +13,32 @@
  #define INIT_ARGS(...) (__VA_ARGS__)
 #endif
 
-//total number of possible ensemble
+//! total number of possible ensemble
 const size_t nens_total=15;
 
-//number of input analysis
+//! number of input analysis
 const size_t ninput_an=8;
 
 //! number of beta
 const size_t nbeta=3;
 
-//betas
+//! betas
 const vector<string> beta_list={"1.90","1.95","2.10"};
+
+const size_t ilight=0,istrange=1,icharm=2;
+const vector<string> qname({"light","strange","charm"});
 
 //! number of boostrap
 const size_t nboots=100;
 
-//! charge of up quark
-const double eu=2.0/3;
-//! charge of down quark
-const double ed=-1.0/3;
-//! charge of strange quark
-const double es=ed;
-//! charge of charm
-const double ec=eu;
+const double eu=2.0/3;  //< charge of up quark
+const double ed=-1.0/3; //< charge of down quark
+const double es=ed;     //< charge of strange quark
+const double ec=eu;     //< charge of charm
+const double MKPLUS=0.493677,MK0=0.497611;
+
+//! charge of all quarks
+const double eq[3]={eu,es,ec};
 
 //! continuum limit
 const double a_cont=1e-5;
@@ -281,6 +284,31 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,size_t univ_full_sub,size_t FSE_flag);
 
 vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const index_t &fact);
+
+//prepare the list of a and z
+inline void prepare_az(int input_an_id)
+{
+  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+    {
+      const int imet=input_an_id/4;
+      alist[ibeta]=1.0/lat_par[input_an_id].ainv[ibeta];
+      zlist[ibeta]=lat_par[input_an_id].Z[ibeta];
+      Za[ibeta].fill_gauss(Za_ae[imet][ibeta],Za_seed[ibeta]);
+      Zt[ibeta].fill_gauss(Zt_ae[imet][ibeta],Zt_seed[ibeta]);
+    }
+}
+
+template <class T1,class T2> T1 FVE_M2(const T1 &M,const T2 &L)
+{
+  const double FVE_k=2.837297;
+  return -FVE_k*alpha_em/L*(M+2.0/L);
+}
+
+template <class T1,class T2> T1 FVE_M(const T1 &M,const T2 &L)
+{
+  const double FVE_k=2.837297;
+  return -FVE_k*alpha_em/L/2.0*(1.0+2.0/L/M);
+}
 
 #undef INIT_TO
 #undef EXTERN_COMMON

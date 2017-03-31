@@ -13,8 +13,6 @@
  #define INIT_TO(A) =A
 #endif
 
-const double eq[3]={eu,es,ec};
-
 double kern_Q(double Q,void *params);
 
 //! parameters to solve

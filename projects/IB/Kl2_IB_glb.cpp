@@ -99,18 +99,6 @@ public:
 
 vector<ens_data_t> raw_data;
 
-template <class T1,class T2> T1 FVE_M2(const T1 &M,const T2 &L)
-{
-  const double FVE_k=2.837297;
-  return -FVE_k*alpha_em/L*(M+2.0/L);
-}
-
-template <class T1,class T2> T1 FVE_M(const T1 &M,const T2 &L)
-{
-  const double FVE_k=2.837297;
-  return -FVE_k*alpha_em/L/2.0*(1.0+2.0/L/M);
-}
-
 //! plot the three ensemble separately
 template <class Tx,class Ty> void plot_ens_data(grace_file_t &file,const Tx &x,const Ty &y)
 {

@@ -4,8 +4,6 @@
 #include <common.hpp>
 #include <gm2_IB_integrators.hpp>
 
-const size_t ilight=0,istrange=1,icharm=2;
-const vector<string> qname({"light","strange","charm"});
 const double M_P_phys[3]={0.775,0.686,2.9834};
 const double M_V_phys[3]={0.775,1.0195,3.0969};
 int use_extra_sources;
@@ -41,7 +39,6 @@ public:
   string path;
   
   size_t tmin[3],tmax[3];
-  djack_t deltam_cr;
 };
 vector<ens_data_t> ens_data;
 size_t nens_used;
@@ -154,7 +151,7 @@ inline djvec_t read_QED_TV(const ens_data_t &ens,const int tpar,const int im,con
 {return read_QED("VV",ens,tpar,im,deltam_cr,c_LO);}
 
 //! initialize gm2 calculation
-void gm2_initialize(int narg,char **arg)
+inline void gm2_initialize(int narg,char **arg)
 {
   //open input file
   string name="input_global.txt";
@@ -196,18 +193,4 @@ void gm2_initialize(int narg,char **arg)
       input.read(ens.path);
     }
 }
-
-//prepare the list of a and z
-inline void prepare_az(int input_an_id)
-{
-  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-    {
-      const int imet=input_an_id/4;
-      alist[ibeta]=1.0/lat_par[input_an_id].ainv[ibeta];
-      zlist[ibeta]=lat_par[input_an_id].Z[ibeta];
-      Za[ibeta].fill_gauss(Za_ae[imet][ibeta],Za_seed[ibeta]);
-      Zt[ibeta].fill_gauss(Zt_ae[imet][ibeta],Zt_seed[ibeta]);
-    }
-}
-
 #endif
