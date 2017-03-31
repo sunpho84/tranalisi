@@ -181,26 +181,29 @@ djvec_t read_MASS(const ens_pars_t &ens,size_t imes,const djvec_t &c_LO)
   return -(c_0S1+c_0S2);
 }
 
-int main(int narg,char **arg)
+//slopes and Z for all mesons and masses
+vector<djack_t> ZP;
+vector<djack_t> M;
+vector<djack_t> A_QED;
+vector<djack_t> SL_QED;
+vector<djack_t> A_MASS;
+vector<djack_t> SL_MASS;
+
+index_t ind_ens_mes;
+void compute_basic_slopes()
 {
-  int start=time(0);
-  
-  initialize(narg,arg);
-  
-  cout<<endl<<"Total time: "<<time(0)-start<<" s"<<endl;
-  
-  index_t ind_ens_mes({{"Ens",nens_used},{"Mes",nmes}});
+  ind_ens_mes.set_ranges({{"Ens",nens_used},{"Mes",nmes}});
   size_t nens_mes=ind_ens_mes.max();
+  ZP.resize(nens_mes);
+  M.resize(nens_mes);
+  A_QED.resize(nens_mes);
+  SL_QED.resize(nens_mes);
+  A_MASS.resize(nens_mes);
+  SL_MASS.resize(nens_mes);
+  
   vector<djvec_t> jPP_LO(nens_mes);
   vector<djvec_t> jPP_QED(nens_mes);
   vector<djvec_t> jPP_MASS(nens_mes);
-  
-  vector<djack_t> ZP(nens_mes);
-  vector<djack_t> M(nens_mes);
-  vector<djack_t> A_QED(nens_mes);
-  vector<djack_t> SL_QED(nens_mes);
-  vector<djack_t> A_MASS(nens_mes);
-  vector<djack_t> SL_MASS(nens_mes);
   
   //load everything
   for(size_t iens=0;iens<nens_used;iens++)
@@ -231,14 +234,19 @@ int main(int narg,char **arg)
 				     plots_path+"/effmass_LO2.xmg",plots_path+"/slope_MASS.xmg");
 	}
     }
-  
-  index_t ind_ml({{"Input",ninput_an},{"Ens",nens_used}});
-  dbvec_t adm_bare(ind_ml.max());
-  
-  for(size_t ind=0;ind<ind_ml.max();ind++)
+}
+
+//! compute the correction to the bare masses needed
+index_t ind_adml;
+dbvec_t adml_bare;
+void compute_adml_bare()
+{
+  ind_adml.set_ranges({{"Input",ninput_an},{"Ens",nens_used}});
+  adml_bare.resize(ind_adml.max());
+  for(size_t ind=0;ind<ind_adml.max();ind++)
     {
-      size_t input_an_id=ind_ml(ind)[0];
-      size_t iens=ind_ml(ind)[1];
+      size_t input_an_id=ind_adml(ind)[0];
+      size_t iens=ind_adml(ind)[1];
       
       ens_pars_t &ens=ens_pars[iens];
       bi=jack_index[input_an_id][ens.iult];
@@ -258,14 +266,28 @@ int main(int narg,char **arg)
       
       dboot_t QCD_dM2K=phys_dM2K-QED_dM2K;
       
+      //compute the proportionality factor between the mass slope of
+      //dM2K and aml_bare, needed to know by how much to multiply any mass correlator
       dboot_t QCD_dM2K_over_adm;
       QCD_dM2K_over_adm=dboot_t(bi,(SL_MASS[ind_Kplus]-SL_MASS[ind_K0])*2*M[ind_Kplus])/sqr(a);
-      adm_bare[ind]=QCD_dM2K/QCD_dM2K_over_adm;
+      adml_bare[ind]=QCD_dM2K/QCD_dM2K_over_adm;
       
-      // dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*ZP*(6.0*log(mu_MS*a)-22.596)/(32.0*sqr(M_PI)));
-      // dboot_t dm_ren=adm_bare[ind]/ZP/a-ml/Z_QED;
-      // cout<<"dm_ren["<<ind<<"]: "<<dm_ren.ave_err()<<endl;
-  }
+      dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*ZP*(6.0*log(mu_MS*a)-22.596)/(32.0*sqr(M_PI)));
+      dboot_t dm_ren=adml_bare[ind]/ZP/a-ml/Z_QED;
+      cout<<"dm_ren["<<ind<<"]: "<<dm_ren.ave_err()<<endl;
+    }
+}
+
+int main(int narg,char **arg)
+{
+  int start=time(0);
+  
+  initialize(narg,arg);
+  
+  compute_basic_slopes();
+  compute_adml_bare();
+  
+  cout<<endl<<"Total time: "<<time(0)-start<<" s"<<endl;
   
   return 0;
 }
