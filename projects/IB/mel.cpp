@@ -253,7 +253,7 @@ int main(int narg,char **arg)
       dboot_t QED_dM2K;
       QED_dM2K=dboot_t(bi,SL_QED[ind_Kplus]-SL_QED[ind_K0]);
       dboot_t ml=ens_pars[iens].aml/ZP/a;
-      QED_dM2K+=ml*a*dboot_t(bi,SL_MASS[ind_Kplus]-SL_MASS[ind_K0])/Z_QED;
+      //QED_dM2K+=ml*a*dboot_t(bi,SL_MASS[ind_Kplus]-SL_MASS[ind_K0])/Z_QED;
       QED_dM2K*=2*dboot_t(bi,M[ind_Kplus]);
       QED_dM2K-=dboot_t(bi,FVE_M2(M[ind_Kplus],ens.L));
       QED_dM2K/=sqr(a);
@@ -263,7 +263,9 @@ int main(int narg,char **arg)
       dboot_t QCD_dM2K_over_adm;
       QCD_dM2K_over_adm=dboot_t(bi,(SL_MASS[ind_Kplus]-SL_MASS[ind_K0])*2*M[ind_Kplus])/sqr(a);
       adm_bare[ind]=QCD_dM2K/QCD_dM2K_over_adm;
-      cout<<"dm["<<ind<<"]: "<<dboot_t(adm_bare[ind]/ZP/a).ave_err()<<endl;
+      
+      dboot_t dm=adm_bare[ind]/ZP/a-ml/Z_QED;
+      cout<<"dm["<<ind<<"]: "<<dm.ave_err()<<endl;
   }
   
   return 0;
