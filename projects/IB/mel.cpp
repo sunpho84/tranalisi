@@ -202,10 +202,10 @@ int main(int narg,char **arg)
   vector<djack_t> A_MASS(nens_mes);
   vector<djack_t> SL_MASS(nens_mes);
   
+  //load everything
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_pars_t &ens=ens_pars[iens];
-      size_t ib=ens.ib;
       djack_t deltam_cr=compute_deltam_cr(ens,ilight,iPiPlus);
       size_t TH=ens.T/2;
       
@@ -230,28 +230,40 @@ int main(int narg,char **arg)
 	  two_pts_with_ins_ratio_fit(ZP[ind],M[ind],A_MASS[ind],SL_MASS[ind],jPP_LO[ind],jPP_MASS[ind],TH,tmin,tmax,
 				     plots_path+"/effmass_LO2.xmg",plots_path+"/slope_MASS.xmg");
 	}
+    }
+  
+  index_t ind_ml({{"Input",ninput_an},{"Ens",nens_used}});
+  dbvec_t adm_bare(ind_ml.max());
+  
+  for(size_t ind=0;ind<ind_ml.max();ind++)
+    {
+      size_t input_an_id=ind_ml(ind)[0];
+      size_t iens=ind_ml(ind)[1];
       
-      const size_t input_an_id=0;
+      ens_pars_t &ens=ens_pars[iens];
+      bi=jack_index[input_an_id][ens.iult];
+      size_t ib=ens.ib;
+      dboot_t a=1/lat_par[input_an_id].ainv[ib];
+      dboot_t ZP=lat_par[input_an_id].Z[ib];
+      
       size_t ind_Kplus=ind_ens_mes({iens,iKPlus}),ind_K0=ind_ens_mes({iens,iK0});
       const double phys_dM2K=sqr(MKPLUS)-sqr(MK0);
-      double a=1/lat_par[input_an_id].ainv[ib].ave();
-      double ZP=lat_par[input_an_id].Z[ib].ave();
-      double Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*ZP*(6.0*log(mu_MS*a)-22.596)/(32.0*sqr(M_PI)));
+      dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*ZP*(6.0*log(mu_MS*a)-22.596)/(32.0*sqr(M_PI)));
       
-      djack_t QED_dM2K;
-      QED_dM2K=SL_QED[ind_Kplus]-SL_QED[ind_K0];
-      djack_t ml=ens_pars[iens].aml/lat_par[input_an_id].Z[ib]/a;
-      QED_dM2K+=2.0*ml*a*SL_MASS[ind_Kplus]/Z_QED;
-      QED_dM2K*=2*M[ind_Kplus];
-      QED_dM2K-=FVE_M2(M[ind_Kplus],ens.L);
+      dboot_t QED_dM2K;
+      QED_dM2K=dboot_t(bi,SL_QED[ind_Kplus]-SL_QED[ind_K0]);
+      dboot_t ml=ens_pars[iens].aml/ZP/a;
+      QED_dM2K+=ml*a*dboot_t(bi,SL_MASS[ind_Kplus]-SL_MASS[ind_K0])/Z_QED;
+      QED_dM2K*=2*dboot_t(bi,M[ind_Kplus]);
+      QED_dM2K-=dboot_t(bi,FVE_M2(M[ind_Kplus],ens.L));
       QED_dM2K/=sqr(a);
       
-      djack_t QCD_dM2K=phys_dM2K-QED_dM2K;
+      dboot_t QCD_dM2K=phys_dM2K-QED_dM2K;
       
-      djack_t QCD_dM2K_over_dm;
-      QCD_dM2K_over_dm=(SL_MASS[ind_Kplus]-SL_MASS[ind_K0])*2*M[ind_Kplus]/a;
-      djack_t dm=QCD_dM2K/QCD_dM2K_over_dm;
-      cout<<"dm: "<<djack_t(dm/ZP).ave_err()<<endl;
+      dboot_t QCD_dM2K_over_adm;
+      QCD_dM2K_over_adm=dboot_t(bi,(SL_MASS[ind_Kplus]-SL_MASS[ind_K0])*2*M[ind_Kplus])/sqr(a);
+      adm_bare[ind]=QCD_dM2K/QCD_dM2K_over_adm;
+      cout<<"dm["<<ind<<"]: "<<dboot_t(adm_bare[ind]/ZP/a).ave_err()<<endl;
   }
   
   return 0;
