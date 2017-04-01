@@ -14,6 +14,7 @@ public:
   qpars_t(size_t iq,double dm,double eq) : iq(iq),dm(dm),eq(eq) {}
 };
 const qpars_t qU(0,1,eu),qD(0,-1,ed),qS(1,0,es),qC(2,0,ec);
+const vector<qpars_t> all_qpars({qU,qD,qS,qC});
 
 //! hold name and consittuent quark for a given meson
 class mes_pars_t
@@ -162,7 +163,7 @@ djvec_t read_QED(const ens_pars_t &ens,size_t imes,const djack_t &deltam_cr,cons
   djvec_t c_0P2=-(read_PP("0P",ens,iq1,iq2,-1,IM)*eq2*eq2); // to take imag part changed of sign
   djvec_t(c_0P1/c_LO).ave_err().write(combine("%s/P5P5_0P1.xmg",ens_qpath.c_str()));
   djvec_t(c_0P2/c_LO).ave_err().write(combine("%s/P5P5_0P2.xmg",ens_qpath.c_str()));
-  djvec_t d=djack_t(-deltam_cr)*(c_0P1+c_0P2);
+  djvec_t d=djack_t(-deltam_cr)*(c_0P1+c_0P2); //minus coming from slopes
   
   return djvec_t(c+d)*e2;
 }
@@ -190,9 +191,11 @@ vector<djack_t> A_MASS;
 vector<djack_t> SL_MASS;
 
 index_t ind_ens_mes;
+vector<djack_t> deltam_cr;
 void compute_basic_slopes()
 {
   ind_ens_mes.set_ranges({{"Ens",nens_used},{"Mes",nmes}});
+  deltam_cr.resize(nens_used);
   size_t nens_mes=ind_ens_mes.max();
   ZP.resize(nens_mes);
   M.resize(nens_mes);
@@ -209,7 +212,7 @@ void compute_basic_slopes()
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_pars_t &ens=ens_pars[iens];
-      djack_t deltam_cr=compute_deltam_cr(ens,ilight,iPiPlus);
+      deltam_cr[iens]=compute_deltam_cr(ens,ilight,iPiPlus);
       size_t TH=ens.T/2;
       
       //load LO for PP
@@ -225,7 +228,7 @@ void compute_basic_slopes()
 	  size_t iq1=mes_pars[imes].iq1;
 	  size_t iq2=mes_pars[imes].iq2;
 	  jPP_LO[ind]=read_PP("00",ens,iq1,iq2,1,RE);
-	  jPP_QED[ind]=read_QED(ens,imes,deltam_cr,jPP_LO[ind]);
+	  jPP_QED[ind]=read_QED(ens,imes,deltam_cr[iens],jPP_LO[ind]);
 	  jPP_MASS[ind]=read_MASS(ens,imes,jPP_LO[ind]);
 	  
 	  two_pts_with_ins_ratio_fit(ZP[ind],M[ind],A_QED[ind],SL_QED[ind],jPP_LO[ind],jPP_QED[ind],TH,tmin,tmax,
@@ -233,6 +236,9 @@ void compute_basic_slopes()
 	  two_pts_with_ins_ratio_fit(ZP[ind],M[ind],A_MASS[ind],SL_MASS[ind],jPP_LO[ind],jPP_MASS[ind],TH,tmin,tmax,
 				     plots_path+"/effmass_LO2.xmg",plots_path+"/slope_MASS.xmg");
 	}
+      
+      //for(size_t iquark=0;iquark<4;iquark++)
+      //cout<<"Kritical kappa shift for iens "<<iens<<" quark "<<iquark<<": "<<djack_t(deltam_cr[iens]*sqr(all_qpars[iquark].eq)*e2).ave_err()<<endl;
     }
 }
 
@@ -286,6 +292,13 @@ int main(int narg,char **arg)
   
   compute_basic_slopes();
   compute_adml_bare();
+  
+  for(size_t iens=0;iens<nens_used;iens++)
+    {
+      cout<<"Ensemble: "<<ens_pars[iens].path<<endl;
+      double aml=ens_pars[iens].aml;
+      for(size_t ian=0;ian<ninput_an;ian++) cout<<" "<<aml<<"\t->\t"<<dboot_t(aml+adml_bare[ind_adml({ian,iens})]).ave_err()<<endl;
+    }
   
   cout<<endl<<"Total time: "<<time(0)-start<<" s"<<endl;
   
