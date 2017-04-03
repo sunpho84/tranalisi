@@ -210,42 +210,46 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
   TV eff_slope_offset=effective_slope_offset(TV(corr_ins/corr),eff_mass,eff_slope,TH);
   A=constant_fit(eff_slope_offset,tmin,tmax,"/tmp/test_slope_offset.xmg");
   
-  //! fit a two point function
-  size_t iel=0;
-  auto x=vector_up_to<double>(corr.size());
-  multi_ch2_t<TV> two_pts_fit_obj({x,x},{tmin,tmin},{tmax,tmax},{corr,corr_ins/corr},
-				  {two_pts_corr_fun_t(TH,par),two_pts_corr_with_ins_fun_t(TH,par)},
-    [](const vector<double> &p,size_t icontr)
-    {
-      switch(icontr)
+  if(SL.err()!=0.0 and A.ave()!=0.0)
+    {    
+      //! fit for real
+      size_t iel=0;
+      auto x=vector_up_to<double>(corr.size());
+      multi_ch2_t<TV> two_pts_fit_obj({x,x},{tmin,tmin},{tmax,tmax},{corr,corr_ins/corr},
+				      {two_pts_corr_fun_t(TH,par),two_pts_corr_with_ins_fun_t(TH,par)},
+				      [](const vector<double> &p,size_t icontr)
+				      {
+					switch(icontr)
+					  {
+					  case 0:return vector<double>({p[0],p[1]});break;
+					  case 1:return vector<double>({p[1],p[2],p[3]});break;
+					  default: CRASH("Unknown contr %zu",icontr);return p;
+					  }
+				      },iel);
+      
+      //parameters to fit
+      minimizer_pars_t pars;
+      pars.add("Z",Z[0],Z.err());
+      pars.add("M",M[0],M.err());
+      pars.add("A",A[0],A.err());
+      pars.add("SL",SL[0],SL.err());
+      
+      minimizer_t minimizer(two_pts_fit_obj,pars);
+      
+      for(iel=0;iel<corr[0].size();iel++)
 	{
-	case 0:return vector<double>({p[0],p[1]});break;
-	case 1:return vector<double>({p[1],p[2],p[3]});break;
-	default: CRASH("Unknown contr %zu",icontr);return p;
+	  //minimize and print the result
+	  vector<double> par_min=minimizer.minimize();
+	  M[iel]=par_min[1];
+	  A[iel]=par_min[2];
+	  SL[iel]=par_min[3];
 	}
-    },iel);
-  
-  //parameters to fit
-  minimizer_pars_t pars;
-  pars.add("Z",Z[0],Z.err());
-  pars.add("M",M[0],M.err());
-  pars.add("A",A[0],A.err());
-  pars.add("SL",SL[0],SL.err());
-  
-  minimizer_t minimizer(two_pts_fit_obj,pars);
-  
-  for(iel=0;iel<corr[0].size();iel++)
-    {
-      //minimize and print the result
-      vector<double> par_min=minimizer.minimize();
-      M[iel]=par_min[1];
-      A[iel]=par_min[2];
-      SL[iel]=par_min[3];
+      
+      //write plots
+      if(path!="") write_constant_fit_plot(path,tmin,tmax,M,eff_mass);
+      if(path_ins!="") write_fit_plot(path_ins,tmin,tmax,[M,A,SL,TH,par](double x)->TS{return two_pts_corr_with_ins_ratio_fun(M,A,SL,TH,x,par);},TV(corr_ins/corr));
     }
-  
-  //write plots
-  if(path!="") write_constant_fit_plot(path,tmin,tmax,M,eff_mass);
-  if(path_ins!="") write_fit_plot(path_ins,tmin,tmax,[M,A,SL,TH,par](double x)->TS{return two_pts_corr_with_ins_ratio_fun(M,A,SL,TH,x,par);},TV(corr_ins/corr));
+  else two_pts_true_fit(Z,M,corr,TH,tmin,tmax,path,par);
 }
 
 /////////////////////////////////////////////////////////////// multi x fit ///////////////////////////////////////////////////////////
