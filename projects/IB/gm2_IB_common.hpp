@@ -170,8 +170,6 @@ inline void gm2_initialize(int narg,char **arg)
   ind_extra.set_ranges({{"NMass", 1},{"NMass", 1},{"Nr",nr},{"RI",2}});
   init_common_IB(ens_pars);
   nens_used=input.read<int>("NEnsemble");
-  Za.resize(nbeta);
-  Zt.resize(nbeta);
   
   input.expect({"Ens","beta","L","UseForL","T","aml","tint_cr","tint_ss","tint_cc","path"});
   ens_data.resize(nens_used);
