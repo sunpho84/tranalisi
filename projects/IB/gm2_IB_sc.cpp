@@ -9,15 +9,6 @@ const int DT=4; //!< number of points to eliminate from corr
 enum an_mode_t{compute_everything,read_integrals};
 an_mode_t an_mode=compute_everything;
 
-template <class T,class Tm> T M2_fun(const T &B0,const Tm &aml)
-{return 2*B0*aml;}
-
-template <class T,class Tm> T M_fun(const T &B0,const Tm &aml)
-{return sqrt(M2_fun(B0,aml));}
-
-template <class T,class Tm> T xi_fun(const T &B0,const Tm &aml,const T &f0)
-{return M2_fun(B0,aml)/sqr(T(4*M_PI*f0));}
-
 template <class Tpars> Tpars FSE_LO(const Tpars &C,const Tpars &L3dep,const Tpars &xi,const Tpars &ML)
 {return C*L3dep*xi*exp(-ML)/(ML);}
 
