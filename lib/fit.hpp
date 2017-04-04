@@ -67,7 +67,7 @@ template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data
 }
 
 //! fit the mass and the matrix element
-template <class TV,class T=typename TV::base_type> void two_pts_fit(T &Z,T &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path_mass="",string path_Z="",int par=1)
+template <class TV,class T=typename TV::base_type> void two_pts_fit(T &Z2,T &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path_mass="",string path_Z2="",int par=1)
 {
   //fit to constant the effective mass
   M=constant_fit(effective_mass(corr,TH,par),tmin,tmax,path_mass);
@@ -75,7 +75,7 @@ template <class TV,class T=typename TV::base_type> void two_pts_fit(T &Z,T &M,co
   //prepare the reduced corr
   TV temp=corr;
   for(size_t t=0;t<=TH;t++) temp[t]/=two_pts_corr_fun(M*0+1,M,TH,t,par);
-  Z=sqrt(constant_fit(temp,tmin,tmax,path_Z));
+  Z2=constant_fit(temp,tmin,tmax,path_Z2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,10 +134,10 @@ public:
 };
 
 //! perform a fit to the usual 2pts ansatz
-template <class TV,class TS=typename TV::base_type> void two_pts_true_fit(TS &Z,TS &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
+template <class TV,class TS=typename TV::base_type> void two_pts_true_fit(TS &Z2,TS &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
 {
   //perform a preliminary fit
-  two_pts_fit(Z,M,corr,TH,tmin,tmax);
+  two_pts_fit(Z2,M,corr,TH,tmin,tmax);
   
   //! fit a two point function
   size_t iel;
@@ -145,7 +145,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_true_fit(TS &Z,
   
   //parameters to fit
   minimizer_pars_t pars;
-  pars.add("Z",Z[0],Z.err());
+  pars.add("Z2",Z2[0],Z2.err());
   pars.add("M",M[0],M.err());
   
   minimizer_t minimizer(two_pts_fit_obj,pars);
@@ -153,7 +153,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_true_fit(TS &Z,
     {
       //minimize and print the result
       vector<double> pars=minimizer.minimize();
-      Z[iel]=pars[0];
+      Z2[iel]=pars[0];
       M[iel]=pars[1];
     }
   
@@ -198,13 +198,13 @@ public:
 //////////////////////////////////////////////////////////// slope /////////////////////////////////////////////////////
 
 //! perform a fit to determine the slope
-template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &Z,TS &M,TS &A,TS &SL,const TV &corr,const TV &corr_ins,size_t TH,size_t tmin,size_t tmax,string path="",string path_ins="",int par=1)
+template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &Z2,TS &M,TS &A,TS &SL,const TV &corr,const TV &corr_ins,size_t TH,size_t tmin,size_t tmax,string path="",string path_ins="",int par=1)
 {
   //perform a preliminary fit
   TV eff_mass=effective_mass(corr,TH,par);
   M=constant_fit(eff_mass,tmin,tmax,"/tmp/test_mass.xmg");
-  TV eff_coupling=effective_coupling(corr,eff_mass,TH,par);
-  Z=constant_fit(eff_coupling,tmin,tmax,"/tmp/test_coupling.xmg");
+  TV eff_sq_coupling=effective_squared_coupling(corr,eff_mass,TH,par);
+  Z2=constant_fit(eff_sq_coupling,tmin,tmax,"/tmp/test_sq_coupling.xmg");
   TV eff_slope=effective_slope(TV(corr_ins/corr),eff_mass,TH);
   SL=constant_fit(eff_slope,tmin,tmax,"/tmp/test_slope.xmg");
   TV eff_slope_offset=effective_slope_offset(TV(corr_ins/corr),eff_mass,eff_slope,TH);
@@ -229,7 +229,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
       
       //parameters to fit
       minimizer_pars_t pars;
-      pars.add("Z",Z[0],Z.err());
+      pars.add("Z2",Z2[0],Z2.err());
       pars.add("M",M[0],M.err());
       pars.add("A",A[0],A.err());
       pars.add("SL",SL[0],SL.err());
@@ -249,7 +249,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
       if(path!="") write_constant_fit_plot(path,tmin,tmax,M,eff_mass);
       if(path_ins!="") write_fit_plot(path_ins,tmin,tmax,[M,A,SL,TH,par](double x)->TS{return two_pts_corr_with_ins_ratio_fun(M,A,SL,TH,x,par);},TV(corr_ins/corr));
     }
-  else two_pts_true_fit(Z,M,corr,TH,tmin,tmax,path,par);
+  else two_pts_true_fit(Z2,M,corr,TH,tmin,tmax,path,par);
 }
 
 /////////////////////////////////////////////////////////////// multi x fit ///////////////////////////////////////////////////////////

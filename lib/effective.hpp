@@ -45,7 +45,7 @@ template <class T> T effective_mass(const T &data,size_t TH=0,int par=1,int dt=1
 }
 
 //! return the effective mass of a whole vector
-template <class TV> TV effective_coupling(const TV &data,const TV &M,size_t TH,int par=1,int dt=1)
+template <class TV> TV effective_squared_coupling(const TV &data,const TV &M,size_t TH,int par=1,int dt=1)
 {
   //check data size
   if(data.size()==0) CRASH("Empty data vector");
@@ -55,7 +55,7 @@ template <class TV> TV effective_coupling(const TV &data,const TV &M,size_t TH,i
   
   for(size_t t=0;t<data.size()-dt;t++)
     for(size_t i=0;i<data[0].size();i++)
-      out[t][i]=sqrt(data[t][i]/two_pts_corr_fun(1.0,M[t][i],TH,(double)t,par));
+      out[t][i]=data[t][i]/two_pts_corr_fun(1.0,M[t][i],TH,(double)t,par);
   
   return out;
 }

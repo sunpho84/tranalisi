@@ -114,16 +114,16 @@ template <class TV,class TS=typename TV::base_type> TS integrate_corr_times_kern
 //! parameters of LO corr
 struct params_LO_t
 {
-  double Z,M,a;
-  params_LO_t(double Z,double M,double a) : Z(Z),M(M),a(a) {}
-  template <class T> params_LO_t(const vector<T> &p,size_t i) : Z(p[0][i]),M(p[1][i]),a(p[2][i]) {}
+  double Z2,M,a;
+  params_LO_t(double Z2,double M,double a) : Z2(Z2),M(M),a(a) {}
+  template <class T> params_LO_t(const vector<T> &p,size_t i) : Z2(p[0][i]),M(p[1][i]),a(p[2][i]) {}
 };
 
 //! parameters of QED corr
 struct params_QED_t
 {
-  double A,Z,SL,M,a;
-  params_QED_t(double A,double Z,double SL,double M,double a) : A(A),Z(Z),SL(SL),M(M),a(a) {}
+  double A,Z2,SL,M,a;
+  params_QED_t(double A,double Z2,double SL,double M,double a) : A(A),Z2(Z2),SL(SL),M(M),a(a) {}
   template <class T> params_QED_t(const vector<T> &p,size_t i) : params_QED_t(p[0][i],p[1][i],p[2][i],p[3][i],p[4][i]) {}
 };
 
@@ -173,11 +173,11 @@ template <class TS,class Pars_wr> TS integrate_reco_from(double (*kern_gsl)(doub
   return 4*sqr(alpha_em)*sqr(eq[im])*result;
 }
 //! integrate the leading order reconstructed from a given point
-template <class T> T integrate_LO_reco_from(const T &Z,const T &M,const T &a,size_t im,double from)
-{return integrate_reco_from<T,params_LO_t>(kern_LO_reco_gsl,vector<T>({Z,M,a}),im,from);}
+template <class T> T integrate_LO_reco_from(const T &Z2,const T &M,const T &a,size_t im,double from)
+{return integrate_reco_from<T,params_LO_t>(kern_LO_reco_gsl,vector<T>({Z2,M,a}),im,from);}
 //! integrate the QED reconstructed from a given point
-template <class T> T integrate_QED_reco_from(const T &A,const T &Z,const T &SL,const T &M,const T &a,size_t im,double from)
-{return integrate_reco_from<T,params_QED_t>(kern_QED_reco_gsl,vector<T>({A,Z,SL,M,a}),im,from);}
+template <class T> T integrate_QED_reco_from(const T &A,const T &Z2,const T &SL,const T &M,const T &a,size_t im,double from)
+{return integrate_reco_from<T,params_QED_t>(kern_QED_reco_gsl,vector<T>({A,Z2,SL,M,a}),im,from);}
 
 //! kernel of LO (used only for debug)
 template <class params_t,class T> T kern_reco(double t,double (*kern_reco_gsl)(double,void*),const vector<T> &pars)
@@ -215,11 +215,11 @@ template <class TV,class TS=typename TV::base_type> void compare_num_reco(string
   out.write_vec_ave_err(num.ave_err());
   out.write_vec_ave_err(reco.ave_err());
 }
-template <class TV,class TS=typename TV::base_type> void compare_LO_num_reco(string path,const TV &corr,const TS &Z,const TS &M,const TS &a)
-{compare_num_reco<TV>(path,kern_LO_reco,corr,{Z,M,a},a);}
+template <class TV,class TS=typename TV::base_type> void compare_LO_num_reco(string path,const TV &corr,const TS &Z2,const TS &M,const TS &a)
+{compare_num_reco<TV>(path,kern_LO_reco,corr,{Z2,M,a},a);}
 
-template <class TV,class TS=typename TV::base_type> void compare_QED_num_reco(string path,const TV &corr,const TS &A,const TS &Z,const TS &SL,const TS &M,const TS &a)
-{compare_num_reco<TV>(path,kern_QED_reco,corr,{A,Z,SL,M,a},a);}
+template <class TV,class TS=typename TV::base_type> void compare_QED_num_reco(string path,const TV &corr,const TS &A,const TS &Z2,const TS &SL,const TS &M,const TS &a)
+{compare_num_reco<TV>(path,kern_QED_reco,corr,{A,Z2,SL,M,a},a);}
 
 #undef EXTERN_GM2IB
 #undef INIT_TO

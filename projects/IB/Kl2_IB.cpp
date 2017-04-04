@@ -73,11 +73,11 @@ int main(int narg,char **arg)
   djvec_t pi_s=load_P5P5("0S",0,0);
   djvec_t pi_p=-load_P5P5("0P",0,0,IM,-1);
   
-  djack_t pi_Z,pi_M,pi_A_exch,pi_SL_exch,pi_A_selftad,pi_SL_selftad,pi_A_s,pi_SL_s,pi_A_p,pi_SL_p;
-  two_pts_with_ins_ratio_fit(pi_Z,pi_M,pi_A_s,pi_SL_s,pi_plain,pi_s,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_s.xmg");
-  two_pts_with_ins_ratio_fit(pi_Z,pi_M,pi_A_p,pi_SL_p,pi_plain,pi_p,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_p.xmg");
-  two_pts_with_ins_ratio_fit(pi_Z,pi_M,pi_A_selftad,pi_SL_selftad,pi_plain,djvec_t(pi_self+pi_tad),TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_selftad.xmg");
-  two_pts_with_ins_ratio_fit(pi_Z,pi_M,pi_A_exch,pi_SL_exch,pi_plain,pi_exch,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_exch.xmg");
+  djack_t pi_Z2,pi_M,pi_A_exch,pi_SL_exch,pi_A_selftad,pi_SL_selftad,pi_A_s,pi_SL_s,pi_A_p,pi_SL_p;
+  two_pts_with_ins_ratio_fit(pi_Z2,pi_M,pi_A_s,pi_SL_s,pi_plain,pi_s,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_s.xmg");
+  two_pts_with_ins_ratio_fit(pi_Z2,pi_M,pi_A_p,pi_SL_p,pi_plain,pi_p,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_p.xmg");
+  two_pts_with_ins_ratio_fit(pi_Z2,pi_M,pi_A_selftad,pi_SL_selftad,pi_plain,djvec_t(pi_self+pi_tad),TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_selftad.xmg");
+  two_pts_with_ins_ratio_fit(pi_Z2,pi_M,pi_A_exch,pi_SL_exch,pi_plain,pi_exch,TH,pi_tmin,pi_tmax,"pi_mass.xmg","pi_exch.xmg");
 
   cout<<"pi_M: "<<pi_M.ave_err()<<endl;
   cout<<"pi_A_exch: "<<pi_A_exch.ave_err()<<endl;
@@ -108,7 +108,7 @@ int main(int narg,char **arg)
   djvec_t k_p=-load_P5P5("0P",1,0,IM,-1);
   djvec_t k_p_revins=-load_P5P5("0P",0,1,IM,-1);
   
-  djack_t k_Z,k_M,k_A_exch,k_SL_exch,k_A_selftad,k_SL_selftad,k_A_selftad_revins,k_SL_selftad_revins,k_A_s,k_SL_s,k_A_p,k_SL_p,k_A_p_revins,k_SL_p_revins;
+  djack_t k_Z2,k_M,k_A_exch,k_SL_exch,k_A_selftad,k_SL_selftad,k_A_selftad_revins,k_SL_selftad_revins,k_A_s,k_SL_s,k_A_p,k_SL_p,k_A_p_revins,k_SL_p_revins;
   
   // djack_t M_k,Z_k;
 
@@ -117,12 +117,12 @@ int main(int narg,char **arg)
   // cout<<"k_Z: "<<Z_k.ave_err()<<endl;
   // cout<<"k_M: "<<M_k.ave_err()<<endl;
   
-  two_pts_with_ins_ratio_fit(k_Z,k_M,k_A_exch,k_SL_exch,k_plain,k_exch,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_exch.xmg");
-  two_pts_with_ins_ratio_fit(k_Z,k_M,k_A_s,k_SL_s,k_plain,k_s,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_s.xmg");
-  two_pts_with_ins_ratio_fit(k_Z,k_M,k_A_p,k_SL_p,k_plain,k_p,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_p.xmg");
-  two_pts_with_ins_ratio_fit(k_Z,k_M,k_A_selftad_revins,k_SL_selftad_revins,k_plain,djvec_t(k_self_revins+k_tad_revins),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_selftad_revins.xmg");
-  two_pts_with_ins_ratio_fit(k_Z,k_M,k_A_p_revins,k_SL_p_revins,k_plain,k_p_revins,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_p_revins.xmg");
-  two_pts_with_ins_ratio_fit(k_Z,k_M,k_A_selftad,k_SL_selftad,k_plain,djvec_t(k_self+k_tad),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_selftad.xmg");
+  two_pts_with_ins_ratio_fit(k_Z2,k_M,k_A_exch,k_SL_exch,k_plain,k_exch,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_exch.xmg");
+  two_pts_with_ins_ratio_fit(k_Z2,k_M,k_A_s,k_SL_s,k_plain,k_s,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_s.xmg");
+  two_pts_with_ins_ratio_fit(k_Z2,k_M,k_A_p,k_SL_p,k_plain,k_p,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_p.xmg");
+  two_pts_with_ins_ratio_fit(k_Z2,k_M,k_A_selftad_revins,k_SL_selftad_revins,k_plain,djvec_t(k_self_revins+k_tad_revins),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_selftad_revins.xmg");
+  two_pts_with_ins_ratio_fit(k_Z2,k_M,k_A_p_revins,k_SL_p_revins,k_plain,k_p_revins,TH,k_tmin,k_tmax,"kaon_mass.xmg","k_p_revins.xmg");
+  two_pts_with_ins_ratio_fit(k_Z2,k_M,k_A_selftad,k_SL_selftad,k_plain,djvec_t(k_self+k_tad),TH,k_tmin,k_tmax,"kaon_mass.xmg","k_selftad.xmg");
   
   cout<<"k_M: "<<k_M.ave_err()<<endl;
   cout<<"k_A_exch: "<<k_A_exch.ave_err()<<endl;
@@ -159,7 +159,7 @@ int main(int narg,char **arg)
   djvec_t D_p=-load_P5P5("0P",2,0,IM,-1);
   djvec_t D_p_revins=-load_P5P5("0P",0,2,IM,-1);
 
-  djack_t D_Z,D_M,D_A_exch,D_SL_exch,D_A_selftad,D_SL_selftad,D_A_selftad_revins,D_SL_selftad_revins,D_A_s,D_SL_s,D_A_p,D_SL_p,D_A_p_revins,D_SL_p_revins;
+  djack_t D_Z2,D_M,D_A_exch,D_SL_exch,D_A_selftad,D_SL_selftad,D_A_selftad_revins,D_SL_selftad_revins,D_A_s,D_SL_s,D_A_p,D_SL_p,D_A_p_revins,D_SL_p_revins;
   
   // djack_t M_D,Z_D;
   
@@ -168,12 +168,12 @@ int main(int narg,char **arg)
   // cout<<"D_Z: "<<Z_D.ave_err()<<endl;
   // cout<<"D_M: "<<M_D.ave_err()<<endl;
   
-  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_exch,D_SL_exch,D_plain,D_exch,TH,D_tmin,D_tmax,"D_mass.xmg","D_exch.xmg");
-  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_s,D_SL_s,D_plain,D_s,TH,D_tmin,D_tmax,"D_mass.xmg","D_s.xmg");
-  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_p,D_SL_p,D_plain,D_p,TH,D_tmin,D_tmax,"D_mass.xmg","D_p.xmg");
-  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_selftad_revins,D_SL_selftad_revins,D_plain,djvec_t(D_self_revins+D_tad_revins),TH,D_tmin,D_tmax,"D_mass.xmg","D_selftad_revins.xmg");
-  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_p_revins,D_SL_p_revins,D_plain,D_p_revins,TH,D_tmin,D_tmax,"D_mass.xmg","D_p_revins.xmg");
-  two_pts_with_ins_ratio_fit(D_Z,D_M,D_A_selftad,D_SL_selftad,D_plain,djvec_t(D_self+D_tad),TH,D_tmin,D_tmax,"D_mass.xmg","D_selftad.xmg");
+  two_pts_with_ins_ratio_fit(D_Z2,D_M,D_A_exch,D_SL_exch,D_plain,D_exch,TH,D_tmin,D_tmax,"D_mass.xmg","D_exch.xmg");
+  two_pts_with_ins_ratio_fit(D_Z2,D_M,D_A_s,D_SL_s,D_plain,D_s,TH,D_tmin,D_tmax,"D_mass.xmg","D_s.xmg");
+  two_pts_with_ins_ratio_fit(D_Z2,D_M,D_A_p,D_SL_p,D_plain,D_p,TH,D_tmin,D_tmax,"D_mass.xmg","D_p.xmg");
+  two_pts_with_ins_ratio_fit(D_Z2,D_M,D_A_selftad_revins,D_SL_selftad_revins,D_plain,djvec_t(D_self_revins+D_tad_revins),TH,D_tmin,D_tmax,"D_mass.xmg","D_selftad_revins.xmg");
+  two_pts_with_ins_ratio_fit(D_Z2,D_M,D_A_p_revins,D_SL_p_revins,D_plain,D_p_revins,TH,D_tmin,D_tmax,"D_mass.xmg","D_p_revins.xmg");
+  two_pts_with_ins_ratio_fit(D_Z2,D_M,D_A_selftad,D_SL_selftad,D_plain,djvec_t(D_self+D_tad),TH,D_tmin,D_tmax,"D_mass.xmg","D_selftad.xmg");
   
   cout<<"D_M: "<<D_M.ave_err()<<endl;
   cout<<"D_A_exch: "<<D_A_exch.ave_err()<<endl;
@@ -200,11 +200,11 @@ int main(int narg,char **arg)
 
   //Ds meson
 
-  djack_t Ds_M,Ds_Z;
+  djack_t Ds_M,Ds_Z2;
 
   djvec_t Ds_corr_00=load_P5P5("00",2,1);
-  two_pts_true_fit(Ds_Z,Ds_M,Ds_corr_00,TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg");
-  cout<<"Ds_Z: "<<Ds_Z.ave_err()<<endl;
+  two_pts_true_fit(Ds_Z2,Ds_M,Ds_corr_00,TH,Ds_tmin,Ds_tmax,"Ds_mass.xmg");
+  cout<<"Ds_Z2: "<<Ds_Z2.ave_err()<<endl;
   cout<<"Ds_M: "<<Ds_M.ave_err()<<endl;
 
   raw_file_t Ds_obs_file("Ds_obs","w");

@@ -10,22 +10,22 @@
 using namespace std;
 
 //! the classic 2pts correlator ansatz, with no around the world term
-template <class T> T nonperiodic_two_pts_corr_fun(T Z,T M,double t)
-{return Z*Z*exp(-M*t)/(2*M);}
+template <class T> T nonperiodic_two_pts_corr_fun(T Z2,T M,double t)
+{return Z2*exp(-M*t)/(2*M);}
 //! the classic 2pts correlator ansatz, with periodic around the world
-template <class T> T periodic_two_pts_corr_fun(T Z,T M,double TH,double t)
-{return Z*Z*exp(-M*TH)*cosh(M*(TH-t))/M;}
+template <class T> T periodic_two_pts_corr_fun(T Z2,T M,double TH,double t)
+{return Z2*exp(-M*TH)*cosh(M*(TH-t))/M;}
 //! the classic 2pts correlator ansatz, with anti-periodic around the world
-template <class T> T antiperiodic_two_pts_corr_fun(T Z,T M,double TH,double t)
-{return Z*Z*exp(-M*TH)*sinh(M*(TH-t))/M;}
+template <class T> T antiperiodic_two_pts_corr_fun(T Z2,T M,double TH,double t)
+{return Z2*exp(-M*TH)*sinh(M*(TH-t))/M;}
 //
-template <class T> T two_pts_corr_fun(T Z,T M,double TH,double t,const int par)
+template <class T> T two_pts_corr_fun(T Z2,T M,double TH,double t,const int par)
 {
   switch(par)
     {
-    case -1: return antiperiodic_two_pts_corr_fun(Z,M,TH,t); break;
-    case  0: return nonperiodic_two_pts_corr_fun(Z, M, t);break; 
-    case +1: return  periodic_two_pts_corr_fun(Z,M,TH,t);break;
+    case -1: return antiperiodic_two_pts_corr_fun(Z2,M,TH,t); break;
+    case  0: return nonperiodic_two_pts_corr_fun(Z2, M, t);break;
+    case +1: return  periodic_two_pts_corr_fun(Z2,M,TH,t);break;
     default: CRASH("unknown periodicity %d",par);return M;
     }
 }
@@ -49,9 +49,9 @@ class two_pts_corr_fun_t
   size_t TH;
   int par;
 public:
-  enum{iZ,iM};
+  enum{iZ2,iM};
   two_pts_corr_fun_t(size_t TH,int par) : TH(TH),par(par) {}
-  double operator()(const vector<double> &p,double x) {return two_pts_corr_fun(p[iZ],p[iM],TH,x,par);}
+  double operator()(const vector<double> &p,double x) {return two_pts_corr_fun(p[iZ2],p[iM],TH,x,par);}
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////

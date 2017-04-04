@@ -645,10 +645,13 @@ int main(int narg,char **arg)
       
       if(an_mode==compute_everything)
 	{
-	  two_pts_with_ins_ratio_fit(jZ_V[ind],jM_V[ind],jA_V[ind],jSL_V[ind],jVV_LO[iens],jVV_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
+	  djack_t jZ2_V,jZ2_P;
+	  two_pts_with_ins_ratio_fit(jZ2_V,jM_V[ind],jA_V[ind],jSL_V[ind],jVV_LO[iens],jVV_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
 				     combine("%s/VV_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/VV_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
-	  two_pts_with_ins_ratio_fit(jZ_P[ind],jM_P[ind],jA_P[ind],jSL_P[ind],jPP_LO[iens],jPP_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
+	  two_pts_with_ins_ratio_fit(jZ2_P,jM_P[ind],jA_P[ind],jSL_P[ind],jPP_LO[iens],jPP_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
 				     combine("%s/PP_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/PP_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
+	  jZ_V[ind]=sqrt(jZ2_V);
+	  jZ_P[ind]=sqrt(jZ2_P);
 	}
       
       cout<<"M_V: "<<jM_V[ind].ave_err()<<endl;
