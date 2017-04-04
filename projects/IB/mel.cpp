@@ -293,7 +293,6 @@ void compute_basic_slopes()
 	  djack_t ZAP,ZPP;
 	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],A_AP_QED[ind_QED],SL_AP_QED[ind_QED],jAP_LO[ind_QCD],jAP_QED[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_AP_LO1.xmg",plots_path+"/slope_AP_QED.xmg",-1);
-	  
 	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],A_AP_MASS[ind_QED],SL_AP_MASS[ind_QED],jAP_LO[ind_QCD],jAP_MASS[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_AP_LO2.xmg",plots_path+"/slope_AP_MASS.xmg",-1);
 	  //
