@@ -153,7 +153,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
   //prepare plot
   grace_file_t fit_file(path);
   //fit_file.set_title("Continuum and chiral limit");
-  fit_file.set_xaxis_label("$$m_{light} (\\overline{MS},2 GeV) [GeV]");
+  fit_file.set_xaxis_label("m\\s\\f{Times-Italic}l\\f{}\\N\\h{0.3}(GeV)");
   fit_file.set_yaxis_label(yaxis_label);
   fit_file.set_xaxis_max(ml_max);
   
@@ -163,8 +163,8 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
   fit_file.write_polygon(fun_poly_cont_lin,1e-6,ml_max);
   //data without and with fse
   grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
-  // grace::default_color_scheme={grace::RED,grace::RED,grace::BLUE,grace::BLUE,grace::GREEN4,grace::VIOLET};
-  // grace::default_symbol_scheme={grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND};
+  grace::default_color_scheme={grace::RED,grace::RED,grace::RED,grace::BLUE,grace::BLUE,grace::GREEN4,grace::VIOLET};
+  grace::default_symbol_scheme={grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND};
   for(int without_with_fse=0;without_with_fse<2;without_with_fse++)
     {
       for(size_t ib=0;ib<pars.fit_a.size();ib++)
@@ -181,7 +181,136 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 	      fit_file.new_data_set();
 	      //put data without fse to brown
 	      if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
-	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L/a=%d",beta_list[ib].c_str(),L).c_str());
+	      
+	      for(size_t idata=0;idata<ext_data.size();idata++)
+		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
+		  {
+		    
+		    fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
+		      fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+		  }
+	    }
+	}
+      
+      //put back colors for data with fse
+      if(without_with_fse==0) fit_file.reset_cur_col();
+    }
+  //data of the continuum-chiral limit
+  fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
+  fit_file.set_legend("physical point");
+}
+
+void plot_chir_fit_empty(const string path,const vector<cont_chir_fit_data_t> &ext_data,const cont_chir_fit_pars_t &pars,
+		   const function<double(double x,size_t ib)> &fun_line_per_beta,
+		   const function<dboot_t(double x)> &fun_poly_cont_lin,
+		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
+		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list)
+{
+  //search max renormalized mass
+  double ml_max=0;
+  for(auto &data : ext_data)
+    ml_max=max(ml_max,dboot_t(data.aml/pars.fit_a[data.ib]/pars.fit_z[data.ib]).ave());
+  ml_max*=1.1;
+  
+  //prepare plot
+  grace_file_t fit_file(path);
+  //fit_file.set_title("Continuum and chiral limit");
+  fit_file.set_xaxis_label("m\\s\\f{Times-Italic}l\\f{}\\N\\h{0.3}(GeV)");
+  fit_file.set_yaxis_label(yaxis_label);
+  fit_file.set_xaxis_max(ml_max);
+  
+  //band of the fit to individual beta
+  for(size_t ib=0;ib<pars.fit_a.size();ib++) fit_file.write_line(bind(fun_line_per_beta,_1,ib),1e-6,ml_max);
+  //band of the continuum limit
+  fit_file.write_polygon(fun_poly_cont_lin,1e-6,ml_max);
+  //data without and with fse
+  grace::default_color_scheme={grace::RED,grace::RED,grace::RED,grace::BLUE,grace::BLUE,grace::GREEN4,grace::VIOLET};
+  grace::default_symbol_scheme={grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND};
+  for(int without_with_fse=0;without_with_fse<2;without_with_fse++)
+    {
+      for(size_t ib=0;ib<pars.fit_a.size();ib++)
+	{
+	  //make the list of volumes
+	  set<size_t> L_list;
+	  for(size_t idata=0;idata<ext_data.size();idata++)
+	    if(ext_data[idata].ib==ib)
+	      L_list.insert(ext_data[idata].L);
+	  
+	  //loop over the list of volumes
+	  for(auto &L : L_list)
+	    {
+	      fit_file.new_data_set();
+	      //put data without fse to brown
+	      if(without_with_fse==0) grace::default_symbol_fill_pattern=grace::EMPTY_SYMBOL;	      
+	      if(without_with_fse==1)
+		{
+		  grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
+		  fit_file.set_legend(combine("$$\\beta=%s, L/a=%d",beta_list[ib].c_str(),L).c_str());
+		}
+	      
+	      for(size_t idata=0;idata<ext_data.size();idata++)
+		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
+		  {
+		    
+		    fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
+		      fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+		  }
+	    }
+	}
+      
+      //put back colors for data with fse
+      if(without_with_fse==0) fit_file.reset_cur_col();
+    }
+  //data of the continuum-chiral limit
+  fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
+  fit_file.set_legend("physical point");
+}
+
+void plot_chir_fit1(const string path,const vector<cont_chir_fit_data_t> &ext_data,const cont_chir_fit_pars_t &pars,
+		   const function<double(double x,size_t ib)> &fun_line_per_beta,
+		   const function<dboot_t(double x)> &fun_poly_cont_lin,
+		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
+		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list)
+{
+  //search max renormalized mass
+  double ml_max=0;
+  for(auto &data : ext_data)
+    ml_max=max(ml_max,dboot_t(data.aml/pars.fit_a[data.ib]/pars.fit_z[data.ib]).ave());
+  ml_max*=1.1;
+  
+  //prepare plot
+  grace_file_t fit_file(path);
+  //fit_file.set_title("Continuum and chiral limit");
+  fit_file.set_xaxis_label("m\\s\\f{Times-Italic}l\\f{}\\N\\h{0.3}(GeV)");
+  fit_file.set_yaxis_label(yaxis_label);
+  fit_file.set_xaxis_max(ml_max);
+  
+  //band of the fit to individual beta
+  for(size_t ib=0;ib<pars.fit_a.size();ib++) fit_file.write_line(bind(fun_line_per_beta,_1,ib),1e-6,ml_max);
+  //band of the continuum limit
+  fit_file.write_polygon(fun_poly_cont_lin,1e-6,ml_max);
+  //data without and with fse
+  grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
+  grace::default_color_scheme={grace::RED,grace::RED,grace::BLUE,grace::BLUE,grace::GREEN4,grace::VIOLET};
+  grace::default_symbol_scheme={grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND};
+  for(int without_with_fse=0;without_with_fse<2;without_with_fse++)
+    {
+      for(size_t ib=0;ib<pars.fit_a.size();ib++)
+	{
+	  //make the list of volumes
+	  set<size_t> L_list;
+	  for(size_t idata=0;idata<ext_data.size();idata++)
+	    if(ext_data[idata].ib==ib)
+	      L_list.insert(ext_data[idata].L);
+	  
+	  //loop over the list of volumes
+	  for(auto &L : L_list)
+	    {
+	      fit_file.new_data_set();
+	      //put data without fse to brown
+	      if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
+	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L/a=%d",beta_list[ib].c_str(),L).c_str());
 	      
 	      for(size_t idata=0;idata<ext_data.size();idata++)
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
@@ -216,7 +345,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
   //prepare plot
   grace_file_t fit_file(path);
   //fit_file.set_title("Continuum and chiral limit");
-  fit_file.set_xaxis_label("$$m_{light} (\\overline{MS},2 GeV) [GeV]");
+  fit_file.set_xaxis_label("m\\s\\f{Times-Italic}l\\f{}\\N\\h{0.3}(GeV)");
   fit_file.set_yaxis_label(yaxis_label);
   fit_file.set_xaxis_max(ml_max);
   
@@ -251,7 +380,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		      grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
 		      fit_file.set_all_colors(grace::BROWN);
 		    }
-		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L/a=%d",beta_list[ib].c_str(),L).c_str());
 		        
 		  for(size_t idata=0;idata<ext_data.size();idata++)
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
@@ -291,7 +420,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		  fit_file.new_data_set();
 		  //put data without fse to brown
 		  if(without_with_fse==0) grace::default_symbol_fill_pattern=grace::EMPTY_SYMBOL;
-		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L/a=%d",beta_list[ib].c_str(),L).c_str());
 	      
 		  for(size_t idata=0;idata<ext_data.size();idata++)
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
@@ -331,7 +460,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
   //prepare plot
   grace_file_t fit_file(path);
   //fit_file.set_title("Continuum and chiral limit");
-  fit_file.set_xaxis_label("$$m_{light} (\\overline{MS},2 GeV) [GeV]");
+  fit_file.set_xaxis_label("m\\s\\f{Times-Italic}l\\f{}\\N\\h{0.3}(GeV)");
   fit_file.set_yaxis_label(yaxis_label);
   fit_file.set_xaxis_max(ml_max);
   
@@ -374,7 +503,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		      grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
 		      fit_file.set_all_colors(grace::BROWN);
 		    }
-		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L/a=%d",beta_list[ib].c_str(),L).c_str());
 		        
 		  for(size_t idata=0;idata<ext_data.size();idata++)
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
@@ -414,7 +543,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		  fit_file.new_data_set();
 		  //put data without fse to brown
 		  if(without_with_fse==0) grace::default_symbol_fill_pattern=grace::EMPTY_SYMBOL;
-		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L/a=%d",beta_list[ib].c_str(),L).c_str());
 	      
 		  for(size_t idata=0;idata<ext_data.size();idata++)
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
