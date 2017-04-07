@@ -57,21 +57,21 @@ public:
 ///////////////////////////////////////////////////////////////////////////////////////
 
 //! return the ratio of a corr with insertion and an original corr, without return contribution
-template< class T> T nonperiodic_two_pts_corr_with_ins_ratio_fun(T M,T A,T SL,double t)
-{return A+SL/M+SL*t;}
+template< class T> T nonperiodic_two_pts_corr_with_ins_ratio_fun(T M,T DZ2,T SL,double t)
+{return DZ2+SL/M+SL*t;}
 //! return the ratio of a corr with insertion and an original corr with periodic return contribution
-template< class T> T periodic_two_pts_corr_with_ins_ratio_fun(T M,T A,T SL,double TH,double t)
-{return A+SL*(1.0/M+TH)-SL*(t-TH)*tanh(M*(t-TH));}
+template< class T> T periodic_two_pts_corr_with_ins_ratio_fun(T M,T DZ2,T SL,double TH,double t)
+{return DZ2+SL*(1.0/M+TH)-SL*(t-TH)*tanh(M*(t-TH));}
 //! return the ratio of a corr with insertion and an original corr with antiperiodic return contribution
-template< class T> T antiperiodic_two_pts_corr_with_ins_ratio_fun(T M,T A,T SL,double TH,double t)
-{return A+SL*(1.0/M+TH)-SL*(t-TH)/tanh(M*(t-TH));}
-template <class T> T two_pts_corr_with_ins_ratio_fun(T M,T A,T SL,double TH,double t,const int par)
+template< class T> T antiperiodic_two_pts_corr_with_ins_ratio_fun(T M,T DZ2,T SL,double TH,double t)
+{return DZ2+SL*(1.0/M+TH)-SL*(t-TH)/tanh(M*(t-TH));}
+template <class T> T two_pts_corr_with_ins_ratio_fun(T M,T DZ2,T SL,double TH,double t,const int par)
 {
   switch(par)
     {
-    case -1: return antiperiodic_two_pts_corr_with_ins_ratio_fun(M,A,SL,TH,t);break;
-    case  0: return  nonperiodic_two_pts_corr_with_ins_ratio_fun(M,A,SL,t);break;
-    case +1: return     periodic_two_pts_corr_with_ins_ratio_fun(M,A,SL,TH,t);break;
+    case -1: return antiperiodic_two_pts_corr_with_ins_ratio_fun(M,DZ2,SL,TH,t);break;
+    case  0: return  nonperiodic_two_pts_corr_with_ins_ratio_fun(M,DZ2,SL,t);break;
+    case +1: return     periodic_two_pts_corr_with_ins_ratio_fun(M,DZ2,SL,TH,t);break;
     default: CRASH("unknown periodicity %d",par);return M;
     }
 }
@@ -86,9 +86,9 @@ class two_pts_corr_with_ins_fun_t
   size_t TH;
   int par;
 public:
-  enum{iM,iA,iSL};
+  enum{iM,iDZ2,iSL};
   two_pts_corr_with_ins_fun_t(size_t TH,int par) : TH(TH),par(par) {}
-  double operator()(const vector<double> &p,double x) {return two_pts_corr_with_ins_ratio_fun(p[iM],p[iA],p[iSL],TH,x,par);}
+  double operator()(const vector<double> &p,double x) {return two_pts_corr_with_ins_ratio_fun(p[iM],p[iDZ2],p[iSL],TH,x,par);}
 };
 
 #endif

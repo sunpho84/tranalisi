@@ -232,7 +232,7 @@ djvec_t read_MASS(const ens_pars_t &ens,size_t iQED_mes,const djvec_t &c_LO,
 //slopes and Z for all mesons and masses
 djvec_t ZP,ZA;
 djvec_t M;
-djvec_t dZA_QED,dZA_MASS;
+djvec_t DZA_QED,DZA_MASS;
 djvec_t SL_PP_QED,SL_PP_MASS;
 djvec_t SL_AP_QED,SL_AP_MASS;
 
@@ -251,8 +251,8 @@ void compute_basic_slopes()
   ZA.resize(nens_QCD_mes);
   M.resize(nens_QCD_mes);
   //
-  dZA_QED.resize(nens_QCD_mes);
-  dZA_MASS.resize(nens_QCD_mes);
+  DZA_QED.resize(nens_QED_mes);
+  DZA_MASS.resize(nens_QED_mes);
   //
   SL_PP_QED.resize(nens_QED_mes);
   SL_PP_MASS.resize(nens_QED_mes);
@@ -300,31 +300,29 @@ void compute_basic_slopes()
 	  jAP_QED[ind_QED]=read_QED(ens,iQED_mes,deltam_cr[iens],jAP_LO[ind_QCD],read_AP,"AP");
 	  
 	  djack_t ZAP,ZPP;
-	  djack_t A_AP_QED,A_PP_QED;
-	  djack_t A_AP_MASS,A_PP_MASS;
-	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],A_AP_QED,SL_AP_QED[ind_QED],jAP_LO[ind_QCD],jAP_QED[ind_QED],TH,tmin,tmax,
+	  djack_t DZ_AP_QED,DZ_PP_QED;
+	  djack_t DZ_AP_MASS,DZ_PP_MASS;
+	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],DZ_AP_QED,SL_AP_QED[ind_QED],jAP_LO[ind_QCD],jAP_QED[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_AP_LO1.xmg",plots_path+"/slope_AP_QED.xmg",-1);
-	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],A_AP_MASS,SL_AP_MASS[ind_QED],jAP_LO[ind_QCD],jAP_MASS[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],DZ_AP_MASS,SL_AP_MASS[ind_QED],jAP_LO[ind_QCD],jAP_MASS[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_AP_LO2.xmg",plots_path+"/slope_AP_MASS.xmg",-1);
 	  //
-	  two_pts_with_ins_ratio_fit(ZPP,M[ind_QCD],A_PP_QED,SL_PP_QED[ind_QED],jPP_LO[ind_QCD],jPP_QED[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZPP,M[ind_QCD],DZ_PP_QED,SL_PP_QED[ind_QED],jPP_LO[ind_QCD],jPP_QED[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_PP_LO1.xmg",plots_path+"/slope_PP_QED.xmg");
-	  two_pts_with_ins_ratio_fit(ZPP,M[ind_QCD],A_PP_MASS,SL_PP_MASS[ind_QED],jPP_LO[ind_QCD],jPP_MASS[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZPP,M[ind_QCD],DZ_PP_MASS,SL_PP_MASS[ind_QED],jPP_LO[ind_QCD],jPP_MASS[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_PP_LO2.xmg",plots_path+"/slope_PP_MASS.xmg");
 	  //
 	  ZP[ind_QCD]=sqrt(ZPP);
 	  ZA[ind_QCD]=ZAP/ZP[ind_QCD];
-	  
-	  djvec_t test=jPP_QED[ind_QED]/jPP_LO[ind_QCD];
-	  for(size_t t=0;t<=TH;t++)
-	    {
-	      size_t T=TH*2;
-	      djack_t sl=SL_PP_QED[ind_QED],m=M[ind_QCD];
-	      djack_t a=exp(-(m*t)),b=exp(-m*(T-t));
-	      djack_t ft=m*(TH-t)*(a-b)/(a+b)-1;
-	      test[t]+=sl/m*ft;
-	    }
-	  test.ave_err().write(plots_path+"/test.xmg");
+	  //
+	  DZA_MASS[ind_QED]=DZ_AP_MASS-DZ_PP_MASS/2;
+	  DZA_QED[ind_QED]=DZ_AP_QED-DZ_PP_QED/2;
+	  cout<<plots_path<<", (Z)A: "<<ZA[ind_QCD].ave_err()<<endl;
+	  cout<<plots_path<<", M_AP: "<<M[ind_QCD].ave_err()<<endl;
+	  cout<<plots_path<<", SL_AP: "<<djack_t(SL_PP_QED[ind_QED]/e2).ave_err()<<endl;
+	  cout<<plots_path<<", SL_PP: "<<djack_t(SL_AP_QED[ind_QED]/e2).ave_err()<<endl;
+	  cout<<plots_path<<", D(Z)A/(Z)A: "<<djack_t(DZA_QED[ind_QED]/e2).ave_err()<<endl;
+	  cout<<plots_path<<", D(Z)A: "<<djack_t(ZA[ind_QCD]*DZA_QED[ind_QED]/e2).ave_err()<<endl;
 	}
       
       for(size_t iquark=0;iquark<4;iquark++)
