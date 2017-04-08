@@ -78,8 +78,8 @@ template <class TV> TV effective_slope(const TV &data,const TV &M,size_t TH,int 
   return out;
 }
 
-//! return the effective slope offset of a whole vector
-template <class TV> TV effective_slope_offset(const TV &data,const TV &M,const TV &SL,size_t TH,int par=1,int dt=1)
+//! return the effective correction to the coupling of a whole vector
+template <class TV> TV effective_squared_coupling_rel_corr(const TV &data,const TV &M,const TV &SL,size_t TH,int par=1,int dt=1)
 {
   //check data size
   if(data.size()==0) CRASH("Empty data vector");
@@ -90,7 +90,7 @@ template <class TV> TV effective_slope_offset(const TV &data,const TV &M,const T
   //initial guess is taken from aperiodic effective mass
   for(size_t t=0;t<data.size()-dt;t++)
     for(size_t i=0;i<data[0].size();i++)
-      out[t][i]=data[t][i]-two_pts_corr_with_ins_ratio_fun(M[t][i],0.0,SL[t][i],TH,t,par);
+      out[t][i]=(data[t][i]-two_pts_corr_with_ins_ratio_fun(M[t][i],0.0,SL[t][i],TH,t,par));
   
   return out;
 }

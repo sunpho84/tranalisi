@@ -122,8 +122,8 @@ struct params_LO_t
 //! parameters of QED corr
 struct params_QED_t
 {
-  double A,Z2,SL,M,a;
-  params_QED_t(double A,double Z2,double SL,double M,double a) : A(A),Z2(Z2),SL(SL),M(M),a(a) {}
+  double DZ2_fr_Z2,Z2,SL,M,a;
+  params_QED_t(double DZ2_fr_Z2,double Z2,double SL,double M,double a) : DZ2_fr_Z2(DZ2_fr_Z2),Z2(Z2),SL(SL),M(M),a(a) {}
   template <class T> params_QED_t(const vector<T> &p,size_t i) : params_QED_t(p[0][i],p[1][i],p[2][i],p[3][i],p[4][i]) {}
 };
 
@@ -176,8 +176,8 @@ template <class TS,class Pars_wr> TS integrate_reco_from(double (*kern_gsl)(doub
 template <class T> T integrate_LO_reco_from(const T &Z2,const T &M,const T &a,size_t im,double from)
 {return integrate_reco_from<T,params_LO_t>(kern_LO_reco_gsl,vector<T>({Z2,M,a}),im,from);}
 //! integrate the QED reconstructed from a given point
-template <class T> T integrate_QED_reco_from(const T &A,const T &Z2,const T &SL,const T &M,const T &a,size_t im,double from)
-{return integrate_reco_from<T,params_QED_t>(kern_QED_reco_gsl,vector<T>({A,Z2,SL,M,a}),im,from);}
+template <class T> T integrate_QED_reco_from(const T &DZ2_fr_Z2,const T &Z2,const T &SL,const T &M,const T &a,size_t im,double from)
+{return integrate_reco_from<T,params_QED_t>(kern_QED_reco_gsl,vector<T>({DZ2_fr_Z2,Z2,SL,M,a}),im,from);}
 
 //! kernel of LO (used only for debug)
 template <class params_t,class T> T kern_reco(double t,double (*kern_reco_gsl)(double,void*),const vector<T> &pars)
@@ -218,8 +218,8 @@ template <class TV,class TS=typename TV::base_type> void compare_num_reco(string
 template <class TV,class TS=typename TV::base_type> void compare_LO_num_reco(string path,const TV &corr,const TS &Z2,const TS &M,const TS &a)
 {compare_num_reco<TV>(path,kern_LO_reco,corr,{Z2,M,a},a);}
 
-template <class TV,class TS=typename TV::base_type> void compare_QED_num_reco(string path,const TV &corr,const TS &A,const TS &Z2,const TS &SL,const TS &M,const TS &a)
-{compare_num_reco<TV>(path,kern_QED_reco,corr,{A,Z2,SL,M,a},a);}
+template <class TV,class TS=typename TV::base_type> void compare_QED_num_reco(string path,const TV &corr,const TS &DZ2_fr_Z2,const TS &Z2,const TS &SL,const TS &M,const TS &a)
+{compare_num_reco<TV>(path,kern_QED_reco,corr,{DZ2_fr_Z2,Z2,SL,M,a},a);}
 
 #undef EXTERN_GM2IB
 #undef INIT_TO

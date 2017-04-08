@@ -615,11 +615,11 @@ int main(int narg,char **arg)
   //fit 2pts
   index_t ind_2pts_fit({{"NFitRanges",nfit_range_variations},{"Ens",nens_used}});
   size_t n2pts_fit_max=ind_2pts_fit.max();
-  djvec_t jZ_V(n2pts_fit_max),jM_V(n2pts_fit_max),jA_V(n2pts_fit_max),jSL_V(n2pts_fit_max);
-  djvec_t jZ_P(n2pts_fit_max),jM_P(n2pts_fit_max),jA_P(n2pts_fit_max),jSL_P(n2pts_fit_max);
+  djvec_t jZ_V(n2pts_fit_max),jM_V(n2pts_fit_max),k_DZ_rel_V(n2pts_fit_max),jSL_V(n2pts_fit_max);
+  djvec_t jZ_P(n2pts_fit_max),jM_P(n2pts_fit_max),k_DZ_rel_P(n2pts_fit_max),jSL_P(n2pts_fit_max);
   
   //read if avail
-  for(auto &obj : {&jZ_P,&jM_P,&jA_P,&jSL_P,&jZ_V,&jM_V,&jA_V,&jSL_V})
+  for(auto &obj : {&jZ_P,&jM_P,&k_DZ_rel_P,&jSL_P,&jZ_V,&jM_V,&k_DZ_rel_V,&jSL_V})
     if(an_mode!=compute_everything) obj->bin_read(results_in);
   
   cout<<" ********************************************* fitting 2pts *******************************************"<<endl;
@@ -637,9 +637,9 @@ int main(int narg,char **arg)
       if(an_mode==compute_everything)
 	{
 	  djack_t jZ2_V,jZ2_P;
-	  two_pts_with_ins_ratio_fit(jZ2_V,jM_V[ind],jA_V[ind],jSL_V[ind],jVV_LO[iens],jVV_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
+	  two_pts_with_ins_ratio_fit(jZ2_V,jM_V[ind],k_DZ_rel_V[ind],jSL_V[ind],jVV_LO[iens],jVV_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
 				     combine("%s/VV_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/VV_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
-	  two_pts_with_ins_ratio_fit(jZ2_P,jM_P[ind],jA_P[ind],jSL_P[ind],jPP_LO[iens],jPP_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
+	  two_pts_with_ins_ratio_fit(jZ2_P,jM_P[ind],k_DZ_rel_P[ind],jSL_P[ind],jPP_LO[iens],jPP_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
 				     combine("%s/PP_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/PP_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
 	  jZ_V[ind]=sqrt(jZ2_V);
 	  jZ_P[ind]=sqrt(jZ2_P);
@@ -650,7 +650,7 @@ int main(int narg,char **arg)
     }
   
   //write if computed
-  for(auto &obj : {&jZ_P,&jM_P,&jA_P,&jSL_P,&jZ_V,&jM_V,&jA_V,&jSL_V})
+  for(auto &obj : {&jZ_P,&jM_P,&k_DZ_rel_P,&jSL_P,&jZ_V,&jM_V,&k_DZ_rel_V,&jSL_V})
     if(an_mode==compute_everything) obj->bin_write(results_out);
   
   //perform the integrations
@@ -682,7 +682,7 @@ int main(int narg,char **arg)
 	    djack_t a=jM_V[i2pts]/M_V_phys[im];
 	    size_t upto=ens.T/2-DT;
 	    djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za);
-	    djack_t c2_QED=integrate_QED_reco_from(jA_V[i2pts],jZ_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
+	    djack_t c2_QED=integrate_QED_reco_from(k_DZ_rel_V[i2pts],jZ_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
 	    A40_QED_data[iA40_L]=c1_QED+c2_QED;
 	    
 	    A40_x[iA40_L]=1.0/ens.L;
@@ -718,7 +718,7 @@ int main(int narg,char **arg)
 	    {
 	      size_t upto=possupto[iint];
 	      djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za);
-	      djack_t c2_QED=integrate_QED_reco_from(jA_V[i2pts],jZ_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
+	      djack_t c2_QED=integrate_QED_reco_from(k_DZ_rel_V[i2pts],jZ_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
 	      djack_t c_QED=c1_QED+c2_QED;
 	      tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_QED.ave_err()<<"\t"<<c2_QED.ave_err()<<"\t"<<c_QED.ave_err()<<endl;
 	    }
@@ -785,7 +785,7 @@ int main(int narg,char **arg)
       prepare_az(input_an_id);
       dbvec_t VV_LO(bi,jVV_LO[iens]),PP_LO(bi,jPP_LO[iens]);
       dbvec_t VV_QED(bi,jVV_QED[iens]),PP_QED(bi,jPP_QED[iens]);
-      dboot_t Z_V(bi,jZ_V[i2pts]),M_V(bi,jM_V[i2pts]),A_V(bi,jA_V[i2pts]),SL_V(bi,jSL_V[i2pts]);
+      dboot_t Z_V(bi,jZ_V[i2pts]),M_V(bi,jM_V[i2pts]),A_V(bi,k_DZ_rel_V[i2pts]),SL_V(bi,jSL_V[i2pts]);
       
       if(an_mode==compute_everything)
 	{
