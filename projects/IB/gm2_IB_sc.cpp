@@ -9,8 +9,22 @@ const int DT=4; //!< number of points to eliminate from corr
 enum an_mode_t{compute_everything,read_integrals};
 an_mode_t an_mode=compute_everything;
 
-template <class Tpars> Tpars FSE_LO(const Tpars &C,const Tpars &L3dep,const Tpars &xi,const Tpars &ML)
-{return C*L3dep*xi*exp(-ML)/(ML);}
+bool is_A40(double aml,size_t ib)
+{return fabs(aml-0.0040)<0.001 and ib==0;}
+
+template <class T> bool is_A40(const T &ens)
+{return is_A40(ens.aml,ens.ib);}
+
+template <class Tpars> Tpars FSE_LO(const Tpars &C,const Tpars &L3dep,const Tpars &xi,const Tpars &M,size_t L,size_t FSE_case)
+{
+  switch(FSE_case)
+    {
+    case 0: return C*0.0; break;
+    case 1: return C*L3dep*xi*exp(-M*L)/(M*L); break;
+    case 2: return C*L3dep/L/L; break;
+    default: CRASH("Unknown case");return C;break;
+    }
+}
 
 //return the tmin for the fit
 size_t tmin_fit(size_t iens,size_t ifit_range)
@@ -35,8 +49,8 @@ void write_ens_header(size_t iens)
 template <class Tpars,class Tm,class Ta>
 Tpars cont_chir_ansatz_LO(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tm &aml,const Ta &a,const Tpars &adep,const Tpars &adep_ml,double L,const Tpars &L3dep,const size_t &isyst)
 {
-  Tpars xi=xi_fun(B0,aml,f0),M=M_fun(B0,aml),ML=M*L;
-  return C*(1+Kpi*xi+K2pi*xi*xi+a*a*(adep+xi*adep_ml))+FSE_LO(C,L3dep,xi,ML);
+  Tpars xi=xi_fun(B0,aml,f0),M=M_fun(B0,aml);
+  return C*(1+Kpi*xi+K2pi*xi*xi+a*a*(adep+xi*adep_ml))+FSE_LO(C,L3dep,xi,M,L,case_of<c_FSE>(isyst));
 }
 
 //! perform the fit to the continuum limit of LO
@@ -54,7 +68,7 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
   pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
   pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
   
-  if(case_of<c_FSE>(isyst)%2==0) boot_fit.fix_par_to(pars.iL3dep,0.0);
+  if(case_of<c_FSE>(isyst)==0) boot_fit.fix_par_to(pars.iL3dep,0.0);
   boot_fit.fix_par_to(pars.iadep_ml,0.0);
   
   boot_fit.fix_par_to(pars.iK2Pi,0.0);
@@ -77,12 +91,13 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
 		     pars.adep.ave(),pars.adep_ml.ave(),inf_vol,pars.L3dep.ave(),isyst);},
 		bind(cont_chir_ansatz_LO<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,a_cont,
 		     pars.adep,pars.adep_ml,inf_vol,pars.L3dep,isyst),
-		[&ext_data,&pars,&B0,&f0]
+		[&ext_data,&pars,&B0,&f0,isyst]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{
 		  dboot_t aml=ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib];
-		  dboot_t xi=xi_fun(pars.fit_B0,aml,pars.fit_f0),ML=M_fun(pars.fit_B0,aml)*ext_data[idata].L;
-		  return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_LO(pars.C,pars.L3dep,xi,ML));},
+		  dboot_t xi=xi_fun(pars.fit_B0,aml,pars.fit_f0),M=M_fun(pars.fit_B0,aml);
+		  size_t L=ext_data[idata].L;
+		  return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_LO(pars.C,pars.L3dep,xi,M,L,case_of<c_FSE>(isyst)));},
 		ml_phys,phys_res,yaxis_title,beta_list,ind_syst.descr(isyst));
   
   return phys_res;
@@ -149,7 +164,12 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
   pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
   pars.iL4dep=boot_fit.add_fit_par(pars.L4dep,"powL",powL_guess.ave(),powL_guess.err());
-  boot_fit.fix_par_to(pars.iL4dep,-2.0);
+  switch(case_of<c_FSE>(isyst))
+    {
+    case 0:boot_fit.fix_par_to(pars.iL4dep,0);break;
+    case 1:boot_fit.fix_par_to(pars.iL4dep,-2);break;
+    case 2:boot_fit.fix_par_to(pars.iL4dep,-1);break;
+    }
   
   if(case_of<c_FSE>(isyst)==0) boot_fit.fix_par_to(pars.iL3dep,0.0);
   boot_fit.fix_par_to(pars.iK2Pi,0.0);
@@ -163,7 +183,7 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   dboot_t phys_res=cont_chir_ansatz_QED(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,ml_phys,a_cont,pars.adep,pars.adep_ml,inf_vol,pars.L3dep,pars.L4dep);
   cout<<"result: "<<phys_res.ave_err()<<endl;
   
-  plot_chir_fit(path,ext_data,pars,
+  plot_chir_fit(combine(path.c_str(),"cont_chir_fit"),ext_data,pars,
 		[&pars]
 		(double x,size_t ib)
 		{return cont_chir_ansatz_QED<double,double,double>
@@ -175,6 +195,24 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_QED(pars.C,pars.L3dep,ext_data[idata].L,pars.L4dep));},
 		ml_phys,phys_res,yaxis_title,beta_list,ind_syst.descr(isyst));
+  
+  grace_file_t out_FSE(combine(path.c_str(),"FSE"));
+  out_FSE.set_color_scheme({grace::RED,grace::BLUE});
+  out_FSE.set_symbol_scheme({grace::SQUARE,grace::CIRCLE});
+  double mlA40=dboot_t(0.0040/pars.fit_a[0]/pars.fit_z[0]).ave(),aA=pars.fit_a[0].ave();
+  for(size_t without_with_fse=0;without_with_fse<2;without_with_fse++)
+    {
+      out_FSE.write_polygon([&pars,mlA40,aA,without_with_fse](double x)
+    {return cont_chir_ansatz_QED(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,mlA40,aA,pars.adep,pars.adep_ml,1.0/x,pars.L3dep*
+				 without_with_fse,pars.L4dep);},1e-5,1.0/12);
+      out_FSE.new_data_set();
+      
+      out_FSE.set_settype(grace::XYDY);
+      for(size_t iens=0;iens<nens_used;iens++)
+	if(is_A40(ext_data[iens]))
+	  out_FSE<<1.0/ext_data[iens].L<<" "<<dboot_t(ext_data[iens].wfse-without_with_fse*FSE_QED(pars.C,pars.L3dep,ext_data[iens].L,pars.L4dep)).ave_err()<<endl;
+      out_FSE.new_data_set();
+    }
   
   return phys_res;
 }
@@ -615,11 +653,11 @@ int main(int narg,char **arg)
   //fit 2pts
   index_t ind_2pts_fit({{"NFitRanges",nfit_range_variations},{"Ens",nens_used}});
   size_t n2pts_fit_max=ind_2pts_fit.max();
-  djvec_t jZ_V(n2pts_fit_max),jM_V(n2pts_fit_max),k_DZ_rel_V(n2pts_fit_max),jSL_V(n2pts_fit_max);
-  djvec_t jZ_P(n2pts_fit_max),jM_P(n2pts_fit_max),k_DZ_rel_P(n2pts_fit_max),jSL_P(n2pts_fit_max);
+  djvec_t jZ2_V(n2pts_fit_max),jM_V(n2pts_fit_max),k_DZ2_rel_V(n2pts_fit_max),jSL_V(n2pts_fit_max);
+  djvec_t jZ2_P(n2pts_fit_max),jM_P(n2pts_fit_max),k_DZ2_rel_P(n2pts_fit_max),jSL_P(n2pts_fit_max);
   
   //read if avail
-  for(auto &obj : {&jZ_P,&jM_P,&k_DZ_rel_P,&jSL_P,&jZ_V,&jM_V,&k_DZ_rel_V,&jSL_V})
+  for(auto &obj : {&jZ2_P,&jM_P,&k_DZ2_rel_P,&jSL_P,&jZ2_V,&jM_V,&k_DZ2_rel_V,&jSL_V})
     if(an_mode!=compute_everything) obj->bin_read(results_in);
   
   cout<<" ********************************************* fitting 2pts *******************************************"<<endl;
@@ -636,13 +674,17 @@ int main(int narg,char **arg)
       
       if(an_mode==compute_everything)
 	{
-	  djack_t jZ2_V,jZ2_P;
-	  two_pts_with_ins_ratio_fit(jZ2_V,jM_V[ind],k_DZ_rel_V[ind],jSL_V[ind],jVV_LO[iens],jVV_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
+	  grace_file_t out(combine("%s/VV_QED_an%zu_jacks.xmg",ens_qpath.c_str(),ifit_range));
+	  for(size_t ijack=0;ijack<njacks;ijack++)
+	    {
+	      for(size_t t=0;t<jVV_QED[iens].size();t++) out<<t<<" "<<jVV_QED[iens][t][njacks]*njacks-jVV_QED[iens][t][ijack]*(njacks-1)<<endl;
+	      out<<endl;
+	    }
+	  
+	  two_pts_with_ins_ratio_fit(jZ2_V[ind],jM_V[ind],k_DZ2_rel_V[ind],jSL_V[ind],jVV_LO[iens],jVV_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
 				     combine("%s/VV_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/VV_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
-	  two_pts_with_ins_ratio_fit(jZ2_P,jM_P[ind],k_DZ_rel_P[ind],jSL_P[ind],jPP_LO[iens],jPP_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
+	  two_pts_with_ins_ratio_fit(jZ2_P[ind],jM_P[ind],k_DZ2_rel_P[ind],jSL_P[ind],jPP_LO[iens],jPP_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],
 				     combine("%s/PP_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/PP_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
-	  jZ_V[ind]=sqrt(jZ2_V);
-	  jZ_P[ind]=sqrt(jZ2_P);
 	}
       
       cout<<"M_V: "<<jM_V[ind].ave_err()<<endl;
@@ -650,7 +692,7 @@ int main(int narg,char **arg)
     }
   
   //write if computed
-  for(auto &obj : {&jZ_P,&jM_P,&k_DZ_rel_P,&jSL_P,&jZ_V,&jM_V,&k_DZ_rel_V,&jSL_V})
+  for(auto &obj : {&jZ2_P,&jM_P,&k_DZ2_rel_P,&jSL_P,&jZ2_V,&jM_V,&k_DZ2_rel_V,&jSL_V})
     if(an_mode==compute_everything) obj->bin_write(results_out);
   
   //perform the integrations
@@ -668,22 +710,33 @@ int main(int narg,char **arg)
     if(an_mode!=compute_everything) obj->bin_read(results_in);
   
   {
+    size_t n40=0;
+    for(auto &ens : ens_data)
+      if(is_A40(ens)) n40++;
+    
     djvec_t A40_QED_data;
-    A40_QED_data.resize(3);
-    double A40_x[3];
+    djvec_t A40_LO_data;
+    A40_QED_data.resize(n40);
+    A40_LO_data.resize(n40);
+    double A40_x[n40];
     size_t iA40_L=0;
     for(size_t iens=0;iens<nens_used;iens++)
       {
 	ens_data_t &ens=ens_data[iens];
-	if(fabs(ens.aml-0.0040)<0.001 and ens.ib==0)
+	if(is_A40(ens))
 	  {
 	    size_t i2pts=ind_2pts_fit({0,iens});
 	    double Za=Za_ae[0][0].ave();
-	    djack_t a=jM_V[i2pts]/M_V_phys[im];
+	    djack_t a;a=djack_t(jM_V[i2pts]/M_V_phys[im]).ave();
+	    //djack_t a;
+	    //a=1/lat_par[0].ainv[ens.ib].ave();
 	    size_t upto=ens.T/2-DT;
 	    djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za);
-	    djack_t c2_QED=integrate_QED_reco_from(k_DZ_rel_V[i2pts],jZ_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
+	    djack_t c2_QED=integrate_QED_reco_from(k_DZ2_rel_V[i2pts],jZ2_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
 	    A40_QED_data[iA40_L]=c1_QED+c2_QED;
+	    djack_t c1_LO=integrate_corr_times_kern_up_to(jVV_LO[iens],ens.T,a,im,upto)*sqr(Za);
+	    djack_t c2_LO=integrate_LO_reco_from(jZ2_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
+	    A40_LO_data[iA40_L]=c1_LO+c2_LO;
 	    
 	    A40_x[iA40_L]=1.0/ens.L;
 	    
@@ -709,7 +762,7 @@ int main(int narg,char **arg)
 	    {
 	      size_t upto=possupto[iint];
 	      djack_t c1_LO=integrate_corr_times_kern_up_to(jVV_LO[iens],ens.T,a,im,upto)*sqr(Za);
-	      djack_t c2_LO=integrate_LO_reco_from(jZ_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
+	      djack_t c2_LO=integrate_LO_reco_from(jZ2_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
 	      djack_t c_LO=c1_LO+c2_LO;
 	      tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_LO.ave_err()<<"\t"<<c2_LO.ave_err()<<"\t"<<c_LO.ave_err()<<endl;
 	    }
@@ -718,7 +771,7 @@ int main(int narg,char **arg)
 	    {
 	      size_t upto=possupto[iint];
 	      djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za);
-	      djack_t c2_QED=integrate_QED_reco_from(k_DZ_rel_V[i2pts],jZ_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
+	      djack_t c2_QED=integrate_QED_reco_from(k_DZ2_rel_V[i2pts],jZ2_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
 	      djack_t c_QED=c1_QED+c2_QED;
 	      tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_QED.ave_err()<<"\t"<<c2_QED.ave_err()<<"\t"<<c_QED.ave_err()<<endl;
 	    }
@@ -726,7 +779,7 @@ int main(int narg,char **arg)
 	}
       }
     
-    djvec_t C_QED(3),C_dMV(3);
+    djvec_t C_QED(n40),C_dMV(n40);
     {
       // djvec_t &C=C_QED;
       double Xa=1/A40_x[0],Xb=1/A40_x[1],Xc=1/A40_x[2];
@@ -764,7 +817,17 @@ int main(int narg,char **arg)
     fit_file.new_data_set();
     fit_file.set_settype(grace::XYDY);
     fit_file.new_data_set();
-    for(size_t iL=0;iL<3;iL++) fit_file<<A40_x[iL]<<" "<<A40_QED_data[iL].ave_err()<<endl;
+    for(size_t iL=0;iL<n40;iL++) fit_file<<A40_x[iL]<<" "<<A40_QED_data[iL].ave_err()<<endl;
+    
+    grace_file_t fit_file_LO(combine("%s/plots/A40_LO.xmg",qname[im].c_str()));
+    fit_file_LO.set_xaxis_label("1/L");
+    fit_file_LO.new_data_set();
+    for(size_t iL=0;iL<n40;iL++) fit_file_LO<<A40_x[iL]<<" "<<A40_LO_data[iL].ave_err()<<endl;
+    
+    grace_file_t fit_file_RAT(combine("%s/plots/A40_RAT.xmg",qname[im].c_str()));
+    fit_file_RAT.set_xaxis_label("1/L");
+    fit_file_RAT.new_data_set();
+    for(size_t iL=0;iL<n40;iL++) fit_file_RAT<<A40_x[iL]<<" "<<djack_t(A40_QED_data[iL]/A40_LO_data[iL]).ave_err()<<endl;
   }
   
   const double rat_perturb=-0.01835*sqr(eq[im]);
@@ -785,7 +848,7 @@ int main(int narg,char **arg)
       prepare_az(input_an_id);
       dbvec_t VV_LO(bi,jVV_LO[iens]),PP_LO(bi,jPP_LO[iens]);
       dbvec_t VV_QED(bi,jVV_QED[iens]),PP_QED(bi,jPP_QED[iens]);
-      dboot_t Z_V(bi,jZ_V[i2pts]),M_V(bi,jM_V[i2pts]),A_V(bi,k_DZ_rel_V[i2pts]),SL_V(bi,jSL_V[i2pts]);
+      dboot_t Z2_V(bi,jZ2_V[i2pts]),M_V(bi,jM_V[i2pts]),A_V(bi,k_DZ2_rel_V[i2pts]),SL_V(bi,jSL_V[i2pts]);
       
       if(an_mode==compute_everything)
 	{
@@ -802,16 +865,16 @@ int main(int narg,char **arg)
 	  size_t upto=vector<size_t>({tmin+2,(tmin+tmax)/2,tmax-2,TH-DT})[iint];
 	  
 	  LO_correl[ind]=integrate_corr_times_kern_up_to(VV_LO,ens.T,resc_a[ind],im,upto)*sqr(Za[ib]);
-	  LO_remaind[ind]=integrate_LO_reco_from(Z_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib]);
+	  LO_remaind[ind]=integrate_LO_reco_from(Z2_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib]);
 	  
 	  QED_correl[ind]=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a[ind],im,upto)*sqr(Za[ib]);
-	  QED_remaind[ind]=integrate_QED_reco_from(A_V,Z_V,SL_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib]);
+	  QED_remaind[ind]=integrate_QED_reco_from(A_V,Z2_V,SL_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib]);
 	  
 	  index_t ind_rest({{"Input",ninput_an},{"Cont",ncont_extrap},{"FitRange",nfit_range_variations}});
 	  size_t irest=ind_rest({input_an_id,icont_extrap,ifit_range});
 	  
-	  compare_LO_num_reco(combine("%s/kern_LO_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_LO,Z_V,M_V,resc_a[iens]);
-	  compare_QED_num_reco(combine("%s/kern_QED_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_QED,A_V,Z_V,SL_V,M_V,resc_a[iens]);
+	  compare_LO_num_reco(combine("%s/kern_LO_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_LO,Z2_V,M_V,resc_a[iens]);
+	  compare_QED_num_reco(combine("%s/kern_QED_num_reco_%zu.xmg",ens_qpath.c_str(),irest),VV_QED,A_V,Z2_V,SL_V,M_V,resc_a[iens]);
 	}
       
       LO[ind]=LO_correl[ind]+LO_remaind[ind];
@@ -856,8 +919,10 @@ int main(int narg,char **arg)
       
       if(case_of<c_FSE>(isyst))
 	{
-	  grace::default_color_scheme={grace::RED,grace::RED,grace::RED, grace::BLUE,grace::BLUE, grace::GREEN4,grace::VIOLET};
-	  grace::default_symbol_scheme={grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND};
+	  grace::default_color_scheme={grace::RED,grace::RED,grace::RED,grace::RED, grace::BLUE,grace::BLUE, grace::GREEN4,grace::VIOLET};
+	  grace::default_symbol_scheme={grace::STAR,grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND};
+	  // grace::default_color_scheme={grace::RED,grace::RED,grace::RED, grace::BLUE,grace::BLUE, grace::GREEN4,grace::VIOLET};
+	  // grace::default_symbol_scheme={grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND};
 	}
       else
 	{
@@ -882,7 +947,7 @@ int main(int narg,char **arg)
 	  dboot_t dum;
 	  dum=0.0;
 	  
-	  if(case_of<c_FSE>(isyst)%2!=0 or ens_data[iens].use_for_L)
+	  if(case_of<c_FSE>(isyst)!=0 or ens_data[iens].use_for_L)
 	    data_LO.push_back(cont_chir_fit_data_t(ens_data[iens].aml,ens_data[iens].aml,dum,ens_data[iens].ib,ens_data[iens].L,LO[iintegr],LO[iintegr]));
 	  if(case_of<c_FSE>(isyst) or ens_data[iens].use_for_L)
 	    {
@@ -900,7 +965,7 @@ int main(int narg,char **arg)
 	}
       
       cLO[isyst]=cont_chir_fit_LO(alist,zlist,f0,B0,data_LO,lat_par[input_an_id].ml,combine("%s/plots/cont_chir_LO_an%zu.xmg",qname[im].c_str(),isyst),isyst,false,beta_list);
-      cQED[isyst]=cont_chir_fit_QED(alist,zlist,f0,B0,data_QED,lat_par[input_an_id].ml,combine("%s/plots/cont_chir_QED_an%zu.xmg",qname[im].c_str(),isyst),isyst,false,beta_list);
+      cQED[isyst]=cont_chir_fit_QED(alist,zlist,f0,B0,data_QED,lat_par[input_an_id].ml,combine("%s/plots/%s_QED_an%zu.xmg",qname[im].c_str(),"%s",isyst),isyst,false,beta_list);
       cRAT[isyst]=cont_chir_fit_RAT(alist,zlist,f0,B0,data_RAT,lat_par[input_an_id].ml,combine("%s/plots/cont_chir_RAT_an%zu.xmg",qname[im].c_str(),isyst),isyst,false,beta_list);
       
       // c_m_rat[iai]=cont_chir_fit_m_rat(alist,zlist,f0,B0,data_m_rat,lat_par[input_an_id].ml,combine("%s/plots/cont_chir_m_rat_flag%zu_an%zu.xmg",qname[im].c_str(),isyst,input_an_id),isyst,false,beta_list);

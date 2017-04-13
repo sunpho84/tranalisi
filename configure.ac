@@ -187,6 +187,7 @@ AC_CONFIG_FILES(Makefile
 	include/Makefile
 	lib/Makefile
 	projects/Makefile
+	projects/FPIEM/Makefile
 	projects/IB/Makefile
 	tools/Makefile)
 AC_OUTPUT

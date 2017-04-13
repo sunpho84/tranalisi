@@ -3,6 +3,7 @@
 #endif
 
 #include <tranalisi.hpp>
+#include <mel_FSE.hpp>
 #include <common.hpp>
 
 ////////////////////////////////////////////////// quarks /////////////////////////////////////////////////
@@ -209,7 +210,7 @@ djvec_t read_QED(const ens_pars_t &ens,size_t iQED_mes,const djack_t &deltam_cr,
   djvec_t(c_0P2/c_LO).ave_err().write(combine("%s/%s_0P2.xmg",ens_qpath.c_str(),name));
   djvec_t d=djack_t(-deltam_cr)*(c_0P1+c_0P2); //minus coming from slopes
   
-  return djvec_t(c+d)*e2;
+  return c+d;
 }
 
 //! read MASS corrections
@@ -319,10 +320,10 @@ void compute_basic_slopes()
 	  DZA_QED_rel[ind_QED]=DZ_AP_QED_rel-DZ_PP_QED_rel/2;
 	  cout<<plots_path<<", (Z)A: "<<ZA[ind_QCD].ave_err()<<endl;
 	  cout<<plots_path<<", M_AP: "<<M[ind_QCD].ave_err()<<endl;
-	  cout<<plots_path<<", SL_AP: "<<djack_t(SL_PP_QED[ind_QED]/e2).ave_err()<<endl;
-	  cout<<plots_path<<", SL_PP: "<<djack_t(SL_AP_QED[ind_QED]/e2).ave_err()<<endl;
-	  cout<<plots_path<<", D(Z)A/(Z)A: "<<djack_t(DZA_QED_rel[ind_QED]/e2).ave_err()<<endl;
-	  cout<<plots_path<<", D(Z)A: "<<djack_t(DZA_QED_rel[ind_QED]*ZA[ind_QCD]/e2).ave_err()<<endl;
+	  cout<<plots_path<<", SL_AP: "<<djack_t(SL_PP_QED[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", SL_PP: "<<djack_t(SL_AP_QED[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", D(Z)A/(Z)A: "<<djack_t(DZA_QED_rel[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", D(Z)A: "<<djack_t(DZA_QED_rel[ind_QED]*ZA[ind_QCD]).ave_err()<<endl;
 	}
       
       for(size_t iquark=0;iquark<4;iquark++)
@@ -458,7 +459,7 @@ void compute_adml_bare()
 	  
 	  dboot_t QED_dM2K;
 	  QED_dM2K=dboot_t(bi,SL_PP_QED[ind_ens_Kplus]-SL_PP_QED[ind_ens_K0]);
-	  QED_dM2K*=2*dboot_t(bi,M[ind_ens_K]);
+	  QED_dM2K*=e2*2*dboot_t(bi,M[ind_ens_K]);
 	  QED_dM2K-=dboot_t(bi,FVE_M2(M[ind_ens_K],ens.L));
 	  QED_dM2K/=sqr(a);
 	  
@@ -519,7 +520,7 @@ djvec_t load_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,/* const
   
   size_t iQED_mes=iQED_mes_of_proc[iproc];
   size_t irev=QED_mes_pars[iQED_mes].irev;
-
+  
   size_t n=0;
   //for(size_t irev=0;irev<nrev;irev++)
     for(size_t r2=0;r2<nr;r2++)
@@ -643,6 +644,16 @@ void load_all_hl()
     }
 }
 
+// void fse(double mlep,const dboot_t &MPS)
+// {
+//   double MW=80.385;
+//   double pi2=M_PI*M_PI;
+//   dboot_t rl=mlep/MPS,rl2=rl*rl;
+//   dboot_t bIR=1/(8*pi2)*(1+rl2)/(1-rl2)*log(rl2);
+//   dboot_t b0=1/(16*pi2)*(-log(MW/MPS)+37/12.0+log(rl2)*(2*(1-3*rl2)+(1+rl2)*log(rl2))/(2*(1+rl2))+(1+rl2)/(1-rl2)*log(rl2)*(gammaeul-log(4*M_PI))+2*(1+rl2)*(k31+k32));
+  
+// }
+
 //! compute the correction to the process
 void compute_corr(size_t iproc)
 {
@@ -658,13 +669,16 @@ void compute_corr(size_t iproc)
 	  bi=jack_index[input_an_id][ens.iult];
 	  
 	  dbvec_t LO=Zv[ib]*dbvec_t(bi,jLO_A_bare[ind]);
-	  dbvec_t QED=-dbvec_t(bi,jQED_A_bare[ind])*Zv[ib]+dbvec_t(bi,jQED_V_bare[ind])*Za[ib]; //minus as before
+	  dbvec_t QED=-dbvec_t(bi,jQED_A_bare[ind])*Zv[ib]+dbvec_t(bi,jQED_V_bare[ind])*Za[ib]; //minus as explained before
 	  LO.ave_err().write(combine("%s/plots_hl/LO_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  QED.ave_err().write(combine("%s/plots_hl/QED_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  
-	  dbvec_t rat=QED/LO;
-	  rat[rat.size()-1]=rat[0]=0.0;
-	  rat.ave_err().write(combine("%s/plots_hl/QED_LO_ratio_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
+	  dbvec_t rat_ext=QED/LO;
+	  rat_ext[rat_ext.size()-1]=rat_ext[0]=0.0; //set to zero the contact term
+	  rat_ext.ave_err().write(combine("%s/plots_hl/QED_LO_ratio_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
+	  
+	  //DZA_QED_rel[ind_QED];
+	  
 	}
     }
 }
@@ -672,6 +686,12 @@ void compute_corr(size_t iproc)
 int main(int narg,char **arg)
 {
   int start=time(0);
+
+  cout.precision(16);
+  cout<<zeta(0.27138338825)<<endl;
+  cout<<endl;
+  cout<<zeta(1e-100)<<endl;
+  exit(0);
   
   initialize(narg,arg);
   

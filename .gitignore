@@ -31,3 +31,4 @@ build*
 bin
 default
 /include/git_hash.hpp
+projects/IB/numerics

@@ -14,7 +14,7 @@ bin_PROGRAMS= \
 
 __top_builddir__bin_manette_SOURCES=manette.cpp
 __top_builddir__bin_test_antonino_SOURCES=test_antonino.cpp
-__top_builddir__bin_mel_SOURCES=mel.cpp common.cpp
+__top_builddir__bin_mel_SOURCES=mel.cpp mel_FSE.cpp common.cpp
 __top_builddir__bin_manette2_SOURCES=manette2.cpp
 __top_builddir__bin_Kl2_IB_SOURCES=Kl2_IB.cpp
 __top_builddir__bin_Kl2_IB_glb_SOURCES=common.cpp Kl2_IB_glb.cpp Kl2_IB_fit.cpp
