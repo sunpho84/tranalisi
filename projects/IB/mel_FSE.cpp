@@ -192,11 +192,10 @@ vector<double> zeta(double betal,double ustar,double eps)
 	   {
 	     double kbeta2=sqr(rangle*betal/(2*M_PI));
 	     long double numlog=nsqu*(kbeta2-1)+log(sqrt(M_PI)*gsl_sf_gamma_inc_P(1.5,nsqu*kbeta2)/2);
-	     return 2*(gsl_sf_gamma_inc(1.5,nsqu)-(double)expl(numlog)/sqrt(kbeta2))/(dncube*(1-kbeta2)*sqrt(M_PI));
+	     return 2*(gsl_sf_gamma_inc(1.5,nsqu)-((betal>1e-16)?((double)expl(numlog)/sqrt(kbeta2)):0))/(dncube*(1-kbeta2)*sqrt(M_PI));
 	   }
       },ustar,betal);},5);
-  
-  
+    
   map<pair<double,double>,double> lktC;
   double tC=until_convergence([&lktC,ustar,betal](int nmax){
     return iter_on_n3(nmax,[&lktC](double nsq,double rangle,double ustar,double betal){
