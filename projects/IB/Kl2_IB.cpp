@@ -95,7 +95,6 @@ const size_t nqmass=3; //< number of quark mass
 const size_t nr=2; //< number of r
 const index_t ind_2pts({{"NMass",nqmass},{"NMass",nqmass},{"Nr",nr},{"RI",2}});
 
-vector<size_t> iQCD_mes_of_proc ({0,1,2,2,3,3}); //< index of the QCD meson corresponding to a given process
 vector<size_t> iQED_mes_of_proc ({0,1,3,3,5,5}); //< index of the QED meson corresponding to a given process
 vector<size_t> imlep_of_proc({0,0,0,1,0,1}); //< index of the lepton corresponding to a given process
 
@@ -579,7 +578,7 @@ djvec_t hl_corr_subtract_around_world(const djvec_t &in,const djack_t &M)
 valarray<djvec_t> load_and_correct_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,/*const int *rev_par,*/size_t iens,const string &name)
 {
   ens_pars_t &ens=ens_pars[iens];
-  size_t iQCD_mes=iQCD_mes_of_proc[iproc];
+  size_t iQCD_mes=QED_mes_pars[iQED_mes_of_proc[iproc]].iQCD;
   const djack_t M0=M[ind_ens_QCD_mes({iens,iQCD_mes})];
   djack_t mismatch=M0-ens.MMes[iQCD_mes];
   
