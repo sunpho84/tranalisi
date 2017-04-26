@@ -431,15 +431,20 @@ public:
   {write_constant_band(xmin,xmax,c,get_col_and_increment());}
   
   //write a vector of data
-  void write_vec_ave_err(const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
+  void write_vec_ave_err(const vector<double> &x,const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
   {
     new_data_set(col,sym);
     for(size_t i=0;i<data.size();i++)
       if(!std::isnan(data[i].err()))
-	(*this)<<i<<" "<<data[i]<<endl;
+	(*this)<<x[i]<<" "<<data[i]<<endl;
   }
+  void write_vec_ave_err(const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
+  {write_vec_ave_err(vector_up_to<double>(data.size()),data,col,sym);}
+    
   void write_vec_ave_err(const vec_ave_err_t &data)
   {write_vec_ave_err(data,get_col_and_increment(),get_symbol_and_increment());}
+  void write_vec_ave_err(const vector<double> &x,const vec_ave_err_t &data)
+  {write_vec_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
   
   //write a single data
   void write_ave_err(const double x,const ave_err_t &data,grace::color_t col,grace::symbol_t sym)

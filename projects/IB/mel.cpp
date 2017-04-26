@@ -3,6 +3,7 @@
 #endif
 
 #include <tranalisi.hpp>
+#include <mel_FSE.hpp>
 #include <common.hpp>
 
 ////////////////////////////////////////////////// quarks /////////////////////////////////////////////////
@@ -209,7 +210,7 @@ djvec_t read_QED(const ens_pars_t &ens,size_t iQED_mes,const djack_t &deltam_cr,
   djvec_t(c_0P2/c_LO).ave_err().write(combine("%s/%s_0P2.xmg",ens_qpath.c_str(),name));
   djvec_t d=djack_t(-deltam_cr)*(c_0P1+c_0P2); //minus coming from slopes
   
-  return djvec_t(c+d)*e2;
+  return c+d;
 }
 
 //! read MASS corrections
@@ -232,7 +233,7 @@ djvec_t read_MASS(const ens_pars_t &ens,size_t iQED_mes,const djvec_t &c_LO,
 //slopes and Z for all mesons and masses
 djvec_t ZP,ZA;
 djvec_t M;
-djvec_t dZA_QED,dZA_MASS;
+djvec_t DZA_QED_rel,DZA_MASS_rel;
 djvec_t SL_PP_QED,SL_PP_MASS;
 djvec_t SL_AP_QED,SL_AP_MASS;
 
@@ -251,8 +252,8 @@ void compute_basic_slopes()
   ZA.resize(nens_QCD_mes);
   M.resize(nens_QCD_mes);
   //
-  dZA_QED.resize(nens_QCD_mes);
-  dZA_MASS.resize(nens_QCD_mes);
+  DZA_QED_rel.resize(nens_QED_mes);
+  DZA_MASS_rel.resize(nens_QED_mes);
   //
   SL_PP_QED.resize(nens_QED_mes);
   SL_PP_MASS.resize(nens_QED_mes);
@@ -300,31 +301,29 @@ void compute_basic_slopes()
 	  jAP_QED[ind_QED]=read_QED(ens,iQED_mes,deltam_cr[iens],jAP_LO[ind_QCD],read_AP,"AP");
 	  
 	  djack_t ZAP,ZPP;
-	  djack_t A_AP_QED,A_PP_QED;
-	  djack_t A_AP_MASS,A_PP_MASS;
-	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],A_AP_QED,SL_AP_QED[ind_QED],jAP_LO[ind_QCD],jAP_QED[ind_QED],TH,tmin,tmax,
+	  djack_t DZ_AP_QED_rel,DZ_PP_QED_rel;
+	  djack_t DZ_AP_MASS_rel,DZ_PP_MASS_rel;
+	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],DZ_AP_QED_rel,SL_AP_QED[ind_QED],jAP_LO[ind_QCD],jAP_QED[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_AP_LO1.xmg",plots_path+"/slope_AP_QED.xmg",-1);
-	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],A_AP_MASS,SL_AP_MASS[ind_QED],jAP_LO[ind_QCD],jAP_MASS[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],DZ_AP_MASS_rel,SL_AP_MASS[ind_QED],jAP_LO[ind_QCD],jAP_MASS[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_AP_LO2.xmg",plots_path+"/slope_AP_MASS.xmg",-1);
 	  //
-	  two_pts_with_ins_ratio_fit(ZPP,M[ind_QCD],A_PP_QED,SL_PP_QED[ind_QED],jPP_LO[ind_QCD],jPP_QED[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZPP,M[ind_QCD],DZ_PP_QED_rel,SL_PP_QED[ind_QED],jPP_LO[ind_QCD],jPP_QED[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_PP_LO1.xmg",plots_path+"/slope_PP_QED.xmg");
-	  two_pts_with_ins_ratio_fit(ZPP,M[ind_QCD],A_PP_MASS,SL_PP_MASS[ind_QED],jPP_LO[ind_QCD],jPP_MASS[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZPP,M[ind_QCD],DZ_PP_MASS_rel,SL_PP_MASS[ind_QED],jPP_LO[ind_QCD],jPP_MASS[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_PP_LO2.xmg",plots_path+"/slope_PP_MASS.xmg");
 	  //
 	  ZP[ind_QCD]=sqrt(ZPP);
 	  ZA[ind_QCD]=ZAP/ZP[ind_QCD];
-	  
-	  djvec_t test=jPP_QED[ind_QED]/jPP_LO[ind_QCD];
-	  for(size_t t=0;t<=TH;t++)
-	    {
-	      size_t T=TH*2;
-	      djack_t sl=SL_PP_QED[ind_QED],m=M[ind_QCD];
-	      djack_t a=exp(-(m*t)),b=exp(-m*(T-t));
-	      djack_t ft=m*(TH-t)*(a-b)/(a+b)-1;
-	      test[t]+=sl/m*ft;
-	    }
-	  test.ave_err().write(plots_path+"/test.xmg");
+	  //
+	  DZA_MASS_rel[ind_QED]=DZ_AP_MASS_rel-DZ_PP_MASS_rel/2;
+	  DZA_QED_rel[ind_QED]=DZ_AP_QED_rel-DZ_PP_QED_rel/2;
+	  cout<<plots_path<<", (Z)A: "<<ZA[ind_QCD].ave_err()<<endl;
+	  cout<<plots_path<<", M_AP: "<<M[ind_QCD].ave_err()<<endl;
+	  cout<<plots_path<<", SL_AP: "<<djack_t(SL_PP_QED[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", SL_PP: "<<djack_t(SL_AP_QED[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", D(Z)A/(Z)A: "<<djack_t(DZA_QED_rel[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", D(Z)A: "<<djack_t(DZA_QED_rel[ind_QED]*ZA[ind_QCD]).ave_err()<<endl;
 	}
       
       for(size_t iquark=0;iquark<4;iquark++)
@@ -460,7 +459,7 @@ void compute_adml_bare()
 	  
 	  dboot_t QED_dM2K;
 	  QED_dM2K=dboot_t(bi,SL_PP_QED[ind_ens_Kplus]-SL_PP_QED[ind_ens_K0]);
-	  QED_dM2K*=2*dboot_t(bi,M[ind_ens_K]);
+	  QED_dM2K*=e2*2*dboot_t(bi,M[ind_ens_K]);
 	  QED_dM2K-=dboot_t(bi,FVE_M2(M[ind_ens_K],ens.L));
 	  QED_dM2K/=sqr(a);
 	  
@@ -521,7 +520,7 @@ djvec_t load_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,/* const
   
   size_t iQED_mes=iQED_mes_of_proc[iproc];
   size_t irev=QED_mes_pars[iQED_mes].irev;
-
+  
   size_t n=0;
   //for(size_t irev=0;irev<nrev;irev++)
     for(size_t r2=0;r2<nr;r2++)
@@ -645,6 +644,16 @@ void load_all_hl()
     }
 }
 
+// void fse(double mlep,const dboot_t &MPS)
+// {
+//   double MW=80.385;
+//   double pi2=M_PI*M_PI;
+//   dboot_t rl=mlep/MPS,rl2=rl*rl;
+//   dboot_t bIR=1/(8*pi2)*(1+rl2)/(1-rl2)*log(rl2);
+//   dboot_t b0=1/(16*pi2)*(-log(MW/MPS)+37/12.0+log(rl2)*(2*(1-3*rl2)+(1+rl2)*log(rl2))/(2*(1+rl2))+(1+rl2)/(1-rl2)*log(rl2)*(gammaeul-log(4*M_PI))+2*(1+rl2)*(k31+k32));
+  
+// }
+
 //! compute the correction to the process
 void compute_corr(size_t iproc)
 {
@@ -660,13 +669,16 @@ void compute_corr(size_t iproc)
 	  bi=jack_index[input_an_id][ens.iult];
 	  
 	  dbvec_t LO=Zv[ib]*dbvec_t(bi,jLO_A_bare[ind]);
-	  dbvec_t QED=-dbvec_t(bi,jQED_A_bare[ind])*Zv[ib]+dbvec_t(bi,jQED_V_bare[ind])*Za[ib]; //minus as before
+	  dbvec_t QED=-dbvec_t(bi,jQED_A_bare[ind])*Zv[ib]+dbvec_t(bi,jQED_V_bare[ind])*Za[ib]; //minus as explained before
 	  LO.ave_err().write(combine("%s/plots_hl/LO_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  QED.ave_err().write(combine("%s/plots_hl/QED_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  
-	  dbvec_t rat=QED/LO;
-	  rat[rat.size()-1]=rat[0]=0.0;
-	  rat.ave_err().write(combine("%s/plots_hl/QED_LO_ratio_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
+	  dbvec_t rat_ext=QED/LO;
+	  rat_ext[rat_ext.size()-1]=rat_ext[0]=0.0; //set to zero the contact term
+	  rat_ext.ave_err().write(combine("%s/plots_hl/QED_LO_ratio_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
+	  
+	  //DZA_QED_rel[ind_QED];
+	  
 	}
     }
 }
@@ -674,6 +686,12 @@ void compute_corr(size_t iproc)
 int main(int narg,char **arg)
 {
   int start=time(0);
+
+  cout.precision(16);
+  cout<<zeta(0.27138338825)<<endl;
+  cout<<endl;
+  cout<<zeta(1e-100)<<endl;
+  exit(0);
   
   initialize(narg,arg);
   

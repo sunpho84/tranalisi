@@ -198,7 +198,7 @@ public:
 //////////////////////////////////////////////////////////// slope /////////////////////////////////////////////////////
 
 //! perform a fit to determine the slope
-template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &Z2,TS &M,TS &A,TS &SL,const TV &corr,const TV &corr_ins,size_t TH,size_t tmin,size_t tmax,string path="",string path_ins="",int par=1)
+template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &Z2,TS &M,TS &DZ2_fr_Z2,TS &SL,const TV &corr,const TV &corr_ins,size_t TH,size_t tmin,size_t tmax,string path="",string path_ins="",int par=1)
 {
   //perform a preliminary fit
   TV eff_mass=effective_mass(corr,TH,par);
@@ -207,11 +207,11 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
   Z2=constant_fit(eff_sq_coupling,tmin,tmax,"/tmp/test_sq_coupling.xmg");
   TV eff_slope=effective_slope(TV(corr_ins/corr),eff_mass,TH);
   SL=constant_fit(eff_slope,tmin,tmax,"/tmp/test_slope.xmg");
-  TV eff_slope_offset=effective_slope_offset(TV(corr_ins/corr),eff_mass,eff_slope,TH);
-  A=constant_fit(eff_slope_offset,tmin,tmax,"/tmp/test_slope_offset.xmg");
+  TV eff_slope_offset=effective_squared_coupling_rel_corr(TV(corr_ins/corr),eff_mass,eff_slope,TH);
+  DZ2_fr_Z2=constant_fit(eff_slope_offset,tmin,tmax,"/tmp/test_sq_coupling_rel_corr.xmg");
   
-  if(SL.err()!=0.0 and A.ave()!=0.0)
-    {    
+  if(SL.err()!=0.0 and DZ2_fr_Z2.ave()!=0.0)
+    {
       //! fit for real
       size_t iel=0;
       auto x=vector_up_to<double>(corr.size());
@@ -231,7 +231,7 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
       minimizer_pars_t pars;
       pars.add("Z2",Z2[0],Z2.err());
       pars.add("M",M[0],M.err());
-      pars.add("A",A[0],A.err());
+      pars.add("DZ2",DZ2_fr_Z2[0],DZ2_fr_Z2.err());
       pars.add("SL",SL[0],SL.err());
       
       minimizer_t minimizer(two_pts_fit_obj,pars);
@@ -241,13 +241,14 @@ template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_
 	  //minimize and print the result
 	  vector<double> par_min=minimizer.minimize();
 	  M[iel]=par_min[1];
-	  A[iel]=par_min[2];
+	  DZ2_fr_Z2[iel]=par_min[2];
 	  SL[iel]=par_min[3];
 	}
       
       //write plots
       if(path!="") write_constant_fit_plot(path,tmin,tmax,M,eff_mass);
-      if(path_ins!="") write_fit_plot(path_ins,tmin,tmax,[M,A,SL,TH,par](double x)->TS{return two_pts_corr_with_ins_ratio_fun(M,A,SL,TH,x,par);},TV(corr_ins/corr));
+      if(path_ins!="") write_fit_plot(path_ins,tmin,tmax,[M,DZ2_fr_Z2,SL,TH,par](double x)->TS
+				      {return two_pts_corr_with_ins_ratio_fun(M,DZ2_fr_Z2,SL,TH,x,par);},TV(corr_ins/corr));
     }
   else two_pts_true_fit(Z2,M,corr,TH,tmin,tmax,path,par);
 }

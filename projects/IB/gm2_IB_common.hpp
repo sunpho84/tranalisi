@@ -15,8 +15,7 @@ const int nint_num_variations=4;
 const int nfit_range_variations=2;
 const int ncont_extrap=2;
 const int nchir_variations=2;
-const vector<size_t> FSE_variations({0,3});
-const int nFSE_variations=FSE_variations.size();
+const int nFSE_variations=3;
 
 index_t ind_syst({
 		  {"Input",ninput_an},
@@ -50,14 +49,21 @@ inline djvec_t read(const char *what,const ens_data_t &ens,size_t im,size_t r,si
   string path=combine("%s/data/corr%s",ens.path.c_str(),what);
   string path_extra=path+"_"+qname[im][0]+qname[im][0];
   
-  djvec_t out=read_djvec(path,ens.T,ind_base({im,im,r,reim}));
-  if(use_extra_sources and file_exists(path_extra))
+  djvec_t out;
+
+  if(file_exists(path))
     {
-      cout<<"Improving with "<<path_extra<<endl;
-      
-      out+=add_fact[im]*read_djvec(path_extra,ens.T,ind_extra({0,0,r,reim}));
-      out/=1+add_fact[im];
+      out=read_djvec(path,ens.T,ind_base({im,im,r,reim}));
+      if(use_extra_sources and file_exists(path_extra))
+	{
+	  cout<<"Improving with "<<path_extra<<endl;
+	  
+	  out+=add_fact[im]*read_djvec(path_extra,ens.T,ind_extra({0,0,r,reim}));
+	  out/=1+add_fact[im];
+	}
     }
+  else out=read_djvec(path_extra,ens.T,ind_extra({0,0,r,reim}));
+  
   return out;
 }
 
@@ -103,6 +109,19 @@ inline djvec_t read_VT(const char *what,const ens_data_t &ens,size_t im,int rpar
 inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
 {
   string ens_qpath=ens.path+"/plots_"+qname[iq];
+  
+  djvec_t P5P5_LO=read("00_P5P5",ens,+1,iq,1,RE);
+  
+  djvec_t P5P5_LL=read("LL_P5P5",ens,+1,iq,1,RE);
+  grace_file_t out(ens_qpath+"/LO_PP_jacks.xmg");
+  for(size_t ijack=0;ijack<njacks;ijack++)
+    {
+      for(size_t t=0;t<P5P5_LO.size();t++) out<<t<<" "<<P5P5_LO[t][njacks]*njacks-P5P5_LO[t][ijack]*(njacks-1)<<endl;
+      out<<endl;
+    }
+  
+  djack_t M=constant_fit(effective_mass(P5P5_LO),ens.tmin[iq],ens.tmax[iq],ens_qpath+"/LO_PP_eff_mass.xmg");
+  cout<<qname[iq]<<" mass ens "<<ens.path<<": "<<M.ave_err()<<endl;
   
   djvec_t V0P5_LL=read("LL_V0P5",ens,-1,iq,-1,IM);
   djvec_t V0P5_0M=read("0M_V0P5",ens,-1,iq,-1,IM);

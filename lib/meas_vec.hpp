@@ -97,8 +97,11 @@ public:
   {bin_read(path.c_str());}
   
   //! clusterize each element
-  void clusterize(size_t clust_size=1)
-  {for(auto &a : *this) a.clusterize(clust_size);}
+  vmeas_t &clusterize(size_t clust_size=1)
+  {
+    for(auto &a : *this) a.clusterize(clust_size);
+    return *this;
+  }
   
   //! assign from a scalar
   vmeas_t& operator=(const meas_t &oth) {for(auto &it : *this) it=oth;return *this;}
@@ -141,6 +144,13 @@ public:
     if(nel%2) CRASH("Size %zu odd",nel);
     
     return vmeas_t(this->subset(0,nelh)+par*this->symmetric().subset(0,nelh))/(1.0+abs(par));//*(this->subset(0,nelh)+this->subset(nelh,nel).inverse());
+  }
+  
+  //! self-assign the symmetrized
+  vmeas_t symmetrize(int par=1)
+  {
+    (*this)=symmetrized(par);
+    return *this;
   }
 };
 

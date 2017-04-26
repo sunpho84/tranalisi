@@ -44,11 +44,11 @@ double kern_LO_reco_gsl(double t,void *_params)
 double kern_QED_reco_gsl(double t,void *_params)
 {
   params_QED_t *params=(params_QED_t*)_params;
-  double &A=params->A;
+  double &DZ2_fr_Z2=params->DZ2_fr_Z2;
   double &M=params->M;
   double &SL=params->SL;
   double &Z2=params->Z2;
   double &a=params->a;
   
-  return ftilde_t(t,a)*nonperiodic_two_pts_corr_with_ins_ratio_fun(M,A,SL,t)*nonperiodic_two_pts_corr_fun(Z2,M,t);
+  return ftilde_t(t,a)*nonperiodic_two_pts_corr_with_ins_ratio_fun(M,DZ2_fr_Z2,SL,t)*nonperiodic_two_pts_corr_fun(Z2,M,t);
 }
