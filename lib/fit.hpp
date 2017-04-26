@@ -67,7 +67,7 @@ template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data
 }
 
 //! fit the mass and the matrix element
-template <class TV,class T=typename TV::base_type> void two_pts_fit(T &Z2,T &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path_mass="",string path_Z2="",int par=1)
+template <class TV,class T=typename TV::base_type> void two_pts_fit(T &Z2,T &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,const string &path_mass="",const string &path_Z2="",int par=1)
 {
   //fit to constant the effective mass
   M=constant_fit(effective_mass(corr,TH,par),tmin,tmax,path_mass);
@@ -397,13 +397,15 @@ public:
   {add_point([num](const vector<double> &p,int iel){return num[iel];},teo,num.err());}
   
   //! add a parameter to the fit
-  size_t add_fit_par(TS &out_par,string name,double ans,double err)
+  size_t add_fit_par(TS &out_par,const string &name,double ans,double err)
   {
     size_t ipar=pars.size();
     pars.add(name.c_str(),ans,err);
     out_pars.push_back(&out_par);
     return ipar;
   }
+  size_t add_fit_par(TS &out_par,const string &name,const ave_err_t &ae)
+  {return add_fit_par(out_par,name,ae.ave(),ae.err());}
   
   //! add a parameter that gets self-fitted (useful to propagate erorr on x)
   size_t add_self_fitted_point(TS &out_par,string name,const TS &point,int block_label)
