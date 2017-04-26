@@ -3,7 +3,7 @@
 #endif
 
 #include <tranalisi.hpp>
-#include <Kl2_IB_fit.hpp>
+#include <meson_mass_IB_fit.hpp>
 #include <common.hpp>
 
 vector<ave_err_t> ave_analyses(const dbvec_t &v)

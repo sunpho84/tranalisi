@@ -7,7 +7,7 @@
 #include <common.hpp>
 #include <fit.hpp>
 #include <functional>
-#include <Kl2_IB_fit.hpp>
+#include <meson_mass_IB_fit.hpp>
 
 index_t ind_an;
 using namespace placeholders;
