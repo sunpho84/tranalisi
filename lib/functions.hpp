@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <vector>
 
+#include <math.hpp>
 #include <tools.hpp>
 
 using namespace std;
@@ -90,5 +91,13 @@ public:
   two_pts_corr_with_ins_fun_t(size_t TH,int par) : TH(TH),par(par) {}
   double operator()(const vector<double> &p,double x) {return two_pts_corr_with_ins_ratio_fun(p[iM],p[iDZ2_fr_Z2],p[iSL],TH,x,par);}
 };
+
+//! continuum energy
+template <class T> T cont_en(T m,double pi)
+{return sqrt(3*sqr(pi)+sqr(m));}
+
+//! lattice energy
+template <class T> T latt_en(T m,double pi)
+{return 2*asinh((T)sqrt(3*sqr(sin(pi/2))+sqr((T)sinh(m/2))));}
 
 #endif
