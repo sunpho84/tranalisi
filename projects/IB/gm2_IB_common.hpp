@@ -42,24 +42,40 @@ public:
 vector<ens_data_t> ens_data;
 size_t nens_used;
 
+//! read the additional factor
+size_t get_add_fact(const string &path,size_t im)
+{
+  static map<string,array<size_t,3>> facts;
+  
+  auto it=facts.emplace(path,array<size_t,3>{});
+  if(it.second==true)
+    {
+      cout<<"Reading "<<endl;
+      raw_file_t fin(path+"/data/add_fact.txt","r");
+      for(size_t jm=0;jm<3;jm++) fin.read(it.first->second[jm]);
+    }
+  
+  return it.first->second[im];
+}
+
 //! read a single vector, for a specific mass and r, real or imaginary
 inline djvec_t read(const char *what,const ens_data_t &ens,size_t im,size_t r,size_t reim)
 {
-  double add_fact[3]={40,4,4};
   string path=combine("%s/data/corr%s",ens.path.c_str(),what);
   string path_extra=path+"_"+qname[im][0]+qname[im][0];
   
   djvec_t out;
-
+  
   if(file_exists(path))
     {
       out=read_djvec(path,ens.T,ind_base({im,im,r,reim}));
       if(use_extra_sources and file_exists(path_extra))
 	{
-	  cout<<"Improving with "<<path_extra<<endl;
+	  size_t add_fact=get_add_fact(ens.path,im);
+	  cout<<"Improving with "<<path_extra<<", weight: "<<add_fact<<endl;
 	  
-	  out+=add_fact[im]*read_djvec(path_extra,ens.T,ind_extra({0,0,r,reim}));
-	  out/=1+add_fact[im];
+	  out+=add_fact*read_djvec(path_extra,ens.T,ind_extra({0,0,r,reim}));
+	  out/=1+add_fact;
 	}
     }
   else out=read_djvec(path_extra,ens.T,ind_extra({0,0,r,reim}));
@@ -73,7 +89,7 @@ inline djvec_t read(const char *what,const ens_data_t &ens,int tpar,size_t im,in
   djvec_t o(ens.T);
   o=0.0;
   
-  for(size_t r=0;r<nr;r++) o+=read(what,ens,im,r,reim)*(r==0?1:rpar);
+  for(size_t r=0;r<nr;r++) o+=read(what,ens,im,r,reim)*((r==0)?1:rpar);
   return o.symmetrized(tpar)/(1+abs(rpar));
 }
 
