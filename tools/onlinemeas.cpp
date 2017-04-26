@@ -8,15 +8,13 @@ int main(int narg,char **arg)
   size_t TH=T/2;
   size_t nconfs=input.read<size_t>("NConfs");
   size_t ntherm=input.read<size_t>("NTherm");
+  set_njacks(input.read<size_t>("NJacks"));
   size_t nposs_meas=nconfs-ntherm;
   cout<<"Nposs_meas: "<<nposs_meas<<endl;
-  size_t njacks=15;
   size_t clust_size=nposs_meas/njacks;
   cout<<"Clust_size: "<<clust_size<<endl;
   size_t nmeas=clust_size*njacks;
   cout<<"Nmeas: "<<nmeas<<endl;
-  
-  set_njacks(njacks);
   
   djvec_t corr(TH+1);
   
