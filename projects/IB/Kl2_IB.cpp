@@ -1,3 +1,4 @@
+
 #ifdef HAVE_CONFIG_H
  #include <config.hpp>
 #endif
@@ -25,10 +26,10 @@ const vector<qpars_t> all_qpars({qU,qD,qS,qC});
 class QCD_mes_pars_t
 {
 public:
-  size_t iq1;
-  size_t iq2;
-  size_t itint;
-  string name;
+  size_t iq1; //< index of quark 1
+  size_t iq2; //< index of quark 2
+  size_t itint; //< which interval range this meson has to use (0=Pi, 1=K, 2=D,Ds)
+  string name; //< name of the quark
   QCD_mes_pars_t(const qpars_t &q1,const qpars_t &q2,size_t itint,const string &name) : iq1(q1.iq),iq2(q2.iq),itint(itint),name(name) {}
 };
 
@@ -42,20 +43,21 @@ const size_t &nQCD_mes=QCD_mes_pars.size();
 class QED_mes_pars_t
 {
 public:
-  size_t iq1;
-  size_t iq2;
-  double dm1;
-  double dm2;
-  double eq1;
-  double eq2;
-  size_t irev;
-  size_t iQCD;
-  string name;
+  size_t iq1; //< index of quark 1
+  size_t iq2; //< index of quark 2
+  double dm1; //< contribution by which scalar insertion on quark 1 mast be added
+  double dm2; //< contribution by which scalar insertion on quark 2 mast be added
+  double eq1; //< charge of quark 1
+  double eq2; //< charge of quark 2
+  size_t irev; //< quark line to be reversed
+  size_t iQCD; //< index of pure QCD meson corresponding to this meson
+  string name; //< name of the meson
   QED_mes_pars_t(const qpars_t &q1,const qpars_t &q2,size_t irev,size_t iQCD,const string &name) :
     iq1(q1.iq),iq2(q2.iq),dm1(q1.dm),dm2(q2.dm),eq1(q1.eq),eq2(q2.eq),irev(irev),iQCD(iQCD),name(name) {}
 };
 
-const size_t QREV1=0,QREV2=1;
+const size_t QREV1=0; //< value to revert quark 1
+const size_t QREV2=1; //< value to revert quark 2
 const vector<QED_mes_pars_t> QED_mes_pars({{qU,qD,QREV2,0,"PiPlus"},
 					   {qS,qU,QREV1,1,"KPlus"},
 					   {qS,qD,QREV1,1,"K0"},
@@ -67,32 +69,37 @@ const size_t &nQED_mes=QED_mes_pars.size();
 
 ////////////////////////////////////////////////////////////////////
 
-const size_t nleps=2;
+const size_t nleps=2; //< number of leptons
+const size_t nmes_tint=3; //< number of time intervals
 
-const size_t nmes_tint=3;
 class ens_pars_t
 {
 public:
   size_t iult; //< input in the ultimate file
-  size_t ib,T,L;
-  double aml;
-  double MLep[nleps],MMes[4];
-  int use_for_L;
-  string path;
+  size_t ib; //< beta index
+  size_t T; //< time extent
+  size_t L; //< spatial size
+  double aml; //< bare light quark mass
+  double MLep[nleps]; //< mass of leptons
+  double MMes[4]; //< mass of mesons (0=Pi, 1=K, 2=D, 3=Ds)
+  int use_for_L; //< use for FSE analysis
+  string path; //< path (name)
   
-  vector<size_t> tmin,tmax;
+  vector<size_t> tmin,tmax; //< range of fit
   ens_pars_t() : tmin(nmes_tint),tmax(nmes_tint) {}
 };
-vector<ens_pars_t> ens_pars;
-size_t nens_used;
+vector<ens_pars_t> ens_pars; //< parameters of all ensemble
+size_t nens_used; //< number of ensemble used
 
-const size_t nmass=3,nr=2;
-const index_t ind_2pts({{"NMass",nmass},{"NMass",nmass},{"Nr",nr},{"RI",2}});
+const size_t nqmass=3; //< number of quark mass
+const size_t nr=2; //< number of r
+const index_t ind_2pts({{"NMass",nqmass},{"NMass",nqmass},{"Nr",nr},{"RI",2}});
 
-vector<size_t> iQCD_mes_of_proc ({0,1,2,2,3,3});
-vector<size_t> iQED_mes_of_proc ({0,1,3,3,5,5});
-vector<size_t> imlep_of_proc({0,0,0,1,0,1});
+vector<size_t> iQCD_mes_of_proc ({0,1,2,2,3,3}); //< index of the QCD meson corresponding to a given process
+vector<size_t> iQED_mes_of_proc ({0,1,3,3,5,5}); //< index of the QED meson corresponding to a given process
+vector<size_t> imlep_of_proc({0,0,0,1,0,1}); //< index of the lepton corresponding to a given process
 
+//! initialize everything
 void initialize(int narg,char **arg)
 {
   //open input file
