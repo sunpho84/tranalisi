@@ -80,20 +80,20 @@ void syst_analysis_sep(const vector<ave_err_t> &v)
   S2chir=1.0/24.0*(pow(db[8],2.0)+pow(db[9],2.0)+pow(db[10],2.0)+pow(db[11],2.0)+pow(db[8]+db[9],2.0)+pow(db[8]+db[10],2.0)+pow(db[9]+db[11],2.0)+pow(db[10]+db[11],2.0))+1.0/48.0*(pow(db[8]+db[11],2.0)+pow(db[9]+db[10],2.0));
   
   S2fse=1.0/24.0*(pow(db[4],2.0)+pow(db[5],2.0)+pow(db[6],2.0)+pow(db[7],2.0)+pow(db[4]+db[5],2.0)+pow(db[4]+db[6],2.0)+pow(db[5]+db[7],2.0)+pow(db[6]+db[7],2.0))+1.0/48.0*(pow(db[4]+db[7],2.0)+pow(db[5]+db[6],2.0));
-  
+
+  cout<<"cont: "<<sqrt(S2cont)<<endl;
   cout<<"chir: "<<sqrt(S2chir)<<endl;
   cout<<"fse: "<<sqrt(S2fse)<<endl;
-  cout<<"cont: "<<sqrt(S2cont)<<endl;
 }
 
 class ens_data_t
 {
 public:
-  size_t iult,ibeta,L,useforL,useforL1;
+  size_t iult,ibeta,L,useforL,useforL1,useforL2;
   double aml,ams,amc;
   string path;
   
-  djack_t pi_mass,pi_SL_exch,pi_SL_selftad,pi_SL_s,pi_SL_p,k_mass,k_SL_exch,k_SL_selftad,k_SL_selftad_revins,k_SL_s,k_SL_s_revins,k_SL_p,k_SL_p_revins,D_mass,D_SL_exch,D_SL_selftad,D_SL_selftad_revins,D_SL_s,D_SL_s_revins,D_SL_p,D_SL_p_revins,Ds_mass,Ds_SL_exch,Ds_SL_selftad,Ds_SL_selftad_revins,Ds_SL_s,Ds_SL_p,Ds_SL_p_revins;
+  djack_t pi_mass,pi_SL_exch,pi_SL_selftad,pi_SL_s,pi_SL_p,k_mass,k_SL_exch,k_SL_selftad,k_SL_selftad_revins,k_SL_s,k_SL_s_revins,k_SL_p,k_SL_p_revins,D_mass,D_SL_exch,D_SL_selftad,D_SL_selftad_revins,D_SL_s,D_SL_s_revins,D_SL_p,D_SL_p_revins,Ds_mass,Ds_SL_exch,Ds_SL_selftad,Ds_SL_selftad_revins,Ds_SL_s,Ds_SL_s_revins,Ds_SL_p,Ds_SL_p_revins;
   djack_t deltam_cr;
 };
 
@@ -141,11 +141,12 @@ int main(int narg,char **arg)
       temp.L=input.read<size_t>("L");
       temp.useforL=input.read<size_t>("useforL");
       temp.useforL1=input.read<size_t>("useforL1");
+      temp.useforL2=input.read<size_t>("useforL2");
       temp.aml=input.read<double>("aml");
       temp.ams=input.read<double>("ams");
       temp.amc=input.read<double>("amc");
       temp.path=input.read<string>("path");
-      
+  
       //read the observable of the pion
       raw_file_t obs_pi_file(combine("%s/pi_obs",temp.path.c_str()),"r");
       obs_pi_file.bin_read(temp.pi_mass);
@@ -185,6 +186,7 @@ int main(int narg,char **arg)
       obs_Ds_file.bin_read(temp.Ds_SL_p);
       obs_Ds_file.bin_read(temp.Ds_SL_selftad_revins);
       obs_Ds_file.bin_read(temp.Ds_SL_p_revins);
+      obs_Ds_file.bin_read(temp.Ds_SL_s_revins);
 
       //read deltam_cr (ud)
       raw_file_t deltam_cr_file(combine("%s/ud_fit_deltam_cr",temp.path.c_str()),"r");
@@ -217,7 +219,9 @@ int main(int narg,char **arg)
   dbvec_t MD_sl_p(ninput_an*raw_data.size());
   dbvec_t aMD_sl_selftad_revins(ninput_an*raw_data.size());
   dbvec_t MD_sl_p_revins(ninput_an*raw_data.size());
-
+  dbvec_t MDs_sl_s_revins(ninput_an*raw_data.size());
+  dbvec_t Z_QED(ninput_an*raw_data.size());
+  
   //output
   dbvec_t output_dM2Pi(ninput_an*nan_syst);
   dbvec_t output_dM2K_QED(ninput_an*nan_syst);
@@ -254,6 +258,7 @@ int main(int narg,char **arg)
     for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
       {
 	dbvec_t ml(raw_data.size());
+	dbvec_t ms(raw_data.size());
 	dbvec_t a2M2Pi(raw_data.size());
 	dbvec_t da2M2Pi(raw_data.size());
 	dbvec_t FVE_da2M2Pi(raw_data.size());
@@ -279,10 +284,11 @@ int main(int narg,char **arg)
 	    dboot_t a=1.0/lat_par[input_an_id].ainv[ibeta];
 	    dboot_t Lphys=raw_data[iens].L*a;
 	    ml[iens]=raw_data[iens].aml/lat_par[input_an_id].Z[ibeta]/a;
+	    ms[iens]=raw_data[iens].ams/lat_par[input_an_id].Z[ibeta]/a;
 	    
 	    boot_init_t &bi=jack_index[input_an_id][ens_id];
 	    
-	    dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*lat_par[input_an_id].Z[ibeta]*(6.0*log(mu_MS*a)-22.596)/(32.0*sqr(M_PI)));
+	    Z_QED[iens+input_an_id*raw_data.size()]=1.0/(e2*lat_par[input_an_id].Z[ibeta]*(6.0*log(mu_MS*a)-22.596)/(16.0*sqr(M_PI)));
 	    aDeltam_cr_u[iens+input_an_id*raw_data.size()]=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(eu);
 	    aDeltam_cr_d[iens+input_an_id*raw_data.size()]=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(ed);
 	    
@@ -306,7 +312,7 @@ int main(int narg,char **arg)
 	    dboot_t MK_sl_p_revins=dboot_t(bi,raw_data[iens].k_SL_p_revins);
 	    
 	    dboot_t daMK_QED=
-	      -(aDeltam_cr_u[iens+input_an_id*raw_data.size()]-aDeltam_cr_d[iens+input_an_id*raw_data.size()])*MK_sl_p-2.0*ml[iens]*a*MK_sl_s[iens+input_an_id*raw_data.size()]/Z_QED
+	      -(aDeltam_cr_u[iens+input_an_id*raw_data.size()]-aDeltam_cr_d[iens+input_an_id*raw_data.size()])*MK_sl_p-2.0*ml[iens]*a*MK_sl_s[iens+input_an_id*raw_data.size()]/(Z_QED[iens+input_an_id*raw_data.size()]*2.0/(sqr(ed)-sqr(eu)))
 	      +(sqr(eu)-sqr(ed))*e2*(aMK_sl_exch-aMK_sl_selftad);
 	    da2M2K_QED[iens]=daMK_QED*2.0*aMK;
 	    FVE_da2M2K[iens]=FVE_M2(aMK,raw_data[iens].L);
@@ -324,7 +330,7 @@ int main(int narg,char **arg)
 	    MD[iens+input_an_id*raw_data.size()]=aMD[iens+input_an_id*raw_data.size()]/a;
 	    
 	    dboot_t daMD_QED=
-	      2.0*ml[iens]*a*MD_sl_s[iens+input_an_id*raw_data.size()]/Z_QED
+	      2.0*ml[iens]*a*MD_sl_s[iens+input_an_id*raw_data.size()]/(Z_QED[iens+input_an_id*raw_data.size()]*2.0/(sqr(ed)-sqr(eu)))
 	      -(aDeltam_cr_d[iens+input_an_id*raw_data.size()]-aDeltam_cr_u[iens+input_an_id*raw_data.size()])*MD_sl_p[iens+input_an_id*raw_data.size()]
 	      +(sqr(eu)-sqr(ed))*e2*aMD_sl_selftad[iens+input_an_id*raw_data.size()]+(eu-ed)*eu*e2*aMD_sl_exch[iens+input_an_id*raw_data.size()];
 	    da2M2D_QED[iens]=daMD_QED*2.0*aMD[iens+input_an_id*raw_data.size()];
@@ -336,11 +342,11 @@ int main(int narg,char **arg)
 	    epsilon_gamma[iens]=(da2M2K_QED[iens]/da2M2Pi[iens])-1.0;
 	    epsilon_gamma_minusFVE[iens]=((da2M2K_QED[iens]-FVE_da2M2K[iens])/(da2M2Pi[iens]-FVE_da2M2Pi[iens]))-1.0;
 	    
-	    dboot_t num_epsilon_Pi0=2.0*aMPi*(-(sqr(eu)+sqr(ed))*e2*(aMPi_sl_exch/2.0+aMPi_sl_selftad)-(aDeltam_cr_u[iens+input_an_id*raw_data.size()]+aDeltam_cr_d[iens+input_an_id*raw_data.size()])*MPi_sl_p);
+	    dboot_t num_epsilon_Pi0=2.0*aMPi*(-(sqr(eu)+sqr(ed))*e2*(aMPi_sl_exch/2.0+aMPi_sl_selftad)-(aDeltam_cr_u[iens+input_an_id*raw_data.size()]+aDeltam_cr_d[iens+input_an_id*raw_data.size()])*MPi_sl_p+2.0*ml[iens]*a*MPi_sl_s[iens+input_an_id*raw_data.size()]/(Z_QED[iens+input_an_id*raw_data.size()]*2.0/(sqr(ed)+sqr(eu))));
 	    epsilon_Pi0[iens]=num_epsilon_Pi0/da2M2Pi[iens];
 	    epsilon_Pi0_minusFVE[iens]=num_epsilon_Pi0/(da2M2Pi[iens]-FVE_da2M2Pi[iens]);
 	    
-	    dboot_t num_epsilon_K0=2.0*aMK*(-sqr(ed)*e2*(aMK_sl_exch+aMK_sl_selftad_revins+aMK_sl_selftad)-aDeltam_cr_d[iens+input_an_id*raw_data.size()]*(MK_sl_p+MK_sl_p_revins));
+	    dboot_t num_epsilon_K0=2.0*aMK*(-sqr(ed)*e2*(aMK_sl_exch+aMK_sl_selftad_revins+aMK_sl_selftad)-aDeltam_cr_d[iens+input_an_id*raw_data.size()]*(MK_sl_p+MK_sl_p_revins)+ml[iens]*a*MK_sl_s[iens+input_an_id*raw_data.size()]/(Z_QED[iens+input_an_id*raw_data.size()]/sqr(ed))+ms[iens]*a*MK_sl_s_revins[iens+input_an_id*raw_data.size()]/(Z_QED[iens+input_an_id*raw_data.size()]/sqr(ed)));
 	    epsilon_K0[iens]=num_epsilon_K0/da2M2Pi[iens];
 	    epsilon_K0_minusFVE[iens]=num_epsilon_K0/(da2M2Pi[iens]-FVE_da2M2Pi[iens]);
 	    a2M2Pi0g[iens]=num_epsilon_Pi0;
@@ -410,8 +416,9 @@ int main(int narg,char **arg)
 	
 	vector<cont_chir_fit_data_t> data_M2Pi0g;
 	for(size_t iens=0;iens<raw_data.size();iens++)
-	  data_M2Pi0g.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMD[iens+input_an_id*raw_data.size()],raw_data[iens].ibeta,raw_data[iens].L,
-							 a2M2Pi0g[iens],a2M2Pi0g[iens]));
+	  if(raw_data[iens].useforL1)
+	    data_M2Pi0g.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMD[iens+input_an_id*raw_data.size()],raw_data[iens].ibeta,raw_data[iens].L,
+						       a2M2Pi0g[iens],a2M2Pi0g[iens]));
 	
 	output_M2Pi0g[ind_an({input_an_id,an_flag})]=cont_chir_fit_M2Pi0g(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_M2Pi0g,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_M2Pi0g_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag,beta_list);
 	
@@ -730,6 +737,8 @@ int main(int narg,char **arg)
   dbvec_t Deltamud_over_mud_col_ind(ninput_an*nan_syst);
   dbvec_t ratio_mu_md_col(ninput_an*nan_syst);
   dbvec_t ratio_mu_md_col_ind(ninput_an*nan_syst);
+  dbvec_t mu_q(ninput_an*nan_syst);
+  dbvec_t md_q(ninput_an*nan_syst);
   vector<ave_err_t> v_ave_an_R(nan_syst);
   vector<ave_err_t> v_ave_an_R_ind(nan_syst);
   vector<ave_err_t> v_ave_an_Q2(nan_syst);
@@ -740,6 +749,8 @@ int main(int narg,char **arg)
   vector<ave_err_t> v_ave_an_Deltamud_col_ind(nan_syst);
   vector<ave_err_t> v_ave_an_ratio_mu_md_col(nan_syst);
   vector<ave_err_t> v_ave_an_ratio_mu_md_col_ind(nan_syst);
+  vector<ave_err_t> v_ave_an_mu(nan_syst);
+  vector<ave_err_t> v_ave_an_md(nan_syst);
   for(size_t an_flag=0;an_flag<nan_syst;an_flag++)
     for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
       {
@@ -757,6 +768,8 @@ int main(int narg,char **arg)
 	Deltamud_over_mud_col_ind[ind_an({input_an_id,an_flag})]=dboot_t(Deltamud_col_ind[ind_an({input_an_id,an_flag})]*1.0e-3/lat_par[input_an_id].ml);
 	ratio_mu_md_col[ind_an({input_an_id,an_flag})]=dboot_t((1.0-Deltamud_over_mud_col[ind_an({input_an_id,an_flag})])/(1.0+Deltamud_over_mud_col[ind_an({input_an_id,an_flag})]));
 	ratio_mu_md_col_ind[ind_an({input_an_id,an_flag})]=dboot_t((1.0-Deltamud_over_mud_col_ind[ind_an({input_an_id,an_flag})])/(1.0+Deltamud_over_mud_col_ind[ind_an({input_an_id,an_flag})]));
+	mu_q[ind_an({input_an_id,an_flag})]=dboot_t(ratio_mu_md[ind_an({input_an_id,an_flag})]*Deltamud[ind_an({input_an_id,an_flag})]*2.0/(1.0-ratio_mu_md[ind_an({input_an_id,an_flag})]));
+	md_q[ind_an({input_an_id,an_flag})]=dboot_t(Deltamud[ind_an({input_an_id,an_flag})]*2.0/(1.0-ratio_mu_md[ind_an({input_an_id,an_flag})]));
       }
   
   v_ave_an_R=ave_analyses(R);
@@ -818,6 +831,18 @@ int main(int narg,char **arg)
   syst_analysis_sep(v_ave_an_ratio_mu_md_col_ind);
   for(size_t i=0;i<8;i++)
     cout<<"an_ratio_mu_md_col_ind: "<<v_ave_an_ratio_mu_md_col_ind[i]<<endl;
+
+  v_ave_an_mu=ave_analyses(mu_q);
+  cout<<"mu: "<<stat_analysis(v_ave_an_mu)<<" "<<syst_analysis(v_ave_an_mu)<<endl;
+  syst_analysis_sep(v_ave_an_mu);
+  for(size_t i=0;i<8;i++)
+    cout<<"an_mu: "<<v_ave_an_mu[i]<<endl;
+
+  v_ave_an_md=ave_analyses(md_q);
+  cout<<"md: "<<stat_analysis(v_ave_an_md)<<" "<<syst_analysis(v_ave_an_md)<<endl;
+  syst_analysis_sep(v_ave_an_md);
+  for(size_t i=0;i<8;i++)
+    cout<<"an_md: "<<v_ave_an_md[i]<<endl;
 
   ////////////////////D meson////////////////////
   for(size_t an_flag=0;an_flag<nan_syst;an_flag++)
@@ -913,12 +938,20 @@ int main(int narg,char **arg)
   for(size_t an_flag=0;an_flag<nan_syst;an_flag++)
     for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
       {
+	dbvec_t ml(raw_data.size());
+	dbvec_t mc(raw_data.size());
 	dbvec_t saMD(raw_data.size());
 	dbvec_t FVE_saMD(raw_data.size());
 	
 	for(size_t iens=0;iens<raw_data.size();iens++)
 	  {
-	    saMD[iens]=-(eu+ed)*eu*e2*aMD_sl_exch[iens+input_an_id*raw_data.size()]-2.0*sqr(eu)*e2*aMD_sl_selftad_revins[iens+input_an_id*raw_data.size()]-(sqr(eu)+sqr(ed))*e2*aMD_sl_selftad[iens+input_an_id*raw_data.size()]-2.0*aDeltam_cr_u[iens+input_an_id*raw_data.size()]*MD_sl_p_revins[iens+input_an_id*raw_data.size()]-(aDeltam_cr_u[iens+input_an_id*raw_data.size()]+aDeltam_cr_d[iens+input_an_id*raw_data.size()])*MD_sl_p[iens+input_an_id*raw_data.size()];
+	    size_t ibeta=raw_data[iens].ibeta;
+	    
+	    dboot_t a=1.0/lat_par[input_an_id].ainv[ibeta];
+	    ml[iens]=raw_data[iens].aml/lat_par[input_an_id].Z[ibeta]/a;
+	    mc[iens]=raw_data[iens].amc/lat_par[input_an_id].Z[ibeta]/a;
+	    
+	    saMD[iens]=-(eu+ed)*eu*e2*aMD_sl_exch[iens+input_an_id*raw_data.size()]-2.0*sqr(eu)*e2*aMD_sl_selftad_revins[iens+input_an_id*raw_data.size()]-(sqr(eu)+sqr(ed))*e2*aMD_sl_selftad[iens+input_an_id*raw_data.size()]-2.0*aDeltam_cr_u[iens+input_an_id*raw_data.size()]*MD_sl_p_revins[iens+input_an_id*raw_data.size()]-(aDeltam_cr_u[iens+input_an_id*raw_data.size()]+aDeltam_cr_d[iens+input_an_id*raw_data.size()])*MD_sl_p[iens+input_an_id*raw_data.size()]+2.0*a*mc[iens]*MD_sl_s_revins[iens+input_an_id*raw_data.size()]/(Z_QED[iens+input_an_id*raw_data.size()]/sqr(eu))+2.0*a*ml[iens]*MD_sl_s[iens+input_an_id*raw_data.size()]/(Z_QED[iens+input_an_id*raw_data.size()]*2.0/(sqr(ed)+sqr(eu)));
 	    FVE_saMD[iens]=FVE_M(aMD[iens+input_an_id*raw_data.size()],raw_data[iens].L);
 	  }
 
@@ -942,8 +975,9 @@ int main(int narg,char **arg)
 
 	vector<cont_chir_fit_data_t> data_sMD;
 	for(size_t iens=0;iens<raw_data.size();iens++)
-	  data_sMD.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMD[iens+input_an_id*raw_data.size()],raw_data[iens].ibeta,raw_data[iens].L,
-						     saMD[iens]-FVE_saMD[iens],saMD[iens]));
+	  if(raw_data[iens].useforL2)
+	    data_sMD.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMD[iens+input_an_id*raw_data.size()],raw_data[iens].ibeta,raw_data[iens].L,
+						    saMD[iens]-FVE_saMD[iens],saMD[iens]));
       
 	output_sMD[ind_an({input_an_id,an_flag})]=cont_chir_linear_fit_dM(alist,zlist,data_sMD,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_sMD_flag%zu_an%zu_sub%s.xmg",an_flag,input_an_id,"%s"),"$$M_{D^+}+M_{D^0} [GeV]",1.0,0.0,an_flag,1,cov_flag,beta_list);
 
@@ -961,21 +995,32 @@ int main(int narg,char **arg)
   for(size_t an_flag=0;an_flag<nan_syst;an_flag++)
     for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
       {
+	dbvec_t ms(raw_data.size());
+	dbvec_t mc(raw_data.size());
 	dbvec_t aMDsg(raw_data.size());
 	dbvec_t FVE_aMDsg(raw_data.size());
 	
 	for(size_t iens=0;iens<raw_data.size();iens++)
 	  {
 	    size_t ens_id=raw_data[iens].iult;
+	    size_t ibeta=raw_data[iens].ibeta;
+	    
+	    dboot_t a=1.0/lat_par[input_an_id].ainv[ibeta];
+	    
 	    boot_init_t &bi=jack_index[input_an_id][ens_id];
+
+	    ms[iens]=raw_data[iens].ams/lat_par[input_an_id].Z[ibeta]/a;
+	    mc[iens]=raw_data[iens].amc/lat_par[input_an_id].Z[ibeta]/a;
 
 	    dboot_t aMDs_sl_exch=dboot_t(bi,raw_data[iens].Ds_SL_exch);
 	    dboot_t aMDs_sl_selftad=dboot_t(bi,raw_data[iens].Ds_SL_selftad);
 	    dboot_t MDs_sl_p=dboot_t(bi,raw_data[iens].Ds_SL_p);
 	    dboot_t aMDs_sl_selftad_revins=dboot_t(bi,raw_data[iens].Ds_SL_selftad_revins);
 	    dboot_t MDs_sl_p_revins=dboot_t(bi,raw_data[iens].Ds_SL_p_revins);
+	    dboot_t MDs_sl_s=dboot_t(bi,raw_data[iens].Ds_SL_s);
+	    dboot_t MDs_sl_s_revins=dboot_t(bi,raw_data[iens].Ds_SL_s_revins);
 	    
-	    aMDsg[iens]=-ed*eu*e2*aMDs_sl_exch-sqr(eu)*e2*aMDs_sl_selftad_revins-aDeltam_cr_u[iens+input_an_id*raw_data.size()]*MDs_sl_p_revins-aDeltam_cr_d[iens+input_an_id*raw_data.size()]*MDs_sl_p-sqr(ed)*e2*aMDs_sl_selftad;
+	    aMDsg[iens]=-ed*eu*e2*aMDs_sl_exch-sqr(eu)*e2*aMDs_sl_selftad_revins-aDeltam_cr_u[iens+input_an_id*raw_data.size()]*MDs_sl_p_revins-aDeltam_cr_d[iens+input_an_id*raw_data.size()]*MDs_sl_p-sqr(ed)*e2*aMDs_sl_selftad+a*mc[iens]*MDs_sl_s_revins/(Z_QED[iens+input_an_id*raw_data.size()]/sqr(eu))+ms[iens]*a*MDs_sl_s/(Z_QED[iens+input_an_id*raw_data.size()]/sqr(ed));
 	    FVE_aMDsg[iens]=FVE_M(aMDs[iens+input_an_id*raw_data.size()],raw_data[iens].L);
 	  }
 
@@ -999,8 +1044,9 @@ int main(int narg,char **arg)
 
 	vector<cont_chir_fit_data_t> data_MDs;
 	for(size_t iens=0;iens<raw_data.size();iens++)
-	  data_MDs.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMDs[iens+input_an_id*raw_data.size()],raw_data[iens].ibeta,raw_data[iens].L,
-						     aMDsg[iens]-FVE_aMDsg[iens],aMDsg[iens]));
+	  if(raw_data[iens].useforL2)
+	    data_MDs.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMDs[iens+input_an_id*raw_data.size()],raw_data[iens].ibeta,raw_data[iens].L,
+						    aMDsg[iens]-FVE_aMDsg[iens],aMDsg[iens]));
       
 	output_MDs[ind_an({input_an_id,an_flag})]=cont_chir_linear_fit_dM(alist,zlist,data_MDs,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_MDs_flag%zu_an%zu_sub%s.xmg",an_flag,input_an_id,"%s"),"$$M_{Ds^+} [GeV]",1.0,0.0,an_flag,1,cov_flag,beta_list);
 
