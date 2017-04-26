@@ -686,12 +686,12 @@ void compute_corr(size_t iproc)
 int main(int narg,char **arg)
 {
   int start=time(0);
-
+  
   cout.precision(16);
   cout<<zeta(0.27138338825)<<endl;
   cout<<endl;
-  cout<<zeta(1e-100)<<endl;
-  exit(0);
+  cout<<zeta(0)<<endl;
+  // exit(0);
   
   initialize(narg,arg);
   
