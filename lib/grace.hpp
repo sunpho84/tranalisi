@@ -428,7 +428,7 @@ public:
   template <class T> void write_constant_band(double xmin,double xmax,const T &c,grace::color_t col)
   {this->write_polygon([&c](double x) -> T {return c;},xmin,xmax,col,2);}
   template <class T> void write_constant_band(double xmin,double xmax,const T &c)
-  {write_constant_band(xmin,xmax,c,get_col_and_increment());}
+  {write_constant_band(xmin,xmax,c,get_line_col_and_increment());}
   
   //write a vector of data
   void write_vec_ave_err(const vector<double> &x,const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
