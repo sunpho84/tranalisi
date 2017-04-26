@@ -36,14 +36,19 @@ string smart_print(double ave,const vector<double> &errors,int ndigits)
   out<<std::fixed;
   
   //get the negative of pow of 10 needed to make all syst have at least 1 digit
-  int lem=(int)ceil(log(*max_element(errors.begin(),errors.end()))/M_LN10);
-  int digit_to_round=lem-ndigits;
-  out.precision((lem<ndigits)*max(-digit_to_round,0));
-  
-  //truncate
-  out<<round_to_digit(ave,digit_to_round);
-  if(digit_to_round<=-ndigits) out.precision(0);
-  for(auto err : errors) out<<"("<<shift_by_10(round_to_digit(err,digit_to_round),(lem<=0)*(ndigits-lem))<<")";
+  double mel=*max_element(errors.begin(),errors.end());
+  if(mel==0) out<<ave<<"(0)";
+  else
+    {
+      int lem=(int)ceil(log(mel)/M_LN10);
+      int digit_to_round=lem-ndigits;
+      out.precision((lem<ndigits)*max(-digit_to_round,0));
+      
+      //truncate
+      out<<round_to_digit(ave,digit_to_round);
+      if(digit_to_round<=-ndigits) out.precision(0);
+      for(auto err : errors) out<<"("<<shift_by_10(round_to_digit(err,digit_to_round),(lem<=0)*(ndigits-lem))<<")";
+    }
   
   return out.str();
 }
