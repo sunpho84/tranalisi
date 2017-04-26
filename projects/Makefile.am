@@ -1,5 +1,5 @@
 AUTOMAKE_OPTIONS=subdir-objects
 
 SUBDIRS= \
-	IB \
-	FPIEM
+	FPIEM \
+	IB
