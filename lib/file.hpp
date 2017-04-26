@@ -45,12 +45,15 @@ class raw_file_t
 {
   FILE *file;
   
+  //! copy constructor - made private, as for any class stream
+  raw_file_t(const raw_file_t& oth);
+  
 public:
   //! open the file with error check
-  void open(string s,string mode)
+  void open(const string &path,string mode)
   {
-    file=fopen(s.c_str(),mode.c_str());
-    if(file==NULL) CRASH("Unable to open %s with mode %s",s.c_str(),mode.c_str());
+    file=fopen(path.c_str(),mode.c_str());
+    if(file==NULL) CRASH("Unable to open %s with mode %s",path.c_str(),mode.c_str());
   }
   
   //! close the file
@@ -60,15 +63,12 @@ public:
   //! default constructor
   raw_file_t() {file=NULL;}
   
-  //! copy constructor
-  raw_file_t(const raw_file_t& oth)=default;
-  
   //! move constructor
-  raw_file_t(raw_file_t&& oth) : file(NULL) {swap(file,oth.file);};
+  raw_file_t(raw_file_t&& oth) : raw_file_t() {swap(file,oth.file);};
   
   //! creator with name
-  raw_file_t(string s,string mode)
-  {open(s,mode);}
+  raw_file_t(const string &path,string mode)
+  {open(path,mode);}
   
   //! destructor
   ~raw_file_t()
@@ -182,7 +182,7 @@ public:
 };
 
 //! return the size of the passed path
-inline long file_size(string path) {return raw_file_t(path,"r").size();}
+inline long file_size(const string &path) {return raw_file_t(path,"r").size();}
 
 ///////////////////////////////////////////////////// file reading observables /////////////////////////////////////
 
@@ -190,37 +190,27 @@ inline long file_size(string path) {return raw_file_t(path,"r").size();}
 class obs_file_t : public raw_file_t
 {
   //! total number of columns
-  size_t ntot_col;
-  
-  //! number of visible columns
-  size_t nvis_col;
+  size_t ntot_cols;
   
   //! view of cols
-  map<size_t,vector<size_t>> col_contr;
+  vector<size_t> cols;
   
 public:
   //! init
-  obs_file_t(size_t ntot_col=1) : ntot_col(ntot_col) {set_col_view(vector<size_t>{0});}
+  obs_file_t(size_t ntot_cols=1) : ntot_cols(ntot_cols) {set_col_view(vector<size_t>{0});}
   
   //! init reading
-  obs_file_t(const char *path,size_t ntot_col=1) : obs_file_t(ntot_col)
+  obs_file_t(const string &path,size_t ntot_cols=1,const vector<size_t> &ext_cols={0}) : obs_file_t(ntot_cols)
   {
-    set_col_view(vector<size_t>{0});
+    set_col_view(ext_cols);
     open(path);
   }
   
   //! set the view on columns
-  void set_col_view(const vector<size_t> &cols)
+  void set_col_view(const vector<size_t> &ext_cols)
   {
-    col_contr.clear();
-    nvis_col=cols.size();
-    
-    //push back in the list to which the col contribute
-    for(size_t it=0;it<cols.size();it++)
-      {
-	if(cols[it]>=ntot_col) CRASH("Col=%d >= NtotCol=%d",cols[it],ntot_col);
-	col_contr[cols[it]].push_back(it);
-      }
+    if(cols.size()>=ntot_cols) CRASH("Col=%zu >= NtotCol=%zu",cols.size(),ntot_cols);
+    cols=ext_cols;
   }
   
   //! measure according to ncols
@@ -236,7 +226,7 @@ public:
       {
 	cur_length=this->read(nlines).size();
 	out+=cur_length;
-    }
+      }
     while(cur_length);
     
     //go back to previous position
@@ -257,7 +247,7 @@ public:
   vector<double> read(size_t nlines=1)
   {
     //returned obj
-    vector<double> data(nvis_col*nlines);
+    vector<double> data(cols.size()*nlines);
     
     size_t iline=0;
     do
@@ -276,14 +266,14 @@ public:
 	  {
 	    //parse the line
 	    size_t nread_col=0;
-	    vector<double> temp(ntot_col);
+	    vector<double> temp(ntot_cols);
 	    do
 	      {
 		//read a double from the line
 		int rc=sscanf(tok,"%lg",&temp[nread_col]);
 		if(rc!=1) CRASH("Parsing col %d, rc %d from %s, line %s",nread_col,rc,tok,line);
-		//check not exceeding ntot_col
-		if(nread_col>=ntot_col) CRASH("nread_col=%d exceeded ntot_col=%d",nread_col,ntot_col);
+		//check not exceeding ntot_cols
+		if(nread_col>=ntot_cols) CRASH("nread_col=%d exceeded ntot_cols=%d",nread_col,ntot_cols);
 		
 		//search next tok
 		tok=strtok_r(NULL," \t",&saveptr);
@@ -292,19 +282,20 @@ public:
 	    while(tok);
 	    
 	    //store
-	    if(nread_col==nvis_col)
-	      {
-		for(auto &col_list : col_contr)
-		  for(auto &icol : col_list.second)
-		    data[iline+nlines*icol]=temp[col_list.first];
-		iline++;
-	      }
+	    for(size_t icol=0;icol<cols.size();icol++)
+	      data[iline+nlines*icol]=temp[cols[icol]];
+	    
+	    iline++;
 	  }
       }
-    while(!feof() && iline<nlines);
+    while(!feof() and iline<nlines);
     
     //invalidate failed reading
-    if(iline<nlines) data.clear();
+    if(iline<nlines)
+      {
+	cout<<"Read "<<iline<<" lines instead of "<<nlines<<endl;
+	data.clear();
+      }
     
     return data;
   }
@@ -317,7 +308,7 @@ class input_file_t : public raw_file_t
 {
 public:
   //! construct with a path
-  input_file_t(const char *path) : raw_file_t(path,"r") {};
+  input_file_t(const string &path) : raw_file_t(path,"r") {};
 };
 
 #endif
