@@ -17,47 +17,26 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
   //compute nfiles
   size_t navail_files=(range.end-range.start)/range.each+1;
   
-  //allocate files and open them
-  size_t nfiles=navail_files,clust_size;
+  //try to open all of them
   vector<obs_file_t> files;
-  size_t icheck_file=0,ifile=0;
-  do
+  for(size_t icheck_file=0;icheck_file<navail_files;icheck_file++)
     {
-      //compute clust size
-      clust_size=navail_files/njacks;
-      size_t nprop_files=clust_size*njacks;
-      if(nprop_files!=nfiles)
-	{
-	  cout<<"Reducing nfiles from "<<nfiles<<" to "<<nprop_files<<" to be multiple of njacks="<<njacks<<endl;
-	  nfiles=nprop_files;
-	}
-      
-      //! full path
       string path=combine(template_path.c_str(),icheck_file*range.each+range.start);
-      
-      //if file exists open it, otherwise skip it
-      if(file_exists(path))
-	{
-	  files.push_back(obs_file_t(ntot_col));
-	  files[ifile].open(path);
-	  files[ifile].set_col_view(cols);
-	  ifile++;
-	}
-      else
-	{
-	  cout<<"Skipping unavailable file "<<path<<endl;
-	  navail_files--;
-	}
-      icheck_file++;
+      //cout<<"Considering file: "<<path<<endl;
+      if(file_exists(path)) files.push_back(obs_file_t(path,ntot_col,cols));
+      else cout<<"Skipping unavailable file "<<path<<endl;
     }
-  while(icheck_file<navail_files and ifile<nfiles);
   
-  //check that all files have been opened
-  if(ifile<nfiles) CRASH("Unable to open all files, opened %zu instead of %zu",ifile,nfiles);
+  //trim
+  cout<<"Opened "<<files.size()<<" out of "<<navail_files<<endl;
+  size_t clust_size=files.size()/njacks;
+  size_t nfiles=clust_size*njacks;
+  files.resize(nfiles);
+  cout<<"Trimmed to "<<nfiles<<", clust_size="<<clust_size<<endl;
   
   //measure the length of the first file
   size_t length=files[0].length(nlines);
-  cout<<"Total length: "<<length<<endl;
+  cout<<"Total length (in multiple of nlines="<<nlines<<"): "<<length<<endl;
   
   //check that the length is a multiple of ncols*nlines
   size_t block_nentr=nlines*cols.size();

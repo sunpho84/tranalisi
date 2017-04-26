@@ -139,7 +139,7 @@ public:
     size_t nel=this->size();
     size_t nelh=nel/2;
     
-    if(abs(par)!=1 && par!=0) CRASH("Unknown parity %d",par);
+    if(abs(par)!=1 and par!=0) CRASH("Unknown parity %d",par);
     
     if(nel%2) CRASH("Size %zu odd",nel);
     
