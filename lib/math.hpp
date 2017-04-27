@@ -13,4 +13,8 @@ template <class T> T uminus(const T &in)
 template <class T> T sqr(const T &x)
 {return x*x;}
 
+//! define the cube
+template <class T> T cube(const T &x)
+{return x*x*x;}
+
 #endif
