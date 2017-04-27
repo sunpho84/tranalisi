@@ -1,4 +1,3 @@
-
 #ifdef HAVE_CONFIG_H
  #include <config.hpp>
 #endif
@@ -80,8 +79,8 @@ public:
   size_t T; //< time extent
   size_t L; //< spatial size
   double aml; //< bare light quark mass
-  double MLep[nleps]; //< mass of leptons
-  double MMes[4]; //< mass of mesons (0=Pi, 1=K, 2=D, 3=Ds)
+  double aMLep[nleps]; //< mass of leptons
+  double aMMes[4]; //< mass of mesons (0=Pi, 1=K, 2=D, 3=Ds)
   int use_for_L; //< use for FSE analysis
   string path; //< path (name)
   
@@ -95,8 +94,16 @@ const size_t nqmass=3; //< number of quark mass
 const size_t nr=2; //< number of r
 const index_t ind_2pts({{"NMass",nqmass},{"NMass",nqmass},{"Nr",nr},{"RI",2}});
 
-vector<size_t> iQED_mes_of_proc ({0,1,3,3,5,5}); //< index of the QED meson corresponding to a given process
-vector<size_t> imlep_of_proc({0,0,0,1,0,1}); //< index of the lepton corresponding to a given process
+/* Processes are
+   Pi->Mu
+   K->Mu
+   D->Mu
+   D->Tau
+   Ds->Mu
+   Ds->Tau */
+
+vector<size_t> iQED_mes_of_proc ({0,1,3,3,5,5}); //< index of the QED meson corresponding to a given process from the QED_mes_pars
+vector<size_t> imlep_of_proc({0,0,0,1,0,1}); //< index of the lepton mass corresponding to a given process
 
 //! initialize everything
 void initialize(int narg,char **arg)
@@ -115,7 +122,7 @@ void initialize(int narg,char **arg)
   ens_pars.resize(nens_used);
   Za.resize(nbeta);
   
-  input.expect({"Ens","beta","aml","L","UseForL","T","TPi","TK","TD","path","MLep0","MLep1","MMes0","MMes1","MMes2","MMes3"});
+  input.expect({"Ens","beta","aml","L","UseForL","T","TPi","TK","TD","path","aMLep0","aMLep1","aMMes0","aMMes1","aMMes2","aMMes3"});
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_pars_t &ens=ens_pars[iens];
@@ -132,8 +139,8 @@ void initialize(int narg,char **arg)
 	  input.read(ens.tmax[itint]);
 	}
       input.read(ens.path);
-      for(size_t ilep=0;ilep<nleps;ilep++) input.read(ens.MLep[ilep]);
-      for(size_t iQCD_mes=0;iQCD_mes<nQCD_mes;iQCD_mes++) input.read(ens.MMes[iQCD_mes]);
+      for(size_t ilep=0;ilep<nleps;ilep++) input.read(ens.aMLep[ilep]);
+      for(size_t iQCD_mes=0;iQCD_mes<nQCD_mes;iQCD_mes++) input.read(ens.aMMes[iQCD_mes]);
     }
 }
 
@@ -233,15 +240,18 @@ djvec_t read_MASS(const ens_pars_t &ens,size_t iQED_mes,const djvec_t &c_LO,
   djvec_t(c_0S1/c_LO).ave_err().write(combine("%s/%s_0S1.xmg",ens_qpath.c_str(),name));
   djvec_t(c_0S2/c_LO).ave_err().write(combine("%s/%s_0S2.xmg",ens_qpath.c_str(),name));
   
+  //the insertion is of the scalar density, but
+  //the correction is given by the lagrangian
+  //insertion, where -S is present
   return -(c_0S1+c_0S2);
 }
 
 //slopes and Z for all mesons and masses
-djvec_t ZP,ZA;
-djvec_t M;
-djvec_t DZA_QED_rel,DZA_MASS_rel;
-djvec_t SL_PP_QED,SL_PP_MASS;
-djvec_t SL_AP_QED,SL_AP_MASS;
+djvec_t jZP,jZA;
+djvec_t jaM;
+djvec_t jDZA_QED_rel,jDZA_MASS_rel;
+djvec_t jSL_PP_QED,jSL_PP_MASS;
+djvec_t jSL_AP_QED,jSL_AP_MASS;
 
 index_t ind_ens_QCD_mes;
 index_t ind_ens_QED_mes;
@@ -254,18 +264,18 @@ void compute_basic_slopes()
   size_t nens_QED_mes=ind_ens_QED_mes.max();
   
   deltam_cr.resize(nens_used);
-  ZP.resize(nens_QCD_mes);
-  ZA.resize(nens_QCD_mes);
-  M.resize(nens_QCD_mes);
+  jZP.resize(nens_QCD_mes);
+  jZA.resize(nens_QCD_mes);
+  jaM.resize(nens_QCD_mes);
   //
-  DZA_QED_rel.resize(nens_QED_mes);
-  DZA_MASS_rel.resize(nens_QED_mes);
+  jDZA_QED_rel.resize(nens_QED_mes);
+  jDZA_MASS_rel.resize(nens_QED_mes);
   //
-  SL_PP_QED.resize(nens_QED_mes);
-  SL_PP_MASS.resize(nens_QED_mes);
+  jSL_PP_QED.resize(nens_QED_mes);
+  jSL_PP_MASS.resize(nens_QED_mes);
   //
-  SL_AP_QED.resize(nens_QED_mes);
-  SL_AP_MASS.resize(nens_QED_mes);
+  jSL_AP_QED.resize(nens_QED_mes);
+  jSL_AP_MASS.resize(nens_QED_mes);
   
   vector<djvec_t> jPP_LO(nens_QCD_mes);
   vector<djvec_t> jPP_MASS(nens_QED_mes);
@@ -309,27 +319,27 @@ void compute_basic_slopes()
 	  djack_t ZAP,ZPP;
 	  djack_t DZ_AP_QED_rel,DZ_PP_QED_rel;
 	  djack_t DZ_AP_MASS_rel,DZ_PP_MASS_rel;
-	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],DZ_AP_QED_rel,SL_AP_QED[ind_QED],jAP_LO[ind_QCD],jAP_QED[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZAP         ,jaM[ind_QCD],DZ_AP_QED_rel,jSL_AP_QED[ind_QED],jAP_LO[ind_QCD],jAP_QED[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_AP_LO1.xmg",plots_path+"/slope_AP_QED.xmg",-1);
-	  two_pts_with_ins_ratio_fit(ZAP         ,M[ind_QCD],DZ_AP_MASS_rel,SL_AP_MASS[ind_QED],jAP_LO[ind_QCD],jAP_MASS[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZAP         ,jaM[ind_QCD],DZ_AP_MASS_rel,jSL_AP_MASS[ind_QED],jAP_LO[ind_QCD],jAP_MASS[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_AP_LO2.xmg",plots_path+"/slope_AP_MASS.xmg",-1);
 	  //
-	  two_pts_with_ins_ratio_fit(ZPP,M[ind_QCD],DZ_PP_QED_rel,SL_PP_QED[ind_QED],jPP_LO[ind_QCD],jPP_QED[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZPP,jaM[ind_QCD],DZ_PP_QED_rel,jSL_PP_QED[ind_QED],jPP_LO[ind_QCD],jPP_QED[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_PP_LO1.xmg",plots_path+"/slope_PP_QED.xmg");
-	  two_pts_with_ins_ratio_fit(ZPP,M[ind_QCD],DZ_PP_MASS_rel,SL_PP_MASS[ind_QED],jPP_LO[ind_QCD],jPP_MASS[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZPP,jaM[ind_QCD],DZ_PP_MASS_rel,jSL_PP_MASS[ind_QED],jPP_LO[ind_QCD],jPP_MASS[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_PP_LO2.xmg",plots_path+"/slope_PP_MASS.xmg");
 	  //
-	  ZP[ind_QCD]=sqrt(ZPP);
-	  ZA[ind_QCD]=ZAP/ZP[ind_QCD];
+	  jZP[ind_QCD]=sqrt(ZPP);
+	  jZA[ind_QCD]=ZAP/jZP[ind_QCD];
 	  //
-	  DZA_MASS_rel[ind_QED]=DZ_AP_MASS_rel-DZ_PP_MASS_rel/2;
-	  DZA_QED_rel[ind_QED]=DZ_AP_QED_rel-DZ_PP_QED_rel/2;
-	  cout<<plots_path<<", (Z)A: "<<ZA[ind_QCD].ave_err()<<endl;
-	  cout<<plots_path<<", M_AP: "<<M[ind_QCD].ave_err()<<endl;
-	  cout<<plots_path<<", SL_AP: "<<djack_t(SL_PP_QED[ind_QED]).ave_err()<<endl;
-	  cout<<plots_path<<", SL_PP: "<<djack_t(SL_AP_QED[ind_QED]).ave_err()<<endl;
-	  cout<<plots_path<<", D(Z)A/(Z)A: "<<djack_t(DZA_QED_rel[ind_QED]).ave_err()<<endl;
-	  cout<<plots_path<<", D(Z)A: "<<djack_t(DZA_QED_rel[ind_QED]*ZA[ind_QCD]).ave_err()<<endl;
+	  jDZA_MASS_rel[ind_QED]=DZ_AP_MASS_rel-DZ_PP_MASS_rel/2;
+	  jDZA_QED_rel[ind_QED]=DZ_AP_QED_rel-DZ_PP_QED_rel/2;
+	  cout<<plots_path<<", (Z)A: "<<jZA[ind_QCD].ave_err()<<endl;
+	  cout<<plots_path<<", M_AP: "<<jaM[ind_QCD].ave_err()<<endl;
+	  cout<<plots_path<<", SL_AP: "<<djack_t(jSL_PP_QED[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", SL_PP: "<<djack_t(jSL_AP_QED[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", D(Z)A/(Z)A: "<<djack_t(jDZA_QED_rel[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", D(Z)A: "<<djack_t(jDZA_QED_rel[ind_QED]*jZA[ind_QCD]).ave_err()<<endl;
 	}
       
       for(size_t iquark=0;iquark<4;iquark++)
@@ -464,9 +474,9 @@ void compute_adml_bare()
 	  const double phys_dM2K=sqr(MKPLUS)-sqr(MK0);
 	  
 	  dboot_t QED_dM2K;
-	  QED_dM2K=dboot_t(bi,SL_PP_QED[ind_ens_Kplus]-SL_PP_QED[ind_ens_K0]);
-	  QED_dM2K*=e2*2*dboot_t(bi,M[ind_ens_K]);
-	  QED_dM2K-=dboot_t(bi,FVE_M2(M[ind_ens_K],ens.L));
+	  QED_dM2K=dboot_t(bi,jSL_PP_QED[ind_ens_Kplus]-jSL_PP_QED[ind_ens_K0]);
+	  QED_dM2K*=e2*2*dboot_t(bi,jaM[ind_ens_K]);
+	  QED_dM2K-=dboot_t(bi,FVE_M2(jaM[ind_ens_K],ens.L));
 	  QED_dM2K/=sqr(a);
 	  
 	  dboot_t QCD_dM2K=phys_dM2K-QED_dM2K;
@@ -474,7 +484,7 @@ void compute_adml_bare()
 	  //compute the proportionality factor between the mass slope of
 	  //dM2K and aml_bare, needed to know by how much to multiply any mass correlator
 	  dboot_t QCD_dM2K_over_adm;
-	  QCD_dM2K_over_adm=dboot_t(bi,(SL_PP_MASS[ind_ens_Kplus]-SL_PP_MASS[ind_ens_K0])*2*M[ind_ens_K])/sqr(a);
+	  QCD_dM2K_over_adm=dboot_t(bi,(jSL_PP_MASS[ind_ens_Kplus]-jSL_PP_MASS[ind_ens_K0])*2*jaM[ind_ens_K])/sqr(a);
 	  adml_bare[ind]=QCD_dM2K/QCD_dM2K_over_adm;
 	  
 	  dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*ZP*(6.0*log(mu_MS*a)-22.596)/(32.0*sqr(M_PI)));
@@ -507,18 +517,17 @@ void compute_adml_bare()
 
 ///////////////////////////////////////////////////// nasty diagram ////////////////////////////////////////////
 
-const size_t NPROJ=1;
 const size_t nw=9;
-const size_t norie=2; //number of orientation of the meson
-const size_t nrev=2; //number of possible reversion
-const size_t nqins=3; //number of quarks inserted: 0(none), 1 or 2
-const size_t nprocess=6;
-const size_t nrlep=2;
-const size_t nproj=1;
+const size_t norie=2; //< number of orientation of the meson
+const size_t nrev=2; //< number of possible reversion
+const size_t nqins=3; //< number of quarks inserted: 0(none), 1 or 2
+const size_t nprocess=6; //< number of processes computed
+const size_t nrlep=2; //< number of r for leptons
+const size_t nproj=1; //<number of projectors: 1, V0 only
 index_t ind_hl_corr;
 
 //! load hl correlations
-djvec_t load_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,/* const int *rev_par,*/size_t qins,const ens_pars_t &ens,const string &name)
+djvec_t load_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t qins,const ens_pars_t &ens,const string &name)
 {
   size_t T=ens.T;
   djvec_t out(T);
@@ -528,37 +537,27 @@ djvec_t load_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,/* const
   size_t irev=QED_mes_pars[iQED_mes].irev;
   
   size_t n=0;
-  //for(size_t irev=0;irev<nrev;irev++)
-    for(size_t r2=0;r2<nr;r2++)
-      for(size_t orie=0;orie<norie;orie++)
-	for(size_t rl=0;rl<nr;rl++)
-	  //for(size_t ri=0;ri<2;ri++)
-  	    {
-	      size_t ri=0;
-	      size_t ic=ind_hl_corr({iproc,qins,irev,r2,orie,rl,iw,iproj,ri});
-	      djvec_t corr=read_djvec(ens.path+"/data/corr_hl",T,ic);
-	      
-	      //insertion on
-	      if(ri==RE) // not doing this to remove mizing! and r2==rl) //nb keeping r2 and rl identical
-		{
-		  //double r=rev_par[irev];
-		  //if(qins==0) NOOOO dependency! we must keep the sign in place!!!!!
-		  int r=1;
-		  
-		  out+=orie_par[orie]*r*corr;
-		  n++;
-		}
-	      
-	      if(0 and name!="")
-		{
-		  string path=ens.path+"/plots_hl/"+name+"_proc_"+to_string(iproc)+"_orie_"+to_string(orie)+"_qins_"+to_string(qins)+"_qrev_"+to_string(irev+1)+
-		    "_r2_"+to_string(r2)+"_rl_"+to_string(rl)+"_ri_"+to_string(ri)+".xmg";
-		  grace_file_t fout(path);
-		  fout.write_vec_ave_err(corr.ave_err());
-		  fout.set_title("iw="+to_string(iw)+" "+to_string(ic));
-		}
-	    }
-    //cout<<n<<endl;
+  for(size_t r2=0;r2<nr;r2++)
+    for(size_t orie=0;orie<norie;orie++)
+      for(size_t rl=0;rl<nr;rl++)
+	{
+	  size_t ri=0; //only real part
+	  size_t ic=ind_hl_corr({iproc,qins,irev,r2,orie,rl,iw,iproj,ri});
+	  djvec_t corr=read_djvec(ens.path+"/data/corr_hl",T,ic);
+	  
+	  out+=orie_par[orie]*corr;
+	  n++;
+	  
+	  // if(name!="")
+	  //   {
+	  //     string path=ens.path+"/plots_hl/"+name+"_proc_"+to_string(iproc)+"_orie_"+to_string(orie)+"_qins_"+to_string(qins)+"_qrev_"+to_string(irev+1)+
+	  // 	"_r2_"+to_string(r2)+"_rl_"+to_string(rl)+"_ri_"+to_string(ri)+".xmg";
+	  //     grace_file_t fout(path);
+	  //     fout.write_vec_ave_err(corr.ave_err());
+	  //     fout.set_title("iw="+to_string(iw)+" "+to_string(ic));
+	  //   }
+	}
+
   return out.symmetrized(1)/n*pow(ens.L,3);
 }
 
@@ -575,24 +574,24 @@ djvec_t hl_corr_subtract_around_world(const djvec_t &in,const djack_t &M)
 }
 
 //! load the correlation and correct for around-the-world effect
-valarray<djvec_t> load_and_correct_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,/*const int *rev_par,*/size_t iens,const string &name)
+valarray<djvec_t> load_and_correct_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t iens,const string &name)
 {
   ens_pars_t &ens=ens_pars[iens];
   size_t iQCD_mes=QED_mes_pars[iQED_mes_of_proc[iproc]].iQCD;
-  const djack_t M0=M[ind_ens_QCD_mes({iens,iQCD_mes})];
-  djack_t mismatch=M0-ens.MMes[iQCD_mes];
+  const djack_t M0=jaM[ind_ens_QCD_mes({iens,iQCD_mes})];
+  djack_t mismatch=M0-ens.aMMes[iQCD_mes];
   
   valarray<djvec_t> out(3);
   for(size_t qins=0;qins<3;qins++)
     {
-      djvec_t precorr=load_hl(iproc,iw,iproj,orie_par,/*rev_par,*/qins,ens,name);
+      djvec_t precorr=load_hl(iproc,iw,iproj,orie_par,qins,ens,name);
       djvec_t postsub=hl_corr_subtract_around_world(precorr,M0);
       
       djvec_t postmism=postsub;
       for(size_t t=0;t<postmism.size();t++) postmism[t]*=exp(mismatch*t);
       
       grace_file_t plot(ens.path+"/plots_hl/"+name+"_proc_"+to_string(iproc)+"_qins_"+to_string(qins)+".xmg");
-      plot.set_subtitle("M0["+to_string(iens)+","+to_string(iproc)+"]: "+smart_print(M0.ave_err())+" input["+to_string(iQCD_mes)+"]: "+to_string(ens.MMes[iQCD_mes]));
+      plot.set_subtitle("M0["+to_string(iens)+","+to_string(iproc)+"]: "+smart_print(M0.ave_err())+" input["+to_string(iQCD_mes)+"]: "+to_string(ens.aMMes[iQCD_mes]));
       plot.write_vec_ave_err(precorr.ave_err());
       plot.set_legend("Raw");
       plot.write_vec_ave_err(postsub.ave_err());
@@ -660,22 +659,69 @@ void load_all_hl()
   
 // }
 
+//! compute the energy of a twisted mass quark
+template <class T1,class T2> T1 tm_quark_energy(T1 pi,T2 mass)
+{
+  T2 m2=mass*mass;
+  T1 sinph=sin(pi/2);
+  T1 sinph2=sinph*sinph;
+  T1 sinph4=sinph2*sinph2;
+  T1 p2=12*sinph2;
+  T1 p4=12*sinph4;
+  T1 four_sinh2_Eh=(m2+p2+p2*p2/4-p4)/(1+p2/2);
+  
+  return 2*asinh((T1)sqrt(four_sinh2_Eh/4));
+}
+
+//! compute the energy of a naive massless fermion
+template <class T> T naive_massless_quark_energy(T pi)
+{
+  T sinh2E=3*sqr(sin(pi));
+  return asinh(sqrt(sinh2E));
+}
+  
+//! compute the non-offshellness
+double offshellness(double pi,double lep_mass,double mes_mass)
+{
+  double lep_energy=tm_quark_energy(pi,lep_mass);
+  double neu_energy=naive_massless_quark_energy(pi);
+  double err=lep_energy+neu_energy-mes_mass;
+  
+  return err;
+}
+
+//! find pi to put for a given process
+double find_pi(double lep_mass,double mes_mass)
+{return Brent_solve(bind(offshellness,_1,lep_mass,mes_mass),0,1);}
+
+//! wrapper
+template <class TS> TS find_pi(double lep_mass,TS mes_mass)
+{
+  TS pi;
+  for(size_t iel=0;iel<pi.size();iel++) pi[iel]=find_pi(lep_mass,mes_mass[iel]);
+  return pi;
+}
+
 //! compute the correction to the process
 void compute_corr(size_t iproc)
 {
-  for(size_t iens=0;iens<nens_used;iens++)
+  for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
     {
-      ens_pars_t &ens=ens_pars[iens];
-      size_t ib=ens.ib;
-      size_t ind=ind_ens_proc({iens,iproc});
+      prepare_az(input_an_id);
       
-      for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
+      for(size_t iens=0;iens<nens_used;iens++)
 	{
-	  prepare_az(input_an_id);
+	  ens_pars_t &ens=ens_pars[iens];
 	  bi=jack_index[input_an_id][ens.iult];
 	  
-	  dbvec_t LO=Zv[ib]*dbvec_t(bi,jLO_A_bare[ind]);
-	  dbvec_t QED=-dbvec_t(bi,jQED_A_bare[ind])*Zv[ib]+dbvec_t(bi,jQED_V_bare[ind])*Za[ib]; //minus as explained before
+	  size_t ib=ens.ib;
+	  size_t ind_proc=ind_ens_proc({iens,iproc});
+	  size_t iQED_mes=iQED_mes_of_proc[iproc];
+	  size_t iQCD_mes=QED_mes_pars[iQED_mes].iQCD;
+	  size_t ind_QCD=ind_ens_QCD_mes({iens,iQCD_mes});
+	  
+	  dbvec_t LO=Zv[ib]*dbvec_t(bi,jLO_A_bare[ind_proc]);
+	  dbvec_t QED=-dbvec_t(bi,jQED_A_bare[ind_proc])*Zv[ib]+dbvec_t(bi,jQED_V_bare[ind_proc])*Za[ib]; //minus as explained before
 	  LO.ave_err().write(combine("%s/plots_hl/LO_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  QED.ave_err().write(combine("%s/plots_hl/QED_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  
@@ -684,7 +730,24 @@ void compute_corr(size_t iproc)
 	  rat_ext.ave_err().write(combine("%s/plots_hl/QED_LO_ratio_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  
 	  //DZA_QED_rel[ind_QED];
+	  size_t ilep=imlep_of_proc[iproc];
+	  dboot_t aM=dboot_t(bi,jaM[ind_QCD]);
+	  double aMlep=ens.aMLep[ilep];
 	  
+	  //check bc put in the simulation
+	  // double pi_bare=find_pi(aMlep,ens.aMMes[iQCD_mes]);
+	  // double bc=pi_bare*ens.L/M_PI;
+	  // cout<<"bc put in the simulation for ensemble "<<ens.path<<": "<<bc<<endl;
+	  
+	  dboot_t pi=find_pi(aMlep,aM);
+	  dboot_t betal=sqrt(3)*pi/tm_quark_energy(pi,aMlep);
+	  cout<<"betal for ensemble "<<ens.path<<": "<<betal.ave_err()<<endl;
+	  //WARNING, propagate a
+	  double a=1/lat_par[input_an_id].ainv[ib].ave();
+	  double Mlep=aMlep/a;
+	  //double Mmes=ens.aMMes[iQCD_mes]/a;
+	  double Mmes=aM.ave();
+	  cout<<"MMes: "<<Mmes<<",  FSE: "<<FSE_corr(Mlep,Mmes,betal.ave(),ens.L,1)*e2<<endl;
 	}
     }
 }
@@ -693,10 +756,10 @@ int main(int narg,char **arg)
 {
   int start=time(0);
   
-  cout.precision(16);
-  cout<<zeta(0.27138338825)<<endl;
-  cout<<endl;
-  cout<<zeta(0)<<endl;
+  // cout.precision(16);
+  // cout<<zeta(0.27138338825)<<endl;
+  // cout<<endl;
+  // cout<<zeta(0)<<endl;
   // exit(0);
   
   initialize(narg,arg);

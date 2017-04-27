@@ -12,6 +12,8 @@
 #include <gsl/gsl_sf_dawson.h>
 #include <gsl/gsl_integration.h>
 
+#include <Kl2_IB_FSE.hpp>
+
 using namespace std;
 
 //! iterate until convergence reached
@@ -237,3 +239,35 @@ vector<double> zeta(double betal,double ustar,double eps)
   return out;
 }
 
+double FSE_corr(double mlep,double mmes,double betal,double L,size_t upto)
+{
+  const double mW=80.385;
+  
+  double rl=mlep/mmes;
+  vector<double> c(4);
+  double rl2=sqr(rl);
+  
+  vector<double> z0=zeta(0);
+  vector<double> z=zeta(betal);
+  
+  cout<<"mlep: "<<mlep<<endl;
+  cout<<"mmes: "<<mmes<<endl;
+  cout<<"betal: "<<betal<<endl;
+  cout<<"Z0: "<<z0<<endl;
+  cout<<"Z: "<<z<<endl;
+  
+  double cIR=1/(8*sqr(M_PI))*((1+rl2)*log(rl2)/(1-rl2)+1);
+  c[0]=1/(16*sqr(M_PI))*(2*log(sqr(mmes)/sqr(mW))+((2-6*rl2)*log(rl2)+(1+rl2)*sqr(log(rl2)))/(1-rl2)-5.0/2)+(z0[2]-2*z[2])/2;
+  c[1]=-2*(1+rl2)/(1-rl2)*z0[1]+8*rl2/(1-sqr(rl2))*z[1];
+  c[2]=4/(1-rl2)*z[0]-8/(1-sqr(rl2))*z[3];
+  c[3]=(-5+rl2*(-5+rl2*(-3+rl2)))/cube(1+rl2);
+  
+  double mL=mmes*L;
+  
+  double out=cIR*log(sqr(mL))+c[0];
+  if(upto>=1) out+=c[1]/mL;
+  if(upto>=2) out+=c[2]/sqr(mL);
+  if(upto>=3) out+=c[3]/cube(mL);
+  
+  return out;
+}
