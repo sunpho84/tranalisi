@@ -124,10 +124,10 @@ public:
   }
   
   //! return only the average
-  double ave() const {return ave_err().ave();}
+  T ave() const {return ave_err().ave();}
   
   //! return only the error
-  double err() const {return ave_err().err();}
+  T err() const {return ave_err().err();}
   
   //! initialize from aver_err_t and a seed
   void fill_gauss(const gauss_filler_t &gf)
@@ -140,7 +140,7 @@ public:
   }
   
   //! initialize from ave and err
-  void fill_gauss(double ave,double err,int seed)
+  void fill_gauss(T ave,T err,int seed)
   {fill_gauss(gauss_filler_t(ave,err,seed));}
   
   //! intialize froma ave_err_t and seed
