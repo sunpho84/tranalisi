@@ -159,7 +159,7 @@ public:
     (*this)[nboots()]=jack[njacks];
   }
   
-    //! write to a stream
+  //! write to a stream
   void bin_write(const raw_file_t &out) const
   {out.bin_write(*this);}
   

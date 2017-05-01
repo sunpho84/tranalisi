@@ -147,13 +147,13 @@ public:
     (*this)[njacks]/=clust_size*njacks;
   }
   
-  //! initialize from vector of double, so to create jackknives
+  //! initialize from vector of T, so to create jackknives
   void init_from_data(const valarray<T> &data)
   {
     check_njacks_init();
     clusterize(fill_clusters(data));
   }
-
+  
   //! write to a stream
   void bin_write(const raw_file_t &out) const
   {out.bin_write(*this);}
