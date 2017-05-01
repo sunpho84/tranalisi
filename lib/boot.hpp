@@ -182,9 +182,17 @@ public:
   //! wrapper with name
   void bin_read(const string &path)
   {bin_read(path.c_str());}
+  
+  //! init (as for STL containers)
+  T* begin() {return &((*this)[0]);}
+  const T* begin() const {return &((*this)[0]);}
+  
+  //! end (as for STL containers)
+  T* end() {return &((*this)[0])+this->size();}
+  const T* end() const {return &((*this)[0])+this->size();}
 };
 
-//! typically we will use double numbers
+//! typically we will use T numbers
 using dboot_t=boot_t<double>;
 
 //! return the size needed to init a boot_t

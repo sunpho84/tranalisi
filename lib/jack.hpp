@@ -177,6 +177,14 @@ public:
   //! wrapper with name
   void bin_read(const string &path)
   {bin_read(path.c_str());}
+  
+  //! init (as for STL containers)
+  T* begin() {return &((*this)[0]);}
+  const T* begin() const {return &((*this)[0]);}
+  
+  //! end (as for STL containers)
+  T* end() {return &((*this)[0])+this->size();}
+  const T* end() const {return &((*this)[0])+this->size();}
 };
 
 //! typically we use jackknives of double
@@ -189,7 +197,7 @@ template <class T> string to_string(const jack_t<T> &obj)
   ostringstream os;
   os<<ae.ave()<<" "<<ae.err();
   return os.str();
-} 
+}
 
 //! get the size needed to init a jack_t
 template <class T> size_t init_nel(const jack_t<T> &obj)

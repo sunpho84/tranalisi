@@ -64,6 +64,14 @@ public:
   vmeas_t& operator=(const typename base_type::base_type &oth)
   {for(auto &it : *this) it=oth;return *this;}
   
+  //! init (as for STL containers)
+  meas_t* begin() {return &((*this)[0]);}
+  const meas_t* begin() const {return &((*this)[0]);}
+  
+  //! end (as for STL containers)
+  meas_t* end() {return &((*this)[0])+this->size();}
+  const meas_t* end() const {return &((*this)[0])+this->size();}
+  
   //! compute average and error
   vec_ave_err_t ave_err() const
   {
@@ -109,7 +117,7 @@ public:
   //! return a subset including end
   vmeas_t subset(size_t beg,size_t end)
   {
-    if(beg>end||beg>this->size()||beg>this->size()) CRASH("Asked to extract from %zu to %zu a vector of length %zu",beg,end,this->size());
+    if(beg>end or beg>this->size() or beg>this->size()) CRASH("Asked to extract from %zu to %zu a vector of length %zu",beg,end,this->size());
     return (*this)[slice(beg,end-beg+1,1)];
   }
   
@@ -152,6 +160,19 @@ public:
     (*this)=symmetrized(par);
     return *this;
   }
+  
+  //! get a specific "slice" of events
+  vector<double> get_all_events(size_t i) const
+  {
+    vector<double> out(this->size());
+    transform(this->begin(),this->end(),out.begin(),[i](const base_type &b){return b[i];});
+    return out;
+  }
+  
+  //! put a specific "slice" of events
+  void put_all_events(const vector<double> &in,size_t i)
+  {for(size_t iel=0;iel<in.size();iel++) (*this)[iel][i]=in[iel];}
+
 };
 
 //! typically we use double
