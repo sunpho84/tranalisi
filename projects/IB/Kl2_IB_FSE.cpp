@@ -122,8 +122,8 @@ double fuD(double u,void *params)
   
   double res;
   if(fabs(wu)<1e-18) res=1;
-  else res =1-2*wu*gsl_sf_dawson(wu);
-
+  else res=1-2*wu*gsl_sf_dawson(wu);
+  
   return res*expl(-1/u)/sqr(u);
 }
 
@@ -147,7 +147,7 @@ double integralazzoD(double betal,double rangle,double nsq4u)
 }
 
 //! return Z, that I have no clue on what it is
-vector<double> zeta(double betal,double ustar,double eps)
+vector<double> zeta_FSE(double betal,double ustar,double eps)
 {
   vector<double> out(4);
   
@@ -179,25 +179,25 @@ vector<double> zeta(double betal,double ustar,double eps)
 	return gsl_sf_gamma_inc(0.5,x/(4*ustar))/(16*M_PI*sqrt(x*M_PI*(1-sqr(betal))));
       },ustar,betal);},11);
   
-    out[1]=fB+sB+tB;
-    
-    ////////////////
-    
-    double fC=((fabs(betal)<1e-10)?1:(0.5*log((1.0+betal)/(1-betal))/betal))*(log(ustar)+gammaeul)/sqr(2*M_PI)-4*pow(ustar,1.5)/(3*sqrt(M_PI));
-    double sC=until_convergence([ustar,betal](int nmax){
-    return iter_on_n3(nmax,[](double nsq,double rangle,double ustar,double betal){
-	 double dnsq=4*sqr(M_PI)*nsq;
-	 double dncube=dnsq*sqrt(dnsq);
-	 double nsqu=ustar*dnsq;
-	 if(rangle==0) return 2*gsl_sf_gamma_inc(1.5,nsqu)/(dncube*sqrt(M_PI));
-	 else
-	   {
-	     double kbeta2=sqr(rangle*betal/(2*M_PI));
-	     long double numlog=nsqu*(kbeta2-1)+log(sqrt(M_PI)*gsl_sf_gamma_inc_P(1.5,nsqu*kbeta2)/2);
-	     return 2*(gsl_sf_gamma_inc(1.5,nsqu)-((betal>1e-16)?((double)expl(numlog)/sqrt(kbeta2)):0))/(dncube*(1-kbeta2)*sqrt(M_PI));
-	   }
-      },ustar,betal);},5);
-    
+  out[1]=fB+sB+tB;
+  
+  ////////////////
+  
+  double fC=((fabs(betal)<1e-10)?1:(0.5*log((1.0+betal)/(1-betal))/betal))*(log(ustar)+gammaeul)/sqr(2*M_PI)-4*pow(ustar,1.5)/(3*sqrt(M_PI));
+  double sC=until_convergence([ustar,betal](int nmax){
+      return iter_on_n3(nmax,[](double nsq,double rangle,double ustar,double betal){
+	  double dnsq=4*sqr(M_PI)*nsq;
+	  double dncube=dnsq*sqrt(dnsq);
+	  double nsqu=ustar*dnsq;
+	  if(rangle==0) return 2*gsl_sf_gamma_inc(1.5,nsqu)/(dncube*sqrt(M_PI));
+	  else
+	    {
+	      double kbeta2=sqr(rangle*betal);
+	      long double numlog=nsqu*(kbeta2-1)+log(sqrt(M_PI)*gsl_sf_gamma_inc_P(1.5,nsqu*kbeta2)/2);
+	      return 2*(gsl_sf_gamma_inc(1.5,nsqu)+((betal>1e-16)?((double)expl(numlog)/sqrt(kbeta2)):0))/(dncube*(1-kbeta2)*sqrt(M_PI));
+	    }
+	},ustar,betal);},5);
+  
   map<pair<double,double>,double> lktC;
   double tC=until_convergence([&lktC,ustar,betal](int nmax){
     return iter_on_n3(nmax,[&lktC](double nsq,double rangle,double ustar,double betal){
@@ -223,9 +223,9 @@ vector<double> zeta(double betal,double ustar,double eps)
 	 if(rangle==0) return gsl_sf_gamma_inc(0.5,nsqu)/(2*sqrt(nsqu)*sqrt(M_PI));
 	 else
 	   {
-	     double kbeta2=sqr(rangle*betal/(2*M_PI));
+	     double kbeta2=sqr(rangle*betal);
 	     long double numlog=nsqu*(kbeta2-1)+log(sqrt(M_PI)*gsl_sf_gamma_inc_P(0.5,nsqu*kbeta2));
-	     return (gsl_sf_gamma_inc(0.5,nsqu)-sqrt(kbeta2)*(double)expl(numlog))/(2*sqrt(nsqu)*(1-kbeta2)*sqrt(M_PI));
+	     return (gsl_sf_gamma_inc(0.5,nsqu)+sqrt(kbeta2)*(double)expl(numlog))/(2*sqrt(nsqu)*(1-kbeta2)*sqrt(M_PI));
 	   }
       },ustar,betal);},5);
   
@@ -239,30 +239,29 @@ vector<double> zeta(double betal,double ustar,double eps)
   return out;
 }
 
-double FSE_corr(double mlep,double mmes,double betal,double L,size_t upto)
+double FSE_corr(double mlep,double mmes,const vector<double> &z0,const vector<double> &z,double L,size_t upto)
 {
-  const double mW=80.385;
-  
   double rl=mlep/mmes;
   vector<double> c(4);
   double rl2=sqr(rl);
+  double mL=mmes*L;
   
-  vector<double> z0=zeta(0);
-  vector<double> z=zeta(betal);
-  
-  cout<<"mlep: "<<mlep<<endl;
-  cout<<"mmes: "<<mmes<<endl;
-  cout<<"betal: "<<betal<<endl;
-  cout<<"Z0: "<<z0<<endl;
-  cout<<"Z: "<<z<<endl;
+  // cout<<"rl: "<<rl<<endl;
+  // cout<<"rW: "<<mW/mmes<<endl;
+  // cout<<"mL: "<<mL<<endl;
+  // cout<<"mlep: "<<mlep<<endl;
+  // cout<<"mmes: "<<mmes<<endl;
+  // cout<<"Z0: "<<endl<<z0<<endl;
+  // cout<<"Z: "<<endl<<z<<endl;
   
   double cIR=1/(8*sqr(M_PI))*((1+rl2)*log(rl2)/(1-rl2)+1);
-  c[0]=1/(16*sqr(M_PI))*(2*log(sqr(mmes)/sqr(mW))+((2-6*rl2)*log(rl2)+(1+rl2)*sqr(log(rl2)))/(1-rl2)-5.0/2)+(z0[2]-2*z[2])/2;
+  c[0]=1/(16*sqr(M_PI))*(2*log(sqr(mmes)/sqr(MW))+((2-6*rl2)*log(rl2)+(1+rl2)*sqr(log(rl2)))/(1-rl2)-5.0/2)+(z0[2]-2*z[2])/2;
   c[1]=-2*(1+rl2)/(1-rl2)*z0[1]+8*rl2/(1-sqr(rl2))*z[1];
   c[2]=4/(1-rl2)*z[0]-8/(1-sqr(rl2))*z[3];
   c[3]=(-5+rl2*(-5+rl2*(-3+rl2)))/cube(1+rl2);
   
-  double mL=mmes*L;
+  // cout<<"cIR: "<<cIR<<endl;
+  // cout<<"c: "<<endl<<c<<endl;
   
   double out=cIR*log(sqr(mL))+c[0];
   if(upto>=1) out+=c[1]/mL;
