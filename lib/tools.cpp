@@ -36,7 +36,7 @@ void internal_crash(int line,const char *file,const char *format,...)
   vsprintf(buffer,format,args);
   va_end(args);
   
-  cerr<<"ERROR at line "<<line<<" of file "<<file<<": "<<buffer<<endl;
+  cerr<<"ERROR at line "<<line<<" of file "<<file<<": \""<<buffer<<"\""<<endl;
   print_backtrace_list();
   exit(1);
 }

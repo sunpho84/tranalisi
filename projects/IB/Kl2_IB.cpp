@@ -105,9 +105,29 @@ const index_t ind_2pts({{"NMass",nqmass},{"NMass",nqmass},{"Nr",nr},{"RI",2}});
 vector<size_t> iQED_mes_of_proc ({0,1,3,3,5,5}); //< index of the QED meson corresponding to a given process from the QED_mes_pars
 vector<size_t> imlep_of_proc({0,0,0,1,0,1}); //< index of the lepton mass corresponding to a given process
 
+//read or write z0
+vector<double> z0;
+void prepare_z0()
+{
+  string path_z0("z0.dat");
+  if(not file_exists(path_z0))
+    {
+      cout<<"Preparing z0"<<endl;
+      raw_file_t(path_z0,"w").bin_write(z0=zeta_FSE(0.0));
+    }
+  else
+    {
+      cout<<"Reading z0"<<endl;
+      z0.resize(nZ_FSE);
+      raw_file_t(path_z0,"r").bin_read(z0);
+    }
+}
+
 //! initialize everything
 void initialize(int narg,char **arg)
 {
+  prepare_z0();
+  
   //open input file
   string name="input_global.txt";
   if(narg>=2) name=arg[1];
@@ -490,7 +510,7 @@ void compute_adml_bare()
 	  dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*ZP*(6.0*log(mu_MS*a)-22.596)/(32.0*sqr(M_PI)));
 	  dboot_t ml=ens_pars[iens].aml/ZP/a;
 	  dboot_t dml_ren=adml_bare[ind]/ZP/a-ml/Z_QED;
-	  cout<<"dm_ren["<<ind<<"]: "<<dml_ren.ave_err()<<endl;
+	  //cout<<"dm_ren["<<ind<<"]: "<<dml_ren.ave_err()<<endl;
 	  
 	  dboot_t dum;
 	  dum=0.0;
@@ -521,7 +541,8 @@ const size_t nw=9;
 const size_t norie=2; //< number of orientation of the meson
 const size_t nrev=2; //< number of possible reversion
 const size_t nqins=3; //< number of quarks inserted: 0(none), 1 or 2
-const size_t nprocess=6; //< number of processes computed
+const size_t nprocess_max=6; //< number of processes computed
+const size_t nprocess=2; //< number of process to analyse
 const size_t nrlep=2; //< number of r for leptons
 const size_t nproj=1; //<number of projectors: 1, V0 only
 index_t ind_hl_corr;
@@ -617,7 +638,7 @@ void load_all_hl()
   jQED_A_bare.resize(nens_proc);
   
   const size_t nw=9;
-  ind_hl_corr.set_ranges({{"NProcess",nprocess},{"NQIns",nqins},{"NRev",nrev},{"Nr2",nr},{"NOrie",norie},{"Nrlep",nrlep},{"NWeak",nw},{"NProj",nproj},{"RI",2}});
+  ind_hl_corr.set_ranges({{"NProcess",nprocess_max},{"NQIns",nqins},{"NRev",nrev},{"Nr2",nr},{"NOrie",norie},{"Nrlep",nrlep},{"NWeak",nw},{"NProj",nproj},{"RI",2}});
   
   for(size_t iens=0;iens<nens_used;iens++)
     {
@@ -702,52 +723,152 @@ template <class TS> TS find_pi(double lep_mass,TS mes_mass)
   return pi;
 }
 
+//! load or compute and write the z to compute FSE
+djvec_t prepare_z_for_FSE(const string &path,const djack_t &jbetal)
+{
+  djvec_t jz(nZ_FSE);
+  
+  bool to_compute=true;
+  
+  //check that marker agrees
+  if(file_exists(path))
+    {
+      cout<<"Z file "<<path<<" found, parsing"<<endl;
+      raw_file_t fin(path,"r");
+      djack_t jbetal_temp=fin.bin_read<djack_t>();
+      to_compute=not equal(jbetal_temp.begin(),jbetal_temp.end(),jbetal.begin());
+      cout<<"checking jbetal, new="<<smart_print(jbetal.ave_err())<<", stored="<<smart_print(jbetal_temp.ave_err())<<endl;
+      if(not to_compute)
+	{
+	  cout<<"jbetal stored agree, reading z"<<endl;
+	  fin.bin_read(jz);
+	}
+      else cout<<"jbetal stored not agrees"<<endl;
+    }
+  
+  //if to compute, write it
+  if(to_compute)
+    {
+      cout<<"Computing z, storing in "<<path<<endl;
+      jz=zeta_FSE(jbetal);
+      raw_file_t fout(path,"w");
+      fout.bin_write(jbetal);
+      fout.bin_write(jz);
+    }
+  
+  return jz;
+}
+
+//! implements eq.50 of Silvano note BUT not dA/A
+dboot_t Wreg_contr(const dboot_t &a)
+{
+  const double uss=1/(16*sqr(M_PI));
+  
+  //tlSym photon
+  // dboot_t Z1=uss*(5.0*log(a*MW)-5.056);
+  // double Z2=uss*0.323;
+  
+  //pure Wilson photon
+  dboot_t Z1=uss*(5.0*log(a*MW)-8.863);
+  double Z2=uss*0.536;
+  
+  //cout<<"Z1 (e2 included): "<<dboot_t(Z1*e2).ave_err()<<", Z2 (idem): "<<Z2*e2<<endl;
+  
+  return Z1+Z2;
+}
+
 //! compute the correction to the process
 void compute_corr(size_t iproc)
 {
-  for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
+  //open a table for FSE contribution
+  string FSE_tab_path="tables/FSE_proc.txt";
+  static ofstream FSE_tab(FSE_tab_path);
+  if(not FSE_tab.good()) CRASH("unable to open %s",FSE_tab_path.c_str());
+  
+  //open a table for Wreg contribution
+  string Wreg_contr_tab_path="tables/Wreg_contr.txt";
+  static ofstream Wreg_contr_tab(Wreg_contr_tab_path);
+  if(not Wreg_contr_tab.good()) CRASH("unable to open %s",Wreg_contr_tab_path.c_str());
+  
+  //open a table for QED contribution
+  string QED_contr_tab_path="tables/QED_contr.txt";
+  static ofstream QED_contr_tab(QED_contr_tab_path);
+  if(not QED_contr_tab.good()) CRASH("unable to open %s",QED_contr_tab_path.c_str());
+  
+  //open a table for bc
+  string bc_tab_path="tables/bc.txt";
+  static ofstream bc_tab(bc_tab_path);
+  if(not bc_tab.good()) CRASH("unable to open %s",bc_tab_path.c_str());
+  
+  size_t ilep=imlep_of_proc[iproc];
+  size_t iQED_mes=iQED_mes_of_proc[iproc];
+  
+  for(size_t iens=0;iens<nens_used;iens++)
     {
-      prepare_az(input_an_id);
+      ens_pars_t &ens=ens_pars[iens];
+      double aMlep=ens.aMLep[ilep];
       
-      for(size_t iens=0;iens<nens_used;iens++)
+      const size_t iQCD_mes=QED_mes_pars[iQED_mes].iQCD;
+      const size_t ind_QCD=ind_ens_QCD_mes({iens,iQCD_mes});
+      const size_t ind_QED=ind_ens_QED_mes({iens,iQED_mes});
+      djack_t jpi=find_pi(aMlep,jaM[ind_QCD]);
+      djack_t jbetal=sqrt(3)*jpi/tm_quark_energy(jpi,aMlep);
+      djvec_t jz=prepare_z_for_FSE(ens.path+"/z_FSE_proc"+to_string(iproc)+".dat",jbetal);
+      
+      for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
 	{
-	  ens_pars_t &ens=ens_pars[iens];
 	  bi=jack_index[input_an_id][ens.iult];
+	  prepare_az(input_an_id);
 	  
 	  size_t ib=ens.ib;
 	  size_t ind_proc=ind_ens_proc({iens,iproc});
-	  size_t iQED_mes=iQED_mes_of_proc[iproc];
-	  size_t iQCD_mes=QED_mes_pars[iQED_mes].iQCD;
-	  size_t ind_QCD=ind_ens_QCD_mes({iens,iQCD_mes});
 	  
+	  //compute the nasty diagram
 	  dbvec_t LO=Zv[ib]*dbvec_t(bi,jLO_A_bare[ind_proc]);
 	  dbvec_t QED=-dbvec_t(bi,jQED_A_bare[ind_proc])*Zv[ib]+dbvec_t(bi,jQED_V_bare[ind_proc])*Za[ib]; //minus as explained before
 	  LO.ave_err().write(combine("%s/plots_hl/LO_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  QED.ave_err().write(combine("%s/plots_hl/QED_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  
+	  //extract dA/A from nasty diagram ratio
 	  dbvec_t rat_ext=QED/LO;
 	  rat_ext[rat_ext.size()-1]=rat_ext[0]=0.0; //set to zero the contact term
-	  rat_ext.ave_err().write(combine("%s/plots_hl/QED_LO_ratio_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
-	  
-	  //DZA_QED_rel[ind_QED];
-	  size_t ilep=imlep_of_proc[iproc];
-	  dboot_t aM=dboot_t(bi,jaM[ind_QCD]);
-	  double aMlep=ens.aMLep[ilep];
+	  const size_t itint=QCD_mes_pars[iQCD_mes].itint;
+	  const size_t tmin=ens.tmin[itint],tmax=tmin+2; //WARNING
+	  dboot_t dA_fr_A=constant_fit(rat_ext,tmin,tmax,combine("%s/plots_hl/QED_LO_ratio_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  
 	  //check bc put in the simulation
-	  // double pi_bare=find_pi(aMlep,ens.aMMes[iQCD_mes]);
-	  // double bc=pi_bare*ens.L/M_PI;
-	  // cout<<"bc put in the simulation for ensemble "<<ens.path<<": "<<bc<<endl;
+	  double pi_bare=find_pi(aMlep,ens.aMMes[iQCD_mes]);
+	  double bc=pi_bare*ens.L/M_PI;
+	  bc_tab<<"bc put in the simulation for ensemble "<<ens.path<<": "<<bc<<endl;
 	  
-	  dboot_t pi=find_pi(aMlep,aM);
-	  dboot_t betal=sqrt(3)*pi/tm_quark_energy(pi,aMlep);
-	  cout<<"betal for ensemble "<<ens.path<<": "<<betal.ave_err()<<endl;
-	  //WARNING, propagate a
-	  double a=1/lat_par[input_an_id].ainv[ib].ave();
-	  double Mlep=aMlep/a;
-	  //double Mmes=ens.aMMes[iQCD_mes]/a;
-	  double Mmes=aM.ave();
-	  cout<<"MMes: "<<Mmes<<",  FSE: "<<FSE_corr(Mlep,Mmes,betal.ave(),ens.L,1)*e2<<endl;
+	  //cout<<"betal for ensemble "<<ens.path<<": "<<betal.ave_err()<<endl;
+	  dboot_t a=1/lat_par[input_an_id].ainv[ib];
+	  dboot_t L=ens.L*a;
+	  dboot_t Mlep=aMlep/a;
+	  dboot_t Mmes=dboot_t(bi,jaM[ind_QCD])/a;
+	  
+	  //compute FSE contribution: this contains already a 2
+	  dboot_t FSE_contr=FSE_corr(Mlep,Mmes,z0,dbvec_t(bi,jz),L,1)*e2;
+	  FSE_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<", FSE: "<<smart_print(FSE_contr.ave_err())<<endl;
+	  
+	  //compute the contribution due to W reg (2*e2 added)
+	  dboot_t W_contr=2*Wreg_contr(a)*e2;
+	  Wreg_contr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<", Wreg_contr to amplitude: "<<
+	    smart_print(W_contr.ave_err())<<endl;
+	  
+	  //compute the point-like contribution according to eq.9 of Silvano's note
+	  
+	  //compute the internal+external contribution
+	  dboot_t external=2.0*dA_fr_A*e2; //nasty: CHECK IF A MINUS is present, I think no, because there should be one in dA and one in A
+	  dboot_t internal=2.0*dboot_t(bi,jDZA_QED_rel[ind_QED])*e2;
+	  dboot_t QED_contr=external+internal; //2*e2 included
+	  QED_contr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<
+	    ", external: "<<smart_print(external.ave_err())<<
+	    ", internal: "<<smart_print(internal.ave_err())<<
+	    ", QED_contr to amplitude: "<<smart_print(QED_contr.ave_err())<<endl;
+	  
+	  dboot_t tot_corr=QED_contr-FSE_contr+W_contr;
+	  cout<<"Tot: "<<tot_corr.ave_err()<<endl;
 	}
     }
 }

@@ -26,7 +26,7 @@ template <class Tpars> Tpars FSE_LO(const Tpars &C,const Tpars &L3dep,const Tpar
     }
 }
 
-//return the tmin for the fit
+//! return the tmin for the fit
 size_t tmin_fit(size_t iens,size_t ifit_range)
 {
   //set malus for fitting
@@ -584,7 +584,7 @@ void perform_analysis(const dbvec_t &data,const index_t &ind,const string &name)
 {
   cout<<" ================== "<<name<<" ================== "<<endl;
   auto r=perform_analysis(data,ind);
-
+  
   for(auto el : vector<pair<string,double>>{{" Ave",r.ave},{"Weig",r.wave}})
     cout<<el.first.substr(0,6)<<":\t"<<el.second<<endl;
   

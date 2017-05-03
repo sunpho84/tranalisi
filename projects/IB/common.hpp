@@ -36,6 +36,7 @@ const double ed=-1.0/3; //< charge of down quark
 const double es=ed;     //< charge of strange quark
 const double ec=eu;     //< charge of charm
 const double MKPLUS=0.493677,MK0=0.497611;
+const double MW=80.385;
 
 //! charge of all quarks
 const double eq[3]={eu,es,ec};
@@ -43,7 +44,7 @@ const double eq[3]={eu,es,ec};
 //! continuum limit
 const double a_cont=1e-5;
 
-//! renormalization constants taken from 
+//! renormalization constants taken from 1403.4504
 const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
 const vector<vector<ave_err_t>> Zv_ae({{{0.587,0.004},{0.603,0.003},{0.655,0.003}},{{0.608,0.003},{0.614,0.002},{0.657,0.002}}});
 const vector<vector<ave_err_t>> Zt_ae({{{0.711,0.005},{0.724,0.004},{0.774,0.004}},{{0.700,0.003},{0.711,0.002},{0.767,0.002}}});

@@ -124,10 +124,10 @@ public:
   }
   
   //! return only the average
-  double ave() const {return ave_err().ave();}
+  T ave() const {return ave_err().ave();}
   
   //! return only the error
-  double err() const {return ave_err().err();}
+  T err() const {return ave_err().err();}
   
   //! initialize from aver_err_t and a seed
   void fill_gauss(const gauss_filler_t &gf)
@@ -140,7 +140,7 @@ public:
   }
   
   //! initialize from ave and err
-  void fill_gauss(double ave,double err,int seed)
+  void fill_gauss(T ave,T err,int seed)
   {fill_gauss(gauss_filler_t(ave,err,seed));}
   
   //! intialize froma ave_err_t and seed
@@ -159,7 +159,7 @@ public:
     (*this)[nboots()]=jack[njacks];
   }
   
-    //! write to a stream
+  //! write to a stream
   void bin_write(const raw_file_t &out) const
   {out.bin_write(*this);}
   
@@ -182,9 +182,17 @@ public:
   //! wrapper with name
   void bin_read(const string &path)
   {bin_read(path.c_str());}
+  
+  //! init (as for STL containers)
+  T* begin() {return &((*this)[0]);}
+  const T* begin() const {return &((*this)[0]);}
+  
+  //! end (as for STL containers)
+  T* end() {return &((*this)[0])+this->size();}
+  const T* end() const {return &((*this)[0])+this->size();}
 };
 
-//! typically we will use double numbers
+//! typically we will use T numbers
 using dboot_t=boot_t<double>;
 
 //! return the size needed to init a boot_t

@@ -101,10 +101,10 @@ public:
   }
   
   //! return only the average
-  double ave() const {return ave_err().ave();}
+  T ave() const {return ave_err().ave();}
   
   //! return only the error
-  double err() const {return ave_err().err();}
+  T err() const {return ave_err().err();}
   
   //! initialize from aver_err_t and a seed
   void fill_gauss(const gauss_filler_t &gf)
@@ -117,7 +117,7 @@ public:
   }
   
   //! initialize from ave and err
-  void fill_gauss(double ave,double err,int seed)
+  void fill_gauss(T ave,T err,int seed)
   {fill_gauss(gauss_filler_t(ave,err,seed));}
   
   //! intialize froma ave_err_t and seed
@@ -147,13 +147,13 @@ public:
     (*this)[njacks]/=clust_size*njacks;
   }
   
-  //! initialize from vector of double, so to create jackknives
+  //! initialize from vector of T, so to create jackknives
   void init_from_data(const valarray<T> &data)
   {
     check_njacks_init();
     clusterize(fill_clusters(data));
   }
-
+  
   //! write to a stream
   void bin_write(const raw_file_t &out) const
   {out.bin_write(*this);}
@@ -177,6 +177,14 @@ public:
   //! wrapper with name
   void bin_read(const string &path)
   {bin_read(path.c_str());}
+  
+  //! init (as for STL containers)
+  T* begin() {return &((*this)[0]);}
+  const T* begin() const {return &((*this)[0]);}
+  
+  //! end (as for STL containers)
+  T* end() {return &((*this)[0])+this->size();}
+  const T* end() const {return &((*this)[0])+this->size();}
 };
 
 //! typically we use jackknives of double
@@ -189,7 +197,7 @@ template <class T> string to_string(const jack_t<T> &obj)
   ostringstream os;
   os<<ae.ave()<<" "<<ae.err();
   return os.str();
-} 
+}
 
 //! get the size needed to init a jack_t
 template <class T> size_t init_nel(const jack_t<T> &obj)
