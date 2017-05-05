@@ -489,17 +489,28 @@ public:
 };
 
 //! prepare a plot with a band
-template <class TV,class T=typename TV::base_type,class fun_t> void write_fit_plot(const string &path,double xmin,double xmax,fun_t fun,const TV &v)
+template <class TV,class T=typename TV::base_type,class fun_t> void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const vector<double> &x,const TV &y)
 {
   grace_file_t out(path);
   out.write_polygon(fun,xmin,xmax);
   out.new_data_set();
-  out.write_vec_ave_err(v.ave_err());
+  out.write_vec_ave_err(x,y.ave_err());
   out.new_data_set();
 }
-//! prepare a plot with a constant
-template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &v)
-{write_fit_plot(path,xmin,xmax,[&c](double x) -> T {return c;},v);}
+template <class TV,class fun_t,class T=typename TV::base_type> void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const TV &y)
+{write_fit_plot(path,xmin,xmax,fun,vector_up_to<double>(y.size()),y);}
+
+//! prepare a plot with a polynomial
+template <class TV,class T=typename TV::base_type> void write_poly_fit_plot(const string &path,double xmin,double xmax,const TV &res,const vector<double> &x,const TV &y)
+{write_fit_plot(path,xmin,xmax,[&res](double x){T out;out=0;for(size_t i=0;i<res.size();i++) out+=res[i]*pow(x,i);return out;},x,y);}
+template <class TV,class T=typename TV::base_type> void write_poly_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
+{write_poly_fit_plot(path,xmin,xmax,c,vector_up_to<double>(y.size()),y);}
+
+//! prepare a plot with a polynomial
+template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const vector<double> &x,const TV &y)
+{write_fit_plot(path,xmin,xmax,[&c](double x){return c;},x,y);}
+template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
+{write_constant_fit_plot(path,xmin,xmax,c,vector_up_to<double>(y.size()),y);}
 
 #undef INIT_TO
 #undef EXTERN_GRACE

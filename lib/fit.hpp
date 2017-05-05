@@ -536,12 +536,12 @@ template <class TV> TV lin_solve(vector<double> A,TV b)
 }
 
 //! perform polynomial fit
-template <class TV> TV poly_fit(const vector<double> &x,const TV &y,int d,double xmin=-1e300,double xmax=1e300)
+template <class TV> TV poly_fit(const vector<double> &x,const TV &y,int d,double xmin=-1e300,double xmax=1e300,const string path="")
 {
   if(x.size()!=y.size()) CRASH("x and y have different sizes, %zu %zu",x.size(),y.size());
   
-  cout<<x<<endl;
-  cout<<y.ave_err()<<endl;
+  // cout<<x<<endl;
+  // cout<<y.ave_err()<<endl;
   
   vector <double> Al(2*d+1,0.0);
   TV c(d+1);
@@ -552,7 +552,7 @@ template <class TV> TV poly_fit(const vector<double> &x,const TV &y,int d,double
       {
         //calculate the weight
         double w=pow(y[p].err(),-2);
-	cout<<w<<endl;
+	//cout<<w<<endl;
         //compute Al and c
         for(int f=0;f<=2*d;f++)
           {
@@ -567,11 +567,15 @@ template <class TV> TV poly_fit(const vector<double> &x,const TV &y,int d,double
     for(int j=0;j<=d;j++)
       A[i*(d+1)+j]=Al[i+j];
   
-  return lin_solve(A,c);
+  TV res=lin_solve(A,c);
+  
+  if(path!="") write_poly_fit_plot(path,xmin,xmax,res,x,y);
+  
+  return res;
 }
 //! perform a polynomial fit assuming x are ranging from 0 to y.size()
-template <class TV> TV poly_fit(const TV &y,int d)
-{return poly_fit(vector_up_to<double>(y.size()),y,d,-0.5,y.size()+0.5);}
+template <class TV> TV poly_fit(const TV &y,int d,double xmin=-1e300,double xmax=1e300,const string path="")
+{return poly_fit(vector_up_to<double>(y.size()),y,d,xmin,xmax,path);}
 
 //! perform the polynomial fit and integrate
 template <class TV> typename TV::base_type poly_integrate(const vector<double> &x,const TV &y)

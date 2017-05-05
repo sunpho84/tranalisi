@@ -118,7 +118,7 @@ inline int to_int(string s)
 }
 
 //! return a filled vector of double ranging from 0 to max (excluded)
-template <class T> vector<T> vector_up_to(size_t max,T offset=0)
+template <class T> vector<T> vector_up_to(const size_t max,const T offset=0)
 {
   vector<T> x(max);
   for(size_t it=0;it<max;it++) x[it]=it+offset;
