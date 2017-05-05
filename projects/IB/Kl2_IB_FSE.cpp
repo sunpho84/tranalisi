@@ -11,6 +11,7 @@
 #include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_sf_dawson.h>
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_sf_dilog.h>
 
 #include <Kl2_IB_FSE.hpp>
 
@@ -267,6 +268,22 @@ double FSE_corr(double mlep,double mmes,const vector<double> &z0,const vector<do
   if(upto>=1) out+=c[1]/mL;
   if(upto>=2) out+=c[2]/sqr(mL);
   if(upto>=3) out+=c[3]/cube(mL);
+  
+  return out;
+}
+
+double Gamma_pt(double mlep,double mmes,double DeltaE)
+{
+  const double mW=80.385;
+  
+  double rl=mlep/mmes;
+  double rl2=sqr(rl);
+  double rE=2.0*DeltaE/mmes;
+  
+  cout<<"mlep: "<<mlep<<endl;
+  cout<<"mmes: "<<mmes<<endl;
+  
+  double out=1.0/(16.0*sqr(M_PI))*(6.0*log(mmes/mW)+log(rl2)-8.0*log(rE)+(2.0-10.0*rl2)*log(rl2)/(1.0-rl2)-4.0*(1.0+rl2)*log(rl2)*log(rE)/(1.0-rl2)-4.0*(1.0+rl2)*gsl_sf_dilog(1.0-rl2)/(1.0-rl2)-3.0+(3.0+sqr(rE)-6.0*rl2-4.0*rE*(1.0-rl2))*log(1.0-rE)/sqr(1.0-rl2)+rE*(4.0-rE-4.0*rl2)*log(rl2)/sqr(1.0-rl2)-rE*(28.0*rl2+3.0*rE-22.0)/(2.0*sqr(1.0-rl2))-4.0*(1.0+rl2)*gsl_sf_dilog(rE)/(1.0-rl2));
   
   return out;
 }
