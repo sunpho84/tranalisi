@@ -187,7 +187,7 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   dboot_t phys_res=cont_chir_ansatz_QED(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,ml_phys,a_cont,pars.adep,pars.adep_ml,inf_vol,pars.L3dep,pars.L4dep);
   cout<<"result: "<<phys_res.ave_err()<<endl;
   
-  plot_chir_fit(combine(path.c_str(),"cont_chir_fit"),ext_data,pars,
+  plot_chir_fit(combine(path.c_str(),"cont_chir"),ext_data,pars,
 		[&pars]
 		(double x,size_t ib)
 		{return cont_chir_ansatz_QED<double,double,double>
@@ -214,8 +214,8 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
       
       out_FSE.set_settype(grace::XYDY);
       for(size_t iens=0;iens<nens_used;iens++)
-	if(is_A40(ext_data[iens]))
-	  out_FSE<<1.0/ext_data[iens].L<<" "<<dboot_t(ext_data[iens].wfse-without_with_fse*FSE_QED(pars.C,pars.L3dep,ext_data[iens].L,pars.L4dep)).ave_err()<<endl;
+	 if(is_A40(ext_data[iens]))
+	   out_FSE<<1.0/ext_data[iens].L<<" "<<dboot_t(ext_data[iens].wfse-without_with_fse*FSE_QED(pars.C,pars.L3dep,ext_data[iens].L,pars.L4dep)).ave_err()<<endl;
       out_FSE.new_data_set();
     }
   
