@@ -32,7 +32,7 @@ public:
   QCD_mes_pars_t(const qpars_t &q1,const qpars_t &q2,size_t itint,const string &name) : iq1(q1.iq),iq2(q2.iq),itint(itint),name(name) {}
 };
 
-const vector<QCD_mes_pars_t> QCD_mes_pars({{qD,qD,1,"Pi"},{qD,qS,1,"K"},{qC,qD,2,"D"},{qC,qS,2,"Ds"}});
+const vector<QCD_mes_pars_t> QCD_mes_pars({{qD,qD,0,"Pi"},{qD,qS,1,"K"},{qC,qD,2,"D"},{qC,qS,2,"Ds"}});
 enum{iPi,iK,iD};
 const size_t &nQCD_mes=QCD_mes_pars.size();
 
@@ -356,8 +356,8 @@ void compute_basic_slopes()
 	  jDZA_QED_rel[ind_QED]=DZ_AP_QED_rel-DZ_PP_QED_rel/2;
 	  cout<<plots_path<<", (Z)A: "<<jZA[ind_QCD].ave_err()<<endl;
 	  cout<<plots_path<<", M_AP: "<<jaM[ind_QCD].ave_err()<<endl;
-	  cout<<plots_path<<", SL_AP: "<<djack_t(jSL_PP_QED[ind_QED]).ave_err()<<endl;
-	  cout<<plots_path<<", SL_PP: "<<djack_t(jSL_AP_QED[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", SL_AP: "<<djack_t(jSL_AP_QED[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", SL_PP: "<<djack_t(jSL_PP_QED[ind_QED]).ave_err()<<endl;
 	  cout<<plots_path<<", D(Z)A/(Z)A: "<<djack_t(jDZA_QED_rel[ind_QED]).ave_err()<<endl;
 	  cout<<plots_path<<", D(Z)A: "<<djack_t(jDZA_QED_rel[ind_QED]*jZA[ind_QCD]).ave_err()<<endl;
 	}
