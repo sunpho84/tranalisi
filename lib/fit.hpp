@@ -593,19 +593,6 @@ template <class TV> typename TV::base_type poly_integrate(const vector<double> &
 template <class TV> typename TV::base_type poly_integrate(const TV &y)
 {return poly_integrate(vector_up_to<double>(y.size()),y);}
 
-//! compute the value of the  polynomial in the point
-template <class TV,class TS=typename TV::base_type> TS poly_eval(const TV &pars,double x)
-{
-  TS t=pars[0];
-  double R=x;
-  for(int ipow=1;ipow<(int)pars.size();ipow++)
-    {
-      t+=pars[ipow]*R;
-      R*=x;
-    }
-  return t;
-}
-
 //! compute the ch2 of a polynomial fit
 template <class TV,class TS=typename TV::base_type> TS chi2_poly_fit(const vector<double> &x,const TV &y,int d,double xmin,double xmax,const TV &pars)
 {
