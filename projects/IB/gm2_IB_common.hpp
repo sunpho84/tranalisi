@@ -234,15 +234,25 @@ inline djvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,con
   djvec_t c_0T=read("0T",pat,ens,tpar,im,1,RE);
   djvec_t c_0M=read("0M",pat,ens,tpar,im,1,RE);
   djvec_t c_LL=read("LL",pat,ens,tpar,im,1,RE);
-  djvec_t(c_0T/c_LO).ave_err().write(combine("%s/%s_0T.xmg",ens_qpath.c_str(),pat));
-  djvec_t(c_0M/c_LO).ave_err().write(combine("%s/%s_0M.xmg",ens_qpath.c_str(),pat));
-  djvec_t(c_LL/c_LO).ave_err().write(combine("%s/%s_LL.xmg",ens_qpath.c_str(),pat));
+  djvec_t(c_0T/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0T.xmg");
+  djvec_t(c_0M/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0M.xmg");
+  djvec_t(c_LL/c_LO).ave_err().write(ens_qpath+"/"+pat+"_LL.xmg");
   djvec_t c=djvec_t(c_LL+2.0*djvec_t(c_0T+c_0M));
   
   djvec_t c_0P=read("0P",pat,ens,tpar,im,-1,IM);
-  djvec_t(c_0P/c_LO).ave_err().write(combine("%s/%s_0P.xmg",ens_qpath.c_str(),pat));
+  djvec_t(c_0P/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0P.xmg");
   djvec_t d=-(deltam_cr*c_0P);
-  return djvec_t(c+2.0*d)*e2*sqr(eq[im]);
+  
+  djvec_t c_0S=read("0S",pat,ens,tpar,im,1,RE);
+  djvec_t(c_0S/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0S.xmg");
+  double amq=get_amq(ens,im),a=1/lat_par[0].ainv[ens.ib].ave(); //TO BE FIXED
+  double dm_bare_noe2=amq*(6.0*log(mu_MS*a)-22.596)/(16.0*sqr(M_PI));
+  djvec_t e=(-dm_bare_noe2)*c_0S; //minus? CHECK
+  
+  double dm_bare=dm_bare_noe2*e2*sqr(eq[im]);
+  cout<<"dm_bare ("<<qname[im]<<" ens: "<<ens.path<<"): "<<dm_bare<<", total: "<<get_amq(ens,im)+dm_bare<<" old: "<<get_amq(ens,im)<<endl;
+  
+  return djvec_t(c+2.0*d+2.0*e)*e2*sqr(eq[im]);
 }
 
 //! read for PP case
