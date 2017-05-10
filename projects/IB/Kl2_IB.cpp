@@ -537,7 +537,7 @@ void compute_adml_bare()
 
 ///////////////////////////////////////////////////// nasty diagram ////////////////////////////////////////////
 
-const size_t nw=9;
+//const size_t nw=9; //< number of weak insertions
 const size_t norie=2; //< number of orientation of the meson
 const size_t nrev=2; //< number of possible reversion
 const size_t nqins=3; //< number of quarks inserted: 0(none), 1 or 2
