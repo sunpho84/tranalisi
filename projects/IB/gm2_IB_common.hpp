@@ -33,6 +33,7 @@ class ens_data_t
 public:
   size_t iult; //< input in the ultimate file
   size_t ib,T,L;
+  double kappa;
   int use_for_L;
   double aml;
   string path;
@@ -41,6 +42,19 @@ public:
 };
 vector<ens_data_t> ens_data;
 size_t nens_used;
+
+//! return the bare mass given the ensemble and the quark index
+inline double get_amq(const ens_data_t &ens,size_t im)
+{
+  const double ams[nbeta]={0.02363,0.02094,0.01612};
+  const double amc[nbeta]={0.27903,0.24725,0.19037};
+  double amq[3];
+  amq[0]=ens.aml;
+  amq[1]=ams[ens.ib];
+  amq[2]=amc[ens.ib];
+  
+  return amq[im];
+}
 
 //! read the additional factor
 size_t get_add_fact(const string &path,size_t im)
@@ -206,7 +220,7 @@ inline void gm2_initialize(int narg,char **arg)
   init_common_IB(ens_pars);
   nens_used=input.read<int>("NEnsemble");
   
-  input.expect({"Ens","beta","L","UseForL","T","aml","tint_cr","tint_ss","tint_cc","path"});
+  input.expect({"Ens","beta","L","UseForL","T","kappa","aml","tint_cr","tint_ss","tint_cc","path"});
   ens_data.resize(nens_used);
   for(size_t iens=0;iens<nens_used;iens++)
     {
@@ -217,6 +231,7 @@ inline void gm2_initialize(int narg,char **arg)
       input.read(ens.L);
       input.read(ens.use_for_L);
       input.read(ens.T);
+      input.read(ens.kappa);
       input.read(ens.aml);
       for(size_t iq=0;iq<3;iq++)
 	{
