@@ -44,15 +44,17 @@ const double eq[3]={eu,es,ec};
 //! continuum limit
 const double a_cont=1e-5;
 
-//! renormalization constants taken from 1403.4504
+//! renormalization constants taken from 1403.4504, table 20 pag. 56, first all M1, then M2
+const vector<vector<ave_err_t>> Zp_ae({{{0.529,0.007},{0.509,0.004},{0.516,0.002}},{{0.574,0.004},{0.546,0.002},{0.545,0.002}}});
 const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
 const vector<vector<ave_err_t>> Zv_ae({{{0.587,0.004},{0.603,0.003},{0.655,0.003}},{{0.608,0.003},{0.614,0.002},{0.657,0.002}}});
 const vector<vector<ave_err_t>> Zt_ae({{{0.711,0.005},{0.724,0.004},{0.774,0.004}},{{0.700,0.003},{0.711,0.002},{0.767,0.002}}});
+const int Zp_seed[nbeta]={82223,224335,34434};
 const int Za_seed[nbeta]={13124,862464,76753};
 const int Zv_seed[nbeta]={84969,3045023,453453};
 const int Zt_seed[nbeta]={5634,917453,324338};
 
-EXTERN_COMMON dbvec_t Za INIT_ARGS(nbeta),Zv INIT_ARGS(nbeta),Zt INIT_ARGS(nbeta);
+EXTERN_COMMON dbvec_t Za INIT_ARGS(nbeta),Zp INIT_ARGS(nbeta),Zv INIT_ARGS(nbeta),Zt INIT_ARGS(nbeta);
 
 //! boot initializer
 EXTERN_COMMON boot_init_t bi;
@@ -308,6 +310,7 @@ inline void prepare_az(int input_an_id)
       const int imet=input_an_id/4;
       alist[ibeta]=1.0/lat_par[input_an_id].ainv[ibeta];
       zlist[ibeta]=lat_par[input_an_id].Z[ibeta];
+      Zp[ibeta].fill_gauss(Zp_ae[imet][ibeta],Zp_seed[ibeta]);
       Za[ibeta].fill_gauss(Za_ae[imet][ibeta],Za_seed[ibeta]);
       Zv[ibeta].fill_gauss(Zv_ae[imet][ibeta],Zv_seed[ibeta]);
       Zt[ibeta].fill_gauss(Zt_ae[imet][ibeta],Zt_seed[ibeta]);
