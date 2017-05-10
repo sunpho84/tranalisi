@@ -45,6 +45,10 @@ void write_ens_header(size_t iens)
   cout<<"----------------------- "<<iens<<" "<<ens.path<<" ---------------------"<<endl;
 }
 
+//! return the perturbative correction to Za
+double Za_perturb_QED(size_t im)
+{return -0.01835*sqr(eq[im]);}
+
 //! ansatz fit
 template <class Tpars,class Tm,class Ta>
 Tpars cont_chir_ansatz_LO(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tm &aml,const Ta &a,const Tpars &adep,const Tpars &adep_ml,double L,const Tpars &L3dep,const size_t &isyst)
