@@ -140,32 +140,90 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
 {
   string ens_qpath=ens.path+"/plots_"+qname[iq];
   
-  djvec_t P5P5_LO=read("00_P5P5",ens,+1,iq,1,RE);
+  //compute M
+  djvec_t P5P5_00=read("00_P5P5",ens,+1,iq,1,RE);
+  djack_t M=constant_fit(effective_mass(P5P5_00),ens.tmin[iq],ens.tmax[iq],ens_qpath+"/P5P5_00_eff.xmg");
+  cout<<qname[iq]<<" mass ens "<<ens.path<<": "<<M.ave_err()<<endl;
   
-  djvec_t P5P5_LL=read("LL_P5P5",ens,+1,iq,1,RE);
-  grace_file_t out(ens_qpath+"/LO_PP_jacks.xmg");
+  //test jacknife per jacknife P5P5_00
+  grace_file_t out(ens_qpath+"/P5P5_00_eff_jacks.xmg");
   for(size_t ijack=0;ijack<njacks;ijack++)
     {
-      for(size_t t=0;t<P5P5_LO.size();t++) out<<t<<" "<<P5P5_LO[t][njacks]*njacks-P5P5_LO[t][ijack]*(njacks-1)<<endl;
+      for(size_t t=0;t<P5P5_00.size();t++) out<<t<<" "<<P5P5_00[t][njacks]*njacks-P5P5_00[t][ijack]*(njacks-1)<<endl;
       out<<endl;
     }
   
-  djack_t M=constant_fit(effective_mass(P5P5_LO),ens.tmin[iq],ens.tmax[iq],ens_qpath+"/LO_PP_eff_mass.xmg");
-  cout<<qname[iq]<<" mass ens "<<ens.path<<": "<<M.ave_err()<<endl;
+  //measure mcrit according to eq.3 of hep-lat/0701012
+  djvec_t V0P5_00=read("00_V0P5",ens,-1,iq,-1,IM);
+  V0P5_00.ave_err().write(ens_qpath+"/V0P5_00.xmg");
+  djvec_t m_cr_corr=forward_derivative(V0P5_00)/(2.0*P5P5_00);
+  djack_t m_cr=constant_fit(m_cr_corr,ens.tmin[iq],ens.tmax[iq],ens_qpath+"/m_cr.xmg");
+  effective_mass(V0P5_00,ens.T/2,-1).ave_err().write(ens_qpath+"/V0P5_00_eff.xmg");
   
+  //load corrections
   djvec_t V0P5_LL=read("LL_V0P5",ens,-1,iq,-1,IM);
   djvec_t V0P5_0M=read("0M_V0P5",ens,-1,iq,-1,IM);
   djvec_t V0P5_0T=read("0T_V0P5",ens,-1,iq,-1,IM);
-  djvec_t num_deltam_cr=forward_derivative(djvec_t(V0P5_LL+2.0*djvec_t(V0P5_0M+V0P5_0T)));
-  num_deltam_cr.ave_err().write(combine("%s/num_deltam_cr.xmg",ens_qpath.c_str()));
+  //build numerator
+  djvec_t num_deltam_cr_corr=V0P5_LL+2.0*djvec_t(V0P5_0M+V0P5_0T);
+  effective_mass(num_deltam_cr_corr,ens.T/2,-1).ave_err().write(ens_qpath+"/num_deltam_cr_corr_eff.xmg");
+  djvec_t num_deltam_cr_alt_corr=num_deltam_cr_corr;
+  num_deltam_cr_alt_corr.ave_err().write(ens_qpath+"/num_deltam_cr_alt_corr.xmg");
+  djvec_t num_deltam_cr=forward_derivative(num_deltam_cr_corr);
+  num_deltam_cr.ave_err().write(ens_qpath+"/num_deltam_cr.xmg");
   
+  //load the derivative wrt counterterm
   djvec_t V0P5_0P=read("0P_V0P5",ens,-1,iq,+1,RE);
-  djvec_t den_deltam_cr=forward_derivative(V0P5_0P);
-  den_deltam_cr.ave_err().write(combine("%s/den_deltam_cr.xmg",ens_qpath.c_str()));
+  //build denominator
+  djvec_t den_deltam_cr_corr=V0P5_0P;
+  effective_mass(den_deltam_cr_corr,ens.T/2,-1).ave_err().write(ens_qpath+"/den_deltam_cr_corr_eff.xmg");
+  djvec_t den_deltam_cr=forward_derivative(den_deltam_cr_corr);
+  den_deltam_cr.ave_err().write(ens_qpath+"/den_deltam_cr.xmg");
   
-  djack_t deltam_cr=constant_fit(djvec_t(-num_deltam_cr/(2.0*den_deltam_cr)),ens.tmin[iq],ens.tmax[iq],combine("%s/deltam_cr_t.xmg",ens_qpath.c_str()));
+  //determine the counteterm
+  djvec_t deltam_cr_corr=-num_deltam_cr/(2.0*den_deltam_cr);
+  djack_t deltam_cr=constant_fit(deltam_cr_corr,ens.tmin[iq]-3,ens.tmax[iq],ens_qpath+"/deltam_cr_t.xmg");
+  djvec_t deltam_cr_alt_corr=-num_deltam_cr_alt_corr/(2.0*den_deltam_cr_corr);
+  djack_t deltam_cr_alt=constant_fit(deltam_cr_alt_corr,ens.tmin[iq]-6,ens.tmax[iq],ens_qpath+"/deltam_cr_alt_t.xmg");
+  djack_t deltam_cr_alt_lin=poly_fit(deltam_cr_alt_corr,1,ens.tmin[iq]-3,ens.tmax[iq],ens_qpath+"/deltam_cr_alt_t_linfit.xmg")[0];
   
-  return deltam_cr;
+  //check if there is a scalar missing
+  djvec_t V0P5_0S=read("0S_V0P5",ens,-1,iq,-1,IM);
+  forward_derivative(deltam_cr_alt_corr).ave_err().write(ens_qpath+"/deltam_cr_alt_der_t.xmg");
+  djvec_t deltam_cr_scal_corr=V0P5_0S/den_deltam_cr_corr;
+  deltam_cr_scal_corr.ave_err().write(ens_qpath+"/deltam_cr_scal_corr.xmg");
+  forward_derivative(deltam_cr_scal_corr).ave_err().write(ens_qpath+"/deltam_cr_scal_corr_der_t.xmg");
+  djvec_t deltam_cr_scal_coef_corr=forward_derivative(deltam_cr_alt_corr)/forward_derivative(deltam_cr_scal_corr);
+  djack_t deltam_cr_scal_coef=constant_fit(deltam_cr_scal_coef_corr,ens.tmin[iq],ens.tmax[iq],ens_qpath+"/deltam_cr_scal_contr_coef_t.xmg");
+  djvec_t deltam_cr_alt_corr_with_S=deltam_cr_alt_corr-deltam_cr_scal_coef*deltam_cr_scal_corr;
+  djack_t deltam_cr_alt_with_S=constant_fit(deltam_cr_alt_corr_with_S,ens.tmin[iq],ens.tmin[iq],ens_qpath+"/deltam_cr_alt_with_S_t.xmg");
+  
+  ///////////////////////// retuning of LO ///////////////////////////
+  
+  //how much should we retune kappa? (note that we should insert iP, so we put a minus, but this gets cancelled with the definition of dm_cr)
+  djvec_t dm_cr_LO_corr=V0P5_00/(2.0*V0P5_0P);
+  djack_t dm_cr_LO=constant_fit(dm_cr_LO_corr,ens.tmin[iq],ens.tmax[iq],ens_qpath+"/m_cr_retune.xmg");
+  djack_t kappa_true=ens.kappa/(1+2*dm_cr_LO*ens.kappa);
+  djack_t dk_cr_LO=kappa_true-ens.kappa;
+  cout<<"True kappa cr (quark "<<qname[iq]<<") ens "<<ens_qpath<<": "<<smart_print(kappa_true.ave_err())
+      <<" vs "<<ens.kappa<<", diff: "<<smart_print(dk_cr_LO.ave_err())<<endl;
+  
+  //hep-lat/0101001 eq.2.5
+  double amq=get_amq(ens,iq);
+  djack_t tan_alpha_bare=amq/m_cr,arctan_alpha_bare=1/tan_alpha_bare;
+  djack_t alpha=atan2(amq,m_cr*Za_ae[0][ens.ib].ave())/M_PI*180;
+  cout<<"Twist angle in units of PI (quark "<<qname[iq]<<") ens "<<ens.path<<": "
+      <<smart_print(alpha.ave_err())<<", am: "<<amq<<", mcr: "<<smart_print(m_cr.ave_err())<<endl;
+  cout<<"Contribution of scalar to pseudo (quark "<<qname[iq]<<") ens "<<ens.path<<": "<<smart_print(arctan_alpha_bare.ave_err())<<endl;
+  effective_mass(djvec_t(num_deltam_cr_corr+0*arctan_alpha_bare*V0P5_0S),ens.T/2,-1).ave_err().write(ens_qpath+"/num_deltam_cr_with_S_eff.xmg");
+  
+  //how much is the pion mass after retuning?
+  djvec_t P5P5_0P=read("0P_P5P5",ens,+1,iq,-1,IM);
+  djvec_t P5P5_00_retuned=P5P5_00+djack_t(2.0*dm_cr_LO)*P5P5_0P;
+  djack_t M_retuned=constant_fit(effective_mass(P5P5_00_retuned),ens.tmin[iq],ens.tmax[iq],ens_qpath+"/P5P5_00_retuned_eff.xmg");
+  cout<<"Variation of M due to k retuning: "<<smart_print(djack_t(M_retuned/M-1).ave_err())<<endl;
+  
+  return deltam_cr_alt;
 }
 
 //! read QED corrections
