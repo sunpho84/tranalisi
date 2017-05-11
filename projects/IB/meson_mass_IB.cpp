@@ -314,6 +314,8 @@ int main(int narg,char **arg)
 
   djack_t s_fit_deltam_cr=constant_fit(s_deltam_cr,s_tmin,s_tmax,"s_fit_deltam_cr.xmg");
   
+  // djack_t s_fit_deltam_cr=poly_fit(s_deltam_cr,1,s_tmin,s_tmax,"s_fit_deltam_cr.xmg")[0];
+
   raw_file_t s_out_fit_deltam_cr("s_fit_deltam_cr","w");
   s_out_fit_deltam_cr.bin_write(s_fit_deltam_cr);
 
