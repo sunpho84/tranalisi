@@ -45,6 +45,10 @@ void write_ens_header(size_t iens)
   cout<<"----------------------- "<<iens<<" "<<ens.path<<" ---------------------"<<endl;
 }
 
+//! return the perturbative correction to Za
+double Za_perturb_QED(size_t im)
+{return -0.01835*sqr(eq[im]);}
+
 //! ansatz fit
 template <class Tpars,class Tm,class Ta>
 Tpars cont_chir_ansatz_LO(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tm &aml,const Ta &a,const Tpars &adep,const Tpars &adep_ml,double L,const Tpars &L3dep,const size_t &isyst)
@@ -183,7 +187,7 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   dboot_t phys_res=cont_chir_ansatz_QED(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,ml_phys,a_cont,pars.adep,pars.adep_ml,inf_vol,pars.L3dep,pars.L4dep);
   cout<<"result: "<<phys_res.ave_err()<<endl;
   
-  plot_chir_fit(combine(path.c_str(),"cont_chir_fit"),ext_data,pars,
+  plot_chir_fit(combine(path.c_str(),"cont_chir"),ext_data,pars,
 		[&pars]
 		(double x,size_t ib)
 		{return cont_chir_ansatz_QED<double,double,double>
@@ -210,8 +214,8 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
       
       out_FSE.set_settype(grace::XYDY);
       for(size_t iens=0;iens<nens_used;iens++)
-	if(is_A40(ext_data[iens]))
-	  out_FSE<<1.0/ext_data[iens].L<<" "<<dboot_t(ext_data[iens].wfse-without_with_fse*FSE_QED(pars.C,pars.L3dep,ext_data[iens].L,pars.L4dep)).ave_err()<<endl;
+	 if(is_A40(ext_data[iens]))
+	   out_FSE<<1.0/ext_data[iens].L<<" "<<dboot_t(ext_data[iens].wfse-without_with_fse*FSE_QED(pars.C,pars.L3dep,ext_data[iens].L,pars.L4dep)).ave_err()<<endl;
       out_FSE.new_data_set();
     }
   

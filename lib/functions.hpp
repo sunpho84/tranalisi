@@ -100,4 +100,17 @@ template <class T> T cont_en(T m,double pi)
 template <class T> T latt_en(T m,double pi)
 {return 2*asinh((T)sqrt(3*sqr(sin(pi/2))+sqr((T)sinh(m/2))));}
 
+//! compute the value of the polynomial in the point
+template <class TV,class TS=typename TV::base_type> TS poly_eval(const TV &pars,double x)
+{
+  TS t=pars[0];
+  double R=x;
+  for(int ipow=1;ipow<(int)pars.size();ipow++)
+    {
+      t+=pars[ipow]*R;
+      R*=x;
+    }
+  return t;
+}
+
 #endif

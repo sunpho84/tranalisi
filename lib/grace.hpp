@@ -12,9 +12,11 @@
 #include <functional>
 
 #include <ave_err.hpp>
+#include <functions.hpp>
 #include <tools.hpp>
 
 using namespace std;
+using namespace placeholders;
 
 namespace grace
 {
@@ -502,7 +504,7 @@ template <class TV,class fun_t,class T=typename TV::base_type> void write_fit_pl
 
 //! prepare a plot with a polynomial
 template <class TV,class T=typename TV::base_type> void write_poly_fit_plot(const string &path,double xmin,double xmax,const TV &res,const vector<double> &x,const TV &y)
-{write_fit_plot(path,xmin,xmax,[&res](double x){T out;out=0;for(size_t i=0;i<res.size();i++) out+=res[i]*pow(x,i);return out;},x,y);}
+{write_fit_plot(path,xmin,xmax,bind(poly_eval<TV>,res,_1),x,y);}
 template <class TV,class T=typename TV::base_type> void write_poly_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
 {write_poly_fit_plot(path,xmin,xmax,c,vector_up_to<double>(y.size()),y);}
 
