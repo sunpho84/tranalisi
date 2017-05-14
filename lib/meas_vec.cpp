@@ -7,7 +7,7 @@
 #endif
 #include <meas_vec.hpp>
 
-djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,size_t nlines)
+djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,size_t nlines,bool verbosity)
 {
   //basic checks
   check_njacks_init();
@@ -24,19 +24,22 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
       string path=combine(template_path.c_str(),icheck_file*range.each+range.start);
       //cout<<"Considering file: "<<path<<endl;
       if(file_exists(path)) files.push_back(obs_file_t(path,ntot_col,cols));
-      else cout<<"Skipping unavailable file "<<path<<endl;
+      else if(verbosity) cout<<"Skipping unavailable file "<<path<<endl;
     }
   
   //trim
-  cout<<"Opened "<<files.size()<<" out of "<<navail_files<<endl;
+  if(verbosity) cout<<"Opened "<<files.size()<<" out of "<<navail_files<<endl;
   size_t clust_size=files.size()/njacks;
   size_t nfiles=clust_size*njacks;
   files.resize(nfiles);
-  cout<<"Trimmed to "<<nfiles<<", clust_size="<<clust_size<<endl;
+  if(verbosity) cout<<"Trimmed to "<<nfiles<<", clust_size="<<clust_size<<endl;
   
   //measure the length of the first file
-  size_t length=files[0].length(nlines);
-  cout<<"Total length (in multiple of nlines="<<nlines<<"): "<<length<<endl;
+  size_t length;
+  if(nfiles==0) length=0;
+  else length=files[0].length(nlines);
+  
+  if(verbosity) cout<<"Total length (in multiple of nlines="<<nlines<<"): "<<length<<endl;
   
   //check that the length is a multiple of ncols*nlines
   size_t block_nentr=nlines*cols.size();
@@ -50,6 +53,7 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
   for(size_t ijack=0;ijack<njacks;ijack++)
     for(size_t ifile=ijack*clust_size;ifile<(ijack+1)*clust_size;ifile++)
       {
+	if(verbosity)
 #ifdef USE_OMP
 	printf("Thread %d/%d reading file %zu/%zu\n",omp_get_thread_num(),omp_get_num_threads(),ifile,files.size());
 #else
@@ -66,13 +70,13 @@ djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vecto
 	    for(size_t ientr=0;ientr<block_nentr;ientr++) data[ientr+block_nentr*iblock][ijack]+=temp[ientr];
 	  }
     }
-  cout<<"Finished reading"<<endl;
+  if(verbosity) cout<<"Finished reading"<<endl;
   
   //clusterize each entry
   {
     auto start=take_time();
     for(auto &d : data) d.clusterize(clust_size);
-    cout<<elapsed_time(start)<<" to clusterize"<<endl;
+    if(verbosity) cout<<elapsed_time(start)<<" to clusterize"<<endl;
   }
   
   return data;

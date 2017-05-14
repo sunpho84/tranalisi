@@ -26,6 +26,8 @@ const double mu_MS=2.0;
 
 enum{RE,IM};
 
+enum{SILENT,VERBOSE};
+
 //! check if has method
 #define DEFINE_HAS_METHOD(METHOD)					\
   template <typename T> class NAME2(has_method,METHOD)			\
