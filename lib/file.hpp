@@ -43,18 +43,27 @@ template<class T,size_t n> T *get_ptr(T in[n]) {return in;}
 //! open file, basic
 class raw_file_t
 {
+  //! handle
   FILE *file;
   
+  //! stored path
+  string path;
+  
   //! copy constructor - made private, as for any class stream
-  raw_file_t(const raw_file_t& oth);
+  raw_file_t(const raw_file_t &oth);
   
 public:
   //! open the file with error check
-  void open(const string &path,string mode)
+  void open(const string &_path,const string &mode)
   {
+    path=_path;
     file=fopen(path.c_str(),mode.c_str());
     if(file==NULL) CRASH("Unable to open %s with mode %s",path.c_str(),mode.c_str());
   }
+  
+  //! return the path
+  string get_path()
+  {return path;}
   
   //! close the file
   void close()
@@ -64,11 +73,15 @@ public:
   raw_file_t() {file=NULL;}
   
   //! move constructor
-  raw_file_t(raw_file_t&& oth) : raw_file_t() {swap(file,oth.file);};
+  raw_file_t(raw_file_t&& oth) : raw_file_t()
+  {
+    swap(file,oth.file);
+    swap(path,oth.path);
+  };
   
   //! creator with name
-  raw_file_t(const string &path,string mode)
-  {open(path,mode);}
+  raw_file_t(const string &_path,string mode)
+  {open(_path,mode);}
   
   //! destructor
   ~raw_file_t()
@@ -301,7 +314,7 @@ public:
     //invalidate failed reading
     if(iline<nlines)
       {
-	cout<<"Read "<<iline<<" lines instead of "<<nlines<<endl;
+	cout<<"Read "<<iline<<" lines instead of "<<nlines<<" in file "<<get_path()<<endl;
 	data.clear();
       }
     
