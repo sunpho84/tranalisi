@@ -236,6 +236,8 @@ int main(int narg,char **arg)
   dbvec_t output_epsilon_K0(ninput_an*nan_syst);
   dbvec_t output_M2Pi0g(ninput_an*nan_syst);
   dbvec_t output_M2K0g(ninput_an*nan_syst);
+  dbvec_t output_M2uug(ninput_an*nan_syst);
+  dbvec_t output_M2ddg(ninput_an*nan_syst);
 
   vector<ave_err_t> v_ave_an_dM2Pi(nan_syst);
   vector<ave_err_t> v_ave_an_dM2K_QED(nan_syst);
@@ -250,7 +252,9 @@ int main(int narg,char **arg)
   vector<ave_err_t> v_ave_an_epsilon_K0(nan_syst);
   vector<ave_err_t> v_ave_an_M2Pi0g(nan_syst);
   vector<ave_err_t> v_ave_an_M2K0g(nan_syst);
-  
+  vector<ave_err_t> v_ave_an_M2uug(nan_syst);
+  vector<ave_err_t> v_ave_an_M2ddg(nan_syst);
+ 
   bool cov_flag=false;
 
   //loop over analysis flags and input scale determination
@@ -275,6 +279,8 @@ int main(int narg,char **arg)
 	dbvec_t epsilon_K0_minusFVE(raw_data.size());
 	dbvec_t a2M2Pi0g(raw_data.size());
 	dbvec_t a2M2K0g(raw_data.size());
+	dbvec_t a2M2uug(raw_data.size());
+	dbvec_t a2M2ddg(raw_data.size());
 	
 	for(size_t iens=0;iens<raw_data.size();iens++)
 	  {
@@ -351,6 +357,12 @@ int main(int narg,char **arg)
 	    epsilon_K0_minusFVE[iens]=num_epsilon_K0/(da2M2Pi[iens]-FVE_da2M2Pi[iens]);
 	    a2M2Pi0g[iens]=num_epsilon_Pi0;
 	    a2M2K0g[iens]=num_epsilon_K0;
+
+	    //////////uu; dd mesons/////////
+	    dboot_t uu_meson=2.0*aMPi*(-sqr(eu)*e2*(aMPi_sl_exch+2.0*aMPi_sl_selftad)-2.0*aDeltam_cr_u[iens+input_an_id*raw_data.size()]*MPi_sl_p+2.0*ml[iens]*a*MPi_sl_s[iens+input_an_id*raw_data.size()]/(Z_QED[iens+input_an_id*raw_data.size()]/sqr(eu)));
+	    dboot_t dd_meson=2.0*aMPi*(-sqr(ed)*e2*(aMPi_sl_exch+2.0*aMPi_sl_selftad)-2.0*aDeltam_cr_d[iens+input_an_id*raw_data.size()]*MPi_sl_p+2.0*ml[iens]*a*MPi_sl_s[iens+input_an_id*raw_data.size()]/(Z_QED[iens+input_an_id*raw_data.size()]/sqr(ed)));	    
+	    a2M2uug[iens]=uu_meson;
+	    a2M2ddg[iens]=dd_meson;
 	  }
 	
 	//prepare the list of a and z
@@ -423,7 +435,33 @@ int main(int narg,char **arg)
 	output_M2Pi0g[ind_an({input_an_id,an_flag})]=cont_chir_fit_M2Pi0g(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_M2Pi0g,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_M2Pi0g_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag,beta_list);
 	
 	cout<<"-----------------------------------------------"<<endl;
+
+	cout<<"                         M2uug "<<endl;
+	cout<<endl;
 	
+	vector<cont_chir_fit_data_t> data_M2uug;
+	for(size_t iens=0;iens<raw_data.size();iens++)
+	  if(raw_data[iens].useforL1)
+	    data_M2uug.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMD[iens+input_an_id*raw_data.size()],raw_data[iens].ibeta,raw_data[iens].L,
+						       a2M2uug[iens],a2M2uug[iens]));
+	
+	output_M2uug[ind_an({input_an_id,an_flag})]=cont_chir_fit_M2Pi0g(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_M2uug,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_M2uug_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag,beta_list);
+	
+	cout<<"-----------------------------------------------"<<endl;
+
+	cout<<"                         M2ddg "<<endl;
+	cout<<endl;
+	
+	vector<cont_chir_fit_data_t> data_M2ddg;
+	for(size_t iens=0;iens<raw_data.size();iens++)
+	  if(raw_data[iens].useforL1)
+	    data_M2ddg.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMD[iens+input_an_id*raw_data.size()],raw_data[iens].ibeta,raw_data[iens].L,
+						       a2M2ddg[iens],a2M2ddg[iens]));
+	
+	output_M2ddg[ind_an({input_an_id,an_flag})]=cont_chir_fit_M2Pi0g(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_M2ddg,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_M2ddg_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag,beta_list);
+	
+	cout<<"-----------------------------------------------"<<endl;
+
 	cout<<"                         M2K0g "<<endl;
 	cout<<endl;
 	
@@ -572,6 +610,18 @@ int main(int narg,char **arg)
   syst_analysis_sep(v_ave_an_M2Pi0g);
   for(size_t i=0;i<8;i++)
     cout<<"an_M2Pi0g: "<<v_ave_an_M2Pi0g[i]<<endl;
+
+  v_ave_an_M2uug=ave_analyses(output_M2uug);
+  cout<<"M2uug: "<<stat_analysis(v_ave_an_M2uug)<<" "<<syst_analysis(v_ave_an_M2uug)<<endl;
+  syst_analysis_sep(v_ave_an_M2uug);
+  for(size_t i=0;i<8;i++)
+    cout<<"an_M2uug: "<<v_ave_an_M2uug[i]<<endl;
+
+  v_ave_an_M2ddg=ave_analyses(output_M2ddg);
+  cout<<"M2ddg: "<<stat_analysis(v_ave_an_M2ddg)<<" "<<syst_analysis(v_ave_an_M2ddg)<<endl;
+  syst_analysis_sep(v_ave_an_M2ddg);
+  for(size_t i=0;i<8;i++)
+    cout<<"an_M2ddg: "<<v_ave_an_M2ddg[i]<<endl;
   
   v_ave_an_M2K0g=ave_analyses(output_M2K0g);
   cout<<"M2K0g: "<<stat_analysis(v_ave_an_M2K0g)<<" "<<syst_analysis(v_ave_an_M2K0g)<<endl;
