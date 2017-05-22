@@ -19,10 +19,10 @@ public:
   ave_err_t(const double &a=0,const double &b=0) : pair<double,double>(a,b) {};
   
   //! rebind average
-  const double ave() const {return first;}
+  double ave() const {return first;}
   
   //! rebind error
-  const double err() const {return second;}
+  double err() const {return second;}
   
   //! rebind average
   double &ave() {return first;}
