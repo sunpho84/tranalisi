@@ -191,7 +191,7 @@ int main(int narg,char **arg)
       //read deltam_cr (ud)
       raw_file_t deltam_cr_file(combine("%s/ud_fit_deltam_cr",temp.path.c_str()),"r");
       deltam_cr_file.bin_read(temp.deltam_cr);
-      
+
       //store in the raw_data vector
       raw_data.push_back(temp);
     }

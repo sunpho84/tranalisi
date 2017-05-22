@@ -589,7 +589,7 @@ djvec_t hl_corr_subtract_around_world(const djvec_t &in,const djack_t &M)
   djack_t fp=exp(M),fm=exp(-M);
   
   for(size_t t=1;t<out.size()-1;t++)
-    out[t]=(in[t]+(in[t-1]*fp-in[t+1]*fm)/(fp-fm))/2;
+    out[t]=(in[t]+(in[t-1]-in[t+1])/(fp-fm))/2;
   
   return out;
 }
