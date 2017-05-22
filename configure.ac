@@ -180,10 +180,10 @@ AC_MSG_RESULT([Enabling debug... $debug])
 
 #check Eigen
 AC_ARG_WITH(Eigen,
-        AS_HELP_STRING([--with-eigen[=dir]], [Specify where to find Eigen folder (include eigen3 in the argument!)]),
-        with_eigen="${withval}"
-	CPPFLAGS="-I${with_eigen} $CPPFLAGS")
-AC_MSG_RESULT([with gsl... $with_gsl])
+        AS_HELP_STRING([--with-Eigen[=dir]], [Specify where to find Eigen folder (include eigen3 in the argument!)]),
+        with_Eigen="${withval}"
+	CPPFLAGS="-I${with_Eigen} $CPPFLAGS")
+AC_MSG_RESULT([with Eigen... $with_Eigen])
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([Eigen/Dense],,AC_MSG_ERROR([Error! Eigen required]))
 AC_LANG_POP([C++])
