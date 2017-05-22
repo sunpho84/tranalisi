@@ -13,7 +13,7 @@ class index_t : vector<pair<string,size_t>>
 {
 public:
   //! return the rank
-  const size_t rank() const
+  size_t rank() const
   {return size();}
   
   //! return the name of the  index
