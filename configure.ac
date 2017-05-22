@@ -179,6 +179,9 @@ esac
 AC_MSG_RESULT([Enabling debug... $debug])
 
 #check eigen
+AC_ARG_WITH(Eigen,
+        AS_HELP_STRING([--with-eigen[=dir]], [Specify where to find Eigen folder (include eigen3 in the argument!)]),
+        CPPFLAGS="-I${with_eigen} $CPPFLAGS")
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([Eigen/Dense],,AC_MSG_ERROR([Error! Eigen required]))
 AC_LANG_POP([C++])
