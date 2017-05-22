@@ -25,8 +25,8 @@ AC_ARG_WITH(gsl,
         AS_HELP_STRING([--with-gsl[=dir]], [Specify where to find gsl]),
         with_gsl="${withval}"
         CPPFLAGS="-I${with_gsl}/include/ $CPPFLAGS"
-        LDFLAGS="-L${with_gsl}/lib/ $LDFLAGS",
-        with_gsl=no)
+        LDFLAGS="-L${with_gsl}/lib/ $LDFLAGS")
+AC_MSG_RESULT([with gsl... $with_gsl])
 
 AC_CHECK_LIB([m],[cos])
 AC_CHECK_LIB([gslcblas],[cblas_dgemm],,AC_MSG_ERROR([Unable to find gslcblas]))
@@ -178,10 +178,12 @@ case "$debug" in
 esac
 AC_MSG_RESULT([Enabling debug... $debug])
 
-#check eigen
+#check Eigen
 AC_ARG_WITH(Eigen,
         AS_HELP_STRING([--with-eigen[=dir]], [Specify where to find Eigen folder (include eigen3 in the argument!)]),
-        CPPFLAGS="-I${with_eigen} $CPPFLAGS")
+        with_eigen="${withval}"
+	CPPFLAGS="-I${with_eigen} $CPPFLAGS")
+AC_MSG_RESULT([with gsl... $with_gsl])
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([Eigen/Dense],,AC_MSG_ERROR([Error! Eigen required]))
 AC_LANG_POP([C++])
