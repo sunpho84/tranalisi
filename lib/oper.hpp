@@ -137,4 +137,8 @@ template <class T> double cov(const T &x,const T &y)
 template <class T> double var(const T &x)
 {return cov(x,x);}
 
+//! correlation
+template <class T> double corr(const T &x,const T &y)
+{return cov(x,y)/sqrt(var(x)*var(y));}
+
 #endif
