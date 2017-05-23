@@ -18,7 +18,7 @@ const array<string,4> RTAGS_3PTS_NAME={"SAME_SAME","SAME_OPPO","OPPO_SAME","OPPO
 const rcombo_3pts_t RTAGS_3PTS[4]={{{0,0,1},{1,1,0}}, {{0,0,0},{1,1,1}}, {{1,0,1},{0,1,0}}, {{0,1,1},{1,0,0}}}; //REV, SPEC, SEQ , remember that SEQ is already reversed
 
 const size_t T=48;
-  const int tmin=12,tmax=T/2-2;
+const int tmin=T/2-1,tmax=T/2;
 
 //! return "_var" or ""
 string prespaced(const string &var)
@@ -102,6 +102,10 @@ djvec_t der_3pts(const int irtags,const int tpar,const int rpar,const array<doub
   return out;
 }
 
+//! return the three pts behaviour
+djack_t three_pts_dt_reco(const djack_t &Zso,const djack_t &Mso,const djack_t &Zsi,const djack_t &Msi,int t)
+{return Zso*Zsi/(4*Mso*Msi)*exp(-Mso*t)*exp(-Msi*(T/2-t))*(Mso+Msi);}
+
 int main()
 {
   set_njacks(15);
@@ -122,8 +126,9 @@ int main()
   djack_t deltam_cr=deltam_cr_corr[tmin];
   
   djvec_t Z(2),Z2(2),M(2);
+  
   djvec_t Z_CORR(2),Z2_CORR(2),M_CORR(2);
-  djvec_t LO_P5P5[2];
+  djvec_t LO_P5P5[2],CORR_P5P5[2];
   for(int rdiff=0;rdiff<2;rdiff++)
     {
       LO_P5P5[rdiff]=load_2pts("P5",rdiff,RE,EVN,EVN);
@@ -133,9 +138,9 @@ int main()
       djvec_t E2_P5P5=der_2pts("P5",rdiff,RE,EVN,EVN,e2_var,"E2");
       djvec_t KA_P5P5=der_2pts("P5",rdiff,RE,EVN,EVN,ka_var,"KA");
       
-      djvec_t CORR_P5P5=LO_P5P5[rdiff]+e2_phys*djvec_t(E2_P5P5-deltam_cr*KA_P5P5);
-      CORR_P5P5.ave_err().write("plots/P5P5_"+RTAGS_2PTS_NAME[rdiff]+"_corrected.xmg");
-      two_pts_fit(Z2_CORR[rdiff],M_CORR[rdiff],CORR_P5P5,T/2,tmin,tmax,"plots/effmass_P5P5_"+RTAGS_2PTS_NAME[rdiff]+"_corrected.xmg");
+      CORR_P5P5[rdiff]=LO_P5P5[rdiff]+e2_phys*djvec_t(E2_P5P5-deltam_cr*KA_P5P5);
+      CORR_P5P5[rdiff].ave_err().write("plots/P5P5_"+RTAGS_2PTS_NAME[rdiff]+"_corrected.xmg");
+      two_pts_fit(Z2_CORR[rdiff],M_CORR[rdiff],CORR_P5P5[rdiff],T/2,tmin,tmax,"plots/effmass_P5P5_"+RTAGS_2PTS_NAME[rdiff]+"_corrected.xmg");
       Z_CORR[rdiff]=sqrt(Z2_CORR[rdiff]);
       
       cout<<RTAGS_2PTS_NAME[rdiff]<<endl;
@@ -144,14 +149,19 @@ int main()
       cout<<" Mass diff: "<<djack_t(M_CORR[rdiff]-M[rdiff]).ave_err()<<endl;
     }
   
+  const double pred_Zv=-20.6178*alpha_em/(4*M_PI);
+  const double pred_Za=-15.7963*alpha_em/(4*M_PI);
+  
   for(int rdiff_so=0;rdiff_so<2;rdiff_so++)
     for(int rdiff_si=0;rdiff_si<2;rdiff_si++)
       {
 	int rdiff_tot=rdiff_si+2*rdiff_so;
+	cout<<"Case: "<<RTAGS_3PTS_NAME[rdiff_tot]<<endl;
 	
 	djvec_t LO_3=load_3pts(rdiff_tot,ODD,EVN);
 	
 	//LO
+	djvec_t Zren_corr;
 	djack_t Zren;
 	{
 	  //reconstruct 3pts dt
@@ -163,11 +173,13 @@ int main()
 	  // cout<<"Analytic: "<<corr(djack_t(-LO_3_dt[T/4]),LO_3[T/4])<<endl;
 	  // cout<<"Numeric: "<<corr(djack_t(-LO_P5P5[rdiff_so][T/2]/2),LO_3[T/4])<<endl;
 	  
+	  Zren_corr=-LO_3_dt/LO_3;
 	  Zren_corr.ave_err().write("plots/Z_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
 	  Zren=Zren_corr[T/4];
 	}
 	
 	//QED
+	djvec_t CORR_Zren_corr;
 	djack_t CORR_Zren;
 	{
 	  //build corrected 3pts
@@ -175,19 +187,22 @@ int main()
 	  djvec_t KA_3=der_3pts(rdiff_tot,ODD,EVN,ka_var,"KA");
 	  djvec_t CORR_3=LO_3+e2_phys*djvec_t(E2_3-deltam_cr*KA_3);
 	  
-	  //reconstruct 2pts corrected
-	  djvec_t CORR_2_reco(T/2);
-	  for(size_t t=0;t<T/2;t++) CORR_2_reco[t]=Z_CORR[rdiff_so]*Z_CORR[rdiff_si]/(4*M_CORR[rdiff_so]*M_CORR[rdiff_si])*exp(-M_CORR[rdiff_so]*t)*exp(-M_CORR[rdiff_si]*(T/2-t));
-	  CORR_2_reco.ave_err().write("plots/CORR_2_reco_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
-	  djvec_t CORR_INVMATREL=-CORR_2_reco/CORR_3,CORR_Zren_corr=CORR_INVMATREL*djack_t(M_CORR[rdiff_so]+M_CORR[rdiff_si]);
-	  CORR_Zren_corr.ave_err().write("plots/CORR_Z_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
-	  CORR_Zren=CORR_Zren_corr[T/4];
+	  //reconstruct 3pts dt
+	  djvec_t CORR_3_dt(T/2+1);
+	  for(size_t t=0;t<=T/2;t++) CORR_3_dt[t]=three_pts_dt_reco(Z_CORR[rdiff_so],M_CORR[rdiff_so],Z_CORR[rdiff_si],M_CORR[rdiff_si],t);
 	  //cout<<"Check CORR "<<RTAGS_3PTS_NAME[rdiff_tot]<<"reco, "<<CORR_3_dt[0].ave_err()<<" "<<djack_t(CORR_P5P5[rdiff_so][T/2]/2).ave_err()<<endl;
 	  CORR_3_dt.ave_err().write("plots/CORR_3_dt_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
+	  
+	  CORR_Zren_corr=-CORR_3_dt/CORR_3;
+	  CORR_Zren=constant_fit(CORR_Zren_corr,T/4-2,T/4+2,"plots/CORR_Z_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
 	}
 	
-	djack_t fact=(CORR_Zren-Zren)/(Zren*qf2_phys);
-	cout<<"Factorization: "<<fact.ave_err()<<endl;
+	double ZQED_pred=(rdiff_so==rdiff_si)?pred_Zv:pred_Za;
+	djvec_t ZQED_fact_corr=(CORR_Zren_corr-Zren_corr)/(Zren_corr*qf2_phys);
+	djack_t ZQED_fact=constant_fit(ZQED_fact_corr,T/4-2,T/4+2,"plots/ZQED_fact_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
+	
+	cout<<" ZQED assuming factoriz: "<<smart_print(ZQED_fact.ave_err())<<endl;
+	cout<<" ZQED according to AOKI: "<<ZQED_pred<<endl;
       }
   
   return 0;
