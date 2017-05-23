@@ -4,16 +4,16 @@
 
 #include <tranalisi.hpp>
 
-const int EVN=1,UNK=0,ODD=-1;
+const int EVN=1,ODD=-1;//,UNK=0;
 
 typedef int rcombo_2pts_t[2][2];
 typedef int rcombo_3pts_t[2][3];
 
-const int SAMER_2PTS=0,OPPOR_2PTS=1;
+const int SAMER_2PTS=0;//,OPPOR_2PTS=1;
 const rcombo_2pts_t RTAGS_2PTS[2]={{{0,0},{1,1}}, {{0,1},{1,0}}};
 const array<string,2> RTAGS_2PTS_NAME={"SAME","OPPO"};
 
-const int SAMER_SAMER_3PTS=0,SAMER_OPPOR_3PTS=1,OPPOR_SAMER_3PTS=2,OPPOR_OPPOR_3PTS=3;
+//const int SAMER_SAMER_3PTS=0,SAMER_OPPOR_3PTS=1,OPPOR_SAMER_3PTS=2,OPPOR_OPPOR_3PTS=3;
 const array<string,4> RTAGS_3PTS_NAME={"SAME_SAME","SAME_OPPO","OPPO_SAME","OPPO_OPPO"};
 const rcombo_3pts_t RTAGS_3PTS[4]={{{0,0,1},{1,1,0}}, {{0,0,0},{1,1,1}}, {{1,0,1},{0,1,0}}, {{0,1,1},{1,0,0}}}; //REV, SPEC, SEQ , remember that SEQ is already reversed
 
@@ -27,7 +27,7 @@ string prespaced(const string &var)
 //! read a single correlator
 djvec_t get(const string &name,const int ri,const int tpar)
 {
-  cout<<"Reading "<<name<<endl;
+  //cout<<"Reading "<<name<<endl;
   return read_djvec("data/"+name,T,ri).symmetrized(tpar);
 }
 
@@ -154,12 +154,15 @@ int main()
 	//LO
 	djack_t Zren;
 	{
-	  //reconstruct 2pts
-	  djvec_t LO_2_reco(T/2);
-	  for(size_t t=0;t<T/2;t++) LO_2_reco[t]=Z[rdiff_so]*Z[rdiff_si]/(4*M[rdiff_so]*M[rdiff_si])*exp(-M[rdiff_so]*t)*exp(-M[rdiff_si]*(T/2-t));
-	  cout<<"Check "<<RTAGS_3PTS_NAME[rdiff_tot]<<"reco, "<<LO_2_reco[0].ave_err()<<" "<<djack_t(LO_P5P5[rdiff_so][T/2]/djack_t(2*M[rdiff_so]+2*M[rdiff_si])).ave_err()<<endl;
+	  //reconstruct 3pts dt
+	  djvec_t LO_3_dt(T/2+1);
+	  for(size_t t=0;t<=T/2;t++) LO_3_dt[t]=three_pts_dt_reco(Z[rdiff_so],M[rdiff_so],Z[rdiff_si],M[rdiff_si],t);
+	  //cout<<"Check "<<RTAGS_3PTS_NAME[rdiff_tot]<<"reco, "<<LO_3_dt[0].ave_err()<<" "<<djack_t(LO_P5P5[rdiff_so][T/2]/2).ave_err()<<endl;
+	  LO_3_dt.ave_err().write("plots/LO_3_dt_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
 	  
-	  djvec_t INVMATREL=-LO_2_reco/LO_3,Zren_corr=INVMATREL*djack_t(M[rdiff_so]+M[rdiff_si]);
+	  // cout<<"Analytic: "<<corr(djack_t(-LO_3_dt[T/4]),LO_3[T/4])<<endl;
+	  // cout<<"Numeric: "<<corr(djack_t(-LO_P5P5[rdiff_so][T/2]/2),LO_3[T/4])<<endl;
+	  
 	  Zren_corr.ave_err().write("plots/Z_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
 	  Zren=Zren_corr[T/4];
 	}
@@ -179,6 +182,8 @@ int main()
 	  djvec_t CORR_INVMATREL=-CORR_2_reco/CORR_3,CORR_Zren_corr=CORR_INVMATREL*djack_t(M_CORR[rdiff_so]+M_CORR[rdiff_si]);
 	  CORR_Zren_corr.ave_err().write("plots/CORR_Z_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
 	  CORR_Zren=CORR_Zren_corr[T/4];
+	  //cout<<"Check CORR "<<RTAGS_3PTS_NAME[rdiff_tot]<<"reco, "<<CORR_3_dt[0].ave_err()<<" "<<djack_t(CORR_P5P5[rdiff_so][T/2]/2).ave_err()<<endl;
+	  CORR_3_dt.ave_err().write("plots/CORR_3_dt_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
 	}
 	
 	djack_t fact=(CORR_Zren-Zren)/(Zren*qf2_phys);
