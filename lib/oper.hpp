@@ -137,5 +137,4 @@ template <class T> double cov(const T &x,const T &y)
 template <class T> double var(const T &x)
 {return cov(x,x);}
 
-
 #endif

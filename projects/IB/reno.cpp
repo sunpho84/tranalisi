@@ -4,114 +4,186 @@
 
 #include <tranalisi.hpp>
 
-const size_t T=48;
-const size_t nconfs=10;
-const range_t conf_set={700,10,700+35*(nconfs-1)};
+const int EVN=1,UNK=0,ODD=-1;
 
-//! return the whole correlator
-djvec_t get(const string &combo,const string &ID,const size_t reim,const size_t sym)
+typedef int rcombo_2pts_t[2][2];
+typedef int rcombo_3pts_t[2][3];
+
+const int SAMER_2PTS=0,OPPOR_2PTS=1;
+const rcombo_2pts_t RTAGS_2PTS[2]={{{0,0},{1,1}}, {{0,1},{1,0}}};
+const array<string,2> RTAGS_2PTS_NAME={"SAME","OPPO"};
+
+const int SAMER_SAMER_3PTS=0,SAMER_OPPOR_3PTS=1,OPPOR_SAMER_3PTS=2,OPPOR_OPPOR_3PTS=3;
+const array<string,4> RTAGS_3PTS_NAME={"SAME_SAME","SAME_OPPO","OPPO_SAME","OPPO_OPPO"};
+const rcombo_3pts_t RTAGS_3PTS[4]={{{0,0,1},{1,1,0}}, {{0,0,0},{1,1,1}}, {{1,0,1},{0,1,0}}, {{0,1,1},{1,0,0}}}; //REV, SPEC, SEQ , remember that SEQ is already reversed
+
+const size_t T=48;
+  const int tmin=12,tmax=T/2-2;
+
+//! return "_var" or ""
+string prespaced(const string &var)
+{return (var==""?"":"_")+var;}
+
+//! read a single correlator
+djvec_t get(const string &name,const int ri,const int tpar)
 {
-  const vector<string> cID=
-    {"S0P5","V1P5","V2P5","V3P5","V0P5","P5P5","A1P5","A2P5","A3P5","A0P5","T1P5","T2P5","T3P5","B1P5","B2P5","B3P5","P5S0","P5V1","P5V2","P5V3","P5V0",
-     "P5P5","P5A1","P5A2","P5A3","P5A0","P5T1","P5T2","P5T3","P5B1","P5B2","P5B3","P5P5"};
- 
- const size_t ncols=2;
- const string templ="%04d/mes_contr_"+combo;
- const djvec_t data=read_conf_set_t(templ,conf_set,ncols,{0,1},T,SILENT);
- if(data.size()==0) CRASH("No file opened for template %s",templ.c_str());
- 
- const auto pos=find(cID.begin(),cID.end(),ID);
- if(pos==cID.end()) CRASH("Unknown %s",ID.c_str());
- 
- //filter
- const size_t offset=ncols*distance(cID.begin(),pos)+reim;
- const size_t each=ncols*cID.size();
- const size_t base_nel=T;
- const size_t hw=data.size()/(base_nel*each);
- djvec_t res=vec_filter(data,gslice(base_nel*offset,{hw,T},{each*base_nel,1}));
- 
- //write
- res.ave_err().write("plots/"+combo+".xmg");
- 
- //self-symmetrize
- res.symmetrize(sym);
- 
- //write symmetrized
- res.ave_err().write("plots/"+combo+"_symm.xmg");
- 
- return res;
+  cout<<"Reading "<<name<<endl;
+  return read_djvec("data/"+name,T,ri).symmetrized(tpar);
+}
+
+//! take three vectors and compute derivative
+djvec_t der(const array<djvec_t,3> &corrs,const array<double,3> &coeffs)
+{
+  return
+    0.5*djvec_t(corrs[1]-corrs[0])/(coeffs[1]-coeffs[0])+
+    0.5*djvec_t(corrs[2]-corrs[0])/(coeffs[2]-coeffs[0]);
+}
+
+//! load averaging r
+djvec_t load_averaging(const array<string,2> &what,int ri,int tpar,int rpar,const string &diracs,const string &var="")
+{
+  djvec_t temp[2];
+  for(int r=0;r<2;r++)
+    temp[r]=get(what[r]+prespaced(var)+"_"+diracs,ri,tpar);
+  
+  return djvec_t(temp[0]+rpar*temp[1])/(1+abs(rpar));
+}
+
+//! load 2pts (??P5)
+djvec_t load_2pts(const string &dirtag,const int irtags,const int ri,const int tpar,const int rpar,const string &var="")
+{
+  array<string,2> what;
+  const rcombo_2pts_t &rtags=RTAGS_2PTS[irtags];
+  for(int r=0;r<2;r++) what[r]="Spect"+to_string(rtags[r][0])+"_Spect"+to_string(rtags[r][1]);
+  
+  djvec_t out=load_averaging(what,ri,tpar,rpar,dirtag+"P5",var);
+  out.ave_err().write("plots/"+dirtag+"P5_"+RTAGS_2PTS_NAME[irtags]+prespaced(var)+".xmg");
+  
+  return out;
+}
+
+//! compute the derivative od 2pts correlators w.r.t a given variation
+djvec_t der_2pts(const string &dirtag,const int irtags,const int ri,const int tpar,const int rpar,const array<double,3> &coeffs,const string &var)
+{
+  array<string,3> vars={"",var+"P",var+"M"};
+  array<djvec_t,3> corrs;
+  for(int i=0;i<3;i++) corrs[i]=load_2pts(dirtag,irtags,ri,tpar,rpar,vars[i]);
+  
+  djvec_t out=der(corrs,coeffs);
+  out.ave_err().write("plots/"+dirtag+"P5_"+RTAGS_2PTS_NAME[irtags]+"_der_"+var+".xmg");
+  
+  return out;
+}
+
+//! load 3pts (V0P5)
+djvec_t load_3pts(const int irtags,const int tpar,const int rpar,const string &var="")
+{
+  array<string,2> what;
+  const rcombo_3pts_t &rtags=RTAGS_3PTS[irtags];
+  
+  for(int r=0;r<2;r++) what[r]="Spect"+to_string(rtags[r][0])+"_Seq"+to_string(rtags[r][2])+to_string(rtags[r][1]); //note the r order
+  
+  djvec_t out=load_averaging(what,RE,tpar,rpar,"V0P5",var);
+  out.ave_err().write("plots/P5V0P5_"+RTAGS_3PTS_NAME[irtags]+prespaced(var)+".xmg");
+  
+  return out;
+}
+
+//! compute the derivative of 3pts correlators w.r.t a given variation
+djvec_t der_3pts(const int irtags,const int tpar,const int rpar,const array<double,3> &coeffs,const string &var)
+{
+  array<string,3> vars={"",var+"P",var+"M"};
+  array<djvec_t,3> corrs;
+  for(int i=0;i<3;i++) corrs[i]=load_3pts(irtags,tpar,rpar,vars[i]);
+  
+  djvec_t out=der(corrs,coeffs);
+  out.ave_err().write("plots/P5V0P5_"+RTAGS_3PTS_NAME[irtags]+"_der_"+var+".xmg");
+  
+  return out;
 }
 
 int main()
 {
-  const double m=0.02363,mp=0.02373,mm=0.02353;
-  const double k=0.163255,kp=0.163355,km=0.163155;
+  set_njacks(15);
+  
+  const double qf2_der=sqr(0.25/3),qf2_phys=1.0/9.0;
+  const array<double,3> e2_var={0,qf2_der*e2,qf2_der*e2};
+  const double e2_phys=e2*qf2_phys;
+  
+  const double k=0.163255,kp=0.163305,km=0.163205;
   const double mc=1/(2*k),mcp=1/(2*kp),mcm=1/(2*km);
+  const array<double,3> ka_var={mc,mcp,mcm};
   
-  set_njacks(nconfs);
+  //compute deltamcr
+  djvec_t E2_V0P5=der_2pts("V0",SAMER_2PTS,IM,ODD,ODD,e2_var,"E2");
+  djvec_t KA_V0P5=der_2pts("V0",SAMER_2PTS,IM,ODD,ODD,ka_var,"KA");
+  djvec_t deltam_cr_corr=E2_V0P5/KA_V0P5;
+  deltam_cr_corr.ave_err().write("plots/deltam_cr.xmg");
+  djack_t deltam_cr=deltam_cr_corr[tmin];
   
-  djvec_t t1=get("Source_Seq","S0P5",RE,1);
-  cout<<t1[0].ave_err()<<endl;
+  djvec_t Z(2),Z2(2),M(2);
+  djvec_t Z_CORR(2),Z2_CORR(2),M_CORR(2);
+  djvec_t LO_P5P5[2];
+  for(int rdiff=0;rdiff<2;rdiff++)
+    {
+      LO_P5P5[rdiff]=load_2pts("P5",rdiff,RE,EVN,EVN);
+      two_pts_fit(Z2[rdiff],M[rdiff],LO_P5P5[rdiff],T/2,tmin,tmax,"plots/effmass_P5P5_"+RTAGS_2PTS_NAME[rdiff]+".xmg");
+      Z[rdiff]=sqrt(Z2[rdiff]);
+      
+      djvec_t E2_P5P5=der_2pts("P5",rdiff,RE,EVN,EVN,e2_var,"E2");
+      djvec_t KA_P5P5=der_2pts("P5",rdiff,RE,EVN,EVN,ka_var,"KA");
+      
+      djvec_t CORR_P5P5=LO_P5P5[rdiff]+e2_phys*djvec_t(E2_P5P5-deltam_cr*KA_P5P5);
+      CORR_P5P5.ave_err().write("plots/P5P5_"+RTAGS_2PTS_NAME[rdiff]+"_corrected.xmg");
+      two_pts_fit(Z2_CORR[rdiff],M_CORR[rdiff],CORR_P5P5,T/2,tmin,tmax,"plots/effmass_P5P5_"+RTAGS_2PTS_NAME[rdiff]+"_corrected.xmg");
+      Z_CORR[rdiff]=sqrt(Z2_CORR[rdiff]);
+      
+      cout<<RTAGS_2PTS_NAME[rdiff]<<endl;
+      cout<<" Mass: "<<M[rdiff].ave_err()<<endl;
+      cout<<" Mass corr: "<<M_CORR[rdiff].ave_err()<<endl;
+      cout<<" Mass diff: "<<djack_t(M_CORR[rdiff]-M[rdiff]).ave_err()<<endl;
+    }
   
-  djvec_t t2=get("Spect_Spect","P5P5",RE,1);
-  cout<<t2[T/2].ave_err()<<endl;
-  
-  get("Spect_Spect","P5P5",RE,1);
-  get("SpectP_Spect","P5P5",RE,1);
-  
-  //2pts
-  djvec_t Spect_Spect=get("Spect_Spect","P5P5",RE,1);
-  djack_t M,Z2;
-  two_pts_fit(Z2,M,Spect_Spect,T/2,12,T/2,"plots/Spect_Spect_effmass.xmg");
-  cout<<"Mass: "<<M.ave_err()<<endl;
-  
-  //3pts
-  djvec_t Spect_Seq=get("Spect_Seq","V0P5",RE,-1);
-  djvec_t Spect_CV_Seq=get("Spect_V_Seq","S0P5",RE,-1);
-  
-  //3pts derivative w.r.t to e2
-  djvec_t SpectP_SeqP=get("SpectP_SeqP","V0P5",RE,-1);
-  djvec_t SpectM_SeqM=get("SpectM_SeqM","V0P5",RE,-1);
-  djvec_t Spect_Seq_der_P=djvec_t(SpectP_SeqP-Spect_Seq)/(sqr(0.25)*e2);
-  Spect_Seq_der_P.ave_err().write("plots/Spect_Seq_der_P.xmg");
-  djvec_t Spect_Seq_der_M=djvec_t(SpectM_SeqM-Spect_Seq)/(sqr(0.25)*e2);
-  Spect_Seq_der_M.ave_err().write("plots/Spect_Seq_der_M.xmg");
-  djvec_t Spect_Seq_der_=djvec_t(Spect_Seq_der_P+Spect_Seq_der_M)/2;
-  Spect_Seq_der_.ave_err().write("plots/Spect_Seq_der_.xmg");
-  
-  //3pts derivative w.r.t mass
-  djvec_t SpectMAP_SeqMAP=get("SpectMAP_SeqMAP","V0P5",RE,-1);
-  djvec_t SpectMAM_SeqMAM=get("SpectMAM_SeqMAM","V0P5",RE,-1);
-  djvec_t Spect_Seq_der_MAP=djvec_t(SpectMAP_SeqMAP-Spect_Seq)/(mp-m);
-  Spect_Seq_der_MAP.ave_err().write("plots/Spect_Seq_der_MAP.xmg");
-  djvec_t Spect_Seq_der_MAM=djvec_t(SpectMAM_SeqMAM-Spect_Seq)/(mm-m);
-  Spect_Seq_der_MAM.ave_err().write("plots/Spect_Seq_der_MAM.xmg");
-  djvec_t Spect_Seq_der_MA=djvec_t(Spect_Seq_der_MAP+Spect_Seq_der_MAM)/2;
-  Spect_Seq_der_MA.ave_err().write("plots/Spect_Seq_der_MA.xmg");
-  
-  //3pts derivative w.r.t critical mass
-  djvec_t SpectKAP_SeqKAP=get("SpectKAP_SeqKAP","V0P5",RE,-1);
-  djvec_t SpectKAM_SeqKAM=get("SpectKAM_SeqKAM","V0P5",RE,-1);
-  djvec_t Spect_Seq_der_KAP=djvec_t(SpectKAP_SeqKAP-Spect_Seq)/(mcp-mc);
-  Spect_Seq_der_KAP.ave_err().write("plots/Spect_Seq_der_KAP.xmg");
-  djvec_t Spect_Seq_der_KAM=djvec_t(SpectKAM_SeqKAM-Spect_Seq)/(mcm-mc);
-  Spect_Seq_der_KAM.ave_err().write("plots/Spect_Seq_der_KAM.xmg");
-  djvec_t Spect_Seq_der_KA=djvec_t(Spect_Seq_der_KAP+Spect_Seq_der_KAM)/2;
-  Spect_Seq_der_KA.ave_err().write("plots/Spect_Seq_der_KA.xmg");
-  
-  //Zv
-  djvec_t(Spect_Spect[T/2]/(-2.0*Spect_Seq)).ave_err().write("plots/Spect_Seq_Zv.xmg");
-  djvec_t(Spect_Spect[T/2]/(-2.0*Spect_CV_Seq)).ave_err().write("plots/Spect_Seq_CZv.xmg");
-  
-  //3pts derivative w.r.t to e2
-  djvec_t SpectP_CV_SeqP=get("SpectP_V_SeqP","V0P5",RE,1);
-  djvec_t SpectM_CV_SeqM=get("SpectM_V_SeqM","V0P5",RE,1);
-  djvec_t Spect_CV_Seq_der_P=djvec_t(SpectP_CV_SeqP-Spect_CV_Seq)/(sqr(0.25)*e2);
-  Spect_CV_Seq_der_P.ave_err().write("plots/Spect_CV_Seq_der_P.xmg");
-  djvec_t Spect_CV_Seq_der_M=djvec_t(SpectM_CV_SeqM-Spect_CV_Seq)/(sqr(0.25)*e2);
-  Spect_CV_Seq_der_M.ave_err().write("plots/Spect_CV_Seq_der_M.xmg");
-  djvec_t Spect_CV_Seq_der_=djvec_t(Spect_CV_Seq_der_P+Spect_CV_Seq_der_M)/2;
-  Spect_CV_Seq_der_.ave_err().write("plots/Spect_CV_Seq_der_.xmg");
+  for(int rdiff_so=0;rdiff_so<2;rdiff_so++)
+    for(int rdiff_si=0;rdiff_si<2;rdiff_si++)
+      {
+	int rdiff_tot=rdiff_si+2*rdiff_so;
+	
+	djvec_t LO_3=load_3pts(rdiff_tot,ODD,EVN);
+	
+	//LO
+	djack_t Zren;
+	{
+	  //reconstruct 2pts
+	  djvec_t LO_2_reco(T/2);
+	  for(size_t t=0;t<T/2;t++) LO_2_reco[t]=Z[rdiff_so]*Z[rdiff_si]/(4*M[rdiff_so]*M[rdiff_si])*exp(-M[rdiff_so]*t)*exp(-M[rdiff_si]*(T/2-t));
+	  cout<<"Check "<<RTAGS_3PTS_NAME[rdiff_tot]<<"reco, "<<LO_2_reco[0].ave_err()<<" "<<djack_t(LO_P5P5[rdiff_so][T/2]/djack_t(2*M[rdiff_so]+2*M[rdiff_si])).ave_err()<<endl;
+	  
+	  djvec_t INVMATREL=-LO_2_reco/LO_3,Zren_corr=INVMATREL*djack_t(M[rdiff_so]+M[rdiff_si]);
+	  Zren_corr.ave_err().write("plots/Z_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
+	  Zren=Zren_corr[T/4];
+	}
+	
+	//QED
+	djack_t CORR_Zren;
+	{
+	  //build corrected 3pts
+	  djvec_t E2_3=der_3pts(rdiff_tot,ODD,EVN,e2_var,"E2");
+	  djvec_t KA_3=der_3pts(rdiff_tot,ODD,EVN,ka_var,"KA");
+	  djvec_t CORR_3=LO_3+e2_phys*djvec_t(E2_3-deltam_cr*KA_3);
+	  
+	  //reconstruct 2pts corrected
+	  djvec_t CORR_2_reco(T/2);
+	  for(size_t t=0;t<T/2;t++) CORR_2_reco[t]=Z_CORR[rdiff_so]*Z_CORR[rdiff_si]/(4*M_CORR[rdiff_so]*M_CORR[rdiff_si])*exp(-M_CORR[rdiff_so]*t)*exp(-M_CORR[rdiff_si]*(T/2-t));
+	  CORR_2_reco.ave_err().write("plots/CORR_2_reco_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
+	  djvec_t CORR_INVMATREL=-CORR_2_reco/CORR_3,CORR_Zren_corr=CORR_INVMATREL*djack_t(M_CORR[rdiff_so]+M_CORR[rdiff_si]);
+	  CORR_Zren_corr.ave_err().write("plots/CORR_Z_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
+	  CORR_Zren=CORR_Zren_corr[T/4];
+	}
+	
+	djack_t fact=(CORR_Zren-Zren)/(Zren*qf2_phys);
+	cout<<"Factorization: "<<fact.ave_err()<<endl;
+      }
   
   return 0;
 }

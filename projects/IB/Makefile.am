@@ -10,12 +10,14 @@ bin_PROGRAMS= \
 	$(top_builddir)/bin/manette2 \
 	$(top_builddir)/bin/meson_mass_IB \
 	$(top_builddir)/bin/meson_mass_IB_glb \
-	$(top_builddir)/bin/reno
+	$(top_builddir)/bin/reno \
+	$(top_builddir)/bin/reno_old
 
 #	$(top_builddir)/bin/test_antonino
 
 __top_builddir__bin_manette_SOURCES=manette.cpp
 __top_builddir__bin_reno_SOURCES=reno.cpp
+__top_builddir__bin_reno_old_SOURCES=reno_old.cpp
 #__top_builddir__bin_test_antonino_SOURCES=test_antonino.cpp
 __top_builddir__bin_Kl2_IB_SOURCES=Kl2_IB.cpp Kl2_IB_FSE.cpp common.cpp
 __top_builddir__bin_manette2_SOURCES=manette2.cpp
