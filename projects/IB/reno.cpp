@@ -40,7 +40,7 @@ djvec_t der(const array<djvec_t,3> &corrs,const array<double,3> &coeffs)
 }
 
 //! load averaging r
-djvec_t load_averaging(const array<string,2> &what,int ri,int tpar,int rpar,const string &diracs,const string &var="")
+djvec_t load_averaging(const array<string,2> &what,const int ri,const int tpar,const int rpar,const string &diracs,const string &var="")
 {
   djvec_t temp[2];
   for(int r=0;r<2;r++)
