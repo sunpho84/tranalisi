@@ -44,7 +44,7 @@ public:
   jack_t() : valarray<T>(njacks+1) {check_njacks_init();}
   
   //! create with size (only njacks is accepted)
-  explicit jack_t(size_t ext_njacks) : jack_t() {if(njacks!=ext_njacks) CRASH("NJacks %zu different from global value %zu",njacks,ext_njacks);}
+  explicit jack_t(size_t ext_njacks) : jack_t() {if(njacks!=ext_njacks) CRASH("NJacks %zu different from global value %zu",ext_njacks,njacks);}
   
   //! create from sliced array
   jack_t(const slice_array<jack_t> &slice) : valarray<T>(slice) {}
