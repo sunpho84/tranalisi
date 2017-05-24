@@ -34,14 +34,21 @@ template <class T> T two_pts_corr_fun(T Z2,T M,double TH,double t,const int par)
 //! used to solve effmass
 template <class T> T periodic_fun_effmass(T M,double TH,double t)
 {return cosh(M*(TH-t));}
+template <class T> T nonperiodic_fun_effmass(T M,double TH,double t)
+{return exp(-M*t);}
 template <class T> T antiperiodic_fun_effmass(T M,double TH,double t)
 {return sinh(M*(TH-t));}
 
 //! ratio of corr_fun_effmass(t+dt)/corr_fun_effmass(t)
 template <class T> T effmass_two_times_ratio_fun(T M,double TH,double t,double dt,int par)
 {
-  if(par==1) return  periodic_fun_effmass(M,TH,t+dt)/ periodic_fun_effmass(M,TH,t);
-  else       return antiperiodic_fun_effmass(M,TH,t+dt)/antiperiodic_fun_effmass(M,TH,t);
+  switch(par)
+    {
+    case -1: return antiperiodic_fun_effmass(M,TH,t+dt)/antiperiodic_fun_effmass(M,TH,t);break;
+    case  0: return nonperiodic_fun_effmass(M,TH,t+dt)/nonperiodic_fun_effmass(M,TH,t);break;
+    case +1: return periodic_fun_effmass(M,TH,t+dt)/periodic_fun_effmass(M,TH,t);break;
+    default: CRASH("unknown periodicity %d",par);return M;
+    }
 }
 
 //! handle keeping TH and parity and returning the function
