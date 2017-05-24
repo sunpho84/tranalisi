@@ -95,6 +95,7 @@ int main()
   djvec_t Spect_V_Seq_der_KA=compute_der("Spect","V_Seq","KAP","KAP","KAM","KAM","S0P5",RE,-1,mcp-mc,mcm-mc,"KA");
   
   //Zv
+  cout<<"Zv_num: "<<Spect_Spect[T/2].ave_err()<<endl;
   djvec_t Zv=Spect_Spect[T/2]/(-2.0*Spect_Seq);
   Zv.ave_err().write("plots/Zv.xmg");
   djvec_t CZv=Spect_Spect[T/2]/(-2.0*Spect_V_Seq);
@@ -116,7 +117,7 @@ int main()
   double deltam=amq*(6.0*log(mu_MS*a)-22.596)/(16.0*sqr(M_PI));
   
   //deltam is uselsess, begins at higher orders
-  deltam*=0.0;
+  deltam*=1.0;
   
   double qf2_phys=1.0/9.0;
   djack_t Zv_e2_num=djvec_t(Spect_Spect+qf2_phys*e2*djvec_t(Spect_Spect_der_e2-deltam_cr*Spect_Spect_der_KA+deltam*Spect_Spect_der_MA))[T/2];
@@ -126,13 +127,15 @@ int main()
   djvec_t(Zv_e2-Zv).ave_err().write("plots/delta_Zv_e2.xmg");
   djvec_t((Zv_e2-Zv)/(Zv*qf2_phys)).ave_err().write("plots/Zv_e2_fact.xmg");
   
-  double pred_Zv=-20.6178*2*alpha_em/(4*M_PI);
-  double pred_Za=-15.7963*2*alpha_em/(4*M_PI);
+  double pred_Zv=-20.6178*alpha_em/(4*M_PI);
+  double pred_Za=-15.7963*alpha_em/(4*M_PI);
   cout<<"Prediction from Davide, Zv: "<<pred_Zv<<endl;
   cout<<"Prediction from Davide, Za: "<<pred_Za<<endl;
   
   djack_t CZv_e2_num=djvec_t(Spect_Spect+qf2_phys*e2*djvec_t(Spect_Spect_der_e2-deltam_cr*Spect_Spect_der_KA+deltam*Spect_Spect_der_MA))[T/2];
+  cout<<"CZv_e2_num: "<<CZv_e2_num.ave_err()<<endl;
   djvec_t CZv_e2_den=Spect_V_Seq+qf2_phys*e2*djvec_t(Spect_V_Seq_der_e2-deltam_cr*Spect_V_Seq_der_KA+deltam*Spect_V_Seq_der_MA);
+  CZv_e2_den.ave_err().write("plots/CZv_e2_den.xmg");
   djvec_t CZv_e2=CZv_e2_num/(-2.0*CZv_e2_den);
   CZv_e2.ave_err().write("plots/CZv_e2.xmg");
   djvec_t((CZv_e2-CZv)/(CZv*qf2_phys)).ave_err().write("plots/CZv_e2_fact.xmg");
