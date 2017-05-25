@@ -140,7 +140,7 @@ void z_from_2pts_dec(djack_t &za,djack_t &zv,const djvec_t &P5P5_SAME,const djve
   djack_t ZA0P5_SAME,MA0P5_SAME;
   djack_t ZA0P5_OPPO,MA0P5_OPPO;
   
-  two_pts_fit(ZP5P5_SAME,MP5P5_SAME,P5P5_SAME,T/2,tmin,tmax);
+  two_pts_fit(ZP5P5_SAME,MP5P5_SAME,P5P5_SAME,T/2,tmin,tmax,"plots/effmass_"+tag+"_P5P5_same.xmg");
   two_pts_fit(ZP5P5_OPPO,MP5P5_OPPO,P5P5_OPPO,T/2,tmin,tmax,"plots/effmass_"+tag+"_P5P5_oppo.xmg");
   two_pts_fit(ZA0P5_SAME,MA0P5_SAME,A0P5_SAME,T/2,tmin,tmax,"plots/effmass_"+tag+"_A0P5_same.xmg","",-1);
   two_pts_fit(ZA0P5_OPPO,MA0P5_OPPO,A0P5_OPPO,T/2,tmin,tmax,"plots/effmass_"+tag+"_A0P5_oppo.xmg","",-1);
@@ -165,7 +165,7 @@ int main(int narg,char **arg)
   
   T=input.read<size_t>("T");
   tmin=input.read<size_t>("tmin_2pts");
-  tmax=T/2;
+  tmax=input.read<size_t>("tmax_2pts");
   
   size_t temp_njacks=input.read<size_t>("NJacks");
   set_njacks(temp_njacks);
