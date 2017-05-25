@@ -131,6 +131,32 @@ djvec_t der_3pts(const int irtags,const int tpar,const int rpar,const array<doub
 djack_t three_pts_dt_reco(const djack_t &Zso,const djack_t &Mso,const djack_t &Zsi,const djack_t &Msi,int t)
 {return Zso*Zsi/(4*Mso*Msi)*exp(-Mso*t)*exp(-Msi*(T/2-t))*(Mso+Msi);}
 
+//! compute the Z from 2pts decay constant
+void z_from_2pts_dec(djack_t &za,djack_t &zv,const djvec_t &P5P5_SAME,const djvec_t &A0P5_SAME,const djvec_t &P5P5_OPPO,const djvec_t &A0P5_OPPO,const string &tag)
+{
+  djack_t ZP5P5_SAME,MP5P5_SAME;
+  djack_t ZP5P5_OPPO,MP5P5_OPPO;
+  djack_t ZA0P5_SAME,MA0P5_SAME;
+  djack_t ZA0P5_OPPO,MA0P5_OPPO;
+  
+  two_pts_fit(ZP5P5_SAME,MP5P5_SAME,P5P5_SAME,T/2,tmin,tmax);
+  two_pts_fit(ZP5P5_OPPO,MP5P5_OPPO,P5P5_OPPO,T/2,tmin,tmax,"plots/effmass_"+tag+"_P5P5_oppo.xmg");
+  two_pts_fit(ZA0P5_SAME,MA0P5_SAME,A0P5_SAME,T/2,tmin,tmax,"plots/effmass_"+tag+"_A0P5_same.xmg","",-1);
+  two_pts_fit(ZA0P5_OPPO,MA0P5_OPPO,A0P5_OPPO,T/2,tmin,tmax,"plots/effmass_"+tag+"_A0P5_oppo.xmg","",-1);
+  
+  djack_t ZP_SAME=sqrt(ZP5P5_SAME);
+  djack_t ZA_SAME=ZA0P5_SAME/ZP_SAME;
+  double amq=0.02363;
+  djack_t f_SAME=ZP_SAME*(2*amq)/sqr(MP5P5_SAME);
+  djack_t f_SAME_bare=ZA_SAME/MP5P5_SAME;
+  
+  djack_t ZA_OPPO=ZA0P5_OPPO/sqrt(ZP5P5_OPPO);
+  djack_t f_OPPO_bare=ZA_OPPO/MP5P5_OPPO;
+  
+  za=f_SAME/f_OPPO_bare;
+  zv=f_SAME/f_SAME_bare;
+}
+
 int main(int narg,char **arg)
 {
   string name="input.txt";
@@ -276,6 +302,49 @@ int main(int narg,char **arg)
     {
       int RSAME=0,ROPPO=1;
       
+      //determination of Za from 2pts WI
+      {
+	cout<<"Determining Za and Zav from 2pts decay constant"<<endl;
+	
+	djvec_t LO_P5P5_SAME=load_2pts("P5P5",RSAME,RE,EVN,EVN);
+	djvec_t E2_P5P5_SAME= der_2pts("P5P5",RSAME,RE,EVN,EVN,e2_var,"E2E2");
+	djvec_t KA_P5P5_SAME= der_2pts("P5P5",RSAME,RE,EVN,EVN,ka_var,"KAKA");
+	djvec_t CORR_P5P5_SAME=LO_P5P5_SAME+e2_phys*djvec_t(E2_P5P5_SAME-deltam_cr*KA_P5P5_SAME);
+	
+	djvec_t LO_P5P5_OPPO=load_2pts("P5P5",ROPPO,RE,EVN,EVN);
+	djvec_t E2_P5P5_OPPO= der_2pts("P5P5",ROPPO,RE,EVN,EVN,e2_var,"E2E2");
+	djvec_t KA_P5P5_OPPO= der_2pts("P5P5",ROPPO,RE,EVN,EVN,ka_var,"KAKA");
+	djvec_t CORR_P5P5_OPPO=LO_P5P5_OPPO+e2_phys*djvec_t(E2_P5P5_OPPO-deltam_cr*KA_P5P5_OPPO);
+	
+	djvec_t LO_A0P5_SAME=load_2pts("A0P5",RSAME,RE,ODD,EVN);
+	djvec_t E2_A0P5_SAME= der_2pts("A0P5",RSAME,RE,ODD,EVN,e2_var,"E2E2");
+	djvec_t KA_A0P5_SAME= der_2pts("A0P5",RSAME,RE,ODD,EVN,ka_var,"KAKA");
+	djvec_t CORR_A0P5_SAME=LO_A0P5_SAME+e2_phys*djvec_t(E2_A0P5_SAME-deltam_cr*KA_A0P5_SAME);
+	
+	djvec_t LO_A0P5_OPPO=load_2pts("A0P5",ROPPO,RE,ODD,EVN);
+	djvec_t E2_A0P5_OPPO= der_2pts("A0P5",ROPPO,RE,ODD,EVN,e2_var,"E2E2");
+	djvec_t KA_A0P5_OPPO= der_2pts("A0P5",ROPPO,RE,ODD,EVN,ka_var,"KAKA");
+	djvec_t CORR_A0P5_OPPO=LO_A0P5_OPPO+e2_phys*djvec_t(E2_A0P5_OPPO-deltam_cr*KA_A0P5_SAME);
+	
+	djack_t za,zv;
+	z_from_2pts_dec(za,zv,LO_P5P5_SAME,LO_A0P5_SAME,LO_P5P5_OPPO,LO_A0P5_OPPO,"LO");
+	
+	cout<<"Za: "<<za.ave_err()<<endl;
+	cout<<"Zv: "<<zv.ave_err()<<endl;
+	
+	djack_t CORR_za,CORR_zv;
+	z_from_2pts_dec(CORR_za,CORR_zv,CORR_P5P5_SAME,CORR_A0P5_SAME,CORR_P5P5_OPPO,CORR_A0P5_OPPO,"CORR");
+	
+	cout<<"Corr Za: "<<CORR_za.ave_err()<<endl;
+	cout<<"Corr Zv: "<<CORR_zv.ave_err()<<endl;
+	
+	djack_t zv_QED_fact=(CORR_zv-zv)/(zv*qf2_phys);
+	djack_t za_QED_fact=(CORR_za-za)/(za*qf2_phys);
+      
+	cout<<"Factorization Za: "<<za_QED_fact.ave_err()<<endl;
+	cout<<"Factorization Zv: "<<zv_QED_fact.ave_err()<<endl;
+      }
+      
       //zv non conserved
       djvec_t LO_VKVK_zv=load_2pts_spave("V%cV%c",ROPPO,RE,EVN,EVN);
       djvec_t E2_VKVK_zv=der_2pts_spave("V%cV%c",ROPPO,RE,EVN,EVN,e2_var,"E2E2");
@@ -325,10 +394,9 @@ int main(int narg,char **arg)
       djvec_t CORR_ZV_ren_t=CORR_VKCVK_zv/CORR_VKVK_zv;
       djack_t ZV_ren=constant_fit(ZV_ren_t,tmin,tmax,"plots/ZV_WI_2pts.xmg");
       djack_t CORR_ZV_ren=constant_fit(CORR_ZV_ren_t,tmin,tmax,"plots/CORR_ZV_WI_2pts.xmg");
-      
       djvec_t ZV_QED_fact_t=(CORR_ZV_ren_t-ZV_ren_t)/(ZV_ren_t*qf2_phys);
       djack_t ZV_QED_fact=constant_fit(ZV_QED_fact_t,T/4-2,T/4+2,"plots/ZV_WI_2pts_QED_fact.xmg");
-
+      
       djvec_t LO_VKVK=load_2pts_spave("V%cV%c",ROPPO,RE,EVN,EVN);
       djvec_t E2_VKVK=der_2pts_spave("V%cV%c",ROPPO,RE,EVN,EVN,e2_var,"E2");
       djvec_t KA_VKVK=der_2pts_spave("V%cV%c",ROPPO,RE,EVN,EVN,ka_var,"KA");
