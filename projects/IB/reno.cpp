@@ -325,7 +325,7 @@ int main(int narg,char **arg)
 	djvec_t LO_A0P5_OPPO=load_2pts("A0P5",ROPPO,RE,ODD,EVN);
 	djvec_t E2_A0P5_OPPO= der_2pts("A0P5",ROPPO,RE,ODD,EVN,e2_var,"E2E2");
 	djvec_t KA_A0P5_OPPO= der_2pts("A0P5",ROPPO,RE,ODD,EVN,ka_var,"KAKA");
-	djvec_t CORR_A0P5_OPPO=LO_A0P5_OPPO+e2_phys*djvec_t(E2_A0P5_OPPO-deltam_cr*KA_A0P5_SAME);
+	djvec_t CORR_A0P5_OPPO=LO_A0P5_OPPO+e2_phys*djvec_t(E2_A0P5_OPPO-deltam_cr*KA_A0P5_OPPO);
 	
 	djack_t za,zv;
 	z_from_2pts_dec(za,zv,LO_P5P5_SAME,LO_A0P5_SAME,LO_P5P5_OPPO,LO_A0P5_OPPO,"LO");
