@@ -307,25 +307,23 @@ int main(int narg,char **arg)
       {
 	cout<<"Determining Za and Zav from 2pts decay constant"<<endl;
 	
-	djvec_t LO_P5P5_SAME=load_2pts("P5P5",RSAME,RE,EVN,EVN);
-	djvec_t E2_P5P5_SAME= der_2pts("P5P5",RSAME,RE,EVN,EVN,e2_var,"E2E2");
-	djvec_t KA_P5P5_SAME= der_2pts("P5P5",RSAME,RE,EVN,EVN,ka_var,"KAKA");
-	djvec_t CORR_P5P5_SAME=LO_P5P5_SAME+e2_phys*djvec_t(E2_P5P5_SAME-deltam_cr*KA_P5P5_SAME);
+	auto load_LO_CORR=[&e2_var,&ka_var,&e2_phys,&deltam_cr]
+	  (djvec_t &LO,djvec_t &CORR,const string &name,const int &rcombo,const int &reim,const int &tpar,const int &rpar)
+	  {
+	    LO=load_2pts(name,rcombo,reim,tpar,rpar);
+	    djvec_t E2=der_2pts(name,rcombo,reim,tpar,rpar,e2_var,"E2E2");
+	    djvec_t KA=der_2pts(name,rcombo,reim,tpar,rpar,ka_var,"KAKA");
+	    CORR=LO+e2_phys*djvec_t(E2-deltam_cr*KA);
+	  };
 	
-	djvec_t LO_P5P5_OPPO=load_2pts("P5P5",ROPPO,RE,EVN,EVN);
-	djvec_t E2_P5P5_OPPO= der_2pts("P5P5",ROPPO,RE,EVN,EVN,e2_var,"E2E2");
-	djvec_t KA_P5P5_OPPO= der_2pts("P5P5",ROPPO,RE,EVN,EVN,ka_var,"KAKA");
-	djvec_t CORR_P5P5_OPPO=LO_P5P5_OPPO+e2_phys*djvec_t(E2_P5P5_OPPO-deltam_cr*KA_P5P5_OPPO);
-	
-	djvec_t LO_A0P5_SAME=load_2pts("A0P5",RSAME,RE,ODD,EVN);
-	djvec_t E2_A0P5_SAME= der_2pts("A0P5",RSAME,RE,ODD,EVN,e2_var,"E2E2");
-	djvec_t KA_A0P5_SAME= der_2pts("A0P5",RSAME,RE,ODD,EVN,ka_var,"KAKA");
-	djvec_t CORR_A0P5_SAME=LO_A0P5_SAME+e2_phys*djvec_t(E2_A0P5_SAME-deltam_cr*KA_A0P5_SAME);
-	
-	djvec_t LO_A0P5_OPPO=load_2pts("A0P5",ROPPO,RE,ODD,EVN);
-	djvec_t E2_A0P5_OPPO= der_2pts("A0P5",ROPPO,RE,ODD,EVN,e2_var,"E2E2");
-	djvec_t KA_A0P5_OPPO= der_2pts("A0P5",ROPPO,RE,ODD,EVN,ka_var,"KAKA");
-	djvec_t CORR_A0P5_OPPO=LO_A0P5_OPPO+e2_phys*djvec_t(E2_A0P5_OPPO-deltam_cr*KA_A0P5_OPPO);
+	djvec_t LO_P5P5_SAME,CORR_P5P5_SAME;
+	load_LO_CORR(LO_P5P5_SAME,CORR_P5P5_SAME,"P5P5",RSAME,RE,EVN,EVN);
+	djvec_t LO_P5P5_OPPO,CORR_P5P5_OPPO;
+	load_LO_CORR(LO_P5P5_OPPO,CORR_P5P5_OPPO,"P5P5",ROPPO,RE,EVN,EVN);
+	djvec_t LO_A0P5_SAME,CORR_A0P5_SAME;
+	load_LO_CORR(LO_A0P5_SAME,CORR_A0P5_SAME,"A0P5",RSAME,RE,ODD,EVN);
+	djvec_t LO_A0P5_OPPO,CORR_A0P5_OPPO;
+	load_LO_CORR(LO_A0P5_OPPO,CORR_A0P5_OPPO,"A0P5",ROPPO,RE,ODD,EVN);
 	
 	djack_t za,zv;
 	z_from_2pts_dec(za,zv,LO_P5P5_SAME,LO_A0P5_SAME,LO_P5P5_OPPO,LO_A0P5_OPPO,"LO");
