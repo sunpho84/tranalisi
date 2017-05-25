@@ -19,6 +19,7 @@ const array<string,4> RTAGS_3PTS_NAME={"SAME_SAME","SAME_OPPO","OPPO_SAME","OPPO
 const rcombo_3pts_t RTAGS_3PTS[4]={{{0,0,1},{1,1,0}}, {{0,0,0},{1,1,1}}, {{1,0,1},{0,1,0}}, {{0,1,1},{1,0,0}}}; //REV, SPEC, SEQ , remember that SEQ is already reversed
 
 size_t T;
+double amq;
 size_t tmin,tmax;
 
 //! return "_var" or ""
@@ -146,7 +147,6 @@ void z_from_2pts_dec(djack_t &za,djack_t &zv,const djvec_t &P5P5_SAME,const djve
   
   djack_t ZP_SAME=sqrt(ZP5P5_SAME);
   djack_t ZA_SAME=ZA0P5_SAME/ZP_SAME;
-  double amq=0.02363;
   djack_t f_SAME=ZP_SAME*(2*amq)/sqr(MP5P5_SAME);
   djack_t f_SAME_bare=ZA_SAME/MP5P5_SAME;
   
@@ -170,6 +170,7 @@ int main(int narg,char **arg)
   size_t temp_njacks=input.read<size_t>("NJacks");
   set_njacks(temp_njacks);
   
+  amq=input.read<double>("amq");
   const double k=input.read<double>("k");
   const double kp=input.read<double>("kp");
   const double km=input.read<double>("km");
