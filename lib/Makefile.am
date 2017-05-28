@@ -5,6 +5,7 @@ lib_LIBRARIES=libtran.a
 libtran_a_SOURCES= \
 	ave_err.cpp \
 	boot.cpp \
+	dirac.cpp \
 	effective.cpp \
 	fit.cpp \
 	grace.cpp \

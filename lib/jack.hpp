@@ -206,6 +206,10 @@ template <class T> string to_string(const jack_t<T> &obj)
 template <class T> size_t init_nel(const jack_t<T> &obj)
 {return njacks;}
 
+//! specify hot to print a jack_t
+template <class T> ostream& operator<<(ostream &out,const jack_t<T> &v)
+{return out<<v.ave_err();}
+
 #undef EXTERN_JACK
 #undef INIT_TO
 

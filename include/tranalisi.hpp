@@ -2,6 +2,7 @@
 #define _TRANALISI_HPP
 
 #include <boot.hpp>
+#include <dirac.hpp>
 #include <effective.hpp>
 #include <file.hpp>
 #include <fit.hpp>
