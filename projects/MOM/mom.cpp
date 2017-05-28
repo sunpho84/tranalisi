@@ -4,43 +4,73 @@
 
 #include <tranalisi.hpp>
 
-const size_t NCOL=3;
-const size_t NSPIN=4;
-const int NSPINCOL=NSPIN*NCOL;
+#include <geometry.hpp>
 
-using jprop_t=Matrix<djack_t,NSPINCOL,NSPINCOL>;
-using dirac_t=Matrix<dcomplex,NSPIN,NSPIN>;
+//////////////// global variables ////////////////
 
-namespace Eigen
+//! list of momenta
+vector<coords_t> moms;
+
+//! read the input file
+void parse_input(const string &name)
 {
-  template<> struct NumTraits<djack_t>
-    : NumTraits<double> 
-  {
-    typedef djack_t Real;
-    typedef djack_t NonInteger;
-    typedef djack_t Nested;
-    enum {
-      IsComplex=0,
-      IsInteger=0,
-      IsSigned=1,
-      RequireInitialization=1,
-      ReadCost=1,
-      AddCost=3,
-      MulCost=3
-    };
-  };
+  raw_file_t input(name,"r");
+  
+  //! lattice size
+  size_t Ls=input.read<size_t>("L");
+  for(size_t mu=1;mu<NDIM;mu++) L[mu]=Ls;
+  L[0]=input.read<size_t>("T");
+  
+  //! number of ranges
+  const int nfft_ranges=input.read<int>("NFftRanges");
+  
+  //read all the ranges
+  for(int irange=0;irange<nfft_ranges;irange++)
+    {
+      size_t L[2],T[2];
+      L[0]=input.read<size_t>("L");
+      L[1]=input.read<size_t>();
+      T[0]=input.read<size_t>("T");
+      T[1]=input.read<size_t>();
+      
+      //init the offset and width from range interval
+      coords_t offs,width;
+      offs[0]=T[0];
+      width[0]=T[1]-T[0]+1;
+      for(int i=1;i<NDIM;i++)
+	{
+	  offs[i]=L[0];
+	  width[i]=L[1]-L[0]+1;
+	}
+      
+      //put all momenta
+      for(int vol=vol_of_lx(width),ifilt=0;ifilt<vol;ifilt++)
+	{
+	  //gets the coordinate in the filtering volume
+	  coords_t c=offs+coord_of_lx(ifilt,width);
+	  
+	  //get mirrorized
+	  for(int imir=0;imir<pow(2,NDIM);imir++)
+	    {
+	      coords_t cmir=get_mirrorized_site_coords(c,imir);
+	      moms.push_back(cmir);
+	    }
+	}
+    }
+  
+  //! number of jacks
+  const size_t ext_njacks=input.read<size_t>("NJacks");
+  set_njacks(ext_njacks);
 }
 
-//! specify hot to print a djack_t
-ostream& operator<<(ostream &out,const djack_t &v)
-{return out<<v.ave_err();}
-
-
-
-
-int main()
+int main(int narg,char **arg)
 {
-  set_njacks(15);
+  //read input file
+  string name="input.txt";
+  if(narg>=2) name=arg[1];
+  parse_input(name);
+  
+  cout<<Gamma[5]<<endl;
   
   jprop_t a,b;
   

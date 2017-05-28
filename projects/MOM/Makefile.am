@@ -6,4 +6,6 @@ LDADD=$(top_builddir)/lib/libtran.a
 bin_PROGRAMS= \
 	$(top_builddir)/bin/mom
 
-__top_builddir__bin_mom_SOURCES=mom.cpp
+__top_builddir__bin_mom_SOURCES= \
+	geometry.cpp \
+	mom.cpp
