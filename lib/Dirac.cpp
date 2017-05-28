@@ -3,5 +3,5 @@
 #endif
 
 #define EXTERN_DIRAC
-#include <dirac.hpp>
+#include <Dirac.hpp>
 
