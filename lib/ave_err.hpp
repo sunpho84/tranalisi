@@ -55,8 +55,8 @@ template <class T> ave_err_t range_ave_stddev(const valarray<T> &v,size_t size)
   ae.err()/=size;
   ae.err()-=sqr(ae.ave());
   ae.err()=sqrt(fabs(ae.err()));
-    
-    return ae;
+  
+  return ae;
 }
 
 //! a vector of ave_err_t

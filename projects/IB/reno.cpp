@@ -223,7 +223,7 @@ int main(int narg,char **arg)
     for(int rdiff_si=0;rdiff_si<2;rdiff_si++)
       {
 	int rdiff_tot=rdiff_si+2*rdiff_so;
-	cout<<"Case: "<<RTAGS_3PTS_NAME[rdiff_tot]<<endl;
+	cout<<"Case: "<<RTAGS_3PTS_NAME[rdiff_tot]<<" "<<((rdiff_so==rdiff_si)?"Zv":"Za")<<endl;
 	
 	djvec_t LO_3=load_3pts(rdiff_tot,ODD,EVN);
 	
@@ -308,22 +308,23 @@ int main(int narg,char **arg)
 	cout<<"Determining Za and Zav from 2pts decay constant"<<endl;
 	
 	auto load_LO_CORR=[&e2_var,&ka_var,&e2_phys,&deltam_cr]
-	  (djvec_t &LO,djvec_t &CORR,const string &name,const int &rcombo,const int &reim,const int &tpar,const int &rpar)
+	  (djvec_t &LO,djvec_t &DELTA,djvec_t &CORR,const string &name,const int &rcombo,const int &reim,const int &tpar,const int &rpar)
 	  {
 	    LO=load_2pts(name,rcombo,reim,tpar,rpar);
 	    djvec_t E2=der_2pts(name,rcombo,reim,tpar,rpar,e2_var,"E2E2");
 	    djvec_t KA=der_2pts(name,rcombo,reim,tpar,rpar,ka_var,"KAKA");
-	    CORR=LO+e2_phys*djvec_t(E2-deltam_cr*KA);
+	    DELTA=E2-deltam_cr*KA;
+	    CORR=LO+e2_phys*DELTA;
 	  };
 	
-	djvec_t LO_P5P5_SAME,CORR_P5P5_SAME;
-	load_LO_CORR(LO_P5P5_SAME,CORR_P5P5_SAME,"P5P5",RSAME,RE,EVN,EVN);
-	djvec_t LO_P5P5_OPPO,CORR_P5P5_OPPO;
-	load_LO_CORR(LO_P5P5_OPPO,CORR_P5P5_OPPO,"P5P5",ROPPO,RE,EVN,EVN);
-	djvec_t LO_A0P5_SAME,CORR_A0P5_SAME;
-	load_LO_CORR(LO_A0P5_SAME,CORR_A0P5_SAME,"A0P5",RSAME,RE,ODD,EVN);
-	djvec_t LO_A0P5_OPPO,CORR_A0P5_OPPO;
-	load_LO_CORR(LO_A0P5_OPPO,CORR_A0P5_OPPO,"A0P5",ROPPO,RE,ODD,EVN);
+	djvec_t LO_P5P5_SAME,DELTA_P5P5_SAME,CORR_P5P5_SAME;
+	load_LO_CORR(LO_P5P5_SAME,DELTA_P5P5_SAME,CORR_P5P5_SAME,"P5P5",RSAME,RE,EVN,EVN);
+	djvec_t LO_P5P5_OPPO,DELTA_P5P5_OPPO,CORR_P5P5_OPPO;
+	load_LO_CORR(LO_P5P5_OPPO,DELTA_P5P5_OPPO,CORR_P5P5_OPPO,"P5P5",ROPPO,RE,EVN,EVN);
+	djvec_t LO_A0P5_SAME,DELTA_A0P5_SAME,CORR_A0P5_SAME;
+	load_LO_CORR(LO_A0P5_SAME,DELTA_A0P5_SAME,CORR_A0P5_SAME,"A0P5",RSAME,RE,ODD,EVN);
+	djvec_t LO_A0P5_OPPO,DELTA_A0P5_OPPO,CORR_A0P5_OPPO;
+	load_LO_CORR(LO_A0P5_OPPO,DELTA_A0P5_OPPO,CORR_A0P5_OPPO,"A0P5",ROPPO,RE,ODD,EVN);
 	
 	djack_t za,zv;
 	z_from_2pts_dec(za,zv,LO_P5P5_SAME,LO_A0P5_SAME,LO_P5P5_OPPO,LO_A0P5_OPPO,"LO");
@@ -339,9 +340,34 @@ int main(int narg,char **arg)
 	
 	djack_t zv_QED_fact=(CORR_zv-zv)/(zv*qf2_phys);
 	djack_t za_QED_fact=(CORR_za-za)/(za*qf2_phys);
-      
+	
 	cout<<"Factorization Za: "<<za_QED_fact.ave_err()<<endl;
 	cout<<"Factorization Zv: "<<zv_QED_fact.ave_err()<<endl;
+	
+       //expanded version
+       djack_t ZPP_OS,M_PP_OS,DZPP_fr_ZPP_OS,SL_PP_OS;
+       two_pts_with_ins_ratio_fit(ZPP_OS,M_PP_OS,DZPP_fr_ZPP_OS,SL_PP_OS,LO_P5P5_OPPO,DELTA_P5P5_OPPO,T/2,tmin,tmax,
+				  "plots/effmass_PP_OS.xmg","plots/slope_PP_OS.xmg");
+       djack_t ZPP_TM,M_PP_TM,DZPP_fr_ZPP_TM,SL_PP_TM;
+       two_pts_with_ins_ratio_fit(ZPP_TM,M_PP_TM,DZPP_fr_ZPP_TM,SL_PP_TM,LO_P5P5_SAME,DELTA_P5P5_SAME,T/2,tmin,tmax,
+				  "plots/effmass_PP_TM.xmg","plots/slope_PP_TM.xmg");
+       djack_t ZAP_OS,M_AP_OS,DZAP_fr_ZAP_OS,SL_AP_OS;
+       two_pts_with_ins_ratio_fit(ZAP_OS,M_AP_OS,DZAP_fr_ZAP_OS,SL_AP_OS,LO_A0P5_OPPO,DELTA_A0P5_OPPO,T/2,tmin,tmax,
+				  "plots/effmass_AP_OS.xmg","plots/slope_AP_OS.xmg",-1);
+       djack_t ZAP_TM,M_AP_TM,DZAP_fr_ZAP_TM,SL_AP_TM;
+       two_pts_with_ins_ratio_fit(ZAP_TM,M_AP_TM,DZAP_fr_ZAP_TM,SL_AP_TM,LO_A0P5_SAME,DELTA_A0P5_SAME,T/2,tmin,tmax,
+				  "plots/effmass_AP_TM.xmg","plots/slope_AP_TM.xmg",-1);
+       
+       djack_t DZP_fr_ZP_TM=DZPP_fr_ZPP_TM/2;
+       djack_t DZP_fr_ZP_OS=DZPP_fr_ZPP_OS/2;
+       djack_t DZA_fr_ZA_TM=DZAP_fr_ZAP_TM-DZP_fr_ZP_TM;
+       djack_t DZA_fr_ZA_OS=DZAP_fr_ZAP_OS-DZP_fr_ZP_OS;
+       
+       djack_t za_QED_fact_exp=DZP_fr_ZP_TM-2*SL_PP_TM+SL_PP_OS-DZA_fr_ZA_OS;
+       djack_t zv_QED_fact_exp=DZP_fr_ZP_TM-SL_PP_TM-DZA_fr_ZA_TM;
+	
+       cout<<"Factorization Za expanded: "<<djack_t(za_QED_fact_exp*e2)<<endl;
+       cout<<"Factorization Zv expanded: "<<djack_t(zv_QED_fact_exp*e2)<<endl;
       }
       
       //zv non conserved
@@ -382,6 +408,7 @@ int main(int narg,char **arg)
       
       cout<<"Zv/Za:      "<<smart_print(djack_t(sqrt(Z2_za/Z2_zv)).ave_err())<<endl;
       cout<<"CORR Zv/Za: "<<smart_print(djack_t(sqrt(CORR_Z2_za/CORR_Z2_zv)).ave_err())<<endl;
+      cout<<"DELTA Zv-Za: "<<smart_print(djack_t(sqrt(CORR_Z2_za/CORR_Z2_zv)-sqrt(Z2_za/Z2_zv)).ave_err())<<endl;
       
       //zv conserved
       djvec_t LO_VKCVK_zv=load_2pts_spave("S0V%c",ROPPO,RE,EVN,EVN,"","","V%c");

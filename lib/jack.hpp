@@ -2,6 +2,7 @@
 #define _JACK_HPP
 
 #include <ave_err.hpp>
+#include <complex>
 #include <file.hpp>
 #include <fstream>
 #include <iostream>
@@ -146,7 +147,7 @@ public:
     for(size_t ijack=0;ijack<njacks;ijack++) (*this)[njacks]+=(*this)[ijack];
     
     //clusterize
-    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[ijack]=((*this)[njacks]-(*this)[ijack])/((njacks-1)*clust_size);
+    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[ijack]=((*this)[njacks]-(*this)[ijack])/double((njacks-1)*clust_size);
     (*this)[njacks]/=clust_size*njacks;
   }
   
@@ -192,6 +193,7 @@ public:
 
 //! typically we use jackknives of double
 using djack_t=jack_t<double>;
+using cjack_t=jack_t<complex<double>>;
 
 //! return a string
 template <class T> string to_string(const jack_t<T> &obj)
