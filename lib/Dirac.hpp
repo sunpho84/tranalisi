@@ -3,7 +3,8 @@
 
 #include <jack.hpp>
 #include <vector>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
 
 #ifndef EXTERN_DIRAC
  #define EXTERN_DIRAC extern
@@ -20,14 +21,6 @@ const size_t NSPIN=4; //< Number of spin components
 const int NSPINCOL=NSPIN*NCOL; //< Total number of spin and color components
 
 using jprop_t=Matrix<djack_t,NSPINCOL,NSPINCOL>; //< Matrix of djack_t
-
-//! Dirac matrix
-class Dirac_t : public Matrix<dcomplex,NSPIN,NSPIN>
-{
-public:
-  Dirac_t(const vector<int> &pars) //: Matrix<dcomplex,NSPIN,NSPIN>()
-  {for(size_t i=0;i<NSPIN;i++) (*this)(i,pars[i])=dcomplex(pars[NSPIN+i],pars[2*NSPIN+i]);}
-};
 
 namespace Eigen
 {
@@ -54,25 +47,14 @@ namespace Eigen
 //! number of matrices in Clifford basis
 const size_t nGamma=16;
 
+//! sparse matrix for Dirac
+using Dirac_t=SparseMatrix<dcomplex>;
+
 //! sixteen Clifford basis
-EXTERN_DIRAC vector<Dirac_t> Gamma INIT_TO
-({
-  vector<int>({{0,1,2,3 , 1,1,1,1 , 0,0,0,0}}),
-  vector<int>({{3,2,1,0 , 0,0,0,0 , -1,-1,1,1}}),
-  vector<int>({{3,2,1,0 , -1,1,1,-1 , 0,0,0,0}}),
-  vector<int>({{2,3,0,1 , 0,0,0,0 , -1,1,1,-1}}),
-  vector<int>({{2,3,0,1 , -1,-1,-1,-1 , 0,0,0,0}}),
-  vector<int>({{0,1,2,3 , 1,1,-1,-1 , 0,0,0,0}}),
-  vector<int>({{3,2,1,0 , 0,0,0,0 , 1,1,1,1}}),
-  vector<int>({{3,2,1,0 , 1,-1,1,-1 , 0,0,0,0}}),
-  vector<int>({{2,3,0,1 , 0,0,0,0 , 1,-1,1,-1}}),
-  vector<int>({{2,3,0,1 , 1,1,-1,-1 , 0,0,0,0}}),
-  vector<int>({{1,0,3,2 , 0,0,0,0 , -1,-1,1,1}}),
-  vector<int>({{1,0,3,2 , -1,1,1,-1 , 0,0,0,0}}),
-  vector<int>({{0,1,2,3 , 0,0,0,0 , -1,1,1,-1}}),
-  vector<int>({{1,0,3,2 , 0,0,0,0 , 1,1,1,1}}),
-  vector<int>({{1,0,3,2 , 1,-1,1,-1 , 0,0,0,0}}),
-  vector<int>({{0,1,2,3 , 0,0,0,0 , 1,-1,1,-1}})});
+extern vector<Dirac_t> Gamma;
+
+//! get a single Gamma
+Dirac_t init_Gamma(const int *irow,const int *re,const int *im);
 
 #undef EXTERN_DIRAC
 #undef INIT_TO
