@@ -22,6 +22,8 @@ typedef Matrix<double,Dynamic,Dynamic> matr_t;
 
 #define DO_NOT_CORRELATE -1
 
+EXTERN_FIT bool fit_debug INIT_TO(false);
+
 ///////////////////////////////////////////////////////////////// fake fits /////////////////////////////////////////////////////
 
 //! perform a fit to constant (uncorrelated)
@@ -117,7 +119,7 @@ public:
   double operator()(const vector<double> &p) const
   {
     double ch2=0;
-    //cout<<"Range: "<<xmin<<" "<<xmax<<endl;
+    if(fit_debug) cout<<"Range: "<<xmin<<" "<<xmax<<endl;
     for(size_t ix=xmin;ix<xmax;ix++)
       {
 	double n=data[ix][iel];
@@ -125,7 +127,7 @@ public:
 	double e=err[ix];
 	double contr=sqr((n-t)/e);
 	ch2+=contr;
-	//cout<<contr<<" = [("<<n<<"-f("<<x[ix]<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	if(fit_debug) cout<<contr<<" = [("<<n<<"-f("<<x[ix]<<")="<<t<<")/"<<e<<"]^2]"<<endl;
       }
     return ch2;
   }
@@ -175,7 +177,8 @@ class multi_ch2_t : public minimizer_fun_t
   fun_shuf_t fun_shuf;
 public:
   //! constructor
-  multi_ch2_t(const initializer_list<vector<double>> &xs,initializer_list<size_t> xmins,initializer_list<size_t> xmaxs,const initializer_list<TV> &datas,initializer_list<fun_t> funs,const fun_shuf_t &fun_shuf,size_t &iel) : fun_shuf(fun_shuf)
+  multi_ch2_t(const vector<vector<double>> &xs,const vector<size_t> &xmins,const vector<size_t> &xmaxs,const vector<TV> &datas,
+	      const vector<fun_t> &funs,const fun_shuf_t &fun_shuf,size_t &iel) : fun_shuf(fun_shuf)
   {
     //init all subch2
     auto x=xs.begin();auto xmin=xmins.begin();auto xmax=xmaxs.begin();auto data=datas.begin();auto fun=funs.begin();
@@ -267,8 +270,6 @@ public:
   distr_fit_data_t(const fun_t &num,const fun_t &teo,double err) : num(num),teo(teo),err(err) {}
 };
 
-EXTERN_FIT bool distr_fit_debug INIT_TO(false);
-
 //! functor to minimize
 template <class TS> class distr_fit_FCN_t : public minimizer_fun_t
 {
@@ -356,7 +357,7 @@ public:
 	  double e=data[ix].err;
 	  double contr=sqr((n-t)/e);
 	  ch2+=contr;
-	  if(distr_fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	  if(fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
 	}
      
      return ch2;
