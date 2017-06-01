@@ -157,6 +157,98 @@ void z_from_2pts_dec(djack_t &za,djack_t &zv,const djvec_t &P5P5_SAME,const djve
   zv=f_SAME/f_SAME_bare;
 }
 
+//! perform a fit to determine the slope and mass of 2 2pts and 2 ins
+template <class TV,class TS=typename TV::base_type> void two_two_pts_with_ins_ratio_fit(TV &Z2,TS &M,TV &DZ2_fr_Z2,TS &SL,const vector<TV> &corr,const vector<TV> &corr_ins,size_t TH,size_t tmin,size_t tmax,vector<string> path={},vector<string> path_ins={},vector<int> par={})
+{
+  size_t ncorrs=corr.size();
+  if(corr.size()!=corr_ins.size()) CRASH("Sizes of corr %zu and corr_ins %zu not matching",corr.size(),corr_ins.size());
+  
+  par.resize(ncorrs,1);
+  path.resize(ncorrs,"");
+  path_ins.resize(ncorrs,"");
+  
+  //perform a preliminary fit
+  bool real_fit=true;
+  TV eff_mass=effective_mass(corr[0],TH,par[0]);
+  M=constant_fit(eff_mass,tmin,tmax,"/tmp/test_mass.xmg");
+  TV eff_slope=effective_slope(TV(corr_ins[0]/corr[0]),eff_mass,TH,par[0]);
+  SL=constant_fit(eff_slope,tmin,tmax,"/tmp/test_slope.xmg");
+  real_fit&=(SL.err()!=0.0);
+  
+  for(size_t icorr=0;icorr<ncorrs;icorr++)
+    {
+      TV eff_sq_coupling=effective_squared_coupling(corr[icorr],eff_mass,TH,par[icorr]);
+      Z2[icorr]=constant_fit(eff_sq_coupling,tmin,tmax,"/tmp/test_sq_coupling"+to_string(icorr)+".xmg");
+      TV eff_slope_offset=effective_squared_coupling_rel_corr(TV(corr_ins[icorr]/corr[icorr]),eff_mass,eff_slope,TH,par[icorr]);
+      DZ2_fr_Z2[icorr]=constant_fit(eff_slope_offset,tmin,tmax,"/tmp/test_sq_coupling_rel_corr"+to_string(icorr)+".xmg");
+      real_fit&=(DZ2_fr_Z2[icorr].ave()!=0.0);
+    }
+  
+  if(real_fit)
+    {
+      //! fit for real
+      size_t iel=0;
+      
+      minimizer_pars_t pars;
+      size_t iM=0;pars.add("M",M.ave(),M.err());
+      size_t iSl=1;pars.add("SL",SL.ave(),SL.err());
+      vector<size_t> iZ2(ncorrs),iDZ2_fr_Z2(ncorrs);
+      for(size_t icorr=0;icorr<ncorrs;icorr++) {iZ2[icorr]=2+icorr;pars.add("Z2_"+to_string(icorr),Z2[icorr].ave(),Z2[icorr].err());}
+      for(size_t icorr=0;icorr<ncorrs;icorr++) {iDZ2_fr_Z2[icorr]=2+icorr+ncorrs;pars.add("DZ2_fr_Z2_"+to_string(icorr),DZ2_fr_Z2[icorr].ave(),DZ2_fr_Z2[icorr].err());}
+      
+      auto x=vector_up_to<double>(corr[0].size());
+      vector<function<double(const vector<double> &p,double x)>> funs;
+      vector<djvec_t> corrs;
+      for(size_t icorr=0;icorr<ncorrs;icorr++)
+	{
+	  funs.push_back(two_pts_corr_fun_t(TH,par[icorr]));
+	  corrs.push_back(corr[icorr]);
+	}
+      for(size_t icorr=0;icorr<ncorrs;icorr++)
+	{
+	  funs.push_back(two_pts_corr_with_ins_fun_t(TH,par[icorr]));
+	  corrs.push_back(corr_ins[icorr]/corr[icorr]);
+	}
+      multi_ch2_t<TV> two_pts_fit_obj(vector<vector<double>>(2*ncorrs,x),
+				      vector<size_t>(2*ncorrs,tmin),
+				      vector<size_t>(2*ncorrs,tmax),
+				      corrs,
+				      funs,
+				      [ncorrs,iM,&iZ2,&iDZ2_fr_Z2,iSl]
+				      (const vector<double> &p,size_t icorr)
+				      {
+					if(icorr<ncorrs) return vector<double>({p[iZ2[icorr%ncorrs]],p[iM]});
+					else             return vector<double>({p[iM],p[iDZ2_fr_Z2[icorr%ncorrs]],p[iSl]});
+				      }
+				      ,iel);
+      
+      //parameters to fit
+      minimizer_t minimizer(two_pts_fit_obj,pars);
+      
+      for(iel=0;iel<corr[0][0].size();iel++)
+	{
+	  //minimize and print the result
+	  vector<double> par_min=minimizer.minimize();
+	  M[iel]=par_min[iM];
+	  SL[iel]=par_min[iSl];
+	  for(size_t icorr=0;icorr<ncorrs;icorr++)
+	    {
+	      Z2[icorr][iel]=par_min[iZ2[icorr]];
+	      DZ2_fr_Z2[icorr][iel]=par_min[iDZ2_fr_Z2[icorr]];
+	    }
+	}
+      
+      //write plots
+      for(size_t icorr=0;icorr<ncorrs;icorr++)
+	{
+	  if(path[icorr]!="") write_constant_fit_plot(path[icorr],tmin,tmax,M,effective_mass(corr[icorr],TH,par[icorr]));
+	  if(path_ins[icorr]!="") write_fit_plot(path_ins[icorr],tmin,tmax,[M,&DZ2_fr_Z2,SL,TH,icorr,&par](double x)->TS
+				      {return two_pts_corr_with_ins_ratio_fun(M,DZ2_fr_Z2[icorr],SL,TH,x,par[icorr]);},TV(corr_ins[icorr]/corr[icorr]));
+	}
+    }
+  else CRASH("cannot fit");
+}
+
 int main(int narg,char **arg)
 {
   string name="input.txt";
@@ -358,14 +450,21 @@ int main(int narg,char **arg)
        two_pts_with_ins_ratio_fit(ZAP_TM,M_AP_TM,DZAP_fr_ZAP_TM,SL_AP_TM,LO_A0P5_SAME,DELTA_A0P5_SAME,T/2,tmin,tmax,
 				  "plots/effmass_AP_TM.xmg","plots/slope_AP_TM.xmg",-1);
        
+       djvec_t Z_OS(2),DZ2_fr_Z2_OS(2);
+       
        djack_t DZP_fr_ZP_TM=DZPP_fr_ZPP_TM/2;
        djack_t DZP_fr_ZP_OS=DZPP_fr_ZPP_OS/2;
        djack_t DZA_fr_ZA_TM=DZAP_fr_ZAP_TM-DZP_fr_ZP_TM;
        djack_t DZA_fr_ZA_OS=DZAP_fr_ZAP_OS-DZP_fr_ZP_OS;
        
-       djack_t za_QED_fact_exp=DZP_fr_ZP_TM-2*SL_PP_TM+SL_PP_OS-DZA_fr_ZA_OS;
-       djack_t zv_QED_fact_exp=DZP_fr_ZP_TM-SL_PP_TM-DZA_fr_ZA_TM;
-	
+       djack_t za_QED_fact_exp=DZP_fr_ZP_TM-2*SL_PP_TM/M_PP_TM+SL_PP_OS/M_PP_OS-DZA_fr_ZA_OS;
+       djack_t zv_QED_fact_exp=DZP_fr_ZP_TM-SL_PP_TM/M_PP_TM-DZA_fr_ZA_TM;
+       
+       cout<<"Check consistency TM M_P5P5: "<<M_PP_OS<<" vs "<<M_AP_OS<<endl;
+       cout<<"Check consistency OS S_P5P5: "<<SL_PP_OS<<" vs "<<SL_AP_OS<<endl;
+
+       //two_two_pts_with_ins_ratio_fit(Z_OS,M_PP_OS,DZ2_fr_Z2_OS,SL_PP_OS,vector<djvec_t>({LO_P5P5_OPPO,LO_A0P5_OPPO}),vector<djvec_t>({DELTA_P5P5_OPPO,DELTA_A0P5_OPPO}),T/2,tmin,tmax,{},{},{1,-1});
+       
        cout<<"Factorization Za expanded: "<<djack_t(za_QED_fact_exp*e2)<<endl;
        cout<<"Factorization Zv expanded: "<<djack_t(zv_QED_fact_exp*e2)<<endl;
       }
