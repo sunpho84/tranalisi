@@ -64,6 +64,8 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
+//NB: Slope is really the slope!!!!
+
 //! return the ratio of a corr with insertion and an original corr, without return contribution
 template< class T> T nonperiodic_two_pts_corr_with_ins_ratio_fun(T M,T DZ2_fr_Z2,T SL,double t)
 {return DZ2_fr_Z2+SL/M+SL*t;}
