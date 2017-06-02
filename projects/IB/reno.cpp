@@ -450,20 +450,32 @@ int main(int narg,char **arg)
        two_pts_with_ins_ratio_fit(ZAP_TM,M_AP_TM,DZAP_fr_ZAP_TM,SL_AP_TM,LO_A0P5_SAME,DELTA_A0P5_SAME,T/2,tmin,tmax,
 				  "plots/effmass_AP_TM.xmg","plots/slope_AP_TM.xmg",-1);
        
-       djvec_t Z_OS(2),DZ2_fr_Z2_OS(2);
        
        djack_t DZP_fr_ZP_TM=DZPP_fr_ZPP_TM/2;
        djack_t DZP_fr_ZP_OS=DZPP_fr_ZPP_OS/2;
        djack_t DZA_fr_ZA_TM=DZAP_fr_ZAP_TM-DZP_fr_ZP_TM;
        djack_t DZA_fr_ZA_OS=DZAP_fr_ZAP_OS-DZP_fr_ZP_OS;
        
-       djack_t za_QED_fact_exp=DZP_fr_ZP_TM-2*SL_PP_TM/M_PP_TM+SL_PP_OS/M_PP_OS-DZA_fr_ZA_OS;
-       djack_t zv_QED_fact_exp=DZP_fr_ZP_TM-SL_PP_TM/M_PP_TM-DZA_fr_ZA_TM;
+       //global fit
        
-       cout<<"Check consistency TM M_P5P5: "<<M_PP_OS<<" vs "<<M_AP_OS<<endl;
-       cout<<"Check consistency OS S_P5P5: "<<SL_PP_OS<<" vs "<<SL_AP_OS<<endl;
+       djack_t M_OS,SL_OS;
+       djvec_t Z_OS(2),DZ2_fr_Z2_OS(2);
+       two_two_pts_with_ins_ratio_fit(Z_OS,M_OS,DZ2_fr_Z2_OS,SL_OS,vector<djvec_t>({LO_P5P5_OPPO,LO_A0P5_OPPO}),vector<djvec_t>({DELTA_P5P5_OPPO,DELTA_A0P5_OPPO}),T/2,tmin,tmax,{},{},{1,-1});
+       DZP_fr_ZP_OS=DZ2_fr_Z2_OS[0]/2;
+       DZA_fr_ZA_OS=DZ2_fr_Z2_OS[1]-DZP_fr_ZP_OS;
+       
+       djack_t M_TM,SL_TM;
+       djvec_t Z_TM(2),DZ2_fr_Z2_TM(2);
+       two_two_pts_with_ins_ratio_fit(Z_TM,M_TM,DZ2_fr_Z2_TM,SL_TM,vector<djvec_t>({LO_P5P5_SAME,LO_A0P5_SAME}),vector<djvec_t>({DELTA_P5P5_SAME,DELTA_A0P5_SAME}),T/2,tmin,tmax,{},{},{1,-1});
+       DZP_fr_ZP_TM=DZ2_fr_Z2_TM[0]/2;
+       DZA_fr_ZA_TM=DZ2_fr_Z2_TM[1]-DZP_fr_ZP_TM;
+       
+       cout<<"Check consistency TM M,  P: "<<M_PP_TM<<", A: "<<M_AP_TM<<", mixed: "<<M_TM<<endl;
+       cout<<"Check consistency OS M,  P: "<<M_PP_OS<<", A: "<<M_AP_OS<<", mixed: "<<M_OS<<endl;
 
-       //two_two_pts_with_ins_ratio_fit(Z_OS,M_PP_OS,DZ2_fr_Z2_OS,SL_PP_OS,vector<djvec_t>({LO_P5P5_OPPO,LO_A0P5_OPPO}),vector<djvec_t>({DELTA_P5P5_OPPO,DELTA_A0P5_OPPO}),T/2,tmin,tmax,{},{},{1,-1});
+       
+       djack_t za_QED_fact_exp=DZP_fr_ZP_TM+2*SL_TM/M_TM-SL_OS/M_OS-DZA_fr_ZA_OS;
+       djack_t zv_QED_fact_exp=DZP_fr_ZP_TM+SL_TM/M_TM-DZA_fr_ZA_TM;
        
        cout<<"Factorization Za expanded: "<<djack_t(za_QED_fact_exp*e2)<<endl;
        cout<<"Factorization Zv expanded: "<<djack_t(zv_QED_fact_exp*e2)<<endl;
