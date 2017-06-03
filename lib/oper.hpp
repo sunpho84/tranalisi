@@ -92,7 +92,7 @@ template <class T> enable_if_t<!has_method_is_printable<T>::value,bool> is_print
 template <class T> enable_if_t<has_method_is_printable<T>::value,bool> is_printable(const T &o)
 {return o.is_printable();}
 
-//! specify hot to print a vector
+//! specify how to print a vector
 template <class T> ostream& operator<<(ostream &out,const vector<T> &v)
 {
   for(size_t it=0;it<v.size();it++) if(is_printable(v[it])) out<<it<<" "<<v[it]<<endl;
