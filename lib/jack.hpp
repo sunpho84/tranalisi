@@ -48,7 +48,7 @@ public:
   //explicit jack_t(size_t ext_njacks) : jack_t() {if(njacks!=ext_njacks) CRASH("NJacks %zu different from global value %zu",ext_njacks,njacks);}
   
   //! create from double
-  explicit jack_t(double ext) : jack_t() {*this=ext;}
+  jack_t(double ext) : jack_t() {*this=ext;}
   
   //! create from sliced array
   jack_t(const slice_array<jack_t> &slice) : valarray<T>(slice) {}
@@ -193,7 +193,9 @@ public:
 
 //! typically we use jackknives of double
 using djack_t=jack_t<double>;
-using cjack_t=jack_t<complex<double>>;
+
+//! complex jackkinves
+using cdjack_t=complex<jack_t<double>>;
 
 //! return a string
 template <class T> string to_string(const jack_t<T> &obj)

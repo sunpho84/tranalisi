@@ -20,20 +20,20 @@ const size_t NCOL=3; //< Number of colors
 const size_t NSPIN=4; //< Number of spin components
 const int NSPINCOL=NSPIN*NCOL; //< Total number of spin and color components
 
-using jprop_t=Matrix<djack_t,NSPINCOL,NSPINCOL>; //< Matrix of djack_t
+using jprop_t=Matrix<cdjack_t,NSPINCOL,NSPINCOL>; //< Matrix of djack_t
 
 namespace Eigen
 {
-  //! Traits for using djack_t as a scalar type for Eigen
-  template<> struct NumTraits<djack_t>
+  //! Traits for using cdjack_t as a scalar type for Eigen
+  template<> struct NumTraits<cdjack_t>
     : NumTraits<double>
   {
     typedef djack_t Real;
-    typedef djack_t NonInteger;
-    typedef djack_t Nested;
+    typedef cdjack_t NonInteger;
+    typedef cdjack_t Nested;
     enum
       {
-	IsComplex=0,
+	IsComplex=1,
 	IsInteger=0,
 	IsSigned=1,
 	RequireInitialization=1,
