@@ -8,9 +8,6 @@
 
 //////////////// global variables ////////////////
 
-//! list of momenta
-vector<coords_t> moms;
-
 //! read the input file
 void parse_input(const string &name)
 {
@@ -21,42 +18,27 @@ void parse_input(const string &name)
   for(size_t mu=1;mu<NDIM;mu++) L[mu]=Ls;
   L[0]=input.read<size_t>("T");
   
-  //! number of ranges
-  const int nfft_ranges=input.read<int>("NFftRanges");
+  //! list of momenta
+  string mom_list_path=input.read<string>("MomList");
+  get_list_of_moms(mom_list_path);
+  get_class_of_equiv_moms();
   
-  //read all the ranges
-  for(int irange=0;irange<nfft_ranges;irange++)
-    {
-      size_t L[2],T[2];
-      L[0]=input.read<size_t>("L");
-      L[1]=input.read<size_t>();
-      T[0]=input.read<size_t>("T");
-      T[1]=input.read<size_t>();
-      
-      //init the offset and width from range interval
-      coords_t offs,width;
-      offs[0]=T[0];
-      width[0]=T[1]-T[0]+1;
-      for(int i=1;i<NDIM;i++)
-	{
-	  offs[i]=L[0];
-	  width[i]=L[1]-L[0]+1;
-	}
-      
-      //put all momenta
-      for(int vol=vol_of_lx(width),ifilt=0;ifilt<vol;ifilt++)
-	{
-	  //gets the coordinate in the filtering volume
-	  coords_t c=offs+coord_of_lx(ifilt,width);
-	  
-	  //get mirrorized
-	  for(int imir=0;imir<pow(2,NDIM);imir++)
-	    {
-	      coords_t cmir=get_mirrorized_site_coords(c,imir);
-	      moms.push_back(cmir);
-	    }
-	}
-    }
+  //print stats
+  cout<<"Read "<<moms.size()<<" momenta"<<endl;
+  cout<<"Found "<<equiv_moms.size()<<" independent momenta "<<endl;
+  
+  // //print details
+  // for(auto &e : equiv_moms)
+  //   {
+  //     for(auto &ei : e.first) cout<<ei<<" ";
+  //     cout<<"Equivalent to: "<<e.second.size()<<" moms:"<<endl;
+  //     for(auto &eq : e.second)
+  // 	{
+  // 	  cout<<" ";
+  // 	  for(auto &eqi : moms[eq]) cout<<eqi<<" ";
+  // 	  cout<<endl;
+  // 	}
+  //   }
   
   //! number of jacks
   const size_t ext_njacks=input.read<size_t>("NJacks");
@@ -70,17 +52,23 @@ int main(int narg,char **arg)
   if(narg>=2) name=arg[1];
   parse_input(name);
   
+  
   cout<<Gamma[5]<<endl;
   
-  jprop_t a,b;
   
-  a.Zero();
-  b=b.Identity();
-  a+=b;
+  //a+=b;
   
-  a*=b;
+  RowVectorXi adew;
+  //no no no fai jack l'indice più interno, punto
+  //cout<<a<<endl;
+  cout<<Gamma[4]<<endl;
   
-  cout<<b<<endl;
+  //cout<<del<<endl;
+  
+  //testing complex jack
+  jack_t<dcomplex> d,e;
+  d+=e;
+
   
   return 0;
 }
