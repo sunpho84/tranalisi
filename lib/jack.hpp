@@ -3,7 +3,7 @@
 
 #include <ave_err.hpp>
 #include <complex>
-#include <file.hpp>
+#include <raw_file.hpp>
 #include <fstream>
 #include <iostream>
 #include <random.hpp>
@@ -213,6 +213,17 @@ template <class T> size_t init_nel(const jack_t<T> &obj)
 //! specify hot to print a jack_t
 template <class T> ostream& operator<<(ostream &out,const jack_t<T> &v)
 {return out<<v.ave_err();}
+
+//! trim a vector in such a way that its size is multiple of njacks, and return clust_size
+template <class T> size_t trim_to_njacks_multiple(vector<T> &v,bool verbosity=false)
+{
+  size_t clust_size=v.size()/njacks;
+  size_t n=clust_size*njacks;
+  if(verbosity) cout<<"Trimmed from "<<v.size()<<" to "<<n<<", clust_size="<<clust_size<<endl;
+  v.resize(n);
+  
+  return clust_size;
+}
 
 #undef EXTERN_JACK
 #undef INIT_TO

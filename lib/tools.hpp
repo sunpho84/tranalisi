@@ -96,6 +96,18 @@ public:
   size_t &each=(*this)[1];
   size_t &end=(*this)[2];
   
+  //! get an element
+  size_t operator()(size_t i) const
+  {
+    size_t id=i*each+start;
+    if(id>end) CRASH("Asking an element %zu beyond end %zu",id,end);
+    return id;
+  }
+  
+  //! number of elements
+  size_t size() const
+  {return (end-start)/each+1;}
+  
   //! default constructor
   range_t() {}
   

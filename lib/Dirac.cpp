@@ -11,11 +11,11 @@ Dirac_t init_Gamma(const int *irow,const int *re,const int *im)
   Dirac_t m(NSPINCOL,NSPINCOL);
   
   //! list of entries
-  vector<Triplet<dcomplex>> tr;
+  vector<Triplet<dcompl_t>> tr;
   
   for(size_t ispin=0;ispin<NSPIN;ispin++)
     for(size_t icol=0;icol<NCOL;icol++)
-      tr.push_back(Triplet<dcomplex>(ispin*NCOL+icol,irow[ispin]*NCOL+icol,dcomplex(re[ispin],im[ispin])));
+      tr.push_back(Triplet<dcompl_t>(ispin*NCOL+icol,irow[ispin]*NCOL+icol,dcompl_t(re[ispin],im[ispin])));
   
   m.setFromTriplets(tr.begin(),tr.end());
   

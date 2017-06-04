@@ -7,6 +7,7 @@ libtran_a_SOURCES= \
 	boot.cpp \
 	Dirac.cpp \
 	effective.cpp \
+	file.cpp \
 	fit.cpp \
 	grace.cpp \
 	jack.cpp \

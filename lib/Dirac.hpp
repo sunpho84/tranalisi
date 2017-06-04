@@ -1,7 +1,10 @@
 #ifndef _DIRAC_HPP
 #define _DIRAC_HPP
 
+#include <index.hpp>
 #include <jack.hpp>
+
+#include <complex>
 #include <vector>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -20,6 +23,8 @@ const size_t NCOL=3; //< Number of colors
 const size_t NSPIN=4; //< Number of spin components
 const int NSPINCOL=NSPIN*NCOL; //< Total number of spin and color components
 
+using dcompl_t=complex<double>;
+using prop_t=Matrix<dcompl_t,NSPINCOL,NSPINCOL>; //< Matrix of complex
 using jprop_t=Matrix<cdjack_t,NSPINCOL,NSPINCOL>; //< Matrix of djack_t
 
 namespace Eigen
@@ -48,13 +53,17 @@ namespace Eigen
 const size_t nGamma=16;
 
 //! sparse matrix for Dirac
-using Dirac_t=SparseMatrix<dcomplex>;
+using Dirac_t=SparseMatrix<dcompl_t>;
 
 //! sixteen Clifford basis
 extern vector<Dirac_t> Gamma;
 
 //! get a single Gamma
 Dirac_t init_Gamma(const int *irow,const int *re,const int *im);
+
+//! return the colorspin index
+inline size_t isc(size_t is,size_t ic)
+{return ic+NCOL*is;}
 
 #undef EXTERN_DIRAC
 #undef INIT_TO

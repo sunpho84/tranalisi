@@ -7,6 +7,7 @@
 
 #include <tools.hpp>
 #include <fstream>
+#include <iostream>
 
 using namespace std;
 
@@ -24,6 +25,9 @@ void get_list_of_moms(const string &path)
       if(mom_file.good()) moms.push_back(c);
     }
   while(mom_file.good());
+  
+  //print stats
+  cout<<"Read "<<moms.size()<<" momenta"<<endl;
 }
 
 void get_class_of_equiv_moms()
@@ -37,4 +41,20 @@ void get_class_of_equiv_moms()
       //store the index to equvalents
       equiv_moms[cr].push_back(i);
     }
+  
+  //print stats
+  cout<<"Found "<<equiv_moms.size()<<" independent momenta "<<endl;
+  
+  // //print details
+  // for(auto &e : equiv_moms)
+  //   {
+  //     for(auto &ei : e.first) cout<<ei<<" ";
+  //     cout<<"Equivalent to: "<<e.second.size()<<" moms:"<<endl;
+  //     for(auto &eq : e.second)
+  // 	{
+  // 	  cout<<" ";
+  // 	  for(auto &eqi : moms[eq]) cout<<eqi<<" ";
+  // 	  cout<<endl;
+  // 	}
+  //   }
 }

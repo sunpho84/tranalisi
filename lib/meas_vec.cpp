@@ -7,36 +7,21 @@
 #endif
 #include <meas_vec.hpp>
 
-djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,size_t nlines,bool verbosity)
+djvec_t read_conf_set_t(const string &template_path,const range_t &range,size_t ntot_col,const vector<size_t> &cols,size_t nlines,bool verbosity)
 {
-  //basic checks
   check_njacks_init();
-  if(range.end<range.start) CRASH("End=%d must be larger than Start=%d",range.end,range.start);
-  if(range.each==0) CRASH("Each=0");
   
-  //compute nfiles
-  size_t navail_files=(range.end-range.start)/range.each+1;
+  //get the list of existing files
+  vector<size_t> id_list=get_existing_paths_in_range(template_path,range);
+  size_t clust_size=trim_to_njacks_multiple(id_list);
   
-  //try to open all of them
+  //open all files and trim to njacks
   vector<obs_file_t> files;
-  for(size_t icheck_file=0;icheck_file<navail_files;icheck_file++)
-    {
-      string path=combine(template_path.c_str(),icheck_file*range.each+range.start);
-      //cout<<"Considering file: "<<path<<endl;
-      if(file_exists(path)) files.push_back(obs_file_t(path,ntot_col,cols));
-      else if(verbosity) cout<<"Skipping unavailable file "<<path<<endl;
-    }
-  
-  //trim
-  if(verbosity) cout<<"Opened "<<files.size()<<" out of "<<navail_files<<endl;
-  size_t clust_size=files.size()/njacks;
-  size_t nfiles=clust_size*njacks;
-  files.resize(nfiles);
-  if(verbosity) cout<<"Trimmed to "<<nfiles<<", clust_size="<<clust_size<<endl;
+  for(auto &id : id_list) files.push_back(obs_file_t(combine(template_path.c_str(),id),ntot_col,cols));
   
   //measure the length of the first file
   size_t length;
-  if(nfiles==0) length=0;
+  if(files.size()==0) length=0;
   else length=files[0].length(nlines);
   
   if(verbosity) cout<<"Total length (in multiple of nlines="<<nlines<<"): "<<length<<endl;

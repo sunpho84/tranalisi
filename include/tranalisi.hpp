@@ -10,7 +10,9 @@
 #include <index.hpp>
 #include <jack.hpp>
 #include <meas_vec.hpp>
+#include <obs_file.hpp>
 #include <oper.hpp>
+#include <raw_file.hpp>
 #include <solve.hpp>
 
 #endif
