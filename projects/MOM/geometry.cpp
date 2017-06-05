@@ -36,7 +36,9 @@ void get_class_of_equiv_moms()
     {
       //get representative
       mom_t cr;
-      for(size_t mu=0;mu<NDIM;mu++) cr[mu]=abs(moms[i][mu]);
+      cr[0]=moms[i][0];
+      if(cr[0]<0) cr[0]=-cr[0]-1;
+      for(size_t mu=1;mu<NDIM;mu++) cr[mu]=abs(moms[i][mu]);
       sort(&cr[1],cr.end());
       //store the index to equvalents
       equiv_moms[cr].push_back(i);
@@ -45,7 +47,7 @@ void get_class_of_equiv_moms()
   //print stats
   cout<<"Found "<<equiv_moms.size()<<" independent momenta "<<endl;
   
-  // //print details
+  //print details
   // for(auto &e : equiv_moms)
   //   {
   //     for(auto &ei : e.first) cout<<ei<<" ";
