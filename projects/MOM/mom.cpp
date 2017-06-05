@@ -10,10 +10,13 @@
 
 #include <geometry.hpp>
 
+using vprop_t=vector<vector<prop_t>>;
+using vjprop_t=vector<jprop_t>;
+
 //! read the propagator
-vector<vector<prop_t>> read_prop(const string &template_path,const vector<size_t> &file_list,bool verbosity=VERBOSE)
+vprop_t read_prop(const string &template_path,const vector<size_t> &file_list,bool verbosity=VERBOSE)
 {
-  vector<vector<prop_t>> prop(file_list.size(),vector<prop_t>(moms.size()));
+  vprop_t prop(file_list.size(),vector<prop_t>(moms.size()));
  
 #pragma omp parallel for
  for(size_t ifile=0;ifile<file_list.size();ifile++)
@@ -36,6 +39,19 @@ vector<vector<prop_t>> read_prop(const string &template_path,const vector<size_t
    }
  
  return prop;
+}
+
+//! build the jackkniffed propagator
+vjprop_t get_jprop(const vprop_t &prop,size_t clust_size)
+{
+  vjprop_t jprop(moms.size());
+  for(size_t iconf=0;iconf<prop.size();iconf++)
+#pragma omp parallel for
+    for(size_t imom=0;imom<moms.size();imom++)
+      put_into_cluster(jprop[imom],prop[iconf][imom],iconf/clust_size);
+  for(auto &j : jprop) clusterize(j,clust_size);
+  
+  return jprop;
 }
 
 int main(int narg,char **arg)
@@ -85,7 +101,12 @@ int main(int narg,char **arg)
   
   //! one entry per file
   auto prop=read_prop(template_path,conf_list);
-
+  cout<<"Finished reading"<<endl;
+  
+  //! jackkniffed propagator
+  auto jprop=get_jprop(prop,clust_size);
+  
+  cout<<jprop[0]<<endl;
   
   // cout<<Gamma[5]<<endl;
   

@@ -80,10 +80,7 @@ public:
   
   //! binary read, complex case
   template <class T> auto bin_read(complex<T> &out) const -> enable_if_t<is_pod<T>::value>
-  {
-    bin_read(out.real());
-    bin_read(out.imag());
-  }
+  {for(size_t ri=0;ri<2;ri++) bin_read(((T*)&out)[ri]);}
   
   //! specialization for vector
   template <class T> auto bin_read(T &out) const -> enable_if_t<is_vector<T>::value>

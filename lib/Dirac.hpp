@@ -4,7 +4,7 @@
 #include <index.hpp>
 #include <jack.hpp>
 
-#include <complex>
+#include <compl.hpp>
 #include <vector>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -23,7 +23,6 @@ const size_t NCOL=3; //< Number of colors
 const size_t NSPIN=4; //< Number of spin components
 const int NSPINCOL=NSPIN*NCOL; //< Total number of spin and color components
 
-using dcompl_t=complex<double>;
 using prop_t=Matrix<dcompl_t,NSPINCOL,NSPINCOL>; //< Matrix of complex
 using jprop_t=Matrix<cdjack_t,NSPINCOL,NSPINCOL>; //< Matrix of djack_t
 
@@ -49,6 +48,12 @@ namespace Eigen
   };
 }
 
+//! clusterize a jprop_t
+void clusterize(jprop_t &j,size_t clust_size=1);
+
+//! put into a cluster
+void put_into_cluster(jprop_t &jprop,const prop_t &prop,size_t iclust);
+
 //! number of matrices in Clifford basis
 const size_t nGamma=16;
 
@@ -64,6 +69,7 @@ Dirac_t init_Gamma(const int *irow,const int *re,const int *im);
 //! return the colorspin index
 inline size_t isc(size_t is,size_t ic)
 {return ic+NCOL*is;}
+
 
 #undef EXTERN_DIRAC
 #undef INIT_TO
