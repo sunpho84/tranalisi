@@ -61,6 +61,19 @@ DEFINE_BIN_OPERATOR(-)
 DEFINE_BIN_OPERATOR(*)
 DEFINE_BIN_OPERATOR(/)
 
+#define DEFINE_BIN_BOOL_OPERATOR(OP)					\
+  template <class TV,class=enable_if_t<is_vector<TV>::value>>		\
+  bool operator OP(const TV &first,const TV &second)			\
+  {									\
+    bool out=true;							\
+    for(size_t it=0;it<first.size();it++) out&=(first[it] OP second[it]); \
+    return out;								\
+  }
+DEFINE_BIN_BOOL_OPERATOR(!=)
+DEFINE_BIN_BOOL_OPERATOR(==)
+DEFINE_BIN_BOOL_OPERATOR(>)
+DEFINE_BIN_BOOL_OPERATOR(<)
+
 //! function of a vector
 #define DEFINE_NAMED_FUNCTION(OP_NAME,OP)				\
   template <class T,class ...Args,class=enable_if<is_vector<T>::value>> T OP_NAME(const T &first,Args... args) \
@@ -78,6 +91,7 @@ DEFINE_BIN_OPERATOR(/)
 // DEFINE_FUNCTION(log)
 // DEFINE_FUNCTION(pow)
 // DEFINE_FUNCTION(sin)
+DEFINE_FUNCTION(abs)
 DEFINE_FUNCTION(asinh)
 // DEFINE_FUNCTION(sqr)
 // DEFINE_FUNCTION(sqrt)
@@ -93,7 +107,8 @@ template <class T> enable_if_t<has_method_is_printable<T>::value,bool> is_printa
 {return o.is_printable();}
 
 //! specify how to print a vector
-template <class T> ostream& operator<<(ostream &out,const vector<T> &v)
+template <class TV,class=enable_if_t<is_vector<TV>::value and !is_same<TV,string>::value>>
+ostream& operator<<(ostream &out,const TV &v)
 {
   for(size_t it=0;it<v.size();it++) if(is_printable(v[it])) out<<it<<" "<<v[it]<<endl;
   return out;
