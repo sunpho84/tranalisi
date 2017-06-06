@@ -54,25 +54,29 @@ void get_class_of_equiv_moms()
   
   //trasform map into vector
   for(auto &mom_class : equiv_imoms_map)
-    equiv_imoms.push_back(make_pair(distance(imoms.begin(),find(imoms.begin(),imoms.end(),mom_class.first)),mom_class.second));
+    {
+      imom_t repr=imoms[mom_class.second[0]]; //take the first real mom, as the key could not exist
+      auto it=find(imoms.begin(),imoms.end(),repr);
+      if(it==imoms.end()) CRASH("Something went wrong with %zu %zu %zu %zu",repr[0],repr[1],repr[2],repr[3]);
+      equiv_imoms.push_back(make_pair(distance(imoms.begin(),it),mom_class.second));
+    }
   
   //print stats
   cout<<"Found "<<equiv_imoms.size()<<" independent momenta "<<endl;
   
   //print details
-  // for(auto &e : equiv_moms)
+  // for(auto &e : equiv_imoms)
   //   {
-  //     for(auto &ei : e.first) cout<<ei<<" ";
+  //     for(auto &ei : imoms[e.first]) cout<<ei<<" ";
   //     cout<<"Equivalent to: "<<e.second.size()<<" moms:"<<endl;
   //     for(auto &eq : e.second)
   // 	{
   // 	  cout<<" ";
-  // 	  for(auto &eqi : moms[eq]) cout<<eqi<<" ";
+  // 	  for(auto &eqi : imoms[eq]) cout<<eqi<<" ";
   // 	  cout<<endl;
   // 	}
   //   }
 }
-
 vector<double> get_indep_pt2()
 {
   vector<double> out;
