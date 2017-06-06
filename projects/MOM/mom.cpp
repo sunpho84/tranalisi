@@ -16,7 +16,7 @@ using vjprop_t=vector<jprop_t>;
 //! read the propagator
 vprop_t read_prop(const string &template_path,const vector<size_t> &file_list,bool verbosity=VERBOSE)
 {
-  vprop_t prop(file_list.size(),vector<prop_t>(moms.size()));
+  vprop_t prop(file_list.size(),vector<prop_t>(imoms.size()));
  
 #pragma omp parallel for
  for(size_t ifile=0;ifile<file_list.size();ifile++)
@@ -32,10 +32,10 @@ vprop_t read_prop(const string &template_path,const vector<size_t> &file_list,bo
        
        for(size_t is_so=0;is_so<NSPIN;is_so++)
 	 for(size_t ic_so=0;ic_so<NCOL;ic_so++)
-	   for(size_t imom=0;imom<moms.size();imom++)
+	   for(size_t imom=0;imom<imoms.size();imom++)
 	     for(size_t is_si=0;is_si<NSPIN;is_si++)
 	       for(size_t ic_si=0;ic_si<NCOL;ic_si++)
-		 file.bin_read(prop[ifile][imom](isc(is_so,ic_so),isc(is_si,ic_si)));
+		 file.bin_read(prop[ifile][imom](isc(is_si,ic_si),isc(is_so,ic_so)));
    }
  
  return prop;
@@ -44,14 +44,50 @@ vprop_t read_prop(const string &template_path,const vector<size_t> &file_list,bo
 //! build the jackkniffed propagator
 vjprop_t get_jprop(const vprop_t &prop,size_t clust_size)
 {
-  vjprop_t jprop(moms.size());
+  vjprop_t jprop(imoms.size());
   for(size_t iconf=0;iconf<prop.size();iconf++)
 #pragma omp parallel for
-    for(size_t imom=0;imom<moms.size();imom++)
+    for(size_t imom=0;imom<imoms.size();imom++)
       put_into_cluster(jprop[imom],prop[iconf][imom],iconf/clust_size);
   for(auto &j : jprop) clusterize(j,clust_size);
   
   return jprop;
+}
+
+//! build the inverse
+vjprop_t get_inv_jprop(const vjprop_t &jprop)
+{
+  vjprop_t jprop_inv(jprop.size());
+#pragma omp parallel for
+  for(size_t imom=0;imom<imoms.size();imom++) jprop_inv[imom]=jprop[imom].inverse();
+  return jprop_inv;
+}
+
+//! compute Zq
+djvec_t compute_Zq(const vjprop_t &jprop_inv)
+{
+  djvec_t out(equiv_imoms.size());
+  
+  //loop on equivalence class
+  size_t ind_mom=0;
+  for(auto &imom_class : equiv_imoms)
+    {
+      djack_t Zq=0;
+      double pt2=imom_class.first.p(L).tilde().norm2();
+      
+      //loop on equivalent moms
+      for(size_t imom : imom_class.second)
+	{
+	  p_t ptilde=imoms[imom].p(L).tilde();
+	  prop_t pslash=slash(ptilde);
+	  Zq+=(jprop_inv[imom]*pslash.cast<cdjack_t>()).trace().imag();
+	}
+      out[ind_mom]=Zq/(12*pt2*V*imom_class.second.size());
+      
+      ind_mom++;
+    }
+  
+  return out;
 }
 
 int main(int narg,char **arg)
@@ -89,6 +125,7 @@ int main(int narg,char **arg)
   set_njacks(ext_njacks);
   
   //set spatial sizes
+  V=L[0]*pow(Ls,NDIM-1);
   for(size_t mu=1;mu<NDIM;mu++) L[mu]=Ls;
   
   //initialize momenta
@@ -104,12 +141,15 @@ int main(int narg,char **arg)
   cout<<"Finished reading"<<endl;
   
   //! jackkniffed propagator
-  auto jprop=get_jprop(prop,clust_size);
+  vjprop_t jprop=get_jprop(prop,clust_size);
   
-  cout<<jprop[0]<<endl;
+  //! inverse prop
+  vjprop_t jprop_inv=get_inv_jprop(jprop);
   
-  // cout<<Gamma[5]<<endl;
-  
+  //! Zq
+  djvec_t Zq=compute_Zq(jprop_inv);
+  grace_file_t out("plots/Zq.xmg");
+  out.write_vec_ave_err(get_indep_pt2(),Zq.ave_err());
   
   // //a+=b;
   
