@@ -41,9 +41,9 @@ namespace Eigen
 	IsInteger=0,
 	IsSigned=1,
 	RequireInitialization=1,
-	ReadCost=1,
-	AddCost=3,
-	MulCost=3
+	ReadCost=30,
+	AddCost=120,
+	MulCost=120
       };
   };
 }
