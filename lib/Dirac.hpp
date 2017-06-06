@@ -63,6 +63,8 @@ using Dirac_t=SparseMatrix<dcompl_t>;
 //! sixteen Clifford basis
 extern vector<Dirac_t> Gamma;
 
+EXTERN_DIRAC const size_t igmu[4] INIT_TO({4,1,2,3});
+
 //! get a single Gamma
 Dirac_t init_Gamma(const int *irow,const int *re,const int *im);
 
