@@ -213,19 +213,5 @@ int main(int narg,char **arg)
   for(auto &p : vector<pair<djvec_t,string>>{{Zq,"Zq"},{ZS,"ZS"},{ZA,"ZA"},{ZP,"ZP"},{ZV,"ZV"},{ZT,"ZT"}})
     grace_file_t("plots/"+p.second+".xmg").write_vec_ave_err(get_indep_pt2(),p.first.ave_err());
   
-  // //a+=b;
-  
-  // RowVectorXi adew;
-  // //no no no fai jack l'indice più interno, punto
-  // //cout<<a<<endl;
-  // cout<<Gamma[4]<<endl;
-  
-  // //cout<<del<<endl;
-  
-  // //testing complex jack
-  // jack_t<dcomplex> d,e;
-  // d+=e;
-
-  
   return 0;
 }
