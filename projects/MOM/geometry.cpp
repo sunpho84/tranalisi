@@ -34,6 +34,7 @@ void get_list_of_moms(const string &path)
 
 void get_class_of_equiv_moms()
 {
+  map<imom_t,vector<size_t>> equiv_imoms_map;
   for(size_t i=0;i<imoms.size();i++)
     {
       //get representative
@@ -48,8 +49,12 @@ void get_class_of_equiv_moms()
       sort(&cr[1],cr.end());
       
       //store the index to equvalents
-      equiv_imoms[cr].push_back(i);
+      equiv_imoms_map[cr].push_back(i);
     }
+  
+  //trasform map into vector
+  for(auto &mom_class : equiv_imoms_map)
+    equiv_imoms.push_back(make_pair(distance(imoms.begin(),find(imoms.begin(),imoms.end(),mom_class.first)),mom_class.second));
   
   //print stats
   cout<<"Found "<<equiv_imoms.size()<<" independent momenta "<<endl;
@@ -72,7 +77,7 @@ vector<double> get_indep_pt2()
 {
   vector<double> out;
   out.reserve(equiv_imoms.size());
-  for(auto &mom_class : equiv_imoms) out.push_back(mom_class.first.p(L).tilde().norm2());
+  for(auto &mom_class : equiv_imoms) out.push_back(imoms[mom_class.first].p(L).tilde().norm2());
   
   return out;
 }

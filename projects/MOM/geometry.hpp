@@ -84,7 +84,7 @@ EXTERN_GEOMETRY vector<imom_t> imoms;
 void get_list_of_moms(const string &path);
 
 //! list of class of equivalence of momenta
-EXTERN_GEOMETRY map<imom_t,vector<size_t>> equiv_imoms;
+EXTERN_GEOMETRY vector<pair<size_t,vector<size_t>>> equiv_imoms;
 
 //! fills the list of class of equivalence
 void get_class_of_equiv_moms();

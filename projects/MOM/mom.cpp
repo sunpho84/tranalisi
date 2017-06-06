@@ -69,11 +69,11 @@ djvec_t compute_Zq(const vjprop_t &jprop_inv)
   djvec_t out(equiv_imoms.size());
   
   //loop on equivalence class
-  size_t ind_mom=0;
-  for(auto &imom_class : equiv_imoms)
+  for(size_t ind_mom=0;ind_mom<equiv_imoms.size();ind_mom++)
     {
+      auto &imom_class=equiv_imoms[ind_mom];
       djack_t Zq=0;
-      double pt2=imom_class.first.p(L).tilde().norm2();
+      double pt2=imoms[imom_class.first].p(L).tilde().norm2();
       
       //loop on equivalent moms
       for(size_t imom : imom_class.second)
@@ -83,8 +83,6 @@ djvec_t compute_Zq(const vjprop_t &jprop_inv)
 	  Zq+=(jprop_inv[imom]*pslash.cast<cdjack_t>()).trace().imag();
 	}
       out[ind_mom]=Zq/(12*pt2*V*imom_class.second.size());
-      
-      ind_mom++;
     }
   
   return out;
@@ -96,9 +94,10 @@ djvec_t compute_projected_amputated_vertex(const vprop_t &prop,const vjprop_t &p
   djvec_t out(equiv_imoms.size());
   
   //loop on equivalence class
-  size_t ind_mom=0;
-  for(auto &imom_class : equiv_imoms)
+#pragma omp parallel for
+  for(size_t ind_mom=0;ind_mom<equiv_imoms.size();ind_mom++)
     {
+      auto &imom_class=equiv_imoms[ind_mom];
       out[ind_mom]=0;
       
       //loop on equivalent moms
@@ -116,8 +115,6 @@ djvec_t compute_projected_amputated_vertex(const vprop_t &prop,const vjprop_t &p
 	}
       
       out[ind_mom]/=imom_class.second.size();
-      
-      ind_mom++;
     }
   
   return out;
