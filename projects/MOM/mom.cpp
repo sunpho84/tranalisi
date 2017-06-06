@@ -90,6 +90,39 @@ djvec_t compute_Zq(const vjprop_t &jprop_inv)
   return out;
 }
 
+//! compute projected amputated vertex on a given momentum
+djvec_t compute_projected_amputated_vertex(const vprop_t &prop,const vjprop_t &prop_inv,const prop_t &G,const prop_t &Gproj,bool ri,size_t clust_size=1)
+{
+  djvec_t out(equiv_imoms.size());
+  
+  //loop on equivalence class
+  size_t ind_mom=0;
+  for(auto &imom_class : equiv_imoms)
+    {
+      out[ind_mom]=0;
+      
+      //loop on equivalent moms
+      for(size_t imom : imom_class.second)
+	{
+	  jprop_t vert;
+	  for(size_t iconf=0;iconf<prop.size();iconf++)
+	    put_into_cluster(vert,prop[iconf][imom]*G*Gamma[5]*prop[iconf][imom].adjoint()*Gamma[5],iconf/clust_size);
+	  clusterize(vert,clust_size);
+	  
+	  jprop_t amp_vert=prop_inv[imom]*vert*prop_inv[imom].adjoint();
+	  cdjack_t pr=(amp_vert*Gproj.cast<cdjack_t>()).trace();
+	  
+	  out[ind_mom]+=get_re_or_im(pr,ri);
+	}
+      
+      out[ind_mom]/=imom_class.second.size();
+      
+      ind_mom++;
+    }
+  
+  return out;
+}
+
 int main(int narg,char **arg)
 {
   //read input file
@@ -137,7 +170,7 @@ int main(int narg,char **arg)
   size_t clust_size=trim_to_njacks_multiple(conf_list,true);
   
   //! one entry per file
-  auto prop=read_prop(template_path,conf_list);
+  vprop_t prop=read_prop(template_path,conf_list);
   cout<<"Finished reading"<<endl;
   
   //! jackkniffed propagator
@@ -148,8 +181,11 @@ int main(int narg,char **arg)
   
   //! Zq
   djvec_t Zq=compute_Zq(jprop_inv);
-  grace_file_t out("plots/Zq.xmg");
-  out.write_vec_ave_err(get_indep_pt2(),Zq.ave_err());
+  grace_file_t("plots/Zq.xmg").write_vec_ave_err(get_indep_pt2(),Zq.ave_err());
+  
+  //! ZP
+  djvec_t ZP=compute_projected_amputated_vertex(prop,jprop_inv,Gamma[5],Gamma[5],RE,clust_size);
+  grace_file_t("plots/ZP.xmg").write_vec_ave_err(get_indep_pt2(),ZP.ave_err());
   
   // //a+=b;
   
