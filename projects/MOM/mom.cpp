@@ -184,7 +184,7 @@ int main(int narg,char **arg)
   grace_file_t("plots/Zq.xmg").write_vec_ave_err(get_indep_pt2(),Zq.ave_err());
   
   //! ZP
-  djvec_t ZP=compute_projected_amputated_vertex(prop,jprop_inv,Gamma[5],Gamma[5],RE,clust_size);
+  djvec_t ZP=Zq/compute_projected_amputated_vertex(prop,jprop_inv,Gamma[5],Gamma[5],RE,clust_size);
   grace_file_t("plots/ZP.xmg").write_vec_ave_err(get_indep_pt2(),ZP.ave_err());
   
   // //a+=b;
