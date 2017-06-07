@@ -69,3 +69,23 @@ void put_into_cluster(jprop_t &jprop,const prop_t &prop,size_t iclust)
 	get_re_or_im(jprop(isc1,isc2),ri)[iclust]+=
 	  get_re_or_im(prop(isc1,isc2),ri);
 }
+
+void put_into_jackknife(jprop_t &jprop,const prop_t &prop,size_t ijack)
+{
+  for(size_t isc1=0;isc1<NSPINCOL;isc1++)
+    for(size_t isc2=0;isc2<NSPINCOL;isc2++)
+      for(size_t ri=0;ri<2;ri++)
+	get_re_or_im(jprop(isc1,isc2),ri)[ijack]=
+	  get_re_or_im(prop(isc1,isc2),ri);
+}
+
+prop_t get_from_jackknife(const jprop_t &jprop,size_t ijack)
+{
+  prop_t prop;
+  for(size_t isc1=0;isc1<NSPINCOL;isc1++)
+    for(size_t isc2=0;isc2<NSPINCOL;isc2++)
+      for(size_t ri=0;ri<2;ri++)
+	get_re_or_im(prop(isc1,isc2),ri)=
+	  get_re_or_im(jprop(isc1,isc2),ri)[ijack];
+  return prop;
+}

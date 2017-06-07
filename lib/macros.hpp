@@ -29,18 +29,24 @@ enum{RE,IM};
 enum{SILENT,VERBOSE};
 
 //! check if has method
-#define DEFINE_HAS_METHOD(METHOD)					\
-  template <typename T> class NAME2(has_method,METHOD)			\
+#define DEFINE_HAS_METHOD(NAME)						\
+  template<class C, typename T = void>					\
+  struct has_method_##NAME						\
   {									\
-  private:								\
-    typedef char yes;							\
-    typedef yes no[2];							\
-    									\
-    template<typename C> static auto test(void*)->decltype(size_t{std::declval<C const>().METHOD()},yes{}); \
-    template<typename> static no& test(...);				\
-    									\
-  public:								\
-    static bool const value=sizeof(test<T>(0))==sizeof(yes);		\
+    typedef char (&yes)[2];						\
+    template<unsigned long> struct exists;				\
+    template<typename V> static yes check(exists<sizeof(static_cast<T>(&V::NAME))>*); \
+    template<typename> static char Check (...);				\
+    static const bool value=(sizeof(Check<C>(0))==sizeof(yes));	\
+  };									\
+  template<class C>							\
+  struct has_method_##NAME<C,void>					\
+  {									\
+    typedef char (&yes)[2];						\
+    template<unsigned long> struct exists;				\
+    template<typename V> static yes check(exists<sizeof(&V::NAME)>*);	\
+    template<typename> static char check(...);				\
+    static const bool value=(sizeof(check<C>(0))==sizeof(yes));		\
   }
 
 #endif
