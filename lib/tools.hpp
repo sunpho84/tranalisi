@@ -3,6 +3,7 @@
 
 #include <array>
 #include <chrono>
+#include <iostream>
 #include <macros.hpp>
 #include <string>
 #include <valarray>
@@ -22,23 +23,28 @@ using instant_t=chrono::time_point<chrono::steady_clock>;
 inline instant_t take_time()
 {return chrono::steady_clock::now();}
 
-//! compute elapsed time
-inline string elapsed_time(const instant_t &start)
+//! difference between two measures
+using duration_t=decltype(take_time()-take_time());
+
+//! print elapsed time
+inline ostream& operator<<(ostream &out,const duration_t &diff)
 {
-  auto diff=take_time()-start;
-  
   double el_nano=chrono::duration<double,nano>(diff).count();
-  if(el_nano<1000) return to_string(el_nano)+" ns";
+  if(el_nano<1000) return out<<el_nano<<" ns";
   
   double el_micro=chrono::duration<double,micro>(diff).count();
-  if(el_micro<1000) return to_string(el_micro)+" us";
+  if(el_micro<1000) return out<<el_micro<<" us";
   
   double el_milli=chrono::duration<double,milli>(diff).count();
-  if(el_milli<1000) return to_string(el_milli)+" ms";
+  if(el_milli<1000) return out<<el_milli<<" ms";
   
   double el_sec=chrono::duration<double>(diff).count();
-  return to_string(el_sec)+" s";
+  return out<<el_sec<<" s";
 }
+
+//! return elapsed time from a given moment
+inline duration_t elapsed_time(const instant_t &start)
+{return take_time()-start;}
 
 //! check if two quantities have the same sign
 template <class T> bool same_sign(const T &a,const T &b)
