@@ -183,6 +183,7 @@ int main(int narg,char **arg)
   //initialize momenta
   get_list_of_moms(mom_list_path);
   get_class_of_equiv_moms();
+  //list_all_smom_pairs();
   
   //! list of existing confs
   vector<size_t> conf_list=get_existing_paths_in_range(template_path,conf_range);

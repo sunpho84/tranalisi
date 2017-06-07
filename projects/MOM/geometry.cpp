@@ -77,6 +77,40 @@ void get_class_of_equiv_moms()
   // 	}
   //   }
 }
+
+void list_all_smom_pairs()
+{
+  size_t npairs=0;
+  
+  for(size_t i=0;i<imoms.size();i++)
+    {
+      p_t pi=imoms[i].p(L);
+      double pi2=pi.norm2();
+      for(size_t j=0;j<imoms.size();j++)
+	{
+	  p_t pj=imoms[j].p(L);
+	  double pj2=pj.norm2();
+	  
+	  if(2.0*fabs(pi2-pj2)<(pi2+pj2)*1e-10)
+	    {
+	      p_t pk;
+	      for(size_t mu=0;mu<NDIM;mu++) pk[mu]=pi[mu]+pj[mu];
+	      double pk2=pk.norm2();
+	      
+	      cerr<<2.0*fabs(pi2-pk2)/(pi2+pk2)<<" "<<pi2<<" "<<pj2<<" "<<pk2<<endl;
+	      
+	      if(2.0*fabs(pi2-pk2)<(pi2+pk2)*1e-10)
+		{
+		  cout<<"Found smom pair: "<<i<<" "<<j<<endl;
+		  npairs++;
+		}
+	    }
+	}
+    }
+  
+  cout<<"Number of smom pairs: "<<npairs<<endl;
+}
+
 vector<double> get_indep_pt2()
 {
   vector<double> out;

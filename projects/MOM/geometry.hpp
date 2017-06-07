@@ -92,6 +92,9 @@ void get_class_of_equiv_moms();
 //! get a vector of pt2 for indep moms
 vector<double> get_indep_pt2();
 
+//! list all smom pairs
+void list_all_smom_pairs();
+
 #undef EXTERN_GEOMETRY
 #undef INIT_TO
 
