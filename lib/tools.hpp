@@ -12,7 +12,6 @@
 using namespace std;
 
 DEFINE_HAS_METHOD(size);
-#define is_vector has_method_size
 
 DEFINE_HAS_METHOD(ave_err);
 

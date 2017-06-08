@@ -173,20 +173,22 @@ public:
   //! put a specific "slice" of events
   void put_all_events(const vector<double> &in,size_t i)
   {for(size_t iel=0;iel<in.size();iel++) (*this)[iel][i]=in[iel];}
-
 };
+
+//! traits for vmeas_t
+template <class TS> class vector_traits<vmeas_t<TS>> : public true_vector_traits<TS> {};
 
 //! typically we use double
 using djvec_t=vmeas_t<jack_t<double>>;
 using dbvec_t=vmeas_t<boot_t<double>>;
 
 //! read a binary from file
-template <class T> T read_vec_meas(raw_file_t &file,size_t nel,size_t ind=0)
+template <class TV> TV read_vec_meas(raw_file_t &file,size_t nel,size_t ind=0)
 {
-  T out(nel);
+  TV out(nel);
   if(nel==0) CRASH("Nel==0");
   
-  file.set_pos(ind*sizeof(typename T::base_type::base_type)*out[0].size()*nel);
+  file.set_pos(ind*sizeof(base_type_t<base_type_t<TV>>)*out[0].size()*nel);
   out.bin_read(file);
   return out;
 }

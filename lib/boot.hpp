@@ -192,6 +192,9 @@ public:
   const T* end() const {return &((*this)[0])+this->size();}
 };
 
+//! traits for jack_t
+template <class TS> class vector_traits<boot_t<TS>> : public true_vector_traits<TS> {};
+
 //! typically we will use T numbers
 using dboot_t=boot_t<double>;
 

@@ -191,6 +191,9 @@ public:
   const T* end() const {return &((*this)[0])+this->size();}
 };
 
+//! traits for jack_t
+template <class TS> class vector_traits<jack_t<TS>> : public true_vector_traits<TS> {};
+
 //! typically we use jackknives of double
 using djack_t=jack_t<double>;
 
@@ -223,6 +226,18 @@ template <class T> size_t trim_to_njacks_multiple(vector<T> &v,bool verbosity=fa
   v.resize(n);
   
   return clust_size;
+}
+
+//! clusterize a generic vector
+template <class T> void clusterize(vector<T> &v,size_t clust_size)
+{
+  //compute avarages
+  v[njacks]=0.0;
+  for(size_t ijack=0;ijack<njacks;ijack++) v[njacks]+=v[ijack];
+  
+  //clusterize
+  for(size_t ijack=0;ijack<njacks;ijack++) v[ijack]=(v[njacks]-v[ijack])/double((njacks-1)*clust_size);
+  v[njacks]/=clust_size*njacks;
 }
 
 #undef EXTERN_JACK

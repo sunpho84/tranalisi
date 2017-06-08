@@ -17,34 +17,53 @@
 using namespace std;
 using namespace placeholders;
 
-//! get the size to init an object, avoiding size() for boot and jack
+//! get the size to init a valarray
 template <class T> size_t init_nel(const valarray<T> &obj)
 {return obj.size();}
 
 //////////////////////////////////////////////// operations //////////////////////////////////////////////
 
-//! operation between two vectors
-// template <class T,class=enable_if_t<is_vector<T>::value>> T OP_NAME(const T &first,const T &second)
-// {
-//   check_match_size(first,second);
-//
-//   T out(init_nel(first));
-//   for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second[it];
-//   return out;
-// }
-
-
 #define DEFINE_BIN_OPERATOR(OP)						\
+  /* operation between vectors */					\
+  template <class TS>							\
+  vector<TS> operator OP(const vector<TS> &first,const vector<TS> &second) \
+  {									\
+    vector<TS> out(first.size());					\
+    for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second[it]; \
+    return out;								\
+  }									\
+  /* self operation between vectors */					\
+  template <class TS>							\
+  vector<TS> operator OP##=(const vector<TS> &first,const vector<TS> &second) \
+  {									\
+    for(size_t it=0;it<first.size();it++) first[it] OP##= second[it];	\
+    return first;							\
+  }									\
+  /* operation between arrays */					\
+  template <class TS,int N>						\
+  array<TS,N> operator OP(const array<TS,N> &first,const array<TS,N> &second) \
+  {									\
+    array<TS,N> out(first.size());					\
+    for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second[it]; \
+    return out;								\
+  }									\
+  /* self operation between arrays */					\
+  template <class TS,int N>						\
+  array<TS,N> operator OP##=(const array<TS,N> &first,const array<TS,N> &second) \
+  {									\
+    for(size_t it=0;it<first.size();it++) first[it] OP##= second[it];	\
+    return first;							\
+  }									\
   /* operation between vector and scalar */				\
-  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<typename TV::base_type,TS>::value)>> \
-    TV operator OP(const TV &first,const TS &second)			\
+    template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<base_type_t<TV>,TS>::value)>> \
+  TV operator OP(const TV &first,const TS &second)			\
   {									\
     TV out(init_nel(first));						\
     for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second;	\
     return out;								\
   }									\
   /* opposite */							\
-    template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<typename TV::base_type,TS>::value)>> \
+    template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<base_type_t<TV>,TS>::value)>> \
     TV operator OP(const TS &first,const TV &second)			\
   {									\
     TV out(init_nel(second));						\
@@ -52,7 +71,7 @@ template <class T> size_t init_nel(const valarray<T> &obj)
     return out;								\
   }									\
   /* self-version of a given operator */				\
-    template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<typename TV::base_type,TS>::value)>> \
+    template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<base_type_t<TV>,TS>::value)>> \
     auto operator OP##=(TV &first,const TS &second) -> decltype(first OP second) \
     {return first=first OP second;}
 
