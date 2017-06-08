@@ -472,13 +472,15 @@ int main(int narg,char **arg)
        
        cout<<"Check consistency TM M,  P: "<<M_PP_TM<<", A: "<<M_AP_TM<<", mixed: "<<M_TM<<endl;
        cout<<"Check consistency OS M,  P: "<<M_PP_OS<<", A: "<<M_AP_OS<<", mixed: "<<M_OS<<endl;
-
        
        djack_t za_QED_fact_exp=DZP_fr_ZP_TM+2*SL_TM/M_TM-SL_OS/M_OS-DZA_fr_ZA_OS;
+       djack_t za_QED_fact_exp_bis=DZP_fr_ZP_TM+SL_TM/M_TM-DZA_fr_ZA_OS;
        djack_t zv_QED_fact_exp=DZP_fr_ZP_TM+SL_TM/M_TM-DZA_fr_ZA_TM;
        
+       cout<<"Factorization Za expanded no OS TM: "<<smart_print(djack_t(za_QED_fact_exp_bis*e2).ave_err())<<endl;
        cout<<"Factorization Za expanded: "<<smart_print(djack_t(za_QED_fact_exp*e2).ave_err())<<endl;
        cout<<"Factorization Zv expanded: "<<smart_print(djack_t(zv_QED_fact_exp*e2).ave_err())<<endl;
+       cout<<"Factorization Za expanded no OS TM for table: "<<smart_print(djack_t(za_QED_fact_exp_bis*sqr(4*M_PI)).ave_err())<<endl;
        cout<<"Factorization Za expanded for table: "<<smart_print(djack_t(za_QED_fact_exp*sqr(4*M_PI)).ave_err())<<endl;
        cout<<"Factorization Zv expanded for table: "<<smart_print(djack_t(zv_QED_fact_exp*sqr(4*M_PI)).ave_err())<<endl;
       }
