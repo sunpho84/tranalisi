@@ -4,6 +4,7 @@
 #include <cmath>
 #include <fstream>
 #include <math.hpp>
+#include <macros.hpp>
 #include <valarray>
 #include <vector>
 
@@ -68,6 +69,10 @@ public:
   //! write to a grace file
   void write(const string &path) const;
 };
+
+
+//! traits for jack_t
+template <> class vector_traits<vec_ave_err_t> : public true_vector_traits<vec_ave_err_t> {};
 
 //! output of ave_err_t
 ostream& operator<<(ostream &out,const ave_err_t &ae);

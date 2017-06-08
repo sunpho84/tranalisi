@@ -127,7 +127,7 @@ int main(int narg,char **arg)
   //! Z
   enum{iZS,iZA,iZP,iZV,iZT};
   const size_t nZ=5,iZ_of_iG[nGamma]={0,1,1,1,1,2,3,3,3,3,4,4,4,4,4,4};
-  const size_t Zdeg[nZ]={1,4,1,4,6};
+  const double Zdeg[nZ]={1,4,1,4,6};
   vector<djvec_t> Z(nZ,djvec_t(equiv_imoms.size()));
   
 #pragma omp parallel for
@@ -157,32 +157,31 @@ int main(int narg,char **arg)
 	      double Zq_cl=(prop_inv*pslash).trace().imag()/(12.0*pt2*V);
 	      Zq[ind_mom][ijack]+=Zq_cl;
 	      
+	      vector<double> pr(nZ,0.0);
 	      for(size_t iG=0;iG<nGamma;iG++)
 		{
 		  prop_t vert=get_from_jackknife(jverts[imom][iG],ijack) ;
 		  prop_t amp_vert=prop_inv*vert*Gamma[5]*prop_inv.adjoint()*Gamma[5];
-		  double pr=(amp_vert*Gamma[iG]).trace().real()/12.0;
-		  double Z_cl=Zq_cl/pr;
-		  
-		  Z[iZ_of_iG[iG]][ind_mom][ijack]+=Z_cl;
+		  pr[iZ_of_iG[iG]]+=(amp_vert*Gamma[iG].adjoint()).trace().real()/12.0;
 		}
+	      
+	      for(size_t iZ=0;iZ<nZ;iZ++) Z[iZ][ind_mom][ijack]+=Zq_cl/pr[iZ];
 	    }
 	}
       
       //normalize Z
       Zq[ind_mom]/=imom_class.second.size();
       for(size_t iZ=0;iZ<nZ;iZ++)
-	Z[iZ][ind_mom]/=imom_class.second.size()*Zdeg[iZ];
+	Z[iZ][ind_mom]/=imom_class.second.size()/Zdeg[iZ];
     }
   
-  //! normalize
   for(auto &p : vector<pair<djvec_t,string>>{{Zq,"Zq"},{Z[iZS],"ZS"},{Z[iZA],"ZA"},{Z[iZP],"ZP"},{Z[iZV],"ZV"},{Z[iZT],"ZT"}})
     {
       grace_file_t outf("plots/"+p.second+".xmg");
       outf<<fixed;
-	    outf.precision(8);
-	    outf.write_vec_ave_err(get_indep_pt2(),p.first.ave_err());
+      outf.precision(8);
+      outf.write_vec_ave_err(get_indep_pt2(),p.first.ave_err());
     }
-	
-	return 0;
+  
+  return 0;
 }
