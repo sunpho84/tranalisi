@@ -11,7 +11,7 @@
 #include <geometry.hpp>
 
 using vprop_t=vector<prop_t>;
-using verts_t=array<prop_t,nGamma>;
+using jverts_t=array<jprop_t,nGamma>;
 using vjprop_t=vector<jprop_t>;
 
 int main(int narg,char **arg)
@@ -62,10 +62,10 @@ int main(int narg,char **arg)
   size_t clust_size=trim_to_njacks_multiple(conf_list,true);
   
   //! jackkniffed propagator
-  vector<vprop_t> jprop(njacks+1,vprop_t(imoms.size()));
+  vjprop_t jprop(imoms.size());
   
   //! jackkniffed vertex
-  vector<vector<verts_t>> jverts(njacks+1,vector<verts_t>(imoms.size()));
+  vector<jverts_t> jverts(imoms.size());
 
 #pragma omp parallel for
   for(size_t ijack=0;ijack<njacks;ijack++)
@@ -93,11 +93,11 @@ int main(int narg,char **arg)
 	for(size_t imom=0;imom<imoms.size();imom++)
 	  {
 	    // build the jackkniffed propagator
-	    jprop[ijack][imom]+=prop[imom];
+	    put_into_cluster(jprop[imom],prop[imom],ijack);
 	    
 	    //! compute all 16 vertices
 	    for(size_t iG=0;iG<nGamma;iG++)
-	      jverts[ijack][imom][iG]+=prop[imom]*Gamma[iG]*Gamma[5]*prop[imom].adjoint()*Gamma[5];
+	      put_into_cluster(jverts[imom][iG],prop[imom]*Gamma[iG]*Gamma[5]*prop[imom].adjoint()*Gamma[5],ijack);
 	  }
       }
   
@@ -106,24 +106,8 @@ int main(int narg,char **arg)
 #pragma omp parallel for
   for(size_t imom=0;imom<imoms.size();imom++)
     {
-        //compute avarages
-      jprop[njacks][imom].Zero();
-      for(size_t ijack=0;ijack<njacks;ijack++) jprop[njacks][imom]+=jprop[ijack][imom];
-  
-  //clusterize
-      for(size_t ijack=0;ijack<njacks;ijack++) jprop[ijack][imom]=(jprop[njacks][imom]-jprop[ijack][imom])/double((njacks-1)*clust_size);
-      jprop[njacks][imom]/=clust_size*njacks;
-
-      for(size_t iG=0;iG<nGamma;iG++)
-	{
-	  //compute avarages
-	  jverts[njacks][imom][iG].Zero();
-	  for(size_t ijack=0;ijack<njacks;ijack++) jverts[njacks][imom][iG]+=jverts[ijack][imom][iG];
-	  
-	  //clusterize
-	  for(size_t ijack=0;ijack<njacks;ijack++) jverts[ijack][imom][iG]=(jverts[njacks][imom][iG]-jverts[ijack][imom][iG])/double((njacks-1)*clust_size);
-	  jverts[njacks][imom][iG]/=clust_size*njacks;
-	}
+      clusterize(jprop[imom]);
+      for(size_t iG=0;iG<nGamma;iG++) clusterize(jverts[imom][iG],clust_size);
     }
   
   //////////////////////////////// compute the inverse propagator ////////////////////////////////
@@ -133,15 +117,18 @@ int main(int narg,char **arg)
 #pragma omp parallel for
   for(size_t imom=0;imom<imoms.size();imom++)
     for(size_t ijack=0;ijack<=njacks;ijack++)
-      put_into_jackknife(jprop_inv[imom],jprop[ijack][imom].inverse(),ijack);
+      put_into_jackknife(jprop_inv[imom],get_from_jackknife(jprop[imom],ijack).inverse(),ijack);
   
   //////////////////////////////////// compute Z by amputating //////////////////////////////////
   
   //! Z of quark field
   djvec_t Zq(equiv_imoms.size());
   
-  //! sixteen gamma Z
-  vector<djvec_t> Z(nGamma,djvec_t(equiv_imoms.size()));
+  //! Z
+  enum{iZS,iZA,iZP,iZV,iZT};
+  const size_t nZ=5,iZ_of_iG[nGamma]={0,1,1,1,1,2,3,3,3,3,4,4,4,4,4,4};
+  const size_t Zdeg[nZ]={1,4,1,4,6};
+  vector<djvec_t> Z(nZ,djvec_t(equiv_imoms.size()));
   
 #pragma omp parallel for
   for(size_t ind_mom=0;ind_mom<equiv_imoms.size();ind_mom++)
@@ -153,8 +140,8 @@ int main(int narg,char **arg)
 #endif
 
       //reset Z
-      Zq[ind_mom]=0;
-      for(size_t iG=0;iG<nGamma;iG++) Z[iG][ind_mom]=0.0;
+      Zq[ind_mom]=0.0;
+      for(auto &Zi : Z) Zi[ind_mom]=0.0;
       
       //loop on equivalent moms
       auto &imom_class=equiv_imoms[ind_mom];
@@ -167,31 +154,35 @@ int main(int narg,char **arg)
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    {
 	      prop_t prop_inv=get_from_jackknife(jprop_inv[imom],ijack);
-	      Zq[ind_mom][ijack]+=(prop_inv*pslash).trace().imag();
+	      double Zq_cl=(prop_inv*pslash).trace().imag()/(12.0*pt2*V);
+	      Zq[ind_mom][ijack]+=Zq_cl;
 	      
 	      for(size_t iG=0;iG<nGamma;iG++)
 		{
-		  prop_t &vert=jverts[ijack][imom][iG];
+		  prop_t vert=get_from_jackknife(jverts[imom][iG],ijack) ;
 		  prop_t amp_vert=prop_inv*vert*Gamma[5]*prop_inv.adjoint()*Gamma[5];
-		  Z[iG][ind_mom][ijack]+=(amp_vert*Gamma[iG]).trace().real();
+		  double pr=(amp_vert*Gamma[iG]).trace().real()/12.0;
+		  double Z_cl=Zq_cl/pr;
+		  
+		  Z[iZ_of_iG[iG]][ind_mom][ijack]+=Z_cl;
 		}
 	    }
 	}
       
       //normalize Z
-      Zq[ind_mom]/=12*pt2*V*imom_class.second.size();
-      for(size_t iG=0;iG<nGamma;iG++)
-	Z[iG][ind_mom]/=12*imom_class.second.size();
+      Zq[ind_mom]/=imom_class.second.size();
+      for(size_t iZ=0;iZ<nZ;iZ++)
+	Z[iZ][ind_mom]/=imom_class.second.size()*Zdeg[iZ];
     }
   
   //! normalize
-  djvec_t ZS=Zq/Z[0];
-  djvec_t ZA=4.0*Zq/(Z[1]+Z[2]+Z[3]+Z[4]);
-  djvec_t ZP=Zq/Z[5];
-  djvec_t ZV=4.0*Zq/(Z[6]+Z[7]+Z[8]+Z[9]);
-  djvec_t ZT=6.0*Zq/(Z[10]+Z[11]+Z[12]+Z[13]+Z[14]+Z[15]);
-  for(auto &p : vector<pair<djvec_t,string>>{{Zq,"Zq"},{ZS,"ZS"},{ZA,"ZA"},{ZP,"ZP"},{ZV,"ZV"},{ZT,"ZT"}})
-    grace_file_t("plots/"+p.second+".xmg").write_vec_ave_err(get_indep_pt2(),p.first.ave_err());
-  
-  return 0;
+  for(auto &p : vector<pair<djvec_t,string>>{{Zq,"Zq"},{Z[iZS],"ZS"},{Z[iZA],"ZA"},{Z[iZP],"ZP"},{Z[iZV],"ZV"},{Z[iZT],"ZT"}})
+    {
+      grace_file_t outf("plots/"+p.second+".xmg");
+      outf<<fixed;
+	    outf.precision(8);
+	    outf.write_vec_ave_err(get_indep_pt2(),p.first.ave_err());
+    }
+	
+	return 0;
 }
