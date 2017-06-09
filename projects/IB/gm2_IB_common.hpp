@@ -187,16 +187,16 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
   djack_t deltam_cr_alt=constant_fit(deltam_cr_alt_corr,ens.tmin[iq]-6,ens.tmax[iq],ens_qpath+"/deltam_cr_alt_t.xmg");
   djack_t deltam_cr_alt_lin=poly_fit(deltam_cr_alt_corr,1,ens.tmin[iq]-3,ens.tmax[iq],ens_qpath+"/deltam_cr_alt_t_linfit.xmg")[0];
   
-  //check if there is a scalar missing
-  djvec_t V0P5_0S=read("0S_V0P5",ens,-1,iq,-1,IM);
-  forward_derivative(deltam_cr_alt_corr).ave_err().write(ens_qpath+"/deltam_cr_alt_der_t.xmg");
-  djvec_t deltam_cr_scal_corr=V0P5_0S/den_deltam_cr_corr;
-  deltam_cr_scal_corr.ave_err().write(ens_qpath+"/deltam_cr_scal_corr.xmg");
-  forward_derivative(deltam_cr_scal_corr).ave_err().write(ens_qpath+"/deltam_cr_scal_corr_der_t.xmg");
-  djvec_t deltam_cr_scal_coef_corr=forward_derivative(deltam_cr_alt_corr)/forward_derivative(deltam_cr_scal_corr);
-  djack_t deltam_cr_scal_coef=constant_fit(deltam_cr_scal_coef_corr,ens.tmin[iq],ens.tmax[iq],ens_qpath+"/deltam_cr_scal_contr_coef_t.xmg");
-  djvec_t deltam_cr_alt_corr_with_S=deltam_cr_alt_corr-deltam_cr_scal_coef*deltam_cr_scal_corr;
-  djack_t deltam_cr_alt_with_S=constant_fit(deltam_cr_alt_corr_with_S,ens.tmin[iq],ens.tmin[iq],ens_qpath+"/deltam_cr_alt_with_S_t.xmg");
+  // //check if there is a scalar missing
+  // djvec_t V0P5_0S=read("0S_V0P5",ens,-1,iq,-1,IM);
+  // forward_derivative(deltam_cr_alt_corr).ave_err().write(ens_qpath+"/deltam_cr_alt_der_t.xmg");
+  // djvec_t deltam_cr_scal_corr=V0P5_0S/den_deltam_cr_corr;
+  // deltam_cr_scal_corr.ave_err().write(ens_qpath+"/deltam_cr_scal_corr.xmg");
+  // forward_derivative(deltam_cr_scal_corr).ave_err().write(ens_qpath+"/deltam_cr_scal_corr_der_t.xmg");
+  // djvec_t deltam_cr_scal_coef_corr=forward_derivative(deltam_cr_alt_corr)/forward_derivative(deltam_cr_scal_corr);
+  // djack_t deltam_cr_scal_coef=constant_fit(deltam_cr_scal_coef_corr,ens.tmin[iq],ens.tmax[iq],ens_qpath+"/deltam_cr_scal_contr_coef_t.xmg");
+  // djvec_t deltam_cr_alt_corr_with_S=deltam_cr_alt_corr-deltam_cr_scal_coef*deltam_cr_scal_corr;
+  // djack_t deltam_cr_alt_with_S=constant_fit(deltam_cr_alt_corr_with_S,ens.tmin[iq],ens.tmin[iq],ens_qpath+"/deltam_cr_alt_with_S_t.xmg");
   
   ///////////////////////// retuning of LO ///////////////////////////
   
@@ -208,14 +208,14 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
   cout<<"True kappa cr (quark "<<qname[iq]<<") ens "<<ens_qpath<<": "<<smart_print(kappa_true.ave_err())
       <<" vs "<<ens.kappa<<", diff: "<<smart_print(dk_cr_LO.ave_err())<<endl;
   
-  //hep-lat/0101001 eq.2.5
-  double amq=get_amq(ens,iq);
-  djack_t tan_alpha_bare=amq/m_cr,arctan_alpha_bare=1/tan_alpha_bare;
-  djack_t alpha=atan2(amq,m_cr*Za_ae[0][ens.ib].ave())/M_PI*180;
-  cout<<"Twist angle in units of PI (quark "<<qname[iq]<<") ens "<<ens.path<<": "
-      <<smart_print(alpha.ave_err())<<", am: "<<amq<<", mcr: "<<smart_print(m_cr.ave_err())<<endl;
-  cout<<"Contribution of scalar to pseudo (quark "<<qname[iq]<<") ens "<<ens.path<<": "<<smart_print(arctan_alpha_bare.ave_err())<<endl;
-  effective_mass(djvec_t(num_deltam_cr_corr+0*arctan_alpha_bare*V0P5_0S),ens.T/2,-1).ave_err().write(ens_qpath+"/num_deltam_cr_with_S_eff.xmg");
+  // //hep-lat/0101001 eq.2.5
+  // double amq=get_amq(ens,iq);
+  // djack_t tan_alpha_bare=amq/m_cr,arctan_alpha_bare=1/tan_alpha_bare;
+  // djack_t alpha=atan2(amq,m_cr*Za_ae[0][ens.ib].ave())/M_PI*180;
+  // cout<<"Twist angle in units of PI (quark "<<qname[iq]<<") ens "<<ens.path<<": "
+  //     <<smart_print(alpha.ave_err())<<", am: "<<amq<<", mcr: "<<smart_print(m_cr.ave_err())<<endl;
+  // cout<<"Contribution of scalar to pseudo (quark "<<qname[iq]<<") ens "<<ens.path<<": "<<smart_print(arctan_alpha_bare.ave_err())<<endl;
+  // effective_mass(djvec_t(num_deltam_cr_corr+0*arctan_alpha_bare*V0P5_0S),ens.T/2,-1).ave_err().write(ens_qpath+"/num_deltam_cr_with_S_eff.xmg");
   
   //how much is the pion mass after retuning?
   djvec_t P5P5_0P=read("0P_P5P5",ens,+1,iq,-1,IM);
