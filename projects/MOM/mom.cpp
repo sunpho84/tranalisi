@@ -66,7 +66,7 @@ int main(int narg,char **arg)
   
   //! jackkniffed vertex
   vector<jverts_t> jverts(imoms.size());
-
+  
 #pragma omp parallel for
   for(size_t ijack=0;ijack<njacks;ijack++)
     for(size_t iconf=ijack*clust_size;iconf<(ijack+1)*clust_size;iconf++)
@@ -77,6 +77,11 @@ int main(int narg,char **arg)
 #else
 	printf("Reading file %zu/%zu\n",iconf+1,conf_list.size());
 #endif
+	
+	coords_t vitL={4,3,3,3};
+	size_t nvit_mom=1;
+	for(size_t mu=0;mu<NDIM;mu++) nvit_mom*=vitL[mu];
+	vector<prop_t> vit_prop(nvit_mom); //!< converted prop
 	
 	//! source file
 	raw_file_t file(path,"r");
@@ -92,6 +97,17 @@ int main(int narg,char **arg)
 	
 	for(size_t imom=0;imom<imoms.size();imom++)
 	  {
+	    //bloody converter
+	    coords_t c=imoms[imom];
+	    bool is=true;
+	    for(size_t mu=0;mu<NDIM;mu++) is&=(c[mu]>=0 and c[mu]<vitL[mu]);
+	    if(is)
+	      {
+		size_t ivit_mom=c[1]+vitL[1]*(c[3]+vitL[3]*(c[2]+vitL[2]*c[0]));
+		if(ivit_mom>=nvit_mom) CRASH("Asked mom: [%zu %zu %zu %zu], %zu/%zu",c[0],c[1],c[2],c[3],ivit_mom,nvit_mom);
+		vit_prop[ivit_mom]=convert_to_Vit_basis(prop[imom]);
+	      }
+	    
 	    // build the jackkniffed propagator
 	    put_into_cluster(jprop[imom],prop[imom],ijack);
 	    
@@ -99,6 +115,14 @@ int main(int narg,char **arg)
 	    for(size_t iG=0;iG<nGamma;iG++)
 	      put_into_cluster(jverts[imom][iG],prop[imom]*Gamma[iG]*Gamma[5]*prop[imom].adjoint()*Gamma[5],ijack);
 	  }
+	
+	//! print formatted
+	raw_file_t converted_file(path+"_converted.txt","w");
+	for(size_t ivit_mom=0;ivit_mom<nvit_mom;ivit_mom++)
+	  for(size_t isc1=0;isc1<NSPINCOL;isc1++)
+	    for(size_t isc2=0;isc2<NSPINCOL;isc2++)
+	      for(size_t ri=0;ri<2;ri++)
+		converted_file.printf("%.16lg\n",get_re_or_im(vit_prop[ivit_mom](isc1,isc2),ri));
       }
   
   //////////////////////////////////////////// clusterize .///////////////////////////////////////
@@ -138,7 +162,7 @@ int main(int narg,char **arg)
 #else
       printf("Analyzing mom %zu/%zu\n",ind_mom+1,equiv_imoms.size());
 #endif
-
+      
       //reset Z
       Zq[ind_mom]=0.0;
       for(auto &Zi : Z) Zi[ind_mom]=0.0;
