@@ -5,6 +5,7 @@
 
 #include <complex>
 #include <cstdio>
+#include <cstdarg>
 #include <cstring>
 #include <iostream>
 #include <map>
@@ -180,6 +181,17 @@ public:
   //! return whether we are at the end of file
   bool feof()
   {return std::feof(file);}
+  
+  //! formatted print
+  int printf(const char *format,...)
+  {
+    va_list ap;
+    va_start(ap,format);
+    int ret=vfprintf(file,format,ap);
+    va_end(ap);
+    
+    return ret;
+  }
 };
 
 //! return the size of the passed path
