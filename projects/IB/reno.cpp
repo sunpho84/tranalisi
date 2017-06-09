@@ -22,9 +22,6 @@ size_t T;
 double amq;
 size_t tmin,tmax;
 
-const double pred_Zv=-20.6178*e2/sqr(4*M_PI);
-const double pred_Za=-15.7963*e2/sqr(4*M_PI);
-
 //! return "_var" or ""
 string prespaced(const string &var)
 {return (var==""?"":"_")+var;}
@@ -279,6 +276,12 @@ int main(int narg,char **arg)
   
   const double mc=1/(2*k),mcp=1/(2*kp),mcm=1/(2*km);
   const array<double,3> ka_var={mc,mcp,mcm};
+
+  const double a[3]={0.45063,0.414834,0.31476};
+  const double pred_Zp=-(6.0*log(mu_MS*a[ib])+22.5954)*e2/sqr(4*M_PI);
+  const double pred_Zs=-(6.0*log(mu_MS*a[ib])+12.9524)*e2/sqr(4*M_PI);
+  const double pred_Zv=-20.6178*e2/sqr(4*M_PI);
+  const double pred_Za=-15.7963*e2/sqr(4*M_PI);
   
   //compute deltamcr
   djvec_t E2_V0P5=der_2pts("V0P5",SAMER_2PTS,IM,ODD,ODD,e2_var,"E2");
@@ -475,14 +478,18 @@ int main(int narg,char **arg)
        
        djack_t za_QED_fact_exp=DZP_fr_ZP_TM+2*SL_TM/M_TM-SL_OS/M_OS-DZA_fr_ZA_OS;
        djack_t za_QED_fact_exp_bis=DZP_fr_ZP_TM+SL_TM/M_TM-DZA_fr_ZA_OS;
-       djack_t zv_QED_fact_exp=DZP_fr_ZP_TM+SL_TM/M_TM-DZA_fr_ZA_TM;
+       djack_t zv_QED_fact_exp=    DZP_fr_ZP_TM+SL_TM/M_TM-DZA_fr_ZA_TM;
+       djack_t za_m_zv_QED_fact_exp=DZA_fr_ZA_TM-DZA_fr_ZA_OS;
+       djack_t zp_m_zs_QED_fact_exp=DZP_fr_ZP_OS-DZP_fr_ZP_TM;
        
        cout<<"Factorization Za expanded no OS TM: "<<smart_print(djack_t(za_QED_fact_exp_bis*e2).ave_err())<<endl;
        cout<<"Factorization Za expanded: "<<smart_print(djack_t(za_QED_fact_exp*e2).ave_err())<<endl;
        cout<<"Factorization Zv expanded: "<<smart_print(djack_t(zv_QED_fact_exp*e2).ave_err())<<endl;
-       cout<<"Factorization Za expanded no OS TM for table: "<<smart_print(djack_t(za_QED_fact_exp_bis*sqr(4*M_PI)).ave_err())<<endl;
-       cout<<"Factorization Za expanded for table: "<<smart_print(djack_t(za_QED_fact_exp*sqr(4*M_PI)).ave_err())<<endl;
-       cout<<"Factorization Zv expanded for table: "<<smart_print(djack_t(zv_QED_fact_exp*sqr(4*M_PI)).ave_err())<<endl;
+       cout<<"Factorization Za expanded no OS TM for table: "<<smart_print(djack_t(za_QED_fact_exp_bis*sqr(4*M_PI)).ave_err())<<", Aoki prediction: "<<pred_Za/(e2/sqr(4*M_PI))<<endl;
+       cout<<"Factorization Za expanded for table: "<<smart_print(djack_t(za_QED_fact_exp*sqr(4*M_PI)).ave_err())<<", Aoki prediction: "<<pred_Za/(e2/sqr(4*M_PI))<<endl;
+       cout<<"Factorization Zv expanded for table: "<<smart_print(djack_t(zv_QED_fact_exp*sqr(4*M_PI)).ave_err())<<", Aoki prediction: "<<pred_Zv/(e2/sqr(4*M_PI))<<endl;
+       cout<<"Factorization Zp-Zs expanded for table: "<<smart_print(djack_t(zp_m_zs_QED_fact_exp*sqr(4*M_PI)).ave_err())<<", Aoki prediction: "<<(pred_Zp-pred_Zs)/(e2/sqr(4*M_PI))<<endl;
+       cout<<"Factorization Za-Zv expanded for table: "<<smart_print(djack_t(za_m_zv_QED_fact_exp*sqr(4*M_PI)).ave_err())<<", Aoki prediction: "<<(pred_Za-pred_Zv)/(e2/sqr(4*M_PI))<<endl;
       }
       
       //zv non conserved
