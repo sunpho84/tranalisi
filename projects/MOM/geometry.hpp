@@ -69,6 +69,14 @@ public:
     for(size_t mu=0;mu<NDIM;mu++) out[mu]=p_mu(mu,L);
     return out;
   }
+  
+  //! return the quadrant
+  size_t imir()
+  {
+    size_t out=0;
+    for(size_t mu=0;mu<NDIM;mu++) out+=((*this)[mu])<<mu;
+    return out;
+  }
 };
 
 //! lattice sizes
