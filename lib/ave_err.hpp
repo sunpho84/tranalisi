@@ -5,6 +5,7 @@
 #include <fstream>
 #include <math.hpp>
 #include <macros.hpp>
+#include <tools.hpp>
 #include <valarray>
 #include <vector>
 
@@ -85,5 +86,8 @@ inline string smart_print(double ave,double error,int ndigits=2)
 
 inline string smart_print(const ave_err_t &ae,int ndigits=2)
 {return smart_print(ae.ave(),vector<double>({ae.err()}),ndigits);}
+
+template <class T,class=enable_if_t<has_method_ave_err<T>::value>> string smart_print(const T &o,int ndigits=2)
+{return smart_print(o.ave_err(),ndigits);}
 
 #endif
