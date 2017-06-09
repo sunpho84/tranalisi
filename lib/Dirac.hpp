@@ -67,7 +67,7 @@ const size_t nGamma=16;
 using Dirac_t=SparseMatrix<dcompl_t>;
 
 //! sixteen Clifford basis
-extern vector<Dirac_t> Gamma;
+extern vector<Dirac_t> Gamma,vit_Gamma;
 
 EXTERN_DIRAC const size_t igmu[4] INIT_TO({4,1,2,3});
 
@@ -78,6 +78,11 @@ Dirac_t init_Gamma(const int *irow,const int *re,const int *im);
 inline size_t isc(size_t is,size_t ic)
 {return ic+NCOL*is;}
 
+//! convert to Vittorio's basis
+prop_t convert_to_Vit_basis(const prop_t &p);
+
+//! convert from Vittorio's basis
+prop_t convert_from_Vit_basis(const prop_t &p);
 
 #undef EXTERN_DIRAC
 #undef INIT_TO
