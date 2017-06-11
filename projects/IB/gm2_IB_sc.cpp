@@ -45,9 +45,12 @@ void write_ens_header(size_t iens)
   cout<<"----------------------- "<<iens<<" "<<ens.path<<" ---------------------"<<endl;
 }
 
+//! approximated Za_fact
+dboot_t Za_fact;
+
 //! return the perturbative correction to Za
-double Za_perturb_QED(size_t im)
-{return -0.01835*sqr(eq[im]);}
+dboot_t Za_perturb_QED(size_t im)
+{return -0.01835*sqr(eq[im])*include_ZA_perturb*Za_fact;}
 
 //! ansatz fit
 template <class Tpars,class Tm,class Ta>
@@ -236,13 +239,13 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   switch(im)
     {
     case istrange:
-      C_guess=ave_err_t({3e-12,0.5e-12});
+      C_guess=ave_err_t({-3e-12,0.5e-12});
       adep_guess={-1.5,0.6};
       KPi_guess={0.0,0.01};
       break;
     case icharm:
-      C_guess=ave_err_t({-7e-12,2e-12});
-      adep_guess={-6,0.2};
+      C_guess=ave_err_t({0-4e-12,2e-12});
+      adep_guess={-3,0.2};
       KPi_guess={-0.001,0.001};
       break;
     default:
@@ -328,12 +331,12 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   switch(im)
     {
     case istrange:
-      C_guess=ave_err_t({-0.0018,0.0004});
+      C_guess=ave_err_t({-0.0005,0.0004});
       adep_guess={-1,0.2};
   break;
     case icharm:
-      C_guess=ave_err_t({-0.013,0.002});
-      adep_guess={-2,0.3};
+      C_guess=ave_err_t({-0.003,0.002});
+      adep_guess={-3,0.3};
       break;
     default:
       CRASH("Unknwon mass %d",im);
@@ -615,84 +618,139 @@ void perform_analysis(const dbvec_t &data,const index_t &ind,const string &name)
 }
 
 //! test the exponents of the A40
-void test_exponent_A40(const index_t &ind_2pts_fit,const djvec_t &jM_V,const vector<djvec_t> &jVV_LO,const vector<djvec_t> &jVV_QED,
+void test_exponent_A40(const index_t &ind_2pts_fit,const djvec_t &jM_P,const djvec_t &jM_V,const vector<djvec_t> &jVV_LO,const vector<djvec_t> &jVV_QED,
 		       const djvec_t &k_DZ2_rel_V,const djvec_t &jZ2_V,const djvec_t &jSL_V)
 {
   size_t nA40=count_if(ens_data.begin(),ens_data.end(),is_A40<ens_data_t>);
+  size_t nA=count_if(ens_data.begin(),ens_data.end(),[](const ens_data_t &ens){return ens.ib==0;});
   
-  djvec_t A40_QED_data;
-  djvec_t A40_LO_data;
-  A40_QED_data.resize(nA40);
-  A40_LO_data.resize(nA40);
+  djvec_t A_QED_data(nA);
+  djvec_t A40_MP_data(nA40);
+  djvec_t A40_MV_data(nA40);
+  djvec_t A40_QED_data(nA40);
+  djvec_t A40_LO_data(nA40);
+  double A_x[nA];
   double A40_x[nA40];
-  size_t iA40_L=0;
+  size_t iA_L=0,iA40_L=0;
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_data_t &ens=ens_data[iens];
-      if(is_A40(ens))
+      size_t ib=ens.ib;
+      if(ib==0)
 	{
 	  size_t i2pts=ind_2pts_fit({0,iens});
-	  double Za=Za_ae[0][0].ave();
-	  //djack_t a;a=djack_t(jM_V[i2pts]/M_V_phys[im]);//.ave();
-	  djack_t a;
-	  a=1/lat_par[0].ainv[ens.ib].ave();
-	  size_t upto=ens.T/2-DT;
+	  double Za=Za_ae[0][ib].ave();
+	  djack_t a=djack_t(jM_V[i2pts]/M_V_phys[im]);
+	  cout<<"a for ensemble "<<ens.path<<": "<<smart_print(a.ave_err())<<endl;
+	  size_t upto=tmin_fit(iens,0);
 	  djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za);
 	  djack_t c2_QED=integrate_QED_reco_from(k_DZ2_rel_V[i2pts],jZ2_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
-	  A40_QED_data[iA40_L]=c1_QED+c2_QED;
 	  djack_t c1_LO=integrate_corr_times_kern_up_to(jVV_LO[iens],ens.T,a,im,upto)*sqr(Za);
 	  djack_t c2_LO=integrate_LO_reco_from(jZ2_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
-	  A40_LO_data[iA40_L]=c1_LO+c2_LO;
 	  
-	  A40_x[iA40_L]=1.0/ens.L;
+	  {
+	    A_QED_data[iA_L]=(c1_QED+c2_QED)+Za_perturb_QED(im)*(c1_LO+c2_LO);
+	    A_x[iA_L]=1.0/ens.L+ens.aml/10;
+	    iA_L++;
+	  }
 	  
-	  iA40_L++;
+	  if(is_A40(ens))
+	    {
+	      A40_MP_data[iA40_L]=jM_P[i2pts];
+	      A40_MV_data[iA40_L]=jM_V[i2pts];
+	      
+	      A40_LO_data[iA40_L]=c1_LO+c2_LO;
+	      A40_QED_data[iA40_L]=c1_QED+c2_QED+Za_perturb_QED(im)*A40_LO_data[iA40_L];
+	      
+	      A40_x[iA40_L]=1.0/ens.L;
+	      
+	      iA40_L++;
+	    }
 	}
     }
   
-  djvec_t C_QED(3);
+  djvec_t C_QED_A40(3);
+  {
+    jack_fit_t fitter;
+    C_QED_A40[1]=(A40_QED_data[nA40-1]-A40_QED_data[1])/(A40_x[nA40-1]-A40_x[1]);
+    C_QED_A40[0]=A40_QED_data[1]-A40_x[1]*C_QED_A40[1];
+    C_QED_A40[2].fill_gauss(1,1.0,624134);
+    
+    cout<<"Guess: "<<endl;
+    cout<<C_QED_A40.ave_err()<<endl;
+    
+    fitter.add_fit_par(C_QED_A40[0],"C0",C_QED_A40[0].ave_err());
+    fitter.add_fit_par(C_QED_A40[1],"C1",C_QED_A40[1].ave_err());
+    fitter.add_fit_par(C_QED_A40[2],"C2",{1.0,1.0});
+    for(size_t i=0;i<nA40;i++)
+      fitter.add_point(A40_QED_data[i],
+		       [&A40_x,i](const vector<double> &p,int iel)
+		       {return p[0]+p[1]*pow(A40_x[i],p[2]);});
+    
+    fitter.fit();
+  }
+  cout<<"Exponent QED from A40: "<<C_QED_A40[2].ave_err()<<endl;
   
-  jack_fit_t fitter;
-  C_QED[1]=(A40_QED_data[nA40-1]-A40_QED_data[0])/(A40_x[nA40-1]-A40_x[0]);
-  C_QED[0]=A40_QED_data[0]-A40_x[0]*C_QED[1];
-  C_QED[2].fill_gauss(1,1.0,624134);
+  djvec_t C_QED_A(3);
+  {
+    jack_fit_t fitter;
+    C_QED_A[1]=(A_QED_data[nA-1]-A_QED_data[0])/(A_x[nA-1]-A_x[0]);
+    C_QED_A[0]=A_QED_data[0]-A_x[0]*C_QED_A[1];
+    C_QED_A[2].fill_gauss(1,1.0,624134);
+    
+    cout<<"Guess: "<<endl;
+    cout<<C_QED_A.ave_err()<<endl;
+    
+    fitter.add_fit_par(C_QED_A[0],"C0",C_QED_A[0].ave_err());
+    fitter.add_fit_par(C_QED_A[1],"C1",C_QED_A[1].ave_err());
+    fitter.add_fit_par(C_QED_A[2],"C2",C_QED_A[2].ave_err());
+    for(size_t i=0;i<nA;i++)
+      fitter.add_point(A_QED_data[i],
+		       [&A_x,i](const vector<double> &p,int iel)
+		       {return p[0]+p[1]*pow(A_x[i],p[2]);});
+    
+    fitter.fit();
+  }
   
-  cout<<"Guess: "<<endl;
-  cout<<C_QED.ave_err()<<endl;
+  cout<<C_QED_A.ave_err()<<endl;
   
-  fitter.add_fit_par(C_QED[0],"C0",C_QED[0].ave_err());
-  fitter.add_fit_par(C_QED[1],"C1",C_QED[1].ave_err());
-  fitter.add_fit_par(C_QED[2],"C2",C_QED[2].ave_err());
-  for(size_t i=0;i<nA40;i++)
-    fitter.add_point(A40_QED_data[i],
-		     [&A40_x,i](const vector<double> &p,int iel)
-		     {return p[0]+p[1]*pow(A40_x[i],p[2]);});
+  cout<<"Exponent QED from all A: "<<C_QED_A[2].ave_err()<<endl;
   
-  fitter.fit();
+  grace_file_t fit_file_QED_A40(combine("%s/plots/A40_QED.xmg",qname[im].c_str()));
+  fit_file_QED_A40.set_xaxis_label("1/L");
+  fit_file_QED_A40.write_polygon([&C_QED_A40](double x) -> dboot_t {return C_QED_A40[0]+C_QED_A40[1]*pow(x,C_QED_A40[2]);},0.0001,*max_element(A40_x,A40_x+nA40)*1.1);
+  fit_file_QED_A40.new_data_set();
+  fit_file_QED_A40.set_settype(grace::XYDY);
+  fit_file_QED_A40.new_data_set();
+  for(size_t iL=0;iL<nA40;iL++) fit_file_QED_A40<<A40_x[iL]<<" "<<A40_QED_data[iL].ave_err()<<endl;
   
-  cout<<C_QED.ave_err()<<endl;
-  
-  cout<<"Exponent QED: "<<C_QED[2].ave_err()<<endl;
-  
-  grace_file_t fit_file(combine("%s/plots/A40_QED.xmg",qname[im].c_str()));
-  fit_file.set_xaxis_label("1/L");
-  
-  //band of the fit
-  fit_file.write_polygon([&C_QED](double x) -> dboot_t {return C_QED[0]+C_QED[1]*pow(x,C_QED[2]);},0.0001,*max_element(A40_x,A40_x+nA40)*1.1);
-  fit_file.new_data_set();
-  fit_file.set_settype(grace::XYDY);
-  fit_file.new_data_set();
-  for(size_t iL=0;iL<nA40;iL++) fit_file<<A40_x[iL]<<" "<<A40_QED_data[iL].ave_err()<<endl;
+  grace_file_t fit_file_QED_A(combine("%s/plots/A_QED.xmg",qname[im].c_str()));
+  fit_file_QED_A.set_xaxis_label("1/L");
+  fit_file_QED_A.write_polygon([&C_QED_A](double x) -> dboot_t {return C_QED_A[0]+C_QED_A[1]*pow(x,C_QED_A[2]);},0.0001,*max_element(A_x,A_x+nA)*1.1);
+  fit_file_QED_A.new_data_set();
+  fit_file_QED_A.set_settype(grace::XYDY);
+  fit_file_QED_A.new_data_set();
+  for(size_t iL=0;iL<nA;iL++) fit_file_QED_A<<A_x[iL]<<" "<<A_QED_data[iL].ave_err()<<endl;
   
   grace_file_t fit_file_LO(combine("%s/plots/A40_LO.xmg",qname[im].c_str()));
   fit_file_LO.set_xaxis_label("1/L");
-  fit_file_LO.new_data_set();
+  fit_file_LO.set_settype(grace::XYDY);
   for(size_t iL=0;iL<nA40;iL++) fit_file_LO<<A40_x[iL]<<" "<<A40_LO_data[iL].ave_err()<<endl;
   
   grace_file_t fit_file_RAT(combine("%s/plots/A40_RAT.xmg",qname[im].c_str()));
   fit_file_RAT.set_xaxis_label("1/L");
-  fit_file_RAT.new_data_set();
+  fit_file_RAT.set_settype(grace::XYDY);
   for(size_t iL=0;iL<nA40;iL++) fit_file_RAT<<A40_x[iL]<<" "<<djack_t(A40_QED_data[iL]/A40_LO_data[iL]).ave_err()<<endl;
+  
+  grace_file_t fit_file_MP(combine("%s/plots/A40_MP.xmg",qname[im].c_str()));
+  fit_file_MP.set_xaxis_label("1/L");
+  fit_file_MP.set_settype(grace::XYDY);
+  for(size_t iL=0;iL<nA40;iL++) fit_file_MP<<A40_x[iL]<<" "<<A40_MP_data[iL].ave_err()<<endl;
+  
+  grace_file_t fit_file_MV(combine("%s/plots/A40_MV.xmg",qname[im].c_str()));
+  fit_file_MV.set_xaxis_label("1/L");
+  fit_file_MV.set_settype(grace::XYDY);
+  for(size_t iL=0;iL<nA40;iL++) fit_file_MV<<A40_x[iL]<<" "<<A40_MV_data[iL].ave_err()<<endl;
 }
 
 int main(int narg,char **arg)
@@ -700,20 +758,55 @@ int main(int narg,char **arg)
   int start=time(0);
   
   gm2_initialize(narg,arg);
+  Za_fact.fill_gauss({1.10,0.05,9873834});
   
   vector<djvec_t> jPP_LO(nens_used),jPP_QED(nens_used),jVV_LO(nens_used),jVV_QED(nens_used);
+  string deltam_cr_path=qname[im]+"/tables/deltam_cr.txt";
+  ofstream deltam_cr_file(deltam_cr_path);
+  if(not deltam_cr_file.good()) CRASH("Unable to open %s",deltam_cr_path.c_str());
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_data_t &ens=ens_data[iens];
-      djack_t deltam_cr=compute_deltam_cr(ens,ilight);
+      djack_t deltam_cr;
+      deltam_cr=compute_deltam_cr(ens,icharm);
+      deltam_cr=compute_deltam_cr(ens,istrange);
+      deltam_cr=compute_deltam_cr(ens,ilight);
+      deltam_cr_file<<ens.path<<"\t"<<deltam_cr.ave_err()<<endl;
       
-      //load LO for PP
+      //load LO
       jPP_LO[iens]=read_PP("00",ens,im,1,RE);
-      jPP_QED[iens]=read_QED_PP(ens,1,im,deltam_cr,jPP_LO[iens]);
-      
-      //load LO and QED for VV
       jVV_LO[iens]=read_VV("00",ens,im,1,RE);
-      jVV_QED[iens]=read_QED_VV(ens,1,im,deltam_cr,jVV_LO[iens]);
+      jPP_LO[iens].ave_err().write(ens.path+"/plots_"+qname[im]+"/jPP_LO_corr.xmg");
+      jVV_LO[iens].ave_err().write(ens.path+"/plots_"+qname[im]+"/jVV_LO_corr.xmg");
+      
+      //test numerical
+      string numpath=ens.path+"/data/corrNmNm_V1V1_"+qname[im][0]+qname[im][0];
+      cout<<"Checking file: "<<numpath<<endl;
+      if(file_exists(numpath))
+	{
+	  double coef=16;
+	  djvec_t NmNm=djvec_t(read_VV("NmNm",ens,im,1,RE)-jVV_LO[iens])*coef;
+	  djvec_t NpNp=djvec_t(read_VV("NpNp",ens,im,1,RE)-jVV_LO[iens])*coef;
+	  NmNm.ave_err().write(ens.path+"/plots_"+qname[im]+"/jVV_QED_num_m.xmg");
+	  NpNp.ave_err().write(ens.path+"/plots_"+qname[im]+"/jVV_QED_num_p.xmg");
+	  djvec_t(0.5*NmNm+0.5*NpNp).ave_err().write(ens.path+"/plots_"+qname[im]+"/jVV_QED_num.xmg");
+	  
+	  NmNm=djvec_t(read_PP("NmNm",ens,im,1,RE)-jPP_LO[iens])*coef;
+	  NpNp=djvec_t(read_PP("NpNp",ens,im,1,RE)-jPP_LO[iens])*coef;
+	  NmNm.ave_err().write(ens.path+"/plots_"+qname[im]+"/jPP_QED_num_m.xmg");
+	  NpNp.ave_err().write(ens.path+"/plots_"+qname[im]+"/jPP_QED_num_p.xmg");
+	  djvec_t(0.5*NmNm+0.5*NpNp).ave_err().write(ens.path+"/plots_"+qname[im]+"/jPP_QED_num.xmg");
+	}
+      
+      double a=1/lat_par[0].ainv[ens.ib].ave();
+      //double a=constant_fit(effective_mass(jVV_LO[iens])/M_V_phys[im],ens.tmin[im],ens.tmax[im],ens.path+"/plots_"+qname[im]+"/test_a_read_QED.xmg").ave();
+      cout<<"Using a="<<a<<" to compute QED contribution for ensemble "<<ens.path<<endl;
+      
+      //load QED
+      jPP_QED[iens]=read_QED_PP(ens,1,im,deltam_cr,jPP_LO[iens],a);
+      jVV_QED[iens]=read_QED_VV(ens,1,im,deltam_cr,jVV_LO[iens],a);
+      jPP_QED[iens].ave_err().write(ens.path+"/plots_"+qname[im]+"/jPP_QED_corr.xmg");
+      jVV_QED[iens].ave_err().write(ens.path+"/plots_"+qname[im]+"/jVV_QED_corr.xmg");
     }
   
   string res_path=combine("%s/integr_results",qname[im].c_str());
@@ -773,8 +866,8 @@ int main(int narg,char **arg)
 				     combine("%s/PP_LO_an%zu.xmg",ens_qpath.c_str(),ifit_range),combine("%s/PP_QED_an%zu.xmg",ens_qpath.c_str(),ifit_range));
 	}
       
-      cout<<"M_V: "<<jM_V[ind].ave_err()<<endl;
-      cout<<"M_P: "<<jM_P[ind].ave_err()<<endl;
+      cout<<"aM_V: "<<jM_V[ind].ave_err()<<", adeltaM_V/e2: "<<djack_t(-jSL_V[ind]/e2).ave_err()<<endl;
+      cout<<"aM_P: "<<jM_P[ind].ave_err()<<", adeltaM_P/e2: "<<djack_t(-jSL_P[ind]/e2).ave_err()<<endl;
     }
   
   //write if computed
@@ -809,13 +902,14 @@ int main(int narg,char **arg)
 	size_t i2pts=ind_2pts_fit({0,iens});
 	size_t tmin=tmin_fit(iens,0),tmax=ens.tmax[im];
 	vector<size_t> possupto({tmin+2,(tmin+tmax)/2,tmax-2,ens.T/2-DT});
+	vector<djack_t> c_LO(nint_num_variations);
 	for(size_t iint=0;iint<nint_num_variations;iint++)
 	  {
 	    size_t upto=possupto[iint];
 	    djack_t c1_LO=integrate_corr_times_kern_up_to(jVV_LO[iens],ens.T,a,im,upto)*sqr(Za);
 	    djack_t c2_LO=integrate_LO_reco_from(jZ2_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
-	    djack_t c_LO=c1_LO+c2_LO;
-	    tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_LO.ave_err()<<"\t"<<c2_LO.ave_err()<<"\t"<<c_LO.ave_err()<<endl;
+	    c_LO[iint]=c1_LO+c2_LO;
+	    tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_LO.ave_err()<<"\t"<<c2_LO.ave_err()<<"\t"<<c_LO[iint].ave_err()<<endl;
 	  }
 	tab_four<<endl;
 	for(size_t iint=0;iint<nint_num_variations;iint++)
@@ -823,15 +917,14 @@ int main(int narg,char **arg)
 	    size_t upto=possupto[iint];
 	    djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za);
 	    djack_t c2_QED=integrate_QED_reco_from(k_DZ2_rel_V[i2pts],jZ2_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
-	    djack_t c_QED=c1_QED+c2_QED;
+	    djack_t c_QED=c1_QED+c2_QED+c_LO[iint]*Za_perturb_QED(im);
 	    tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_QED.ave_err()<<"\t"<<c2_QED.ave_err()<<"\t"<<c_QED.ave_err()<<endl;
 	  }
 	tab_four<<"============================================================================"<<endl;
       }
-    test_exponent_A40(ind_2pts_fit,jM_V,jVV_LO,jVV_QED,k_DZ2_rel_V,jZ2_V,jSL_V);
+    test_exponent_A40(ind_2pts_fit,jM_P,jM_V,jVV_LO,jVV_QED,k_DZ2_rel_V,jZ2_V,jSL_V);
   }
   
-  const double rat_perturb=-0.01835*sqr(eq[im]);
   for(size_t ind=0;ind<nintegr_max;ind++)
     {
       vector<size_t> comp=ind_integr(ind);
@@ -868,8 +961,8 @@ int main(int narg,char **arg)
 	  LO_correl[ind]=integrate_corr_times_kern_up_to(VV_LO,ens.T,resc_a[ind],im,upto)*sqr(Za[ib]);
 	  LO_remaind[ind]=integrate_LO_reco_from(Z2_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib]);
 	  
-	  QED_correl[ind]=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a[ind],im,upto)*sqr(Za[ib]);
-	  QED_remaind[ind]=integrate_QED_reco_from(A_V,Z2_V,SL_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib]);
+	  QED_correl[ind]=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a[ind],im,upto)*sqr(Za[ib])+Za_perturb_QED(im)*LO_correl[ind];
+	  QED_remaind[ind]=integrate_QED_reco_from(A_V,Z2_V,SL_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib])+Za_perturb_QED(im)*LO_remaind[ind];
 	  
 	  index_t ind_rest({{"Input",ninput_an},{"Cont",ncont_extrap},{"FitRange",nfit_range_variations}});
 	  size_t irest=ind_rest({input_an_id,icont_extrap,ifit_range});
@@ -880,12 +973,11 @@ int main(int narg,char **arg)
       
       LO[ind]=LO_correl[ind]+LO_remaind[ind];
       QED[ind]=QED_correl[ind]+QED_remaind[ind];
-      RAT[ind]=QED[ind]/LO[ind]+rat_perturb;
+      RAT[ind]=QED[ind]/LO[ind];
       cout<<" Ratio: "<<RAT[ind].ave_err()<<endl;
-	  
       
       cout<<"amu: "<< LO_correl[ind].ave_err()<<" + "<<LO_remaind[ind].ave_err()<<" = "<<LO[ind].ave_err()<<endl;
-      cout<<"amu_QED: "<<QED_correl[ind].ave_err()<<" + "<<QED_remaind[ind].ave_err()<<" = "<<QED[ind].ave_err()<<endl;
+      cout<<"amu_QED (with QED perturb correction to Za): "<<QED_correl[ind].ave_err()<<" + "<<QED_remaind[ind].ave_err()<<" = "<<QED[ind].ave_err()<<endl;
     }
   
   //write if computed

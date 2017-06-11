@@ -7,7 +7,7 @@
 const double M_P_phys[3]={0.775,0.686,2.9834};
 const double M_V_phys[3]={0.775,1.0195,3.0969};
 int use_extra_sources;
-size_t nm,im,nr;
+size_t nm,im,nr,include_ZA_perturb;
 index_t ind_base,ind_extra;
 
 //! systematic
@@ -164,6 +164,8 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
   djvec_t V0P5_LL=read("LL_V0P5",ens,-1,iq,-1,IM);
   djvec_t V0P5_0M=read("0M_V0P5",ens,-1,iq,-1,IM);
   djvec_t V0P5_0T=read("0T_V0P5",ens,-1,iq,-1,IM);
+  djvec_t(V0P5_0M+V0P5_0T).ave_err().write(ens_qpath+"/V0P5_0MpT_norat.xmg");
+  
   //build numerator
   djvec_t num_deltam_cr_corr=V0P5_LL+2.0*djvec_t(V0P5_0M+V0P5_0T);
   effective_mass(num_deltam_cr_corr,ens.T/2,-1).ave_err().write(ens_qpath+"/num_deltam_cr_corr_eff.xmg");
@@ -227,7 +229,7 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
 }
 
 //! read QED corrections
-inline djvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO)
+inline djvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
 {
   string ens_qpath=ens.path+"/plots_"+qname[im];
   
@@ -240,12 +242,19 @@ inline djvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,con
   djvec_t c=djvec_t(c_LL+2.0*djvec_t(c_0T+c_0M));
   
   djvec_t c_0P=read("0P",pat,ens,tpar,im,-1,IM);
+  c_0P.ave_err().write(ens_qpath+"/"+pat+"_0P_norat.xmg");
   djvec_t(c_0P/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0P.xmg");
   djvec_t d=-(deltam_cr*c_0P);
   
+  djack_t dmcrit_bare=deltam_cr*e2*sqr(eq[im]);
+  djack_t kappa_new=ens.kappa/(1+2*dmcrit_bare*ens.kappa);
+  cout<<"dmcrit_bare ("<<qname[im]<<" ens: "<<ens.path<<"): "<<dmcrit_bare.ave_err()<<", kappa: "<<kappa_new.ave_err()<<" old: "<<ens.kappa<<endl;
+  
   djvec_t c_0S=read("0S",pat,ens,tpar,im,1,RE);
+  c_0S.ave_err().write(ens_qpath+"/"+pat+"_0S_norat.xmg");
   djvec_t(c_0S/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0S.xmg");
-  double amq=get_amq(ens,im),a=1/lat_par[0].ainv[ens.ib].ave(); //TO BE FIXED
+  double amq=get_amq(ens,im);
+  
   double dm_bare_noe2=amq*(6.0*log(mu_MS*a)-22.596)/(16.0*sqr(M_PI));
   djvec_t e=(-dm_bare_noe2)*c_0S; //minus? CHECK
   
@@ -256,16 +265,16 @@ inline djvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,con
 }
 
 //! read for PP case
-inline djvec_t read_QED_PP(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO)
-{return read_QED("P5P5",ens,tpar,im,deltam_cr,c_LO);}
+inline djvec_t read_QED_PP(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
+{return read_QED("P5P5",ens,tpar,im,deltam_cr,c_LO,a);}
 
 //! read for VV case
-inline djvec_t read_QED_VV(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO)
-{return read_QED("VV",ens,tpar,im,deltam_cr,c_LO);}
+inline djvec_t read_QED_VV(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
+{return read_QED("VV",ens,tpar,im,deltam_cr,c_LO,a);}
 
 //! read for TV case
-inline djvec_t read_QED_TV(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO)
-{return read_QED("VV",ens,tpar,im,deltam_cr,c_LO);}
+inline djvec_t read_QED_TV(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
+{return read_QED("VV",ens,tpar,im,deltam_cr,c_LO,a);}
 
 //! initialize gm2 calculation
 inline void gm2_initialize(int narg,char **arg)
@@ -283,6 +292,8 @@ inline void gm2_initialize(int narg,char **arg)
   nm=input.read<size_t>("NMass");
   im=input.read<size_t>("IMass");
   nr=input.read<size_t>("NR");
+  include_ZA_perturb=input.read<size_t>("IncludeZAcorr");
+  
   ind_base.set_ranges ({{"NMass",nm},{"NMass",nm},{"Nr",nr},{"RI",2}});
   ind_extra.set_ranges({{"NMass", 1},{"NMass", 1},{"Nr",nr},{"RI",2}});
   init_common_IB(ens_pars);
