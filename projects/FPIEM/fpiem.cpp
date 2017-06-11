@@ -1,5 +1,7 @@
 #include <tranalisi.hpp>
 
+#include <fpiem_FSE.hpp>
+
 const double a=0.457,a2=a*a;
 size_t EVN=1,ODD=-1;
 
@@ -10,7 +12,8 @@ public:
   vector<double> th;
   size_t nth(){return th.size();}
   size_t T,L,spat_vol;
-  size_t tmin_2pts;
+  size_t tmin_2pts,tmax_2pts;
+  size_t tmin_3pts,tmax_3pts;
   double aml;
   string path;
 };
@@ -30,7 +33,7 @@ inline void fpiem_initialize(int narg,char **arg)
   cout.precision(16);
   nens_used=input.read<int>("NEnsemble");
   
-  input.expect({"L","T","t2pts","aml","path","nth"});
+  input.expect({"L","T","t2pts","t3pts","aml","path","nth"});
   ens_data.resize(nens_used);
   for(size_t iens=0;iens<nens_used;iens++)
     {
@@ -40,6 +43,9 @@ inline void fpiem_initialize(int narg,char **arg)
       ens.spat_vol=ens.L*ens.L*ens.L;
       input.read(ens.T);
       input.read(ens.tmin_2pts);
+      input.read(ens.tmax_2pts);
+      input.read(ens.tmin_3pts);
+      input.read(ens.tmax_3pts);
       input.read(ens.aml);
       input.read(ens.path);
       size_t nth;
@@ -100,7 +106,7 @@ int main(int narg,char **arg)
 	  corr_PP[ith]=load_corr("pp",ith,1,ens);
 	  size_t TH=ens.T/2;
 	  
-	  two_pts_fit(Z2Pi[ith],aEfit[ith],corr_PP[ith],TH,ens.tmin_2pts,TH-2,ppath+"/pp_effmass_"+to_string(ith)+".xmg");
+	  two_pts_fit(Z2Pi[ith],aEfit[ith],corr_PP[ith],TH,ens.tmin_2pts,ens.tmax_2pts,ppath+"/pp_effmass_"+to_string(ith)+".xmg");
 	  
 	  //compute kinematics
 	  pi[ith]=ens.th[ith]*M_PI/ens.L;
@@ -115,7 +121,7 @@ int main(int narg,char **arg)
 	  a2P2[ith]=sqr(aP0[ith]);
 	  
 	  eff_all.write_vec_ave_err(effective_mass(corr_PP[ith]).ave_err());
-	  eff_all.write_constant_band(ens.tmin_2pts,TH-2,aEfit[ith]);
+	  eff_all.write_constant_band(ens.tmin_2pts,ens.tmax_2pts,aEfit[ith]);
 	}
       
       //decay constant
@@ -138,12 +144,12 @@ int main(int narg,char **arg)
 	  vector_ff[0]=vector_ff[1];
 	  
 	  //extract matrix element and print effective mass
-	  mel[ith]=constant_fit(vector_ff,ens.tmin_2pts,ens.T/4+1,ens.path+"/plots/vv_th"+to_string(ith)+".xmg");
+	  mel[ith]=constant_fit(vector_ff,ens.tmin_3pts,ens.tmax_3pts,ens.path+"/plots/vv_th"+to_string(ith)+".xmg");
 	  djvec_t vector_ff_effmass=aperiodic_effective_mass(vector_ff);
 	  vector_ff_effmass.ave_err().write(ens.path+"/plots/vv_effmass_th"+to_string(ith)+".xmg");
 	  
 	  vv_all.write_vec_ave_err(vector_ff.ave_err());
-	  vv_all.write_constant_band(ens.tmin_2pts,ens.T/4+1,mel[ith]);
+	  vv_all.write_constant_band(ens.tmin_3pts,ens.tmax_3pts,mel[ith]);
 	  
 	  //compute ff
 	  size_t tsep=ens.T/2;
@@ -163,10 +169,10 @@ int main(int narg,char **arg)
       ff_all.set_legend(ens.path);
       
       for(size_t ith=0;ith<nth;ith++)
-	table<<ith<<"\t"<<a2p2[ith]<<"\t"<<a2Q2[ith]<<"\t"<<smart_print(aEfit[ith].ave_err())<<"\t"<<smart_print(ff[ith].ave_err())<<endl;
+	table<<ith<<"\t"<<a2p2[ith]<<"\t"<<a2Q2[ith]<<"\t"<<aEfit[ith].ave_err()<<"\t"<<ff[ith].ave_err()<<endl;
       
       table<<endl;
-      table<<"\tafPi="<<smart_print(afPi.ave_err())<<"\tML: "<<smart_print(djack_t(aEfit[0]*ens.L).ave_err())<<endl;
+      table<<"\tafPi="<<afPi.ave_err()<<"\tML: "<<djack_t(aEfit[0]*ens.L).ave_err()<<endl;
       //"\tfPi="<<smart_print(djack_t(afPi/a).ave_err())<<endl;
     }
   
