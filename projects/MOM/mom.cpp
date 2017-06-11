@@ -97,17 +97,6 @@ int main(int narg,char **arg)
 	
 	for(size_t imom=0;imom<imoms.size();imom++)
 	  {
-	    //bloody converter
-	    coords_t c=imoms[imom];
-	    bool is=true;
-	    for(size_t mu=0;mu<NDIM;mu++) is&=(c[mu]>=0 and c[mu]<vitL[mu]);
-	    if(is)
-	      {
-		size_t ivit_mom=c[1]+vitL[1]*(c[3]+vitL[3]*(c[2]+vitL[2]*c[0]));
-		if(ivit_mom>=nvit_mom) CRASH("Asked mom: [%zu %zu %zu %zu], %zu/%zu",c[0],c[1],c[2],c[3],ivit_mom,nvit_mom);
-		vit_prop[ivit_mom]=convert_to_Vit_basis(prop[imom]);
-	      }
-	    
 	    // build the jackkniffed propagator
 	    put_into_cluster(jprop[imom],prop[imom],ijack);
 	    
