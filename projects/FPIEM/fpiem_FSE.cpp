@@ -9,35 +9,37 @@ using namespace std;
 
 #include <gsl/gsl_integration.h>
 
-double elltheta(double tau,double alphai)
+double elltheta(double tau,double theta)
 {
   double ftheta;
-  double alpha=alphai-int(alphai);
+  double thetai=theta-int(theta);
+  bool smalltau=(tau<=M_PI);
   
-  if(tau<=M_PI) ftheta=1;
-  else          ftheta=exp(-tau*sqr(alpha));
-
+  if(smalltau) ftheta=1;
+  else         ftheta=exp(-tau*sqr(thetai));
+  
   size_t n=1;
-  double arg1=alpha,arg2=alpha;
+  double arg1=thetai+1,arg2=thetai-1;
   double contr;
   do
     {
-      if(tau<=M_PI)
+      if(smalltau)
 	{
+	  contr=2.0*exp(-sqr(M_PI*n)/tau)*cos(2.0*M_PI*thetai*n);
 	  n++;
-	  contr=2.0*exp(-sqr(M_PI*n)/tau)*cos(2.0*M_PI*alpha*n);
 	}
-      else 
+      else
 	{
+          contr=exp(-tau*sqr(arg1))+exp(-tau*sqr(arg2));
 	  arg1+=1.0;
 	  arg2-=1.0;
-          contr=exp(-tau*double(arg1))+exp(-tau*sqr(arg2));
 	}
       ftheta+=contr;
     }
-  while(contr>1e-13*fabs(ftheta));
+  while(fabs(contr)>1e-13*fabs(ftheta));
   
-  ftheta*=sqrt(M_PI/tau);
+  //normalization in the smalltau case
+  if(smalltau) ftheta*=sqrt(M_PI/tau);
   
   return ftheta;
 }
