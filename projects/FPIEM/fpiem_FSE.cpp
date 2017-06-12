@@ -44,15 +44,13 @@ double elltheta(double tau,double theta)
   return ftheta;
 }
 
-double kern_FSE(double x,double mpi,double L,const array<double,3> &B)
+double kern_FSE_I(double tau,double mpi,double L,double B)
 {
-  double rn=2.0*M_PI/L;
-  double f=1;
-  for(int mu=0;mu<3;mu++) f*=elltheta(x,(1.0-2.0*x)*B[mu]);
-  
-  return rn*
-    exp(-x*(sqr(mpi)+4.0*x*(1.0-x)*(sqr(rn)*(sqr(B[0])+sqr(B[1])+sqr(B[2])))))
-    *(f-pow(M_PI/x,1.5))/sqrt(x);
+  double f=elltheta(tau,B);
+  double f3=f*f*f;
+  double xmpi=mpi*L/(2*M_PI);
+  return exp(-tau*sqr(xmpi))*
+    (f3-pow(M_PI/tau,1.5))/sqrt(tau);
 }
 
 //! parameters to solve
@@ -60,18 +58,18 @@ struct params_FSE_t
 {
   double mpi;
   double L;
-  array<double,3> B;
+  double B;
   
-  params_FSE_t(double mpi,double L,const array<double,3> &B) : mpi(mpi),L(L),B(B) {}
+  params_FSE_t(double mpi,double L,double B) : mpi(mpi),L(L),B(B) {}
 };
 
-double kern_FSE_gsl(double x,void *_params)
+double kern_FSE_I_gsl(double x,void *_params)
 {
   params_FSE_t *p=(params_FSE_t*)_params;
-  return kern_FSE(x,p->mpi,p->L,p->B);
+  return kern_FSE_I(x,p->mpi,p->L,p->B);
 }
 
-double FSE(double mpi,double L,double fpi,const array<double,3> &B)
+double FSE_I(double mpi,double L,double B)
 {
   int workspace_size=1000;
   gsl_integration_workspace *workspace=gsl_integration_workspace_alloc(workspace_size);
@@ -80,7 +78,7 @@ double FSE(double mpi,double L,double fpi,const array<double,3> &B)
   
   //! function structure
   gsl_function f;
-  f.function=kern_FSE_gsl;
+  f.function=kern_FSE_I_gsl;
   f.params=&params;
   
   //integrate
@@ -88,5 +86,42 @@ double FSE(double mpi,double L,double fpi,const array<double,3> &B)
   double epsabs=0,epsrel=1e-6;
   gsl_integration_qagiu(&f,0,epsabs,epsrel,workspace_size,workspace,&res,&abserr);
   
-  return (res-120)/sqr(fpi);
+  gsl_integration_workspace_free(workspace);
+  
+  return res/(2.0*pow(M_PI,1.5)*sqr(L));
+}
+
+///////////////////////////////////////////////////////////
+
+double kern_FSE_V(double x,double mpi,double L,double B)
+{
+  double Q2=3*sqr(2*2*M_PI*B/L);
+  double mpix=sqrt(sqr(mpi)+x*(1.0-x)*Q2);
+  double Bx=(1-2*x)*B;
+  
+  return FSE_I(mpix,L,Bx);
+}
+
+double kern_FSE_V_gsl(double x,void *_params)
+{
+  params_FSE_t *p=(params_FSE_t*)_params;
+  return kern_FSE_V(x,p->mpi,p->L,p->B);
+}
+
+double FSE_V(double mpi,double L,double fpi,double B)
+{
+  params_FSE_t params(mpi,L,B);
+  
+  //! function structure
+  gsl_function f;
+  f.function=kern_FSE_V_gsl;
+  f.params=&params;
+  
+  //integrate
+  size_t neval;
+  double abserr,res;
+  double epsabs=0,epsrel=1e-6;
+  gsl_integration_qng(&f,0,1,epsabs,epsrel,&res,&abserr,&neval);
+  
+  return (res-FSE_I(mpi,L,B))/sqr(fpi);
 }

@@ -33,6 +33,14 @@ djvec_t get(const string &name,const int ri,const int tpar)
 }
 
 //! take three vectors and compute derivative
+djvec_t derP(const array<djvec_t,3> &corrs,const array<double,3> &coeffs)
+{return djvec_t(corrs[1]-corrs[0])/(coeffs[1]-coeffs[0]);}
+
+//! take three vectors and compute derivative
+djvec_t derM(const array<djvec_t,3> &corrs,const array<double,3> &coeffs)
+{return djvec_t(corrs[2]-corrs[0])/(coeffs[2]-coeffs[0]);}
+
+//! take three vectors and compute derivative
 djvec_t der(const array<djvec_t,3> &corrs,const array<double,3> &coeffs)
 {
   return
@@ -87,6 +95,16 @@ djvec_t der_2pts(const string &dirtag,const int irtags,const int ri,const int tp
   array<string,3> vars={"",var+"P",var+"M"};
   array<djvec_t,3> corrs;
   for(int i=0;i<3;i++) corrs[i]=load_fun(dirtag,irtags,ri,tpar,rpar,vars[i],suff_rev,suff_for);
+  
+  derP(corrs,coeffs).ave_err().write("plots/"+combine(dirtag.c_str(),'K','K')+"_"+RTAGS_2PTS_NAME[irtags]+
+				     prespaced(combine(suff_rev.c_str(),'K'))+
+				     prespaced(combine(suff_for.c_str(),'K'))+
+				     "_der_"+var+"P.xmg");
+  
+  derM(corrs,coeffs).ave_err().write("plots/"+combine(dirtag.c_str(),'K','K')+"_"+RTAGS_2PTS_NAME[irtags]+
+				     prespaced(combine(suff_rev.c_str(),'K'))+
+				     prespaced(combine(suff_for.c_str(),'K'))+
+				     "_der_"+var+"M.xmg");
   
   djvec_t out=der(corrs,coeffs);
   out.ave_err().write("plots/"+combine(dirtag.c_str(),'K','K')+"_"+RTAGS_2PTS_NAME[irtags]+
