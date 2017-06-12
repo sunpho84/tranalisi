@@ -279,17 +279,26 @@ int main(int narg,char **arg)
   size_t temp_njacks=input.read<size_t>("NJacks");
   set_njacks(temp_njacks);
   
+  bool ant=input.read<bool>("ant");
+  double use_mass=input.read<double>("use_mass");
+  
   const double k=input.read<double>("k");
-  const double kp=input.read<double>("kp");
-  const double km=input.read<double>("km");
+  double kp=0,km=0;
+  if(ant)
+    {
+      kp=input.read<double>("kp");
+      km=input.read<double>("km");
+    }
+  
   const double ma=input.read<double>("m");
-  const double use_mass=input.read<double>("use_mass");
+  
   double map=0,mam=0;
-  if(use_mass)
+  if(ant and use_mass)
     {
       map=input.read<double>("mp");
       mam=input.read<double>("mm");
     }
+  //use_mass=0;
   const size_t ib=input.read<size_t>("ib");
   
   const size_t WI_2pts=input.read<size_t>("WI_2pts");
@@ -303,7 +312,7 @@ int main(int narg,char **arg)
   const array<double,3> ka_var={mc,mcp,mcm};
   array<double,3> ma_var;
   if(use_mass) ma_var={ma,map,mam};
-
+  
   const double a[3]={0.45063,0.414834,0.31476};
   const double pred_Zp_coeff=6.0*log(mu_MS*a[ib])-22.5954;
   const double pred_Zs_coeff=6.0*log(mu_MS*a[ib])-12.9524;
@@ -317,13 +326,21 @@ int main(int narg,char **arg)
   const double pred_Za=pred_Za_coeff*e2/sqr(4*M_PI);
   
   //compute deltamcr
-  djvec_t E2_V0P5=der_2pts("V0P5",SAMER_2PTS,IM,ODD,ODD,e2_var,"E2");
-  djvec_t KA_V0P5=der_2pts("V0P5",SAMER_2PTS,IM,ODD,ODD,ka_var,"KA");
+  djvec_t E2_V0P5;
+  if(ant) E2_V0P5=der_2pts("V0P5",SAMER_2PTS,IM,ODD,ODD,e2_var,"E2");
+  else    E2_V0P5=forward_derivative(djvec_t(2*load_2pts("V0P5_M0",SAMER_2PTS,IM,ODD,ODD)+
+					     2*load_2pts("V0P5_T0",SAMER_2PTS,IM,ODD,ODD)+
+					     load_2pts("V0P5_LL",SAMER_2PTS,IM,ODD,ODD)));
+  djvec_t KA_V0P5;
+  if(ant) KA_V0P5=der_2pts("V0P5",SAMER_2PTS,IM,ODD,ODD,ka_var,"KA");
+  else    KA_V0P5=forward_derivative(djvec_t(2*load_2pts("V0P5_P0",SAMER_2PTS,RE,ODD,EVN)));
+  KA_V0P5.ave_err().write("plots/V0P5_SAME_KA.xmg");
+  
   djvec_t deltam_cr_t=E2_V0P5/KA_V0P5;
   deltam_cr_t.ave_err().write("plots/deltam_cr.xmg");
   djack_t deltam_cr=deltam_cr_t[13];
   double deltam=ma/sqr(4*M_PI)*pred_Zp_coeff;
-    
+  
   if(WI_3pts)
     {
       djvec_t Z(2),Z2(2),M(2);
@@ -439,16 +456,35 @@ int main(int narg,char **arg)
       {
 	cout<<"Determining Za and Zav from 2pts decay constant"<<endl;
 	
-	auto load_LO_CORR=[&e2_var,&ka_var,&ma_var,&e2_phys,&deltam_cr,&deltam,&use_mass]
+	auto load_LO_CORR=[&e2_var,&ka_var,&ma_var,&e2_phys,&deltam_cr,&deltam,&use_mass,&ant]
 	  (djvec_t &LO,djvec_t &DELTA,djvec_t &CORR,const string &name,const int &rcombo,const int &reim,const int &tpar,const int &rpar)
 	  {
 	    LO=load_2pts(name,rcombo,reim,tpar,rpar);
-	    djvec_t E2=der_2pts(name,rcombo,reim,tpar,rpar,e2_var,"E2E2");
-	    djvec_t KA=der_2pts(name,rcombo,reim,tpar,rpar,ka_var,"KAKA");
-	    djvec_t MA=KA*0.0;
-	    if(use_mass) MA=der_2pts(name,rcombo,reim,tpar,rpar,ma_var,"MAMA");
+	    LO.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_LO.xmg");
+	    djvec_t E2;
+	    if(ant) E2=der_2pts(name,rcombo,reim,tpar,rpar,e2_var,"E2E2");
+	    else    E2=
+		      load_2pts(name+"_LL",rcombo,reim,tpar,rpar)+
+		      load_2pts(name+"_0M",rcombo,reim,tpar,rpar)+
+		      load_2pts(name+"_M0",rcombo,reim,tpar,rpar)+
+		      load_2pts(name+"_0T",rcombo,reim,tpar,rpar)+
+		      load_2pts(name+"_T0",rcombo,reim,tpar,rpar);
+	    E2.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_E2.xmg");
+	    
+	    djvec_t KA;
+	    if(ant) KA=der_2pts(name,rcombo,reim,tpar,rpar,ka_var,"KAKA");
+	    else    KA=-2*load_2pts(name+"_P0",rcombo,!reim,tpar,!rpar);
+	    KA.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_KA.xmg");
+	    
+	    djvec_t MA;
+	    if(ant) MA=der_2pts(name,rcombo,reim,tpar,rpar,ma_var,"MAMA");
+	    else    MA=-(load_2pts(name+"_0S",rcombo,reim,tpar,rpar)+load_2pts(name+"_S0",rcombo,reim,tpar,rpar));
+	    MA.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_MA.xmg");
 	    
 	    DELTA=E2-deltam_cr*KA+deltam*MA*use_mass;
+	    cout<<"deltam_cr: "<<deltam_cr<<endl;
+	    cout<<"deltam: "<<deltam<<endl;
+	    DELTA.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_DELTA.xmg");
 	    CORR=LO+e2_phys*DELTA;
 	  };
 	
@@ -507,7 +543,7 @@ int main(int narg,char **arg)
 	
 	djack_t M_OS,SL_OS;
 	djvec_t Z2_OS(2),DZ2_fr_Z2_OS(2);
-	two_two_pts_with_ins_ratio_fit(Z2_OS,M_OS,DZ2_fr_Z2_OS,SL_OS,vector<djvec_t>({LO_P5P5_OPPO,LO_A0P5_OPPO}),vector<djvec_t>({DELTA_P5P5_OPPO,DELTA_A0P5_OPPO}),T/2,tmin,tmax,{},{},{1,-1});
+	two_two_pts_with_ins_ratio_fit(Z2_OS,M_OS,DZ2_fr_Z2_OS,SL_OS,vector<djvec_t>({LO_P5P5_OPPO,LO_A0P5_OPPO}),vector<djvec_t>({DELTA_P5P5_OPPO,DELTA_A0P5_OPPO}),T/2,tmin,tmax,{"plots/P5P5_OPPO_effmass.xmg","plots/A0P5_OPPO_effmass.xmg"},{"plots/P5P5_OPPO_slope.xmg","plots/A0P5_OPPO_slope.xmg"},{1,-1});
 	djack_t ZP_OS=sqrt(Z2_OS[0]);
 	djack_t ZA_OS=Z2_OS[1]/ZP_OS;
 	djack_t DZP_fr_ZP_OS=DZ2_fr_Z2_OS[0]/2;
@@ -515,7 +551,7 @@ int main(int narg,char **arg)
 	
 	djack_t M_TM,SL_TM;
 	djvec_t Z2_TM(2),DZ2_fr_Z2_TM(2);
-	two_two_pts_with_ins_ratio_fit(Z2_TM,M_TM,DZ2_fr_Z2_TM,SL_TM,vector<djvec_t>({LO_P5P5_SAME,LO_A0P5_SAME}),vector<djvec_t>({DELTA_P5P5_SAME,DELTA_A0P5_SAME}),T/2,tmin,tmax,{},{},{1,-1});
+	two_two_pts_with_ins_ratio_fit(Z2_TM,M_TM,DZ2_fr_Z2_TM,SL_TM,vector<djvec_t>({LO_P5P5_SAME,LO_A0P5_SAME}),vector<djvec_t>({DELTA_P5P5_SAME,DELTA_A0P5_SAME}),T/2,tmin,tmax,{"plots/P5P5_SAME_effmass.xmg","plots/A0P5_SAME_effmass.xmg"},{"plots/P5P5_SAME_slope.xmg","plots/A0P5_SAME_slope.xmg"},{1,-1});
 	djack_t ZP_TM=sqrt(Z2_TM[0]);
 	djack_t ZA_TM=Z2_TM[1]/ZP_TM;
 	djack_t DZP_fr_ZP_TM=DZ2_fr_Z2_TM[0]/2;
@@ -525,6 +561,12 @@ int main(int narg,char **arg)
 	// cout<<"Check consistency OS M,  P: "<<M_PP_OS<<", A: "<<M_AP_OS<<", mixed: "<<M_OS<<endl;
 	
 	//djack_t za_QED_fact_exp_from_dec=DZP_fr_ZP_TM+2*SL_TM/M_TM-SL_OS/M_OS-DZA_fr_ZA_OS;
+	cout<<"SL_OS: "<<SL_OS<<", SL_TM: "<<SL_TM<<endl;
+	cout<<"M_OS: "<<M_OS<<", M_TM: "<<M_TM<<endl;
+	cout<<"SL/M_OS: "<<djack_t(SL_OS/M_OS)<<", SL/M_TM: "<<djack_t(SL_TM/M_TM)<<endl;
+	cout<<"DP_OS: "<<DZP_fr_ZP_OS<<", DP_TM: "<<DZP_fr_ZP_TM<<endl;
+	cout<<"DA0_OS: "<<DZA_fr_ZA_OS<<", DA0_TM: "<<DZA_fr_ZA_TM<<endl;
+	
 	djack_t za_QED_fact_exp=DZP_fr_ZP_TM+SL_TM/M_TM-DZA_fr_ZA_OS+use_mass*pred_Zp_coeff/sqr(4*M_PI);
 	djack_t zv_QED_fact_exp=DZP_fr_ZP_TM+SL_TM/M_TM-DZA_fr_ZA_TM+use_mass*pred_Zp_coeff/sqr(4*M_PI);
 	djack_t za_m_zv_QED_fact_exp=DZA_fr_ZA_TM-DZA_fr_ZA_OS;
