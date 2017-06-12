@@ -13,6 +13,7 @@ using line_t=char[max_line_length];
 
 //! class to format data
 template <class T> class format_str {public: static const enable_if<is_void<T>::value,char> *value(){return "";}};
+template <> class format_str<bool> {public: static const char *value(){return "%d";}};
 template <> class format_str<int> {public: static const char *value(){return "%d";}};
 template <> class format_str<size_t> {public: static const char *value(){return "%zu";}};
 template <> class format_str<double> {public: static const char *value(){return "%lg";}};
@@ -26,6 +27,7 @@ template<size_t N> struct return_type<char[N]> {typedef string type;};
 //! class to handle working type from reader
 template<class T> struct working_type {typedef T type;};
 template<> struct working_type<string> {typedef word_t type;};
+template<> struct working_type<bool> {typedef int type;};
 
 //! class to handle working type from reader
 template<class T> T *get_ptr(T &in) {return &in;}
