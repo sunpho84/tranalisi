@@ -74,13 +74,13 @@ public:
 //! return a dummy vector traits
 template <class T> class vector_traits : public false_vector_traits<T> {};
 
-//! base type for array
+//! traits for array
 template <class TS,int N> class vector_traits<array<TS,N>> : public true_vector_traits<TS> {};
 
-//! base type for valarray
+//! traits for valarray
 template <class TS> class vector_traits<valarray<TS>> : public true_vector_traits<TS> {};
 
-//! base type for vector
+//! traits for vector
 template <class TS> class vector_traits<vector<TS>> : public true_vector_traits<TS> {};
 
 //! helper for is_vector
@@ -93,5 +93,8 @@ public:
 #if __cplusplus<201402L
 template <class T> using base_type_t=typename vector_traits<T>::base_type;
 #endif
+
+//! true only if vector of double
+template <class TV> using enable_if_vector_of_double=enable_if_t<is_vector<TV>::value and is_same<typename vector_traits<TV>::base_type,double>::value>;
 
 #endif

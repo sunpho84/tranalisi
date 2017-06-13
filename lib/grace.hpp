@@ -433,7 +433,8 @@ public:
   {write_constant_band(xmin,xmax,c,get_line_col_and_increment());}
   
   //write a vector of data
-  void write_vec_ave_err(const vector<double> &x,const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
+  template <class TV,class=enable_if_vector_of_double<TV>>
+  void write_vec_ave_err(const TV &x,const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
   {
     new_data_set(col,sym);
     for(size_t i=0;i<data.size();i++)
@@ -442,14 +443,16 @@ public:
   }
   void write_vec_ave_err(const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
   {write_vec_ave_err(vector_up_to<double>(data.size()),data,col,sym);}
-    
+  
   void write_vec_ave_err(const vec_ave_err_t &data)
   {write_vec_ave_err(data,get_col_and_increment(),get_symbol_and_increment());}
-  void write_vec_ave_err(const vector<double> &x,const vec_ave_err_t &data)
+  template <class TV,class=enable_if_vector_of_double<TV>>
+  void write_vec_ave_err(const TV &x,const vec_ave_err_t &data)
   {write_vec_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
   
   //write a single data
-  void write_ave_err(const double x,const ave_err_t &data,grace::color_t col,grace::symbol_t sym)
+  template <class TV,class=enable_if_vector_of_double<TV>>
+  void write_vec_ave_err(const TV &x,const ave_err_t &data,grace::color_t col,grace::symbol_t sym)
   {
     new_data_set(col,sym);
     (*this)<<x<<" "<<data<<endl;
@@ -503,13 +506,15 @@ template <class TV,class fun_t,class T=typename TV::base_type> void write_fit_pl
 {write_fit_plot(path,xmin,xmax,fun,vector_up_to<double>(y.size()),y);}
 
 //! prepare a plot with a polynomial
-template <class TV,class T=typename TV::base_type> void write_poly_fit_plot(const string &path,double xmin,double xmax,const TV &res,const vector<double> &x,const TV &y)
+template <class TV,class T=typename TV::base_type>
+void write_poly_fit_plot(const string &path,double xmin,double xmax,const TV &res,const vector<double> &x,const TV &y)
 {write_fit_plot(path,xmin,xmax,bind(poly_eval<TV>,res,_1),x,y);}
 template <class TV,class T=typename TV::base_type> void write_poly_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
 {write_poly_fit_plot(path,xmin,xmax,c,vector_up_to<double>(y.size()),y);}
 
 //! prepare a plot with a polynomial
-template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const vector<double> &x,const TV &y)
+template <class TV,class T=typename TV::base_type>
+void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const vector<double> &x,const TV &y)
 {write_fit_plot(path,xmin,xmax,[&c](double x){return c;},x,y);}
 template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
 {write_constant_fit_plot(path,xmin,xmax,c,vector_up_to<double>(y.size()),y);}

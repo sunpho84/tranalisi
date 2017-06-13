@@ -81,6 +81,14 @@ public:
     return out;
   }
   
+  //! compute average
+  vector<double> ave() const
+  {
+    vector<double> out(this->size());
+    for(size_t it=0;it<this->size();it++) out[it]=(*this)[it].ave();
+    return out;
+  }
+  
   //! write to a stream
   void bin_write(const raw_file_t &out)
   {out.bin_write(*this);}
