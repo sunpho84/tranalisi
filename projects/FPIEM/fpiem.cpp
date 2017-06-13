@@ -2,7 +2,9 @@
 
 #include <fpiem_FSE.hpp>
 
-const double a=0.457,a2=a*a;
+const double a=0.457;
+//const double a2=a*a;
+const double MPi_phys=0.1349766,fPi_phys=0.13041;
 size_t EVN=1,ODD=-1;
 
 //! hold the data for a single ensemble
@@ -20,6 +22,10 @@ public:
 
 vector<ens_data_t> ens_data;
 size_t nens_used;
+
+//return xi
+template <class T> T xi_fun(const T &mpi,const T &fpi)
+{return sqr(mpi/sqr(4.0*M_PI*fpi));}
 
 //! initialize the program
 inline void fpiem_initialize(int narg,char **arg)
@@ -75,6 +81,9 @@ int main(int narg,char **arg)
   table<<fixed;
   table.precision(8);
   
+  vector<djvec_t> ff(nens_used),ff_FSE(nens_used);
+  valarray<valarray<double>> a2Q2(nens_used);
+  djvec_t aMPi(nens_used),afPi(nens_used);
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_data_t &ens=ens_data[iens];
@@ -96,10 +105,13 @@ int main(int narg,char **arg)
 	  it->set_color_scheme(color_scheme);
 	}
       
-      vector<double> a2p2(nth),a2Q2(nth),Q2(nth),pi(nth);
+      vector<double> a2p2(nth),pi(nth);
       djvec_t Z2Pi(nth),aEfit(nth),aEcont(nth),aElat(nth),aE(nth),a2P2(nth),aP0(nth);
-      djack_t afPi;
       vector<djvec_t> corr_PP(nth);
+      
+      ff[iens].resize(nth);
+      ff_FSE[iens].resize(nth);
+      a2Q2[iens].resize(nth);
       
       for(size_t ith=0;ith<nth;ith++)
 	{
@@ -110,14 +122,13 @@ int main(int narg,char **arg)
 	  
 	  //compute kinematics
 	  pi[ith]=ens.th[ith]*M_PI/ens.L;
-	  a2p2[ith]=3*sqr(pi[ith]);
+	  a2p2[ith]=3.0*sqr(pi[ith]);
 	  aEcont[ith]=cont_en(aEfit[0],pi[ith]);
 	  aElat[ith]=latt_en(aEfit[0],pi[ith]);
 	  aE[ith]=aElat[ith];
 	  
-	  a2Q2[ith]=4*a2p2[ith];
-	  Q2[ith]=a2Q2[ith]/a2;
-	  aP0[ith]=2*aE[ith];
+	  a2Q2[iens][ith]=4.0*a2p2[ith];
+	  aP0[ith]=2.0*aE[ith];
 	  a2P2[ith]=sqr(aP0[ith]);
 	  
 	  eff_all.write_vec_ave_err(effective_mass(corr_PP[ith]).ave_err());
@@ -125,7 +136,8 @@ int main(int narg,char **arg)
 	}
       
       //decay constant
-      afPi=2*ens.aml*sqrt(Z2Pi[0])/sqr(aEfit[0]);
+      afPi[iens]=2*ens.aml*sqrt(Z2Pi[0])/sqr(aEfit[0]);
+      aMPi[iens]=aEfit[0];
       
       //write the dispersion relation
       grace_file_t disprel(ppath+"disprel.xmg");
@@ -135,7 +147,7 @@ int main(int narg,char **arg)
       
       auto aperiodic_effective_mass=[](const djvec_t corr){return forward_derivative(djvec_t(log(corr)));};
       
-      djvec_t mel(nth),ff(nth);
+      djvec_t mel(nth);
       for(size_t ith=0;ith<nth;ith++)
 	{
 	  //load and improve
@@ -153,28 +165,66 @@ int main(int narg,char **arg)
 	  
 	  //compute ff
 	  size_t tsep=ens.T/2;
-	  ff[ith]=mel[ith]*2*aE[ith]*exp(aE[ith]*tsep); //see eq.20 of 0812.4042
-	  
+	  ff[iens][ith]=mel[ith]*2*aE[ith]*exp(aE[ith]*tsep); //see eq.20 of 0812.4042
+	  ff_FSE[iens][ith]=FSE_V(aE[0],ens.L,afPi[iens],ens.th[ith]/2);
 	  //ff[ith]=mel[ith]/corr_PP[ith][tsep]; //does not work better
 	}
       
       //normalize and renormalize
-      ff/=(djack_t)(ff[0]);
+      ff[iens]/=(djack_t)(ff[iens][0]);
       
       //plot ff
       grace_file_t ff_plot(ppath+"ff.xmg");
-      ff_plot.write_vec_ave_err(Q2,ff.ave_err());
+      ff_plot.write_vec_ave_err(a2Q2[iens],ff[iens].ave_err());
       
-      ff_all.write_vec_ave_err(Q2,ff.ave_err());
+      ff_all.write_vec_ave_err(a2Q2[iens],ff[iens].ave_err());
       ff_all.set_legend(ens.path);
       
       for(size_t ith=0;ith<nth;ith++)
-	table<<ith<<"\t"<<a2p2[ith]<<"\t"<<a2Q2[ith]<<"\t"<<aEfit[ith].ave_err()<<"\t"<<ff[ith].ave_err()<<endl;
+	table<<ith<<"\t"<<a2p2[ith]<<"\t"<<a2Q2[iens][ith]<<"\t"<<aEfit[ith]<<"\t"<<ff[iens][ith]<<"\t"<<ff_FSE[iens][ith]<<endl;
       
       table<<endl;
-      table<<"\tafPi="<<afPi.ave_err()<<"\tML: "<<djack_t(aEfit[0]*ens.L).ave_err()<<endl;
-      //"\tfPi="<<smart_print(djack_t(afPi/a).ave_err())<<endl;
+      table<<"\tafPi="<<afPi[iens].ave_err()<<"\tML: "<<djack_t(aMPi[iens]*ens.L).ave_err()<<endl;
     }
+  
+  //fitting
+  jack_fit_t fitter;
+  djack_t C,LEC_6,B1,B2;
+  djvec_t xi=aMPi/sqr(djvec_t(4.0*M_PI*afPi));
+  vector<djvec_t> s(nens_used);
+  for(size_t iens=0;iens<nens_used;iens++)
+    {
+      s[iens].resize(ens_data[iens].nth());
+      for(size_t ith=0;ith<ens_data[iens].nth();ith++)
+	s[iens][ith]=a2Q2[iens][ith]/sqr(aMPi[iens]);
+    }
+  
+  for(size_t iens=0;iens<nens_used;iens++)
+    {
+      ens_data_t &ens=ens_data[iens];
+      size_t nth=ens.nth();
+      
+      size_t iC=fitter.add_fit_par(C,"C",{12.0,1.0});
+      size_t iB1=fitter.add_fit_par(B1,"B2",{0.1,0.1});
+      size_t iB2=fitter.add_fit_par(B2,"B2",{0.1,0.1});
+      size_t iLEC_6=fitter.add_fit_par(LEC_6,"LEC_6",{0.1,0.1});
+      double xi_phys=xi_fun(MPi_phys,fPi_phys);
+      for(size_t ith=1;ith<nth;ith++)
+	fitter.add_point(1/ff[iens][ith],
+			 [iC,iB1,iB2,iLEC_6,&xi,&s,ith,xi_phys,iens,&ff_FSE]
+			 (const vector<double> &p,int iel)
+			 {
+			   double xii=xi[iens][iel];
+			   double ell_6=p[iLEC_6]-log(xii/xi_phys);
+			   double si=s[iens][ith][iel];
+			   double Rs=2.0/3.0+(1.0+4.0/si)*(2.0+sqrt(si+4)*log((sqrt(si+4)-sqrt(si)/(sqrt(si+4)+sqrt(si)))));
+			   double fpi_inf_inv=1.0+si*xii*(ell_6-1.0+Rs)/3.0+sqr(xii)*si*(p[iB1]+p[iB2]*si)/6.0;
+			   return fpi_inf_inv*(1-p[iC]*ff_FSE[iens][ith][iel]*fpi_inf_inv);
+			 });
+    }
+  
+  fit_debug=1;
+  fitter.fit();
   
   return 0;
 }
