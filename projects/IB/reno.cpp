@@ -293,25 +293,25 @@ int main(int narg,char **arg)
   const double ma=input.read<double>("m");
   
   double map=0,mam=0;
-  if(ant and use_mass)
+  if(ant)
     {
       map=input.read<double>("mp");
       mam=input.read<double>("mm");
     }
-  //use_mass=0;
   const size_t ib=input.read<size_t>("ib");
   
   const size_t WI_2pts=input.read<size_t>("WI_2pts");
   const size_t WI_3pts=0;
-  
-  const double qf2_der=sqr(0.25/3),qf2_phys=1.0/9.0;
+
+  const double charge=input.read<double>("charge");
+
+  const double qf2_der=sqr(charge/3),qf2_phys=1.0/9.0;
   const array<double,3> e2_var={0,qf2_der*e2,qf2_der*e2};
   const double e2_phys=e2*qf2_phys;
   
   const double mc=1/(2*k),mcp=1/(2*kp),mcm=1/(2*km);
   const array<double,3> ka_var={mc,mcp,mcm};
-  array<double,3> ma_var;
-  if(use_mass) ma_var={ma,map,mam};
+  array<double,3> ma_var={ma,map,mam};
   
   const double a[3]={0.45063,0.414834,0.31476};
   const double pred_Zp_coeff=6.0*log(mu_MS*a[ib])-22.5954;
