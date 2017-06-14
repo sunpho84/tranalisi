@@ -156,6 +156,15 @@ template <class T> T forward_derivative(const T &v)
   return out;
 }
 
+//! take the backward derivative
+template <class T> T backward_derivative(const T &v)
+{
+  T out(v.size());
+  out[0]=0.0;
+  for(size_t it=1;it<out.size();it++) out[it]=v[it]-v[it-1];
+  return out;
+}
+
 //! extract a subset of a vector
 template <class T> T subset(const T &v,size_t beg,size_t end)
 {
