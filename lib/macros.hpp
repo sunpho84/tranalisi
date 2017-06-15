@@ -90,9 +90,8 @@ public:
   static const bool value=vector_traits<T>::is_vector;
 };
 
-#if __cplusplus<201402L
+//! helper for base_type
 template <class T> using base_type_t=typename vector_traits<T>::base_type;
-#endif
 
 //! true only if vector of double
 template <class TV> using enable_if_vector_of_double=enable_if_t<is_vector<TV>::value and is_same<typename vector_traits<TV>::base_type,double>::value>;
