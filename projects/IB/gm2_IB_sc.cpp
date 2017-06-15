@@ -578,12 +578,45 @@ void prepare_table(const string &tag,const dbvec_t &quantity,const index_t &ind,
       syst_t r=perform_analysis(data,ind_table);
       double ave=r.ave*fact;
       vector<double> systs;
+      systs.push_back(r.stat*fact);
       systs.push_back(r.syst[0]*fact);
       systs.push_back(r.syst[1]*fact);
       systs.push_back(sqrt(sqr(r.syst[2])+sqr(r.syst[3]))*fact);
       
       //out<<ens_data[iens].path<<" "<<ave<<endl<<systs<<endl;
       out<<ens_data[iens].path<<" "<<smart_print(ave,systs)<<endl;
+    }
+}
+
+//! prepare the table for a given quantity, with or without hl
+void prepare_table_with_without_hl(const string &tag,const dbvec_t &quantity,const index_t &ind,double fact,size_t icont_extrap)
+{
+  index_t ind_table({{"Input",ninput_an},{"Fran",nfit_range_variations},{"Inte",nint_num_variations}});
+  string path=combine("%s/tables/%s_%s_hl.txt",qname[im].c_str(),tag.c_str(),(icont_extrap==0)?"without":"with");
+  ofstream out(path);
+  if(!(out.good())) CRASH("Opening %s",path.c_str());
+  
+  for(size_t iens=0;iens<nens_used;iens++)
+    {
+      dbvec_t data(ind_table.max());
+      for(size_t itable=0;itable<ind_table.max();itable++)
+	{
+	  vector<size_t> comp=ind_table(itable);
+	  size_t input_an_id=comp[0],ifit_range=comp[1],iint=comp[2];
+	  size_t iintegr=ind({input_an_id,icont_extrap,ifit_range,iens,iint});
+	  data[itable]=quantity[iintegr];
+	}
+      
+      syst_t r=perform_analysis(data,ind_table);
+      double ave=r.ave*fact;
+      vector<double> systs;
+      systs.push_back(r.stat*fact);
+      systs.push_back(r.syst[0]*fact);
+      systs.push_back(r.syst[1]*fact);
+      systs.push_back(sqrt(sqr(r.syst[2])+sqr(r.syst[3]))*fact);
+      
+      //out<<ens_data[iens].path<<" "<<smart_print(ave,systs)<<endl;
+      out<<ens_data[iens].path<<" "<<ave<<" "<<systs[0]<<" "<<systs[1]<<" "<<systs[2]<<endl;
     }
 }
 
@@ -774,6 +807,7 @@ int main(int narg,char **arg)
       deltam_cr=compute_deltam_cr(ens,icharm);
       deltam_cr=compute_deltam_cr(ens,istrange);
       deltam_cr=compute_deltam_cr(ens,ilight);
+      deltam_cr.bin_write(ens.path+"/deltam_cr_light.bin");
       deltam_cr_file<<ens.path<<"\t"<<deltam_cr.ave_err()<<endl;
       
       //load LO
@@ -906,21 +940,23 @@ int main(int narg,char **arg)
 	size_t tmin=tmin_fit(iens,0),tmax=ens.tmax[im];
 	vector<size_t> possupto({tmin+2,(tmin+tmax)/2,tmax-2,ens.T/2-DT});
 	vector<djack_t> c_LO(nint_num_variations);
+	vector<djack_t> c1_LO(nint_num_variations);
+	vector<djack_t> c2_LO(nint_num_variations);
 	for(size_t iint=0;iint<nint_num_variations;iint++)
 	  {
 	    size_t upto=possupto[iint];
-	    djack_t c1_LO=integrate_corr_times_kern_up_to(jVV_LO[iens],ens.T,a,im,upto)*sqr(Za);
-	    djack_t c2_LO=integrate_LO_reco_from(jZ2_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
-	    c_LO[iint]=c1_LO+c2_LO;
-	    tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_LO.ave_err()<<"\t"<<c2_LO.ave_err()<<"\t"<<c_LO[iint].ave_err()<<endl;
+	    c1_LO[iint]=integrate_corr_times_kern_up_to(jVV_LO[iens],ens.T,a,im,upto)*sqr(Za);
+	    c2_LO[iint]=integrate_LO_reco_from(jZ2_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
+	    c_LO[iint]=c1_LO[iint]+c2_LO[iint];
+	    tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_LO[iint].ave_err()<<"\t"<<c2_LO[iint].ave_err()<<"\t"<<c_LO[iint].ave_err()<<endl;
 	  }
 	tab_four<<endl;
 	for(size_t iint=0;iint<nint_num_variations;iint++)
 	  {
 	    size_t upto=possupto[iint];
-	    djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za);
-	    djack_t c2_QED=integrate_QED_reco_from(k_DZ2_rel_V[i2pts],jZ2_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
-	    djack_t c_QED=c1_QED+c2_QED+c_LO[iint]*Za_perturb_QED(im);
+	    djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za)+c1_LO[iint]*Za_perturb_QED(im).ave();
+	    djack_t c2_QED=integrate_QED_reco_from(k_DZ2_rel_V[i2pts],jZ2_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za)+c2_LO[iint]*Za_perturb_QED(im).ave();
+	    djack_t c_QED=c1_QED+c2_QED;
 	    tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_QED.ave_err()<<"\t"<<c2_QED.ave_err()<<"\t"<<c_QED.ave_err()<<endl;
 	  }
 	tab_four<<"============================================================================"<<endl;
@@ -987,10 +1023,18 @@ int main(int narg,char **arg)
   for(auto &obj : {&resc_a,&LO_correl,&LO_remaind,&QED_correl,&QED_remaind})
     if(an_mode==compute_everything) obj->bin_write(results_out);
   results_out.close();
-  
+
+  const double qed_print_fact[3]={1e12,1e12,1e13};
   prepare_table("LO",LO,ind_integr,1e10);
-  prepare_table("QED",QED,ind_integr,1e12);
+  prepare_table("QED",QED,ind_integr,qed_print_fact[im]);
   prepare_table("RAT",RAT,ind_integr,1e5);
+  for(size_t icont_extrap=0;icont_extrap<2;icont_extrap++)
+    {
+      prepare_table_with_without_hl("LO",LO,ind_integr,1e10,icont_extrap);
+      prepare_table_with_without_hl("QED",QED,ind_integr,qed_print_fact[im],icont_extrap);
+      prepare_table_with_without_hl("RAT",RAT,ind_integr,1e5,icont_extrap);
+    }
+  
   
   //loop over analysis flags and input scale determination
   dbvec_t cLO(ind_syst.max());
