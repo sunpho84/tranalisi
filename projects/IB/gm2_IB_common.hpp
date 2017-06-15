@@ -229,6 +229,7 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
 }
 
 //! read QED corrections
+djack_t *Zm_fact;
 inline djvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
 {
   string ens_qpath=ens.path+"/plots_"+qname[im];
@@ -256,7 +257,7 @@ inline djvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,con
   double amq=get_amq(ens,im);
   
   double dm_bare_noe2=amq*(6.0*log(mu_MS*a)-22.596)/(16.0*sqr(M_PI));
-  djvec_t e=(-dm_bare_noe2)*c_0S; //minus? CHECK
+  djvec_t e=(-dm_bare_noe2)*c_0S*(*Zm_fact); //minus? CHECK
   
   double dm_bare=dm_bare_noe2*e2*sqr(eq[im]);
   cout<<"dm_bare ("<<qname[im]<<" ens: "<<ens.path<<"): "<<dm_bare<<", total: "<<get_amq(ens,im)+dm_bare<<" old: "<<get_amq(ens,im)<<endl;

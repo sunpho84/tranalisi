@@ -47,6 +47,7 @@ void write_ens_header(size_t iens)
 
 //! approximated Za_fact
 dboot_t Za_fact;
+extern djack_t *Zm_fact;
 
 //! return the perturbative correction to Za
 dboot_t Za_perturb_QED(size_t im)
@@ -758,7 +759,9 @@ int main(int narg,char **arg)
   int start=time(0);
   
   gm2_initialize(narg,arg);
-  Za_fact.fill_gauss({1.10,0.05,9873834});
+  Za_fact.fill_gauss({0.9,0.1,9873834});
+  Zm_fact=new djack_t;
+  Zm_fact->fill_gauss({1.0,1e-6,6232342});
   
   vector<djvec_t> jPP_LO(nens_used),jPP_QED(nens_used),jVV_LO(nens_used),jVV_QED(nens_used);
   string deltam_cr_path=qname[im]+"/tables/deltam_cr.txt";
