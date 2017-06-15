@@ -52,6 +52,9 @@ int main(int narg,char **arg)
   
   //set the number of jackknives
   set_njacks(ext_njacks);
+
+  double g2=6.0/beta; //!< coupling
+  double g2tilde=g2/plaq; //!< boosted coupling
   
   //set spatial sizes
   V=L[0]*pow(Ls,NDIM-1);
@@ -83,10 +86,11 @@ int main(int narg,char **arg)
 	printf("Reading file %zu/%zu\n",iconf+1,conf_list.size());
 #endif
 	
-	coords_t vitL={4,3,3,3};
-	size_t nvit_mom=1;
-	for(size_t mu=0;mu<NDIM;mu++) nvit_mom*=vitL[mu];
-	vector<prop_t> vit_prop(nvit_mom); //!< converted prop
+	// filter Vittorio
+	// coords_t vitL={4,3,3,3};
+	// size_t nvit_mom=1;
+	// for(size_t mu=0;mu<NDIM;mu++) nvit_mom*=vitL[mu];
+	// vector<prop_t> vit_prop(nvit_mom); //!< converted prop
 	
 	//! source file
 	raw_file_t file(path,"r");
@@ -110,13 +114,13 @@ int main(int narg,char **arg)
 	      add_to_cluster(jverts[imom][iG],prop[imom]*Gamma[iG]*Gamma[5]*prop[imom].adjoint()*Gamma[5],ijack);
 	  }
 	
-	//! print formatted
-	raw_file_t converted_file(path+"_converted.txt","w");
-	for(size_t ivit_mom=0;ivit_mom<nvit_mom;ivit_mom++)
-	  for(size_t isc1=0;isc1<NSPINCOL;isc1++)
-	    for(size_t isc2=0;isc2<NSPINCOL;isc2++)
-	      for(size_t ri=0;ri<2;ri++)
-		converted_file.printf("%.16lg\n",get_re_or_im(vit_prop[ivit_mom](isc1,isc2),ri));
+	//! print formatted the converted prop
+	// raw_file_t converted_file(path+"_converted.txt","w");
+	// for(size_t ivit_mom=0;ivit_mom<nvit_mom;ivit_mom++)
+	//   for(size_t isc1=0;isc1<NSPINCOL;isc1++)
+	//     for(size_t isc2=0;isc2<NSPINCOL;isc2++)
+	//       for(size_t ri=0;ri<2;ri++)
+	// 	converted_file.printf("%.16lg\n",get_re_or_im(vit_prop[ivit_mom](isc1,isc2),ri));
       }
   
   //////////////////////////////////////////// clusterize .///////////////////////////////////////
@@ -203,9 +207,6 @@ int main(int narg,char **arg)
       for(size_t iZ=0;iZ<nZ;iZ++)
 	Z[iZ][ind_mom]/=imom_class.second.size()/Zdeg[iZ];
     }
-  
-  double g2=6.0/beta;
-  double g2tilde=g2/plaq;
   
   //correct Zq
   djvec_t Zq_sub(equiv_imoms.size());
