@@ -124,7 +124,7 @@ int main(int narg,char **arg)
 #pragma omp parallel for
   for(size_t imom=0;imom<imoms.size();imom++)
     {
-      clusterize(jprop[imom]);
+      clusterize(jprop[imom]),clust_size;
       for(size_t iG=0;iG<nGamma;iG++) clusterize(jverts[imom][iG],clust_size);
     }
   
