@@ -113,7 +113,7 @@ const double EpsT2prime[naz][10]=
    {0.0,-0.26900984,0.0,0.0,-0.67000961,0.0,0.0,1.0574111,0.24663315,0.06136902},
    {0.0,-0.45213470,0.0,0.0,-1.24108756,0.0,0.0,0.3465297,0.19560470,0.07153771}};
 
-//! corrections to sigma1,in units of g^2
+//! build a generic correction in terms of invariant and coeffs
 inline double corr_a2(double p2,double p4,double c1,double c2,double c3)
 {return p2*(c1+c2*log(p2)+c3*p4/p2)/(12*sqr(M_PI));}
 
