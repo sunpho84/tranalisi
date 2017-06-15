@@ -200,8 +200,13 @@ int main(int narg,char **arg)
 	Z[iZ][ind_mom]/=imom_class.second.size()/Zdeg[iZ];
     }
 
-  double beta=3.90;
-  double plaq=0.582591;
+  //double beta=3.90;
+  //double plaq=0.582591;
+  //gaz_t act=TLSYM;
+  double beta=1.90;
+  double plaq=0.574872;
+  gaz_t act=IWA;
+ 
   double g2=6.0/beta;
   double g2tilde=g2/plaq;
   
@@ -212,8 +217,8 @@ int main(int narg,char **arg)
     {
       auto &e=equiv_imoms[imom];
       imom_t irep=imoms[e.first];
-      Zq_sub[imom]=Zq[imom]-g2tilde*sig1_a2(TLSYM,irep,L);
-      Zq_sig1_sub[imom]=Zq_sig1[imom]-g2tilde*sig1_a2(TLSYM,irep,L);
+      Zq_sub[imom]=Zq[imom]-g2tilde*sig1_a2(act,irep,L);
+      Zq_sig1_sub[imom]=Zq_sig1[imom]-g2tilde*sig1_a2(act,irep,L);
     }
   
   //write all Z
