@@ -73,6 +73,14 @@ public:
   double p_mu(size_t mu,const coords_t &L) const
   {return 2*M_PI*((*this)[mu]+ph_mom[mu])/L[mu];}
   
+  //! return the number of components different from 0
+  size_t Np()
+  {
+    size_t out=0;
+    for(size_t mu=0;mu<NDIM;mu++) out+=((*this)[mu]!=0 or fabs(ph_mom[mu])>1.0e-10);
+    return out;
+  }
+  
   //! return the p
   p_t p(const coords_t &L) const
   {
@@ -93,7 +101,6 @@ public:
 EXTERN_GEOMETRY coords_t L; //!< lattice sizes
 EXTERN_GEOMETRY size_t V; //!< lattice volume
 EXTERN_GEOMETRY vector<imom_t> imoms; //!< list of momenta
-EXTERN_GEOMETRY vector<size_t> Np_class; //< sum of Np over the class
 
 //! reads the list of momenta from file
 void get_list_of_moms(const string &path);
