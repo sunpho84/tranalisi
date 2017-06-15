@@ -229,7 +229,8 @@ template <class T> size_t trim_to_njacks_multiple(vector<T> &v,bool verbosity=fa
 }
 
 //! clusterize a generic vector
-template <class T> void clusterize(vector<T> &v,size_t clust_size)
+template <class T>
+void clusterize(vector<T> &v,size_t clust_size=1)
 {
   //compute avarages
   v[njacks]=0.0;

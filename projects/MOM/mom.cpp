@@ -103,11 +103,11 @@ int main(int narg,char **arg)
 	for(size_t imom=0;imom<imoms.size();imom++)
 	  {
 	    // build the jackkniffed propagator
-	    put_into_cluster(jprop[imom],prop[imom],ijack);
+	    add_to_cluster(jprop[imom],prop[imom],ijack);
 	    
 	    //! compute all 16 vertices
 	    for(size_t iG=0;iG<nGamma;iG++)
-	      put_into_cluster(jverts[imom][iG],prop[imom]*Gamma[iG]*Gamma[5]*prop[imom].adjoint()*Gamma[5],ijack);
+	      add_to_cluster(jverts[imom][iG],prop[imom]*Gamma[iG]*Gamma[5]*prop[imom].adjoint()*Gamma[5],ijack);
 	  }
 	
 	//! print formatted

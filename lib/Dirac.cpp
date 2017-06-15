@@ -102,7 +102,7 @@ void clusterize(jprop_t &j,size_t clust_size)
 	get_re_or_im(j(isc1,isc2),ri).clusterize(clust_size);
 }
 
-void put_into_cluster(jprop_t &jprop,const prop_t &prop,size_t iclust)
+void add_to_cluster(jprop_t &jprop,const prop_t &prop,size_t iclust)
 {
   for(size_t isc1=0;isc1<NSPINCOL;isc1++)
     for(size_t isc2=0;isc2<NSPINCOL;isc2++)

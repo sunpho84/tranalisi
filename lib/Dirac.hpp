@@ -51,8 +51,8 @@ namespace Eigen
 //! clusterize a jprop_t
 void clusterize(jprop_t &j,size_t clust_size=1);
 
-//! put into a cluster
-void put_into_cluster(jprop_t &jprop,const prop_t &prop,size_t iclust);
+//! add to a cluster
+void add_to_cluster(jprop_t &jprop,const prop_t &prop,size_t iclust);
 
 //! put into a jackknife
 void put_into_jackknife(jprop_t &jprop,const prop_t &prop,size_t ijack);
