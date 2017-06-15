@@ -5,6 +5,8 @@
 #include <oper.hpp>
 
 enum gaz_t{PLAQ,TLSYM,IWA};
+const map<string,gaz_t> gaz_decr={{"Plaq",PLAQ},{"tlSym",TLSYM},{"Iwa",IWA}};
+
 const size_t naz=3;
 
 const valarray<double> c1={0,-1.0/12.0,-0.331};

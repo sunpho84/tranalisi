@@ -24,15 +24,19 @@ int main(int narg,char **arg)
   //open input
   raw_file_t input(input_path,"r");
   
-  //! lattice size
-  size_t Ls=input.read<size_t>("L");
+  size_t Ls=input.read<size_t>("L"); //!< lattice spatial size
   L[0]=input.read<size_t>("T");
   
-  //! list of momenta
-  string mom_list_path=input.read<string>("MomList");
+  const string act_str=input.read<string>("Action"); //!< action name
+  auto act_key=gaz_decr.find(act_str); //!< key in the map of act
+  if(act_key==gaz_decr.end()) CRASH("Unable to decript %s",act_str.c_str());
+  gaz_t act=act_key->second; //!< action
   
-  //! number of jacks
-  const size_t ext_njacks=input.read<size_t>("NJacks");
+  const double beta=input.read<double>("Beta"); //!< beta
+  const double plaq=input.read<double>("Plaq"); //!< plaquette
+  
+  const string mom_list_path=input.read<string>("MomList"); //!< list of momenta
+  const size_t ext_njacks=input.read<size_t>("NJacks"); //!< number of jacks
   
   //! conf range
   range_t conf_range;
@@ -199,14 +203,7 @@ int main(int narg,char **arg)
       for(size_t iZ=0;iZ<nZ;iZ++)
 	Z[iZ][ind_mom]/=imom_class.second.size()/Zdeg[iZ];
     }
-
-  //double beta=3.90;
-  //double plaq=0.582591;
-  //gaz_t act=TLSYM;
-  double beta=1.90;
-  double plaq=0.574872;
-  gaz_t act=IWA;
- 
+  
   double g2=6.0/beta;
   double g2tilde=g2/plaq;
   
