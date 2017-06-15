@@ -134,8 +134,8 @@ int main(int narg,char **arg)
   
   //////////////////////////////////// compute Z by amputating //////////////////////////////////
   
-  //! Z of quark field
-  djvec_t Zq(equiv_imoms.size());
+  djvec_t Zq(equiv_imoms.size()); //!< Z of quark field
+  djvec_t Zq_sig1(equiv_imoms.size()); //!< Z of quark field, alternative definition
   
   //! Z
   enum{iZS,iZA,iZP,iZV,iZT};
@@ -153,7 +153,7 @@ int main(int narg,char **arg)
 #endif
       
       //reset Z
-      Zq[ind_mom]=0.0;
+      Zq[ind_mom]=Zq_sig1[ind_mom]=0.0;
       for(auto &Zi : Z) Zi[ind_mom]=0.0;
       
       //loop on equivalent moms
@@ -167,8 +167,16 @@ int main(int narg,char **arg)
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    {
 	      prop_t prop_inv=get_from_jackknife(jprop_inv[imom],ijack);
+	      //zq
 	      double Zq_cl=(prop_inv*pslash).trace().imag()/(12.0*pt2*V);
 	      Zq[ind_mom][ijack]+=Zq_cl;
+	      //sigma1
+	      for(size_t mu=0;mu<NDIM;mu++)
+		if(fabs(ptilde[mu])>1e-10)
+		  {
+		    double Zq_sig1_cl=(prop_inv*Gamma[igmu[mu]]).trace().imag()/(12.0*ptilde[mu]*V);
+		    Zq_sig1[ind_mom][ijack]+=Zq_sig1_cl;
+		  }
 	      
 	      vector<double> pr(nZ,0.0);
 	      for(size_t iG=0;iG<nGamma;iG++)
@@ -184,11 +192,12 @@ int main(int narg,char **arg)
       
       //normalize Z
       Zq[ind_mom]/=imom_class.second.size();
+      Zq_sig1[ind_mom]/=Np_class[ind_mom]*imom_class.second.size();
       for(size_t iZ=0;iZ<nZ;iZ++)
 	Z[iZ][ind_mom]/=imom_class.second.size()/Zdeg[iZ];
     }
   
-  for(auto &p : vector<pair<djvec_t,string>>{{Zq,"Zq"},{Z[iZS],"ZS"},{Z[iZA],"ZA"},{Z[iZP],"ZP"},{Z[iZV],"ZV"},{Z[iZT],"ZT"}})
+  for(auto &p : vector<pair<djvec_t,string>>{{Zq,"Zq"},{Zq_sig1,"Zq_sig1"},{Z[iZS],"ZS"},{Z[iZA],"ZA"},{Z[iZP],"ZP"},{Z[iZV],"ZV"},{Z[iZT],"ZT"}})
     {
       grace_file_t outf("plots/"+p.second+".xmg");
       outf<<fixed;

@@ -7,5 +7,6 @@ bin_PROGRAMS= \
 	$(top_builddir)/bin/mom
 
 __top_builddir__bin_mom_SOURCES= \
+	corrections.cpp \
 	geometry.cpp \
 	mom.cpp

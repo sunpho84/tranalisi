@@ -52,6 +52,9 @@ void get_class_of_equiv_moms()
       equiv_imoms_map[cr].push_back(i);
     }
   
+  //reserve the number of components different from 0 in each class
+  Np_class.reserve(equiv_imoms.size());
+  
   //trasform map into vector
   for(auto &mom_class : equiv_imoms_map)
     {
@@ -59,15 +62,22 @@ void get_class_of_equiv_moms()
       auto it=find(imoms.begin(),imoms.end(),repr);
       if(it==imoms.end()) CRASH("Something went wrong with %zu %zu %zu %zu",repr[0],repr[1],repr[2],repr[3]);
       equiv_imoms.push_back(make_pair(distance(imoms.begin(),it),mom_class.second));
+      
+      //compute the number of components different from 0 in each class
+      size_t Np=0;
+      for(size_t mu=0;mu<NDIM;mu++) Np+=(repr[mu]!=0 or fabs(ph_mom[mu])>1.0e-10);
+      Np_class.push_back(Np);
     }
   
   //print stats
   cout<<"Found "<<equiv_imoms.size()<<" independent momenta "<<endl;
   
   //print details
+  // auto Np=Np_class.begin();
   // for(auto &e : equiv_imoms)
   //   {
   //     for(auto &ei : imoms[e.first]) cout<<ei<<" ";
+  //     cout<<"(Np="<<*(Np++)<<") ";
   //     cout<<"Equivalent to: "<<e.second.size()<<" moms:"<<endl;
   //     for(auto &eq : e.second)
   // 	{

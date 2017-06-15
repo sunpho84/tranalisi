@@ -38,13 +38,24 @@ public:
     return out;
   }
   
-  //! return p2
-  double norm2()
+  //! return \sum_mu(p_mu^x)
+  template <class T>
+  double normx(T x)
   {
     double out=0;
-    for(size_t mu=0;mu<NDIM;mu++) out+=sqr((*this)[mu]);
+    for(size_t mu=0;mu<NDIM;mu++) out+=pow((*this)[mu],x);
     return out;
   }
+  
+  //! return p2
+  double norm2() {return normx(2);}
+  
+  //! return p4
+  double norm4() {return normx(4);}
+  
+  //! return /\sum_nu(p_nu^2)
+  double p4_fr_p2()
+  {return norm4()/norm2();}
 };
 
 //! return pslash
@@ -79,14 +90,10 @@ public:
   }
 };
 
-//! lattice sizes
-EXTERN_GEOMETRY coords_t L;
-
-//! lattice volume
-EXTERN_GEOMETRY size_t V;
-
-//! list of momenta
-EXTERN_GEOMETRY vector<imom_t> imoms;
+EXTERN_GEOMETRY coords_t L; //!< lattice sizes
+EXTERN_GEOMETRY size_t V; //!< lattice volume
+EXTERN_GEOMETRY vector<imom_t> imoms; //!< list of momenta
+EXTERN_GEOMETRY vector<size_t> Np_class; //< sum of Np over the class
 
 //! reads the list of momenta from file
 void get_list_of_moms(const string &path);
