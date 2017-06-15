@@ -8,6 +8,7 @@
 
 #include <tranalisi.hpp>
 
+#include <corrections.hpp>
 #include <geometry.hpp>
 
 using vprop_t=vector<prop_t>;
@@ -158,7 +159,8 @@ int main(int narg,char **arg)
       
       //loop on equivalent moms
       auto &imom_class=equiv_imoms[ind_mom];
-      double pt2=imoms[imom_class.first].p(L).tilde().norm2();
+      size_t irep_mom=imom_class.first;
+      double pt2=imoms[irep_mom].p(L).tilde().norm2();
       for(size_t imom : imom_class.second)
 	{
 	  p_t ptilde=imoms[imom].p(L).tilde();
@@ -178,6 +180,7 @@ int main(int narg,char **arg)
 		    Zq_sig1[ind_mom][ijack]+=Zq_sig1_cl;
 		  }
 	      
+	      //project all Z
 	      vector<double> pr(nZ,0.0);
 	      for(size_t iG=0;iG<nGamma;iG++)
 		{
@@ -192,12 +195,40 @@ int main(int narg,char **arg)
       
       //normalize Z
       Zq[ind_mom]/=imom_class.second.size();
-      Zq_sig1[ind_mom]/=Np_class[ind_mom]*imom_class.second.size();
+      Zq_sig1[ind_mom]/=imoms[irep_mom].Np()*imom_class.second.size();
       for(size_t iZ=0;iZ<nZ;iZ++)
 	Z[iZ][ind_mom]/=imom_class.second.size()/Zdeg[iZ];
     }
+
+  double beta=3.90;
+  double plaq=0.582591;
+  double g2=6.0/beta;
+  double g2tilde=g2/plaq;
   
-  for(auto &p : vector<pair<djvec_t,string>>{{Zq,"Zq"},{Zq_sig1,"Zq_sig1"},{Z[iZS],"ZS"},{Z[iZA],"ZA"},{Z[iZP],"ZP"},{Z[iZV],"ZV"},{Z[iZT],"ZT"}})
+  //correct Zq
+  djvec_t Zq_sub(equiv_imoms.size());
+  djvec_t Zq_sig1_sub(equiv_imoms.size());
+  for(size_t imom=0;imom<equiv_imoms.size();imom++)
+    {
+      auto &e=equiv_imoms[imom];
+      imom_t irep=imoms[e.first];
+      Zq_sub[imom]=Zq[imom]-g2tilde*sig1_a2(TLSYM,irep,L);
+      Zq_sig1_sub[imom]=Zq_sig1[imom]-g2tilde*sig1_a2(TLSYM,irep,L);
+    }
+  
+  //write all Z
+  for(auto &p : vector<pair<djvec_t,string>>
+    {
+      {Zq,"Zq"},
+      {Zq_sig1,"Zq_sig1"},
+      {Zq_sub,"Zq_sub"},
+      {Zq_sig1_sub,"Zq_sig1_sub"},
+      {Z[iZS],"ZS"},
+      {Z[iZA],"ZA"},
+      {Z[iZP],"ZP"},
+      {Z[iZV],"ZV"},
+      {Z[iZT],"ZT"}
+    })
     {
       grace_file_t outf("plots/"+p.second+".xmg");
       outf<<fixed;
