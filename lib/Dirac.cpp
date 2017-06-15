@@ -3,7 +3,7 @@
 #endif
 
 #define EXTERN_DIRAC
-#include <Dirac.hpp>
+ #include <Dirac.hpp>
 
 Dirac_t init_Gamma(const int *irow,const int *re,const int *im)
 {
