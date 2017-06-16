@@ -19,15 +19,15 @@ void set_pr_bil_a2(gaz_t iaz)
   
   cP[0]=-EpsP2[iaz][1];
   cP[1]=cS[1];
-  cP[2]=cP[1];
+  cP[2]=cS[1];
   
   cV[0]=EpsV2[iaz][4]+(EpsV2[iaz][1]+EpsV2[iaz][7])/4.0;
   cV[1]=(-3.0-6.0*c1[iaz]+2*C2[iaz])/8.0;
   cV[2]=13.0/32.0+C2[iaz]/3;
   
   cA[0]=EpsA2[iaz][4]+(EpsA2[iaz][1]+EpsA2[iaz][7])/4.0;
-  cA[1]=cV[1];
-  cA[2]=cV[2];
+  cA[1]=cA[1];
+  cA[2]=cA[2];
   
   cT[0]=(EpsT2prime[iaz][1]-EpsT2prime[iaz][4])/4.0+EpsT2prime[iaz][7]+(-7.0/3.0-4.0*C2[iaz]/3.0)/12.0;
   cT[1]=-5.0/12.0-c1[iaz]+C2[iaz]/3.0;

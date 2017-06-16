@@ -128,6 +128,9 @@ int main(int narg,char **arg)
   double g2=6.0/beta; //!< coupling
   double g2tilde=g2/plaq; //!< boosted coupling
   
+  //set the coefficients
+  set_pr_bil_a2(act);
+  
   //set spatial sizes
   V=L[0]*pow(Ls,NDIM-1);
   for(size_t mu=1;mu<NDIM;mu++) L[mu]=Ls;
@@ -215,11 +218,11 @@ int main(int narg,char **arg)
   
   write_Z("Zq_sub_filt",Zq_sub_filt,get_filtered_pt2());
   write_Z("Zq_sig1_sub_filt",Zq_sig1_sub_filt,get_filtered_pt2());
-  write_Z("ZS_filt",Zbil_sub_filt[iZS],get_filtered_pt2());
-  write_Z("ZA_filt",Zbil_sub_filt[iZA],get_filtered_pt2());
-  write_Z("ZP_filt",Zbil_sub_filt[iZP],get_filtered_pt2());
-  write_Z("ZV_filt",Zbil_sub_filt[iZV],get_filtered_pt2());
-  write_Z("ZT_filt",Zbil_sub_filt[iZT],get_filtered_pt2());
+  write_Z("ZS_sub_filt",Zbil_sub_filt[iZS],get_filtered_pt2());
+  write_Z("ZA_sub_filt",Zbil_sub_filt[iZA],get_filtered_pt2());
+  write_Z("ZP_sub_filt",Zbil_sub_filt[iZP],get_filtered_pt2());
+  write_Z("ZV_sub_filt",Zbil_sub_filt[iZV],get_filtered_pt2());
+  write_Z("ZT_sub_filt",Zbil_sub_filt[iZT],get_filtered_pt2());
   
   return 0;
 }
