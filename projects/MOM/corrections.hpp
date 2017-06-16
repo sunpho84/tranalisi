@@ -122,8 +122,8 @@ const double EpsT2prime[naz][10]=
    {0.0,-0.45213470,0.0,0.0,-1.24108756,0.0,0.0,0.3465297,0.19560470,0.07153771}};
 
 //! build a generic correction in terms of invariant and coeffs
-inline double corr_a2(double p2,double p4,double c1,double c2,double c3)
-{return (p2*(c1+c2*log(p2))+c3*p4/p2)/(12*sqr(M_PI));}
+inline double corr_a2(double p2,double p4,double *c)
+{return (p2*(c[0]+c[1]*log(p2))+c[2]*p4/p2)/(12*sqr(M_PI));}
 
 //! corrections to sigma1,in units of g^2
 inline double sig1_a2(gaz_t iaz,const imom_t &ip,const coords_t &L)
@@ -132,18 +132,28 @@ inline double sig1_a2(gaz_t iaz,const imom_t &ip,const coords_t &L)
   double p2_tilde=p_tilde.norm2(),p4_tilde=p_tilde.norm4();
   
   const double Np=ip.Np();
-  const double cq1=-Eps2[iaz][4]-(Eps2[iaz][1]+Eps0[iaz][1]/6.0)/Np;
-  const double cq2=-(59.0/240.0+c1[iaz]/2+C2[iaz]/60.0)-(101.0/120.0-11.0/30.0*C2[iaz])/Np;
-  const double cq3=3.0/80.0+C2[iaz]/10.0;
+  double cq[3];
+  cq[0]=-Eps2[iaz][4]-(Eps2[iaz][1]+Eps0[iaz][1]/6.0)/Np;
+  cq[1]=-(59.0/240.0+c1[iaz]/2+C2[iaz]/60.0)-(101.0/120.0-11.0/30.0*C2[iaz])/Np;
+  cq[2]=3.0/80.0+C2[iaz]/10.0;
   
-  return corr_a2(p2_tilde,p4_tilde,cq1,cq2,cq3);
+  return corr_a2(p2_tilde,p4_tilde,cq);
 }
 
 //! coefficients of Zbil
-EXTERN_CORRECTIONS double pr_bil_a2[nZbil][3];
+EXTERN_CORRECTIONS double pr_bil_a2_c[nZbil][3];
 
 //! set all coefficients for bilinears
 void set_pr_bil_a2(gaz_t iaz);
+
+//! corrections to projected,in units of g^2
+inline double pr_bil_a2(gaz_t iaz,const imom_t &ip,const coords_t &L,size_t iZ)
+{
+  p_t p_tilde=ip.p(L).tilde();
+  double p2_tilde=p_tilde.norm2(),p4_tilde=p_tilde.norm4();
+  
+  return corr_a2(p2_tilde,p4_tilde,pr_bil_a2_c[iZ]);
+}
 
 #undef EXTERN_CORRECTIONS
 #undef INIT_TO

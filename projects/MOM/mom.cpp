@@ -170,30 +170,38 @@ int main(int narg,char **arg)
   djvec_t Zq_sig1_allmoms=compute_Zq_sig1(jprop_inv);
   vector<djvec_t> pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts,jprop_inv);
   
+  //correct Z
+  djvec_t Zq_allmoms_sub=Zq_allmoms;
+  djvec_t Zq_sig1_allmoms_sub=Zq_sig1_allmoms;
+  vector<djvec_t> pr_bil_allmoms_sub=pr_bil_allmoms;
+  for(size_t imom=0;imom<imoms.size();imom++)
+    {
+      imom_t mom=imoms[imom];
+      Zq_allmoms_sub[imom]-=g2tilde*sig1_a2(act,mom,L);
+      Zq_sig1_allmoms_sub[imom]-=g2tilde*sig1_a2(act,mom,L);
+      for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+	pr_bil_allmoms_sub[iZbil][imom]-=g2tilde*pr_bil_a2(act,mom,L,iZbil);
+    }
+  
   //average equiv moms
   djvec_t Zq=average_equiv_moms(Zq_allmoms);
+  djvec_t Zq_sub=average_equiv_moms(Zq_allmoms_sub);
   djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
+  djvec_t Zq_sig1_sub=average_equiv_moms(Zq_sig1_allmoms_sub);
   vector<djvec_t> Zbil(nZbil);
+  vector<djvec_t> Zbil_sub(nZbil);
   for(size_t iZbil=0;iZbil<nZbil;iZbil++)
-    Zbil[iZbil]=average_equiv_moms(Zq_allmoms/pr_bil_allmoms[iZbil]);
-  
-  //correct Zq
-  djvec_t Zq_sub(equiv_imoms.size());
-  djvec_t Zq_sig1_sub(equiv_imoms.size());
-  for(size_t imom=0;imom<equiv_imoms.size();imom++)
     {
-      auto &e=equiv_imoms[imom];
-      imom_t irep=imoms[e.first];
-      Zq_sub[imom]=Zq[imom]-g2tilde*sig1_a2(act,irep,L);
-      Zq_sig1_sub[imom]=Zq_sig1[imom]-g2tilde*sig1_a2(act,irep,L);
+      Zbil[iZbil]=average_equiv_moms(Zq_allmoms/pr_bil_allmoms[iZbil]);
+      Zbil_sub[iZbil]=average_equiv_moms(Zq_allmoms_sub/pr_bil_allmoms_sub[iZbil]);
     }
   
   //filter moms
   djvec_t Zq_sub_filt=get_filtered_moms(Zq_sub);
   djvec_t Zq_sig1_sub_filt=get_filtered_moms(Zq_sig1_sub);
-  // vector<djvec_t> Zbil_sub_filt(nZbil);
-  // for(size_t iZbil=0;iZbil<nZbil;iZbil++)
-  //   Zbil_filt_sub[iZbil]=get_filtered_moms(Zbil_sub[iZbil]);
+  vector<djvec_t> Zbil_sub_filt(nZbil);
+  for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+    Zbil_sub_filt[iZbil]=get_filtered_moms(Zbil_sub[iZbil]);
   
   write_Z("Zq",Zq,get_indep_pt2());
   write_Z("Zq_sub",Zq_sub,get_indep_pt2());
@@ -207,6 +215,11 @@ int main(int narg,char **arg)
   
   write_Z("Zq_sub_filt",Zq_sub_filt,get_filtered_pt2());
   write_Z("Zq_sig1_sub_filt",Zq_sig1_sub_filt,get_filtered_pt2());
+  write_Z("ZS_filt",Zbil_sub_filt[iZS],get_filtered_pt2());
+  write_Z("ZA_filt",Zbil_sub_filt[iZA],get_filtered_pt2());
+  write_Z("ZP_filt",Zbil_sub_filt[iZP],get_filtered_pt2());
+  write_Z("ZV_filt",Zbil_sub_filt[iZV],get_filtered_pt2());
+  write_Z("ZT_filt",Zbil_sub_filt[iZT],get_filtered_pt2());
   
   return 0;
 }
