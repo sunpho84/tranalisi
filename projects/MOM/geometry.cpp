@@ -2,8 +2,12 @@
  #include <config.hpp>
 #endif
 
+#ifdef USE_OMP
+ #include <omp.h>
+#endif
+
 #define EXTERN_GEOMETRY
-#include <geometry.hpp>
+ #include <geometry.hpp>
 
 #include <tools.hpp>
 #include <fstream>
@@ -13,7 +17,7 @@ using namespace std;
 
 double ph_mom[NDIM]={0.5,0,0,0};
 
-void get_list_of_moms(const string &path)
+void set_list_of_moms(const string &path)
 {
   //open the file
   ifstream mom_file(path);
@@ -32,7 +36,7 @@ void get_list_of_moms(const string &path)
   cout<<"Read "<<imoms.size()<<" momenta"<<endl;
 }
 
-void get_class_of_equiv_moms()
+void set_class_of_equiv_moms()
 {
   map<imom_t,vector<size_t>> equiv_imoms_map;
   for(size_t i=0;i<imoms.size();i++)
@@ -113,11 +117,67 @@ void list_all_smom_pairs()
   cout<<"Number of smom pairs: "<<npairs<<endl;
 }
 
+vector<double> get_pt2()
+{
+  vector<double> out;
+  out.reserve(imoms.size());
+  for(auto &mom : imoms) out.push_back(mom.p(L).tilde().norm2());
+  
+  return out;
+}
+
 vector<double> get_indep_pt2()
 {
   vector<double> out;
   out.reserve(equiv_imoms.size());
   for(auto &mom_class : equiv_imoms) out.push_back(imoms[mom_class.first].p(L).tilde().norm2());
+  
+  return out;
+}
+
+vector<double> get_filtered_pt2()
+{
+  vector<double> out;
+  out.reserve(iequiv_mom_of_ifilt.size());
+  for(auto &ieq : iequiv_mom_of_ifilt)
+    out.push_back(imoms[equiv_imoms[ieq].first].p(L).tilde().norm2());
+  
+  return out;
+}
+
+djvec_t average_equiv_moms(const djvec_t &in)
+{
+  djvec_t out(equiv_imoms.size());
+#pragma omp parallel for
+  for(size_t ind_mom=0;ind_mom<equiv_imoms.size();ind_mom++)
+    {
+      //reset
+      out[ind_mom]=0.0;
+      
+      //loop on equivalent moms
+      auto &imom_class=equiv_imoms[ind_mom];
+      for(size_t imom : imom_class.second) out[ind_mom]+=in[imom];
+      
+      //normalize
+      out[ind_mom]/=imom_class.second.size();
+    }
+  
+  return out;
+}
+
+void set_filtered_moms(const double thresh)
+{
+  for(size_t ieq=0;ieq<equiv_imoms.size();ieq++)
+    if(imoms[equiv_imoms[ieq].first].p(L).tilde().p4_fr_p22()<thresh)
+      iequiv_mom_of_ifilt.push_back(ieq);
+  cout<<"NFiltered moms (p4/p2^2<"<<thresh<<"): "<<iequiv_mom_of_ifilt.size()<<endl;
+}
+
+djvec_t get_filtered_moms(const djvec_t &in)
+{
+  djvec_t out(iequiv_mom_of_ifilt.size());
+  for(size_t ifilt=0;ifilt<iequiv_mom_of_ifilt.size();ifilt++)
+    out[ifilt]=in[iequiv_mom_of_ifilt[ifilt]];
   
   return out;
 }

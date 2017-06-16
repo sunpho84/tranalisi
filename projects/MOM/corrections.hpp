@@ -3,6 +3,14 @@
 
 #include <geometry.hpp>
 #include <oper.hpp>
+#include <Zbil.hpp>
+
+#ifndef EXTERN_CORRECTIONS
+ #define EXTERN_CORRECTIONS extern
+ #define INIT_TO(...)
+#else
+ #define INIT_TO(...) = __VA_ARGS__
+#endif
 
 enum gaz_t{PLAQ,TLSYM,IWA};
 const map<string,gaz_t> gaz_decr={{"Plaq",PLAQ},{"tlSym",TLSYM},{"Iwa",IWA}};
@@ -115,10 +123,10 @@ const double EpsT2prime[naz][10]=
 
 //! build a generic correction in terms of invariant and coeffs
 inline double corr_a2(double p2,double p4,double c1,double c2,double c3)
-{return p2*(c1+c2*log(p2)+c3*p4/p2)/(12*sqr(M_PI));}
+{return (p2*(c1+c2*log(p2))+c3*p4/p2)/(12*sqr(M_PI));}
 
 //! corrections to sigma1,in units of g^2
-inline double sig1_a2(gaz_t iaz,imom_t &ip,coords_t &L)
+inline double sig1_a2(gaz_t iaz,const imom_t &ip,const coords_t &L)
 {
   p_t p_tilde=ip.p(L).tilde();
   double p2_tilde=p_tilde.norm2(),p4_tilde=p_tilde.norm4();
@@ -130,5 +138,14 @@ inline double sig1_a2(gaz_t iaz,imom_t &ip,coords_t &L)
   
   return corr_a2(p2_tilde,p4_tilde,cq1,cq2,cq3);
 }
+
+//! coefficients of Zbil
+EXTERN_CORRECTIONS double pr_bil_a2[nZbil][3];
+
+//! set all coefficients for bilinears
+void set_pr_bil_a2(gaz_t iaz);
+
+#undef EXTERN_CORRECTIONS
+#undef INIT_TO
 
 #endif

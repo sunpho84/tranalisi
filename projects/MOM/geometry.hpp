@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <Dirac.hpp>
+#include <meas_vec.hpp>
 
 #ifndef EXTERN_GEOMETRY
  #define EXTERN_GEOMETRY extern
@@ -53,9 +54,9 @@ public:
   //! return p4
   double norm4() {return normx(4);}
   
-  //! return /\sum_nu(p_nu^2)
-  double p4_fr_p2()
-  {return norm4()/norm2();}
+  //! return \sum_nu(p_nu^4)/\sum_nu(p_nu^2)^2
+  double p4_fr_p22()
+  {return norm4()/sqr(norm2());}
 };
 
 //! return pslash
@@ -74,7 +75,7 @@ public:
   {return 2*M_PI*((*this)[mu]+ph_mom[mu])/L[mu];}
   
   //! return the number of components different from 0
-  size_t Np()
+  size_t Np() const
   {
     size_t out=0;
     for(size_t mu=0;mu<NDIM;mu++) out+=((*this)[mu]!=0 or fabs(ph_mom[mu])>1.0e-10);
@@ -103,19 +104,37 @@ EXTERN_GEOMETRY size_t V; //!< lattice volume
 EXTERN_GEOMETRY vector<imom_t> imoms; //!< list of momenta
 
 //! reads the list of momenta from file
-void get_list_of_moms(const string &path);
+void set_list_of_moms(const string &path);
 
 //! list of class of equivalence of momenta
 EXTERN_GEOMETRY vector<pair<size_t,vector<size_t>>> equiv_imoms;
 
+//! list of class of equivalence of momenta
+EXTERN_GEOMETRY vector<size_t> iequiv_mom_of_ifilt;
+
 //! fills the list of class of equivalence
-void get_class_of_equiv_moms();
+void set_class_of_equiv_moms();
+
+//! set a list of imom from filter moms
+void set_filtered_moms(const double thresh=0.28);
+
+//! get a vector of pt2 for filtered moms
+vector<double> get_filtered_pt2();
 
 //! get a vector of pt2 for indep moms
 vector<double> get_indep_pt2();
 
+//! get a vector of pt2 for all moms
+vector<double> get_pt2();
+
 //! list all smom pairs
 void list_all_smom_pairs();
+
+//! average all equivalent momenta
+djvec_t average_equiv_moms(const djvec_t &in);
+
+//! take a vector of indep moms and returns the list of filtered moms
+djvec_t get_filtered_moms(const djvec_t &in);
 
 #undef EXTERN_GEOMETRY
 #undef INIT_TO

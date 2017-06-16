@@ -10,10 +10,82 @@
 
 #include <corrections.hpp>
 #include <geometry.hpp>
+#include <types.hpp>
 
-using vprop_t=vector<prop_t>;
-using jverts_t=array<jprop_t,nGamma>;
-using vjprop_t=vector<jprop_t>;
+#include <Zbil.hpp>
+#include <Zq.hpp>
+#include <Zq_sig1.hpp>
+
+//! compute the inverse of the passed propagator
+vjprop_t get_prop_inv(const vjprop_t &jprop)
+{
+  vjprop_t jprop_inv(jprop.size());
+#pragma omp parallel for
+  for(size_t imom=0;imom<imoms.size();imom++)
+    for(size_t ijack=0;ijack<=njacks;ijack++)
+      put_into_jackknife(jprop_inv[imom],get_from_jackknife(jprop[imom],ijack).inverse(),ijack);
+  
+  return jprop_inv;
+}
+
+//! read a propagator from a given file
+vprop_t read_prop(const string &path)
+{
+  vprop_t prop(imoms.size());
+  
+  //! source file
+  raw_file_t file(path,"r");
+  
+  for(size_t is_so=0;is_so<NSPIN;is_so++)
+    for(size_t ic_so=0;ic_so<NCOL;ic_so++)
+      for(size_t imom=0;imom<imoms.size();imom++)
+	for(size_t is_si=0;is_si<NSPIN;is_si++)
+	  for(size_t ic_si=0;ic_si<NCOL;ic_si++)
+	    file.bin_read(prop[imom](isc(is_si,ic_si),isc(is_so,ic_so)));
+  
+  return prop;
+}
+
+//! add the prop of a given conf on the jackknife
+void build_jackknifed_prop(vjprop_t &jprop,const vprop_t &prop,size_t ijack)
+{
+  for(size_t imom=0;imom<imoms.size();imom++)
+    add_to_cluster(jprop[imom],prop[imom],ijack);
+}
+
+//! compute all 16 vertices, with a given pair of propagators
+void build_jackknifed_verts(vector<jverts_t> &jverts,const vprop_t &prop1,const vprop_t &prop2,size_t ijack)
+{
+  for(size_t imom=0;imom<imoms.size();imom++)
+    for(size_t iG=0;iG<nGamma;iG++)
+      add_to_cluster(jverts[imom][iG],prop1[imom]*Gamma[iG]*Gamma[5]*prop2[imom].adjoint()*Gamma[5],ijack);
+}
+
+//! clusterize the propagator
+void clusterize_prop(vjprop_t &jprop,size_t clust_size=1)
+{
+#pragma omp parallel for
+  for(size_t imom=0;imom<imoms.size();imom++)
+    clusterize(jprop[imom],clust_size);
+}
+
+//! clusterize the vertexes
+void clusterize_verts(vector<jverts_t> &jverts,size_t clust_size=1)
+{
+#pragma omp parallel for
+  for(size_t imom=0;imom<imoms.size();imom++)
+    for(size_t iG=0;iG<nGamma;iG++)
+      clusterize(jverts[imom][iG],clust_size);
+}
+
+//! write a given Z
+void write_Z(const string &name,const djvec_t &Z,const vector<double> &pt2)
+{
+  grace_file_t outf("plots/"+name+".xmg");
+  outf<<fixed;
+  outf.precision(8);
+  outf.write_vec_ave_err(pt2,Z.ave_err());
+}
 
 int main(int narg,char **arg)
 {
@@ -52,7 +124,7 @@ int main(int narg,char **arg)
   
   //set the number of jackknives
   set_njacks(ext_njacks);
-
+  
   double g2=6.0/beta; //!< coupling
   double g2tilde=g2/plaq; //!< boosted coupling
   
@@ -61,19 +133,15 @@ int main(int narg,char **arg)
   for(size_t mu=1;mu<NDIM;mu++) L[mu]=Ls;
   
   //initialize momenta
-  get_list_of_moms(mom_list_path);
-  get_class_of_equiv_moms();
+  set_list_of_moms(mom_list_path);
+  set_class_of_equiv_moms();
+  set_filtered_moms();
   //list_all_smom_pairs();
   
-  //! list of existing confs
-  vector<size_t> conf_list=get_existing_paths_in_range(template_path,conf_range);
-  size_t clust_size=trim_to_njacks_multiple(conf_list,true);
-  
-  //! jackkniffed propagator
-  vjprop_t jprop(imoms.size());
-  
-  //! jackkniffed vertex
-  vector<jverts_t> jverts(imoms.size());
+  vector<size_t> conf_list=get_existing_paths_in_range(template_path,conf_range); //!< list of existing confs
+  size_t clust_size=trim_to_njacks_multiple(conf_list,true); //!< cluster size
+  vjprop_t jprop(imoms.size()); //!< jackkniffed propagator
+  vector<jverts_t> jverts(imoms.size()); //!< jackkniffed vertex
   
 #pragma omp parallel for
   for(size_t ijack=0;ijack<njacks;ijack++)
@@ -86,127 +154,28 @@ int main(int narg,char **arg)
 	printf("Reading file %zu/%zu\n",iconf+1,conf_list.size());
 #endif
 	
-	// filter Vittorio
-	// coords_t vitL={4,3,3,3};
-	// size_t nvit_mom=1;
-	// for(size_t mu=0;mu<NDIM;mu++) nvit_mom*=vitL[mu];
-	// vector<prop_t> vit_prop(nvit_mom); //!< converted prop
-	
-	//! source file
-	raw_file_t file(path,"r");
-	
-	//! propagator on a given conf
-	vprop_t prop(imoms.size());
-	for(size_t is_so=0;is_so<NSPIN;is_so++)
-	  for(size_t ic_so=0;ic_so<NCOL;ic_so++)
-	    for(size_t imom=0;imom<imoms.size();imom++)
-	      for(size_t is_si=0;is_si<NSPIN;is_si++)
-		for(size_t ic_si=0;ic_si<NCOL;ic_si++)
-		  file.bin_read(prop[imom](isc(is_si,ic_si),isc(is_so,ic_so)));
-	
-	for(size_t imom=0;imom<imoms.size();imom++)
-	  {
-	    // build the jackkniffed propagator
-	    add_to_cluster(jprop[imom],prop[imom],ijack);
-	    
-	    //! compute all 16 vertices
-	    for(size_t iG=0;iG<nGamma;iG++)
-	      add_to_cluster(jverts[imom][iG],prop[imom]*Gamma[iG]*Gamma[5]*prop[imom].adjoint()*Gamma[5],ijack);
-	  }
-	
-	//! print formatted the converted prop
-	// raw_file_t converted_file(path+"_converted.txt","w");
-	// for(size_t ivit_mom=0;ivit_mom<nvit_mom;ivit_mom++)
-	//   for(size_t isc1=0;isc1<NSPINCOL;isc1++)
-	//     for(size_t isc2=0;isc2<NSPINCOL;isc2++)
-	//       for(size_t ri=0;ri<2;ri++)
-	// 	converted_file.printf("%.16lg\n",get_re_or_im(vit_prop[ivit_mom](isc1,isc2),ri));
+	vprop_t prop=read_prop(path); //!< propagator on a given conf
+	build_jackknifed_prop(jprop,prop,ijack);
+	build_jackknifed_verts(jverts,prop,prop,ijack);
       }
   
-  //////////////////////////////////////////// clusterize .///////////////////////////////////////
+  //clusterize
+  clusterize_prop(jprop,clust_size);
+  clusterize_verts(jverts,clust_size);
   
-#pragma omp parallel for
-  for(size_t imom=0;imom<imoms.size();imom++)
-    {
-      clusterize(jprop[imom],clust_size);
-      for(size_t iG=0;iG<nGamma;iG++) clusterize(jverts[imom][iG],clust_size);
-    }
+  vjprop_t jprop_inv=get_prop_inv(jprop); //!< inverse prop
   
-  //////////////////////////////// compute the inverse propagator ////////////////////////////////
+  //compute Zq, Zq_sig1 and Zbil for all moms
+  djvec_t Zq_allmoms=compute_Zq(jprop_inv);
+  djvec_t Zq_sig1_allmoms=compute_Zq_sig1(jprop_inv);
+  vector<djvec_t> pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts,jprop_inv);
   
-  //! inverse prop
-  vjprop_t jprop_inv(jprop.size());
-#pragma omp parallel for
-  for(size_t imom=0;imom<imoms.size();imom++)
-    for(size_t ijack=0;ijack<=njacks;ijack++)
-      put_into_jackknife(jprop_inv[imom],get_from_jackknife(jprop[imom],ijack).inverse(),ijack);
-  
-  //////////////////////////////////// compute Z by amputating //////////////////////////////////
-  
-  djvec_t Zq(equiv_imoms.size()); //!< Z of quark field
-  djvec_t Zq_sig1(equiv_imoms.size()); //!< Z of quark field, alternative definition
-  
-  //! Z
-  enum{iZS,iZA,iZP,iZV,iZT};
-  const size_t nZ=5,iZ_of_iG[nGamma]={0,1,1,1,1,2,3,3,3,3,4,4,4,4,4,4};
-  const double Zdeg[nZ]={1,4,1,4,6};
-  vector<djvec_t> Z(nZ,djvec_t(equiv_imoms.size()));
-  
-#pragma omp parallel for
-  for(size_t ind_mom=0;ind_mom<equiv_imoms.size();ind_mom++)
-    {
-#ifdef USE_OMP
-      printf("Thread %d/%d analyzing mom %zu/%zu\n",omp_get_thread_num()+1,omp_get_num_threads(),ind_mom+1,equiv_imoms.size());
-#else
-      printf("Analyzing mom %zu/%zu\n",ind_mom+1,equiv_imoms.size());
-#endif
-      
-      //reset Z
-      Zq[ind_mom]=Zq_sig1[ind_mom]=0.0;
-      for(auto &Zi : Z) Zi[ind_mom]=0.0;
-      
-      //loop on equivalent moms
-      auto &imom_class=equiv_imoms[ind_mom];
-      size_t irep_mom=imom_class.first;
-      double pt2=imoms[irep_mom].p(L).tilde().norm2();
-      for(size_t imom : imom_class.second)
-	{
-	  p_t ptilde=imoms[imom].p(L).tilde();
-	  prop_t pslash=slash(ptilde);
-	  
-	  for(size_t ijack=0;ijack<=njacks;ijack++)
-	    {
-	      prop_t prop_inv=get_from_jackknife(jprop_inv[imom],ijack);
-	      //zq
-	      double Zq_cl=(prop_inv*pslash).trace().imag()/(12.0*pt2*V);
-	      Zq[ind_mom][ijack]+=Zq_cl;
-	      //sigma1
-	      for(size_t mu=0;mu<NDIM;mu++)
-		if(fabs(ptilde[mu])>1e-10)
-		  {
-		    double Zq_sig1_cl=(prop_inv*Gamma[igmu[mu]]).trace().imag()/(12.0*ptilde[mu]*V);
-		    Zq_sig1[ind_mom][ijack]+=Zq_sig1_cl;
-		  }
-	      
-	      //project all Z
-	      vector<double> pr(nZ,0.0);
-	      for(size_t iG=0;iG<nGamma;iG++)
-		{
-		  prop_t vert=get_from_jackknife(jverts[imom][iG],ijack) ;
-		  prop_t amp_vert=prop_inv*vert*Gamma[5]*prop_inv.adjoint()*Gamma[5];
-		  pr[iZ_of_iG[iG]]+=(amp_vert*Gamma[iG].adjoint()).trace().real()/12.0;
-		}
-	      
-	      for(size_t iZ=0;iZ<nZ;iZ++) Z[iZ][ind_mom][ijack]+=Zq_cl/pr[iZ];
-	    }
-	}
-      
-      //normalize Z
-      Zq[ind_mom]/=imom_class.second.size();
-      Zq_sig1[ind_mom]/=imoms[irep_mom].Np()*imom_class.second.size();
-      for(size_t iZ=0;iZ<nZ;iZ++)
-	Z[iZ][ind_mom]/=imom_class.second.size()/Zdeg[iZ];
-    }
+  //average equiv moms
+  djvec_t Zq=average_equiv_moms(Zq_allmoms);
+  djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
+  vector<djvec_t> Zbil(nZbil);
+  for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+    Zbil[iZbil]=average_equiv_moms(Zq_allmoms/pr_bil_allmoms[iZbil]);
   
   //correct Zq
   djvec_t Zq_sub(equiv_imoms.size());
@@ -219,25 +188,25 @@ int main(int narg,char **arg)
       Zq_sig1_sub[imom]=Zq_sig1[imom]-g2tilde*sig1_a2(act,irep,L);
     }
   
-  //write all Z
-  for(auto &p : vector<pair<djvec_t,string>>
-    {
-      {Zq,"Zq"},
-      {Zq_sig1,"Zq_sig1"},
-      {Zq_sub,"Zq_sub"},
-      {Zq_sig1_sub,"Zq_sig1_sub"},
-      {Z[iZS],"ZS"},
-      {Z[iZA],"ZA"},
-      {Z[iZP],"ZP"},
-      {Z[iZV],"ZV"},
-      {Z[iZT],"ZT"}
-    })
-    {
-      grace_file_t outf("plots/"+p.second+".xmg");
-      outf<<fixed;
-      outf.precision(8);
-      outf.write_vec_ave_err(get_indep_pt2(),p.first.ave_err());
-    }
+  //filter moms
+  djvec_t Zq_sub_filt=get_filtered_moms(Zq_sub);
+  djvec_t Zq_sig1_sub_filt=get_filtered_moms(Zq_sig1_sub);
+  // vector<djvec_t> Zbil_sub_filt(nZbil);
+  // for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+  //   Zbil_filt_sub[iZbil]=get_filtered_moms(Zbil_sub[iZbil]);
+  
+  write_Z("Zq",Zq,get_indep_pt2());
+  write_Z("Zq_sub",Zq_sub,get_indep_pt2());
+  write_Z("Zq_sig1",Zq_sig1,get_indep_pt2());
+  write_Z("Zq_sig1_sub",Zq_sig1_sub,get_indep_pt2());
+  write_Z("ZS",Zbil[iZS],get_indep_pt2());
+  write_Z("ZA",Zbil[iZA],get_indep_pt2());
+  write_Z("ZP",Zbil[iZP],get_indep_pt2());
+  write_Z("ZV",Zbil[iZV],get_indep_pt2());
+  write_Z("ZT",Zbil[iZT],get_indep_pt2());
+  
+  write_Z("Zq_sub_filt",Zq_sub_filt,get_filtered_pt2());
+  write_Z("Zq_sig1_sub_filt",Zq_sig1_sub_filt,get_filtered_pt2());
   
   return 0;
 }
