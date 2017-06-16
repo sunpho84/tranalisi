@@ -10,6 +10,7 @@ __top_builddir__bin_mom_SOURCES= \
 	corrections.cpp \
 	geometry.cpp \
 	mom.cpp \
+	sig3.cpp \
 	Zbil.cpp \
 	Zq.cpp \
 	Zq_sig1.cpp
