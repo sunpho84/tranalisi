@@ -18,7 +18,13 @@ using namespace std;
 using namespace placeholders;
 
 //! get the size to init a valarray
-template <class T> size_t init_nel(const valarray<T> &obj)
+template <class T> size_t
+init_nel(const valarray<T> &obj)
+{return obj.size();}
+
+//! get the size to init a vector
+template <class T> size_t
+init_nel(const vector<T> &obj)
 {return obj.size();}
 
 //////////////////////////////////////////////// operations //////////////////////////////////////////////

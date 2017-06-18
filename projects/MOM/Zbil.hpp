@@ -22,6 +22,12 @@ const size_t nZbil=5;
 //! compute the projected bilinears
 vector<djvec_t> compute_proj_bil(const vjprop_t &jprop_inv1,vector<jverts_t> &jverts,const vjprop_t &jprop_inv2);
 
+//! compute all 16 vertices, with a given pair of propagators
+void build_jackknifed_verts(vector<jverts_t> &jverts,const vprop_t &prop1,const vprop_t &prop2,size_t ijack);
+
+//! clusterize the vertexes
+void clusterize_verts(vector<jverts_t> &jverts,size_t clust_size=1);
+
 #undef EXTERN_ZBIL
 #undef INIT_TO
 

@@ -12,71 +12,11 @@
 #include <geometry.hpp>
 #include <types.hpp>
 
+#include <prop.hpp>
+#include <sig3.hpp>
 #include <Zbil.hpp>
 #include <Zq.hpp>
 #include <Zq_sig1.hpp>
-
-//! compute the inverse of the passed propagator
-vjprop_t get_prop_inv(const vjprop_t &jprop)
-{
-  vjprop_t jprop_inv(jprop.size());
-#pragma omp parallel for
-  for(size_t imom=0;imom<imoms.size();imom++)
-    for(size_t ijack=0;ijack<=njacks;ijack++)
-      put_into_jackknife(jprop_inv[imom],get_from_jackknife(jprop[imom],ijack).inverse(),ijack);
-  
-  return jprop_inv;
-}
-
-//! read a propagator from a given file
-vprop_t read_prop(const string &path)
-{
-  vprop_t prop(imoms.size());
-  
-  //! source file
-  raw_file_t file(path,"r");
-  
-  for(size_t is_so=0;is_so<NSPIN;is_so++)
-    for(size_t ic_so=0;ic_so<NCOL;ic_so++)
-      for(size_t imom=0;imom<imoms.size();imom++)
-	for(size_t is_si=0;is_si<NSPIN;is_si++)
-	  for(size_t ic_si=0;ic_si<NCOL;ic_si++)
-	    file.bin_read(prop[imom](isc(is_si,ic_si),isc(is_so,ic_so)));
-  
-  return prop;
-}
-
-//! add the prop of a given conf on the jackknife
-void build_jackknifed_prop(vjprop_t &jprop,const vprop_t &prop,size_t ijack)
-{
-  for(size_t imom=0;imom<imoms.size();imom++)
-    add_to_cluster(jprop[imom],prop[imom],ijack);
-}
-
-//! compute all 16 vertices, with a given pair of propagators
-void build_jackknifed_verts(vector<jverts_t> &jverts,const vprop_t &prop1,const vprop_t &prop2,size_t ijack)
-{
-  for(size_t imom=0;imom<imoms.size();imom++)
-    for(size_t iG=0;iG<nGamma;iG++)
-      add_to_cluster(jverts[imom][iG],prop1[imom]*Gamma[iG]*Gamma[5]*prop2[imom].adjoint()*Gamma[5],ijack);
-}
-
-//! clusterize the propagator
-void clusterize_prop(vjprop_t &jprop,size_t clust_size=1)
-{
-#pragma omp parallel for
-  for(size_t imom=0;imom<imoms.size();imom++)
-    clusterize(jprop[imom],clust_size);
-}
-
-//! clusterize the vertexes
-void clusterize_verts(vector<jverts_t> &jverts,size_t clust_size=1)
-{
-#pragma omp parallel for
-  for(size_t imom=0;imom<imoms.size();imom++)
-    for(size_t iG=0;iG<nGamma;iG++)
-      clusterize(jverts[imom][iG],clust_size);
-}
 
 //! write a given Z
 void write_Z(const string &name,const djvec_t &Z,const vector<double> &pt2)
@@ -143,37 +83,50 @@ int main(int narg,char **arg)
   
   vector<size_t> conf_list=get_existing_paths_in_range(template_path,conf_range); //!< list of existing confs
   size_t clust_size=trim_to_njacks_multiple(conf_list,true); //!< cluster size
-  vjprop_t jprop(imoms.size()); //!< jackkniffed propagator
+  vjprop_t jprop(imoms.size()); //!< jackkniffed LO propagator
+  vjprop_t jprop_1(imoms.size()); //!< jackkniffed FF+T propagator
   vector<jverts_t> jverts(imoms.size()); //!< jackkniffed vertex
   
 #pragma omp parallel for
   for(size_t ijack=0;ijack<njacks;ijack++)
     for(size_t iconf=ijack*clust_size;iconf<(ijack+1)*clust_size;iconf++)
       {
-	string path=combine(template_path.c_str(),conf_list[iconf]);
 #ifdef USE_OMP
 	printf("Thread %d/%d reading file %zu/%zu\n",omp_get_thread_num()+1,omp_get_num_threads(),iconf+1,conf_list.size());
 #else
 	printf("Reading file %zu/%zu\n",iconf+1,conf_list.size());
 #endif
 	
-	vprop_t prop=read_prop(path); //!< propagator on a given conf
+	vprop_t prop=read_prop(template_path+"",conf_list[iconf]);
+	
+	vprop_t prop_FF=read_prop(template_path+"_FF",conf_list[iconf]);
+	vprop_t prop_T=read_prop(template_path+"_T",conf_list[iconf]);
+	vprop_t prop_P=read_prop(template_path+"_P",conf_list[iconf]);
+	for(auto &pP : prop_P) pP*=dcompl_t(0.0,-1.0);
+	
+	double deltam_cr=0.22;
+	vprop_t prop_1=prop_FF+prop_T+deltam_cr*prop_P;
+	
 	build_jackknifed_prop(jprop,prop,ijack);
+	build_jackknifed_prop(jprop_1,prop_1,ijack);
 	build_jackknifed_verts(jverts,prop,prop,ijack);
       }
   
   //clusterize
   clusterize_prop(jprop,clust_size);
+  clusterize_prop(jprop_1,clust_size);
   clusterize_verts(jverts,clust_size);
   
   vjprop_t jprop_inv=get_prop_inv(jprop); //!< inverse prop
+  vjprop_t jprop_1_inv=jprop_inv*jprop_1*jprop_inv;
   
   //compute Zq, Zq_sig1 and Zbil for all moms
   djvec_t Zq_allmoms=compute_Zq(jprop_inv);
   djvec_t Zq_sig1_allmoms=compute_Zq_sig1(jprop_inv);
+  djvec_t Zq_sig1_1_allmoms=compute_Zq_sig1(jprop_1_inv);
   vector<djvec_t> pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts,jprop_inv);
   
-  //correct Z
+  //correct Z LO
   djvec_t Zq_allmoms_sub=Zq_allmoms;
   djvec_t Zq_sig1_allmoms_sub=Zq_sig1_allmoms;
   vector<djvec_t> pr_bil_allmoms_sub=pr_bil_allmoms;
@@ -190,6 +143,7 @@ int main(int narg,char **arg)
   djvec_t Zq=average_equiv_moms(Zq_allmoms);
   djvec_t Zq_sub=average_equiv_moms(Zq_allmoms_sub);
   djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
+  djvec_t Zq_sig1_1=average_equiv_moms(Zq_sig1_1_allmoms);
   djvec_t Zq_sig1_sub=average_equiv_moms(Zq_sig1_allmoms_sub);
   vector<djvec_t> Zbil(nZbil);
   vector<djvec_t> Zbil_sub(nZbil);
@@ -199,16 +153,20 @@ int main(int narg,char **arg)
       Zbil_sub[iZbil]=average_equiv_moms(Zq_allmoms_sub/pr_bil_allmoms_sub[iZbil]);
     }
   
-  //filter moms
-  djvec_t Zq_sub_filt=get_filtered_moms(Zq_sub);
-  djvec_t Zq_sig1_sub_filt=get_filtered_moms(Zq_sig1_sub);
-  vector<djvec_t> Zbil_sub_filt(nZbil);
-  for(size_t iZbil=0;iZbil<nZbil;iZbil++)
-    Zbil_sub_filt[iZbil]=get_filtered_moms(Zbil_sub[iZbil]);
+  // //filter moms
+  // djvec_t Zq_sub_filt=get_filtered_moms(Zq_sub);
+  // djvec_t Zq_sig1_sub_filt=get_filtered_moms(Zq_sig1_sub);
+  // djvec_t sig3_filt=get_filtered_moms(sig3);
+  // djvec_t sig3_filt=get_filtered_moms(sig3);
+  // vector<djvec_t> Zbil_sub_filt(nZbil);
+  // for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+  //   Zbil_sub_filt[iZbil]=get_filtered_moms(Zbil_sub[iZbil]);
   
   write_Z("Zq",Zq,get_indep_pt2());
   write_Z("Zq_sub",Zq_sub,get_indep_pt2());
   write_Z("Zq_sig1",Zq_sig1,get_indep_pt2());
+  write_Z("Zq_sig1_allmoms",Zq_sig1_allmoms,get_pt2());
+  write_Z("Zq_sig1_1",Zq_sig1_1,get_indep_pt2());
   write_Z("Zq_sig1_sub",Zq_sig1_sub,get_indep_pt2());
   write_Z("ZS",Zbil[iZS],get_indep_pt2());
   write_Z("ZA",Zbil[iZA],get_indep_pt2());
@@ -216,13 +174,13 @@ int main(int narg,char **arg)
   write_Z("ZV",Zbil[iZV],get_indep_pt2());
   write_Z("ZT",Zbil[iZT],get_indep_pt2());
   
-  write_Z("Zq_sub_filt",Zq_sub_filt,get_filtered_pt2());
-  write_Z("Zq_sig1_sub_filt",Zq_sig1_sub_filt,get_filtered_pt2());
-  write_Z("ZS_sub_filt",Zbil_sub_filt[iZS],get_filtered_pt2());
-  write_Z("ZA_sub_filt",Zbil_sub_filt[iZA],get_filtered_pt2());
-  write_Z("ZP_sub_filt",Zbil_sub_filt[iZP],get_filtered_pt2());
-  write_Z("ZV_sub_filt",Zbil_sub_filt[iZV],get_filtered_pt2());
-  write_Z("ZT_sub_filt",Zbil_sub_filt[iZT],get_filtered_pt2());
+  write_Z("Zq_sub",Zq_sub,get_indep_pt2());
+  write_Z("Zq_sig1_sub",Zq_sig1_sub,get_indep_pt2());
+  write_Z("ZS_sub",Zbil_sub[iZS],get_indep_pt2());
+  write_Z("ZA_sub",Zbil_sub[iZA],get_indep_pt2());
+  write_Z("ZP_sub",Zbil_sub[iZP],get_indep_pt2());
+  write_Z("ZV_sub",Zbil_sub[iZV],get_indep_pt2());
+  write_Z("ZT_sub",Zbil_sub[iZT],get_indep_pt2());
   
   return 0;
 }

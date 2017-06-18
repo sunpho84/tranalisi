@@ -9,6 +9,22 @@
 #define EXTERN_ZBIL
  #include <Zbil.hpp>
 
+void build_jackknifed_verts(vector<jverts_t> &jverts,const vprop_t &prop1,const vprop_t &prop2,size_t ijack)
+{
+  for(size_t imom=0;imom<imoms.size();imom++)
+    for(size_t iG=0;iG<nGamma;iG++)
+      add_to_cluster(jverts[imom][iG],prop1[imom]*Gamma[iG]*Gamma[5]*prop2[imom].adjoint()*Gamma[5],ijack);
+  //add_to_cluster(jverts[imom][iG],prop1[imom]*Gamma[iG]*prop2[get_mir_mom(imom,(1<<NDIM)-1)],ijack);
+}
+
+void clusterize_verts(vector<jverts_t> &jverts,size_t clust_size)
+{
+#pragma omp parallel for
+  for(size_t imom=0;imom<imoms.size();imom++)
+    for(size_t iG=0;iG<nGamma;iG++)
+      clusterize(jverts[imom][iG],clust_size);
+}
+
 vector<djvec_t> compute_proj_bil(const vjprop_t &jprop_inv1,vector<jverts_t> &jverts,const vjprop_t &jprop_inv2)
 {
   const size_t iZbil_of_iG[nGamma]={iZS,iZA,iZA,iZA,iZA,iZP,iZV,iZV,iZV,iZV,iZT,iZT,iZT,iZT,iZT,iZT};

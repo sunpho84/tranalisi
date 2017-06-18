@@ -36,6 +36,18 @@ void set_list_of_moms(const string &path)
   cout<<"Read "<<imoms.size()<<" momenta"<<endl;
 }
 
+size_t get_mir_mom(size_t imom,size_t imir)
+{
+  coords_t cm=imoms[imom];
+  
+  if(imir&1) cm[0]=-cm[0]-1;
+  for(size_t mu=1;mu<NDIM;mu++) cm[mu]*=(1-2*((imir>>mu)&1));
+  auto ret=find(imoms.begin(),imoms.end(),cm);
+  if(ret==imoms.end()) CRASH("searching imir=%zu of %zu",imom,imom);
+  
+  return distance(imoms.begin(),ret);
+}
+
 void set_class_of_equiv_moms()
 {
   map<imom_t,vector<size_t>> equiv_imoms_map;

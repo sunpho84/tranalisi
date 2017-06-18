@@ -136,6 +136,9 @@ djvec_t average_equiv_moms(const djvec_t &in);
 //! take a vector of indep moms and returns the list of filtered moms
 djvec_t get_filtered_moms(const djvec_t &in);
 
+//! return the mirrorized site
+size_t get_mir_mom(size_t imom,size_t imir);
+  
 #undef EXTERN_GEOMETRY
 #undef INIT_TO
 
