@@ -128,20 +128,21 @@ int main(int narg,char **arg)
 	    vprop_t prop_T=read_prop(template_path+"_T"+suff_hit,conf_list[iconf],ihit);
 	    vprop_t prop_P=read_prop(template_path+"_P"+suff_hit,conf_list[iconf],ihit);
 	    for(auto &pP : prop_P) pP*=dcompl_t(0.0,-1.0);
-	    
-	    vprop_t prop_2T=prop_FF+prop_T*use_tad;
-	    
+	    	    
 	    build_jackknifed_prop(jprop,prop,ijack);
-	    build_jackknifed_prop(jprop_2T,prop_2T,ijack);
+	    build_jackknifed_prop(jprop_2T,prop_FF,ijack);
+	    if(use_tad) build_jackknifed_prop(jprop_2T,prop_T,ijack);
 	    build_jackknifed_prop(jprop_P,prop_P,ijack);
 	    
 	    build_jackknifed_verts(jverts,prop,prop,ijack);
 	    
 	    build_jackknifed_verts(jverts_2T,prop_F,prop_F,ijack);
+	    build_jackknifed_verts(jverts_2T,prop_FF,prop,ijack);
+	    build_jackknifed_verts(jverts_2T,prop,prop_FF,ijack);
 	    if(use_tad)
 	      {
-		build_jackknifed_verts(jverts_2T,prop_2T,prop,ijack);
-		build_jackknifed_verts(jverts_2T,prop,prop_2T,ijack);
+		build_jackknifed_verts(jverts_2T,prop_T,prop,ijack);
+		build_jackknifed_verts(jverts_2T,prop,prop_T,ijack);
 	      }
 	    
 	    build_jackknifed_verts(jverts_P,prop_P,prop,ijack);
