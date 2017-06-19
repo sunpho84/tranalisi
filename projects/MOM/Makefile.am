@@ -8,6 +8,7 @@ bin_PROGRAMS= \
 
 __top_builddir__bin_mom_SOURCES= \
 	corrections.cpp \
+	contractions.cpp \
 	geometry.cpp \
 	mom.cpp \
 	prop.cpp \
