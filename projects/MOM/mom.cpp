@@ -8,6 +8,7 @@
 
 #include <tranalisi.hpp>
 
+#include <contractions.hpp>
 #include <corrections.hpp>
 #include <geometry.hpp>
 #include <types.hpp>
@@ -26,6 +27,8 @@ void write_Z(const string &name,const djvec_t &Z,const vector<double> &pt2)
   outf.precision(8);
   outf.write_vec_ave_err(pt2,Z.ave_err());
 }
+
+double use_tad=1.0;
 
 int main(int narg,char **arg)
 {
@@ -57,6 +60,8 @@ int main(int narg,char **arg)
   conf_range.each=input.read<size_t>();
   conf_range.end=input.read<size_t>();
   
+  const size_t nhits=input.read<size_t>("NHits"); //!< number of hits
+  
   //! template path
   string template_path=input.read<string>("TemplatePath");
   
@@ -64,6 +69,10 @@ int main(int narg,char **arg)
   
   //set the number of jackknives
   set_njacks(ext_njacks);
+  
+  //! sufffix if a number of hits is different from 1
+  string suff_hit="";
+  if(nhits>1) suff_hit="_hit_%zu";
   
   double g2=6.0/beta; //!< coupling
   double g2tilde=g2/plaq; //!< boosted coupling
@@ -78,53 +87,93 @@ int main(int narg,char **arg)
   //initialize momenta
   set_list_of_moms(mom_list_path);
   set_class_of_equiv_moms();
-  set_filtered_moms();
   //list_all_smom_pairs();
   
-  vector<size_t> conf_list=get_existing_paths_in_range(template_path,conf_range); //!< list of existing confs
+  string test_path=template_path;
+  if(nhits>1) test_path+="_hit_0";
+  vector<size_t> conf_list=get_existing_paths_in_range(test_path,conf_range); //!< list of existing confs
+  if(conf_list.size()==0) CRASH("list of configurations is empty! check %s ",test_path.c_str());
+  
+  //compute deltam_cr
+  size_t tmin=12,tmax=23;
+  djack_t deltam_cr=compute_deltam_cr(conf_list,tmin,tmax,use_tad);
+  cout<<"Deltam cr: "<<deltam_cr<<endl;
+  
   size_t clust_size=trim_to_njacks_multiple(conf_list,true); //!< cluster size
   vjprop_t jprop(imoms.size()); //!< jackkniffed LO propagator
-  vjprop_t jprop_1(imoms.size()); //!< jackkniffed FF+T propagator
   vector<jverts_t> jverts(imoms.size()); //!< jackkniffed vertex
   
-#pragma omp parallel for
-  for(size_t ijack=0;ijack<njacks;ijack++)
-    for(size_t iconf=ijack*clust_size;iconf<(ijack+1)*clust_size;iconf++)
-      {
-#ifdef USE_OMP
-	printf("Thread %d/%d reading file %zu/%zu\n",omp_get_thread_num()+1,omp_get_num_threads(),iconf+1,conf_list.size());
-#else
-	printf("Reading file %zu/%zu\n",iconf+1,conf_list.size());
-#endif
-	
-	vprop_t prop=read_prop(template_path+"",conf_list[iconf]);
-	
-	vprop_t prop_FF=read_prop(template_path+"_FF",conf_list[iconf]);
-	vprop_t prop_T=read_prop(template_path+"_T",conf_list[iconf]);
-	vprop_t prop_P=read_prop(template_path+"_P",conf_list[iconf]);
-	for(auto &pP : prop_P) pP*=dcompl_t(0.0,-1.0);
-	
-	double deltam_cr=0.22;
-	vprop_t prop_1=prop_FF+prop_T+deltam_cr*prop_P;
-	
-	build_jackknifed_prop(jprop,prop,ijack);
-	build_jackknifed_prop(jprop_1,prop_1,ijack);
-	build_jackknifed_verts(jverts,prop,prop,ijack);
-      }
+  vector<jverts_t> jverts_em(imoms.size()); //!< jackkniffed em vertex
+  vjprop_t jprop_em(imoms.size()); //!< jackkniffed FF+T+P propagator
   
-  //clusterize
-  clusterize_prop(jprop,clust_size);
-  clusterize_prop(jprop_1,clust_size);
-  clusterize_verts(jverts,clust_size);
+  //scope for 2T and P
+  {
+    vjprop_t jprop_2T(imoms.size()); //!< jackkniffed FF+T propagator
+    vjprop_t jprop_P(imoms.size()); //!< jackkniffed FF+T propagator
+    vector<jverts_t> jverts_2T(imoms.size()); //!< jackkniffed FF + T vertex
+    vector<jverts_t> jverts_P(imoms.size()); //!< jackkniffed P vertex
+    
+#pragma omp parallel for
+    for(size_t ijack=0;ijack<njacks;ijack++)
+      for(size_t iconf=ijack*clust_size;iconf<(ijack+1)*clust_size;iconf++)
+	for(size_t ihit=0;ihit<nhits;ihit++)
+	  {
+	    printf("Thread %d/%d reading conf %zu/%zu hit %zu/%zu\n",omp_get_thread_num()+1,omp_get_num_threads(),iconf+1,conf_list.size(),ihit+1,nhits);
+	    
+	    vprop_t prop=read_prop(template_path+""+suff_hit,conf_list[iconf],ihit);
+	    
+	    vprop_t prop_FF=read_prop(template_path+"_FF"+suff_hit,conf_list[iconf],ihit);
+	    vprop_t prop_F=read_prop(template_path+"_F"+suff_hit,conf_list[iconf],ihit);
+	    vprop_t prop_T=read_prop(template_path+"_T"+suff_hit,conf_list[iconf],ihit);
+	    vprop_t prop_P=read_prop(template_path+"_P"+suff_hit,conf_list[iconf],ihit);
+	    for(auto &pP : prop_P) pP*=dcompl_t(0.0,-1.0);
+	    
+	    vprop_t prop_2T=prop_FF+prop_T*use_tad;
+	    
+	    build_jackknifed_prop(jprop,prop,ijack);
+	    build_jackknifed_prop(jprop_2T,prop_2T,ijack);
+	    build_jackknifed_prop(jprop_P,prop_P,ijack);
+	    
+	    build_jackknifed_verts(jverts,prop,prop,ijack);
+	    
+	    build_jackknifed_verts(jverts_2T,prop_F,prop_F,ijack);
+	    if(use_tad)
+	      {
+		build_jackknifed_verts(jverts_2T,prop_2T,prop,ijack);
+		build_jackknifed_verts(jverts_2T,prop,prop_2T,ijack);
+	      }
+	    
+	    build_jackknifed_verts(jverts_P,prop_P,prop,ijack);
+	    build_jackknifed_verts(jverts_P,prop,prop_P,ijack);
+	  }
+    
+    //clusterize
+    clusterize_prop(jprop,clust_size*nhits);
+    clusterize_prop(jprop_2T,clust_size*nhits);
+    clusterize_verts(jverts,clust_size*nhits);
+    clusterize_verts(jverts_2T,clust_size*nhits);
+    clusterize_verts(jverts_P,clust_size*nhits);
+    
+    for(size_t imom=0;imom<imoms.size();imom++)
+      {
+	for(size_t iGamma=0;iGamma<nGamma;iGamma++) jverts_em[imom][iGamma]=jverts_2T[imom][iGamma]-deltam_cr*jverts_P[imom][iGamma];
+	jprop_em[imom]=jprop_2T[imom]-deltam_cr*jprop_P[imom];
+      }
+  }
   
   vjprop_t jprop_inv=get_prop_inv(jprop); //!< inverse prop
-  vjprop_t jprop_1_inv=jprop_inv*jprop_1*jprop_inv;
+  vjprop_t jprop_em_inv=jprop_inv*jprop_em*jprop_inv;
   
   //compute Zq, Zq_sig1 and Zbil for all moms
   djvec_t Zq_allmoms=compute_Zq(jprop_inv);
   djvec_t Zq_sig1_allmoms=compute_Zq_sig1(jprop_inv);
-  djvec_t Zq_sig1_1_allmoms=compute_Zq_sig1(jprop_1_inv);
+  djvec_t Zq_sig1_em_allmoms=compute_Zq_sig1(jprop_em_inv);
   vector<djvec_t> pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts,jprop_inv);
+  
+  //QED
+  vector<djvec_t> pr_bil_em_allmoms=compute_proj_bil(jprop_inv,jverts_em,jprop_inv);
+  vector<djvec_t> pr_bil_a_allmoms=compute_proj_bil(jprop_em_inv,jverts,jprop_inv);
+  vector<djvec_t> pr_bil_b_allmoms=compute_proj_bil(jprop_inv,jverts,jprop_em_inv);
   
   //correct Z LO
   djvec_t Zq_allmoms_sub=Zq_allmoms;
@@ -143,44 +192,36 @@ int main(int narg,char **arg)
   djvec_t Zq=average_equiv_moms(Zq_allmoms);
   djvec_t Zq_sub=average_equiv_moms(Zq_allmoms_sub);
   djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
-  djvec_t Zq_sig1_1=average_equiv_moms(Zq_sig1_1_allmoms);
+  djvec_t Zq_sig1_em=average_equiv_moms(Zq_sig1_em_allmoms);
   djvec_t Zq_sig1_sub=average_equiv_moms(Zq_sig1_allmoms_sub);
   vector<djvec_t> Zbil(nZbil);
+  vector<djvec_t> Zbil_QED_allmoms(nZbil),Zbil_QED(nZbil);
   vector<djvec_t> Zbil_sub(nZbil);
   for(size_t iZbil=0;iZbil<nZbil;iZbil++)
     {
       Zbil[iZbil]=average_equiv_moms(Zq_allmoms/pr_bil_allmoms[iZbil]);
+      Zbil_QED_allmoms[iZbil]=(pr_bil_a_allmoms[iZbil]+pr_bil_b_allmoms[iZbil]-pr_bil_em_allmoms[iZbil])/pr_bil_allmoms[iZbil]+Zq_sig1_em_allmoms/Zq_sig1_allmoms;
       Zbil_sub[iZbil]=average_equiv_moms(Zq_allmoms_sub/pr_bil_allmoms_sub[iZbil]);
+      Zbil_QED[iZbil]=average_equiv_moms(Zbil_QED_allmoms[iZbil]);
     }
   
-  // //filter moms
-  // djvec_t Zq_sub_filt=get_filtered_moms(Zq_sub);
-  // djvec_t Zq_sig1_sub_filt=get_filtered_moms(Zq_sig1_sub);
-  // djvec_t sig3_filt=get_filtered_moms(sig3);
-  // djvec_t sig3_filt=get_filtered_moms(sig3);
-  // vector<djvec_t> Zbil_sub_filt(nZbil);
-  // for(size_t iZbil=0;iZbil<nZbil;iZbil++)
-  //   Zbil_sub_filt[iZbil]=get_filtered_moms(Zbil_sub[iZbil]);
+  write_Z("Zq_sig1_allmoms",Zq_sig1_allmoms,get_pt2());
   
   write_Z("Zq",Zq,get_indep_pt2());
   write_Z("Zq_sub",Zq_sub,get_indep_pt2());
   write_Z("Zq_sig1",Zq_sig1,get_indep_pt2());
-  write_Z("Zq_sig1_allmoms",Zq_sig1_allmoms,get_pt2());
-  write_Z("Zq_sig1_1",Zq_sig1_1,get_indep_pt2());
+  write_Z("Zq_sig1_em",Zq_sig1_em,get_indep_pt2());
   write_Z("Zq_sig1_sub",Zq_sig1_sub,get_indep_pt2());
-  write_Z("ZS",Zbil[iZS],get_indep_pt2());
-  write_Z("ZA",Zbil[iZA],get_indep_pt2());
-  write_Z("ZP",Zbil[iZP],get_indep_pt2());
-  write_Z("ZV",Zbil[iZV],get_indep_pt2());
-  write_Z("ZT",Zbil[iZT],get_indep_pt2());
+  for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+    {
+      write_Z(combine("Z%c",Zbil_tag[iZbil]),Zbil[iZbil],get_indep_pt2());
+      write_Z(combine("Z%c_QED_allmoms",Zbil_tag[iZbil]),Zbil_QED_allmoms[iZbil],get_pt2());
+      write_Z(combine("Z%c_QED",Zbil_tag[iZbil]),Zbil_QED[iZbil],get_indep_pt2());
+      write_Z(combine("Z%c_sub",Zbil_tag[iZbil]),Zbil_sub[iZbil],get_indep_pt2());
+    }
   
   write_Z("Zq_sub",Zq_sub,get_indep_pt2());
   write_Z("Zq_sig1_sub",Zq_sig1_sub,get_indep_pt2());
-  write_Z("ZS_sub",Zbil_sub[iZS],get_indep_pt2());
-  write_Z("ZA_sub",Zbil_sub[iZA],get_indep_pt2());
-  write_Z("ZP_sub",Zbil_sub[iZP],get_indep_pt2());
-  write_Z("ZV_sub",Zbil_sub[iZV],get_indep_pt2());
-  write_Z("ZT_sub",Zbil_sub[iZT],get_indep_pt2());
   
   return 0;
 }
