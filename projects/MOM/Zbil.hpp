@@ -15,6 +15,7 @@
 
 //! bilinears Z
 enum iZbil{iZS,iZA,iZP,iZV,iZT};
+const string Zbil_tag="SAPVT";
 
 //! number of Z
 const size_t nZbil=5;

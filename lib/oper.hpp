@@ -190,4 +190,9 @@ template <class T> double var(const T &x)
 template <class T> double corr(const T &x,const T &y)
 {return cov(x,y)/sqrt(var(x)*var(y));}
 
+//! filter a valarray
+template <class T,class=enable_if_t<has_method_size<T>::value>>
+T vec_filter(const T &v,const gslice &slice)
+{return (T)(v[slice]);}
+
 #endif

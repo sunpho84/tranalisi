@@ -17,7 +17,7 @@ using namespace std;
 
 double ph_mom[NDIM]={0.5,0,0,0};
 
-void set_list_of_moms(const string &path)
+void set_list_of_moms(const string &path,double thresh)
 {
   //open the file
   ifstream mom_file(path);
@@ -28,12 +28,18 @@ void set_list_of_moms(const string &path)
       imom_t c;
       for(auto &ci : c) mom_file>>ci;
       //if coords good, store them
-      if(mom_file.good()) imoms.push_back(c);
+      if(mom_file.good())
+	{
+	  bool filt=(c.p(L).tilde().p4_fr_p22()<thresh);
+	  if(filt) imoms.push_back(c);
+	  filt_moms.push_back(filt);
+	}
     }
   while(mom_file.good());
   
   //print stats
-  cout<<"Read "<<imoms.size()<<" momenta"<<endl;
+  cout<<"Read "<<filt_moms.size()<<" momenta"<<endl;
+  cout<<"NFiltered moms (p4/p2^2<"<<thresh<<"): "<<imoms.size()<<endl;
 }
 
 size_t get_mir_mom(size_t imom,size_t imir)
@@ -147,16 +153,6 @@ vector<double> get_indep_pt2()
   return out;
 }
 
-vector<double> get_filtered_pt2()
-{
-  vector<double> out;
-  out.reserve(iequiv_mom_of_ifilt.size());
-  for(auto &ieq : iequiv_mom_of_ifilt)
-    out.push_back(imoms[equiv_imoms[ieq].first].p(L).tilde().norm2());
-  
-  return out;
-}
-
 djvec_t average_equiv_moms(const djvec_t &in)
 {
   djvec_t out(equiv_imoms.size());
@@ -173,23 +169,6 @@ djvec_t average_equiv_moms(const djvec_t &in)
       //normalize
       out[ind_mom]/=imom_class.second.size();
     }
-  
-  return out;
-}
-
-void set_filtered_moms(const double thresh)
-{
-  for(size_t ieq=0;ieq<equiv_imoms.size();ieq++)
-    if(imoms[equiv_imoms[ieq].first].p(L).tilde().p4_fr_p22()<thresh)
-      iequiv_mom_of_ifilt.push_back(ieq);
-  cout<<"NFiltered moms (p4/p2^2<"<<thresh<<"): "<<iequiv_mom_of_ifilt.size()<<endl;
-}
-
-djvec_t get_filtered_moms(const djvec_t &in)
-{
-  djvec_t out(iequiv_mom_of_ifilt.size());
-  for(size_t ifilt=0;ifilt<iequiv_mom_of_ifilt.size();ifilt++)
-    out[ifilt]=in[iequiv_mom_of_ifilt[ifilt]];
   
   return out;
 }
