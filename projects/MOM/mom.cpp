@@ -149,7 +149,9 @@ int main(int narg,char **arg)
     
     //clusterize
     clusterize_prop(jprop,clust_size*nhits);
+    clusterize_prop(jprop_P,clust_size*nhits);
     clusterize_prop(jprop_2T,clust_size*nhits);
+    
     clusterize_verts(jverts,clust_size*nhits);
     clusterize_verts(jverts_2T,clust_size*nhits);
     clusterize_verts(jverts_P,clust_size*nhits);
