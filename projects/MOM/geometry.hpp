@@ -102,9 +102,10 @@ public:
 EXTERN_GEOMETRY coords_t L; //!< lattice sizes
 EXTERN_GEOMETRY size_t V; //!< lattice volume
 EXTERN_GEOMETRY vector<imom_t> imoms; //!< list of momenta
+EXTERN_GEOMETRY vector<bool> filt_moms; //!< store if a momentum passed the filter
 
 //! reads the list of momenta from file
-void set_list_of_moms(const string &path);
+void set_list_of_moms(const string &path,double thresh=0.28);
 
 //! list of class of equivalence of momenta
 EXTERN_GEOMETRY vector<pair<size_t,vector<size_t>>> equiv_imoms;
