@@ -232,7 +232,10 @@ template <class T> vmeas_t<boot_t<T>> bvec_from_jvec(const boot_init_t &iboot_in
   return out;
 }
 
-//! read from a set of confs
+//! read from a list of confs
+djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size_t ntot_col,const vector<size_t> &cols,size_t nlines,bool verbosity=VERBOSE);
+
+//! read from a range of confs
 djvec_t read_conf_set_t(const string &template_path,const range_t &range,size_t ntot_col,const vector<size_t> &cols,size_t nlines=1,bool verbosity=VERBOSE);
 
 #endif

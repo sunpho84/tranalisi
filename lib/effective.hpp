@@ -95,8 +95,4 @@ template <class TV> TV effective_squared_coupling_rel_corr(const TV &data,const 
   return out;
 }
 
-//! filter a valarray
-template <class T,class=enable_if_t<has_method_size<T>::value>> T vec_filter(const T &v,const gslice &slice)
-{return (T)(v[slice]);}
-
 #endif
