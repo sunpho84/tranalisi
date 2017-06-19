@@ -77,7 +77,7 @@ public:
   
   //! binary read, non-vector case
   template <class T> auto bin_read(T &out) const -> enable_if_t<is_pod<T>::value>
-  {int rc=fread(&out,sizeof(T),1,file); if(rc!=1) CRASH("Reading from file, rc: %d",rc);}
+  {int rc=fread(&out,sizeof(T),1,file); if(rc!=1) CRASH("Reading from file %s, rc: %d",path.c_str(),rc);}
   
   //! binary read, complex case
   template <class T> auto bin_read(complex<T> &out) const -> enable_if_t<is_pod<T>::value>
