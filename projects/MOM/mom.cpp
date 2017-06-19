@@ -28,8 +28,6 @@ void write_Z(const string &name,const djvec_t &Z,const vector<double> &pt2)
   outf.write_vec_ave_err(pt2,Z.ave_err());
 }
 
-double use_tad=1.0;
-
 int main(int narg,char **arg)
 {
   //read input file
@@ -64,6 +62,9 @@ int main(int narg,char **arg)
   
   //! template path
   string template_path=input.read<string>("TemplatePath");
+  
+  //! include or not tadpole
+  const double use_tad=input.read<double>("UseTad");
   
   //////////////////////////////////////////////////
   
