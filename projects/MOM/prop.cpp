@@ -23,19 +23,26 @@ vjprop_t get_prop_inv(const vjprop_t &jprop)
   return jprop_inv;
 }
 
-vprop_t read_prop(const string &template_path,size_t iconf)
+vprop_t read_prop(const string &template_path,size_t iconf,size_t ihit)
 {
   vprop_t prop(imoms.size());
   
   //! source file
-  raw_file_t file(combine(template_path.c_str(),iconf),"r");
+  raw_file_t file(combine(template_path.c_str(),iconf,ihit),"r");
   
   for(size_t is_so=0;is_so<NSPIN;is_so++)
     for(size_t ic_so=0;ic_so<NCOL;ic_so++)
-      for(size_t imom=0;imom<imoms.size();imom++)
-	for(size_t is_si=0;is_si<NSPIN;is_si++)
-	  for(size_t ic_si=0;ic_si<NCOL;ic_si++)
-	    file.bin_read(prop[imom](isc(is_si,ic_si),isc(is_so,ic_so)));
+      for(size_t iall_mom=0,imom=0;iall_mom<filt_moms.size();iall_mom++)
+	{
+	  for(size_t is_si=0;is_si<NSPIN;is_si++)
+	    for(size_t ic_si=0;ic_si<NCOL;ic_si++)
+	      {
+		dcompl_t c;
+		file.bin_read(c);
+		if(filt_moms[iall_mom]) prop[imom](isc(is_si,ic_si),isc(is_so,ic_so))=c;
+	    }
+	  if(filt_moms[iall_mom]) imom++;
+	}
   
   return prop;
 }

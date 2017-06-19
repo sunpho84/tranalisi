@@ -9,7 +9,7 @@
 vjprop_t get_prop_inv(const vjprop_t &jprop);
 
 //! read a propagator from a given file
-vprop_t read_prop(const string &template_path,size_t iconf);
+vprop_t read_prop(const string &template_path,size_t iconf,size_t ihit);
 
 //! add the prop of a given conf on the jackknife
 void build_jackknifed_prop(vjprop_t &jprop,const vprop_t &prop,size_t ijack);
