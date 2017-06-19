@@ -23,8 +23,6 @@
 void write_Z(const string &name,const djvec_t &Z,const vector<double> &pt2)
 {
   grace_file_t outf("plots/"+name+".xmg");
-  outf<<fixed;
-  outf.precision(8);
   outf.write_vec_ave_err(pt2,Z.ave_err());
 }
 
@@ -110,7 +108,7 @@ int main(int narg,char **arg)
   //scope for 2T and P
   {
     vjprop_t jprop_2T(imoms.size()); //!< jackkniffed FF+T propagator
-    vjprop_t jprop_P(imoms.size()); //!< jackkniffed FF+T propagator
+    vjprop_t jprop_P(imoms.size()); //!< jackkniffed P propagator
     vector<jverts_t> jverts_2T(imoms.size()); //!< jackkniffed FF + T vertex
     vector<jverts_t> jverts_P(imoms.size()); //!< jackkniffed P vertex
     
