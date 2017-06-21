@@ -45,7 +45,7 @@ void set_conf_props(bool set_QED);
 void read_all_mr_INS_props(vprop_t &mom_prop,map<string,vector<raw_file_t>> &map_files,const string &ins,size_t iconf_hit);
 
 //! read all propagators, LO and QED
-void read_all_mr_props(bool read_QED,map<string,vector<raw_file_t>> &map_files);
+void read_all_mr_props(bool read_QED,map<string,vector<raw_file_t>> &map_files,size_t iconf_hit);
 
 EXTERN_PROP vjprop_t jprop_0; //!< propagator with no photon, given momentum and conf, all m and r
 

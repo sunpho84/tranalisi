@@ -128,6 +128,7 @@ int main(int narg,char **arg)
   if(use_QED) for(auto &ins : {"P","S","T","F","FF"}) ins_list.push_back(ins);
   
   index_t m_r_conf_hit_ind({{"m",nm},{"r",nr},{"conf",conf_list.size()},{"hit",nhits}});
+  index_t conf_hit_ind({{"conf",conf_list.size()},{"hit",nhits}});
   
   map<string,vector<raw_file_t>> prop_files;
   for(auto &ins : ins_list) prop_files[ins].resize(m_r_conf_hit_ind.max());
@@ -151,7 +152,7 @@ int main(int narg,char **arg)
 	    {
 	      printf("Thread %d/%d reading conf %zu/%zu hit %zu/%zu\n",omp_get_thread_num()+1,omp_get_num_threads(),iconf+1,conf_list.size(),ihit+1,nhits_to_use);
 	      
-	      read_all_mr_props(use_QED,prop_files);
+	      read_all_mr_props(use_QED,prop_files,conf_hit_ind({iconf,ihit}));
 	      build_all_mr_jackknifed_props(use_QED,ijack);
 	      build_all_mr_gbil_jackknifed_verts(use_QED,ijack);
 	    }
