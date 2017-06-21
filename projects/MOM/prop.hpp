@@ -42,7 +42,7 @@ string get_prop_tag(size_t im,size_t ir,const string &ins);
 void set_conf_props(bool set_QED);
 
 //! read propagators with a certain insertion, for all mass and r
-void read_all_mr_INS_props(vprop_t &mom_prop,map<string,vector<raw_file_t>> &map_files,const string &ins);
+void read_all_mr_INS_props(vprop_t &mom_prop,map<string,vector<raw_file_t>> &map_files,const string &ins,size_t iconf_hit);
 
 //! read all propagators, LO and QED
 void read_all_mr_props(bool read_QED,map<string,vector<raw_file_t>> &map_files);

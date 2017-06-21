@@ -51,20 +51,20 @@ void set_conf_props(bool set_QED)
       mom_prop->resize(nmr);
 }
 
-void read_all_mr_INS_props(vprop_t &mom_prop,map<string,vector<raw_file_t>> &map_files,const string &ins)
+void read_all_mr_INS_props(vprop_t &mom_prop,map<string,vector<raw_file_t>> &map_files,const string &ins,size_t iconf_hit)
 {
   if(map_files.find(ins)==map_files.end()) CRASH("Unable to find prop with insertion kind: %s",ins.c_str());
   for(size_t imr=0;imr<nmr;imr++) mom_prop[imr]=read_prop(map_files[ins][imr]);
 }
 
-void read_all_mr_props(bool read_QED,map<string,vector<raw_file_t>> &map_files)
+void read_all_mr_props(bool read_QED,map<string,vector<raw_file_t>> &map_files,size_t iconf_hit)
 {
-  read_all_mr_INS_props(mom_prop_0,map_files,"0");
+  read_all_mr_INS_props(mom_prop_0,map_files,"0",iconf_hit);
   
   if(read_QED)
     {
       for(auto &o : vector<pair<vprop_t*,string>>({{&mom_prop_FF,"FF"},{&mom_prop_F,"F"},{&mom_prop_T,"T"},{&mom_prop_P,"P"},{&mom_prop_S,"S"}}))
-	read_all_mr_INS_props(*o.first,map_files,o.second);
+	read_all_mr_INS_props(*o.first,map_files,o.second,iconf_hit);
       
       dcompl_t fact_P(0.0,-1.0);
       dcompl_t fact_S(-1.0,0.0);
