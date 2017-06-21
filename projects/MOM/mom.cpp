@@ -145,6 +145,7 @@ int main(int narg,char **arg)
   
   for(size_t imom=0;imom<imoms.size();imom++)
     {
+      cout<<"Reading momentum "<<imom+1<<"/"<<imoms.size()<<endl;
 #pragma omp parallel for
       for(size_t ijack=0;ijack<njacks;ijack++)
 	for(size_t iconf=ijack*clust_size;iconf<(ijack+1)*clust_size;iconf++)
