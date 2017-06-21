@@ -10,9 +10,10 @@
 #include <macros.hpp>
 #include <solve.hpp>
 #include <tools.hpp>
-#include <type_traits>
 #include <valarray>
 #include <vector>
+
+#include <traits>
 
 using namespace std;
 using namespace placeholders;
@@ -26,6 +27,17 @@ init_nel(const valarray<T> &obj)
 template <class T> size_t
 init_nel(const vector<T> &obj)
 {return obj.size();}
+
+
+////////////////////////////////////////////// a scalar wrapper //////////////////////////////////////////
+
+template <class T>
+class SC()
+{
+ public:
+  T& val;
+  SC(T& val) : val(val) {}
+};
 
 //////////////////////////////////////////////// operations //////////////////////////////////////////////
 
