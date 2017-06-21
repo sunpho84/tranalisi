@@ -41,17 +41,18 @@ string get_prop_tag(size_t im,size_t ir,const string &ins);
 //! set the propagators for each conf
 void set_conf_props(bool set_QED);
 
-//! read propagators with a certain insertion, for all mass and r
-void read_all_mr_INS_props(vprop_t &mom_prop,map<string,vector<raw_file_t>> &map_files,const string &ins,size_t iconf_hit);
-
 //! read all propagators, LO and QED
-void read_all_mr_props(bool read_QED,map<string,vector<raw_file_t>> &map_files,size_t iconf_hit);
+void read_all_mr_props(bool read_QED,map<string,vector<raw_file_t>> &map_files,size_t iconf,size_t ihit);
 
 EXTERN_PROP vjprop_t jprop_0; //!< propagator with no photon, given momentum and conf, all m and r
 
 EXTERN_PROP vjprop_t jprop_2; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
 EXTERN_PROP vjprop_t jprop_P; //!< propagator with Pseudoscalar inserion
 EXTERN_PROP vjprop_t jprop_S; //!< propagator with Scalar insertion
+
+EXTERN_PROP index_t m_r_ind; //!| index of m,r
+EXTERN_PROP index_t conf_hit_ind; //!< index of conf and hit
+EXTERN_PROP index_t m_r_conf_hit_ind; //!| index of m,r,conf and hit
 
 //! set all jackknifed props
 void set_jprops(bool set_QED);

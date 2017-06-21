@@ -20,7 +20,6 @@
 #include <Zq_sig1.hpp>
 
 string suff_hit="";
-index_t conf_hit_ind;
 vector<string> ins_list={"0"};
 
 //! open all files in battery
@@ -30,8 +29,9 @@ map<string,vector<raw_file_t>> open_all_prop_files(const vector<size_t> &conf_li
   if(use_QED) for(auto &ins : {"P","S","T","F","FF"}) ins_list.push_back(ins);
   
   //set indices
+  m_r_ind.set_ranges({{"m",nm},{"r",nr}});
   conf_hit_ind.set_ranges({{"conf",conf_list.size()},{"hit",nhits_to_use}});
-  index_t m_r_conf_hit_ind({{"m",nm},{"r",nr},{"conf",conf_list.size()},{"hit",nhits_to_use}});
+  m_r_conf_hit_ind.set_ranges({{"m",nm},{"r",nr},{"conf",conf_list.size()},{"hit",nhits_to_use}});
   
   //resize the list of prop for each ins
   map<string,vector<raw_file_t>> prop_files;
@@ -167,7 +167,7 @@ int main(int narg,char **arg)
 	    {
 	      printf("Thread %d/%d reading conf %zu/%zu hit %zu/%zu\n",omp_get_thread_num()+1,omp_get_num_threads(),iconf+1,conf_list.size(),ihit+1,nhits_to_use);
 	      
-	      read_all_mr_props(use_QED,prop_files,conf_hit_ind({iconf,ihit}));
+	      read_all_mr_props(use_QED,prop_files,iconf,ihit);
 	      build_all_mr_jackknifed_props(use_QED,ijack);
 	      build_all_mr_gbil_jackknifed_verts(use_QED,ijack);
 	    }
