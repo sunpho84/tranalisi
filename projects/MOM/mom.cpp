@@ -63,6 +63,8 @@ int main(int narg,char **arg)
   nm=input.read<double>("Nm");
   nr=input.read<double>("Nr");
   
+  size_t im_sea=input.read<double>("ImSea"); //!< index of sea mass
+  
   const string mom_list_path=input.read<string>("MomList"); //!< list of momenta
   const size_t ext_njacks=input.read<size_t>("NJacks"); //!< number of jacks
   
@@ -113,7 +115,7 @@ int main(int narg,char **arg)
   
   //compute deltam_cr
   size_t tmin=12,tmax=23;
-  djack_t deltam_cr=compute_deltam_cr(conf_list,tmin,tmax,use_tad);
+  djack_t deltam_cr=compute_deltam_cr(conf_list,tmin,tmax,use_tad,im_sea);
   cout<<"Deltam cr: "<<deltam_cr<<endl;
   
   size_t clust_size=trim_to_njacks_multiple(conf_list,true); //!< cluster size

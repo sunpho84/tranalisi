@@ -33,18 +33,15 @@ djvec_t get_contraction(const string &combo,const string &ID,vector<size_t> &con
   return vec_filter(data,gslice(base_nel*offset,{hw,T},{each*base_nel,1})).symmetrized(tpar);
 }
 
-djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size_t tmax,const double use_tad)
+djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size_t tmax,const double use_tad,const size_t im)
 {
-  auto get=[&conf_list]
-    (string tag_rev,string tag_for,const string &ID,const size_t reim,const int tpar)
+  auto get=[&conf_list,im]
+    (string tag_bw,string tag_fw,const string &ID,const size_t reim,const int tpar)
     {
-      if(tag_rev!="") tag_rev="_"+tag_rev;
-      if(tag_for!="") tag_for="_"+tag_for;
-      djvec_t res=get_contraction("Spect0"+tag_rev+"_Spect0"+tag_for,ID,conf_list,reim,tpar);
+      string name="M"+to_string(im)+"_R0"+tag_bw+"_M"+to_string(im)+"_R0"+tag_fw;
+      djvec_t res=get_contraction(name,ID,conf_list,reim,tpar);
       
-      if(tag_rev=="") tag_rev="_0";
-      if(tag_for=="") tag_for="_0";
-      res.ave_err().write("plots/contr_"+ID+tag_rev+tag_for+".xmg");
+      res.ave_err().write("plots/"+name+".xmg");
       
       return res;
     };
