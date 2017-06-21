@@ -25,6 +25,8 @@ void set_mr_gbil_ind(size_t nm,size_t nr)
 
 void set_jbil_verts(bool set_QED)
 {
+  cout<<"Setting all "<<nmr_gbil<<" vbilinear verts"<<endl;
+  
   jverts_0.resize(nmr_gbil,vjbil_vert_t(imoms.size()));
   if(set_QED)
     for(auto &o : {&jverts_em,&jverts_P,&jverts_S})

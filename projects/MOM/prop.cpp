@@ -48,6 +48,8 @@ string get_prop_tag(size_t im,size_t ir,const string &ins)
 
 void set_conf_props(bool set_QED)
 {
+  cout<<"Setting all "<<nmr<<" conf props"<<endl;
+  
   //resize all props
   conf_prop_0.resize(nmr);
   if(set_QED)
@@ -90,6 +92,8 @@ void read_all_mr_props(bool read_QED,const string &template_path)
 
 void set_jprops(bool set_QED)
 {
+  cout<<"Setting all "<<nmr<<" jprops"<<endl;
+  
   jprop_0.resize(nmr,vjprop_t(imoms.size()));
   if(set_QED)
     for(auto &o : {&jprop_2,&jprop_P,&jprop_S})
