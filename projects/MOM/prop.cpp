@@ -52,6 +52,7 @@ void set_conf_props(bool set_QED)
   
   //resize all props
   conf_prop_0.resize(nmr,vprop_t(imoms.size()));
+  cout<<conf_prop_0.size()<<endl;
   if(set_QED)
     for(auto &conf_prop : {&conf_prop_FF,&conf_prop_F,&conf_prop_T,&conf_prop_P,&conf_prop_S})
       conf_prop->resize(nmr,vprop_t(imoms.size()));
@@ -62,30 +63,29 @@ void read_all_mr_INS_props(vector<vprop_t> &conf_prop,const string &template_pat
   for(size_t im=0;im<nm;im++)
     for(size_t r=0;r<nr;r++)
       {
-	cout<<"Reading all "<<template_path<<" "<<ins<<" "<<im<<" "<<r<<endl;
+	cout<<"Reading all "<<template_path<<" "<<ins<<" "<<im<<" "<<r<<" "<<conf_prop.size()<<endl;
 	conf_prop[mr_ind({im,r})]=read_prop(combine(template_path.c_str(),get_prop_tag(im,r,ins).c_str()));
       }
 }
 
-void read_all_mr_QED_props(const string &template_path)
-{
-  for(auto &o : vector<pair<vector<vprop_t>*,string>>({{&conf_prop_FF,"FF"},{&conf_prop_F,"F"},{&conf_prop_T,"T"},{&conf_prop_P,"P"},{&conf_prop_S,""}}))
-    read_all_mr_INS_props(*o.first,template_path,o.second);
-  
-  dcompl_t fact_P(0.0,-1.0);
-  dcompl_t fact_S(-1.0,0.0);
-  
-  //put factors
-  for(auto &pmr_f : vector<pair<vector<vprop_t>*,dcompl_t>>({{&conf_prop_P,fact_P},{&conf_prop_S,fact_S}}))
-    for(auto &p : *pmr_f.first) //all mr
-      for(auto &p_mom : p) //all momentum
-	p_mom*=pmr_f.second;
-}
-
 void read_all_mr_props(bool read_QED,const string &template_path)
 {
-  read_all_mr_LO_props(template_path);
-  if(read_QED) read_all_mr_QED_props(template_path);
+  read_all_mr_INS_props(conf_prop_0,template_path,"0");
+  
+  if(read_QED)
+    {
+      for(auto &o : vector<pair<vector<vprop_t>*,string>>({{&conf_prop_FF,"FF"},{&conf_prop_F,"F"},{&conf_prop_T,"T"},{&conf_prop_P,"P"},{&conf_prop_S,""}}))
+	read_all_mr_INS_props(*o.first,template_path,o.second);
+      
+      dcompl_t fact_P(0.0,-1.0);
+      dcompl_t fact_S(-1.0,0.0);
+      
+      //put factors
+      for(auto &pmr_f : vector<pair<vector<vprop_t>*,dcompl_t>>({{&conf_prop_P,fact_P},{&conf_prop_S,fact_S}}))
+	for(auto &p : *pmr_f.first) //all mr
+	  for(auto &p_mom : p) //all momentum
+	    p_mom*=pmr_f.second;
+    }
 }
 
 void set_jprops(bool set_QED)

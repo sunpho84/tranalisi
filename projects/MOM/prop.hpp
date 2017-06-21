@@ -44,12 +44,6 @@ void set_conf_props(bool set_QED);
 //! read propagators with a certain insertion, for all mass and r
 void read_all_mr_INS_props(vector<vprop_t> &conf_prop,const string &template_path,const string &ins);
 
-//! read all propagators for LO
-EXTERN_PROP function<void(const string &)> read_all_mr_LO_props INIT_TO(bind(read_all_mr_INS_props,conf_prop_0,_1,"0"));
-
-//! read all propagators for QED
-void read_all_mr_QED_props(const string &template_path);
-
 //! read all propagators, LO and QED
 void read_all_mr_props(bool read_QED,const string &template_path);
 
