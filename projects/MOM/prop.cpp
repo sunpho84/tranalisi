@@ -119,6 +119,8 @@ void clusterize_all_mr_INS_props(vector<vjprop_t> &jprop,size_t clust_size)
 
 void clusterize_all_mr_props(bool use_QED,size_t clust_size)
 {
+  cout<<"Clusterizing all props, clust_size="<<clust_size<<endl;
+  
   clusterize_all_mr_INS_props(jprop_0,clust_size);
   if(use_QED)
     for(auto &p : {&jprop_2,&jprop_P,&jprop_S})

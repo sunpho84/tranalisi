@@ -70,6 +70,8 @@ void clusterize_all_mr_gbil_INS_verts(vector<vjbil_vert_t> &jverts,size_t clust_
 
 void clusterize_all_mr_gbil_verts(bool use_QED,size_t clust_size)
 {
+  cout<<"Clusterizing all gbil verts, clust_size="<<clust_size<<endl;
+  
   clusterize_all_mr_gbil_INS_verts(jverts_0,clust_size);
   if(use_QED)
     for(auto &v : {&jverts_em,&jverts_P,&jverts_S})
