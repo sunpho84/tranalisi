@@ -78,12 +78,6 @@ int main(int narg,char **arg)
   const size_t nhits=input.read<size_t>("NHits"); //!< number of hits
   const size_t nhits_to_use=input.read<size_t>("NHitsToUse"); //!< number of hits to be used
   
-  //! template path
-  string template_path=input.read<string>("TemplatePath");
-  
-  //! include or not tadpole
-  const double use_tad=input.read<double>("UseTad");
-  
   //////////////////////////////////////////////////
   
   //set the number of jackknives
@@ -108,14 +102,14 @@ int main(int narg,char **arg)
   set_class_of_equiv_moms();
   //list_all_smom_pairs();
   
-  string test_path=template_path;
+  string test_path="out/%04zu/fft_S_M0_R0_0";
   if(nhits>1) test_path+="_hit_0";
   vector<size_t> conf_list=get_existing_paths_in_range(test_path,conf_range); //!< list of existing confs
   if(conf_list.size()==0) CRASH("list of configurations is empty! check %s ",test_path.c_str());
   
   //compute deltam_cr
   size_t tmin=12,tmax=23;
-  djack_t deltam_cr=compute_deltam_cr(conf_list,tmin,tmax,use_tad,im_sea);
+  djack_t deltam_cr=compute_deltam_cr(conf_list,tmin,tmax,im_sea);
   cout<<"Deltam cr: "<<deltam_cr<<endl;
   
   size_t clust_size=trim_to_njacks_multiple(conf_list,true); //!< cluster size

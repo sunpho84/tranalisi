@@ -33,7 +33,7 @@ djvec_t get_contraction(const string &combo,const string &ID,vector<size_t> &con
   return vec_filter(data,gslice(base_nel*offset,{hw,T},{each*base_nel,1})).symmetrized(tpar);
 }
 
-djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size_t tmax,const double use_tad,const size_t im)
+djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size_t tmax,const size_t im)
 {
   auto get=[&conf_list,im]
     (string tag_bw,string tag_fw,const string &ID,const size_t reim,const int tpar)
@@ -64,7 +64,7 @@ djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size
   djvec_t V0P5_P0=get("P","","V0P5",RE,ODD);
   
   //build numerator
-  djvec_t num_deltam_cr_corr=V0P5_LL+V0P5_0M+V0P5_M0+use_tad*(V0P5_0T+V0P5_T0)+V0P5_0P+V0P5_P0;
+  djvec_t num_deltam_cr_corr=V0P5_LL+V0P5_0M+V0P5_M0+V0P5_0T+V0P5_T0+V0P5_0P+V0P5_P0;
   //build denominator
   djvec_t den_deltam_cr_corr=V0P5_P0-V0P5_0P;
   djvec_t deltam_cr_corr=num_deltam_cr_corr/den_deltam_cr_corr;
