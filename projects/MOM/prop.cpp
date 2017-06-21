@@ -51,15 +51,10 @@ void set_conf_props(bool set_QED)
   cout<<"Setting all "<<nmr<<" conf props"<<endl;
   
   //resize all props
-  conf_prop_0.resize(nmr);
+  conf_prop_0.resize(nmr,vprop_t(imoms.size()));
   if(set_QED)
-    {
-      conf_prop_FF.resize(nmr);
-      conf_prop_F.resize(nmr);
-      conf_prop_T.resize(nmr);
-      conf_prop_P.resize(nmr);
-      conf_prop_S.resize(nmr);
-    }
+    for(auto &conf_prop : {&conf_prop_FF,&conf_prop_F,&conf_prop_T,&conf_prop_P,&conf_prop_S})
+      conf_prop->resize(nmr,vprop_t(imoms.size()));
 }
 
 void read_all_mr_INS_props(vector<vprop_t> &conf_prop,const string &template_path,const string &ins)

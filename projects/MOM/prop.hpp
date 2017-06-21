@@ -23,7 +23,6 @@ vprop_t read_prop(const string &template_path,size_t iconf,size_t ihit);
 //! add the prop of a given conf on the jackknife
 void build_jackknifed_prop(vjprop_t &jprop,const vprop_t &prop,size_t ijack);
 
-
 //! index of the (im,ir) prop
 EXTERN_PROP index_t mr_ind;
 void set_mr_ind(size_t nm,size_t nr);
