@@ -14,7 +14,7 @@
  #define INIT_TO(...) = __VA_ARGS__
 #endif
 
-using vjbil_vert_t=vector<jprop_t>; //! vector of jackkniffed bilinear vertex (spanning moms)
+using vjbil_vert_t=vector<jprop_t>; //! vector of jackkniffed bilinear vertex
 
 //! bilinears Z
 enum iZbil{iZS,iZA,iZP,iZV,iZT};
@@ -24,7 +24,7 @@ const string Zbil_tag="SAPVT";
 const size_t nZbil=5;
 
 //! compute the projected bilinears
-vector<djvec_t> compute_proj_bil(const vjprop_t &jprop_inv1,vjbil_vert_t &jverts,const vjprop_t &jprop_inv2);
+//vector<djvec_t> compute_proj_bil(const vjprop_t &jprop_inv1,vjbil_vert_t &jverts,const vjprop_t &jprop_inv2);
 
 //! compute a certain vertex, with a given pair of propagators
 void build_jackknifed_vert_Gamma(vjbil_vert_t &jverts,const vprop_t &prop1,size_t iG,const vprop_t &prop2,size_t ijack);
@@ -46,10 +46,10 @@ void set_mr_gbil_ind(size_t nm,size_t nr);
 EXTERN_ZBIL size_t nmr_Zbil; //!< total number of m and r pair times nZbil
 EXTERN_ZBIL size_t nmr_gbil; //!< total number of m and r pair times nGamma
 
-EXTERN_ZBIL vector<vjbil_vert_t> jverts_0; //!< jackkniffed vertex
-EXTERN_ZBIL vector<vjbil_vert_t> jverts_em; //!< jackkniffed vertex with all em corrs
-EXTERN_ZBIL vector<vjbil_vert_t> jverts_P; //!< jackkniffed P vertex
-EXTERN_ZBIL vector<vjbil_vert_t> jverts_S; //!< jackkniffed S vertex
+EXTERN_ZBIL vjbil_vert_t jverts_0; //!< jackkniffed vertex spanning nm and r
+EXTERN_ZBIL vjbil_vert_t jverts_em; //!< jackkniffed vertex with all em corrs
+EXTERN_ZBIL vjbil_vert_t jverts_P; //!< jackkniffed P vertex
+EXTERN_ZBIL vjbil_vert_t jverts_S; //!< jackkniffed S vertex
 
 //! set the vertex combo
 void set_jbil_verts(bool set_QED);

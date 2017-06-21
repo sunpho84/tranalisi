@@ -124,28 +124,42 @@ int main(int narg,char **arg)
   set_mr_Zbil_ind(nm,nr);
   set_jbil_verts(use_QED);
   
-#pragma omp parallel for
-  for(size_t ijack=0;ijack<njacks;ijack++)
-    for(size_t iconf=ijack*clust_size;iconf<(ijack+1)*clust_size;iconf++)
+  vector<string> ins_list={"0"};
+  if(use_QED) for(auto &ins : {"P","S","T","F","FF"}) ins_list.push_back(ins);
+  
+  index_t conf_hit_ind({{"conf",conf_list.size()},{"hit",nhits}});
+  
+  map<string,vector<raw_file_t>> prop_files;
+  for(auto &ins : ins_list) prop_files[ins].resize(conf_hit_ind.max());
+  
+  for(auto &ins : ins_list)
+    for(size_t iconf=0;iconf<conf_list.size();iconf++)
       for(size_t ihit=0;ihit<nhits_to_use;ihit++)
-	{
-	  printf("Thread %d/%d reading conf %zu/%zu hit %zu/%zu\n",omp_get_thread_num()+1,omp_get_num_threads(),iconf+1,conf_list.size(),ihit+1,nhits_to_use);
-	  
-	  string template_path_conf_hit=combine("out/%04zu/fft_",conf_list[iconf])+"%s"+suff_hit;
-	  read_all_mr_props(use_QED,template_path_conf_hit);
-	  build_all_mr_jackknifed_props(use_QED,ijack);
-	  build_all_mr_gbil_jackknifed_verts(use_QED,ijack);
-	}
+	prop_files[ins][conf_hit_ind({iconf,ihit})].open(combine("out/%04zu/fft_",conf_list[iconf])+ins+combine(suff_hit.c_str(),ihit),"r");
   
-  clusterize_all_mr_props(use_QED,clust_size);
-  clusterize_all_mr_gbil_verts(use_QED,clust_size);
-  
-  jverts_em=jverts_em-jverts_P*SC(SC(deltam_cr));
-  
-  jprop_2=jprop_2-jprop_P*SC(SC(deltam_cr));
-  
-  vector<vjprop_t> jprop_inv=get_all_mr_props_inv(jprop_0); //!< inverse prop
-  vector<vjprop_t> jprop_em_inv=jprop_inv*jprop_2*jprop_inv;
+  for(size_t imom=0;imom<imoms.size();imom++)
+    {
+#pragma omp parallel for
+      for(size_t ijack=0;ijack<njacks;ijack++)
+	for(size_t iconf=ijack*clust_size;iconf<(ijack+1)*clust_size;iconf++)
+	  for(size_t ihit=0;ihit<nhits_to_use;ihit++)
+	    {
+	      printf("Thread %d/%d reading conf %zu/%zu hit %zu/%zu\n",omp_get_thread_num()+1,omp_get_num_threads(),iconf+1,conf_list.size(),ihit+1,nhits_to_use);
+	      
+	      read_all_mr_props(use_QED,prop_files);
+	      build_all_mr_jackknifed_props(use_QED,ijack);
+	      build_all_mr_gbil_jackknifed_verts(use_QED,ijack);
+	    }
+      
+      clusterize_all_mr_props(use_QED,clust_size);
+      clusterize_all_mr_gbil_verts(use_QED,clust_size);
+      
+      jverts_em=jverts_em-jverts_P*SC(deltam_cr);
+      jprop_2=jprop_2-jprop_P*SC(deltam_cr);
+      
+      vjprop_t jprop_inv=get_all_mr_props_inv(jprop_0); //!< inverse prop
+      vjprop_t jprop_em_inv=jprop_inv*jprop_2*jprop_inv;
+    }
   
   // //compute Zq, Zq_sig1 and Zbil for all moms
   // djvec_t Zq_allmoms=compute_Zq(jprop_inv);

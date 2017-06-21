@@ -13,26 +13,20 @@
 #include <geometry.hpp>
 #include <types.hpp>
 
-vprop_t read_prop(const string &path)
+prop_t read_prop(raw_file_t &file)
 {
-  vprop_t prop(imoms.size());
+  prop_t prop;
   
   //! source file
-  raw_file_t file(path,"r");
-  
   for(size_t is_so=0;is_so<NSPIN;is_so++)
     for(size_t ic_so=0;ic_so<NCOL;ic_so++)
-      for(size_t iall_mom=0,imom=0;iall_mom<filt_moms.size();iall_mom++)
-	{
-	  for(size_t is_si=0;is_si<NSPIN;is_si++)
-	    for(size_t ic_si=0;ic_si<NCOL;ic_si++)
-	      {
-		dcompl_t c;
-		file.bin_read(c);
-		if(filt_moms[iall_mom]) prop[imom](isc(is_si,ic_si),isc(is_so,ic_so))=c;
-	    }
-	  if(filt_moms[iall_mom]) imom++;
-	}
+      for(size_t is_si=0;is_si<NSPIN;is_si++)
+	for(size_t ic_si=0;ic_si<NCOL;ic_si++)
+	  {
+	    dcompl_t c;
+	    file.bin_read(c);
+	    prop(isc(is_si,ic_si),isc(is_so,ic_so))=c;
+	  }
   
   return prop;
 }
@@ -51,36 +45,34 @@ void set_conf_props(bool set_QED)
   cout<<"Setting all "<<nmr<<" conf props"<<endl;
   
   //resize all props
-  conf_prop_0.resize(nmr,vprop_t(imoms.size()));
+  mom_prop_0.resize(nmr);
   if(set_QED)
-    for(auto &conf_prop : {&conf_prop_FF,&conf_prop_F,&conf_prop_T,&conf_prop_P,&conf_prop_S})
-      conf_prop->resize(nmr,vprop_t(imoms.size()));
+    for(auto &mom_prop : {&mom_prop_FF,&mom_prop_F,&mom_prop_T,&mom_prop_P,&mom_prop_S})
+      mom_prop->resize(nmr);
 }
 
-void read_all_mr_INS_props(vector<vprop_t> &conf_prop,const string &template_path,const string &ins)
+void read_all_mr_INS_props(vprop_t &mom_prop,map<string,vector<raw_file_t>> &map_files,const string &ins)
 {
-  for(size_t im=0;im<nm;im++)
-    for(size_t r=0;r<nr;r++)
-      conf_prop[mr_ind({im,r})]=read_prop(combine(template_path.c_str(),get_prop_tag(im,r,ins).c_str()));
+  if(map_files.find(ins)==map_files.end()) CRASH("Unable to find prop with insertion kind: %s",ins.c_str());
+  for(size_t imr=0;imr<nmr;imr++) mom_prop[imr]=read_prop(map_files[ins][imr]);
 }
 
-void read_all_mr_props(bool read_QED,const string &template_path)
+void read_all_mr_props(bool read_QED,map<string,vector<raw_file_t>> &map_files)
 {
-  read_all_mr_INS_props(conf_prop_0,template_path,"0");
+  read_all_mr_INS_props(mom_prop_0,map_files,"0");
   
   if(read_QED)
     {
-      for(auto &o : vector<pair<vector<vprop_t>*,string>>({{&conf_prop_FF,"FF"},{&conf_prop_F,"F"},{&conf_prop_T,"T"},{&conf_prop_P,"P"},{&conf_prop_S,"S"}}))
-	read_all_mr_INS_props(*o.first,template_path,o.second);
+      for(auto &o : vector<pair<vprop_t*,string>>({{&mom_prop_FF,"FF"},{&mom_prop_F,"F"},{&mom_prop_T,"T"},{&mom_prop_P,"P"},{&mom_prop_S,"S"}}))
+	read_all_mr_INS_props(*o.first,map_files,o.second);
       
       dcompl_t fact_P(0.0,-1.0);
       dcompl_t fact_S(-1.0,0.0);
       
       //put factors
-      for(auto &pmr_f : vector<pair<vector<vprop_t>*,dcompl_t>>({{&conf_prop_P,fact_P},{&conf_prop_S,fact_S}}))
+      for(auto &pmr_f : vector<pair<vprop_t*,dcompl_t>>({{&mom_prop_P,fact_P},{&mom_prop_S,fact_S}}))
 	for(auto &p : *pmr_f.first) //all mr
-	  for(auto &p_mom : p) //all momentum
-	    p_mom*=pmr_f.second;
+	  p*=pmr_f.second;
     }
 }
 
@@ -88,33 +80,31 @@ void set_jprops(bool set_QED)
 {
   cout<<"Setting all "<<nmr<<" jprops"<<endl;
   
-  jprop_0.resize(nmr,vjprop_t(imoms.size()));
+  jprop_0.resize(nmr);
   if(set_QED)
     for(auto &o : {&jprop_2,&jprop_P,&jprop_S})
-      o->resize(nmr,vjprop_t(imoms.size()));
+      o->resize(nmr);
 }
 
-void build_all_mr_jackknifed_INS_props(vector<vjprop_t> &out,const vector<vprop_t> &in,size_t ijack)
+void build_all_mr_jackknifed_INS_props(vjprop_t &out,const vprop_t &in,size_t ijack)
 {
   for(size_t imr=0;imr<nmr;imr++)
-    for(size_t imom=0;imom<imoms.size();imom++)
-      add_to_cluster(out[imr][imom],in[imr][imom],ijack);
+    add_to_cluster(out[imr],in[imr],ijack);
 }
 
 void build_all_mr_jackknifed_props(bool set_QED,size_t ijack)
 {
-  build_all_mr_jackknifed_INS_props(jprop_0,conf_prop_0,ijack);
+  build_all_mr_jackknifed_INS_props(jprop_0,mom_prop_0,ijack);
   if(set_QED)
-    for(auto &jp_p : vector<pair<vector<vjprop_t>*,vector<vprop_t>*>>({{&jprop_2,&conf_prop_FF},{&jprop_2,&conf_prop_T},{&jprop_P,&conf_prop_P},{&jprop_S,&conf_prop_S}}))
+    for(auto &jp_p : vector<pair<vjprop_t*,vprop_t*>>({{&jprop_2,&mom_prop_FF},{&jprop_2,&mom_prop_T},{&jprop_P,&mom_prop_P},{&jprop_S,&mom_prop_S}}))
   build_all_mr_jackknifed_INS_props(*jp_p.first,*jp_p.second,ijack);
 }
 
-void clusterize_all_mr_INS_props(vector<vjprop_t> &jprop,size_t clust_size)
+void clusterize_all_mr_INS_props(vjprop_t &jprop,size_t clust_size)
 {
-  for(size_t imr=0;imr<nmr;imr++)
 #pragma omp parallel for
-    for(size_t imom=0;imom<imoms.size();imom++)
-      clusterize(jprop[imr][imom],clust_size);
+  for(size_t imr=0;imr<nmr;imr++)
+    clusterize(jprop[imr],clust_size);
 }
 
 void clusterize_all_mr_props(bool use_QED,size_t clust_size)
@@ -127,17 +117,16 @@ void clusterize_all_mr_props(bool use_QED,size_t clust_size)
       clusterize_all_mr_INS_props(*p,clust_size);
 }
 
-vector<vjprop_t> get_all_mr_props_inv(const vector<vjprop_t> &jprop)
+vjprop_t get_all_mr_props_inv(const vjprop_t &jprop)
 {
   cout<<"Inverting all props"<<endl;
   
-  vector<vjprop_t> jprop_inv(jprop.size(),vjprop_t(imoms.size()));
+  vjprop_t jprop_inv(jprop.size());
   
-  for(size_t imr=0;imr<nmr;imr++)
 #pragma omp parallel for
-    for(size_t imom=0;imom<imoms.size();imom++)
-      for(size_t ijack=0;ijack<=njacks;ijack++)
-	put_into_jackknife(jprop_inv[imr][imom],get_from_jackknife(jprop[imr][imom],ijack).inverse(),ijack);
+  for(size_t imr=0;imr<nmr;imr++)
+    for(size_t ijack=0;ijack<=njacks;ijack++)
+      put_into_jackknife(jprop_inv[imr],get_from_jackknife(jprop[imr],ijack).inverse(),ijack);
   
   return jprop_inv;
 }

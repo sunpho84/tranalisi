@@ -27,45 +27,43 @@ void set_jbil_verts(bool set_QED)
 {
   cout<<"Setting all "<<nmr_gbil<<" vbilinear verts"<<endl;
   
-  jverts_0.resize(nmr_gbil,vjbil_vert_t(imoms.size()));
+  jverts_0.resize(nmr_gbil);
   if(set_QED)
     for(auto &o : {&jverts_em,&jverts_P,&jverts_S})
-      o->resize(nmr_gbil,vjbil_vert_t(imoms.size()));
+      o->resize(nmr_gbil);
 }
 
-void build_all_mr_gbil_jackknifed_INS_verts(vector<vjbil_vert_t> &jverts,const vector<vprop_t> &prop1,const vector<vprop_t> &prop2,size_t ijack)
+void build_all_mr_gbil_jackknifed_INS_verts(vjbil_vert_t &jverts,const vprop_t &prop1,const vprop_t &prop2,size_t ijack)
 {
   for(size_t imr_bw=0;imr_bw<nmr;imr_bw++)
     for(size_t imr_fw=0;imr_fw<nmr;imr_fw++)
-      for(size_t imom=0;imom<imoms.size();imom++)
-	for(size_t iG=0;iG<nGamma;iG++)
-	  add_to_cluster(jverts[mr_gbil_ind({imr_bw,imr_fw,iG})][imom],prop1[imr_fw][imom]*Gamma[iG]*Gamma[5]*prop2[imr_bw][imom].adjoint()*Gamma[5],ijack);
+      for(size_t iG=0;iG<nGamma;iG++)
+	add_to_cluster(jverts[mr_gbil_ind({imr_bw,imr_fw,iG})],prop1[imr_fw]*Gamma[iG]*Gamma[5]*prop2[imr_bw].adjoint()*Gamma[5],ijack);
 }
 
 void build_all_mr_gbil_jackknifed_verts(bool use_QED,size_t ijack)
 {
-  build_all_mr_gbil_jackknifed_INS_verts(jverts_0,conf_prop_0,conf_prop_0,ijack);
+  build_all_mr_gbil_jackknifed_INS_verts(jverts_0,mom_prop_0,mom_prop_0,ijack);
   
   if(use_QED)
-  for(auto &o : vector<tuple<vector<vjbil_vert_t>*,vector<vprop_t>*,vector<vprop_t>*>>{
-    {&jverts_em,&conf_prop_F,&conf_prop_F},
-    {&jverts_em,&conf_prop_FF,&conf_prop_0},
-    {&jverts_em,&conf_prop_0,&conf_prop_FF},
-    {&jverts_em,&conf_prop_T,&conf_prop_0},
-    {&jverts_em,&conf_prop_0,&conf_prop_T},
-    {&jverts_P,&conf_prop_P,&conf_prop_0},
-    {&jverts_P,&conf_prop_0,&conf_prop_P},
-    {&jverts_S,&conf_prop_S,&conf_prop_0},
-    {&jverts_S,&conf_prop_0,&conf_prop_S}})
+  for(auto &o : vector<tuple<vjbil_vert_t*,vprop_t*,vprop_t*>>{
+    {&jverts_em,&mom_prop_F,&mom_prop_F},
+    {&jverts_em,&mom_prop_FF,&mom_prop_0},
+    {&jverts_em,&mom_prop_0,&mom_prop_FF},
+    {&jverts_em,&mom_prop_T,&mom_prop_0},
+    {&jverts_em,&mom_prop_0,&mom_prop_T},
+    {&jverts_P,&mom_prop_P,&mom_prop_0},
+    {&jverts_P,&mom_prop_0,&mom_prop_P},
+    {&jverts_S,&mom_prop_S,&mom_prop_0},
+    {&jverts_S,&mom_prop_0,&mom_prop_S}})
     build_all_mr_gbil_jackknifed_INS_verts(*get<0>(o),*get<1>(o),*get<2>(o),ijack);
 }
 
-void clusterize_all_mr_gbil_INS_verts(vector<vjbil_vert_t> &jverts,size_t clust_size)
+void clusterize_all_mr_gbil_INS_verts(vjbil_vert_t &jverts,size_t clust_size)
 {
-  for(size_t imr_gbil=0;imr_gbil<nmr_gbil;imr_gbil++)
 #pragma omp parallel for
-    for(size_t imom=0;imom<imoms.size();imom++)
-      clusterize(jverts[imr_gbil][imom],clust_size);
+  for(size_t imr_gbil=0;imr_gbil<nmr_gbil;imr_gbil++)
+    clusterize(jverts[imr_gbil],clust_size);
 }
 
 void clusterize_all_mr_gbil_verts(bool use_QED,size_t clust_size)
