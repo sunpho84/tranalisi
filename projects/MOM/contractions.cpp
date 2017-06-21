@@ -17,7 +17,7 @@ djvec_t get_contraction(const string &combo,const string &ID,vector<size_t> &con
   const vector<string> cID={"V0P5","P5P5"};
   
   const size_t ncols=2;
-  const string templ="out/%04d/mes_contr_"+combo;
+  const string templ="out/%04zu/mes_contr_"+combo;
   const djvec_t data=read_conf_set_t(templ,conf_list,ncols,{0,1},T,SILENT);
   if(data.size()==0) CRASH("No file opened for template %s",templ.c_str());
   
@@ -38,7 +38,7 @@ djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size
   auto get=[&conf_list,im]
     (string tag_bw,string tag_fw,const string &ID,const size_t reim,const int tpar)
     {
-      string name="M"+to_string(im)+"_R0"+tag_bw+"_M"+to_string(im)+"_R0"+tag_fw;
+      string name="M"+to_string(im)+"_R0_"+tag_bw+"_M"+to_string(im)+"_R0_"+tag_fw;
       djvec_t res=get_contraction(name,ID,conf_list,reim,tpar);
       
       res.ave_err().write("plots/"+name+".xmg");
