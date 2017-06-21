@@ -19,6 +19,23 @@
 #include <Zq.hpp>
 #include <Zq_sig1.hpp>
 
+index_t conf_hit_ind;
+vector<string> ins_list={"0"};
+
+//! open all files in battery
+map<string,vector<raw_file_t>>  open_all_prop_files(const vector<size_t> &conf_list,size_t nhits,bool use_QED)
+{
+  if(use_QED) for(auto &ins : {"P","S","T","F","FF"}) ins_list.push_back(ins);
+  
+  conf_hit_ind.set_ranges({{"conf",conf_list.size()},{"hit",nhits}});
+  index_t m_r_conf_hit_ind({{"m",nm},{"r",nr},{"conf",conf_list.size()},{"hit",nhits}});
+  
+  map<string,vector<raw_file_t>> prop_files;
+  for(auto &ins : ins_list) prop_files[ins].resize(m_r_conf_hit_ind.max());
+  
+  return prop_files;
+}
+
 //! write a given Z
 void write_Z(const string &name,const djvec_t &Z,const vector<double> &pt2)
 {
@@ -124,24 +141,7 @@ int main(int narg,char **arg)
   set_mr_Zbil_ind(nm,nr);
   set_jbil_verts(use_QED);
   
-  vector<string> ins_list={"0"};
-  if(use_QED) for(auto &ins : {"P","S","T","F","FF"}) ins_list.push_back(ins);
-  
-  index_t m_r_conf_hit_ind({{"m",nm},{"r",nr},{"conf",conf_list.size()},{"hit",nhits}});
-  index_t conf_hit_ind({{"conf",conf_list.size()},{"hit",nhits}});
-  
-  map<string,vector<raw_file_t>> prop_files;
-  for(auto &ins : ins_list) prop_files[ins].resize(m_r_conf_hit_ind.max());
-  
-  for(auto &ins : ins_list)
-    for(size_t im=0;im<nm;im++)
-      for(size_t r=0;r<nr;r++)
-	for(size_t iconf=0;iconf<conf_list.size();iconf++)
-	  for(size_t ihit=0;ihit<nhits_to_use;ihit++)
-	    {
-	      string path=combine("out/%04zu/fft_",conf_list[iconf])+get_prop_tag(im,r,ins)+combine(suff_hit.c_str(),ihit);
-	      prop_files[ins][m_r_conf_hit_ind({im,r,iconf,ihit})].open(path,"r");
-	    }
+  map<string,vector<raw_file_t>> prop_files=open_all_prop_files(conf_list,nhits,use_QED);
   
   for(size_t imom=0;imom<imoms.size();imom++)
     {
