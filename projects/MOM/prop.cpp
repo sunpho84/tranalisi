@@ -129,7 +129,7 @@ void clusterize_all_mr_props(bool use_QED,size_t clust_size)
 
 vector<vjprop_t> get_all_mr_props_inv(const vector<vjprop_t> &jprop)
 {
-  vector<vjprop_t> jprop_inv(jprop.size());
+  vector<vjprop_t> jprop_inv(jprop.size(),vjprop_t(imoms.size()));
   
   for(size_t imr=0;imr<nmr;imr++)
 #pragma omp parallel for
