@@ -13,7 +13,7 @@
 #include <valarray>
 #include <vector>
 
-#include <traits>
+#include <traits.hpp>
 
 using namespace std;
 using namespace placeholders;
@@ -32,12 +32,17 @@ init_nel(const vector<T> &obj)
 ////////////////////////////////////////////// a scalar wrapper //////////////////////////////////////////
 
 template <class T>
-class SC()
+class SC_t
 {
  public:
-  T& val;
-  SC(T& val) : val(val) {}
+  const T *val;
+  SC_t(const T &val) : val(&val) {}
 };
+
+//! return a scalar wrapper around T
+template <class T>
+auto SC(const T &val) -> SC_t<T>
+{return SC_t<T>(val);}
 
 //////////////////////////////////////////////// operations //////////////////////////////////////////////
 
@@ -73,7 +78,7 @@ class SC()
     return first;							\
   }									\
   /* operation between vector and scalar */				\
-    template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<base_type_t<TV>,TS>::value)>> \
+  template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<base_type_t<TV>,TS>::value)>> \
   TV operator OP(const TV &first,const TS &second)			\
   {									\
     TV out(init_nel(first));						\
@@ -91,7 +96,23 @@ class SC()
   /* self-version of a given operator */				\
     template <class TV,class TS,class=enable_if_t<is_vector<TV>::value and is_arithmetic<TS>::value and !(is_same<base_type_t<TV>,TS>::value)>> \
     auto operator OP##=(TV &first,const TS &second) -> decltype(first OP second) \
-    {return first=first OP second;}
+    {return first=first OP second;}					\
+    /* operation between a generic vector and a scalar of type different from base_type */ \
+    template<class TV,class TT=vector_traits<TV>,class TS,class=enable_if_t<TT::is_vector and !is_same<typename TT::base_type,TS>::value>> \
+    TV operator OP(const TV &first,const SC_t<TS> &second)		\
+    {									\
+      TV out(init_nel(first));						\
+      for(size_t it=0;it<first.size();it++) out[it]=first[it] OP *second.val; \
+      return out;							\
+    }									\
+    /* operation between a generic vector and a scalar of type different from base_type */ \
+    template<class TV,class TT=vector_traits<TV>,class TS,class=enable_if_t<TT::is_vector and !is_same<typename TT::base_type,TS>::value>> \
+    TV operator OP(const SC_t<TS> &first,const TV &second)		\
+    {									\
+      TV out(init_nel(second));						\
+      for(size_t it=0;it<first.size();it++) out[it]=first.val OP *second[it]; \
+      return out;							\
+    }
 
 DEFINE_BIN_OPERATOR(+)
 DEFINE_BIN_OPERATOR(-)
