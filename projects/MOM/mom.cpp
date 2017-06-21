@@ -131,7 +131,7 @@ int main(int narg,char **arg)
 	{
 	  printf("Thread %d/%d reading conf %zu/%zu hit %zu/%zu\n",omp_get_thread_num()+1,omp_get_num_threads(),iconf+1,conf_list.size(),ihit+1,nhits_to_use);
 	  
-	  string template_path_conf_hit=combine("out/%04zu/fft_",conf_list[iconf])+"%s/"+suff_hit;
+	  string template_path_conf_hit=combine("out/%04zu/fft_",conf_list[iconf])+"%s"+suff_hit;
 	  read_all_mr_props(use_QED,template_path_conf_hit);
 	  build_all_mr_jackknifed_props(use_QED,ijack);
 	  build_all_mr_gbil_jackknifed_verts(use_QED,ijack);
