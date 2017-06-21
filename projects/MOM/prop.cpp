@@ -66,7 +66,10 @@ void read_all_mr_INS_props(vector<vprop_t> &conf_prop,const string &template_pat
 {
   for(size_t im=0;im<nm;im++)
     for(size_t r=0;r<nr;r++)
-      conf_prop[mr_ind({im,r})]=read_prop(combine(template_path.c_str(),get_prop_tag(im,r,ins).c_str()));
+      {
+	cout<<"Reading all "<<template_path<<" "<<ins<<" "<<im<<" "<<r<<endl;
+	conf_prop[mr_ind({im,r})]=read_prop(combine(template_path.c_str(),get_prop_tag(im,r,ins).c_str()));
+      }
 }
 
 void read_all_mr_QED_props(const string &template_path)
