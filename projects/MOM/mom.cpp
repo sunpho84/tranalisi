@@ -146,12 +146,10 @@ int main(int narg,char **arg)
   
   jverts_em=jverts_em-jverts_P*SC(SC(deltam_cr));
   
-  // 	jprop_em[imom]=jprop_2T[imom]-deltam_cr*jprop_P[imom];
-  //     }
-  // }
+  jprop_2=jprop_2-jprop_P*SC(SC(deltam_cr));
   
-  // vjprop_t jprop_inv=get_prop_inv(jprop); //!< inverse prop
-  // vjprop_t jprop_em_inv=jprop_inv*jprop_em*jprop_inv;
+  vector<vjprop_t> jprop_inv=get_all_mr_props_inv(jprop_0); //!< inverse prop
+  vector<vjprop_t> jprop_em_inv=jprop_inv*jprop_2*jprop_inv;
   
   // //compute Zq, Zq_sig1 and Zbil for all moms
   // djvec_t Zq_allmoms=compute_Zq(jprop_inv);

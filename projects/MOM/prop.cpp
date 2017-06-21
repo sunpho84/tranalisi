@@ -13,17 +13,6 @@
 #include <geometry.hpp>
 #include <types.hpp>
 
-vjprop_t get_prop_inv(const vjprop_t &jprop)
-{
-  vjprop_t jprop_inv(jprop.size());
-#pragma omp parallel for
-  for(size_t imom=0;imom<imoms.size();imom++)
-    for(size_t ijack=0;ijack<=njacks;ijack++)
-      put_into_jackknife(jprop_inv[imom],get_from_jackknife(jprop[imom],ijack).inverse(),ijack);
-  
-  return jprop_inv;
-}
-
 vprop_t read_prop(const string &path)
 {
   vprop_t prop(imoms.size());
@@ -103,7 +92,7 @@ void set_jprops(bool set_QED)
 {
   jprop_0.resize(nmr,vjprop_t(imoms.size()));
   if(set_QED)
-    for(auto &o : {&jprop_1,&jprop_2,&jprop_P,&jprop_S})
+    for(auto &o : {&jprop_2,&jprop_P,&jprop_S})
       o->resize(nmr,vjprop_t(imoms.size()));
 }
 
@@ -118,7 +107,7 @@ void build_all_mr_jackknifed_props(bool set_QED,size_t ijack)
 {
   build_all_mr_jackknifed_INS_props(jprop_0,conf_prop_0,ijack);
   if(set_QED)
-    for(auto &jp_p : vector<pair<vector<vjprop_t>*,vector<vprop_t>*>>({{&jprop_1,&conf_prop_F},{&jprop_2,&conf_prop_FF},{&jprop_2,&conf_prop_T},{&jprop_P,&conf_prop_P},{&jprop_S,&conf_prop_S}}))
+    for(auto &jp_p : vector<pair<vector<vjprop_t>*,vector<vprop_t>*>>({{&jprop_2,&conf_prop_FF},{&jprop_2,&conf_prop_T},{&jprop_P,&conf_prop_P},{&jprop_S,&conf_prop_S}}))
   build_all_mr_jackknifed_INS_props(*jp_p.first,*jp_p.second,ijack);
 }
 
@@ -134,7 +123,20 @@ void clusterize_all_mr_props(bool use_QED,size_t clust_size)
 {
   clusterize_all_mr_INS_props(jprop_0,clust_size);
   if(use_QED)
-    for(auto &p : {&jprop_1,&jprop_2,&jprop_P,&jprop_S})
+    for(auto &p : {&jprop_2,&jprop_P,&jprop_S})
       clusterize_all_mr_INS_props(*p,clust_size);
+}
+
+vector<vjprop_t> get_all_mr_props_inv(const vector<vjprop_t> &jprop)
+{
+  vector<vjprop_t> jprop_inv(jprop.size());
+  
+  for(size_t imr=0;imr<nmr;imr++)
+#pragma omp parallel for
+    for(size_t imom=0;imom<imoms.size();imom++)
+      for(size_t ijack=0;ijack<=njacks;ijack++)
+	put_into_jackknife(jprop_inv[imr][imom],get_from_jackknife(jprop[imr][imom],ijack).inverse(),ijack);
+  
+  return jprop_inv;
 }
 

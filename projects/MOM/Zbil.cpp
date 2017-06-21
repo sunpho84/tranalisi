@@ -11,31 +11,6 @@
 
 #include <prop.hpp>
 
-// vector<djvec_t> compute_proj_bil(const vjprop_t &jprop_inv1,vjbil_vert_t &jverts,const vjprop_t &jprop_inv2)
-// {
-//   const size_t iZbil_of_iG[nGamma]={iZS,iZA,iZA,iZA,iZA,iZP,iZV,iZV,iZV,iZV,iZT,iZT,iZT,iZT,iZT,iZT};
-//   const double Zdeg[nZbil]={1,4,1,4,6};
-//   vector<djvec_t> pr(nZbil,djvec_t(imoms.size(),0.0)); //!< Five summed projectors
-  
-// #pragma omp parallel for
-//   for(size_t imom=0;imom<imoms.size();imom++)
-//     for(size_t ijack=0;ijack<=njacks;ijack++)
-//       {
-// 	prop_t prop_inv1=get_from_jackknife(jprop_inv1[imom],ijack);
-// 	prop_t prop_inv2=get_from_jackknife(jprop_inv2[imom],ijack);
-	
-// 	for(size_t iG=0;iG<nGamma;iG++)
-// 	  {
-// 	    size_t iZbil=iZbil_of_iG[iG];
-// 	    prop_t vert=get_from_jackknife(jverts[imom][iG],ijack) ;
-// 	    prop_t amp_vert=prop_inv1*vert*Gamma[5]*prop_inv2.adjoint()*Gamma[5];
-// 	    pr[iZbil][imom][ijack]+=(amp_vert*Gamma[iG].adjoint()).trace().real()/(12.0*Zdeg[iZbil]);
-// 	  }
-//       }
-  
-//   return pr;
-// }
-
 void set_mr_Zbil_ind(size_t nm,size_t nr)
 {
   mr_Zbil_ind.set_ranges({{"mr_bw",nmr},{"mr_fw",nmr},{"Zbil",nZbil}});
@@ -98,4 +73,29 @@ void clusterize_all_mr_gbil_verts(bool use_QED,size_t clust_size)
     for(auto &v : {&jverts_em,&jverts_P,&jverts_S})
       clusterize_all_mr_gbil_INS_verts(*v,clust_size);
 }
+
+// vector<djvec_t> compute_proj_bil(const vjprop_t &jprop_inv1,vjbil_vert_t &jverts,const vjprop_t &jprop_inv2)
+// {
+//   const size_t iZbil_of_iG[nGamma]={iZS,iZA,iZA,iZA,iZA,iZP,iZV,iZV,iZV,iZV,iZT,iZT,iZT,iZT,iZT,iZT};
+//   const double Zdeg[nZbil]={1,4,1,4,6};
+//   vector<djvec_t> pr(nZbil,djvec_t(imoms.size(),0.0)); //!< Five summed projectors
+  
+// #pragma omp parallel for
+//   for(size_t imom=0;imom<imoms.size();imom++)
+//     for(size_t ijack=0;ijack<=njacks;ijack++)
+//       {
+// 	prop_t prop_inv1=get_from_jackknife(jprop_inv1[imom],ijack);
+// 	prop_t prop_inv2=get_from_jackknife(jprop_inv2[imom],ijack);
+	
+// 	for(size_t iG=0;iG<nGamma;iG++)
+// 	  {
+// 	    size_t iZbil=iZbil_of_iG[iG];
+// 	    prop_t vert=get_from_jackknife(jverts[imom][iG],ijack) ;
+// 	    prop_t amp_vert=prop_inv1*vert*Gamma[5]*prop_inv2.adjoint()*Gamma[5];
+// 	    pr[iZbil][imom][ijack]+=(amp_vert*Gamma[iG].adjoint()).trace().real()/(12.0*Zdeg[iZbil]);
+// 	  }
+//       }
+  
+//   return pr;
+// }
 

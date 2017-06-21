@@ -17,9 +17,6 @@ EXTERN_PROP size_t nm; //!< number of masses
 EXTERN_PROP size_t nr; //!< number of r
 EXTERN_PROP size_t nmr; //total number of m and r
 
-//! compute the inverse of the passed propagator
-vjprop_t get_prop_inv(const vjprop_t &jprop);
-
 //! read a propagator from a given file
 vprop_t read_prop(const string &template_path,size_t iconf,size_t ihit);
 
@@ -58,7 +55,6 @@ void read_all_mr_QED_props(const string &template_path);
 void read_all_mr_props(bool read_QED,const string &template_path);
 
 EXTERN_PROP vector<vjprop_t> jprop_0; //!< propagator with no photon
-EXTERN_PROP vector<vjprop_t> jprop_1; //!< propagator with 1 photon only
 EXTERN_PROP vector<vjprop_t> jprop_2; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
 EXTERN_PROP vector<vjprop_t> jprop_P; //!< propagator with Pseudoscalar inserion
 EXTERN_PROP vector<vjprop_t> jprop_S; //!< propagator with Scalar insertion
@@ -71,6 +67,9 @@ void build_all_mr_jackknifed_props(bool use_QED,size_t ijack);
 
 //! clusterize the propagators
 void clusterize_all_mr_props(bool use_QED,size_t clust_size);
+
+//! compute the inverse of all mr props
+vector<vjprop_t> get_all_mr_props_inv(const vector<vjprop_t> &jprop);
 
 #undef EXTERN_PROP
 #undef INIT_TO
