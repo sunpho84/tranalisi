@@ -5,8 +5,4 @@
 
 using namespace std;
 
-using vprop_t=vector<prop_t>;
-using jverts_t=array<jprop_t,nGamma>;
-using vjprop_t=vector<jprop_t>;
-
 #endif

@@ -69,8 +69,8 @@ djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size
   //build numerator
   djvec_t num_deltam_cr_corr=V0P5_LL+V0P5_0M+V0P5_M0+use_tad*(V0P5_0T+V0P5_T0)+V0P5_0P+V0P5_P0;
   //build denominator
-  djvec_t den_deltam_cr_corr=-V0P5_P0+V0P5_0P;
-  djvec_t deltam_cr_corr=-num_deltam_cr_corr/den_deltam_cr_corr;
+  djvec_t den_deltam_cr_corr=V0P5_P0-V0P5_0P;
+  djvec_t deltam_cr_corr=num_deltam_cr_corr/den_deltam_cr_corr;
   djack_t deltam_cr=constant_fit(deltam_cr_corr,tmin,tmax,"plots/deltam_cr.xmg");
   
   return deltam_cr;

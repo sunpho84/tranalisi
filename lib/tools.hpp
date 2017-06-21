@@ -9,6 +9,8 @@
 #include <valarray>
 #include <vector>
 
+#include <traits.hpp>
+
 using namespace std;
 
 DEFINE_HAS_METHOD(size);
