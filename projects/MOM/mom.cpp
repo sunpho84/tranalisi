@@ -66,6 +66,22 @@ vector<read_prop_task_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &pr
   return read_tasks;
 }
 
+//! read all m and r for a given i_in_clust and hit
+void read_all_props(vector<read_prop_task_t> &read_tasks)
+{
+  #pragma omp parallel for
+  for(size_t iread=0;iread<read_tasks.size();iread++)
+    {
+      prop_t &prop=*get<0>(read_tasks[iread]);
+      raw_file_t &file=get<1>(read_tasks[iread]);
+      dcompl_t fact=get<2>(read_tasks[iread]);
+      
+      printf("Thread %d/%d reading %s (%zu/%zu)\n",omp_get_thread_num()+1,omp_get_num_threads(),file.get_path().c_str(),iread,read_tasks.size());
+      
+      read_prop(prop,file,fact);
+    }
+}
+
 //! write a given Z
 void write_Z(const string &name,const djvec_t &Z,const vector<double> &pt2)
 {
@@ -180,17 +196,10 @@ int main(int narg,char **arg)
 	
 	for(size_t imom=0;imom<imoms.size();imom++)
 	  {
-	    cout<<"Reading momentum "<<imom+1<<"/"<<imoms.size()<<endl;
-#pragma omp parallel for
-	    for(size_t iread=0;iread<read_tasks.size();iread++)
-	      {
-		prop_t &prop=*get<0>(read_tasks[iread]);
-		raw_file_t &file=get<1>(read_tasks[iread]);
-		dcompl_t fact=get<2>(read_tasks[iread]);
-		printf("Thread %d/%d reading %s (%zu/%zu)\n",omp_get_thread_num()+1,omp_get_num_threads(),file.get_path().c_str(),iread,read_tasks.size());
-		read_prop(prop,file,fact);
-	      //SPOSTA LOOP IN MODO DA AUMENTARE PARALLELIZZABILITA
-	      // vector<m_r_mom_conf_props_t> m_r_props(nmr);
+	    cout<<"Reading clust_entry "<<i_in_clust<<"/"<<clust_size<<", hit "<<ihit<<"/"<<nhits<<", momentum "<<imom+1<<"/"<<imoms.size()<<endl;
+	    read_all_props(read_tasks);
+	    //SPOSTA LOOP IN MODO DA AUMENTARE PARALLELIZZABILITA
+	    // vector<m_r_mom_conf_props_t> m_r_props(nmr);
 	      // for(size_t im=0;im<nm;im++)
 	      // 	for(size_t r=0;r<nr;r++)
 	      // 	  {
@@ -200,8 +209,7 @@ int main(int narg,char **arg)
 	      // 	    build_jackknifed_props(use_QED,m_r_props[imr],im,r,ijack);
 	      // 	  }
 	      // build_all_mr_gbil_jackknifed_verts(use_QED,ijack);
-	      }
-      
+	    
       // clusterize_all_mr_props(use_QED,clust_size);
       // clusterize_all_mr_gbil_verts(use_QED,clust_size);
       

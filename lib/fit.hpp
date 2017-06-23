@@ -35,7 +35,7 @@ template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data
   check_ordered({xmin,xmax,data.size()});
   
   //result of the fit
-  T res(init_nel(data[0]));
+  T res=0.0;
   
   //take weighted average
   double norm=0;
