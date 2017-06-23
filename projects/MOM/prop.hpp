@@ -17,9 +17,6 @@ EXTERN_PROP size_t nm; //!< number of masses
 EXTERN_PROP size_t nr; //!< number of r
 EXTERN_PROP size_t nmr; //total number of m and r
 
-//! read a propagator from a given file
-vprop_t read_prop(const string &template_path,size_t iconf,size_t ihit);
-
 //! add the prop of a given conf on the jackknife
 void build_jackknifed_prop(vjprop_t &jprop,const vprop_t &prop,size_t ijack);
 
@@ -27,24 +24,26 @@ void build_jackknifed_prop(vjprop_t &jprop,const vprop_t &prop,size_t ijack);
 EXTERN_PROP index_t mr_ind;
 void set_mr_ind(size_t nm,size_t nr);
 
-EXTERN_PROP vprop_t mom_prop_0; //!< propagator with no insertion for a given momentum and conf, all m and r
+//! read a propagator
+void read_prop(prop_t &prop,raw_file_t &file,const dcompl_t &fact);
 
-EXTERN_PROP vprop_t mom_prop_FF; //!< propagator with 2 photon insertions
-EXTERN_PROP vprop_t mom_prop_F; //!< propagator with 1 photon insertion
-EXTERN_PROP vprop_t mom_prop_T; //!< propagator with Tadpole insertion
-EXTERN_PROP vprop_t mom_prop_S; //!< propagator with Scalar insertion
-EXTERN_PROP vprop_t mom_prop_P; //!< propagator with Pseudoscalar insertion
+//! holds all m and r for a given momentum, conf, m and r
+class m_r_mom_conf_props_t
+{
+public:
+  prop_t prop_0; //!< propagator with no insertion
+  
+  prop_t prop_FF; //!< propagator with 2 photon insertions
+  prop_t prop_F; //!< propagator with 1 photon insertion
+  prop_t prop_T; //!< propagator with Tadpole insertion
+  prop_t prop_S; //!< propagator with Scalar insertion
+  prop_t prop_P; //!< propagator with Pseudoscalar insertion
+};
 
 //! return the tag of a prop
 string get_prop_tag(size_t im,size_t ir,const string &ins);
 
-//! set the propagators for each conf
-void set_conf_props(bool set_QED);
-
-//! read all propagators, LO and QED
-void read_all_mr_props(bool read_QED,map<string,vector<raw_file_t>> &map_files,size_t iconf,size_t ihit);
-
-EXTERN_PROP vjprop_t jprop_0; //!< propagator with no photon, given momentum and conf, all m and r
+EXTERN_PROP vjprop_t jprop_0; //!< propagator with no photon, given momentum, all m and r
 
 EXTERN_PROP vjprop_t jprop_2; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
 EXTERN_PROP vjprop_t jprop_P; //!< propagator with Pseudoscalar inserion
@@ -52,13 +51,12 @@ EXTERN_PROP vjprop_t jprop_S; //!< propagator with Scalar insertion
 
 EXTERN_PROP index_t m_r_ind; //!| index of m,r
 EXTERN_PROP index_t conf_hit_ind; //!< index of conf and hit
-EXTERN_PROP index_t m_r_conf_hit_ind; //!| index of m,r,conf and hit
 
 //! set all jackknifed props
 void set_jprops(bool set_QED);
 
 //! takes all conf prop and put them into appropriate jprop
-void build_all_mr_jackknifed_props(bool use_QED,size_t ijack);
+void build_jackknifed_props(bool set_QED,m_r_mom_conf_props_t &l,size_t im,size_t r,size_t ijack);
 
 //! clusterize the propagators
 void clusterize_all_mr_props(bool use_QED,size_t clust_size);

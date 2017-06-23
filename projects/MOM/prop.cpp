@@ -13,11 +13,8 @@
 #include <geometry.hpp>
 #include <types.hpp>
 
-prop_t read_prop(raw_file_t &file)
+void read_prop(prop_t &prop,raw_file_t &file,const dcompl_t &fact)
 {
-  prop_t prop;
-  
-  //! source file
   for(size_t is_so=0;is_so<NSPIN;is_so++)
     for(size_t ic_so=0;ic_so<NCOL;ic_so++)
       for(size_t is_si=0;is_si<NSPIN;is_si++)
@@ -25,10 +22,8 @@ prop_t read_prop(raw_file_t &file)
 	  {
 	    dcompl_t c;
 	    file.bin_read(c);
-	    prop(isc(is_si,ic_si),isc(is_so,ic_so))=c;
+	    prop(isc(is_si,ic_si),isc(is_so,ic_so))=c*fact;
 	  }
-  
-  return prop;
 }
 
 void set_mr_ind(size_t nm,size_t nr)
@@ -40,43 +35,6 @@ void set_mr_ind(size_t nm,size_t nr)
 string get_prop_tag(size_t im,size_t ir,const string &ins)
 {return combine("S_M%zu_R%zu_%s",im,ir,ins.c_str());}
 
-void set_conf_props(bool set_QED)
-{
-  cout<<"Setting all "<<nmr<<" conf props"<<endl;
-  
-  //resize all props
-  mom_prop_0.resize(nmr);
-  if(set_QED)
-    for(auto &mom_prop : {&mom_prop_FF,&mom_prop_F,&mom_prop_T,&mom_prop_P,&mom_prop_S})
-      mom_prop->resize(nmr);
-}
-
-void read_all_mr_INS_props(vprop_t &mom_prop,map<string,vector<raw_file_t>> &map_files,const string &ins,size_t iconf,size_t ihit)
-{
-  if(map_files.find(ins)==map_files.end()) CRASH("Unable to find prop with insertion kind: %s",ins.c_str());
-  for(size_t im=0;im<nm;im++)
-  for(size_t r=0;r<nr;r++)
-    mom_prop[m_r_ind({im,r})]=read_prop(map_files[ins][m_r_conf_hit_ind({im,r,iconf,ihit})]);
-}
-
-void read_all_mr_props(bool read_QED,map<string,vector<raw_file_t>> &map_files,size_t iconf,size_t ihit)
-{
-  read_all_mr_INS_props(mom_prop_0,map_files,"0",iconf,ihit);
-  
-  if(read_QED)
-    {
-      for(auto &o : vector<pair<vprop_t*,string>>({{&mom_prop_FF,"FF"},{&mom_prop_F,"F"},{&mom_prop_T,"T"},{&mom_prop_P,"P"},{&mom_prop_S,"S"}}))
-	read_all_mr_INS_props(*o.first,map_files,o.second,iconf,ihit);
-      
-      dcompl_t fact_P(0.0,-1.0);
-      dcompl_t fact_S(-1.0,0.0);
-      
-      //put factors
-      for(auto &pmr_f : vector<pair<vprop_t*,dcompl_t>>({{&mom_prop_P,fact_P},{&mom_prop_S,fact_S}}))
-	for(auto &p : *pmr_f.first) //all mr
-	  p*=pmr_f.second;
-    }
-}
 
 void set_jprops(bool set_QED)
 {
@@ -88,18 +46,13 @@ void set_jprops(bool set_QED)
       o->resize(nmr);
 }
 
-void build_all_mr_jackknifed_INS_props(vjprop_t &out,const vprop_t &in,size_t ijack)
+void build_jackknifed_props(bool set_QED,m_r_mom_conf_props_t &l,size_t im,size_t r,size_t ijack)
 {
-  for(size_t imr=0;imr<nmr;imr++)
-    add_to_cluster(out[imr],in[imr],ijack);
-}
-
-void build_all_mr_jackknifed_props(bool set_QED,size_t ijack)
-{
-  build_all_mr_jackknifed_INS_props(jprop_0,mom_prop_0,ijack);
+  size_t imr=m_r_ind({im,r});
+  add_to_cluster(jprop_0[imr],l.prop_0,ijack);
   if(set_QED)
-    for(auto &jp_p : vector<pair<vjprop_t*,vprop_t*>>({{&jprop_2,&mom_prop_FF},{&jprop_2,&mom_prop_T},{&jprop_P,&mom_prop_P},{&jprop_S,&mom_prop_S}}))
-  build_all_mr_jackknifed_INS_props(*jp_p.first,*jp_p.second,ijack);
+    for(auto &jp_p : vector<pair<vjprop_t*,prop_t*>>({{&jprop_2,&l.prop_FF},{&jprop_2,&l.prop_T},{&jprop_P,&l.prop_P},{&jprop_S,&l.prop_S}}))
+      add_to_cluster((*jp_p.first)[imr],(*jp_p.second),ijack);
 }
 
 void clusterize_all_mr_INS_props(vjprop_t &jprop,size_t clust_size)

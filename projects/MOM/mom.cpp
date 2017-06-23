@@ -6,6 +6,8 @@
  #include <omp.h>
 #endif
 
+#include <future>
+
 #include <tranalisi.hpp>
 
 #include <contractions.hpp>
@@ -20,35 +22,48 @@
 #include <Zq_sig1.hpp>
 
 string suff_hit="";
-vector<string> ins_list={"0"};
 
-//! open all files in battery
-map<string,vector<raw_file_t>> open_all_prop_files(const vector<size_t> &conf_list,size_t nhits_to_use,bool use_QED)
+using read_prop_task_t=tuple<prop_t*,raw_file_t,const dcompl_t&>;
+
+index_t conf_ind; //!< index of a conf given ijack and i_in_clust
+index_t im_r_ijack_ind; //!> index of im,r,ijack combo
+
+//! prepare a list of reading task, to be executed in parallel
+vector<read_prop_task_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,size_t i_in_clust,size_t ihit,bool use_QED)
 {
-  //add EM if asked
-  if(use_QED) for(auto &ins : {"P","S","T","F","FF"}) ins_list.push_back(ins);
+  //! tasks
+  vector<read_prop_task_t> read_tasks;
   
-  //set indices
-  m_r_ind.set_ranges({{"m",nm},{"r",nr}});
-  conf_hit_ind.set_ranges({{"conf",conf_list.size()},{"hit",nhits_to_use}});
-  m_r_conf_hit_ind.set_ranges({{"m",nm},{"r",nr},{"conf",conf_list.size()},{"hit",nhits_to_use}});
+  for(size_t ijack=0;ijack<njacks;ijack++)
+    {
+      size_t iconf=conf_ind({ijack,i_in_clust});
+      
+      for(size_t im=0;im<nm;im++)
+	for(size_t r=0;r<nr;r++)
+	  {
+	    size_t im_r_ijack=im_r_ijack_ind({im,r,ijack});
+	    m_r_mom_conf_props_t &l=props[im_r_ijack];
+	    
+	    //add EM if asked
+	    vector<tuple<prop_t*,string,dcompl_t>> list={{&l.prop_0,"0",1}};
+	    if(use_QED)
+	      {
+		list.push_back(make_tuple(&l.prop_P,"P",dcompl_t(0,-1)));
+		list.push_back(make_tuple(&l.prop_S,"S",dcompl_t(-1,0)));
+		list.push_back(make_tuple(&l.prop_T,"T",dcompl_t(1,0)));
+		list.push_back(make_tuple(&l.prop_F,"F",dcompl_t(1,0)));
+		list.push_back(make_tuple(&l.prop_FF,"FF",dcompl_t(1,0)));
+	      }
+	    
+	    for(auto &psc : list)
+	      {
+		string path=combine("out/%04zu/fft_",conf_list[iconf])+get_prop_tag(im,r,get<1>(psc))+combine(suff_hit.c_str(),ihit);
+		read_tasks.push_back(make_tuple(get<0>(psc),raw_file_t(path,"r"),get<2>(psc)));
+	      }
+	  }
+    }
   
-  //resize the list of prop for each ins
-  map<string,vector<raw_file_t>> prop_files;
-  for(auto &ins : ins_list) prop_files[ins].resize(m_r_conf_hit_ind.max());
-  
-  //open for real
-  for(auto &ins : ins_list)
-    for(size_t im=0;im<nm;im++)
-      for(size_t r=0;r<nr;r++)
-	for(size_t iconf=0;iconf<conf_list.size();iconf++)
-	  for(size_t ihit=0;ihit<nhits_to_use;ihit++)
-	    {
-	      string path=combine("out/%04zu/fft_",conf_list[iconf])+get_prop_tag(im,r,ins)+combine(suff_hit.c_str(),ihit);
-	      prop_files[ins][m_r_conf_hit_ind({im,r,iconf,ihit})].open(path,"r");
-	    }
-  
-  return prop_files;
+  return read_tasks;
 }
 
 //! write a given Z
@@ -148,39 +163,55 @@ int main(int narg,char **arg)
   bool use_QED=true;
   
   set_mr_ind(nm,nr);
-  set_conf_props(use_QED);
   set_jprops(use_QED);
+  conf_ind.set_ranges({{"ijack",njacks},{"i_in_clust",clust_size}});
+  im_r_ijack_ind.set_ranges({{"m",nm},{"r",nr},{"ijack",njacks}});
   
   set_mr_gbil_ind(nm,nr);
   set_mr_Zbil_ind(nm,nr);
   set_jbil_verts(use_QED);
   
-  map<string,vector<raw_file_t>> prop_files=open_all_prop_files(conf_list,nhits,use_QED);
+  vector<m_r_mom_conf_props_t> props(im_r_ijack_ind.max());
   
-  for(size_t imom=0;imom<imoms.size();imom++)
-    {
-      cout<<"Reading momentum "<<imom+1<<"/"<<imoms.size()<<endl;
+  for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
+    for(size_t ihit=0;ihit<nhits_to_use;ihit++)
+      {
+	vector<read_prop_task_t> read_tasks=prepare_read_prop_taks(props,conf_list,i_in_clust,ihit,use_QED);
+	
+	for(size_t imom=0;imom<imoms.size();imom++)
+	  {
+	    cout<<"Reading momentum "<<imom+1<<"/"<<imoms.size()<<endl;
 #pragma omp parallel for
-      for(size_t ijack=0;ijack<njacks;ijack++)
-	for(size_t iconf=ijack*clust_size;iconf<(ijack+1)*clust_size;iconf++)
-	  for(size_t ihit=0;ihit<nhits_to_use;ihit++)
-	    {
-	      printf("Thread %d/%d reading conf %zu/%zu hit %zu/%zu\n",omp_get_thread_num()+1,omp_get_num_threads(),iconf+1,conf_list.size(),ihit+1,nhits_to_use);
-	      
-	      read_all_mr_props(use_QED,prop_files,iconf,ihit);
-	      build_all_mr_jackknifed_props(use_QED,ijack);
-	      build_all_mr_gbil_jackknifed_verts(use_QED,ijack);
-	    }
+	    for(size_t iread=0;iread<read_tasks.size();iread++)
+	      {
+		prop_t &prop=*get<0>(read_tasks[iread]);
+		raw_file_t &file=get<1>(read_tasks[iread]);
+		dcompl_t fact=get<2>(read_tasks[iread]);
+		printf("Thread %d/%d reading %s (%zu/%zu)\n",omp_get_thread_num()+1,omp_get_num_threads(),file.get_path().c_str(),iread,read_tasks.size());
+		read_prop(prop,file,fact);
+	      //SPOSTA LOOP IN MODO DA AUMENTARE PARALLELIZZABILITA
+	      // vector<m_r_mom_conf_props_t> m_r_props(nmr);
+	      // for(size_t im=0;im<nm;im++)
+	      // 	for(size_t r=0;r<nr;r++)
+	      // 	  {
+	      // 	    size_t imr=m_r_ind({im,r});
+		   
+	      // 	    m_r_props[imr].read(use_QED,prop_files,im,r,iconf,ihit);
+	      // 	    build_jackknifed_props(use_QED,m_r_props[imr],im,r,ijack);
+	      // 	  }
+	      // build_all_mr_gbil_jackknifed_verts(use_QED,ijack);
+	      }
       
-      clusterize_all_mr_props(use_QED,clust_size);
-      clusterize_all_mr_gbil_verts(use_QED,clust_size);
+      // clusterize_all_mr_props(use_QED,clust_size);
+      // clusterize_all_mr_gbil_verts(use_QED,clust_size);
       
-      jverts_em=jverts_em-jverts_P*SC(deltam_cr);
-      jprop_2=jprop_2-jprop_P*SC(deltam_cr);
+      // jverts_em=jverts_em-jverts_P*SC(deltam_cr);
+      // jprop_2=jprop_2-jprop_P*SC(deltam_cr);
       
-      vjprop_t jprop_inv=get_all_mr_props_inv(jprop_0); //!< inverse prop
-      vjprop_t jprop_em_inv=jprop_inv*jprop_2*jprop_inv;
-    }
+      // vjprop_t jprop_inv=get_all_mr_props_inv(jprop_0); //!< inverse prop
+      // vjprop_t jprop_em_inv=jprop_inv*jprop_2*jprop_inv;
+	  }
+      }
   
   // //compute Zq, Zq_sig1 and Zbil for all moms
   // djvec_t Zq_allmoms=compute_Zq(jprop_inv);

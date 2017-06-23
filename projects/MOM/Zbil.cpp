@@ -43,20 +43,21 @@ void build_all_mr_gbil_jackknifed_INS_verts(vjbil_vert_t &jverts,const vprop_t &
 
 void build_all_mr_gbil_jackknifed_verts(bool use_QED,size_t ijack)
 {
-  build_all_mr_gbil_jackknifed_INS_verts(jverts_0,mom_prop_0,mom_prop_0,ijack);
+  CRASH("");
+  // build_all_mr_gbil_jackknifed_INS_verts(jverts_0,mom_prop_0,mom_prop_0,ijack);
   
-  if(use_QED)
-  for(auto &o : vector<tuple<vjbil_vert_t*,vprop_t*,vprop_t*>>{
-    {&jverts_em,&mom_prop_F,&mom_prop_F},
-    {&jverts_em,&mom_prop_FF,&mom_prop_0},
-    {&jverts_em,&mom_prop_0,&mom_prop_FF},
-    {&jverts_em,&mom_prop_T,&mom_prop_0},
-    {&jverts_em,&mom_prop_0,&mom_prop_T},
-    {&jverts_P,&mom_prop_P,&mom_prop_0},
-    {&jverts_P,&mom_prop_0,&mom_prop_P},
-    {&jverts_S,&mom_prop_S,&mom_prop_0},
-    {&jverts_S,&mom_prop_0,&mom_prop_S}})
-    build_all_mr_gbil_jackknifed_INS_verts(*get<0>(o),*get<1>(o),*get<2>(o),ijack);
+  // if(use_QED)
+  // for(auto &o : vector<tuple<vjbil_vert_t*,vprop_t*,vprop_t*>>{
+  //   {&jverts_em,&mom_prop_F,&mom_prop_F},
+  //   {&jverts_em,&mom_prop_FF,&mom_prop_0},
+  //   {&jverts_em,&mom_prop_0,&mom_prop_FF},
+  //   {&jverts_em,&mom_prop_T,&mom_prop_0},
+  //   {&jverts_em,&mom_prop_0,&mom_prop_T},
+  //   {&jverts_P,&mom_prop_P,&mom_prop_0},
+  //   {&jverts_P,&mom_prop_0,&mom_prop_P},
+  //   {&jverts_S,&mom_prop_S,&mom_prop_0},
+  //   {&jverts_S,&mom_prop_0,&mom_prop_S}})
+  //   build_all_mr_gbil_jackknifed_INS_verts(*get<0>(o),*get<1>(o),*get<2>(o),ijack);
 }
 
 void clusterize_all_mr_gbil_INS_verts(vjbil_vert_t &jverts,size_t clust_size)
