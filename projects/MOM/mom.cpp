@@ -31,17 +31,17 @@ index_t im_r_ijack_ind; //!> index of im,r,ijack combo
 using incapsulated_task_t=function<void()>;
 
 template<typename F,typename... Rest>
-incapsulated_task_t incapsulate_task(F &&f,Rest&&... rest)
+incapsulated_task_t* incapsulate_task(F &&f,Rest&&... rest)
 {
   auto pck=packaged_task<decltype(f(rest...))()>(bind(forward<F>(f),forward<Rest>(rest)...));
-  return [&pck](){pck();};
+  return new function<void()>([&pck](){pck();});
 }
 
 //! prepare a list of reading task, to be executed in parallel
-vector<incapsulated_task_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,size_t i_in_clust,size_t ihit,bool use_QED)
+vector<incapsulated_task_t*> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,size_t i_in_clust,size_t ihit,bool use_QED)
 {
   //! tasks
-  vector<incapsulated_task_t> read_tasks;
+  vector<incapsulated_task_t*> read_tasks;
   
   for(size_t ijack=0;ijack<njacks;ijack++)
     {
@@ -87,10 +87,10 @@ void prepare_build_all_jackknifed_props(m_r_mom_conf_props_t &l,size_t im,size_t
 }
 
 //! read all m and r for a given i_in_clust and hit
-void read_all_props(vector<incapsulated_task_t> &read_tasks)
+void read_all_props(vector<incapsulated_task_t*> &read_tasks)
 {
 #pragma omp parallel for
-  for(size_t iread=0;iread<read_tasks.size();iread++) read_tasks[iread]();
+  for(size_t iread=0;iread<read_tasks.size();iread++) (*read_tasks[iread])();
     // {
     //   prop_t &prop=get<0>(read_tasks[iread]);
     //   raw_file_t &file=get<1>(read_tasks[iread]);
@@ -212,7 +212,7 @@ int main(int narg,char **arg)
   for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
     for(size_t ihit=0;ihit<nhits_to_use;ihit++)
       {
-	vector<incapsulated_task_t> read_tasks=prepare_read_prop_taks(props,conf_list,i_in_clust,ihit,use_QED);
+	vector<incapsulated_task_t*> read_tasks=prepare_read_prop_taks(props,conf_list,i_in_clust,ihit,use_QED);
 	
 	for(size_t imom=0;imom<imoms.size();imom++)
 	  {
