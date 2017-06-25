@@ -23,16 +23,25 @@
 
 string suff_hit="";
 
-using read_prop_task_t=tuple<prop_t*,raw_file_t,const dcompl_t&>;
+using read_prop_task_t=tuple<prop_t&,raw_file_t&&,const dcompl_t&>;
 
 index_t conf_ind; //!< index of a conf given ijack and i_in_clust
 index_t im_r_ijack_ind; //!> index of im,r,ijack combo
 
+using incapsulated_task_t=function<void()>;
+
+template<typename F,typename... Rest>
+incapsulated_task_t incapsulate_task(F &&f,Rest&&... rest)
+{
+  auto pck=packaged_task<decltype(f(rest...))()>(bind(forward<F>(f),forward<Rest>(rest)...));
+  return [&pck](){pck();};
+}
+
 //! prepare a list of reading task, to be executed in parallel
-vector<read_prop_task_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,size_t i_in_clust,size_t ihit,bool use_QED)
+vector<incapsulated_task_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,size_t i_in_clust,size_t ihit,bool use_QED)
 {
   //! tasks
-  vector<read_prop_task_t> read_tasks;
+  vector<incapsulated_task_t> read_tasks;
   
   for(size_t ijack=0;ijack<njacks;ijack++)
     {
@@ -45,20 +54,21 @@ vector<read_prop_task_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &pr
 	    m_r_mom_conf_props_t &l=props[im_r_ijack];
 	    
 	    //add EM if asked
-	    vector<tuple<prop_t*,string,dcompl_t>> list={{&l.prop_0,"0",1}};
+	    using tup_in_t=tuple<prop_t&,string,dcompl_t>;
+	    vector<tup_in_t> list={{l.prop_0,"0",1}};
 	    if(use_QED)
 	      {
-		list.push_back(make_tuple(&l.prop_P,"P",dcompl_t(0,-1)));
-		list.push_back(make_tuple(&l.prop_S,"S",dcompl_t(-1,0)));
-		list.push_back(make_tuple(&l.prop_T,"T",dcompl_t(1,0)));
-		list.push_back(make_tuple(&l.prop_F,"F",dcompl_t(1,0)));
-		list.push_back(make_tuple(&l.prop_FF,"FF",dcompl_t(1,0)));
+		list.push_back(tup_in_t(l.prop_P,"P",dcompl_t(0,-1)));
+		list.push_back(tup_in_t(l.prop_S,"S",dcompl_t(-1,0)));
+		list.push_back(tup_in_t(l.prop_T,"T",dcompl_t(1,0)));
+		list.push_back(tup_in_t(l.prop_F,"F",dcompl_t(1,0)));
+		list.push_back(tup_in_t(l.prop_FF,"FF",dcompl_t(1,0)));
 	      }
 	    
 	    for(auto &psc : list)
 	      {
 		string path=combine("out/%04zu/fft_",conf_list[iconf])+get_prop_tag(im,r,get<1>(psc))+combine(suff_hit.c_str(),ihit);
-		read_tasks.push_back(make_tuple(get<0>(psc),raw_file_t(path,"r"),get<2>(psc)));
+		read_tasks.push_back(incapsulate_task(read_prop,get<0>(psc),raw_file_t(path,"r"),get<2>(psc)));
 	      }
 	  }
     }
@@ -66,20 +76,30 @@ vector<read_prop_task_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &pr
   return read_tasks;
 }
 
-//! read all m and r for a given i_in_clust and hit
-void read_all_props(vector<read_prop_task_t> &read_tasks)
+//! takes all conf prop and put them into appropriate jprop
+void prepare_build_all_jackknifed_props(m_r_mom_conf_props_t &l,size_t im,size_t r,size_t ijack,bool set_QED)
 {
-  #pragma omp parallel for
-  for(size_t iread=0;iread<read_tasks.size();iread++)
-    {
-      prop_t &prop=*get<0>(read_tasks[iread]);
-      raw_file_t &file=get<1>(read_tasks[iread]);
-      dcompl_t fact=get<2>(read_tasks[iread]);
+  // size_t imr=m_r_ind({im,r});
+  // add_to_cluster(jprop_0[imr],l.prop_0,ijack);
+  // if(set_QED)
+  //   for(auto &jp_p : vector<pair<vjprop_t*,prop_t*>>({{&jprop_2,&l.prop_FF},{&jprop_2,&l.prop_T},{&jprop_P,&l.prop_P},{&jprop_S,&l.prop_S}}))
+  //     add_to_cluster((*jp_p.first)[imr],(*jp_p.second),ijack);
+}
+
+//! read all m and r for a given i_in_clust and hit
+void read_all_props(vector<incapsulated_task_t> &read_tasks)
+{
+#pragma omp parallel for
+  for(size_t iread=0;iread<read_tasks.size();iread++) read_tasks[iread]();
+    // {
+    //   prop_t &prop=get<0>(read_tasks[iread]);
+    //   raw_file_t &file=get<1>(read_tasks[iread]);
+    //   dcompl_t fact=get<2>(read_tasks[iread]);
       
-      printf("Thread %d/%d reading %s (%zu/%zu)\n",omp_get_thread_num()+1,omp_get_num_threads(),file.get_path().c_str(),iread,read_tasks.size());
+    //   printf("Thread %d/%d reading %s (%zu/%zu)\n",omp_get_thread_num()+1,omp_get_num_threads(),file.get_path().c_str(),iread,read_tasks.size());
       
-      read_prop(prop,file,fact);
-    }
+    //   read_prop(prop,file,fact);
+    // }
 }
 
 //! write a given Z
@@ -192,12 +212,13 @@ int main(int narg,char **arg)
   for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
     for(size_t ihit=0;ihit<nhits_to_use;ihit++)
       {
-	vector<read_prop_task_t> read_tasks=prepare_read_prop_taks(props,conf_list,i_in_clust,ihit,use_QED);
+	vector<incapsulated_task_t> read_tasks=prepare_read_prop_taks(props,conf_list,i_in_clust,ihit,use_QED);
 	
 	for(size_t imom=0;imom<imoms.size();imom++)
 	  {
 	    cout<<"Reading clust_entry "<<i_in_clust<<"/"<<clust_size<<", hit "<<ihit<<"/"<<nhits<<", momentum "<<imom+1<<"/"<<imoms.size()<<endl;
 	    read_all_props(read_tasks);
+
 	    //SPOSTA LOOP IN MODO DA AUMENTARE PARALLELIZZABILITA
 	    // vector<m_r_mom_conf_props_t> m_r_props(nmr);
 	      // for(size_t im=0;im<nm;im++)
@@ -206,7 +227,7 @@ int main(int narg,char **arg)
 	      // 	    size_t imr=m_r_ind({im,r});
 		   
 	      // 	    m_r_props[imr].read(use_QED,prop_files,im,r,iconf,ihit);
-	      // 	    build_jackknifed_props(use_QED,m_r_props[imr],im,r,ijack);
+	      // 	    
 	      // 	  }
 	      // build_all_mr_gbil_jackknifed_verts(use_QED,ijack);
 	    

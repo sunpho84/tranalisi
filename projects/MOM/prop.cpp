@@ -35,24 +35,14 @@ void set_mr_ind(size_t nm,size_t nr)
 string get_prop_tag(size_t im,size_t ir,const string &ins)
 {return combine("S_M%zu_R%zu_%s",im,ir,ins.c_str());}
 
-
 void set_jprops(bool set_QED)
 {
   cout<<"Setting all "<<nmr<<" jprops"<<endl;
   
-  jprop_0.resize(nmr);
-  if(set_QED)
-    for(auto &o : {&jprop_2,&jprop_P,&jprop_S})
-      o->resize(nmr);
-}
-
-void build_jackknifed_props(bool set_QED,m_r_mom_conf_props_t &l,size_t im,size_t r,size_t ijack)
-{
-  size_t imr=m_r_ind({im,r});
-  add_to_cluster(jprop_0[imr],l.prop_0,ijack);
-  if(set_QED)
-    for(auto &jp_p : vector<pair<vjprop_t*,prop_t*>>({{&jprop_2,&l.prop_FF},{&jprop_2,&l.prop_T},{&jprop_P,&l.prop_P},{&jprop_S,&l.prop_S}}))
-      add_to_cluster((*jp_p.first)[imr],(*jp_p.second),ijack);
+  // jprop_0.resize(nmr);
+  // if(set_QED)
+  //   for(auto &o : {&jprop_2,&jprop_P,&jprop_S})
+  //     o->resize(nmr);
 }
 
 void clusterize_all_mr_INS_props(vjprop_t &jprop,size_t clust_size)
@@ -66,10 +56,10 @@ void clusterize_all_mr_props(bool use_QED,size_t clust_size)
 {
   cout<<"Clusterizing all props, clust_size="<<clust_size<<endl;
   
-  clusterize_all_mr_INS_props(jprop_0,clust_size);
-  if(use_QED)
-    for(auto &p : {&jprop_2,&jprop_P,&jprop_S})
-      clusterize_all_mr_INS_props(*p,clust_size);
+  // clusterize_all_mr_INS_props(jprop_0,clust_size);
+  // if(use_QED)
+  //   for(auto &p : {&jprop_2,&jprop_P,&jprop_S})
+  //     clusterize_all_mr_INS_props(*p,clust_size);
 }
 
 vjprop_t get_all_mr_props_inv(const vjprop_t &jprop)

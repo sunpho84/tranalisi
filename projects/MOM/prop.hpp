@@ -27,7 +27,7 @@ void set_mr_ind(size_t nm,size_t nr);
 //! read a propagator
 void read_prop(prop_t &prop,raw_file_t &file,const dcompl_t &fact);
 
-//! holds all m and r for a given momentum, conf, m and r
+//! holds a given l r and momentum, for a fized conf
 class m_r_mom_conf_props_t
 {
 public:
@@ -43,20 +43,22 @@ public:
 //! return the tag of a prop
 string get_prop_tag(size_t im,size_t ir,const string &ins);
 
-EXTERN_PROP vjprop_t jprop_0; //!< propagator with no photon, given momentum, all m and r
-
-EXTERN_PROP vjprop_t jprop_2; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
-EXTERN_PROP vjprop_t jprop_P; //!< propagator with Pseudoscalar inserion
-EXTERN_PROP vjprop_t jprop_S; //!< propagator with Scalar insertion
-
+//! holds a given m and r, all jackks and moms
+class jm_r_mom_props_t
+{
+public:
+  vjprop_t jprop_0; //!< propagator with no photon, given momentum, all m and r
+  
+  vjprop_t jprop_2; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
+  vjprop_t jprop_P; //!< propagator with Pseudoscalar inserion
+  vjprop_t jprop_S; //!< propagator with Scalar insertion
+};
+  
 EXTERN_PROP index_t m_r_ind; //!| index of m,r
 EXTERN_PROP index_t conf_hit_ind; //!< index of conf and hit
 
 //! set all jackknifed props
 void set_jprops(bool set_QED);
-
-//! takes all conf prop and put them into appropriate jprop
-void build_jackknifed_props(bool set_QED,m_r_mom_conf_props_t &l,size_t im,size_t r,size_t ijack);
 
 //! clusterize the propagators
 void clusterize_all_mr_props(bool use_QED,size_t clust_size);
