@@ -23,25 +23,39 @@
 
 string suff_hit="";
 
-using read_prop_task_t=tuple<prop_t&,raw_file_t&&,const dcompl_t&>;
-
 index_t conf_ind; //!< index of a conf given ijack and i_in_clust
 index_t im_r_ijack_ind; //!> index of im,r,ijack combo
 
-using incapsulated_task_t=function<void()>;
+using incapsulated_task_t=function<void(bool)>;
 
+const bool RECYCLE=true,DONT_RECYCLE=false;
+
+//! single task
 template<typename F,typename... Rest>
 incapsulated_task_t* incapsulate_task(F &&f,Rest&&... rest)
 {
-  auto pck=packaged_task<decltype(f(rest...))()>(bind(forward<F>(f),forward<Rest>(rest)...));
-  return new function<void()>([&pck](){pck();});
+  auto pck=make_shared<packaged_task<decltype(f(rest...))()>>(bind(forward<F>(f),forward<Rest>(rest)...));
+  return new function<void(bool)>([pck](bool recycle){(*pck)();if(recycle) pck->reset();});
 }
 
+//! list of tasks
+class task_list_t : public vector<incapsulated_task_t*>
+{
+public:
+  void assolve_all(bool recycle=DONT_RECYCLE)
+  {
+#pragma omp parallel for
+  for(size_t itask=0;itask<this->size();itask++)
+    (*((*this)[itask]))(recycle);
+
+  }
+};
+
 //! prepare a list of reading task, to be executed in parallel
-vector<incapsulated_task_t*> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,size_t i_in_clust,size_t ihit,bool use_QED)
+task_list_t prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,size_t i_in_clust,size_t ihit,bool use_QED)
 {
   //! tasks
-  vector<incapsulated_task_t*> read_tasks;
+  task_list_t read_tasks;
   
   for(size_t ijack=0;ijack<njacks;ijack++)
     {
@@ -84,22 +98,6 @@ void prepare_build_all_jackknifed_props(m_r_mom_conf_props_t &l,size_t im,size_t
   // if(set_QED)
   //   for(auto &jp_p : vector<pair<vjprop_t*,prop_t*>>({{&jprop_2,&l.prop_FF},{&jprop_2,&l.prop_T},{&jprop_P,&l.prop_P},{&jprop_S,&l.prop_S}}))
   //     add_to_cluster((*jp_p.first)[imr],(*jp_p.second),ijack);
-}
-
-//! read all m and r for a given i_in_clust and hit
-void read_all_props(vector<incapsulated_task_t*> &read_tasks)
-{
-#pragma omp parallel for
-  for(size_t iread=0;iread<read_tasks.size();iread++) (*read_tasks[iread])();
-    // {
-    //   prop_t &prop=get<0>(read_tasks[iread]);
-    //   raw_file_t &file=get<1>(read_tasks[iread]);
-    //   dcompl_t fact=get<2>(read_tasks[iread]);
-      
-    //   printf("Thread %d/%d reading %s (%zu/%zu)\n",omp_get_thread_num()+1,omp_get_num_threads(),file.get_path().c_str(),iread,read_tasks.size());
-      
-    //   read_prop(prop,file,fact);
-    // }
 }
 
 //! write a given Z
@@ -212,12 +210,12 @@ int main(int narg,char **arg)
   for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
     for(size_t ihit=0;ihit<nhits_to_use;ihit++)
       {
-	vector<incapsulated_task_t*> read_tasks=prepare_read_prop_taks(props,conf_list,i_in_clust,ihit,use_QED);
+	task_list_t read_tasks=prepare_read_prop_taks(props,conf_list,i_in_clust,ihit,use_QED);
 	
 	for(size_t imom=0;imom<imoms.size();imom++)
 	  {
 	    cout<<"Reading clust_entry "<<i_in_clust<<"/"<<clust_size<<", hit "<<ihit<<"/"<<nhits<<", momentum "<<imom+1<<"/"<<imoms.size()<<endl;
-	    read_all_props(read_tasks);
+	    read_tasks.assolve_all(RECYCLE);
 
 	    //SPOSTA LOOP IN MODO DA AUMENTARE PARALLELIZZABILITA
 	    // vector<m_r_mom_conf_props_t> m_r_props(nmr);
