@@ -1,6 +1,8 @@
 #ifndef _OBS_FILE_HPP
 #define _OBS_FILE_HPP
 
+#include <raw_file.hpp>
+
 ///////////////////////////////////////////////////// file reading observables /////////////////////////////////////
 
 //! open a file for reading, skip commented lines, put columns one after the other
@@ -58,7 +60,7 @@ public:
   
   //! open for reading obs
   void open(const string &path)
-  {raw_file_t::open(path.c_str(),"r");}
+  {raw_file_t::open(path,"r");}
   
   //! read
   vector<double> read(size_t nlines=1)
