@@ -22,8 +22,9 @@
 string suff_hit="";
 
 index_t conf_ind; //!< index of a conf given ijack and i_in_clust
-index_t im_r_ijack_ind; //!> index of im,r,ijack combo
-index_t i_in_clust_ihit_ind;
+index_t im_r_ind; //!< index of im,r
+index_t im_r_ijack_ind; //!< index of im,r,ijack combo
+index_t i_in_clust_ihit_ind; //!< index of i_in_clust,ihit
 
 //! prepare a list of reading task, to be executed in parallel
 vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,bool use_QED)
@@ -172,9 +173,8 @@ int main(int narg,char **arg)
   
   bool use_QED=true;
   
-  set_mr_ind(nm,nr);
-  set_jprops(use_QED);
   conf_ind.set_ranges({{"ijack",njacks},{"i_in_clust",clust_size}});
+  im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   im_r_ijack_ind.set_ranges({{"m",nm},{"r",nr},{"ijack",njacks}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
   
@@ -183,6 +183,7 @@ int main(int narg,char **arg)
   set_jbil_verts(use_QED);
   
   vector<m_r_mom_conf_props_t> props(im_r_ijack_ind.max());
+  vector<jm_r_mom_props_t> jprops(im_r_ind.max());
   
   vector<task_list_t> read_tasks=prepare_read_prop_taks(props,conf_list,use_QED);
   for(size_t imom=0;imom<imoms.size();imom++)
@@ -191,9 +192,11 @@ int main(int narg,char **arg)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
 	    size_t i_in_clust_hit=i_in_clust_ihit_ind({i_in_clust,ihit});
-	    cout<<"Reading clust_entry "<<i_in_clust<<"/"<<clust_size<<", hit "<<ihit<<"/"<<nhits<<", momentum "<<imom+1<<"/"<<imoms.size()<<endl;
+	    cout<<"Working on clust_entry "<<i_in_clust<<"/"<<clust_size<<", hit "<<ihit<<"/"<<nhits<<", momentum "<<imom+1<<"/"<<imoms.size()<<endl;
 	    read_tasks[i_in_clust_hit].assolve_all(RECYCLE);
-
+	    
+	    build_all_mr_jackknifed_props(jprops,props,use_QED,im_r_ijack_ind,im_r_ind);
+	    
 	    //SPOSTA LOOP IN MODO DA AUMENTARE PARALLELIZZABILITA
 	    // vector<m_r_mom_conf_props_t> m_r_props(nmr);
 	      // for(size_t im=0;im<nm;im++)

@@ -80,6 +80,10 @@ public:
     return out;
   }
   
+  //! return the maximal value of a component
+  size_t max(size_t icomp) const
+  {return ((*this)[icomp]).second;}
+  
   index_t() : vector<pair<string,size_t>>() {}
   
   index_t(const vector<pair<string,size_t>> &list) : vector<pair<string,size_t>>(list) {}

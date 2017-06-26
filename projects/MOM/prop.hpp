@@ -17,13 +17,6 @@ EXTERN_PROP size_t nm; //!< number of masses
 EXTERN_PROP size_t nr; //!< number of r
 EXTERN_PROP size_t nmr; //total number of m and r
 
-//! add the prop of a given conf on the jackknife
-void build_jackknifed_prop(vjprop_t &jprop,const vprop_t &prop,size_t ijack);
-
-//! index of the (im,ir) prop
-EXTERN_PROP index_t mr_ind;
-void set_mr_ind(size_t nm,size_t nr);
-
 //! read a propagator
 void read_prop(prop_t &prop,raw_file_t &file,const dcompl_t &fact);
 
@@ -43,25 +36,37 @@ public:
 //! return the tag of a prop
 string get_prop_tag(size_t im,size_t ir,const string &ins);
 
-//! holds a given m and r, all jackks and moms
+//! holds a given m and r, all jackks
 class jm_r_mom_props_t
 {
+  //! return a list of pointers to all internal data
+  vector<jprop_t*> get_all_ptrs(bool use_QED)
+  {
+    vector<jprop_t*> out={&jprop_0};
+    if(use_QED)
+      for(auto &p : {&jprop_2,&jprop_P,&jprop_S})
+	out.push_back(p);
+    return out;
+  }
+  
 public:
-  vjprop_t jprop_0; //!< propagator with no photon, given momentum, all m and r
+  jprop_t jprop_0; //!< propagator with no photon, given momentum, all m and r
   
-  vjprop_t jprop_2; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
-  vjprop_t jprop_P; //!< propagator with Pseudoscalar inserion
-  vjprop_t jprop_S; //!< propagator with Scalar insertion
+  jprop_t jprop_2; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
+  jprop_t jprop_P; //!< propagator with Pseudoscalar inserion
+  jprop_t jprop_S; //!< propagator with Scalar insertion
+  
+  //! clusterize the propagators
+  void clusterize_all_mr_props(bool use_QED,size_t clust_size)
+  {
+    cout<<"Clusterizing all props, clust_size="<<clust_size<<endl;
+    for(auto *p : get_all_ptrs(use_QED))
+      clusterize(*p,clust_size);
+  }
 };
-  
-EXTERN_PROP index_t m_r_ind; //!| index of m,r
-EXTERN_PROP index_t conf_hit_ind; //!< index of conf and hit
 
-//! set all jackknifed props
-void set_jprops(bool set_QED);
-
-//! clusterize the propagators
-void clusterize_all_mr_props(bool use_QED,size_t clust_size);
+//! add the prop of a given conf on the jackknife
+void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ijack_ind,const index_t &im_r_ind);
 
 //! compute the inverse of all mr props
 vjprop_t get_all_mr_props_inv(const vjprop_t &jprop);

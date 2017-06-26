@@ -26,41 +26,8 @@ void read_prop(prop_t &prop,raw_file_t &file,const dcompl_t &fact)
 	  }
 }
 
-void set_mr_ind(size_t nm,size_t nr)
-{
-  mr_ind.set_ranges({{"im",nm},{"r",nr}});
-  nmr=mr_ind.max();
-}
-
 string get_prop_tag(size_t im,size_t ir,const string &ins)
 {return combine("S_M%zu_R%zu_%s",im,ir,ins.c_str());}
-
-void set_jprops(bool set_QED)
-{
-  cout<<"Setting all "<<nmr<<" jprops"<<endl;
-  
-  // jprop_0.resize(nmr);
-  // if(set_QED)
-  //   for(auto &o : {&jprop_2,&jprop_P,&jprop_S})
-  //     o->resize(nmr);
-}
-
-void clusterize_all_mr_INS_props(vjprop_t &jprop,size_t clust_size)
-{
-#pragma omp parallel for
-  for(size_t imr=0;imr<nmr;imr++)
-    clusterize(jprop[imr],clust_size);
-}
-
-void clusterize_all_mr_props(bool use_QED,size_t clust_size)
-{
-  cout<<"Clusterizing all props, clust_size="<<clust_size<<endl;
-  
-  // clusterize_all_mr_INS_props(jprop_0,clust_size);
-  // if(use_QED)
-  //   for(auto &p : {&jprop_2,&jprop_P,&jprop_S})
-  //     clusterize_all_mr_INS_props(*p,clust_size);
-}
 
 vjprop_t get_all_mr_props_inv(const vjprop_t &jprop)
 {
@@ -76,3 +43,20 @@ vjprop_t get_all_mr_props_inv(const vjprop_t &jprop)
   return jprop_inv;
 }
 
+void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ijack_ind,const index_t &im_r_ind)
+{
+  for(size_t i_im_r_ijack=0;i_im_r_ijack<im_r_ijack_ind.max();i_im_r_ijack++)
+    {
+      vector<size_t> im_r_ijack=im_r_ijack_ind(i_im_r_ijack);
+      size_t im=im_r_ijack[0],r=im_r_ijack[1],ijack=im_r_ijack[2];
+      size_t im_r=im_r_ind({im,r});
+      
+      jm_r_mom_props_t &j=jprops[im_r];
+      const m_r_mom_conf_props_t &p=props[i_im_r_ijack];
+      
+      add_to_cluster(j.jprop_0,p.prop_0,ijack);
+      if(set_QED)
+	for(auto &jp_p : vector<pair<jprop_t*,const prop_t*>>({{&j.jprop_2,&p.prop_FF},{&j.jprop_2,&p.prop_T},{&j.jprop_P,&p.prop_P},{&j.jprop_S,&p.prop_S}}))
+	  add_to_cluster(*jp_p.first,*jp_p.second,ijack);
+    }
+}
