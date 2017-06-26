@@ -24,6 +24,7 @@ string suff_hit="";
 index_t conf_ind; //!< index of a conf given ijack and i_in_clust
 index_t im_r_ind; //!< index of im,r
 index_t im_r_ijack_ind; //!< index of im,r,ijack combo
+index_t im_r_imom_ind; //!< index of im,r,imom combo
 index_t i_in_clust_ihit_ind; //!< index of i_in_clust,ihit
 
 //! prepare a list of reading task, to be executed in parallel
@@ -66,16 +67,6 @@ vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,c
     }
   
   return read_tasks;
-}
-
-//! takes all conf prop and put them into appropriate jprop
-void prepare_build_all_jackknifed_props(m_r_mom_conf_props_t &l,size_t im,size_t r,size_t ijack,bool set_QED)
-{
-  // size_t imr=m_r_ind({im,r});
-  // add_to_cluster(jprop_0[imr],l.prop_0,ijack);
-  // if(set_QED)
-  //   for(auto &jp_p : vector<pair<vjprop_t*,prop_t*>>({{&jprop_2,&l.prop_FF},{&jprop_2,&l.prop_T},{&jprop_P,&l.prop_P},{&jprop_S,&l.prop_S}}))
-  //     add_to_cluster((*jp_p.first)[imr],(*jp_p.second),ijack);
 }
 
 //! write a given Z
@@ -177,14 +168,20 @@ int main(int narg,char **arg)
   conf_ind.set_ranges({{"ijack",njacks},{"i_in_clust",clust_size}});
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   im_r_ijack_ind.set_ranges({{"m",nm},{"r",nr},{"ijack",njacks}});
+  im_r_imom_ind.set_ranges({{"m",nm},{"r",nr},{"imom",imoms.size()}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
   
   set_mr_gbil_ind(nm,nr);
   set_mr_Zbil_ind(nm,nr);
   set_jbil_verts(use_QED);
   
-  vector<m_r_mom_conf_props_t> props(im_r_ijack_ind.max());
-  vector<jm_r_mom_props_t> jprops(im_r_ind.max());
+  //Zq for all moms, with and without em
+  djvec_t Zq_allmoms(im_r_imom_ind.max());
+  djvec_t Zq_sig1_allmoms(im_r_imom_ind.max());
+  djvec_t Zq_sig1_em_allmoms(im_r_imom_ind.max());
+  
+  vector<m_r_mom_conf_props_t> props(im_r_ijack_ind.max()); //!< store props for individual conf
+  vector<jm_r_mom_props_t> jprops(im_r_ind.max()); //!< jackknived props
   
   vector<task_list_t> read_tasks=prepare_read_prop_taks(props,conf_list,use_QED);
   for(size_t imom=0;imom<imoms.size();imom++)
@@ -209,25 +206,59 @@ int main(int narg,char **arg)
 	      // 	    
 	      // 	  }
 	      // build_all_mr_gbil_jackknifed_verts(use_QED,ijack);
-	    
-      // clusterize_all_mr_props(use_QED,clust_size);
+	  }
+      
+      clusterize_all_mr_jackknifed_props(jprops,use_QED,clust_size);
       // clusterize_all_mr_gbil_verts(use_QED,clust_size);
       
       // jverts_em=jverts_em-jverts_P*SC(deltam_cr);
       // jprop_2=jprop_2-jprop_P*SC(deltam_cr);
       
-      // vjprop_t jprop_inv=get_all_mr_props_inv(jprop_0); //!< inverse prop
-      // vjprop_t jprop_em_inv=jprop_inv*jprop_2*jprop_inv;
-	  }
-      }
+      vector<jprop_t> jprop_inv(im_r_ind.max()); //!< inverse propagator
+      vector<jprop_t> jprop_em_inv(im_r_ind.max()); //!< inverse propagator with em insertion
+#pragma omp parallel for
+      for(size_t im_r_ijack=0;im_r_ijack<im_r_ijack_ind.max();im_r_ijack++)
+	{
+	  //decript indices
+	  vector<size_t> im_r_ijack_comps=im_r_ijack_ind(im_r_ijack);
+	  size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
+	  size_t im_r=im_r_ind({im,r});
+	  size_t im_r_imom=im_r_imom_ind({im,r,imom});
+	  
+	  //compute inverse
+	  prop_t prop_inv=get_from_jackknife(jprops[im_r].jprop_0,ijack).inverse();
+	  prop_t prop_em_inv=prop_inv*get_from_jackknife(jprops[im_r].jprop_2,ijack)*prop_inv;
+	  
+	  //store inverses
+	  put_into_jackknife(jprop_inv[im_r],prop_inv,ijack);
+	  put_into_jackknife(jprop_em_inv[im_r],prop_em_inv,ijack);
+	  
+	  //compute Zq
+	  Zq_allmoms[im_r_imom][ijack]=compute_Zq(prop_inv,imom);
+	  Zq_sig1_allmoms[im_r_imom][ijack]=compute_Zq_sig1(prop_inv,imom);
+	  
+	  Zq_sig1_em_allmoms[im_r_imom][ijack]=-compute_Zq_sig1(prop_em_inv,imom);
+	  // vector<djvec_t> pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts,jprop_inv);
+	}
+    }
+  
+  grace_file_t out("plots/Zq_sig1_new.xmg");
+  out.set_settype(grace::XYDY);
+  for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
+    {
+      vector<size_t> im_r_comps=im_r_ind(im_r);
+      size_t im=im_r_comps[0],r=im_r_comps[1];
+      for(size_t imom=0;imom<imoms.size();imom++)
+	{
+	  size_t im_r_imom=im_r_imom_ind({im,r,imom});
+	  out<<imoms[imom].p(L).tilde().norm2()<<" "<<Zq_sig1_allmoms[im_r_imom]<<endl;
+	}
+      out.new_data_set();
+    }
   
   // //compute Zq, Zq_sig1 and Zbil for all moms
-  // djvec_t Zq_allmoms=compute_Zq(jprop_inv);
-  // djvec_t Zq_sig1_allmoms=compute_Zq_sig1(jprop_inv);
   // djvec_t sig3_allmoms=compute_sig3(jprop_inv);
   // djvec_t sig3_em_allmoms=compute_sig3(jprop_em_inv);
-  // djvec_t Zq_sig1_em_allmoms=-compute_Zq_sig1(jprop_em_inv);
-  // vector<djvec_t> pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts,jprop_inv);
   
   // //QED
   // vector<djvec_t> pr_bil_em_allmoms=compute_proj_bil(jprop_inv,jverts_em,jprop_inv);

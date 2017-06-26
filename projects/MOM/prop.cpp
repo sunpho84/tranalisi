@@ -62,3 +62,10 @@ void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector
 	  add_to_cluster(*jp_p.first,*jp_p.second,ijack);
     }
 }
+
+void clusterize_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,bool use_QED,size_t clust_size)
+{
+#pragma omp parallel for
+  for(size_t iprop=0;iprop<jprops.size();iprop++)
+    jprops[iprop].clusterize_all_mr_props(use_QED,clust_size);
+}

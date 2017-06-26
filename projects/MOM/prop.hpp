@@ -71,6 +71,9 @@ void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector
 //! compute the inverse of all mr props
 vjprop_t get_all_mr_props_inv(const vjprop_t &jprop);
 
+//! clusterize all props
+void clusterize_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,bool use_QED,size_t clust_size);
+
 #undef EXTERN_PROP
 #undef INIT_TO
 
