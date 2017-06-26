@@ -6,8 +6,6 @@
  #include <omp.h>
 #endif
 
-#include <future>
-
 #include <tranalisi.hpp>
 
 #include <contractions.hpp>
@@ -26,31 +24,6 @@ string suff_hit="";
 index_t conf_ind; //!< index of a conf given ijack and i_in_clust
 index_t im_r_ijack_ind; //!> index of im,r,ijack combo
 index_t i_in_clust_ihit_ind;
-
-using incapsulated_task_t=function<void(bool)>;
-
-const bool RECYCLE=true,DONT_RECYCLE=false;
-
-//! single task
-template<typename F,typename... Rest>
-incapsulated_task_t* incapsulate_task(F &&f,Rest&&... rest)
-{
-  auto pck=make_shared<packaged_task<decltype(f(rest...))()>>(bind(forward<F>(f),forward<Rest>(rest)...));
-  return new function<void(bool)>([pck](bool recycle){(*pck)();if(recycle) pck->reset();});
-}
-
-//! list of tasks
-class task_list_t : public vector<incapsulated_task_t*>
-{
-public:
-  void assolve_all(bool recycle=DONT_RECYCLE)
-  {
-#pragma omp parallel for
-  for(size_t itask=0;itask<this->size();itask++)
-    (*((*this)[itask]))(recycle);
-
-  }
-};
 
 //! prepare a list of reading task, to be executed in parallel
 vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,bool use_QED)

@@ -15,5 +15,6 @@
 #include <oper.hpp>
 #include <raw_file.hpp>
 #include <solve.hpp>
+#include <tasks.hpp>
 
 #endif
