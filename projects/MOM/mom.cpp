@@ -25,6 +25,7 @@ index_t conf_ind; //!< index of a conf given ijack and i_in_clust
 index_t im_r_ind; //!< index of im,r
 index_t im_r_ijack_ind; //!< index of im,r,ijack combo
 index_t im_r_imom_ind; //!< index of im,r,imom combo
+index_t im_r_ind_imom_ind; //!< index of im,r,imom combo
 index_t i_in_clust_ihit_ind; //!< index of i_in_clust,ihit
 
 //! prepare a list of reading task, to be executed in parallel
@@ -43,7 +44,6 @@ vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,c
 	    
 	    //add EM if asked
 	    using tup_in_t=tuple<prop_t*,string,dcompl_t>;
-	    cout<<"Preparing: "<<&l.prop_0<<endl;
 	    vector<tup_in_t> list={{&l.prop_0,"0",1}};
 	    if(use_QED)
 	      {
@@ -61,8 +61,6 @@ vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,c
 		  size_t i_in_clust=i_in_clust_ihit[0],ihit=i_in_clust_ihit[1];
 		  size_t iconf=conf_ind({ijack,i_in_clust});
 		  string path=combine("out/%04zu/fft_",conf_list[iconf])+get_prop_tag(im,r,get<1>(psc))+combine(suff_hit.c_str(),ihit);
-		  cout<<"Opening "<<path<<endl;
-		  cout<<"Packing: "<<get<0>(psc)<<endl;
 		  read_tasks[i_i_in_clust_ihit].push_back(incapsulate_task(read_prop,get<0>(psc),raw_file_t(path,"r"),get<2>(psc)));
 		}
 	  }
@@ -174,6 +172,7 @@ int main(int narg,char **arg)
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   im_r_ijack_ind.set_ranges({{"m",nm},{"r",nr},{"ijack",njacks}});
   im_r_imom_ind.set_ranges({{"m",nm},{"r",nr},{"imom",imoms.size()}});
+  im_r_ind_imom_ind.set_ranges({{"m",nm},{"r",nr},{"ind_mom",equiv_imoms.size()}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
   
   set_mr_gbil_ind(nm,nr);
@@ -186,7 +185,6 @@ int main(int narg,char **arg)
   djvec_t Zq_sig1_em_allmoms(im_r_imom_ind.max());
   
   vector<m_r_mom_conf_props_t> props(im_r_ijack_ind.max()); //!< store props for individual conf
-  cout<<"Cerca: "<<&props[0].prop_0<<endl;
   
   vector<task_list_t> read_tasks=prepare_read_prop_taks(props,conf_list,use_QED);
   for(size_t imom=0;imom<imoms.size();imom++)
@@ -249,20 +247,6 @@ int main(int narg,char **arg)
 	}
     }
   
-  grace_file_t out("plots/Zq_sig1_new.xmg");
-  out.set_settype(grace::XYDY);
-  for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
-    {
-      vector<size_t> im_r_comps=im_r_ind(im_r);
-      size_t im=im_r_comps[0],r=im_r_comps[1];
-      for(size_t imom=0;imom<imoms.size();imom++)
-	{
-	  size_t im_r_imom=im_r_imom_ind({im,r,imom});
-	  out<<imoms[imom].p(L).tilde().norm2()<<" "<<Zq_sig1_allmoms[im_r_imom]<<endl;
-	}
-      out.new_data_set();
-    }
-  
   // //compute Zq, Zq_sig1 and Zbil for all moms
   // djvec_t sig3_allmoms=compute_sig3(jprop_inv);
   // djvec_t sig3_em_allmoms=compute_sig3(jprop_em_inv);
@@ -285,8 +269,8 @@ int main(int narg,char **arg)
   // 	pr_bil_allmoms_sub[iZbil][imom]-=g2tilde*pr_bil_a2(act,mom,L,iZbil);
   //   }
   
-  // //average equiv moms
-  // djvec_t Zq=average_equiv_moms(Zq_allmoms);
+  //average equiv moms
+  djvec_t Zq=average_equiv_moms(Zq_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
   // djvec_t Zq_sub=average_equiv_moms(Zq_allmoms_sub);
   // djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
   // djvec_t sig3=average_equiv_moms(sig3_allmoms);
@@ -328,6 +312,21 @@ int main(int narg,char **arg)
   
   // linfit_Z(Zbil_QED[iZV]*sqr(4*M_PI),"ZV_QED",-20.6178);
   // linfit_Z(Zbil_QED[iZA]*sqr(4*M_PI),"ZA_QED",-15.7963);
+  
+  grace_file_t out("plots/Zq_sig1_new.xmg");
+  out.set_settype(grace::XYDY);
+  for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
+    {
+      vector<size_t> im_r_comps=im_r_ind(im_r);
+      size_t im=im_r_comps[0],r=im_r_comps[1];
+      for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
+	{
+	  size_t im_r_imom=im_r_ind_imom_ind({im,r,ind_imom});
+	  size_t imom=equiv_imoms[ind_imom].first;
+	  out<<imoms[imom].p(L).tilde().norm2()<<" "<<Zq_sig1_allmoms[im_r_imom]<<endl;
+	}
+      out.new_data_set();
+    }
   
   return 0;
 }

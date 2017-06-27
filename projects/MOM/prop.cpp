@@ -15,8 +15,6 @@
 
 void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact)
 {
-  cout<<"Writing into "<<prop<<" from file "<<file.get_path()<<" ptr: "<<&file<<" coeff "<<fact<<endl;
-  
   for(size_t is_so=0;is_so<NSPIN;is_so++)
     for(size_t ic_so=0;ic_so<NCOL;ic_so++)
       for(size_t is_si=0;is_si<NSPIN;is_si++)
@@ -26,8 +24,6 @@ void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact)
 	    file.bin_read(c);
 	    (*prop)(isc(is_si,ic_si),isc(is_so,ic_so))=c*fact;
 	  }
-  
-  cout<<prop<<endl;
 }
 
 string get_prop_tag(size_t im,size_t ir,const string &ins)

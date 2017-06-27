@@ -153,21 +153,33 @@ vector<double> get_indep_pt2()
   return out;
 }
 
-djvec_t average_equiv_moms(const djvec_t &in)
+djvec_t average_equiv_moms(const djvec_t &in,const index_t &oth_ind_mom_ind,const index_t &oth_mom_ind)
 {
-  djvec_t out(equiv_imoms.size());
+  djvec_t out(oth_ind_mom_ind.max());
 #pragma omp parallel for
-  for(size_t ind_mom=0;ind_mom<equiv_imoms.size();ind_mom++)
+  for(size_t ioth_ind_mom=0;ioth_ind_mom<oth_ind_mom_ind.max();ioth_ind_mom++)
     {
+      const vector<size_t> oth_ind_mom_comps=oth_ind_mom_ind(ioth_ind_mom);
+      const size_t ind_mom=oth_ind_mom_comps.back();
+      
       //reset
-      out[ind_mom]=0.0;
+      out[ioth_ind_mom]=0.0;
       
       //loop on equivalent moms
       auto &imom_class=equiv_imoms[ind_mom];
-      for(size_t imom : imom_class.second) out[ind_mom]+=in[imom];
+      for(size_t imom : imom_class.second)
+	{
+	  //copy all components
+	  vector<size_t> oth_mom_comps=oth_ind_mom_comps;
+	  //set the last component to imom
+	  oth_mom_comps.back()=imom;
+	  //take index
+	  size_t ioth_mom=oth_mom_ind(oth_mom_comps);
+	  out[ioth_ind_mom]+=in[ioth_mom];
+	}
       
       //normalize
-      out[ind_mom]/=imom_class.second.size();
+      out[ioth_ind_mom]/=imom_class.second.size();
     }
   
   return out;
