@@ -42,15 +42,16 @@ vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,c
 	    m_r_mom_conf_props_t &l=props[im_r_ijack];
 	    
 	    //add EM if asked
-	    using tup_in_t=tuple<prop_t&,string,dcompl_t>;
-	    vector<tup_in_t> list={{l.prop_0,"0",1}};
+	    using tup_in_t=tuple<prop_t*,string,dcompl_t>;
+	    cout<<"Preparing: "<<&l.prop_0<<endl;
+	    vector<tup_in_t> list={{&l.prop_0,"0",1}};
 	    if(use_QED)
 	      {
-		list.push_back(tup_in_t(l.prop_P,"P",dcompl_t(0,-1)));
-		list.push_back(tup_in_t(l.prop_S,"S",dcompl_t(-1,0)));
-		list.push_back(tup_in_t(l.prop_T,"T",dcompl_t(1,0)));
-		list.push_back(tup_in_t(l.prop_F,"F",dcompl_t(1,0)));
-		list.push_back(tup_in_t(l.prop_FF,"FF",dcompl_t(1,0)));
+		list.push_back(tup_in_t(&l.prop_P,"P",dcompl_t(0,-1)));
+		list.push_back(tup_in_t(&l.prop_S,"S",dcompl_t(-1,0)));
+		list.push_back(tup_in_t(&l.prop_T,"T",dcompl_t(1,0)));
+		list.push_back(tup_in_t(&l.prop_F,"F",dcompl_t(1,0)));
+		list.push_back(tup_in_t(&l.prop_FF,"FF",dcompl_t(1,0)));
 	      }
 	    
 	    for(auto &psc : list)
@@ -61,6 +62,7 @@ vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,c
 		  size_t iconf=conf_ind({ijack,i_in_clust});
 		  string path=combine("out/%04zu/fft_",conf_list[iconf])+get_prop_tag(im,r,get<1>(psc))+combine(suff_hit.c_str(),ihit);
 		  cout<<"Opening "<<path<<endl;
+		  cout<<"Packing: "<<get<0>(psc)<<endl;
 		  read_tasks[i_i_in_clust_ihit].push_back(incapsulate_task(read_prop,get<0>(psc),raw_file_t(path,"r"),get<2>(psc)));
 		}
 	  }
@@ -128,6 +130,9 @@ int main(int narg,char **arg)
   const size_t nhits=input.read<size_t>("NHits"); //!< number of hits
   const size_t nhits_to_use=input.read<size_t>("NHitsToUse"); //!< number of hits to be used
   
+  const size_t tmin=input.read<size_t>("Tmin");
+  const size_t tmax=input.read<size_t>("Tmax");
+  
   //////////////////////////////////////////////////
   
   //set the number of jackknives
@@ -138,6 +143,7 @@ int main(int narg,char **arg)
   
   double g2=6.0/beta; //!< coupling
   double g2tilde=g2/plaq; //!< boosted coupling
+  cout<<"g2tilde: "<<g2tilde<<endl;
   
   //set the coefficients
   set_pr_bil_a2(act);
@@ -157,7 +163,6 @@ int main(int narg,char **arg)
   if(conf_list.size()==0) CRASH("list of configurations is empty! check %s ",test_path.c_str());
   
   //compute deltam_cr
-  size_t tmin=12,tmax=23;
   djack_t deltam_cr=compute_deltam_cr(conf_list,tmin,tmax,im_sea);
   cout<<"Deltam cr: "<<deltam_cr<<endl;
   
@@ -181,11 +186,13 @@ int main(int narg,char **arg)
   djvec_t Zq_sig1_em_allmoms(im_r_imom_ind.max());
   
   vector<m_r_mom_conf_props_t> props(im_r_ijack_ind.max()); //!< store props for individual conf
-  vector<jm_r_mom_props_t> jprops(im_r_ind.max()); //!< jackknived props
+  cout<<"Cerca: "<<&props[0].prop_0<<endl;
   
   vector<task_list_t> read_tasks=prepare_read_prop_taks(props,conf_list,use_QED);
   for(size_t imom=0;imom<imoms.size();imom++)
     {
+      vector<jm_r_mom_props_t> jprops(im_r_ind.max()); //!< jackknived props
+      
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
