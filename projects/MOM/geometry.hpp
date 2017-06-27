@@ -31,17 +31,29 @@ public:
   double tilde_mu(size_t mu) const
   {return sin((*this)[mu]);}
   
+  //! return a single component of phat
+  double hat_mu(size_t mu) const
+  {return 2.0*sin((*this)[mu]/2.0);}
+  
   //! return the ptilde
-  p_t tilde()
+  p_t tilde() const
   {
     p_t out;
     for(size_t mu=0;mu<NDIM;mu++) out[mu]=tilde_mu(mu);
     return out;
   }
   
+  //! return the phat
+  p_t hat() const
+  {
+    p_t out;
+    for(size_t mu=0;mu<NDIM;mu++) out[mu]=hat_mu(mu);
+    return out;
+  }
+  
   //! return \sum_mu(p_mu^x)
   template <class T>
-  double normx(T x)
+  double normx(T x) const
   {
     double out=0;
     for(size_t mu=0;mu<NDIM;mu++) out+=pow((*this)[mu],x);
@@ -49,10 +61,12 @@ public:
   }
   
   //! return p2
-  double norm2() {return normx(2);}
+  double norm2() const
+  {return normx(2);}
   
   //! return p4
-  double norm4() {return normx(4);}
+  double norm4() const
+  {return normx(4);}
   
   //! return \sum_nu(p_nu^4)/\sum_nu(p_nu^2)^2
   double p4_fr_p22()

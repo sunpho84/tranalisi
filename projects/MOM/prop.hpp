@@ -18,7 +18,7 @@ EXTERN_PROP size_t nr; //!< number of r
 EXTERN_PROP size_t nmr; //total number of m and r
 
 //! read a propagator
-void read_prop(prop_t &prop,raw_file_t &file,const dcompl_t &fact);
+void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact);
 
 //! holds a given l r and momentum, for a fized conf
 class m_r_mom_conf_props_t
@@ -31,6 +31,11 @@ public:
   prop_t prop_T; //!< propagator with Tadpole insertion
   prop_t prop_S; //!< propagator with Scalar insertion
   prop_t prop_P; //!< propagator with Pseudoscalar insertion
+  
+  m_r_mom_conf_props_t()
+  {
+    cout<<"Creating "<<this<<endl;
+  }
 };
 
 //! return the tag of a prop
@@ -73,6 +78,9 @@ vjprop_t get_all_mr_props_inv(const vjprop_t &jprop);
 
 //! clusterize all props
 void clusterize_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,bool use_QED,size_t clust_size);
+
+//! return the propagator at maximal twist
+prop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r);
 
 #undef EXTERN_PROP
 #undef INIT_TO
