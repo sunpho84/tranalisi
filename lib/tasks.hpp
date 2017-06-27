@@ -3,6 +3,7 @@
 
 #include <future>
 #include <memory>
+#include <vector>
 
 using namespace std;
 
