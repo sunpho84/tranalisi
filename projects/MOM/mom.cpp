@@ -271,6 +271,7 @@ int main(int narg,char **arg)
   
   //average equiv moms
   djvec_t Zq=average_equiv_moms(Zq_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
+  djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
   // djvec_t Zq_sub=average_equiv_moms(Zq_allmoms_sub);
   // djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
   // djvec_t sig3=average_equiv_moms(sig3_allmoms);
@@ -323,7 +324,7 @@ int main(int narg,char **arg)
 	{
 	  size_t im_r_imom=im_r_ind_imom_ind({im,r,ind_imom});
 	  size_t imom=equiv_imoms[ind_imom].first;
-	  out<<imoms[imom].p(L).tilde().norm2()<<" "<<Zq_sig1_allmoms[im_r_imom]<<endl;
+	  out<<imoms[imom].p(L).tilde().norm2()<<" "<<Zq_sig1[im_r_imom]<<endl;
 	}
       out.new_data_set();
     }
