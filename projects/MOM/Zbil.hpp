@@ -14,8 +14,6 @@
  #define INIT_TO(...) = __VA_ARGS__
 #endif
 
-using vjbil_vert_t=vector<jprop_t>; //! vector of jackkniffed bilinear vertex
-
 //! bilinears Z
 enum iZbil{iZS,iZA,iZP,iZV,iZT};
 const string Zbil_tag="SAPVT";
@@ -23,42 +21,44 @@ const string Zbil_tag="SAPVT";
 //! number of Z
 const size_t nZbil=5;
 
+//! holds jackkniffed vertex for an mr combo and for a given mom
+class jbil_vert_t
+{
+  //! return a list of pointers to all internal data
+  vector<jprop_t*> get_all_ptrs(bool use_QED)
+  {
+    vector<jprop_t*> out={&jvert_0};
+    if(use_QED)
+      for(auto &p : {&jvert_em,&jvert_P,&jvert_S})
+	out.push_back(p);
+    return out;
+  }
+  
+public:
+  jprop_t jvert_0; //!< jackkniffed vertex
+  
+  jprop_t jvert_em; //!< jackkniffed vertex with all em corrs
+  jprop_t jvert_P; //!< jackkniffed P vertex
+  jprop_t jvert_S; //!< jackkniffed S vertex
+  
+  //! clusterize
+  void clusterize_all(bool use_QED,size_t clust_size)
+  {
+    cout<<"Clusterizing all verts, clust_size="<<clust_size<<endl;
+    for(auto &p : get_all_ptrs(use_QED))
+      clusterize(*p,clust_size);
+  }
+};
+
 //! compute the projected bilinears
 //vector<djvec_t> compute_proj_bil(const vjprop_t &jprop_inv1,vjbil_vert_t &jverts,const vjprop_t &jprop_inv2);
 
-//! compute a certain vertex, with a given pair of propagators
-void build_jackknifed_vert_Gamma(vjbil_vert_t &jverts,const vprop_t &prop1,size_t iG,const vprop_t &prop2,size_t ijack);
-
-//! compute all vertices
-void build_all_mr_gBil_jackknifed_verts(bool use_QED,size_t ijack);
-
-//! clusterize the vertexes
-void clusterize_verts(vjbil_vert_t &jverts,size_t clust_size=1);
-
-//! index of the (im,ir)(im,ir)(iZbil) prop combo, first is reverted
-EXTERN_ZBIL index_t mr_Zbil_ind;
-void set_mr_Zbil_ind(size_t nm,size_t nr);
-
-//! index of the (im,ir)(im,ir)(ig) prop combo, first is reverted
-EXTERN_ZBIL index_t mr_gbil_ind;
-void set_mr_gbil_ind(size_t nm,size_t nr);
-
-EXTERN_ZBIL size_t nmr_Zbil; //!< total number of m and r pair times nZbil
-EXTERN_ZBIL size_t nmr_gbil; //!< total number of m and r pair times nGamma
-
-EXTERN_ZBIL vjbil_vert_t jverts_0; //!< jackkniffed vertex spanning nm and r
-EXTERN_ZBIL vjbil_vert_t jverts_em; //!< jackkniffed vertex with all em corrs
-EXTERN_ZBIL vjbil_vert_t jverts_P; //!< jackkniffed P vertex
-EXTERN_ZBIL vjbil_vert_t jverts_S; //!< jackkniffed S vertex
-
-//! set the vertex combo
-void set_jbil_verts(bool set_QED);
-
-//! build all vertices
-void build_all_mr_gbil_jackknifed_verts(bool use_QED,size_t ijack);
+//! compute all vertices for a certain conf
+void build_all_mr_gbil_jackknifed_verts(vector<jbil_vert_t> &jbil,const vector<m_r_mom_conf_props_t> &props,
+					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED);
 
 //! clusterize all vertices
-void clusterize_all_mr_gbil_verts(bool use_QED,size_t clust_size);
+void clusterize_all_mr_gbil_verts(vector<jbil_vert_t> &jbils,bool use_QED,size_t clust_size);
 
 #undef EXTERN_ZBIL
 #undef INIT_TO

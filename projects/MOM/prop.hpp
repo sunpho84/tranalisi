@@ -31,11 +31,6 @@ public:
   prop_t prop_T; //!< propagator with Tadpole insertion
   prop_t prop_S; //!< propagator with Scalar insertion
   prop_t prop_P; //!< propagator with Pseudoscalar insertion
-  
-  m_r_mom_conf_props_t()
-  {
-    cout<<"Creating "<<this<<endl;
-  }
 };
 
 //! return the tag of a prop
@@ -65,7 +60,7 @@ public:
   void clusterize_all_mr_props(bool use_QED,size_t clust_size)
   {
     cout<<"Clusterizing all props, clust_size="<<clust_size<<endl;
-    for(auto *p : get_all_ptrs(use_QED))
+    for(auto &p : get_all_ptrs(use_QED))
       clusterize(*p,clust_size);
   }
 };
