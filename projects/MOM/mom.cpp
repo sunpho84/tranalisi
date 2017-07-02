@@ -27,9 +27,6 @@ index_t im_r_ijack_ind; //!< index of im,r,ijack combo
 index_t im_r_imom_ind; //!< index of im,r,imom combo
 index_t im_r_ind_imom_ind; //!< index of im,r,imom combo
 index_t i_in_clust_ihit_ind; //!< index of i_in_clust,ihit
-index_t im_r_im_r_igam_ind; //!< index for gamma
-index_t im_r_im_r_igam_ijack_ind; //!< index for jgamma
-index_t im_r_im_r_ibil_ijack_ind; //!< index for jbil
 
 //! prepare a list of reading task, to be executed in parallel
 vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,bool use_QED)
@@ -177,14 +174,15 @@ int main(int narg,char **arg)
   im_r_imom_ind.set_ranges({{"m",nm},{"r",nr},{"imom",imoms.size()}});
   im_r_ind_imom_ind.set_ranges({{"m",nm},{"r",nr},{"ind_mom",equiv_imoms.size()}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
-  im_r_im_r_igam_ind.set_ranges({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"igamma",nGamma}});
-  im_r_im_r_igam_ijack_ind.set_ranges({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"igamma",nGamma},{"ijack",njacks}});
-  im_r_im_r_ibil_ijack_ind.set_ranges({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"ibil",nZbil},{"ijack",njacks}});
+  index_t im_r_im_r_igam_ind=concat(im_r_ind.base(),im_r_ind.base(),index_t({{"igamma",nGamma}}).base());
+  index_t im_r_im_r_iZbil_ind=concat(im_r_ind.base(),im_r_ind.base(),index_t({{"iZbil",nZbil}}).base());
+  index_t im_r_im_r_iZbil_imom_ind=concat(im_r_im_r_iZbil_ind.base(),index_t({{"imom",imoms.size()}}).base());
   
   //Zq for all moms, with and without em
   djvec_t Zq_allmoms(im_r_imom_ind.max());
   djvec_t Zq_sig1_allmoms(im_r_imom_ind.max());
   djvec_t Zq_sig1_EM_allmoms(im_r_imom_ind.max());
+  djvec_t Zbil_allmoms(im_r_im_r_iZbil_imom_ind.max());
   
   vector<m_r_mom_conf_props_t> props(im_r_ijack_ind.max()); //!< store props for individual conf
   
@@ -246,6 +244,20 @@ int main(int narg,char **arg)
 	  pr_bil_a_allmoms=compute_proj_bil(jprop_EM_inv,jverts.LO,jprop_inv,im_r_ind);
 	  pr_bil_b_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_EM_inv,im_r_ind);
 	}
+      
+      //build Z
+      for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
+	{
+	  const vector<size_t> im_r_im_r_iZbil_comp=im_r_im_r_iZbil_ind(im_r_im_r_iZbil);
+	  const vector<size_t> im_r1_comp=subset(im_r_im_r_iZbil_comp,0,2);
+	  const vector<size_t> im_r2_comp=subset(im_r_im_r_iZbil_comp,2,4);
+	  const size_t iZbil=im_r_im_r_iZbil_comp[4];
+	  const size_t im_r1=im_r_ind(im_r1_comp);
+	  const size_t im_r2=im_r_ind(im_r2_comp);
+	  
+	  Zbil_allmoms[im_r_im_r_iZbil_imom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,imom})))]=
+	    sqrt(Zq_allmoms[im_r1]*Zq_allmoms[im_r2])/pr_bil_allmoms[im_r_im_r_iZbil];
+	}
     }
   
   // //compute Zq, Zq_sig1 and Zbil for all moms
@@ -266,9 +278,13 @@ int main(int narg,char **arg)
   // 	pr_bil_allmoms_sub[iZbil][imom]-=g2tilde*pr_bil_a2(act,mom,L,iZbil);
   //   }
   
+  const index_t im_r_im_r_iZbil_ind_imom_ind=concat(im_r_im_r_iZbil_ind.base(),index_t({{"ind_mom",equiv_imoms.size()}}).base());
+  
   //average equiv moms
-  djvec_t Zq=average_equiv_moms(Zq_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
-  djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
+  const djvec_t Zq=average_equiv_moms(Zq_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
+  const djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
+  const djvec_t Zbil=average_equiv_moms(Zbil_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind);
+  
   // djvec_t Zq_sub=average_equiv_moms(Zq_allmoms_sub);
   // djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
   // djvec_t sig3=average_equiv_moms(sig3_allmoms);
@@ -322,6 +338,19 @@ int main(int narg,char **arg)
 	  size_t im_r_imom=im_r_ind_imom_ind({im,r,ind_imom});
 	  size_t imom=equiv_imoms[ind_imom].first;
 	  out<<imoms[imom].p(L).tilde().norm2()<<" "<<Zq_sig1[im_r_imom]<<endl;
+	}
+      out.new_data_set();
+    }
+  
+  //for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+    {
+      const size_t iZbil=2;
+      grace_file_t out("plots/ZP.xmg");
+      out.set_settype(grace::XYDY);
+      for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
+	{
+	  size_t imom=equiv_imoms[ind_imom].first;
+	  out<<imoms[imom].p(L).tilde().norm2()<<" "<<Zbil[im_r_im_r_iZbil_ind_imom_ind({0,0,0,0,iZbil,ind_imom})]<<endl;
 	}
       out.new_data_set();
     }

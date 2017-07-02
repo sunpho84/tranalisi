@@ -12,6 +12,10 @@ using namespace std;
 class index_t : vector<pair<string,size_t>>
 {
 public:
+  //! return a reference to the base type
+  vector<pair<string,size_t>> &base()
+  {return *this;}
+  
   //! return the rank
   size_t rank() const
   {return size();}

@@ -228,4 +228,47 @@ template <class T,class=enable_if_t<has_method_size<T>::value>>
 T vec_filter(const T &v,const gslice &slice)
 {return (T)(v[slice]);}
 
+//! conctatenate two vector
+template <class T>
+vector<T> concat(const vector<T> &v1,const vector<T> &v2)
+{
+  vector<T> v;
+  v.reserve(v1.size()+v2.size());
+  for(auto &x1 : v1) v.push_back(x1);
+  for(auto &x2 : v2) v.push_back(x2);
+  return v;
+}
+
+//! concatenate an arbitrary number of vectors
+template <class T>
+vector<T> concat_internal(const vector<const vector<T>*> &in)
+{
+  vector<T> out;
+  
+  //compute eize and reserve
+  size_t size=0;
+  for(auto &v : in) size+=v->size();
+  out.reserve(size);
+  
+  //push back all
+  for(auto &v : in)
+    for(auto &vi : *v)
+      out.push_back(vi);
+  
+  return out;
+}
+
+//! concatenate one vector to a list of at least two others
+template <class T,typename ...Rest>
+vector<T> concat_internal(vector<const vector<T>*> &&vlist,const vector<T> &v,const Rest&&... rest)
+{
+  vlist.push_back(&v);
+  return concat_internal(vlist,rest...);
+}
+
+//! concatenate at least two vectors
+template <class T,typename... Rest>
+vector<T> concat(const vector<T> &v1,const vector<T> &v2,const Rest&... rest)
+{return concat_internal({&v1,&v2},rest...);}
+
 #endif
