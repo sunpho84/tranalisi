@@ -342,10 +342,9 @@ int main(int narg,char **arg)
       out.new_data_set();
     }
   
-  //for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+  for(size_t iZbil=0;iZbil<nZbil;iZbil++)
     {
-      const size_t iZbil=2;
-      grace_file_t out("plots/ZP.xmg");
+      grace_file_t out(combine("plots/Z%c.xmg",Zbil_tag[iZbil]));
       out.set_settype(grace::XYDY);
       for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
 	{
