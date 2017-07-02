@@ -9,12 +9,14 @@
 #define EXTERN_ZBIL
  #include <Zbil.hpp>
 
+#include <oper.hpp>
+
 #include <prop.hpp>
 
 void build_jackknifed_vert_Gamma(jprop_t &jvert,const prop_t &prop1,size_t iG,const prop_t &prop2,size_t ijack)
 {add_to_cluster(jvert,prop1*Gamma[iG]*Gamma[5]*prop2.adjoint()*Gamma[5],ijack);}
 
-void build_all_mr_gbil_jackknifed_verts(vector<jbil_vert_t> &jbil,const vector<m_r_mom_conf_props_t> &props,
+void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_props_t> &props,
 					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED)
 {
   //! help finding the bilinear/jack combo
@@ -34,23 +36,22 @@ void build_all_mr_gbil_jackknifed_verts(vector<jbil_vert_t> &jbil,const vector<m
       const size_t iG=im_r_im_r_igam_comp[4];
       
       //proxy for vector and props
-      jbil_vert_t &jv=jbil[im_r_im_r_igam];
       const m_r_mom_conf_props_t &p1=props[im_r_ijack_ind({im_fw,r_fw,ijack})];
       const m_r_mom_conf_props_t &p2=props[im_r_ijack_ind({im_bw,r_bw,ijack})];
       
       //create list of operations
-      vector<tuple<jprop_t*,const prop_t*,const prop_t*>> list={{&jv.jvert_0,&p1.prop_0,&p2.prop_0}};
+      vector<tuple<jprop_t*,const prop_t*,const prop_t*>> list={{&jbil.LO[im_r_im_r_igam],&p1.LO,&p2.LO}};
       if(use_QED)
 	for(auto &o : vector<tuple<jprop_t*,const prop_t*,const prop_t*>>({
-	    {&jv.jvert_em,&p1.prop_F,&p2.prop_F},
-	    {&jv.jvert_em,&p1.prop_FF,&p2.prop_0},
-            {&jv.jvert_em,&p1.prop_0,&p2.prop_FF},
-            {&jv.jvert_em,&p1.prop_T,&p2.prop_0},
-            {&jv.jvert_em,&p1.prop_0,&p2.prop_T},
-            {&jv.jvert_P,&p1.prop_P,&p2.prop_0},
-            {&jv.jvert_P,&p1.prop_0,&p2.prop_P},
-            {&jv.jvert_S,&p1.prop_S,&p2.prop_0},
-            {&jv.jvert_S,&p1.prop_0,&p2.prop_S}}))
+	    {&jbil.EM[im_r_im_r_igam],&p1.F,&p2.F},
+	    {&jbil.EM[im_r_im_r_igam],&p1.FF,&p2.LO},
+            {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.FF},
+            {&jbil.EM[im_r_im_r_igam],&p1.T,&p2.LO},
+            {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.T},
+            {&jbil.P[im_r_im_r_igam],&p1.P,&p2.LO},
+            {&jbil.P[im_r_im_r_igam],&p1.LO,&p2.P},
+            {&jbil.S[im_r_im_r_igam],&p1.S,&p2.LO},
+            {&jbil.S[im_r_im_r_igam],&p1.LO,&p2.S}}))
 	  list.push_back(o);
       
       //create the vertex
@@ -59,37 +60,56 @@ void build_all_mr_gbil_jackknifed_verts(vector<jbil_vert_t> &jbil,const vector<m
     }
 }
 
-void clusterize_all_mr_gbil_verts(vector<jbil_vert_t> &jbils,bool use_QED,size_t clust_size)
+void finish_jverts_EM(jbil_vert_t &jverts,const djack_t &deltam_cr)
 {
-  cout<<"Clusterizing all gbil verts, clust_size="<<clust_size<<endl;
-  
+  auto &vem=jverts.EM,&vP=jverts.P;
 #pragma omp parallel for
-  for(size_t ibil=0;ibil<jbils.size();ibil++)
-    jbils[ibil].clusterize_all(use_QED,clust_size);
+  for(size_t i=0;i<vem.size();i++)
+    vem[i]-=vP[i]*deltam_cr;
 }
 
-// vector<djvec_t> compute_proj_bil(const vjprop_t &jprop_inv1,vjbil_vert_t &jverts,const vjprop_t &jprop_inv2)
-// {
-//   const size_t iZbil_of_iG[nGamma]={iZS,iZA,iZA,iZA,iZA,iZP,iZV,iZV,iZV,iZV,iZT,iZT,iZT,iZT,iZT,iZT};
-//   const double Zdeg[nZbil]={1,4,1,4,6};
-//   vector<djvec_t> pr(nZbil,djvec_t(imoms.size(),0.0)); //!< Five summed projectors
+djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jverts,const vjprop_t &jprop_inv2,const index_t &im_r_ind)
+{
+  const size_t nm=im_r_ind.max(0),nr=im_r_ind.max(1);
+  index_t im_r_im_r_iG_ind({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"igamma",nGamma}});
+  index_t im_r_im_r_ibil_ind({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"ibil",nZbil}});
+  index_t ind({{"rest",im_r_im_r_iG_ind.max()},{"ijack",njacks}});
   
-// #pragma omp parallel for
-//   for(size_t imom=0;imom<imoms.size();imom++)
-//     for(size_t ijack=0;ijack<=njacks;ijack++)
-//       {
-// 	prop_t prop_inv1=get_from_jackknife(jprop_inv1[imom],ijack);
-// 	prop_t prop_inv2=get_from_jackknife(jprop_inv2[imom],ijack);
-	
-// 	for(size_t iG=0;iG<nGamma;iG++)
-// 	  {
-// 	    size_t iZbil=iZbil_of_iG[iG];
-// 	    prop_t vert=get_from_jackknife(jverts[imom][iG],ijack) ;
-// 	    prop_t amp_vert=prop_inv1*vert*Gamma[5]*prop_inv2.adjoint()*Gamma[5];
-// 	    pr[iZbil][imom][ijack]+=(amp_vert*Gamma[iG].adjoint()).trace().real()/(12.0*Zdeg[iZbil]);
-// 	  }
-//       }
+  const vector<vector<size_t>> iG_of_Zbil={{0},{1,2,3,4},{5},{6,7,8,9},{10,11,12,13,14,15}};
+  djvec_t pr(im_r_im_r_ibil_ind.max());
   
-//   return pr;
-// }
+#pragma omp parallel for
+  for(size_t i=0;i<ind.max();i++)
+    {
+      //split im_r_im_r_ibil and ijack
+      vector<size_t> i_comp=ind(i);
+      const size_t im_r_im_r_ibil=i_comp[0],ijack=i_comp[1];
+      const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_ibil_ind(im_r_im_r_ibil);
+      
+      //get im and r for fw and back, and ibil
+      const size_t im_fw=im_r_im_r_ibil_comp[0],r_fw=im_r_im_r_ibil_comp[1];
+      const size_t im_bw=im_r_im_r_ibil_comp[2],r_bw=im_r_im_r_ibil_comp[3];
+      const size_t ibil=im_r_im_r_ibil_comp[4];
+      
+      //loop on all gammas
+      djack_t &out=pr[im_r_im_r_ibil];
+      for(auto & iG : iG_of_Zbil[ibil])
+	{
+	  vector<size_t> im_r_im_r_iG_comp=im_r_im_r_ibil_comp;
+	  im_r_im_r_iG_comp[4]=iG;
+	  const size_t im_r_im_r_iG=im_r_im_r_iG_ind(im_r_im_r_iG_comp);
+	  
+	  const size_t ip1=im_r_ind({im_fw,r_fw});
+	  const size_t ip2=im_r_ind({im_bw,r_bw});
+	  const prop_t prop_inv1=get_from_jackknife(jprop_inv1[ip1],ijack);
+	  const prop_t prop_inv2=get_from_jackknife(jprop_inv2[ip2],ijack);
+	  
+	  prop_t vert=get_from_jackknife(jverts[im_r_im_r_iG],ijack) ; //cambia con la gammosa, non jbil
+	  prop_t amp_vert=prop_inv1*vert*Gamma[5]*prop_inv2.adjoint()*Gamma[5];
+	  out[ijack]+=(amp_vert*Gamma[iG].adjoint()).trace().real()/(12.0*iG_of_Zbil[ibil].size());
+	}
+    }
+  
+  return pr;
+}
 

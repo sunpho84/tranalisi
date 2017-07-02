@@ -24,13 +24,13 @@ void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact);
 class m_r_mom_conf_props_t
 {
 public:
-  prop_t prop_0; //!< propagator with no insertion
+  prop_t LO; //!< propagator with no insertion
   
-  prop_t prop_FF; //!< propagator with 2 photon insertions
-  prop_t prop_F; //!< propagator with 1 photon insertion
-  prop_t prop_T; //!< propagator with Tadpole insertion
-  prop_t prop_S; //!< propagator with Scalar insertion
-  prop_t prop_P; //!< propagator with Pseudoscalar insertion
+  prop_t FF; //!< propagator with 2 photon insertions
+  prop_t F; //!< propagator with 1 photon insertion
+  prop_t T; //!< propagator with Tadpole insertion
+  prop_t S; //!< propagator with Scalar insertion
+  prop_t P; //!< propagator with Pseudoscalar insertion
 };
 
 //! return the tag of a prop
@@ -42,19 +42,19 @@ class jm_r_mom_props_t
   //! return a list of pointers to all internal data
   vector<jprop_t*> get_all_ptrs(bool use_QED)
   {
-    vector<jprop_t*> out={&jprop_0};
+    vector<jprop_t*> out={&LO};
     if(use_QED)
-      for(auto &p : {&jprop_2,&jprop_P,&jprop_S})
+      for(auto &p : {&EM,&P,&S})
 	out.push_back(p);
     return out;
   }
   
 public:
-  jprop_t jprop_0; //!< propagator with no photon, given momentum, all m and r
+  jprop_t LO; //!< propagator with no photon, given momentum, all m and r
   
-  jprop_t jprop_2; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
-  jprop_t jprop_P; //!< propagator with Pseudoscalar inserion
-  jprop_t jprop_S; //!< propagator with Scalar insertion
+  jprop_t EM; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
+  jprop_t P; //!< propagator with Pseudoscalar inserion
+  jprop_t S; //!< propagator with Scalar insertion
   
   //! clusterize the propagators
   void clusterize_all_mr_props(bool use_QED,size_t clust_size)
@@ -76,6 +76,9 @@ void clusterize_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,bool us
 
 //! return the propagator at maximal twist
 prop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r);
+
+//! finish computing em prop
+void finish_jprops_EM(vector<jm_r_mom_props_t> &jprops,const djack_t &deltam_cr);
 
 #undef EXTERN_PROP
 #undef INIT_TO

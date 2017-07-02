@@ -27,8 +27,9 @@ index_t im_r_ijack_ind; //!< index of im,r,ijack combo
 index_t im_r_imom_ind; //!< index of im,r,imom combo
 index_t im_r_ind_imom_ind; //!< index of im,r,imom combo
 index_t i_in_clust_ihit_ind; //!< index of i_in_clust,ihit
-index_t im_r_im_r_igam_ind; //!< index for bilinears
-index_t im_r_im_r_igam_ijack_ind; //!< index for jbilinears
+index_t im_r_im_r_igam_ind; //!< index for gamma
+index_t im_r_im_r_igam_ijack_ind; //!< index for jgamma
+index_t im_r_im_r_ibil_ijack_ind; //!< index for jbil
 
 //! prepare a list of reading task, to be executed in parallel
 vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,bool use_QED)
@@ -46,14 +47,14 @@ vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,c
 	    
 	    //add EM if asked
 	    using tup_in_t=tuple<prop_t*,string,dcompl_t>;
-	    vector<tup_in_t> list={{&l.prop_0,"0",1}};
+	    vector<tup_in_t> list={{&l.LO,"0",1}};
 	    if(use_QED)
 	      {
-		list.push_back(tup_in_t(&l.prop_P,"P",dcompl_t(0,-1)));
-		list.push_back(tup_in_t(&l.prop_S,"S",dcompl_t(-1,0)));
-		list.push_back(tup_in_t(&l.prop_T,"T",dcompl_t(1,0)));
-		list.push_back(tup_in_t(&l.prop_F,"F",dcompl_t(1,0)));
-		list.push_back(tup_in_t(&l.prop_FF,"FF",dcompl_t(1,0)));
+		list.push_back(tup_in_t(&l.P,"P",dcompl_t(0,-1)));
+		list.push_back(tup_in_t(&l.S,"S",dcompl_t(-1,0)));
+		list.push_back(tup_in_t(&l.T,"T",dcompl_t(1,0)));
+		list.push_back(tup_in_t(&l.F,"F",dcompl_t(1,0)));
+		list.push_back(tup_in_t(&l.FF,"FF",dcompl_t(1,0)));
 	      }
 	    
 	    for(auto &psc : list)
@@ -178,11 +179,12 @@ int main(int narg,char **arg)
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
   im_r_im_r_igam_ind.set_ranges({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"igamma",nGamma}});
   im_r_im_r_igam_ijack_ind.set_ranges({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"igamma",nGamma},{"ijack",njacks}});
+  im_r_im_r_ibil_ijack_ind.set_ranges({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"ibil",nZbil},{"ijack",njacks}});
   
   //Zq for all moms, with and without em
   djvec_t Zq_allmoms(im_r_imom_ind.max());
   djvec_t Zq_sig1_allmoms(im_r_imom_ind.max());
-  djvec_t Zq_sig1_em_allmoms(im_r_imom_ind.max());
+  djvec_t Zq_sig1_EM_allmoms(im_r_imom_ind.max());
   
   vector<m_r_mom_conf_props_t> props(im_r_ijack_ind.max()); //!< store props for individual conf
   
@@ -190,7 +192,7 @@ int main(int narg,char **arg)
   for(size_t imom=0;imom<imoms.size();imom++)
     {
       vector<jm_r_mom_props_t> jprops(im_r_ind.max()); //!< jackknived props
-      vector<jbil_vert_t> jverts(im_r_im_r_igam_ind.max()); //!< jackknived vertex
+      jbil_vert_t jverts(im_r_im_r_igam_ind.max(),use_QED); //!< jackknived vertex
       
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
@@ -204,13 +206,13 @@ int main(int narg,char **arg)
 	  }
       
       clusterize_all_mr_jackknifed_props(jprops,use_QED,clust_size);
-      clusterize_all_mr_gbil_verts(jverts,use_QED,clust_size);
+      jverts.clusterize_all(use_QED,clust_size);
       
-      // jverts_em=jverts_em-jverts_P*SC(deltam_cr);
-      // jprop_2=jprop_2-jprop_P*SC(deltam_cr);
+      finish_jverts_EM(jverts,deltam_cr);
+      finish_jprops_EM(jprops,deltam_cr);
       
       vector<jprop_t> jprop_inv(im_r_ind.max()); //!< inverse propagator
-      vector<jprop_t> jprop_em_inv(im_r_ind.max()); //!< inverse propagator with em insertion
+      vector<jprop_t> jprop_EM_inv(im_r_ind.max()); //!< inverse propagator with em insertion
 #pragma omp parallel for
       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijack_ind.max();im_r_ijack++)
 	{
@@ -221,19 +223,28 @@ int main(int narg,char **arg)
 	  size_t im_r_imom=im_r_imom_ind({im,r,imom});
 	  
 	  //compute inverse
-	  prop_t prop_inv=get_from_jackknife(jprops[im_r].jprop_0,ijack).inverse();
-	  prop_t prop_em_inv=prop_inv*get_from_jackknife(jprops[im_r].jprop_2,ijack)*prop_inv;
+	  prop_t prop_inv=get_from_jackknife(jprops[im_r].LO,ijack).inverse();
+	  prop_t prop_EM_inv=prop_inv*get_from_jackknife(jprops[im_r].EM,ijack)*prop_inv;
 	  
 	  //store inverses
 	  put_into_jackknife(jprop_inv[im_r],prop_inv,ijack);
-	  put_into_jackknife(jprop_em_inv[im_r],prop_em_inv,ijack);
+	  put_into_jackknife(jprop_EM_inv[im_r],prop_EM_inv,ijack);
 	  
 	  //compute Zq
 	  Zq_allmoms[im_r_imom][ijack]=compute_Zq(prop_inv,imom);
 	  Zq_sig1_allmoms[im_r_imom][ijack]=compute_Zq_sig1(prop_inv,imom);
 	  
-	  Zq_sig1_em_allmoms[im_r_imom][ijack]=-compute_Zq_sig1(prop_em_inv,imom);
-	  // vector<djvec_t> pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts,jprop_inv);
+	  Zq_sig1_EM_allmoms[im_r_imom][ijack]=-compute_Zq_sig1(prop_EM_inv,imom);
+	}
+      
+      djvec_t pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_inv,im_r_ind);
+      //QED
+      djvec_t pr_bil_EM_allmoms,pr_bil_a_allmoms,pr_bil_b_allmoms;
+      if(use_QED)
+	{
+	  pr_bil_EM_allmoms=compute_proj_bil(jprop_inv,jverts.EM,jprop_inv,im_r_ind);
+	  pr_bil_a_allmoms=compute_proj_bil(jprop_EM_inv,jverts.LO,jprop_inv,im_r_ind);
+	  pr_bil_b_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_EM_inv,im_r_ind);
 	}
     }
   
@@ -241,10 +252,6 @@ int main(int narg,char **arg)
   // djvec_t sig3_allmoms=compute_sig3(jprop_inv);
   // djvec_t sig3_em_allmoms=compute_sig3(jprop_em_inv);
   
-  // //QED
-  // vector<djvec_t> pr_bil_em_allmoms=compute_proj_bil(jprop_inv,jverts_em,jprop_inv);
-  // vector<djvec_t> pr_bil_a_allmoms=compute_proj_bil(jprop_em_inv,jverts,jprop_inv);
-  // vector<djvec_t> pr_bil_b_allmoms=compute_proj_bil(jprop_inv,jverts,jprop_em_inv);
   
   // //correct Z LO
   // djvec_t Zq_allmoms_sub=Zq_allmoms;

@@ -9,6 +9,8 @@
 #define EXTERN_PROP
  #include <prop.hpp>
 
+#include <oper.hpp>
+
 #include <corrections.hpp>
 #include <geometry.hpp>
 #include <types.hpp>
@@ -56,9 +58,9 @@ void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector
       jm_r_mom_props_t &j=jprops[im_r];
       const m_r_mom_conf_props_t &p=props[i_im_r_ijack];
       
-      add_to_cluster(j.jprop_0,p.prop_0,ijack);
+      add_to_cluster(j.LO,p.LO,ijack);
       if(set_QED)
-	for(auto &jp_p : vector<pair<jprop_t*,const prop_t*>>({{&j.jprop_2,&p.prop_FF},{&j.jprop_2,&p.prop_T},{&j.jprop_P,&p.prop_P},{&j.jprop_S,&p.prop_S}}))
+	for(auto &jp_p : vector<pair<jprop_t*,const prop_t*>>({{&j.EM,&p.FF},{&j.EM,&p.T},{&j.P,&p.P},{&j.S,&p.S}}))
 	  add_to_cluster(*jp_p.first,*jp_p.second,ijack);
     }
 }
@@ -68,6 +70,16 @@ void clusterize_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,bool us
 #pragma omp parallel for
   for(size_t iprop=0;iprop<jprops.size();iprop++)
     jprops[iprop].clusterize_all_mr_props(use_QED,clust_size);
+}
+
+void finish_jprops_EM(vector<jm_r_mom_props_t> &jprops,const djack_t &deltam_cr)
+{
+#pragma omp parallel for
+  for(size_t i=0;i<jprops.size();i++)
+    {
+      jm_r_mom_props_t &j=jprops[i];
+      j.EM-=j.P*deltam_cr;
+    }
 }
 
 double m0_of_kappa(double kappa)
