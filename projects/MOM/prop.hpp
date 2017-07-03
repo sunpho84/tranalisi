@@ -59,7 +59,7 @@ public:
   //! clusterize the propagators
   void clusterize_all_mr_props(bool use_QED,size_t clust_size)
   {
-    cout<<"Clusterizing all props, clust_size="<<clust_size<<endl;
+    //cout<<"Clusterizing all props, clust_size="<<clust_size<<endl;
     for(auto &p : get_all_ptrs(use_QED))
       clusterize(*p,clust_size);
   }
