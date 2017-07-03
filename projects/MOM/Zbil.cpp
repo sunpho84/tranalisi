@@ -20,7 +20,7 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
 					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED)
 {
   //! help finding the bilinear/jack combo
-  index_t ind({{"i",im_r_im_r_igam_ind.max()},{"ijack",njacks}});
+  index_t ind({{"i",im_r_im_r_igam_ind.max()},{"ijack",njacks+1}});
   
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
@@ -73,7 +73,7 @@ djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jvert
   const size_t nm=im_r_ind.max(0),nr=im_r_ind.max(1);
   index_t im_r_im_r_iG_ind({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"igamma",nGamma}});
   index_t im_r_im_r_ibil_ind({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"ibil",nZbil}});
-  index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks}});
+  index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks+1}});
   
   const vector<vector<size_t>> iG_of_Zbil={{0},{1,2,3,4},{5},{6,7,8,9},{10,11,12,13,14,15}};
   djvec_t pr(im_r_im_r_ibil_ind.max());

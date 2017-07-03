@@ -10,6 +10,7 @@
 #include <macros.hpp>
 #include <solve.hpp>
 #include <tools.hpp>
+#include <utility>
 #include <valarray>
 #include <vector>
 
@@ -228,17 +229,6 @@ template <class T,class=enable_if_t<has_method_size<T>::value>>
 T vec_filter(const T &v,const gslice &slice)
 {return (T)(v[slice]);}
 
-//! conctatenate two vector
-template <class T>
-vector<T> concat(const vector<T> &v1,const vector<T> &v2)
-{
-  vector<T> v;
-  v.reserve(v1.size()+v2.size());
-  for(auto &x1 : v1) v.push_back(x1);
-  for(auto &x2 : v2) v.push_back(x2);
-  return v;
-}
-
 //! concatenate an arbitrary number of vectors
 template <class T>
 vector<T> concat_internal(const vector<const vector<T>*> &in)
@@ -258,17 +248,37 @@ vector<T> concat_internal(const vector<const vector<T>*> &in)
   return out;
 }
 
-//! concatenate one vector to a list of at least two others
+//! concatenate one vector to another
 template <class T,typename ...Rest>
-vector<T> concat_internal(vector<const vector<T>*> &&vlist,const vector<T> &v,const Rest&&... rest)
+vector<T> concat_internal(vector<const vector<T>*> &vlist,const vector<T> &v,Rest&&... rest)
 {
   vlist.push_back(&v);
-  return concat_internal(vlist,rest...);
+  return concat_internal(vlist,forward<Rest>(rest)...);
 }
 
+//! concatenate one vector and a const
+template <class T,typename ...Rest>
+vector<T> concat_internal(vector<const vector<T>*> &vlist,const T &v,Rest&&... rest)
+{
+  vector<T> tv={v};
+  vlist.push_back(&tv);
+  return concat_internal(vlist,forward<Rest>(rest)...);
+}
+
+//! concatenate one vector and an initializer list
+template <class T,typename ...Rest>
+vector<T> concat_internal(vector<const vector<T>*> &vlist,const initializer_list<T> &v,Rest&&... rest)
+{
+  vector<T> tv={v};
+  vlist.push_back(&tv);
+  return concat_internal(vlist,forward<Rest>(rest)...);
+}
 //! concatenate at least two vectors
 template <class T,typename... Rest>
-vector<T> concat(const vector<T> &v1,const vector<T> &v2,const Rest&... rest)
-{return concat_internal({&v1,&v2},rest...);}
+vector<T> concat(const vector<T> &v,Rest&&... rest)
+{
+  vector<const vector<T>*> vlist({&v});
+  return concat_internal(vlist,forward<Rest>(rest)...);
+}
 
 #endif

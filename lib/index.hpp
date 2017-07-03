@@ -12,8 +12,8 @@ using namespace std;
 class index_t : vector<pair<string,size_t>>
 {
 public:
-  //! return a reference to the base type
-  vector<pair<string,size_t>> &base()
+  //! return a const reference to the base type
+  const vector<pair<string,size_t>> &base() const
   {return *this;}
   
   //! return the rank
