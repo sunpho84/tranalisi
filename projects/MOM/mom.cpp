@@ -178,7 +178,8 @@ int main(int narg,char **arg)
   const index_t im_r_im_r_igam_ind=concat(im_r_ind.base(),im_r_ind.base(),index_t({{"igamma",nGamma}}).base());
   const index_t im_r_im_r_iZbil_ind=concat(im_r_ind.base(),im_r_ind.base(),index_t({{"iZbil",nZbil}}).base());
   const index_t im_r_im_r_iZbil_imom_ind=concat(im_r_im_r_iZbil_ind.base(),index_t({{"imom",imoms.size()}}).base());
-  const index_t im_r_ialljack_ind=concat(im_r_ind.base(),index_t({{"ijack",njacks+1}}).base()); //!< index of im,r,ijack combo
+  const index_t im_r_ijack_ind=concat(im_r_ind.base(),index_t({{"ijack",njacks}}).base());
+  const index_t im_r_ijackp1_ind=concat(im_r_ind.base(),index_t({{"ijack",njacks+1}}).base());
   
   //Zq for all moms, with and without em
   djvec_t Zq_allmoms(im_r_imom_ind.max());
@@ -201,8 +202,8 @@ int main(int narg,char **arg)
 	    cout<<"Working on clust_entry "<<i_in_clust<<"/"<<clust_size<<", hit "<<ihit<<"/"<<nhits<<", momentum "<<imom+1<<"/"<<imoms.size()<<endl;
 	    read_tasks[i_in_clust_hit].assolve_all(RECYCLE);
 	    
-	    build_all_mr_jackknifed_props(jprops,props,use_QED,im_r_ialljack_ind,im_r_ind);
-	    build_all_mr_gbil_jackknifed_verts(jverts,props,im_r_im_r_igam_ind,im_r_ialljack_ind,use_QED);
+	    build_all_mr_jackknifed_props(jprops,props,use_QED,im_r_ijack_ind,im_r_ind);
+	    build_all_mr_gbil_jackknifed_verts(jverts,props,im_r_im_r_igam_ind,im_r_ijack_ind,use_QED);
 	  }
       
       clusterize_all_mr_jackknifed_props(jprops,use_QED,clust_size);
@@ -214,10 +215,10 @@ int main(int narg,char **arg)
       vector<jprop_t> jprop_inv(im_r_ind.max()); //!< inverse propagator
       vector<jprop_t> jprop_EM_inv(im_r_ind.max()); //!< inverse propagator with em insertion
 #pragma omp parallel for
-      for(size_t im_r_ijack=0;im_r_ijack<im_r_ialljack_ind.max();im_r_ijack++)
+      for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
 	{
 	  //decript indices
-	  vector<size_t> im_r_ijack_comps=im_r_ialljack_ind(im_r_ijack);
+	  vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
 	  size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
 	  size_t im_r=im_r_ind({im,r});
 	  size_t im_r_imom=im_r_imom_ind({im,r,imom});
