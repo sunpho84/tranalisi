@@ -20,7 +20,7 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
 					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED)
 {
   //! help finding the bilinear/jack combo
-  index_t ind({{"i",im_r_im_r_igam_ind.max()},{"ijack",njacks+1}});
+  index_t ind({{"i",im_r_im_r_igam_ind.max()},{"ijack",njacks}});
   
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
