@@ -47,7 +47,7 @@ public:
   //! clusterize
   void clusterize_all(bool use_QED,size_t clust_size)
   {
-    cout<<"Clusterizing all verts, clust_size="<<clust_size<<endl;
+    //cout<<"Clusterizing all verts, clust_size="<<clust_size<<endl;
     for(auto &p : get_all_ptrs(use_QED))
       for(auto &pi : *p)
 	clusterize(pi,clust_size);
