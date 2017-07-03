@@ -45,8 +45,10 @@ vjprop_t get_all_mr_props_inv(const vjprop_t &jprop)
   return jprop_inv;
 }
 
-void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ijack_ind,const index_t &im_r_ind)
+void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ind)
 {
+  const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
+  
 #pragma omp parallel for
   for(size_t i_im_r_ijack=0;i_im_r_ijack<im_r_ijack_ind.max();i_im_r_ijack++)
     {

@@ -5,6 +5,7 @@
 #include <file.hpp>
 #include <grace.hpp>
 #include <obs_file.hpp>
+#include <stopwatch.hpp>
 #include <tools.hpp>
 
 //! type defining a vector of measures

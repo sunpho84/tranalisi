@@ -9,6 +9,7 @@
 #include <jack.hpp>
 #include <macros.hpp>
 #include <solve.hpp>
+#include <stopwatch.hpp>
 #include <tools.hpp>
 #include <utility>
 #include <valarray>

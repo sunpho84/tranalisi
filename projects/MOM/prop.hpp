@@ -66,7 +66,7 @@ public:
 };
 
 //! add the prop of a given conf on the jackknife
-void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ijack_ind,const index_t &im_r_ind);
+void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ind);
 
 //! compute the inverse of all mr props
 vjprop_t get_all_mr_props_inv(const vjprop_t &jprop);
