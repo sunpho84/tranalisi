@@ -2,7 +2,6 @@
 #define _TOOLS_HPP
 
 #include <array>
-#include <chrono>
 #include <iostream>
 #include <macros.hpp>
 #include <string>
@@ -21,99 +20,6 @@ DEFINE_HAS_METHOD(is_printable);
 
 //! crashes emitting the message
 void internal_crash(int line,const char *file,const char *temp,...);
-
-//! measure time
-using instant_t=chrono::time_point<chrono::steady_clock>;
-inline instant_t take_time()
-{return chrono::steady_clock::now();}
-
-//! difference between two measures
-using duration_t=decltype(take_time()-take_time());
-
-//! implment a stopwatch
-class stopwatch_t : duration_t
-{
-  //! number of measurements
-  size_t nmeas;
-  
-  //! last measurement
-  instant_t last;
-  
-  //! true if the stopwatch has been started
-  bool started;
-  
-public:
-  stopwatch_t() {reset();}
-  
-  //! reference to base type
-  duration_t& base()
-  {return (duration_t&)(*this);}
-  
-  //! const reference to base type
-  const duration_t& base() const
-  {return (const duration_t&)(*this);}
-  
-  //! start the stopwatch
-  void start()
-  {
-    if(started==true) CRASH("Trying to start an already started stopwatch!");
-    last=take_time();
-    started=true;
-  }
-  
-  //! stop the stopwatch
-  void stop()
-  {
-    if(started==false) CRASH("Trying to stop a non-started stopwatch!");
-    base()+=take_time()-last;
-    nmeas++;
-    started=false;
-  }
-  
-  //! reset the timewatch
-  void reset()
-  {
-    nmeas=0;
-    started=false;
-    last=take_time();
-    base()=last-last;
-  }
-  
-  //! return the total time
-  duration_t tot() const
-  {
-    if(started) CRASH("Tryng to ask for the total time of a running stopwatch!");
-    return base();
-  }
-  
-  //! return the average
-  duration_t ave() const
-  {return tot()/nmeas;}
-  
-  //! return the number of measures
-  size_t get_nmeas() const
-  {return nmeas;}
-};
-
-//! print elapsed time
-inline ostream& operator<<(ostream &out,const duration_t &diff)
-{
-  double el_nano=chrono::duration<double,nano>(diff).count();
-  if(el_nano<1000) return out<<el_nano<<" ns";
-  
-  double el_micro=chrono::duration<double,micro>(diff).count();
-  if(el_micro<1000) return out<<el_micro<<" us";
-  
-  double el_milli=chrono::duration<double,milli>(diff).count();
-  if(el_milli<1000) return out<<el_milli<<" ms";
-  
-  double el_sec=chrono::duration<double>(diff).count();
-  return out<<el_sec<<" s";
-}
-
-//! return elapsed time from a given moment
-inline duration_t elapsed_time(const instant_t &start)
-{return take_time()-start;}
 
 //! check if two quantities have the same sign
 template <class T> bool same_sign(const T &a,const T &b)
