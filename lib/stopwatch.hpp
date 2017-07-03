@@ -32,7 +32,7 @@ class stopwatch_t : duration_t
   bool started;
   
 public:
-  stopwatch_t(const string &name) : name(name) {reset();}
+  stopwatch_t(const string &name="") : name(name) {reset();}
   
   //! descritpion
   string descr() const
