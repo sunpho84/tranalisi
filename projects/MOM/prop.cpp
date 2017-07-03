@@ -53,7 +53,7 @@ void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector
       vector<size_t> im_r_ijack=im_r_ijack_ind(i_im_r_ijack);
       size_t im=im_r_ijack[0],r=im_r_ijack[1],ijack=im_r_ijack[2];
       size_t im_r=im_r_ind({im,r});
-      cout<<"Building jack prop im="<<im<<", r="<<r<<", ijack="<<ijack<<endl;
+      //cout<<"Building jack prop im="<<im<<", r="<<r<<", ijack="<<ijack<<endl;
       
       jm_r_mom_props_t &j=jprops[im_r];
       const m_r_mom_conf_props_t &p=props[i_im_r_ijack];
