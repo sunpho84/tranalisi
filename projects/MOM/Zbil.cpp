@@ -63,7 +63,7 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
 void finish_jverts_EM(jbil_vert_t &jverts,const djack_t &deltam_cr)
 {
   auto &vem=jverts.EM,&vP=jverts.P;
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for
   for(size_t i=0;i<vem.size();i++)
     for(size_t ijack=0;ijack<=njacks;ijack++)
     vem[i][ijack]-=vP[i][ijack]*deltam_cr[ijack];
