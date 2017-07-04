@@ -166,7 +166,7 @@ esac
 AC_DEFINE_UNQUOTED([MINIMIZER_TYPE],[$minimizer_type],[How to minimize])
 AC_MSG_RESULT([Enable minimizer... ${enable_minimizer}])
 
-#activate debug or not bootstrap
+#activate debug or not
 AC_ARG_ENABLE(debug,
         AS_HELP_STRING([--enable-debug=yes[,no]],[Enable debug]),
         debug="${enableval}",
@@ -187,6 +187,30 @@ AC_MSG_RESULT([with Eigen... $with_Eigen])
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([Eigen/Dense],,AC_MSG_ERROR([Error! Eigen required]))
 AC_LANG_POP([C++])
+
+#activate arch optimization
+AC_ARG_ENABLE(arch_opt,
+        AS_HELP_STRING([--enable-arch-optimizations=val[-march=native]],[Enable architecture optimizations]),
+        arch_opt="${enableval}",
+        arch_opt=-march=native)
+case "$arch_opt" in
+     no) ;;
+     *) CXXFLAGS="${arch_opt} $CXXFLAGS";;
+esac
+AC_MSG_RESULT([Enabling architecture optimization... $arch_opt])
+
+
+#activate Eigen vectorization
+AC_ARG_ENABLE(Eigen_vec_opt,
+        AS_HELP_STRING([--enable-Eigen_vec_opt=yes[,no]],[Enable Eigen vectorization]),
+        Eigen_vec_opt="${enableval}",
+        Eigen_vec_opt=no)
+case "$Eigen_vec_opt" in
+     no) AC_DEFINE_UNQUOTED([EIGEN_DONT_VECTORIZE],,[Disable Eigen_vectorization]);;
+     yes) ;;
+     *) AC_MSG_ERROR(["Unkwnown Eigen_vec_opt method $Eigen_vec_opt"])
+esac
+AC_MSG_RESULT([Enabling Eigen vectorization... $Eigen_vec_opt])
 
 AC_CONFIG_FILES(Makefile
 	include/Makefile

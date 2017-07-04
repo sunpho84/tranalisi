@@ -6,7 +6,6 @@
  #include <omp.h>
 #endif
 
-
 #include <Zq.hpp>
 
 double compute_Zq(const prop_t &prop_inv,size_t imom)

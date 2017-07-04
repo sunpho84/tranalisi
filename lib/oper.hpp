@@ -33,18 +33,27 @@ init_nel(const vector<T> &obj)
 
 ////////////////////////////////////////////// a scalar wrapper //////////////////////////////////////////
 
-template <class T>
+template <class T,size_t deg>
 class SC_t
 {
  public:
-  const T *val;
-  SC_t(const T &val) : val(&val) {}
+  const SC_t<T,deg-1> val;
+  SC_t(const T &val) : val(val) {}
+};
+
+//! 1-level wrapper
+template <class T>
+class SC_t<T,1>
+{
+ public:
+  const T &val;
+  SC_t(const T &val) : val(val) {}
 };
 
 //! return a scalar wrapper around T
-template <class T>
-auto SC(const T &val) -> SC_t<T>
-{return SC_t<T>(val);}
+template <class T,const size_t deg=1>
+auto SC(const T &val) -> SC_t<T,deg>
+{return SC_t<T,deg>(val);}
 
 //////////////////////////////////////////////// operations //////////////////////////////////////////////
 
@@ -100,19 +109,19 @@ auto SC(const T &val) -> SC_t<T>
     auto operator OP##=(TV &first,const TS &second) -> decltype(first OP second) \
     {return first=first OP second;}					\
     /* operation between a generic vector and a scalar of type different from base_type */ \
-    template<class TV,class TT=vector_traits<TV>,class TS,class=enable_if_t<TT::is_vector and !is_same<typename TT::base_type,TS>::value>> \
-    TV operator OP(const TV &first,const SC_t<TS> &second)		\
+    template<class TV,class TT=vector_traits<TV>,class TS,size_t deg,class=enable_if_t<TT::is_vector and !is_same<typename TT::base_type,TS>::value>> \
+    TV operator OP(const TV &first,const SC_t<TS,deg> &second)		\
     {									\
       TV out(init_nel(first));						\
-      for(size_t it=0;it<first.size();it++) out[it]=first[it] OP *second.val; \
+      for(size_t it=0;it<first.size();it++) out[it]=first[it] OP second.val; \
       return out;							\
     }									\
     /* operation between a generic vector and a scalar of type different from base_type */ \
-    template<class TV,class TT=vector_traits<TV>,class TS,class=enable_if_t<TT::is_vector and !is_same<typename TT::base_type,TS>::value>> \
-    TV operator OP(const SC_t<TS> &first,const TV &second)		\
+    template<class TV,class TT=vector_traits<TV>,class TS,size_t deg,class=enable_if_t<TT::is_vector and !is_same<typename TT::base_type,TS>::value>> \
+    TV operator OP(const SC_t<TS,deg> &first,const TV &second)		\
     {									\
       TV out(init_nel(second));						\
-      for(size_t it=0;it<first.size();it++) out[it]=first.val OP *second[it]; \
+      for(size_t it=0;it<first.size();it++) out[it]=first.val OP second[it]; \
       return out;							\
     }
 

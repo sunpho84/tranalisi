@@ -108,7 +108,6 @@ void signal_handler(int sig)
   CRASH("signal %d (%s) detected, exiting",sig,name);
 }
 
-
 //! class to force call to initialization
 class initializer_t
 {
