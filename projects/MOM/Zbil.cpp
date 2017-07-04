@@ -14,7 +14,7 @@
 #include <prop.hpp>
 
 void build_jackknifed_vert_Gamma(jprop_t &jvert,const prop_t &prop1,size_t iG,const prop_t &prop2,size_t ijack)
-{add_to_cluster(jvert,prop1*Gamma[iG]*Gamma[5]*prop2.adjoint()*Gamma[5],ijack);}
+{jvert[ijack]+=prop1*Gamma[iG]*Gamma[5]*prop2.adjoint()*Gamma[5];}
 
 void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_props_t> &props,
 					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED)
@@ -63,9 +63,10 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
 void finish_jverts_EM(jbil_vert_t &jverts,const djack_t &deltam_cr)
 {
   auto &vem=jverts.EM,&vP=jverts.P;
-#pragma omp parallel for
+#pragma omp parallel for collapse(2)
   for(size_t i=0;i<vem.size();i++)
-    vem[i]-=vP[i]*deltam_cr;
+    for(size_t ijack=0;ijack<=njacks;ijack++)
+    vem[i][ijack]-=vP[i][ijack]*deltam_cr[ijack];
 }
 
 djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jverts,const vjprop_t &jprop_inv2,const index_t &im_r_ind)
@@ -101,10 +102,11 @@ djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jvert
 	  
 	  const size_t ip1=im_r_ind({im_fw,r_fw});
 	  const size_t ip2=im_r_ind({im_bw,r_bw});
-	  const prop_t prop_inv1=get_from_jackknife(jprop_inv1[ip1],ijack);
-	  const prop_t prop_inv2=get_from_jackknife(jprop_inv2[ip2],ijack);
+	  const prop_t &prop_inv1=jprop_inv1[ip1][ijack];
+	  const prop_t &prop_inv2=jprop_inv2[ip2][ijack];
 	  
-	  prop_t vert=get_from_jackknife(jverts[im_r_im_r_iG],ijack) ; //cambia con la gammosa, non jbil
+	  const prop_t &vert=jverts[im_r_im_r_iG][ijack];
+	  
 	  prop_t amp_vert=prop_inv1*vert*Gamma[5]*prop_inv2.adjoint()*Gamma[5];
 	  out[ijack]+=(amp_vert*Gamma[iG].adjoint()).trace().real()/(12.0*iG_of_Zbil[ibil].size());
 	}

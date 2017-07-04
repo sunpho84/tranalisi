@@ -6,6 +6,7 @@
  #include <omp.h>
 #endif
 
+
 #include <Zq.hpp>
 
 double compute_Zq(const prop_t &prop_inv,size_t imom)
@@ -30,10 +31,7 @@ djack_t compute_Zq(const jprop_t &jprop_inv,size_t imom)
   prop_t pslash=slash(ptilde);
   
   for(size_t ijack=0;ijack<=njacks;ijack++)
-    {
-      prop_t prop_inv=get_from_jackknife(jprop_inv,ijack);
-      Zq[ijack]=(prop_inv*pslash).trace().imag()/(12.0*pt2*V);
-    }
+    Zq[ijack]=(jprop_inv[ijack]*pslash).trace().imag()/(12.0*pt2*V);
   
   return Zq;
 }

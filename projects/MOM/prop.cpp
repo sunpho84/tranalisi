@@ -40,7 +40,7 @@ vjprop_t get_all_mr_props_inv(const vjprop_t &jprop)
 #pragma omp parallel for
   for(size_t imr=0;imr<nmr;imr++)
     for(size_t ijack=0;ijack<=njacks;ijack++)
-      put_into_jackknife(jprop_inv[imr],get_from_jackknife(jprop[imr],ijack).inverse(),ijack);
+      jprop_inv[imr][ijack]=jprop[imr][ijack].inverse();
   
   return jprop_inv;
 }
@@ -60,10 +60,10 @@ void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector
       jm_r_mom_props_t &j=jprops[im_r];
       const m_r_mom_conf_props_t &p=props[i_im_r_ijack];
       
-      add_to_cluster(j.LO,p.LO,ijack);
+      j.LO[ijack]+=p.LO;
       if(set_QED)
 	for(auto &jp_p : vector<pair<jprop_t*,const prop_t*>>({{&j.EM,&p.FF},{&j.EM,&p.T},{&j.P,&p.P},{&j.S,&p.S}}))
-	  add_to_cluster(*jp_p.first,*jp_p.second,ijack);
+	  (*jp_p.first)[ijack]+=*jp_p.second;
     }
 }
 
@@ -76,11 +76,13 @@ void clusterize_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,bool us
 
 void finish_jprops_EM(vector<jm_r_mom_props_t> &jprops,const djack_t &deltam_cr)
 {
+  index_t ind({{"iprop",jprops.size()},{"ijack",njacks+1}});
 #pragma omp parallel for
-  for(size_t i=0;i<jprops.size();i++)
+  for(size_t i=0;i<ind.max();i++)
     {
-      jm_r_mom_props_t &j=jprops[i];
-      j.EM-=j.P*deltam_cr;
+      const vector<size_t> comp=ind(i);
+      const size_t iprop=comp[0],ijack=comp[1];
+      jprops[iprop].EM[ijack]-=jprops[iprop].P[ijack]*deltam_cr[ijack];
     }
 }
 

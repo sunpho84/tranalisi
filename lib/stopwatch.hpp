@@ -138,7 +138,7 @@ public:
 
 //! print a stopwatch
 inline ostream& operator<<(ostream &out,const stopwatch_ratio_t &s)
-{return out<<s.num<<",\t relative to "<<s.den.descr()<<":\t "<<s.num.tot()*100.0/s.den.tot()<<" %";}
+{return out<<s.num<<",\t relative to "<<s.den.descr()<<":\t "<<percentage(s.num.tot(),s.den.tot())<<"%";}
 
 //! return a stopwatch_ratio to write the used time in proportion of another one
 inline stopwatch_ratio_t operator/(const stopwatch_t &num,const stopwatch_t &den)
@@ -146,5 +146,43 @@ inline stopwatch_ratio_t operator/(const stopwatch_t &num,const stopwatch_t &den
 
 //! reduction for stopwatch
 #pragma omp declare reduction(+: stopwatch_t : omp_out+=omp_in) initializer(omp_priv=stopwatch_t(omp_orig.descr()))
+
+class time_stats_t : public vector<stopwatch_t>
+{
+  stopwatch_t total_time;
+  
+  friend ostream &operator<<(ostream &os,time_stats_t &t);
+  
+public:
+  time_stats_t() : total_time("do everything")
+  {
+    total_time.reset();
+    total_time.start();
+  }
+  
+  //! add a timer
+  size_t add(const string &name)
+  {
+    push_back(name);
+    return size()-1;
+  }
+};
+
+//! print the timings
+inline ostream &operator<<(ostream &os,time_stats_t &t)
+{
+  t.total_time.stop();
+  os<<"Total time: \t"<<t.total_time.tot()<<endl;
+  
+  duration_t unaccounted=t.total_time.tot();
+  for(auto &f : t)
+    {
+      os<<f/t.total_time<<endl;
+      unaccounted-=f.tot();
+    }
+  os<<"Unaccounted time: "<<unaccounted<<", "<<percentage(unaccounted,t.total_time.tot())<<" % of total"<<endl;
+  
+  return os;
+}
 
 #endif

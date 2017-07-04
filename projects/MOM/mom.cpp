@@ -95,8 +95,7 @@ djvec_t linfit_Z(const djvec_t &Z,const string &name,double band_val=0)
 
 int main(int narg,char **arg)
 {
-  stopwatch_t total_time("do everything");
-  total_time.start();
+  time_stats_t ts;
   
   //read input file
   string input_path="input.txt";
@@ -185,13 +184,14 @@ int main(int narg,char **arg)
   const index_t im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});
   
   //compute the partial times
-  stopwatch_t read_time("read propagators");
-  stopwatch_t build_props_time("build props");
-  stopwatch_t build_verts_time("build verts");
-  stopwatch_t clust_time("clusterize");
-  stopwatch_t invert_time("invert the props");
-  stopwatch_t finish_EM_time("finish EM");
-  stopwatch_t proj_time("project bilinears");
+  size_t read_time=ts.add("read propagators");
+  size_t build_props_time=ts.add("build props");
+  size_t build_verts_time=ts.add("build verts");
+  size_t clust_time=ts.add("clusterize");
+  size_t invert_time=ts.add("invert the props");
+  size_t finish_EM_time=ts.add("finish EM");
+  size_t proj_time=ts.add("project bilinears");
+  size_t Zq_time=ts.add("compute Zq");
   
   //Zq for all moms, with and without em
   djvec_t Zq_allmoms(im_r_imom_ind.max());
@@ -212,38 +212,39 @@ int main(int narg,char **arg)
 	  {
 	    size_t i_in_clust_hit=i_in_clust_ihit_ind({i_in_clust,ihit});
 	    cout<<"Working on clust_entry "<<i_in_clust<<"/"<<clust_size<<", hit "<<ihit<<"/"<<nhits<<", momentum "<<imom+1<<"/"<<imoms.size()<<endl;
-	    read_time.start();
+	    ts[read_time].start();
 	    read_tasks[i_in_clust_hit].assolve_all(RECYCLE);
-	    read_time.stop();
+	    ts[read_time].stop();
 	    
 	    //build all props
-	    build_props_time.start();
+	    ts[build_props_time].start();
 	    build_all_mr_jackknifed_props(jprops,props,use_QED,im_r_ind);
-	    build_props_time.stop();
+	    ts[build_props_time].stop();
 	    
-	    build_verts_time.start();
+	    ts[build_verts_time].start();
 	    build_all_mr_gbil_jackknifed_verts(jverts,props,im_r_im_r_igam_ind,im_r_ijack_ind,use_QED);
-	    build_verts_time.stop();
+	    ts[build_verts_time].stop();
 	  }
       
       //clusterize
-      clust_time.start();
+      ts[clust_time].start();
       clusterize_all_mr_jackknifed_props(jprops,use_QED,clust_size);
       jverts.clusterize_all(use_QED,clust_size);
-      clust_time.stop();
+      ts[clust_time].stop();
       
       //finish EM
       if(use_QED)
 	{
-	  finish_EM_time.start();
+	  ts[finish_EM_time].start();
 	  finish_jverts_EM(jverts,deltam_cr);
 	  finish_jprops_EM(jprops,deltam_cr);
-	  finish_EM_time.stop();
+	  ts[finish_EM_time].stop();
 	}
       
       vector<jprop_t> jprop_inv(im_r_ind.max()); //!< inverse propagator
       vector<jprop_t> jprop_EM_inv(im_r_ind.max()); //!< inverse propagator with em insertion
-#pragma omp parallel for reduction(+:invert_time)
+      stopwatch_t &tinv=ts[invert_time];
+#pragma omp parallel for reduction(+:tinv)
       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
 	{
 	  //decript indices
@@ -253,37 +254,42 @@ int main(int narg,char **arg)
 	  size_t im_r_imom=im_r_imom_ind({im,r,imom});
 	  
 	  //compute inverse
-	  invert_time.start();
-	  prop_t prop_inv=get_from_jackknife(jprops[im_r].LO,ijack).inverse();
-	  put_into_jackknife(jprop_inv[im_r],prop_inv,ijack);
-	  invert_time.stop();
+	  tinv.start();
+	  prop_t prop_inv=jprops[im_r].LO[ijack].inverse();
+	  jprop_inv[im_r][ijack]=prop_inv;
+	  tinv.stop();
 	  
 	  //compute Zq
+	  ts[Zq_time].start();
 	  Zq_allmoms[im_r_imom][ijack]=compute_Zq(prop_inv,imom);
 	  Zq_sig1_allmoms[im_r_imom][ijack]=compute_Zq_sig1(prop_inv,imom);
+	  ts[Zq_time].stop();
 	  
 	  //do the same with QED
 	  if(use_QED)
 	    {
-	      invert_time.start();
-	      prop_t prop_EM_inv=prop_inv*get_from_jackknife(jprops[im_r].EM,ijack)*prop_inv;
-	      put_into_jackknife(jprop_EM_inv[im_r],prop_EM_inv,ijack);
+	      tinv.start();
+	      prop_t prop_EM_inv=prop_inv*jprops[im_r].EM[ijack]*prop_inv;
+	      jprop_EM_inv[im_r][ijack]=prop_EM_inv;
+	      tinv.stop();
+	      
+	      ts[Zq_time].start();
 	      Zq_sig1_EM_allmoms[im_r_imom][ijack]=-compute_Zq_sig1(prop_EM_inv,imom);
-	      invert_time.stop();
+	      ts[Zq_time].stop();
 	    }
 	}
       
-      proj_time.start();
+      ts[proj_time].start();
       djvec_t pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_inv,im_r_ind);
       //QED
       djvec_t pr_bil_EM_allmoms,pr_bil_a_allmoms,pr_bil_b_allmoms;
       if(use_QED)
 	{
-	  pr_bil_EM_allmoms=compute_proj_bil(jprop_inv,jverts.EM,jprop_inv,im_r_ind);
+	  pr_bil_EM_allmoms=compute_proj_bil(jprop_inv,jverts.EM,jprop_inv,im_r_ind); 
 	  pr_bil_a_allmoms=compute_proj_bil(jprop_EM_inv,jverts.LO,jprop_inv,im_r_ind);
 	  pr_bil_b_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_EM_inv,im_r_ind);
 	}
-      proj_time.stop();
+      ts[proj_time].stop();
       
       //build Z
       for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
@@ -394,16 +400,7 @@ int main(int narg,char **arg)
       out.new_data_set();
     }
   
-  total_time.stop();
-  
-  cout<<total_time<<endl;
-  cout<<read_time/total_time<<endl;
-  cout<<build_props_time/total_time<<endl;
-  cout<<build_verts_time/total_time<<endl;
-  cout<<clust_time/total_time<<endl;
-  cout<<finish_EM_time/total_time<<endl;
-  cout<<invert_time/total_time<<endl;
-  cout<<proj_time/total_time<<endl;
+  cout<<ts<<endl;
   
   return 0;
 }

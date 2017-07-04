@@ -50,7 +50,7 @@ public:
     //cout<<"Clusterizing all verts, clust_size="<<clust_size<<endl;
     for(auto &p : get_all_ptrs(use_QED))
       for(auto &pi : *p)
-	clusterize(pi,clust_size);
+	pi.clusterize(clust_size);
   }
 };
 

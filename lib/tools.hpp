@@ -1,6 +1,8 @@
 #ifndef _TOOLS_HPP
 #define _TOOLS_HPP
 
+#include <Eigen/Dense>
+
 #include <array>
 #include <iostream>
 #include <macros.hpp>
@@ -114,5 +116,18 @@ template <class T> vector<T> vector_up_to(const size_t max,const T offset=0)
   for(size_t it=0;it<max;it++) x[it]=it+offset;
   return x;
 }
+
+//! set to zero a double
+inline void set_to_zero(double &x)
+{x=0;}
+
+//! set to zero an eigen matr
+template <typename D> void set_to_zero(const Eigen::MatrixBase<D> &x)
+{x.Zero();}
+
+//! return a percentage
+template <class T>
+double percentage(const T &num,const T& den)
+{return num*100.0/den;}
 
 #endif

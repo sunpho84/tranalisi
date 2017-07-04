@@ -35,12 +35,11 @@ djack_t compute_Zq_sig1(const jprop_t &jprop_inv,size_t imom)
   
   for(size_t ijack=0;ijack<=njacks;ijack++)
     {
-      prop_t prop_inv=get_from_jackknife(jprop_inv,ijack);
       Zq[ijack]=0.0;
       for(size_t mu=0;mu<NDIM;mu++)
 	if(fabs(ptilde[mu])>1e-10)
 	  Zq[ijack]+=
-	    (prop_inv*Gamma[igmu[mu]]).trace().imag()/
+	    (jprop_inv[ijack]*Gamma[igmu[mu]]).trace().imag()/
 	    (12.0*ptilde[mu]*V*imoms[imom].Np());
     }
   

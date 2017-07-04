@@ -61,7 +61,7 @@ public:
   {
     //cout<<"Clusterizing all props, clust_size="<<clust_size<<endl;
     for(auto &p : get_all_ptrs(use_QED))
-      clusterize(*p,clust_size);
+      p->clusterize(clust_size);
   }
 };
 
