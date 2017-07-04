@@ -24,41 +24,7 @@ const size_t NSPIN=4; //< Number of spin components
 const int NSPINCOL=NSPIN*NCOL; //< Total number of spin and color components
 
 using prop_t=Matrix<dcompl_t,NSPINCOL,NSPINCOL>; //< Matrix of complex
-using jprop_t=Matrix<cdjack_t,NSPINCOL,NSPINCOL>; //< Matrix of djack_t
-
-namespace Eigen
-{
-  //! Traits for using cdjack_t as a scalar type for Eigen
-  template<> struct NumTraits<cdjack_t>
-    : NumTraits<double>
-  {
-    typedef djack_t Real;
-    typedef cdjack_t NonInteger;
-    typedef cdjack_t Nested;
-    enum
-      {
-	IsComplex=1,
-	IsInteger=0,
-	IsSigned=1,
-	RequireInitialization=1,
-	ReadCost=30,
-	AddCost=120,
-	MulCost=120
-      };
-  };
-}
-
-//! clusterize a jprop_t
-void clusterize(jprop_t &j,size_t clust_size=1);
-
-//! add to a cluster
-void add_to_cluster(jprop_t &jprop,const prop_t &prop,size_t iclust);
-
-//! put into a jackknife
-void put_into_jackknife(jprop_t &jprop,const prop_t &prop,size_t ijack);
-
-//! get from a jackkinfe
-prop_t get_from_jackknife(const jprop_t &jprop,size_t ijack);
+using jprop_t=jack_t<prop_t>;
 
 //! number of matrices in Clifford basis
 const size_t nGamma=16;
@@ -83,6 +49,9 @@ prop_t convert_to_Vit_basis(const prop_t &p);
 
 //! convert from Vittorio's basis
 prop_t convert_from_Vit_basis(const prop_t &p);
+
+//! invert the jprop
+jprop_t invert(const jprop_t &in);
 
 #undef EXTERN_DIRAC
 #undef INIT_TO

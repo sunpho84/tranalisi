@@ -143,7 +143,7 @@ public:
   void clusterize(size_t clust_size=1)
   {
     //fill clusters and compute avarages
-    (*this)[njacks]=0;
+    set_to_zero((*this)[njacks]);
     for(size_t ijack=0;ijack<njacks;ijack++) (*this)[njacks]+=(*this)[ijack];
     
     //clusterize

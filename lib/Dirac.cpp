@@ -94,43 +94,6 @@ vector<Dirac_t> Gamma=init_all_Gamma(Gamma_data);
 
 vector<Dirac_t> vit_Gamma=init_all_Gamma(vit_Gamma_data);
 
-void clusterize(jprop_t &j,size_t clust_size)
-{
-  for(size_t isc1=0;isc1<NSPINCOL;isc1++)
-    for(size_t isc2=0;isc2<NSPINCOL;isc2++)
-      for(size_t ri=0;ri<2;ri++)
-	get_re_or_im(j(isc1,isc2),ri).clusterize(clust_size);
-}
-
-void add_to_cluster(jprop_t &jprop,const prop_t &prop,size_t iclust)
-{
-  for(size_t isc1=0;isc1<NSPINCOL;isc1++)
-    for(size_t isc2=0;isc2<NSPINCOL;isc2++)
-      for(size_t ri=0;ri<2;ri++)
-	get_re_or_im(jprop(isc1,isc2),ri)[iclust]+=
-	  get_re_or_im(prop(isc1,isc2),ri);
-}
-
-void put_into_jackknife(jprop_t &jprop,const prop_t &prop,size_t ijack)
-{
-  for(size_t isc1=0;isc1<NSPINCOL;isc1++)
-    for(size_t isc2=0;isc2<NSPINCOL;isc2++)
-      for(size_t ri=0;ri<2;ri++)
-	get_re_or_im(jprop(isc1,isc2),ri)[ijack]=
-	  get_re_or_im(prop(isc1,isc2),ri);
-}
-
-prop_t get_from_jackknife(const jprop_t &jprop,size_t ijack)
-{
-  prop_t prop;
-  for(size_t isc1=0;isc1<NSPINCOL;isc1++)
-    for(size_t isc2=0;isc2<NSPINCOL;isc2++)
-      for(size_t ri=0;ri<2;ri++)
-	get_re_or_im(prop(isc1,isc2),ri)=
-	  get_re_or_im(jprop(isc1,isc2),ri)[ijack];
-  return prop;
-}
-
 prop_t convert_basis(const prop_t &p,const Gamma_data_t *rec,const Gamma_data_t *pro)
 {
   prop_t pv;
@@ -149,3 +112,10 @@ prop_t convert_to_Vit_basis(const prop_t &p)
 
 prop_t convert_from_Vit_basis(const prop_t &p)
 {return convert_basis(p,Gamma_data,vit_Gamma_data);}
+
+jprop_t invert(const jprop_t &in)
+{
+  jprop_t out;
+  for(size_t ijack=0;ijack<=njacks;ijack++) out[ijack]=in[ijack].inverse();
+  return out;
+}
