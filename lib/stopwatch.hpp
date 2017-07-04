@@ -49,7 +49,7 @@ public:
   //! start the stopwatch
   void start()
   {
-    if(started==true) CRASH("Trying to start an already started stopwatch!");
+    if(started==true) CRASH("Trying to start an already started stopwatch %s!",name.c_str());
     last=take_time();
     started=true;
   }
@@ -57,7 +57,7 @@ public:
   //! stop the stopwatch
   void stop()
   {
-    if(started==false) CRASH("Trying to stop a non-started stopwatch!");
+    if(started==false) CRASH("Trying to stop a non-started stopwatch %s!",name.c_str());
     base()+=take_time()-last;
     nmeas++;
     started=false;
@@ -154,17 +154,22 @@ class time_stats_t : public vector<stopwatch_t>
   friend ostream &operator<<(ostream &os,time_stats_t &t);
   
 public:
-  time_stats_t() : total_time("do everything")
+  time_stats_t(size_t nres) : total_time("do everything")
   {
     total_time.reset();
     total_time.start();
+    
+    //ensure that references remains the same
+    this->reserve(nres);
   }
   
   //! add a timer
-  size_t add(const string &name)
+  stopwatch_t &add(const string &name)
   {
+    if(this->capacity()<=this->size()) CRASH("Unable to allocate %s, reserve more stopwatches",name.c_str());
+    
     push_back(name);
-    return size()-1;
+    return back();
   }
 };
 
