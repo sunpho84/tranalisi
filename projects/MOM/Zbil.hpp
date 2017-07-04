@@ -47,10 +47,19 @@ public:
   //! clusterize
   void clusterize_all(bool use_QED,size_t clust_size)
   {
+    vector<vector<jprop_t>*> ps=get_all_ptrs(use_QED);
+    index_t ind({{"type",ps.size()},{"icombo",ps[0]->size()}});
+    
     //cout<<"Clusterizing all verts, clust_size="<<clust_size<<endl;
-    for(auto &p : get_all_ptrs(use_QED))
-      for(auto &pi : *p)
-	pi.clusterize(clust_size);
+#pragma omp parallel for
+    for(size_t i=0;i<ind.max();i++)
+      {
+	const vector<size_t> comp=ind(i);
+	const size_t itype=comp[0];
+	const size_t icombo=comp[1];
+	
+	(*ps[itype])[icombo].clusterize(clust_size);
+      }
   }
 };
 
