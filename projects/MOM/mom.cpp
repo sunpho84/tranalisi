@@ -95,7 +95,20 @@ djvec_t linfit_Z(const djvec_t &Z,const string &name,double band_val=0)
 
 int main(int narg,char **arg)
 {
-  time_stats_t ts;
+  const size_t ntimers=9;
+  time_stats_t ts(ntimers);
+  //compute the partial times
+  stopwatch_t &read_time=ts.add("read propagators");
+  stopwatch_t &build_props_time=ts.add("build props");
+  stopwatch_t &build_verts_time=ts.add("build verts");
+  stopwatch_t &clust_time=ts.add("clusterize");
+  stopwatch_t &invert_time=ts.add("invert the props");
+  stopwatch_t &finish_EM_time=ts.add("finish EM");
+  stopwatch_t &proj_time=ts.add("project bilinears");
+  stopwatch_t &Zq_time=ts.add("compute Zq");
+  stopwatch_t &deltam_cr_time=ts.add("compute deltam_cr");
+  
+  ///////////////////////////////////////////////////////////////////////////
   
   //read input file
   string input_path="input.txt";
@@ -165,8 +178,10 @@ int main(int narg,char **arg)
   if(conf_list.size()==0) CRASH("list of configurations is empty! check %s ",test_path.c_str());
   
   //compute deltam_cr
+  deltam_cr_time.start();
   djack_t deltam_cr=compute_deltam_cr(conf_list,tmin,tmax,im_sea);
   cout<<"Deltam cr: "<<deltam_cr<<endl;
+  deltam_cr_time.stop();
   
   size_t clust_size=trim_to_njacks_multiple(conf_list,true); //!< cluster size
   
@@ -182,16 +197,6 @@ int main(int narg,char **arg)
   const index_t im_r_im_r_iZbil_imom_ind=im_r_im_r_iZbil_ind*index_t({{"imom",imoms.size()}});
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   const index_t im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});
-  
-  //compute the partial times
-  size_t read_time=ts.add("read propagators");
-  size_t build_props_time=ts.add("build props");
-  size_t build_verts_time=ts.add("build verts");
-  size_t clust_time=ts.add("clusterize");
-  size_t invert_time=ts.add("invert the props");
-  size_t finish_EM_time=ts.add("finish EM");
-  size_t proj_time=ts.add("project bilinears");
-  size_t Zq_time=ts.add("compute Zq");
   
   //Zq for all moms, with and without em
   djvec_t Zq_allmoms(im_r_imom_ind.max());
@@ -212,39 +217,38 @@ int main(int narg,char **arg)
 	  {
 	    size_t i_in_clust_hit=i_in_clust_ihit_ind({i_in_clust,ihit});
 	    cout<<"Working on clust_entry "<<i_in_clust<<"/"<<clust_size<<", hit "<<ihit<<"/"<<nhits<<", momentum "<<imom+1<<"/"<<imoms.size()<<endl;
-	    ts[read_time].start();
+	    read_time.start();
 	    read_tasks[i_in_clust_hit].assolve_all(RECYCLE);
-	    ts[read_time].stop();
+	    read_time.stop();
 	    
 	    //build all props
-	    ts[build_props_time].start();
+	    build_props_time.start();
 	    build_all_mr_jackknifed_props(jprops,props,use_QED,im_r_ind);
-	    ts[build_props_time].stop();
+	    build_props_time.stop();
 	    
-	    ts[build_verts_time].start();
+	    build_verts_time.start();
 	    build_all_mr_gbil_jackknifed_verts(jverts,props,im_r_im_r_igam_ind,im_r_ijack_ind,use_QED);
-	    ts[build_verts_time].stop();
+	    build_verts_time.stop();
 	  }
       
       //clusterize
-      ts[clust_time].start();
+      clust_time.start();
       clusterize_all_mr_jackknifed_props(jprops,use_QED,clust_size);
       jverts.clusterize_all(use_QED,clust_size);
-      ts[clust_time].stop();
+      clust_time.stop();
       
       //finish EM
       if(use_QED)
 	{
-	  ts[finish_EM_time].start();
+	  finish_EM_time.start();
 	  finish_jverts_EM(jverts,deltam_cr);
 	  finish_jprops_EM(jprops,deltam_cr);
-	  ts[finish_EM_time].stop();
+	  finish_EM_time.stop();
 	}
       
       vector<jprop_t> jprop_inv(im_r_ind.max()); //!< inverse propagator
       vector<jprop_t> jprop_EM_inv(im_r_ind.max()); //!< inverse propagator with em insertion
-      stopwatch_t &tinv=ts[invert_time];
-#pragma omp parallel for reduction(+:tinv)
+#pragma omp parallel for reduction(+:invert_time,Zq_time)
       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
 	{
 	  //decript indices
@@ -254,32 +258,32 @@ int main(int narg,char **arg)
 	  size_t im_r_imom=im_r_imom_ind({im,r,imom});
 	  
 	  //compute inverse
-	  tinv.start();
+	  invert_time.start();
 	  prop_t prop_inv=jprops[im_r].LO[ijack].inverse();
 	  jprop_inv[im_r][ijack]=prop_inv;
-	  tinv.stop();
+	  invert_time.stop();
 	  
 	  //compute Zq
-	  ts[Zq_time].start();
+	  Zq_time.start();
 	  Zq_allmoms[im_r_imom][ijack]=compute_Zq(prop_inv,imom);
 	  Zq_sig1_allmoms[im_r_imom][ijack]=compute_Zq_sig1(prop_inv,imom);
-	  ts[Zq_time].stop();
+	  Zq_time.stop();
 	  
 	  //do the same with QED
 	  if(use_QED)
 	    {
-	      tinv.start();
+	      invert_time.start();
 	      prop_t prop_EM_inv=prop_inv*jprops[im_r].EM[ijack]*prop_inv;
 	      jprop_EM_inv[im_r][ijack]=prop_EM_inv;
-	      tinv.stop();
+	      invert_time.stop();
 	      
-	      ts[Zq_time].start();
+	      Zq_time.start();
 	      Zq_sig1_EM_allmoms[im_r_imom][ijack]=-compute_Zq_sig1(prop_EM_inv,imom);
-	      ts[Zq_time].stop();
+	      Zq_time.stop();
 	    }
 	}
       
-      ts[proj_time].start();
+      proj_time.start();
       djvec_t pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_inv,im_r_ind);
       //QED
       djvec_t pr_bil_EM_allmoms,pr_bil_a_allmoms,pr_bil_b_allmoms;
@@ -289,7 +293,7 @@ int main(int narg,char **arg)
 	  pr_bil_a_allmoms=compute_proj_bil(jprop_EM_inv,jverts.LO,jprop_inv,im_r_ind);
 	  pr_bil_b_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_EM_inv,im_r_ind);
 	}
-      ts[proj_time].stop();
+      proj_time.stop();
       
       //build Z
       for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
