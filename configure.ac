@@ -189,7 +189,7 @@ AC_CHECK_HEADERS([Eigen/Dense],,AC_MSG_ERROR([Error! Eigen required]))
 AC_LANG_POP([C++])
 
 #activate arch optimization
-AC_ARG_ENABLE(arch_opt,
+AC_ARG_ENABLE(arch-optimizations,
         AS_HELP_STRING([--enable-arch-optimizations=val[-march=native]],[Enable architecture optimizations]),
         arch_opt="${enableval}",
         arch_opt=-march=native)
