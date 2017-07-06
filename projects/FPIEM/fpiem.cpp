@@ -25,7 +25,7 @@ size_t nens_used;
 
 //return xi
 template <class T> T xi_fun(const T &mpi,const T &fpi)
-{return sqr(mpi/sqr(4.0*M_PI*fpi));}
+{return sqr((T)(mpi/(4.0*M_PI*fpi)));}
 
 //! initialize the program
 inline void fpiem_initialize(int narg,char **arg)
@@ -64,6 +64,17 @@ inline void fpiem_initialize(int narg,char **arg)
 //! load the 2pts
 djvec_t load_corr(const char *name,size_t ith,int par,const ens_data_t &ens)
 {return read_djvec(ens.path+"/jacks/"+name+"."+combine("%02zu",ith),ens.T).symmetrized(par);}
+
+const double xi_phys=xi_fun(MPi_phys,fPi_phys);
+
+double fpi_inf_inv_fun(double si,double xii,double p6,double p1,double p2)
+{
+  double ell_6=p6-log(xii/xi_phys);
+  double Rsi=2.0/3.0+(1.0+4.0/si)*(2.0+sqrt(1.0+4.0/si)*log((sqrt(si+4)-sqrt(si))/(sqrt(si+4)+sqrt(si))));
+  double ans=1.0+si*xii*(ell_6-1.0+Rsi)/3.0+sqr(xii)*si*(p1+p2*si)/6.0;
+  //cout<<"Rs: "<<Rsi<<" xi: "<<xii<<", xi_phys: "<<xi_phys<<", ans: "<<ans<<", si: "<<si<<", p6: "<<p6<<" p1: "<<p1<<", p2: "<<p2<<endl;
+  return ans;
+}
 
 int main(int narg,char **arg)
 {
@@ -190,7 +201,7 @@ int main(int narg,char **arg)
   //fitting
   jack_fit_t fitter;
   djack_t C,LEC_6,B1,B2;
-  djvec_t xi=aMPi/sqr(djvec_t(4.0*M_PI*afPi));
+  djvec_t xi=xi_fun(aMPi,afPi);
   vector<djvec_t> s(nens_used);
   for(size_t iens=0;iens<nens_used;iens++)
     {
@@ -199,27 +210,28 @@ int main(int narg,char **arg)
 	s[iens][ith]=a2Q2[iens][ith]/sqr(aMPi[iens]);
     }
   
+  size_t iC=fitter.add_fit_par(C,"C",{11.9,0.1});
+  size_t iB1=fitter.add_fit_par(B1,"B1",{54.3,0.1});
+  size_t iB2=fitter.add_fit_par(B2,"B2",{17.9,0.1});
+  size_t iLEC_6=fitter.add_fit_par(LEC_6,"LEC_6",{15.9,0.1});
+  fitter.fix_par_to(iB1,0.0);
+  fitter.fix_par_to(iB2,0.0);
+  
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_data_t &ens=ens_data[iens];
       size_t nth=ens.nth();
       
-      size_t iC=fitter.add_fit_par(C,"C",{12.0,1.0});
-      size_t iB1=fitter.add_fit_par(B1,"B2",{0.1,0.1});
-      size_t iB2=fitter.add_fit_par(B2,"B2",{0.1,0.1});
-      size_t iLEC_6=fitter.add_fit_par(LEC_6,"LEC_6",{0.1,0.1});
-      double xi_phys=xi_fun(MPi_phys,fPi_phys);
       for(size_t ith=1;ith<nth;ith++)
 	fitter.add_point(1/ff[iens][ith],
-			 [iC,iB1,iB2,iLEC_6,&xi,&s,ith,xi_phys,iens,&ff_FSE]
+			 [iC,iB1,iB2,iLEC_6,&xi,&s,ith,iens,&ff_FSE]
 			 (const vector<double> &p,int iel)
 			 {
-			   double xii=xi[iens][iel];
-			   double ell_6=p[iLEC_6]-log(xii/xi_phys);
 			   double si=s[iens][ith][iel];
-			   double Rs=2.0/3.0+(1.0+4.0/si)*(2.0+sqrt(si+4)*log((sqrt(si+4)-sqrt(si)/(sqrt(si+4)+sqrt(si)))));
-			   double fpi_inf_inv=1.0+si*xii*(ell_6-1.0+Rs)/3.0+sqr(xii)*si*(p[iB1]+p[iB2]*si)/6.0;
-			   return fpi_inf_inv*(1-p[iC]*ff_FSE[iens][ith][iel]*fpi_inf_inv);
+			   double xii=xi[iens][iel];
+			   double fpi_inf_inv_ans=fpi_inf_inv_fun(si,xii,p[iLEC_6],p[iB1],p[iB2]);
+			   //cout<<fpi_inf_inv_ans<<" "<<-p[iC]*ff_FSE[iens][ith][iel]*sqr(fpi_inf_inv_ans)<<endl;
+			   return fpi_inf_inv_ans*(1-p[iC]*ff_FSE[iens][ith][iel]*fpi_inf_inv_ans);
 			 });
     }
   
