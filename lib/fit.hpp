@@ -288,47 +288,109 @@ public:
   distr_fit_FCN_t(const vector<distr_fit_data_t> &data,size_t &iel) : cov_flag(false),data(data),iel(iel){}
   
   //! add the covariance matrix
-  bool add_cov(const vector<TS> &pro_cov,const vector<int> &cov_block)
+  bool add_cov(const vector<TS> &pro_cov,const vector<int> &cov_block,double eps=0)
   {
     cov_flag=true;
     const size_t &n=pro_cov.size();
+    inv_cov.resize(n*n,0.0);
     
-    //fill the covariance matrix
-    matr_t cov_matr(n,n);
+    //get the list of blocks
+    vector<int> unique_block=cov_block;
+    unique_block.resize(distance(unique_block.begin(),remove(unique_block.begin(),unique_block.end(),DO_NOT_CORRELATE)));
+    sort(unique_block.begin(),unique_block.end());
+    unique_block.resize(distance(unique_block.begin(),unique(unique_block.begin(),unique_block.end())));
+    //cout<<unique_block<<endl;
+    
+    //fill the DO_NOT_CORRELATE entries
     for(size_t i=0;i<n;i++)
-      for(size_t j=0;j<n;j++)
-	if(i==j or (cov_block[i]==cov_block[j] and cov_block[i]>=0))
-	  cov_matr(i,j)=cov(pro_cov[i],pro_cov[j]);
+      if(cov_block[i]==DO_NOT_CORRELATE)
+	inv_cov[i*n+i]=1.0/sqr(pro_cov[i].err());
     
-    //compute eigenvalues
-    SelfAdjointEigenSolver<matr_t> es;
-    auto e=es.compute(cov_matr);
-    auto ei=e.eigenvalues();
-    auto ev=e.eigenvectors();
-    
-    //get the epsilon
-    double eps=0.0;//-ei(0);
-    if(eps<0) eps=0;
-    cout<<"Epsilon: "<<eps<<endl;
-    // //debug
-    // eps=0;
-    
-    //fill the inverse
-    inv_cov.resize(n*n);
-    for(size_t i=0;i<n;i++)
-      for(size_t j=0;j<n;j++)
-	{
-	  inv_cov[i*n+j]=0;
-	  for(size_t k=0;k<n;k++) inv_cov[i*n+j]+=ev(i,k)*(1/(ei(k)+eps))*ev(j,k);
+    //loop over the blocks
+    for(size_t iblock=0;iblock<unique_block.size();iblock++)
+      {
+	int block_id=unique_block[iblock];
+	size_t hmany=count(cov_block.begin(),cov_block.end(),block_id);
+	
+	//filter the matrix
+	matr_t blk_cov(hmany,hmany);
+	for(size_t i=0,iout=0;i<n;i++)
+	  if(block_id==cov_block[i])
+	    {
+	      for(size_t j=i,jout=iout;j<n;j++)
+		if(block_id==cov_block[j])
+		  {
+		    blk_cov(jout,iout)=
+		      blk_cov(iout,jout)=
+		      cov(pro_cov[i],pro_cov[j]);
+		    jout++;
+		  }
+	      iout++;
+	    }
+	
+	//compute eigenvalues
+	SelfAdjointEigenSolver<matr_t> es;
+	auto e=es.compute(blk_cov);
+	auto ei=e.eigenvalues();
+	auto ev=e.eigenvectors();
+	
+	//cout<<"Eigenvalues: "<<endl;
+	//cout<<ei<<endl;
+	//cout<<"Condition number: "<<ei(hmany-1)/ei(0)<<endl;
+	
+	//get the epsilon
+	double eps=0*ei(0);
+	if(eps<0) eps=0;
+	//cout<<"Epsilon: "<<eps<<endl;
+	//debug
+	// eps=0;
+	
+	//compute the inverse
+	matr_t blk_inv(hmany,hmany);
+	for(size_t i=0;i<hmany;i++)
+	  for(size_t j=i;j<hmany;j++)
+	    {
+	      blk_inv(i,j)=blk_inv(j,i)=0;
+	      for(size_t k=0;k<hmany;k++)
+		{
+		  double temp=ev(i,k)*(1/(ei(k)+eps))*ev(j,k);;
+		  blk_inv(i,j)+=temp;
+		  blk_inv(j,i)+=temp;
+		}
+	    }
+	
+	
+	//override: let us take just the inverse
+	if(eps==0.0) blk_inv=blk_cov.inverse();
+	
+	//symmetrize
+	//blk_inv=(blk_inv+blk_inv.transpose())/2.,"v=(blk_inv+blk_inv.transpose())/2."0;
+	
+        //cout<<blk_inv<<endl;
+	
+	//fill the inverse
+	for(size_t i=0,iin=0;i<n;i++)
+	  if(block_id==cov_block[i])
+	    {
+	      for(size_t j=0,jin=0;j<n;j++)
+		if(block_id==cov_block[j])
+		  {
+		    inv_cov[i*n+j]=inv_cov[j*n+i]=blk_inv(iin,jin);
+		    jin++;
+		    //cout<<i*n+j<<" "<<j*n+i<<" "<<endl;
+		  }
+	      iin++;
+	    }
       }
+    //cout<<inv_cov<<endl;
     
-    // //test inverse
+    //test inverse
     // for(size_t i=0;i<n;i++)
     //   for(size_t j=0;j<n;j++)
     // 	{
-    // 	  double a=0;
-    // 	  for(size_t k=0;k<n;k++) a+=cov_matr(i,k)*inv_cov[k*n+j];
-    // 	  cout<<" wkehnfwjihoefwfeih "<<i<<" "<<j<<" "<<a<<endl;
+    // 	  double t=0;
+    // 	  for(size_t k=0;k<n;k++) t+=inv_cov[i*n+k]*cov(pro_cov[k],pro_cov[j])*(cov_block[k]==cov_block[j]);
+    // 	  cout<<"test "<<i<<" "<<j<<" "<<t<<endl;
     // 	}
     
     return cov_flag;
@@ -340,15 +402,22 @@ public:
     double ch2=0;
      if(cov_flag)
         for(size_t ix=0;ix<data.size();ix++)
-	  for(size_t iy=0;iy<data.size();iy++)
+	  for(size_t iy=ix;iy<data.size();iy++)
 	    {
       	    double nx=data[ix].num(p,iel);
       	    double tx=data[ix].teo(p,iel);
       	    double ny=data[iy].num(p,iel);
       	    double ty=data[iy].teo(p,iel);
       	    double contr=(nx-tx)*inv_cov[ix*data.size()+iy]*(ny-ty);
-      	    ch2+=contr;
-	    //if(distr_fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+      	    ch2+=contr*(1.0+(ix!=iy));
+	    if(0 and fit_debug)
+	      {
+		cout<<contr<<" = ";
+		cout<<"["<<nx<<"-f("<<ix<<")]" "*";
+		cout<<"["<<ny<<"-f("<<iy<<")]" "*";
+	        cout<<inv_cov[ix*data.size()+iy]<<endl;
+	      }
+	    
       	}
     else
       for(size_t ix=0;ix<data.size();ix++)
@@ -358,8 +427,11 @@ public:
 	  double e=data[ix].err;
 	  double contr=sqr((n-t)/e);
 	  ch2+=contr;
-	  if(fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	  //if(fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
 	}
+     
+     if(fit_debug)
+       cout<<"Tot ch2: "<<ch2<<endl;
      
      return ch2;
   }
@@ -395,8 +467,8 @@ public:
   }
   
   //! add a simple point
-  void add_point(const TS &num,const distr_fit_data_t::fun_t &teo)
-  {add_point([num](const vector<double> &p,int iel){return num[iel];},teo,num.err());}
+  void add_point(const TS &num,const distr_fit_data_t::fun_t &teo,int block_label=DO_NOT_CORRELATE)
+  {add_point([num](const vector<double> &p,int iel){return num[iel];},teo,num,block_label);}
   
   //! add a parameter to the fit
   size_t add_fit_par(TS &out_par,const string &name,double ans,double err)
@@ -444,13 +516,13 @@ public:
   }
   
   //! perform the fit
-  void fit(bool cov_flag=false)
+  void fit(bool cov_flag=false,double eps=0)
   {
     size_t npars=pars.size();
     size_t nfree_pars=pars.nfree_pars();
     size_t idistr=0;
     distr_fit_FCN_t<TS> distr_fit_FCN(data,idistr);
-    if(cov_flag) distr_fit_FCN.add_cov(pro_cov,cov_block_label);
+    if(cov_flag) distr_fit_FCN.add_cov(pro_cov,cov_block_label,eps);
     
     //define minimizator
     minimizer_t minimizer(distr_fit_FCN,pars);
