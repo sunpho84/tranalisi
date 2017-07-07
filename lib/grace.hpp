@@ -110,7 +110,7 @@ public:
   {color_scheme.assign(oth.begin(),oth.end());}
   void reset_cur_col()
   {cur_col=0;}
-
+  
   //! set a line color scheme
   void set_line_color_scheme(const initializer_list<grace::color_t> &oth)
   {line_color_scheme.assign(oth.begin(),oth.end());}
@@ -366,7 +366,8 @@ public:
   }
   
   //! write a polygon
-  template <class fun_t> void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  template <class fun_t>
+  void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
   {
     close_cur_set();
     
@@ -394,7 +395,8 @@ public:
     
     need_close_set=true;
   }
-  template <class fun_t> void write_polygon(const fun_t &fun,double xmin,double xmax,size_t npoints=100)
+  template <class fun_t>
+  void write_polygon(const fun_t &fun,double xmin,double xmax,size_t npoints=100)
   {write_polygon(fun,xmin,xmax,get_poly_col_and_increment(),npoints);}
   
   //! mark as a continuos line
@@ -427,9 +429,11 @@ public:
   {write_line(fun,xmin,xmax,get_line_col_and_increment(),npoints);}
   
   //! write a constant band
-  template <class T> void write_constant_band(double xmin,double xmax,const T &c,grace::color_t col)
+  template <class T>
+  void write_constant_band(double xmin,double xmax,const T &c,grace::color_t col)
   {this->write_polygon([&c](double x) -> T {return c;},xmin,xmax,col,2);}
-  template <class T> void write_constant_band(double xmin,double xmax,const T &c)
+  template <class T>
+  void write_constant_band(double xmin,double xmax,const T &c)
   {write_constant_band(xmin,xmax,c,get_line_col_and_increment());}
   
   //write a vector of data
