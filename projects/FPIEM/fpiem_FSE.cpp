@@ -120,7 +120,7 @@ double FSE_V(double mpi,double L,double fpi,double B)
   //integrate
   size_t neval;
   double abserr,res;
-  double epsabs=0,epsrel=1e-6;
+  double epsabs=0,epsrel=1e-5;
   gsl_integration_qng(&f,0,1,epsabs,epsrel,&res,&abserr,&neval);
   
   return (res-FSE_I(mpi,L,B))/sqr(fpi);
