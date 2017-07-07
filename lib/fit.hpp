@@ -27,7 +27,8 @@ EXTERN_FIT bool fit_debug INIT_TO(false);
 ///////////////////////////////////////////////////////////////// fake fits /////////////////////////////////////////////////////
 
 //! perform a fit to constant (uncorrelated)
-template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data,size_t xmin,size_t xmax,string path="")
+template <class TV,class T=typename TV::base_type>
+T constant_fit(const TV &data,size_t xmin,size_t xmax,string path="")
 {
   //fix max and min, check order
   //xmin=max(xmin,0ul);
@@ -70,7 +71,8 @@ template <class TV,class T=typename TV::base_type> T constant_fit(const TV &data
 }
 
 //! fit the mass and the matrix element
-template <class TV,class T=typename TV::base_type> void two_pts_fit(T &Z2,T &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,const string &path_mass="",const string &path_Z2="",int par=1)
+template <class TV,class T=typename TV::base_type>
+void two_pts_fit(T &Z2,T &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,const string &path_mass="",const string &path_Z2="",int par=1)
 {
   //fit to constant the effective mass
   M=constant_fit(effective_mass(corr,TH,par),tmin,tmax,path_mass);
@@ -137,7 +139,8 @@ public:
 };
 
 //! perform a fit to the usual 2pts ansatz
-template <class TV,class TS=typename TV::base_type> void two_pts_true_fit(TS &Z2,TS &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
+template <class TV,class TS=typename TV::base_type>
+void two_pts_true_fit(TS &Z2,TS &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
 {
   //perform a preliminary fit
   two_pts_fit(Z2,M,corr,TH,tmin,tmax);
@@ -272,7 +275,8 @@ public:
 };
 
 //! functor to minimize
-template <class TS> class distr_fit_FCN_t : public minimizer_fun_t
+template <class TS>
+class distr_fit_FCN_t : public minimizer_fun_t
 {
   //! covariance flag
   bool cov_flag;
@@ -440,7 +444,8 @@ public:
 };
 
 //! class to fit
-template <class TV,class TS=typename TV::base_type> class distr_fit_t
+template <class TV,class TS=typename TV::base_type>
+class distr_fit_t
 {
   vector<TS> pro_cov;
   vector<int> cov_block_label; //<! contains the block index for which to fill the covariance matrix
