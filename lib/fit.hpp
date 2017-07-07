@@ -292,7 +292,7 @@ public:
   distr_fit_FCN_t(const vector<distr_fit_data_t> &data,size_t &iel) : cov_flag(false),data(data),iel(iel){}
   
   //! add the covariance matrix
-  bool add_cov(const vector<TS> &pro_cov,const vector<int> &cov_block,double eps=0)
+  bool add_cov(const vector<TS> &pro_cov,const vector<int> &cov_block,double eps_fact=0)
   {
     cov_flag=true;
     const size_t &n=pro_cov.size();
@@ -332,6 +332,8 @@ public:
 	      iout++;
 	    }
 	
+	cout<<blk_cov<<endl;
+	
 	//compute eigenvalues
 	SelfAdjointEigenSolver<matr_t> es;
 	auto e=es.compute(blk_cov);
@@ -342,13 +344,6 @@ public:
 	//cout<<ei<<endl;
 	//cout<<"Condition number: "<<ei(hmany-1)/ei(0)<<endl;
 	
-	//get the epsilon
-	double eps=0*ei(0);
-	if(eps<0) eps=0;
-	//cout<<"Epsilon: "<<eps<<endl;
-	//debug
-	// eps=0;
-	
 	//compute the inverse
 	matr_t blk_inv(hmany,hmany);
 	for(size_t i=0;i<hmany;i++)
@@ -357,15 +352,19 @@ public:
 	      blk_inv(i,j)=blk_inv(j,i)=0;
 	      for(size_t k=0;k<hmany;k++)
 		{
-		  double temp=ev(i,k)*(1/(ei(k)+eps))*ev(j,k);;
+		  double delta=0;
+		  if(eps_fact and ei(hmany-1)!=ei(0)) delta=ei(0)*eps_fact*(ei(hmany-1)-ei(k))/(ei(hmany-1)-ei(0));
+		  delta=ei(0)*eps_fact;
+		  double temp=ev(i,k)*(1/(ei(k)+delta))*ev(j,k);
+		  
 		  blk_inv(i,j)+=temp;
-		  blk_inv(j,i)+=temp;
+		  if(i!=j) blk_inv(j,i)+=temp;
 		}
 	    }
 	
 	
 	//override: let us take just the inverse
-	if(eps==0.0) blk_inv=blk_cov.inverse();
+	if(eps_fact==0.0) blk_inv=blk_cov.inverse();
 	
 	//symmetrize
 	//blk_inv=(blk_inv+blk_inv.transpose())/2.,"v=(blk_inv+blk_inv.transpose())/2."0;
