@@ -292,7 +292,7 @@ public:
   distr_fit_FCN_t(const vector<distr_fit_data_t> &data,size_t &iel) : cov_flag(false),data(data),iel(iel){}
   
   //! add the covariance matrix
-  bool add_cov(const vector<TS> &pro_cov,const vector<int> &cov_block,double eps_fact=0)
+  bool add_cov(const vector<TS> &pro_cov,const vector<int> &cov_block,double eps_fact=3.0)
   {
     cov_flag=true;
     const size_t &n=pro_cov.size();
@@ -317,59 +317,96 @@ public:
 	size_t hmany=count(cov_block.begin(),cov_block.end(),block_id);
 	
 	//filter the matrix
-	matr_t blk_cov(hmany,hmany);
+	vector<TS> mc(hmany*hmany);
 	for(size_t i=0,iout=0;i<n;i++)
 	  if(block_id==cov_block[i])
 	    {
 	      for(size_t j=i,jout=iout;j<n;j++)
 		if(block_id==cov_block[j])
 		  {
-		    blk_cov(jout,iout)=
-		      blk_cov(iout,jout)=
-		      cov(pro_cov[i],pro_cov[j]);
+		    //double c=cov(pro_cov[i],pro_cov[j]);
+		    TS t=distr_cov(pro_cov[i],pro_cov[j]);
+		    //cout<<c<<" "<<t.ave_err()<<endl;
+		    
+		    mc[jout*hmany+iout]=
+		      mc[iout*hmany+jout]=
+		      t;
+		    
 		    jout++;
 		  }
 	      iout++;
 	    }
 	
-	cout<<blk_cov<<endl;
-	
-	//compute eigenvalues
 	SelfAdjointEigenSolver<matr_t> es;
-	auto e=es.compute(blk_cov);
-	auto ei=e.eigenvalues();
-	auto ev=e.eigenvectors();
+	vector<vector<TS>> ev(hmany,vector<TS>(hmany));
+	vector<TS> ei(hmany);
+	for(size_t idist=0;idist<mc[0].size();idist++)
+	  {
+	    //fill the blk
+	    matr_t blk_cov(hmany,hmany);
+	    for(size_t iout=0;iout<hmany;iout++)
+	      for(size_t jout=0;jout<hmany;jout++)
+		blk_cov(iout,jout)=mc[iout*hmany+jout][idist];
+	    //cout<<endl<<blk_cov<<endl;
+	    
+	    //compute and print the correlation matrix
+	    // matr_t blk_rho(hmany,hmany);
+	    // for(size_t iout=0;iout<hmany;iout++)
+	    //   for(size_t jout=0;jout<hmany;jout++)
+	    // 	blk_rho(iout,jout)=
+	    // 	  blk_cov(iout,jout)/sqrt(blk_cov(iout,iout)*blk_cov(jout,jout));
+	    //cout<<blk_rho<<endl;
+	    
+	    //compute eigenvalues and store
+	    auto e=es.compute(blk_cov);
+	    auto _ei=e.eigenvalues();
+	    auto _ev=e.eigenvectors();
+	    for(size_t ieg=0;ieg<hmany;ieg++)
+	      {
+		ei[ieg][idist]=_ei[ieg];
+		for(size_t jeg=0;jeg<hmany;jeg++)
+		  ev[ieg][jeg][idist]=_ev(ieg,jeg);
+	      }
+	  }
 	
-	//cout<<"Eigenvalues: "<<endl;
-	//cout<<ei<<endl;
-	//cout<<"Condition number: "<<ei(hmany-1)/ei(0)<<endl;
+	//check condition on smallest eigenvalue
+	double w=ei[0].ave()/ei[0].err();
+	if(w<eps_fact)
+	  {
+	    cerr<<"Warning! Minimal eigenvalue is at "<<w<<" sigma, but asked "<<eps_fact<<", trying to cure it"<<endl;
+	    
+	    cerr<<"Eigenvalues before cure: "<<endl;
+	    cerr<<ei<<endl;
+	    cerr<<"Condition number: "<<TS(ei[hmany-1]/ei[0])<<endl<<endl;
+	    
+	    //treatement
+	    double delta=ei[0].err()*(eps_fact-w);
+	    for(size_t i=0;i<hmany;i++) ei[i]+=delta;
+	    
+	    cerr<<"Eigenvalues after cure: "<<endl;
+	    cerr<<ei<<endl;
+	    cerr<<"Condition number: "<<TS(ei[hmany-1]/ei[0])<<endl<<endl;
+
+	  }
 	
-	//compute the inverse
-	matr_t blk_inv(hmany,hmany);
+	//compute the "cured" cov matrix and inverse
+	matr_t blk_inv(hmany,hmany),blk_cov(hmany,hmany);
 	for(size_t i=0;i<hmany;i++)
 	  for(size_t j=i;j<hmany;j++)
 	    {
-	      blk_inv(i,j)=blk_inv(j,i)=0;
+	      TS temp_cov,temp_inv;
+	      temp_cov=0.0;
+	      temp_inv=0.0;
 	      for(size_t k=0;k<hmany;k++)
 		{
-		  double delta=0;
-		  if(eps_fact and ei(hmany-1)!=ei(0)) delta=ei(0)*eps_fact*(ei(hmany-1)-ei(k))/(ei(hmany-1)-ei(0));
-		  delta=ei(0)*eps_fact;
-		  double temp=ev(i,k)*(1/(ei(k)+delta))*ev(j,k);
-		  
-		  blk_inv(i,j)+=temp;
-		  if(i!=j) blk_inv(j,i)+=temp;
+		  TS weight=ev[i][k]*ev[j][k];
+		  TS eig=ei[k];
+		  temp_cov+=weight*eig;
+		  temp_inv+=weight/eig;
 		}
+	      blk_cov(i,j)=blk_cov(j,i)=temp_cov.ave();
+	      blk_inv(i,j)=blk_inv(j,i)=temp_inv.ave();
 	    }
-	
-	
-	//override: let us take just the inverse
-	if(eps_fact==0.0) blk_inv=blk_cov.inverse();
-	
-	//symmetrize
-	//blk_inv=(blk_inv+blk_inv.transpose())/2.,"v=(blk_inv+blk_inv.transpose())/2."0;
-	
-        //cout<<blk_inv<<endl;
 	
 	//fill the inverse
 	for(size_t i=0,iin=0;i<n;i++)
@@ -385,6 +422,7 @@ public:
 	      iin++;
 	    }
       }
+    
     //cout<<inv_cov<<endl;
     
     //test inverse

@@ -11,6 +11,7 @@ size_t EVN=1,ODD=-1;
 class ens_data_t
 {
 public:
+  bool use;
   vector<double> th;
   size_t nth(){return th.size();}
   size_t T,L,spat_vol;
@@ -20,12 +21,31 @@ public:
   string path;
 };
 
+bool use_NLO;
+bool use_Colangelo;
+bool use_corr;
 vector<ens_data_t> ens_data;
 size_t nens_used;
 
-//return xi
-template <class T> T xi_fun(const T &mpi,const T &fpi)
+//! return xi
+template <class T>
+T xi_fun(const T &mpi,const T &fpi)
 {return sqr((T)(mpi/(4.0*M_PI*fpi)));}
+
+//! return s
+template <class T>
+T si_fun(const double &Q2,const T &mpi)
+{return Q2/sqr(mpi);}
+
+//! return theta given a q2
+template <class T>
+T th_fun(const T &Q2,int L)
+{return L*sqrt(Q2/12.0)/M_PI;}
+
+//! return q2 given theta
+template <class T>
+T Q2_fun(const T &th,int L)
+{return 12.0*sqr(th*M_PI/L);}
 
 //! initialize the program
 inline void fpiem_initialize(int narg,char **arg)
@@ -39,12 +59,17 @@ inline void fpiem_initialize(int narg,char **arg)
   cout.precision(16);
   nens_used=input.read<int>("NEnsemble");
   
-  input.expect({"L","T","t2pts","t3pts","aml","path","nth"});
+  use_NLO=input.read<bool>("UseNLO");
+  use_Colangelo=input.read<bool>("UseColangelo");
+  use_corr=input.read<bool>("UseCorr");
+  
+  input.expect({"Use","L","T","t2pts","t3pts","aml","path","nth"});
   ens_data.resize(nens_used);
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_data_t &ens=ens_data[iens];
       
+      input.read(ens.use);
       input.read(ens.L);
       ens.spat_vol=ens.L*ens.L*ens.L;
       input.read(ens.T);
@@ -67,64 +92,96 @@ djvec_t load_corr(const char *name,size_t ith,int par,const ens_data_t &ens)
 
 const double xi_phys=xi_fun(MPi_phys,fPi_phys);
 
+template <class T>
+T FSE_fun(const T &mpi,double L,const T&fpi,double thhalf)
+{
+  if(use_Colangelo) return FSE_V(mpi,L,fpi,thhalf);
+  else
+    {
+      T xi=xi_fun(mpi,fpi);
+      return xi*exp(-mpi*L)/(mpi*L,1.5);
+    }
+}
+
 //! fit ansatz for the inverse
 template <class Tpars,class Tx>
-Tpars fpi_inf_inv_fun(double a2Q2,Tx aMPi,Tx afPi,Tx ff_FSE,Tpars p6,Tpars p1,Tpars p2,Tpars pC)
+Tpars fpi_inf_inv_fun(double a2Q2,Tx aMPi,Tx afPi,Tx ff_FSE,Tpars p6,Tpars p1,Tpars p2,Tpars pC1,Tpars pC2)
 {
-  Tx si=a2Q2/sqr(aMPi);
+  Tx si=si_fun(a2Q2,aMPi);
   Tx xi=xi_fun(aMPi,afPi);
   Tpars ell_6=p6-log(xi/xi_phys);
   Tpars Rsi=2.0/3.0+(1.0+4.0/si)*(2.0+sqrt(1.0+4.0/si)*log((sqrt(si+4)-sqrt(si))/(sqrt(si+4)+sqrt(si))));
   Tpars ans=1.0+si*xi*(ell_6-1.0+Rsi)/3.0+sqr(xi)*si*(p1+p2*si)/6.0;
-  Tpars FSE_fact=(1-pC*ff_FSE*ans);
+  Tpars FSE_prefact;
+  if(use_Colangelo) FSE_prefact=pC1;
+  else              FSE_prefact=pC1*si+pC2*si*si;
+  Tpars FSE_fact=(1-FSE_prefact*ff_FSE*ans);
   //cout<<"Rs: "<<Rsi<<" xi: "<<xii<<", xi_phys: "<<xi_phys<<", ans: "<<ans<<", si: "<<si<<", p6: "<<p6<<" p1: "<<p1<<", p2: "<<p2<<endl;
   return ans*FSE_fact;
 }
 
 //! fitting
-void fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarray<double>> &a2Q2,const vector<djvec_t> &ff,const vector<djvec_t> &ff_FSE,bool cov_flag=false)
+void fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarray<double>> &a2Q2,const vector<djvec_t> &ff,const vector<djvec_t> &ff_FSE,bool cov_flag=false,double eps_cov_flag=0.0)
 {
   jack_fit_t fitter;
-  djack_t C,LEC_6,B1,B2;
-  size_t iC=fitter.add_fit_par(C,"C",{11.9*0,0.1});
+  djack_t C1,C2,LEC_6,B1,B2;
+  size_t iC1=fitter.add_fit_par(C1,"C1",{11.9*0,0.1});
+  size_t iC2=fitter.add_fit_par(C2,"C2",{11.9*0,0.1});
   size_t iB1=fitter.add_fit_par(B1,"B1",{54.3,0.1});
   size_t iB2=fitter.add_fit_par(B2,"B2",{17.9,0.1});
   size_t iLEC_6=fitter.add_fit_par(LEC_6,"LEC_6",{15.9,0.1});
-  //fitter.fix_par_to(iB1,0.0);
-  //fitter.fix_par_to(iB2,0.0);
+  
+  if(not use_NLO)
+    {
+      fitter.fix_par_to(iB1,0.0);
+      fitter.fix_par_to(iB2,0.0);
+    }
+  
+  if(use_Colangelo) fitter.fix_par_to(iC2,0.0);
   
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_data_t &ens=ens_data[iens];
       size_t nth=ens.nth();
       
-      for(size_t ith=1;ith<nth;ith++)
-	fitter.add_point(1/ff[iens][ith],
-			 [&a2Q2,iC,iB1,iB2,iLEC_6,&aMPi,&afPi,ith,iens,&ff_FSE]
-			 (const vector<double> &p,int iel)
-			 {return fpi_inf_inv_fun(a2Q2[iens][ith],aMPi[iens][iel],afPi[iens][iel],ff_FSE[iens][ith][iel],p[iLEC_6],p[iB1],p[iB2],p[iC]);},iens);}
+      if(ens.use)
+	for(size_t ith=1;ith<nth;ith++)
+	  fitter.add_point(1/ff[iens][ith],
+			   [&a2Q2,iC1,iC2,iB1,iB2,iLEC_6,&aMPi,&afPi,ith,iens,&ff_FSE]
+			   (const vector<double> &p,int iel)
+			   {return fpi_inf_inv_fun(a2Q2[iens][ith],aMPi[iens][iel],afPi[iens][iel],ff_FSE[iens][ith][iel],p[iLEC_6],p[iB1],p[iB2],p[iC1],p[iC2]);}
+			   ,iens);
+    }
   
   fit_debug=1;
-  fitter.fit(cov_flag);
+  fitter.fit(cov_flag,eps_cov_flag);
   
   //write plots
   for(size_t iens=0;iens<nens_used;iens++)
     {
       grace_file_t plot_mfix("plots/inv_fpi_fun_q2_ens"+to_string(iens)+".xmg");
+      plot_mfix.set_title(ens_data[iens].path);
+      plot_mfix.set_xaxis_label("$$a^2Q^2");
+      plot_mfix.set_yaxis_label("$$1/f_+^\\pi");
+      
       djvec_t inv=1/ff[iens];
       plot_mfix.write_vec_ave_err(a2Q2[iens],inv.ave_err());
       
       size_t L=ens_data[iens].L;
-      plot_mfix.write_polygon([&L,&aMPi,afPi,iens,LEC_6,B1,B2,C](double x)
+      plot_mfix.write_polygon([&L,&aMPi,afPi,iens,LEC_6,B1,B2,C1,C2](double x)
 			      {
-				auto th=L*sqrt(x/12.0)/M_PI;
-				auto F=FSE_V(aMPi[iens],L,afPi[iens],th/2.0);
-				cout<<th<<" "<<F<<endl;
-				return fpi_inf_inv_fun(x,aMPi[iens],afPi[iens],F,LEC_6,B1,B2,C);}
-			      ,a2Q2[iens][1],a2Q2[iens][ens_data[iens].nth()-1]);
+				auto th=th_fun(x,L);
+				auto F=FSE_fun(aMPi[iens],L,afPi[iens],th/2.0);
+				//cout<<th<<" "<<F<<endl;
+				return fpi_inf_inv_fun(x,aMPi[iens],afPi[iens],F,LEC_6,B1,B2,C1,C2);}
+			      ,a2Q2[iens][1]/2,a2Q2[iens][ens_data[iens].nth()-1],50);
     }
   
-  cout<<C<<endl;
+  cout<<"C1: "<<C1<<endl;
+  cout<<"C2: "<<C2<<endl;
+  cout<<"LEC_6: "<<LEC_6<<endl;
+  cout<<"B1: "<<B1<<endl;
+  cout<<"B2: "<<B2<<endl;
 }
 
 int main(int narg,char **arg)
@@ -228,8 +285,8 @@ int main(int narg,char **arg)
 	  //compute ff
 	  size_t tsep=ens.T/2;
 	  ff[iens][ith]=mel[ith]*2*aE[ith]*exp(aE[ith]*tsep); //see eq.20 of 0812.4042
-	  ff_FSE[iens][ith]=FSE_V(aMPi[iens],ens.L,afPi[iens],ens.th[ith]/2);
-	  cout<<"check:"<<ens.th[ith]<<" "<<ff_FSE[iens][ith]<<endl;
+	  ff_FSE[iens][ith]=FSE_fun(aMPi[iens],ens.L,afPi[iens],ens.th[ith]/2);
+	  //cout<<"check:"<<ens.th[ith]<<" "<<ff_FSE[iens][ith]<<endl;
 	  //ff[ith]=mel[ith]/corr_PP[ith][tsep]; //does not work better
 	}
       
@@ -250,7 +307,7 @@ int main(int narg,char **arg)
       table<<"\tafPi="<<afPi[iens].ave_err()<<"\tML: "<<djack_t(aMPi[iens]*ens.L).ave_err()<<endl;
     }
   
-  fit_fpiinv(aMPi,afPi,a2Q2,ff,ff_FSE,false);
+  fit_fpiinv(aMPi,afPi,a2Q2,ff,ff_FSE,use_corr,10.0);
   
   return 0;
 }

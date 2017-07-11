@@ -222,16 +222,47 @@ template <class T> T subset(const T &v,size_t beg,size_t end)
   return T(&v[beg],&v[end]);
 }
 
+//! compute the covariance error
+template <class T>
+T distr_cov(const T &x,const T &y)
+{
+  T xy=x*y;
+  
+  size_t nel=x.size();
+  T a;
+  double xa=x.ave();
+  double ya=y.ave();
+  double xya=xy.ave();
+  
+  for(size_t iel=0;iel<nel;iel++)
+    {
+      double xi=x[iel];
+      double yi=y[iel];
+      double xyi=xy[iel];
+      
+      double xb=(xa*nel-xi)/(nel-1);
+      double yb=(ya*nel-yi)/(nel-1);
+      double xyb=(xya*nel-xyi)/(nel-1);
+      
+      a[iel]=(xyb-xb*yb)*(njacks-1);
+    }
+  
+  return a;
+}
+
 //! compute the covariance
-template <class T> double cov(const T &x,const T &y)
+template <class T>
+double cov(const T &x,const T &y)
 {return (T(x*y).ave()-x.ave()*y.ave())*(njacks-1);}
 
 //! variance
-template <class T> double var(const T &x)
+template <class T>
+double var(const T &x)
 {return cov(x,x);}
 
 //! correlation
-template <class T> double corr(const T &x,const T &y)
+template <class T>
+double corr(const T &x,const T &y)
 {return cov(x,y)/sqrt(var(x)*var(y));}
 
 //! filter a valarray
