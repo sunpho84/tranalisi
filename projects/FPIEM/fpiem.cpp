@@ -11,7 +11,7 @@ size_t EVN=1,ODD=-1;
 class ens_data_t
 {
 public:
-  bool use,use_for_FSE;
+  bool use,use_for_FSE,use_for_chir;
   vector<double> th;
   size_t nth(){return th.size();}
   size_t T,L,spat_vol;
@@ -25,9 +25,14 @@ public:
 vector<int> fit_range_variations={0,2};
 
 //! NLO or NNLO fit
-enum chir_t{NLO,NNLO};
-vector<chir_t> chir_variations={NLO,NNLO};
-vector<string> chir_tag={"NLO","NNLO"};
+enum chirord_t{NLO,NNLO};
+vector<chirord_t> chirord_variations={NLO,NNLO};
+vector<string> chirord_tag={"NLO","NNLO"};
+
+//! pion fit
+enum pion_masses_t{PHYS_PI,ALL_PI};
+vector<pion_masses_t> pion_masses_variations={PHYS_PI,ALL_PI};
+vector<string> pion_masses_tag={"PHYS","ALL"};
 
 //! no FSE, Colangelo or expanded version
 enum FSE_t{NO_FSE,COLANGELO,EXPANDED};
@@ -47,13 +52,13 @@ vector<RAT_t> RAT_variations={AN_RAT,NU_RAT};
 vector<string> RAT_tag={"Analytic","Numerical"};
 
 vector<ens_data_t> ens_data;
-size_t nens_used;
 
-enum{iRAT_comp,ifit_range_comp,iuse_chir_comp,iuse_FSE_comp,is_max_comp};
+enum{iRAT_comp,ifit_range_comp,iuse_pion_masses_comp,iuse_chirord_comp,iuse_FSE_comp,is_max_comp};
 index_t syst_ind({
     {"Ratio",RAT_variations.size()},
     {"FitRange",fit_range_variations.size()},
-    {"Chir",chir_variations.size()},
+    {"Pion masses",pion_masses_variations.size()},
+    {"Chir Ord",chirord_variations.size()},
     {"FSE",FSE_variations.size()},
     {"Smax",s_max_variations.size()}});
 
@@ -64,17 +69,22 @@ T xi_fun(const T &mpi,const T &fpi)
 
 //! return s
 template <class T>
-T si_fun(const double &Q2,const T &mpi)
+T si_fun_Q2(const double &Q2,const T &mpi)
 {return Q2/sqr(mpi);}
+
+//! return Q2
+template <class T>
+T Q2_fun_si(const double &si,const T &mpi)
+{return si*sqr(mpi);}
 
 //! return theta given a q2
 template <class T>
-T th_fun(const T &Q2,int L)
+T th_fun_Q2(const T &Q2,int L)
 {return L*sqrt(Q2/12.0)/M_PI;}
 
 //! return q2 given theta
 template <class T>
-T Q2_fun(const T &th,int L)
+T Q2_fun_th(const T &th,int L)
 {return 12.0*sqr(th*M_PI/L);}
 
 //! get an element out of a possible list, through a key
@@ -102,18 +112,19 @@ inline void fpiem_initialize(int narg,char **arg)
   set_njacks(ext_njacks);
   
   cout.precision(16);
-  nens_used=input.read<int>("NEnsemble");
+  size_t nens=input.read<size_t>("NEnsemble");
   
   use_cov=input.read<bool>("UseCov");
   cov_fact=input.read<double>("CovFact");
   
-  input.expect({"Use","UseFSE","L","T","t2pts","t3pts","aml","path","nth"});
-  ens_data.resize(nens_used);
-  for(size_t iens=0;iens<nens_used;iens++)
+  input.expect({"Use","UseChir","UseFSE","L","T","t2pts","t3pts","aml","path","nth"});
+  ens_data.resize(nens);
+  for(size_t iens=0;iens<nens;iens++)
     {
       ens_data_t &ens=ens_data[iens];
       
       input.read(ens.use);
+      input.read(ens.use_for_chir);
       input.read(ens.use_for_FSE);
       input.read(ens.L);
       ens.spat_vol=ens.L*ens.L*ens.L;
@@ -157,7 +168,7 @@ T FSE_fun(const T &mpi,double L,const T&fpi,double thhalf,FSE_t use_FSE)
 template <class Tpars,class Tx>
 Tpars fpi_inf_inv_fun(double a2Q2,Tx aMPi,Tx afPi,Tx ff_FSE,Tpars p6,Tpars p1,Tpars p2,Tpars pC1,Tpars pC2,FSE_t use_FSE)
 {
-  Tx si=si_fun(a2Q2,aMPi);
+  Tx si=si_fun_Q2(a2Q2,aMPi);
   Tx xi=xi_fun(aMPi,afPi);
   Tpars ell_6=p6-log(xi/xi_phys);
   Tpars Rsi=2.0/3.0+(1.0+4.0/si)*(2.0+sqrt(1.0+4.0/si)*log((sqrt(si+4)-sqrt(si))/(sqrt(si+4)+sqrt(si))));
@@ -175,7 +186,7 @@ Tpars fpi_inf_inv_fun(double a2Q2,Tx aMPi,Tx afPi,Tx ff_FSE,Tpars p6,Tpars p1,Tp
 }
 
 //! fitting
-djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarray<double>> &a2Q2,const vector<djvec_t> &ff,const vector<djvec_t> &ff_FSE,chir_t use_chir,FSE_t use_FSE,double s_max,bool cov_flag=false,double eps_cov_flag=0.0)
+djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarray<double>> &a2Q2,const vector<djvec_t> &ff,const vector<djvec_t> &ff_FSE,pion_masses_t use_pion_masses,chirord_t use_chirord,FSE_t use_FSE,double s_max,size_t isyst,bool cov_flag=false,double eps_cov_flag=0.0)
 {
   jack_fit_t fitter;
   djack_t C1,C2,LEC_6,B1,B2;
@@ -185,7 +196,16 @@ djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarr
   size_t iB2=fitter.add_fit_par(B2,"B2",{17.9,0.1});
   size_t iLEC_6=fitter.add_fit_par(LEC_6,"LEC_6",{15.9,0.1});
   
-  switch(use_chir)
+  switch(use_pion_masses)
+    {
+    case PHYS_PI:
+      fitter.fix_par_to(iB1,0.0);
+      break;
+    case ALL_PI:
+      break;
+    }
+  
+  switch(use_chirord)
     {
     case NLO:
       fitter.fix_par_to(iB1,0.0);
@@ -208,14 +228,16 @@ djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarr
       break;
     }
   
-  for(size_t iens=0;iens<nens_used;iens++)
+  vector<bool> used(ens_data.size());
+  for(size_t iens=0;iens<ens_data.size();iens++)
     {
       ens_data_t &ens=ens_data[iens];
       size_t nth=ens.nth();
+      used[iens]=(ens.use and (use_FSE!=NO_FSE or ens.use_for_FSE) and (use_pion_masses==ALL_PI or ens.use_for_chir));
       
-      if(ens.use)
+      if(used[iens])
 	for(size_t ith=1;ith<nth;ith++)
-	  if((s_max==0 or si_fun(a2Q2[iens][ith],aMPi[iens].ave())<s_max) and (use_FSE!=NO_FSE or ens.use_for_FSE))
+	  if((s_max==0 or si_fun_Q2(a2Q2[iens][ith],aMPi[iens].ave())<s_max))
 	    fitter.add_point(1/ff[iens][ith],
 			     [&a2Q2,iC1,iC2,iB1,iB2,iLEC_6,&aMPi,&afPi,ith,iens,&ff_FSE,&use_FSE]
 			     (const vector<double> &p,int iel)
@@ -227,24 +249,61 @@ djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarr
   fitter.fit(cov_flag,eps_cov_flag);
   
   //write plots
-  for(size_t iens=0;iens<nens_used;iens++)
+  for(size_t iens=0;iens<ens_data.size();iens++)
     {
-      grace_file_t plot_mfix("plots/inv_fpi_fun_q2_ens"+to_string(iens)+".xmg");
-      plot_mfix.set_title(ens_data[iens].path);
+      vector<size_t> syst_comp=syst_ind(isyst);
+      size_t iRAT=syst_comp[iRAT_comp];
+      size_t ifit_range=syst_comp[ifit_range_comp];
+      size_t iuse_pion_masses=syst_comp[iuse_pion_masses_comp];
+      size_t iuse_chirord=syst_comp[iuse_chirord_comp];
+      size_t iuse_FSE=syst_comp[iuse_FSE_comp];
+      int dtf=fit_range_variations[ifit_range];
+      
+      grace_file_t plot_mfix("plots/fit"+to_string(isyst)+"_inv_fpi_fun_q2_ens"+to_string(iens)+".xmg");
+      plot_mfix.set_title(ens_data[iens].path+", "+(used[iens]?"":"not ")+"used");
+      plot_mfix.set_subtitle_size(1.0);
+      plot_mfix.set_subtitle("Ratio: "+RAT_tag[iRAT]+", "
+			     "FSE: "+FSE_tag[iuse_FSE]+", "
+			     "pion masses: "+pion_masses_tag[iuse_pion_masses]+", "
+			     "chirord: "+chirord_tag[iuse_chirord]+", "
+			     "dt fit: "+to_string(dtf)+", "
+			     "s max: "+to_string(s_max));
       plot_mfix.set_xaxis_label("$$a^2Q^2");
       plot_mfix.set_yaxis_label("$$1/f_+^\\pi");
       
+      //write data, in 2 scansions
       djvec_t inv=1/ff[iens];
-      plot_mfix.write_vec_ave_err(a2Q2[iens],inv.ave_err());
+      plot_mfix.set_settype(grace::XYDY);
+      for(size_t it=0;it<2;it++) //0=used, 1=not used
+	{
+	  if(it) plot_mfix.new_data_set();
+	  
+	  if(it==1) plot_mfix.set_symbol_fill_pattern(grace::FILLED_SYMBOL);
+	  for(size_t ith=1;ith<ens_data[iens].nth();ith++)
+	    {
+	      bool th_used=(used[iens] and (s_max==0 or si_fun_Q2(a2Q2[iens][ith],aMPi[iens].ave())<s_max));
+	      if(it!=th_used) plot_mfix<<a2Q2[iens][ith]<<" " <<inv[ith].ave_err()<<endl;
+	    }
+	  plot_mfix.new_data_set();
+	}
       
       size_t L=ens_data[iens].L;
-      plot_mfix.write_polygon([&L,&aMPi,afPi,iens,LEC_6,B1,B2,C1,C2,use_FSE](double x)
-			      {
-				auto th=th_fun(x,L);
-				auto F=FSE_fun(aMPi[iens],L,afPi[iens],th/2.0,use_FSE);
-				//cout<<th<<" "<<F<<endl;
-				return fpi_inf_inv_fun(x,aMPi[iens],afPi[iens],F,LEC_6,B1,B2,C1,C2,use_FSE);}
-			      ,a2Q2[iens][1]/2,a2Q2[iens][ens_data[iens].nth()-1],50);
+      //select the range of Q2 to paint in the two colors
+      double Q2_min=a2Q2[iens][1]/2;
+      double Q2_max=a2Q2[iens][ens_data[iens].nth()-1];
+      double Q2_int=Q2_fun_si(s_max,aMPi[iens]).ave();
+      if(Q2_int<Q2_min) Q2_int=Q2_min;
+      if(Q2_int>Q2_max) Q2_int=Q2_max;
+      double xmin[2]={Q2_min,Q2_int};
+      double xmax[2]={Q2_int,Q2_max};
+      for(size_t it=0;it<2;it++)
+	plot_mfix.write_polygon([&L,&aMPi,afPi,iens,LEC_6,B1,B2,C1,C2,use_FSE,xmin,xmax,it](double x)
+				{
+				  auto th=th_fun_Q2(x,L);
+				  auto F=FSE_fun(aMPi[iens],L,afPi[iens],th/2.0,use_FSE);
+				  //cout<<th<<" "<<F<<endl;
+				  return fpi_inf_inv_fun(x,aMPi[iens],afPi[iens],F,LEC_6,B1,B2,C1,C2,use_FSE);}
+				,xmin[it],xmax[it],50);
     }
   
   cout<<"C1: "<<C1<<endl;
@@ -254,7 +313,7 @@ djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarr
   cout<<"B2: "<<B2<<endl;
   
   double fpi_exp=0.1304;
-  djack_t chrad=2/sqr(4*M_PI*fpi_exp)*(LEC_6-1.0)*sqr(0.19731);
+  djack_t chrad=1.0/sqr(4*M_PI*fpi_exp)*(2*(LEC_6-1.0)+B1*xi_phys)*sqr(0.19731);
   cout<<"Charge radius: "<<chrad<<" fm^2"<<endl;
   
   return chrad;
@@ -286,25 +345,28 @@ int main(int narg,char **arg)
       vector<size_t> syst_comp=syst_ind(isyst);
       size_t iRAT=syst_comp[iRAT_comp];
       size_t ifit_range=syst_comp[ifit_range_comp];
-      size_t iuse_chir=syst_comp[iuse_chir_comp];
+      size_t iuse_pion_masses=syst_comp[iuse_pion_masses_comp];
+      size_t iuse_chirord=syst_comp[iuse_chirord_comp];
       size_t iuse_FSE=syst_comp[iuse_FSE_comp];
       size_t is_max=syst_comp[is_max_comp];
       
       FSE_t use_FSE=FSE_variations[iuse_FSE];
-      chir_t use_chir=chir_variations[iuse_chir];
+      pion_masses_t use_pion_masses=pion_masses_variations[iuse_pion_masses];
+      chirord_t use_chirord=chirord_variations[iuse_chirord];
       int dtf=fit_range_variations[ifit_range];
       double s_max=s_max_variations[is_max];
       
       cout<<"Ratio: "<<RAT_tag[iRAT]<<endl;
       cout<<"Use FSE: "<<FSE_tag[iuse_FSE]<<endl;
-      cout<<"Use chir: "<<chir_tag[iuse_chir]<<endl;
+      cout<<"Use pion masses: "<<pion_masses_tag[iuse_pion_masses]<<endl;
+      cout<<"Use chirord: "<<chirord_tag[iuse_chirord]<<endl;
       cout<<"dt for fit: "<<dtf<<endl;
       cout<<"s max: "<<s_max<<endl;
       
-      vector<djvec_t> ff(nens_used),ff_FSE(nens_used);
-      valarray<valarray<double>> a2Q2(nens_used);
-      djvec_t aMPi(nens_used),afPi(nens_used);
-      for(size_t iens=0;iens<nens_used;iens++)
+      vector<djvec_t> ff(ens_data.size()),ff_FSE(ens_data.size());
+      valarray<valarray<double>> a2Q2(ens_data.size());
+      djvec_t aMPi(ens_data.size()),afPi(ens_data.size());
+      for(size_t iens=0;iens<ens_data.size();iens++)
 	{
 	  ens_data_t &ens=ens_data[iens];
 	  string ppath=ens.path+"/plots/";
@@ -412,7 +474,7 @@ int main(int narg,char **arg)
 	  table<<"\tafPi="<<afPi[iens].ave_err()<<"\tML: "<<djack_t(aMPi[iens]*ens.L).ave_err()<<endl;
 	}
       
-      ch_rad[isyst]=fit_fpiinv(aMPi,afPi,a2Q2,ff,ff_FSE,use_chir,use_FSE,s_max,use_cov,cov_fact);
+      ch_rad[isyst]=fit_fpiinv(aMPi,afPi,a2Q2,ff,ff_FSE,use_pion_masses,use_chirord,use_FSE,s_max,isyst,use_cov,cov_fact);
     }
   
   perform_analysis(ch_rad,syst_ind,"Charge radius");
