@@ -15,4 +15,5 @@ libtran_a_SOURCES= \
 	minimizer.cpp \
 	oper.cpp \
 	solve.cpp \
+	systematics.cpp \
 	tools.cpp

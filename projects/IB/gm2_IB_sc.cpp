@@ -522,40 +522,6 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-class syst_t
-{
-public:
-  double ave,wave,stat,wstat,totsy,tot;
-  vector<double> syst;
-};
-
-syst_t perform_analysis(const dbvec_t &data,const index_t &ind)
-{
-  syst_t r;
-  double &ave=r.ave=0,&err=r.stat=0,&wave=r.wave=0,&werr=r.wstat=0,weight=0;
-  for(auto &d : data)
-    {
-      double a=d.ave(),e=d.err(),w=1/sqr(e);
-      ave+=a;
-      err+=e;
-      wave+=a*w;
-      werr+=e*w;
-      weight+=w;
-    }
-  ave/=data.size();
-  err/=data.size();
-  wave/=weight;
-  werr/=weight;
-  
-  r.syst=syst_analysis_sep_bis(data.ave_err(),ind);
-  double &totsy=r.totsy=0,&tot=r.tot=0;
-  for(auto &s : r.syst) totsy+=s*s;
-  totsy=sqrt(totsy);
-  tot=sqrt(sqr(totsy)+sqr(err));
-  
-  return r;
-}
-
 //! prepare the table for a given quantity
 void prepare_table(const string &tag,const dbvec_t &quantity,const index_t &ind,double fact)
 {
@@ -620,36 +586,6 @@ void prepare_table_with_without_hl(const string &tag,const dbvec_t &quantity,con
     }
 }
 
-//! write average, errors and systematics
-void perform_analysis(const dbvec_t &data,const index_t &ind,const string &name)
-{
-  cout<<" ================== "<<name<<" ================== "<<endl;
-  auto r=perform_analysis(data,ind);
-  
-  for(auto el : vector<pair<string,double>>{{" Ave",r.ave},{"Weig",r.wave}})
-    cout<<el.first.substr(0,6)<<":\t"<<el.second<<endl;
-  
-  vector<pair<string,double>> top;
-  top.push_back({" Stat",r.stat});
-  top.push_back({"Werr",r.wstat});
-  for(size_t i=0;i<ind.rank();i++) top.push_back({ind.name(i),r.syst[i]});
-  top.push_back({"TotSy",r.totsy});
-  top.push_back({" Tot",r.tot});
-  
-  for(auto t : top)
-    {
-      cout<<t.first.substr(0,6);
-      cout<<"\t=\t";
-      cout<<t.second;
-      cout<<"\t=\t";
-      streamsize prec=cout.precision();
-      cout.precision(3);
-      cout<<fabs(t.second/r.ave)*100<<" %";
-      cout.precision(prec);
-      cout<<endl;
-    }
-  cout<<endl;
-}
 
 //! test the exponents of the A40
 void test_exponent_A40(const index_t &ind_2pts_fit,const djvec_t &jM_P,const djvec_t &jM_V,const vector<djvec_t> &jVV_LO,const vector<djvec_t> &jVV_QED,

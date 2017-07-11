@@ -374,7 +374,7 @@ public:
 	
 	//check condition on smallest eigenvalue
 	double w=ei[0].ave()/ei[0].err();
-	if(w<eps_fact)
+	if(eps_fact!=0 and w<eps_fact)
 	  {
 	    cerr<<"Warning! Minimal eigenvalue is at "<<w<<" sigma, but asked "<<eps_fact<<", trying to cure it"<<endl;
 	    

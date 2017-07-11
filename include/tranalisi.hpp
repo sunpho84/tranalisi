@@ -16,6 +16,7 @@
 #include <raw_file.hpp>
 #include <solve.hpp>
 #include <stopwatch.hpp>
+#include <systematics.hpp>
 #include <tasks.hpp>
 
 #endif
