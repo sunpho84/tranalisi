@@ -383,6 +383,7 @@ public:
     //! interval between points
     double dx=(xmax-xmin)/(npoints-1);
     //set x and y
+#pragma omp parallel for
     for(size_t ipoint=0;ipoint<npoints;ipoint++)
       {
 	x[ipoint]=xmin+dx*ipoint;
@@ -417,6 +418,7 @@ public:
     //mark a continuous line
     this->continuous_line(col);
     
+#pragma omp parallel for
     for(size_t ipoint=0;ipoint<npoints;ipoint++)
       {
 	double x=xmin+(xmax-xmin)/(npoints-1)*ipoint;
