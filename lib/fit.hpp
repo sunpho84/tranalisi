@@ -284,7 +284,9 @@ class distr_fit_FCN_t : public minimizer_fun_t
   vector<distr_fit_data_t> data;
   //! inverse covariance
   vector<double> inv_cov;
-  //! element of the data-dstribution
+  //! block for each inv cov matr entry
+  vector<int> cov_block;
+  //! element of the data-distribution
   size_t &iel;
   
 public:
@@ -292,8 +294,9 @@ public:
   distr_fit_FCN_t(const vector<distr_fit_data_t> &data,size_t &iel) : cov_flag(false),data(data),iel(iel){}
   
   //! add the covariance matrix
-  bool add_cov(const vector<TS> &pro_cov,const vector<int> &cov_block,double eps_fact=3.0)
+  bool add_cov(const vector<TS> &pro_cov,const vector<int> &ext_cov_block,double eps_fact=3.0)
   {
+    cov_block=ext_cov_block;
     cov_flag=true;
     const size_t &n=pro_cov.size();
     inv_cov.resize(n*n,0.0);
@@ -386,7 +389,6 @@ public:
 	    cerr<<"Eigenvalues after cure: "<<endl;
 	    cerr<<ei<<endl;
 	    cerr<<"Condition number: "<<TS(ei[hmany-1]/ei[0])<<endl<<endl;
-
 	  }
 	
 	//compute the "cured" cov matrix and inverse
@@ -441,16 +443,30 @@ public:
   double operator()(const vector<double> &p) const
   {
     double ch2=0;
-     if(cov_flag)
-        for(size_t ix=0;ix<data.size();ix++)
-	  for(size_t iy=ix;iy<data.size();iy++)
-	    {
+    
+    map<double,pair<double,int>> cov_block_ch2; //partial ch2
+    
+    if(cov_flag)
+      for(size_t ix=0;ix<data.size();ix++)
+	for(size_t iy=ix;iy<data.size();iy++)
+	  {
       	    double nx=data[ix].num(p,iel);
       	    double tx=data[ix].teo(p,iel);
       	    double ny=data[iy].num(p,iel);
       	    double ty=data[iy].teo(p,iel);
       	    double contr=(nx-tx)*inv_cov[ix*data.size()+iy]*(ny-ty);
-      	    ch2+=contr*(1.0+(ix!=iy));
+	    int fact=(1+(ix!=iy));
+      	    ch2+=contr*fact; //twice for off-diag
+	    
+	    //block contribs
+	    int cix=cov_block[ix];
+	    int ciy=cov_block[iy];
+	    if(cix==ciy)
+	      {
+		cov_block_ch2[cix].first+=contr*fact;
+		cov_block_ch2[cix].second+=fact;
+	      }
+	    
 	    if(0 and fit_debug)
 	      {
 		cout<<contr<<" = ";
@@ -472,7 +488,16 @@ public:
 	}
      
      if(fit_debug)
-       cout<<"Tot ch2: "<<ch2<<endl;
+       {
+	 cout<<"Partial ch2: "<<endl;
+	 for(auto &x : cov_block_ch2)
+	   {
+	     double s=sqrt(x.second.second);
+	     cout<<x.first<<" "<<x.second.first<<"/("<<s<<"x"<<s<<")"<<endl;
+	   }
+	 
+	 cout<<"Tot ch2: "<<ch2<<endl;
+       }
      
      return ch2;
   }
