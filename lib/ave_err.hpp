@@ -18,7 +18,8 @@ class ave_err_t : public pair<double,double>
 {
 public:
   //! rebind base constructor
-  ave_err_t(const double &a=0,const double &b=0) : pair<double,double>(a,b) {};
+  ave_err_t(const double &a=0,const double &b=0) :
+    pair<double,double>(a,b) {};
   
   //! rebind average
   double ave() const {return first;}

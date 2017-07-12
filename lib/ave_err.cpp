@@ -9,11 +9,7 @@
 void vec_ave_err_t::write(const string &path) const
 {
   grace_file_t gr(path);
-  gr.set_settype(grace::XYDY);
-  for(size_t it=0;it<this->size();it++)
-    if(!std::isnan((*this)[it].err()))
-      gr<<it<<" "<<(*this)[it]<<endl;
-  gr.new_data_set();
+  gr.write_vec_ave_err(*this);
 }
 
 //! shift by 10 left(if positive) or right(if negative)

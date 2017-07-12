@@ -40,7 +40,7 @@ namespace grace
 };
 
 //! class to write a grace file
-class grace_file_t : public ofstream
+class grace_file_t : private ofstream
 {
   bool need_close_set;
   
@@ -71,6 +71,7 @@ class grace_file_t : public ofstream
   size_t iset; //<! set id
   string legend; //! legend of the set
   
+  grace::settype_t settype; //<! set type
   grace::symbol_t symbol; //<! symbol
   grace::color_t symbol_color; //<! color for symbol
   bool symbol_fill_pattern; //<! epmty or filled symbols
@@ -104,7 +105,54 @@ class grace_file_t : public ofstream
   
   unsigned short int transparency; //<! transparency of all fillings
   
+  //! write all props and start a new set
+  void close_cur_set()
+  {
+    if(need_close_set)
+      {
+	//line props
+	write_prop("line type "+to_string(line_type));
+	write_prop("linewidth "+to_string(linewidth));
+	write_prop("line linestyle "+to_string(line_linestyle));
+	write_prop("line color "+to_string(line_color));
+	//fill props
+	write_prop("fill color "+to_string(fill_color));
+	write_prop("fill type "+to_string(fill_type));
+	//symbol props
+	write_prop("symbol "+to_string(symbol));
+	write_prop("symbol size "+to_string(symbol_size));
+	write_prop("symbol linewidth "+to_string(symbol_linewidth));
+	write_prop("symbol color "+to_string(symbol_color));
+	write_prop("symbol fill color "+to_string(symbol_fill_color));
+	write_prop("symbol fill pattern "+to_string(symbol_fill_pattern));
+	//error props
+	write_prop("errorbar color "+to_string(errorbar_color));
+	write_prop("errorbar size "+to_string(errorbar_size));
+	write_prop("errorbar linewidth "+to_string(errorbar_linewidth));
+	write_prop("errorbar riser linewidth "+to_string(errorbar_riser_linewidth));
+	//transparency
+	(*this)<<"#QTGRACE_ADDITIONAL_PARAMETER: G 0 S "<<iset<<" ALPHA_CHANNELS {"<<transparency<<";"<<transparency<<";255;255;255;255}"<<endl;
+	//write legend
+	write_prop("legend \""+legend+"\"");
+	//point to the next set
+	(*this)<<"&"<<endl;
+	shift_iset();
+	(*this)<<"@target G0.S"<<iset<<endl;
+	//reset all props and force next call to ignore
+	reset_props();
+	need_close_set=false;
+      }
+  }
+  
 public:
+  //! close current set
+  bool get_need_close_set() const
+  {return need_close_set;}
+  
+  //! mark the current set as needing close
+  void set_need_close_set()
+  {need_close_set=true;}
+  
   //! set a color scheme
   void set_color_scheme(const initializer_list<grace::color_t> &oth)
   {color_scheme.assign(oth.begin(),oth.end());}
@@ -240,45 +288,6 @@ public:
   void shift_iset(size_t how_many=1)
   {iset+=how_many;}
   
-  //! write all props and start a new set
-  void close_cur_set()
-  {
-    if(need_close_set)
-      {
-	//line props
-	write_prop("line type "+to_string(line_type));
-	write_prop("linewidth "+to_string(linewidth));
-	write_prop("line linestyle "+to_string(line_linestyle));
-	write_prop("line color "+to_string(line_color));
-	//fill props
-	write_prop("fill color "+to_string(fill_color));
-	write_prop("fill type "+to_string(fill_type));
-	//symbol props
-	write_prop("symbol "+to_string(symbol));
-	write_prop("symbol size "+to_string(symbol_size));
-	write_prop("symbol linewidth "+to_string(symbol_linewidth));
-	write_prop("symbol color "+to_string(symbol_color));
-	write_prop("symbol fill color "+to_string(symbol_fill_color));
-	write_prop("symbol fill pattern "+to_string(symbol_fill_pattern));
-	//error props
-	write_prop("errorbar color "+to_string(errorbar_color));
-	write_prop("errorbar size "+to_string(errorbar_size));
-	write_prop("errorbar linewidth "+to_string(errorbar_linewidth));
-	write_prop("errorbar riser linewidth "+to_string(errorbar_riser_linewidth));
-	//transparency
-	(*this)<<"#QTGRACE_ADDITIONAL_PARAMETER: G 0 S "<<iset<<" ALPHA_CHANNELS {"<<transparency<<";"<<transparency<<";255;255;255;255}"<<endl;
-	//write legend
-	write_prop("legend \""+legend+"\"");
-	//point to the next set
-	(*this)<<"&"<<endl;
-	shift_iset();
-	(*this)<<"@target G0.S"<<iset<<endl;
-	//reset all props and force next call to ignore
-	reset_props();
-	need_close_set=false;
-      }
-  }
-  
   //! start a new set of data type
   void new_data_set(grace::color_t col,grace::symbol_t sym)
   {
@@ -298,17 +307,22 @@ public:
   void write_prop(string what) {(*this)<<"@s"<<iset<<" "<<what<<endl;}
   
   //! symbol type
-  void set_settype(grace::settype_t settype)
+  void set_settype(grace::settype_t ext_settype)
   {
-    string how_s;
-    switch(settype)
+    if(this->settype!=ext_settype)
       {
-      case grace::XY: how_s="xy";break;
-      case grace::XYDY: how_s="xydy";break;
-      case grace::XYDXDY: how_s="xydxdy";break;
-      default: CRASH("Unknown type %d",settype);
+	string how_s;
+	switch(ext_settype)
+	  {
+	  case grace::XY: how_s="xy";break;
+	  case grace::XYDY: how_s="xydy";break;
+	  case grace::XYDXDY: how_s="xydxdy";break;
+	  default: CRASH("Unknown type %d",settype);
+	  }
+	(*this)<<"@type "<<how_s<<endl;
       }
-    (*this)<<"@type "<<how_s<<endl;
+    
+    this->settype=ext_settype;
   }
   
   //! set line style and filling
@@ -456,25 +470,30 @@ public:
   void write_vec_ave_err(const TV &x,const vec_ave_err_t &data)
   {write_vec_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
   
-  //write a single data
+  //write a vector of data
   template <class TV,class=enable_if_vector_of_double<TV>>
   void write_vec_ave_err(const TV &x,const ave_err_t &data,grace::color_t col,grace::symbol_t sym)
   {
     new_data_set(col,sym);
     (*this)<<x<<" "<<data<<endl;
+    set_need_close_set();
   }
-  void write_ave_err(const double x,const ave_err_t &data)
-  {write_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
   
-  //write a single data
-  void write_ave_err(const ave_err_t x,const ave_err_t &data,grace::color_t col,grace::symbol_t sym)
+  //! write a single data without error on x
+  void write_ave_err(const double x,const ave_err_t &data)
   {
-    new_data_set(col,sym);
+    set_need_close_set();
+    set_settype(grace::XYDY);
+    (*this)<<x<<" "<<data.ave()<<" "<<data.err()<<endl;
+  }
+  
+  //! write a single data with error
+  void write_ave_err(const ave_err_t x,const ave_err_t &data)
+  {
+    set_need_close_set();
     set_settype(grace::XYDXDY);
     (*this)<<x.ave()<<" "<<data.ave()<<" "<<x.err()<<" "<<data.err()<<endl;
   }
-  void write_ave_err(const ave_err_t x,const ave_err_t &data)
-  {write_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
   
   //! close the file
   void close()

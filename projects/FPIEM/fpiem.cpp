@@ -276,14 +276,13 @@ djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarr
       plot_mfix.set_settype(grace::XYDY);
       for(size_t it=0;it<2;it++) //0=used, 1=not used
 	{
-	  if(it) plot_mfix.new_data_set();
-	  
 	  if(it==1) plot_mfix.set_symbol_fill_pattern(grace::FILLED_SYMBOL);
 	  for(size_t ith=1;ith<ens_data[iens].nth();ith++)
 	    {
 	      bool th_used=(used[iens] and (s_max==0 or si_fun_Q2(a2Q2[iens][ith],aMPi[iens].ave())<s_max));
-	      if(it!=th_used) plot_mfix<<a2Q2[iens][ith]<<" " <<inv[ith].ave_err()<<endl;
+	      if(it!=th_used) plot_mfix.write_ave_err(a2Q2[iens][ith],inv[ith].ave_err());
 	    }
+	  cout<<"Need close: "<<plot_mfix.get_need_close_set()<<endl;
 	  plot_mfix.new_data_set();
 	}
       

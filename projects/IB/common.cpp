@@ -197,8 +197,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		  {
 		    
-		    fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-		      fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+		    fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		  }
 	    }
 	}
@@ -263,8 +262,7 @@ void plot_chir_fit_empty(const string path,const vector<cont_chir_fit_data_t> &e
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		  {
 		    
-		    fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-		      fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+		    fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		  }
 	    }
 	}
@@ -326,8 +324,7 @@ void plot_chir_fit1(const string path,const vector<cont_chir_fit_data_t> &ext_da
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		  {
 		    
-		    fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-		      fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+		    fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		  }
 	    }
 	}
@@ -393,8 +390,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		      {
 		    
-			fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-			  fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+			fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 			
 		      }
 		}
@@ -433,12 +429,11 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		      {
 		    
-			fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-			  fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+			fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		      }
 		}
 	    }
-      
+	  
 	  //put back colors for data with fse
 	  if(without_with_fse==0) grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
 	      
@@ -513,9 +508,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		      {
 		    
-			fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-			  fun_data(idata,without_with_fse,ib).ave_err()<<endl;
-			
+			fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		      }
 		}
 	    }
@@ -551,11 +544,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 	      
 		  for(size_t idata=0;idata<ext_data.size();idata++)
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
-		      {
-		    
-			fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-			  fun_data(idata,without_with_fse,ib).ave_err()<<endl;
-		      }
+		      fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		}
 	    }
       

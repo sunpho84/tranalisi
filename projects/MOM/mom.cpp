@@ -387,7 +387,7 @@ int main(int narg,char **arg)
 	{
 	  size_t im_r_imom=im_r_ind_imom_ind({im,r,ind_imom});
 	  size_t imom=equiv_imoms[ind_imom].first;
-	  out<<imoms[imom].p(L).tilde().norm2()<<" "<<Zq_sig1[im_r_imom]<<endl;
+	  out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zq_sig1[im_r_imom].ave_err());
 	}
       out.new_data_set();
     }
@@ -399,7 +399,7 @@ int main(int narg,char **arg)
       for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
 	{
 	  size_t imom=equiv_imoms[ind_imom].first;
-	  out<<imoms[imom].p(L).tilde().norm2()<<" "<<Zbil[im_r_im_r_iZbil_ind_imom_ind({0,0,0,0,iZbil,ind_imom})]<<endl;
+	  out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zbil[im_r_im_r_iZbil_ind_imom_ind({0,0,0,0,iZbil,ind_imom})].ave_err());
 	}
       out.new_data_set();
     }
