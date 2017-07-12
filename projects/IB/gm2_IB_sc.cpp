@@ -216,10 +216,9 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 				 without_with_fse,pars.L4dep);},1e-5,1.0/12);
       out_FSE.new_data_set();
       
-      out_FSE.set_settype(grace::XYDY);
       for(size_t iens=0;iens<nens_used;iens++)
 	 if(is_A40(ext_data[iens]))
-	   out_FSE<<1.0/ext_data[iens].L<<" "<<dboot_t(ext_data[iens].wfse-without_with_fse*FSE_QED(pars.C,pars.L3dep,ext_data[iens].L,pars.L4dep)).ave_err()<<endl;
+	   out_FSE.write_ave_err(1.0/ext_data[iens].L,dboot_t(ext_data[iens].wfse-without_with_fse*FSE_QED(pars.C,pars.L3dep,ext_data[iens].L,pars.L4dep)).ave_err());
       out_FSE.new_data_set();
     }
   
@@ -692,7 +691,7 @@ void test_exponent_A40(const index_t &ind_2pts_fit,const djvec_t &jM_P,const djv
   fit_file_QED_A40.new_data_set();
   fit_file_QED_A40.set_settype(grace::XYDY);
   fit_file_QED_A40.new_data_set();
-  for(size_t iL=0;iL<nA40;iL++) fit_file_QED_A40<<A40_x[iL]<<" "<<A40_QED_data[iL].ave_err()<<endl;
+  for(size_t iL=0;iL<nA40;iL++) fit_file_QED_A40.write_ave_err(A40_x[iL],A40_QED_data[iL].ave_err());
   
   grace_file_t fit_file_QED_A(combine("%s/plots/A_QED.xmg",qname[im].c_str()));
   fit_file_QED_A.set_xaxis_label("1/L");
@@ -700,27 +699,27 @@ void test_exponent_A40(const index_t &ind_2pts_fit,const djvec_t &jM_P,const djv
   fit_file_QED_A.new_data_set();
   fit_file_QED_A.set_settype(grace::XYDY);
   fit_file_QED_A.new_data_set();
-  for(size_t iL=0;iL<nA;iL++) fit_file_QED_A<<A_x[iL]<<" "<<A_QED_data[iL].ave_err()<<endl;
+  for(size_t iL=0;iL<nA;iL++) fit_file_QED_A.write_ave_err(A_x[iL],A_QED_data[iL].ave_err());
   
   grace_file_t fit_file_LO(combine("%s/plots/A40_LO.xmg",qname[im].c_str()));
   fit_file_LO.set_xaxis_label("1/L");
   fit_file_LO.set_settype(grace::XYDY);
-  for(size_t iL=0;iL<nA40;iL++) fit_file_LO<<A40_x[iL]<<" "<<A40_LO_data[iL].ave_err()<<endl;
+  for(size_t iL=0;iL<nA40;iL++) fit_file_LO.write_ave_err(A40_x[iL],A40_LO_data[iL].ave_err());
   
   grace_file_t fit_file_RAT(combine("%s/plots/A40_RAT.xmg",qname[im].c_str()));
   fit_file_RAT.set_xaxis_label("1/L");
   fit_file_RAT.set_settype(grace::XYDY);
-  for(size_t iL=0;iL<nA40;iL++) fit_file_RAT<<A40_x[iL]<<" "<<djack_t(A40_QED_data[iL]/A40_LO_data[iL]).ave_err()<<endl;
+  for(size_t iL=0;iL<nA40;iL++) fit_file_RAT.write_ave_err(A40_x[iL],djack_t(A40_QED_data[iL]/A40_LO_data[iL]).ave_err());
   
   grace_file_t fit_file_MP(combine("%s/plots/A40_MP.xmg",qname[im].c_str()));
   fit_file_MP.set_xaxis_label("1/L");
   fit_file_MP.set_settype(grace::XYDY);
-  for(size_t iL=0;iL<nA40;iL++) fit_file_MP<<A40_x[iL]<<" "<<A40_MP_data[iL].ave_err()<<endl;
+  for(size_t iL=0;iL<nA40;iL++) fit_file_MP.write_ave_err(A40_x[iL],A40_MP_data[iL].ave_err());
   
   grace_file_t fit_file_MV(combine("%s/plots/A40_MV.xmg",qname[im].c_str()));
   fit_file_MV.set_xaxis_label("1/L");
   fit_file_MV.set_settype(grace::XYDY);
-  for(size_t iL=0;iL<nA40;iL++) fit_file_MV<<A40_x[iL]<<" "<<A40_MV_data[iL].ave_err()<<endl;
+  for(size_t iL=0;iL<nA40;iL++) fit_file_MV.write_ave_err(A40_x[iL],A40_MV_data[iL].ave_err());
 }
 
 int main(int narg,char **arg)
@@ -829,8 +828,8 @@ int main(int narg,char **arg)
 	  grace_file_t out(combine("%s/VV_QED_an%zu_jacks.xmg",ens_qpath.c_str(),ifit_range));
 	  for(size_t ijack=0;ijack<njacks;ijack++)
 	    {
-	      for(size_t t=0;t<jVV_QED[iens].size();t++) out<<t<<" "<<jVV_QED[iens][t][njacks]*njacks-jVV_QED[iens][t][ijack]*(njacks-1)<<endl;
-	      out<<endl;
+	      for(size_t t=0;t<jVV_QED[iens].size();t++) out.write_xy(t,jVV_QED[iens][t][njacks]*njacks-jVV_QED[iens][t][ijack]*(njacks-1));
+	      out.new_data_set();
 	    }
 	  
 	  two_pts_with_ins_ratio_fit(jZ2_V[ind],jM_V[ind],k_DZ2_rel_V[ind],jSL_V[ind],jVV_LO[iens],jVV_QED[iens],TH,tmin_fit(iens,ifit_range),ens.tmax[im],

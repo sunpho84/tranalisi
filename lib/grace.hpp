@@ -470,13 +470,21 @@ public:
   void write_vec_ave_err(const TV &x,const vec_ave_err_t &data)
   {write_vec_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
   
-  //write a vector of data
+  //! write a vector of data
   template <class TV,class=enable_if_vector_of_double<TV>>
   void write_vec_ave_err(const TV &x,const ave_err_t &data,grace::color_t col,grace::symbol_t sym)
   {
     new_data_set(col,sym);
     (*this)<<x<<" "<<data<<endl;
     set_need_close_set();
+  }
+  
+  //! write x and y
+  void write_xy(const double x,const double y)
+  {
+    set_need_close_set();
+    set_settype(grace::XY);
+    (*this)<<x<<" "<<y<<endl;
   }
   
   //! write a single data without error on x

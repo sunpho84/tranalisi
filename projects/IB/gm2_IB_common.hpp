@@ -149,8 +149,8 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
   grace_file_t out(ens_qpath+"/P5P5_00_eff_jacks.xmg");
   for(size_t ijack=0;ijack<njacks;ijack++)
     {
-      for(size_t t=0;t<P5P5_00.size();t++) out<<t<<" "<<P5P5_00[t][njacks]*njacks-P5P5_00[t][ijack]*(njacks-1)<<endl;
-      out<<endl;
+      for(size_t t=0;t<P5P5_00.size();t++) out.write_xy(t,P5P5_00[t][njacks]*njacks-P5P5_00[t][ijack]*(njacks-1));
+      out.new_data_set();
     }
   
   //measure mcrit according to eq.3 of hep-lat/0701012

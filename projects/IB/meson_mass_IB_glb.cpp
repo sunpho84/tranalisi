@@ -107,7 +107,7 @@ template <class Tx,class Ty> void plot_ens_data(grace_file_t &file,const Tx &x,c
       file.new_data_set();
       for(size_t iens=0;iens<raw_data.size();iens++)
 	if(raw_data[iens].ibeta==ibeta)
-	  file<<x[iens].ave()<<" "<<y[iens].ave_err()<<endl;
+	  file.write_ave_err(x[iens].ave(),y[iens].ave_err());
     }
 }
 
