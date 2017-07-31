@@ -69,7 +69,7 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
 djvec_t read_conf_set_t(const string &template_path,const range_t &range,size_t ntot_col,const vector<size_t> &cols,size_t nlines,bool verbosity)
 {
   //get the list of existing files
-  vector<size_t> id_list=get_existing_paths_in_range(template_path,range);
+  vector<size_t> id_list=get_existing_paths_in_range(template_path,range,verbosity);
   
   return read_conf_set_t(template_path,id_list,ntot_col,cols,nlines,verbosity);
 }
