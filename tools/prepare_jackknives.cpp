@@ -55,7 +55,7 @@ int main(int narg,char **arg)
   for(auto &it : files)
     {
       auto start=take_time();
-      djvec_t data=read_conf_set_t(it.first,file_range,ntot_cols,cols,T);
+      djvec_t data=read_conf_set_t(it.first,file_range,ntot_cols,cols,T,VERBOSE);
       cout<<"Time to read: "<<elapsed_time(start)<<endl;
       
       //loop on filters

@@ -201,7 +201,8 @@ using djack_t=jack_t<double>;
 using cdjack_t=complex<jack_t<double>>;
 
 //! return a string
-template <class T> string to_string(const jack_t<T> &obj)
+template <class T>
+string to_string(const jack_t<T> &obj)
 {
   ave_err_t ae=obj.ave_err();
   ostringstream os;
@@ -210,15 +211,18 @@ template <class T> string to_string(const jack_t<T> &obj)
 }
 
 //! get the size needed to init a jack_t
-template <class T> size_t init_nel(const jack_t<T> &obj)
+template <class T>
+size_t init_nel(const jack_t<T> &obj)
 {return njacks;}
 
 //! specify hot to print a jack_t
-template <class T> ostream& operator<<(ostream &out,const jack_t<T> &v)
+template <class T>
+ostream& operator<<(ostream &out,const jack_t<T> &v)
 {return out<<v.ave_err();}
 
 //! trim a vector in such a way that its size is multiple of njacks, and return clust_size
-template <class T> size_t trim_to_njacks_multiple(vector<T> &v,bool verbosity=false)
+template <class T>
+size_t trim_to_njacks_multiple(vector<T> &v,bool verbosity=false)
 {
   size_t clust_size=v.size()/njacks;
   size_t n=clust_size*njacks;

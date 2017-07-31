@@ -193,17 +193,25 @@ public:
 };
 
 //! traits for jack_t
-template <class TS> class vector_traits<boot_t<TS>> : public true_vector_traits<TS> {};
+template <class TS>
+class vector_traits<boot_t<TS>> : public true_vector_traits<TS> {};
 
 //! typically we will use T numbers
 using dboot_t=boot_t<double>;
 
+//! specify hot to print a boot_t
+template <class T>
+ostream& operator<<(ostream &out,const boot_t<T> &v)
+{return out<<v.ave_err();}
+
 //! return the size needed to init a boot_t
-template <class T> size_t init_nel(const boot_t<T> &obj)
+template <class T>
+size_t init_nel(const boot_t<T> &obj)
 {return obj.nboots();}
 
 //! return a string
-template <class T> string to_string(const boot_t<T> &obj)
+template <class T>
+string to_string(const boot_t<T> &obj)
 {
   ave_err_t ae=obj.ave_err();
   ostringstream os;
