@@ -80,6 +80,7 @@ void perform_analysis(const TV &data,const index_t &ind,const string &name)
       cout<<endl;
     }
   cout<<endl;
+  cout<<"In sysntesis: "<<smart_print(r.ave,r.syst)<<endl;
 }
 
 #endif

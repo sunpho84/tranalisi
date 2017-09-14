@@ -69,9 +69,10 @@ public:
   explicit vec_ave_err_t(size_t in) : vector<ave_err_t>(in) {}
   
   //! write to a grace file
-  void write(const string &path) const;
+  void write(const vector<double> &x,const string &path) const;
+  void write(const string &path)
+  {write(vector_up_to<double>(this->size()),path);}
 };
-
 
 //! traits for jack_t
 template <> class vector_traits<vec_ave_err_t> : public true_vector_traits<vec_ave_err_t> {};

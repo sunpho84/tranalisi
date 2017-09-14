@@ -70,36 +70,6 @@ template <class T> T kern_LO_num(const T &corr_t,double t,const T &a)
 template <class T> T kern_QED_num(const T &corr_t,double t,const T &a)
 {return kern_num(corr_t,t,a);}
 
-//! integrate
-template <class TS> TS integrate_corr_up_to(const valarray<TS> &corr,size_t &upto,size_t ord=1)
-{
-  if(upto>=corr.size()) CRASH("Upto=%zu >= corr.size()=%zu",upto,corr.size());
-  
-  valarray<double> weight;
-  switch(ord)
-    {
-    case 0: weight={1};       break;
-    case 1: weight={1,1};     break;
-    case 2: weight={1,4,1};   break;
-    case 3: weight={3,9,9,3}; break;
-    default: CRASH("Unknwown order %zu",ord);
-    }
-  
-  size_t len=weight.size()-1;
-  double norm=weight.sum()/len;
-  
-  TS out;
-  out=0.0;
-  upto=size_t(upto/len)*len;
-  for(size_t t=0;t<upto;t+=len)
-    for(size_t j=0;j<=len;j++)
-      out+=corr[t+j]*weight[j];
-  
-  out/=norm;
-  
-  return out;
-}
-
 //! integrate the kernel
 template <class TV,class TS=typename TV::base_type> TS integrate_corr_times_kern_up_to(const TV &corr,size_t T,const TS &a,size_t im,size_t &upto,size_t ord=1)
 {

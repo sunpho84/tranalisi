@@ -196,6 +196,7 @@ public:
     cur_line_col(0),
     cur_symbol(0),
     iset(0),
+    settype(grace::XY),
     xaxis_min(0),
     xaxis_max(1),
     yaxis_min(0),
@@ -432,13 +433,15 @@ public:
     //mark a continuous line
     this->continuous_line(col);
     
+    double x[npoints],y[npoints];
 #pragma omp parallel for
     for(size_t ipoint=0;ipoint<npoints;ipoint++)
       {
-	double x=xmin+(xmax-xmin)/(npoints-1)*ipoint;
-	double y=fun(x);
-	(*this)<<x<<" "<<y<<endl;
+	x[ipoint]=xmin+(xmax-xmin)/(npoints-1)*ipoint;
+	y[ipoint]=fun(x[ipoint]);
       }
+    for(size_t ipoint=0;ipoint<npoints;ipoint++)
+      (*this)<<x[ipoint]<<" "<<y[ipoint]<<endl;
     need_close_set=true;
   }
   void write_line(const function<double(double)> &fun,double xmin,double xmax,size_t npoints=100)
@@ -527,7 +530,8 @@ public:
 };
 
 //! prepare a plot with a band
-template <class TV,class T=typename TV::base_type,class fun_t> void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const vector<double> &x,const TV &y)
+template <class TV,class T=typename TV::base_type,class fun_t>
+void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const vector<double> &x,const TV &y)
 {
   grace_file_t out(path);
   out.write_polygon(fun,xmin,xmax);
@@ -535,7 +539,8 @@ template <class TV,class T=typename TV::base_type,class fun_t> void write_fit_pl
   out.write_vec_ave_err(x,y.ave_err());
   out.new_data_set();
 }
-template <class TV,class fun_t,class T=typename TV::base_type> void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const TV &y)
+template <class TV,class fun_t,class T=typename TV::base_type>
+void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const TV &y)
 {write_fit_plot(path,xmin,xmax,fun,vector_up_to<double>(y.size()),y);}
 
 //! prepare a plot with a polynomial
@@ -549,7 +554,8 @@ template <class TV,class T=typename TV::base_type> void write_poly_fit_plot(cons
 template <class TV,class T=typename TV::base_type>
 void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const vector<double> &x,const TV &y)
 {write_fit_plot(path,xmin,xmax,[&c](double x){return c;},x,y);}
-template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
+template <class TV,class T=typename TV::base_type>
+void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
 {write_constant_fit_plot(path,xmin,xmax,c,vector_up_to<double>(y.size()),y);}
 
 #undef INIT_TO

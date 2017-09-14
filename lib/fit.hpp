@@ -202,10 +202,66 @@ public:
   double Up() const {return 1;}
 };
 
+/////////////////////////////////// smeared/local fit /////////////////////////////////////////////////
+
+//! perform a fit to determine the slope
+template <class TV,class TS=typename TV::base_type>
+void two_pts_SL_fit(TS &Z_S,TS &Z_L,TS &M,const TV &corr_SL,const TV &corr_SS,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
+{
+  //perform a preliminary fit
+  TS Z_SS,Z_SL;
+  two_pts_fit(Z_SS,M,corr_SS,TH,tmin,tmax,"/tmp/test_eff_mass_sme_sme.xmg","",par);
+  two_pts_fit(Z_SL,M,corr_SL,TH,tmin,tmax,"/tmp/test_eff_mass_sme_sme.xmg","",par);
+  Z_S=sqrt(Z_SS);
+  Z_L=Z_SL/Z_S;
+  
+  //parameters to fit
+  minimizer_pars_t pars;
+  pars.add("M",M[0],M.err());
+  pars.add("Z_L",Z_L[0],Z_L.err());
+  pars.add("Z_S",Z_S[0],Z_S.err());
+  
+  //! fit for real
+  size_t iel=0;
+  auto x=vector_up_to<double>(corr_SL.size());
+  multi_ch2_t<TV> two_pts_SL_fit_obj({x,x},{tmin,tmin},{tmax,tmax},{corr_SL,corr_SS},
+				  {two_pts_corr_fun_t(TH,par),two_pts_corr_fun_t(TH,par)},
+				     [](const vector<double> &p,size_t icontr)
+				     {
+				       switch(icontr)
+					 {
+					 case 0:return vector<double>({p[2]*p[1],p[0]});break;
+					 case 1:return vector<double>({p[2]*p[2],p[0]});break;
+					 default: CRASH("Unknown contr %zu",icontr);return p;
+					 }
+				     },iel);
+      
+  minimizer_t minimizer(two_pts_SL_fit_obj,pars);
+  
+  for(iel=0;iel<corr_SL[0].size();iel++)
+    {
+      //minimize and print the result
+      vector<double> par_min=minimizer.minimize();
+      M[iel]=par_min[0];
+      Z_L[iel]=par_min[1];
+      Z_S[iel]=par_min[2];
+    }
+  
+  //write plots
+  if(path!="")
+    {
+      grace_file_t out(path);
+      out.write_polygon([&M](double x){return M;},tmin,tmax);
+      out.write_vec_ave_err(x,effective_mass(corr_SL,TH,par).ave_err());
+      out.write_vec_ave_err(x,effective_mass(corr_SS,TH,par).ave_err());
+    }
+}
+
 //////////////////////////////////////////////////////////// slope /////////////////////////////////////////////////////
 
 //! perform a fit to determine the slope
-template <class TV,class TS=typename TV::base_type> void two_pts_with_ins_ratio_fit(TS &Z2,TS &M,TS &DZ2_fr_Z2,TS &SL,const TV &corr,const TV &corr_ins,size_t TH,size_t tmin,size_t tmax,string path="",string path_ins="",int par=1)
+template <class TV,class TS=typename TV::base_type>
+void two_pts_with_ins_ratio_fit(TS &Z2,TS &M,TS &DZ2_fr_Z2,TS &SL,const TV &corr,const TV &corr_ins,size_t TH,size_t tmin,size_t tmax,string path="",string path_ins="",int par=1)
 {
   //perform a preliminary fit
   TV eff_mass=effective_mass(corr,TH,par);
@@ -374,6 +430,7 @@ public:
 	
 	//check condition on smallest eigenvalue
 	double w=ei[0].ave()/ei[0].err();
+	if(fit_debug) cout<<ei<<endl;
 	if(eps_fact!=0 and w<eps_fact)
 	  {
 	    cerr<<"Warning! Minimal eigenvalue is at "<<w<<" sigma, but asked "<<eps_fact<<", trying to cure it"<<endl;

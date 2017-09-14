@@ -10,7 +10,7 @@ const int EVN=1,ODD=-1;//,UNK=0;
 typedef int rcombo_2pts_t[2][2];
 typedef int rcombo_3pts_t[2][3];
 
-const int SAMER_2PTS=0;//,OPPOR_2PTS=1;
+const int SAMER_2PTS=0,OPPOR_2PTS=1;
 const rcombo_2pts_t RTAGS_2PTS[2]={{{0,0},{1,1}}, {{0,1},{1,0}}};
 const array<string,2> RTAGS_2PTS_NAME={"SAME","OPPO"};
 
@@ -325,21 +325,70 @@ int main(int narg,char **arg)
   const double pred_Zv=pred_Zv_coeff*e2/sqr(4*M_PI);
   const double pred_Za=pred_Za_coeff*e2/sqr(4*M_PI);
   
-  //compute deltamcr
-  djvec_t E2_V0P5;
-  if(ant) E2_V0P5=der_2pts("V0P5",SAMER_2PTS,IM,ODD,ODD,e2_var,"E2");
-  else    E2_V0P5=forward_derivative(djvec_t(2*load_2pts("V0P5_M0",SAMER_2PTS,IM,ODD,ODD)+
-					     2*load_2pts("V0P5_T0",SAMER_2PTS,IM,ODD,ODD)+
-					     load_2pts("V0P5_LL",SAMER_2PTS,IM,ODD,ODD)));
-  djvec_t KA_V0P5;
-  if(ant) KA_V0P5=der_2pts("V0P5",SAMER_2PTS,IM,ODD,ODD,ka_var,"KA");
-  else    KA_V0P5=forward_derivative(djvec_t(2*load_2pts("V0P5_P0",SAMER_2PTS,RE,ODD,EVN)));
-  KA_V0P5.ave_err().write("plots/V0P5_SAME_KA.xmg");
+  djvec_t V0P5_SAME=load_2pts("V0P5",SAMER_2PTS,IM,ODD,ODD);
+  djvec_t V0P5_OPPO=load_2pts("V0P5",OPPOR_2PTS,IM,ODD,ODD);
+  V0P5_SAME.ave_err().write("plots/V0P5_SAME.xmg");
+  V0P5_OPPO.ave_err().write("plots/V0P5_OPPO.xmg");
+  djvec_t P5P5_SAME=load_2pts("P5P5",SAMER_2PTS,RE,EVN,EVN);
+  djvec_t P5P5_OPPO=load_2pts("P5P5",OPPOR_2PTS,RE,EVN,EVN);
+  djvec_t mcr_SAME=backward_derivative(V0P5_SAME)/P5P5_SAME;
+  djvec_t mcr_OPPO=backward_derivative(V0P5_OPPO)/P5P5_OPPO;
+  mcr_SAME.ave_err().write("plots/mcr_SAME.xmg");
+  mcr_OPPO.ave_err().write("plots/mcr_OPPO.xmg");
   
-  djvec_t deltam_cr_t=E2_V0P5/KA_V0P5;
-  deltam_cr_t.ave_err().write("plots/deltam_cr.xmg");
-  djack_t deltam_cr=deltam_cr_t[13];
+  //compute deltamcr
+  djvec_t E2_V0P5_SAME;
+  if(ant) E2_V0P5_SAME=der_2pts("V0P5",SAMER_2PTS,IM,ODD,ODD,e2_var,"E2E2");
+  else    E2_V0P5_SAME=
+	    load_2pts("V0P5_M0",SAMER_2PTS,IM,ODD,ODD)+
+	    load_2pts("V0P5_0M",SAMER_2PTS,IM,ODD,ODD)+
+	    load_2pts("V0P5_T0",SAMER_2PTS,IM,ODD,ODD)+
+	    load_2pts("V0P5_0T",SAMER_2PTS,IM,ODD,ODD)+
+	    load_2pts("V0P5_LL",SAMER_2PTS,IM,ODD,ODD);
+  E2_V0P5_SAME=backward_derivative(E2_V0P5_SAME);
+  E2_V0P5_SAME.ave_err().write("plots/V0P5_SAME_E2.xmg");
+  
+  djvec_t KA_V0P5_SAME;
+  if(ant) KA_V0P5_SAME=der_2pts("V0P5",SAMER_2PTS,IM,ODD,ODD,ka_var,"KAKA");
+  else    KA_V0P5_SAME=load_2pts("V0P5_P0",SAMER_2PTS,RE,ODD,EVN)-load_2pts("V0P5_0P",SAMER_2PTS,RE,ODD,EVN);
+  KA_V0P5_SAME=backward_derivative(KA_V0P5_SAME);
+  KA_V0P5_SAME.ave_err().write("plots/V0P5_SAME_KA.xmg");
+  
+  //compute deltamcr
+  djvec_t E2_V0P5_OPPO;
+  if(ant) E2_V0P5_OPPO=der_2pts("V0P5",OPPOR_2PTS,IM,ODD,ODD,e2_var,"E2E2");
+  else    E2_V0P5_OPPO=
+	    load_2pts("V0P5_M0",OPPOR_2PTS,IM,ODD,ODD)-
+	    load_2pts("V0P5_0M",OPPOR_2PTS,IM,ODD,ODD)+
+	    load_2pts("V0P5_T0",OPPOR_2PTS,IM,ODD,ODD)-
+	    load_2pts("V0P5_0T",OPPOR_2PTS,IM,ODD,ODD)+
+	    load_2pts("V0P5_LL",OPPOR_2PTS,IM,ODD,ODD);
+  E2_V0P5_OPPO.ave_err().write("plots/V0P5_OPPO_E2.xmg");
+  
+  djvec_t KA_V0P5_OPPO;
+  if(ant) KA_V0P5_OPPO=der_2pts("V0P5",OPPOR_2PTS,IM,ODD,ODD,ka_var,"KAKA");
+  else    KA_V0P5_OPPO=load_2pts("V0P5_P0",OPPOR_2PTS,RE,ODD,EVN)-load_2pts("V0P5_0P",OPPOR_2PTS,RE,ODD,EVN);
+  KA_V0P5_OPPO.ave_err().write("plots/V0P5_OPPO_KA.xmg");
+  
+  djvec_t deltam_cr_same_t=E2_V0P5_SAME/KA_V0P5_SAME;
+  size_t tmax_dmcr[3]={20,28,40};
+  djack_t deltam_cr_same=constant_fit(deltam_cr_same_t,tmin,tmax_dmcr[ib],"plots/deltam_cr_same.xmg");
+  cout<<"deltam_cr_same: "<<deltam_cr_same<<endl;
+  
+  djvec_t deltam_cr_oppo_t=E2_V0P5_OPPO/KA_V0P5_OPPO;
+  djack_t deltam_cr_oppo=constant_fit(deltam_cr_oppo_t,tmin,tmax_dmcr[ib],"plots/deltam_cr_oppo.xmg");
+  cout<<"deltam_cr_oppo: "<<deltam_cr_oppo<<endl;
+
+  djack_t deltam_cr_gm2;
+  string deltam_cr_gm2_path="deltam_cr_light.bin";
+  if(file_exists(deltam_cr_gm2_path))
+    {
+      deltam_cr_gm2.bin_read(deltam_cr_gm2_path);
+      cout<<"deltam_cr_gm2: "<<deltam_cr_gm2<<endl;
+    }
+  
   double deltam=ma/sqr(4*M_PI)*pred_Zp_coeff;
+  djack_t deltam_cr=deltam_cr_oppo;
   
   if(WI_3pts)
     {
@@ -473,7 +522,9 @@ int main(int narg,char **arg)
 	    
 	    djvec_t KA;
 	    if(ant) KA=der_2pts(name,rcombo,reim,tpar,rpar,ka_var,"KAKA");
-	    else    KA=-2*load_2pts(name+"_P0",rcombo,!reim,tpar,!rpar);
+	    else
+	      if(rcombo==0) KA=load_2pts(name+"_0P",rcombo,!reim,tpar,!rpar)-load_2pts(name+"_P0",rcombo,!reim,tpar,!rpar);
+	      else          KA=-load_2pts(name+"_0P",rcombo,!reim,tpar,!rpar)-load_2pts(name+"_P0",rcombo,!reim,tpar,!rpar);
 	    KA.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_KA.xmg");
 	    
 	    djvec_t MA;
@@ -482,8 +533,6 @@ int main(int narg,char **arg)
 	    MA.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_MA.xmg");
 	    
 	    DELTA=E2-deltam_cr*KA+deltam*MA*use_mass;
-	    cout<<"deltam_cr: "<<deltam_cr<<endl;
-	    cout<<"deltam: "<<deltam<<endl;
 	    DELTA.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_DELTA.xmg");
 	    CORR=LO+e2_phys*DELTA;
 	  };
@@ -496,48 +545,6 @@ int main(int narg,char **arg)
 	load_LO_CORR(LO_A0P5_SAME,DELTA_A0P5_SAME,CORR_A0P5_SAME,"A0P5",RSAME,RE,ODD,EVN);
 	djvec_t LO_A0P5_OPPO,DELTA_A0P5_OPPO,CORR_A0P5_OPPO;
 	load_LO_CORR(LO_A0P5_OPPO,DELTA_A0P5_OPPO,CORR_A0P5_OPPO,"A0P5",ROPPO,RE,ODD,EVN);
-	
-	// const bool nonexp=false;
-	// if(nonexp)
-	//   {
-	//     djack_t za,zv;
-	//     z_from_2pts_dec(za,zv,LO_P5P5_SAME,LO_A0P5_SAME,LO_P5P5_OPPO,LO_A0P5_OPPO,ma,"LO");
-	
-	//     cout<<"Za: "<<za.ave_err()<<endl;
-	//     cout<<"Zv: "<<zv.ave_err()<<endl;
-	
-	//     djack_t CORR_za,CORR_zv;
-	//     z_from_2pts_dec(CORR_za,CORR_zv,CORR_P5P5_SAME,CORR_A0P5_SAME,CORR_P5P5_OPPO,CORR_A0P5_OPPO,ma,"CORR");
-	
-	//     cout<<"Corr Za: "<<CORR_za.ave_err()<<endl;
-	//     cout<<"Corr Zv: "<<CORR_zv.ave_err()<<endl;
-	
-	//     djack_t zv_QED_fact=(CORR_zv-zv)/(zv*qf2_phys);
-	//     djack_t za_QED_fact=(CORR_za-za)/(za*qf2_phys);
-	
-	//     cout<<"Factorization Za: "<<za_QED_fact.ave_err()<<endl;
-	//     cout<<"Factorization Zv: "<<zv_QED_fact.ave_err()<<endl;
-	//   }
-	
-	//expanded version
-       // djack_t ZPP_OS,M_PP_OS,DZPP_fr_ZPP_OS,SL_PP_OS;
-       // two_pts_with_ins_ratio_fit(ZPP_OS,M_PP_OS,DZPP_fr_ZPP_OS,SL_PP_OS,LO_P5P5_OPPO,DELTA_P5P5_OPPO,T/2,tmin,tmax,
-       // 				  "plots/effmass_PP_OS.xmg","plots/slope_PP_OS.xmg");
-       // djack_t ZPP_TM,M_PP_TM,DZPP_fr_ZPP_TM,SL_PP_TM;
-       // two_pts_with_ins_ratio_fit(ZPP_TM,M_PP_TM,DZPP_fr_ZPP_TM,SL_PP_TM,LO_P5P5_SAME,DELTA_P5P5_SAME,T/2,tmin,tmax,
-       // 				  "plots/effmass_PP_TM.xmg","plots/slope_PP_TM.xmg");
-       // djack_t ZAP_OS,M_AP_OS,DZAP_fr_ZAP_OS,SL_AP_OS;
-       // two_pts_with_ins_ratio_fit(ZAP_OS,M_AP_OS,DZAP_fr_ZAP_OS,SL_AP_OS,LO_A0P5_OPPO,DELTA_A0P5_OPPO,T/2,tmin,tmax,
-       // 				  "plots/effmass_AP_OS.xmg","plots/slope_AP_OS.xmg",-1);
-       // djack_t ZAP_TM,M_AP_TM,DZAP_fr_ZAP_TM,SL_AP_TM;
-       // two_pts_with_ins_ratio_fit(ZAP_TM,M_AP_TM,DZAP_fr_ZAP_TM,SL_AP_TM,LO_A0P5_SAME,DELTA_A0P5_SAME,T/2,tmin,tmax,
-       // 				  "plots/effmass_AP_TM.xmg","plots/slope_AP_TM.xmg",-1);
-       
-       
-       // djack_t DZP_fr_ZP_TM=DZPP_fr_ZPP_TM/2;
-       // djack_t DZP_fr_ZP_OS=DZPP_fr_ZPP_OS/2;
-       // djack_t DZA_fr_ZA_TM=DZAP_fr_ZAP_TM-DZP_fr_ZP_TM;
-       // djack_t DZA_fr_ZA_OS=DZAP_fr_ZAP_OS-DZP_fr_ZP_OS;
 	
        //global fit
 	
@@ -567,6 +574,25 @@ int main(int narg,char **arg)
 	cout<<"DP_OS: "<<DZP_fr_ZP_OS<<", DP_TM: "<<DZP_fr_ZP_TM<<endl;
 	cout<<"DA0_OS: "<<DZA_fr_ZA_OS<<", DA0_TM: "<<DZA_fr_ZA_TM<<endl;
 	
+	if(0)
+	{
+	two_pts_with_ins_ratio_fit(Z2_OS[0],M_OS,DZ2_fr_Z2_OS[0],SL_OS,LO_P5P5_OPPO,DELTA_P5P5_OPPO,T/2,tmin,tmax,"plots/qP5P5_OPPO_effmass.xmg","plots/qP5P5_OPPO_slope.xmg");
+	two_pts_with_ins_ratio_fit(Z2_TM[0],M_TM,DZ2_fr_Z2_TM[0],SL_TM,LO_P5P5_SAME,DELTA_P5P5_SAME,T/2,tmin,tmax,"plots/qP5P5_SAME_effmass.xmg","plots/qP5P5_SAME_slope.xmg");
+	two_pts_with_ins_ratio_fit(Z2_OS[1],M_OS,DZ2_fr_Z2_OS[1],SL_OS,LO_A0P5_OPPO,DELTA_A0P5_OPPO,T/2,tmin,tmax,"plots/qA0P5_OPPO_effmass.xmg","plots/qA0P5_OPPO_slope.xmg",-1);
+	two_pts_with_ins_ratio_fit(Z2_TM[1],M_TM,DZ2_fr_Z2_TM[1],SL_TM,LO_A0P5_SAME,DELTA_A0P5_SAME,T/2,tmin,tmax,"plots/qA0P5_SAME_effmass.xmg","plots/qA0P5_SAME_slope.xmg",-1);
+
+	ZP_TM=sqrt(Z2_TM[0]);
+	ZA_TM=Z2_TM[1]/ZP_TM;
+	DZP_fr_ZP_TM=DZ2_fr_Z2_TM[0]/2;
+	DZA_fr_ZA_TM=DZ2_fr_Z2_TM[1]-DZP_fr_ZP_TM;
+	
+	cout<<"SL_OS: "<<SL_OS<<", SL_TM: "<<SL_TM<<endl;
+	cout<<"M_OS: "<<M_OS<<", M_TM: "<<M_TM<<endl;
+	cout<<"SL/M_OS: "<<djack_t(SL_OS/M_OS)<<", SL/M_TM: "<<djack_t(SL_TM/M_TM)<<endl;
+	cout<<"DP_OS: "<<DZP_fr_ZP_OS<<", DP_TM: "<<DZP_fr_ZP_TM<<endl;
+	cout<<"DA0_OS: "<<DZA_fr_ZA_OS<<", DA0_TM: "<<DZA_fr_ZA_TM<<endl;
+
+	}
 	djack_t za_QED_fact_exp=DZP_fr_ZP_TM+SL_TM/M_TM-DZA_fr_ZA_OS+use_mass*pred_Zp_coeff/sqr(4*M_PI);
 	djack_t zv_QED_fact_exp=DZP_fr_ZP_TM+SL_TM/M_TM-DZA_fr_ZA_TM+use_mass*pred_Zp_coeff/sqr(4*M_PI);
 	djack_t za_m_zv_QED_fact_exp=DZA_fr_ZA_TM-DZA_fr_ZA_OS;
@@ -590,6 +616,72 @@ int main(int narg,char **arg)
 	cout<<"Factorization Za: "<<smart_print(za_QED_fact)<<", Aoki prediction: "<<pred_Za_coeff<<", correction: "<<smart_print(za_QED_fact_corr)<<endl;
 	cout<<"Factorization Zv: "<<smart_print(zv_QED_fact)<<", Aoki prediction: "<<pred_Zv_coeff<<", correction: "<<smart_print(zv_QED_fact_corr)<<endl;
 	cout<<"Factorization Zp-Zs: "<<smart_print(zp_m_zs_QED_fact)<<", Aoki prediction: "<<pred_Zp_m_Zs_coeff<<", correction: "<<smart_print(zp_m_zs_QED_fact_corr)<<endl;
+	cout<<"Factorization Za-Zv: "<<smart_print(za_m_zv_QED_fact)<<", Aoki prediction: "<<pred_Za_m_Zv_coeff<<", correction: "<<smart_print(za_m_zv_QED_fact_corr)<<endl;
+      }
+      
+      //determination of Za-Zv from vector corr
+      bool VEC=false;
+      if(VEC)
+      {
+	cout<<endl<<"Determining Za-ZV from vector correlator"<<endl;
+	
+	auto load_LO_CORR=[&e2_var,&ka_var,&ma_var,&e2_phys,&deltam_cr,&deltam,&use_mass,&ant]
+	  (djvec_t &LO,djvec_t &DELTA,djvec_t &CORR,const string &name,const int &rcombo,const int &reim,const int &tpar,const int &rpar)
+	  {
+	    LO=load_2pts_spave(name,rcombo,reim,tpar,rpar);
+	    LO.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_LO.xmg");
+	    djvec_t E2;
+	    if(ant) E2=der_2pts_spave(name,rcombo,reim,tpar,rpar,e2_var,"E2E2");
+	    else    E2=
+		      load_2pts_spave(name+"_LL",rcombo,reim,tpar,rpar)+
+		      load_2pts_spave(name+"_0M",rcombo,reim,tpar,rpar)+
+		      load_2pts_spave(name+"_M0",rcombo,reim,tpar,rpar)+
+		      load_2pts_spave(name+"_0T",rcombo,reim,tpar,rpar)+
+		      load_2pts_spave(name+"_T0",rcombo,reim,tpar,rpar);
+	    E2.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_E2.xmg");
+	    
+	    djvec_t KA;
+	    if(ant) KA=der_2pts_spave(name,rcombo,reim,tpar,rpar,ka_var,"KAKA");
+	    else    KA=-2*load_2pts_spave(name+"_P0",rcombo,!reim,tpar,!rpar);
+	    KA.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_KA.xmg");
+	    
+	    djvec_t MA;
+	    if(ant) MA=der_2pts_spave(name,rcombo,reim,tpar,rpar,ma_var,"MAMA");
+	    else    MA=-(load_2pts_spave(name+"_0S",rcombo,reim,tpar,rpar)+load_2pts_spave(name+"_S0",rcombo,reim,tpar,rpar));
+	    MA.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_MA.xmg");
+	    
+	    DELTA=E2-deltam_cr*KA+deltam*MA*use_mass;
+	    DELTA.ave_err().write("plots/"+name+"_"+RTAGS_2PTS_NAME[rcombo]+"_DELTA.xmg");
+	    CORR=LO+e2_phys*DELTA;
+	  };
+	
+	djvec_t LO_VKVK_SAME,DELTA_VKVK_SAME,CORR_VKVK_SAME;
+	load_LO_CORR(LO_VKVK_SAME,DELTA_VKVK_SAME,CORR_VKVK_SAME,"V%cV%c",RSAME,RE,EVN,EVN);
+	djvec_t LO_VKVK_OPPO,DELTA_VKVK_OPPO,CORR_VKVK_OPPO;
+	load_LO_CORR(LO_VKVK_OPPO,DELTA_VKVK_OPPO,CORR_VKVK_OPPO,"V%cV%c",ROPPO,RE,EVN,EVN);
+	
+	djack_t M_OS,SL_OS;
+	djack_t Z2_OS,DZ2_fr_Z2_OS;
+	two_pts_with_ins_ratio_fit(Z2_OS,M_OS,DZ2_fr_Z2_OS,SL_OS,LO_VKVK_OPPO,DELTA_VKVK_OPPO,T/2,tmin,tmax,"plots/VKVK_OPPO_effmass.xmg","plots/VKVK_OPPO_slope.xmg");
+	djack_t ZV_OS=sqrt(Z2_OS);
+	djack_t DZV_fr_ZV_OS=DZ2_fr_Z2_OS/2;
+	
+	djack_t M_TM,SL_TM;
+	djack_t Z2_TM,DZ2_fr_Z2_TM;
+	two_pts_with_ins_ratio_fit(Z2_TM,M_TM,DZ2_fr_Z2_TM,SL_TM,LO_VKVK_SAME,DELTA_VKVK_SAME,T/2,tmin,tmax,"plots/VKVK_SAME_effmass.xmg","plots/VKVK_SAME_slope.xmg");
+	djack_t ZV_TM=sqrt(Z2_TM);
+	djack_t DZV_fr_ZV_TM=DZ2_fr_Z2_TM/2;
+	
+	cout<<"SL_OS: "<<SL_OS<<", SL_TM: "<<SL_TM<<endl;
+	cout<<"M_OS: "<<M_OS<<", M_TM: "<<M_TM<<endl;
+	cout<<"SL/M_OS: "<<djack_t(SL_OS/M_OS)<<", SL/M_TM: "<<djack_t(SL_TM/M_TM)<<endl;
+	cout<<"DV_OS: "<<DZV_fr_ZV_OS<<", DV_TM: "<<DZV_fr_ZV_TM<<endl;
+	
+	djack_t za_m_zv_QED_fact_exp=DZV_fr_ZV_OS-DZV_fr_ZV_TM;
+	djack_t zv_fr_za=ZV_OS/ZV_TM;
+	djack_t za_m_zv_QED_fact=za_m_zv_QED_fact_exp*sqr(4*M_PI);
+	djack_t za_m_zv_QED_fact_corr=za_m_zv_QED_fact/pred_Za_m_Zv_coeff-1.0;
+	cout<<"Zv/Za: "<<smart_print(zv_fr_za)<<endl;
 	cout<<"Factorization Za-Zv: "<<smart_print(za_m_zv_QED_fact)<<", Aoki prediction: "<<pred_Za_m_Zv_coeff<<", correction: "<<smart_print(za_m_zv_QED_fact_corr)<<endl;
       }
       

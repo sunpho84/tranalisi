@@ -6,10 +6,11 @@
 #include <grace.hpp>
 #include <oper.hpp>
 
-void vec_ave_err_t::write(const string &path) const
+//! write to a path
+void vec_ave_err_t::write(const vector<double> &x,const string &path) const
 {
   grace_file_t gr(path);
-  gr.write_vec_ave_err(*this);
+  gr.write_vec_ave_err(x,*this);
 }
 
 //! shift by 10 left(if positive) or right(if negative)

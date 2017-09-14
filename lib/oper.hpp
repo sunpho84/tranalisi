@@ -247,6 +247,11 @@ T distr_cov(const T &x,const T &y)
       a[iel]=(xyb-xb*yb)*(njacks-1);
     }
   
+  // //renormalize
+  // double t=a.ave();
+  // for(size_t iel=0;iel<nel;iel++)
+  //   a[iel]=t+(a[iel]-t)*(nel-1)/(njacks-1);
+  
   return a;
 }
 

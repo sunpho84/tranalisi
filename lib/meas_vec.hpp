@@ -127,8 +127,7 @@ public:
   //! return a subset including end
   vmeas_t subset(size_t beg,size_t end)
   {
-    if(beg>end or beg>this->size() or beg>this->size()) CRASH("Asked to extract from %zu to %zu a vector of length %zu",beg,end,this->size());
-    return (*this)[slice(beg,end-beg+1,1)];
+    return (*this)[slice(std::max(size_t(0),beg),std::min(end-beg+1,this->size()),1)];
   }
   
   //! return the tail-backked
@@ -238,5 +237,36 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
 
 //! read from a range of confs
 djvec_t read_conf_set_t(const string &template_path,const range_t &range,size_t ntot_col,const vector<size_t> &cols,size_t nlines=1,bool verbosity=VERBOSE);
+
+//! integrate
+template <class TS>
+TS integrate_corr_up_to(const valarray<TS> &corr,size_t &upto,size_t ord=1)
+{
+  if(upto>=corr.size()) CRASH("Upto=%zu >= corr.size()=%zu",upto,corr.size());
+  
+  valarray<double> weight;
+  switch(ord)
+    {
+    case 0: weight={1};       break;
+    case 1: weight={1,1};     break;
+    case 2: weight={1,4,1};   break;
+    case 3: weight={3,9,9,3}; break;
+    default: CRASH("Unknwown order %zu",ord);
+    }
+  
+  size_t len=weight.size()-1;
+  double norm=weight.sum()/len;
+  
+  TS out;
+  out=0.0;
+  upto=size_t(upto/len)*len;
+  for(size_t t=0;t<upto;t+=len)
+    for(size_t j=0;j<=len;j++)
+      out+=corr[t+j]*weight[j];
+  
+  out/=norm;
+  
+  return out;
+}
 
 #endif

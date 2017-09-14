@@ -24,11 +24,13 @@ DEFINE_HAS_METHOD(is_printable);
 void internal_crash(int line,const char *file,const char *temp,...);
 
 //! check if two quantities have the same sign
-template <class T> bool same_sign(const T &a,const T &b)
+template <class T>
+bool same_sign(const T &a,const T &b)
 {return (a<=0 and b<=0) or (a>=0 and b>=0);}
 
 //! check it two quantities have opposite sign
-template <class T> bool opposite_sign(const T &a,const T &b)
+template <class T>
+bool opposite_sign(const T &a,const T &b)
 {return !same_sign(a,b);}
 
 //! combine arguments in a single string
@@ -47,7 +49,8 @@ int dir_exists(string path);
 void signal_handler(int sig);
 
 //! check that a vector is orderd
-template <class T> inline void check_ordered(const initializer_list<T> &vec)
+template <class T>
+void check_ordered(const initializer_list<T> &vec)
 {
   auto prev=vec.begin();
   auto cur=prev+1;
@@ -110,7 +113,8 @@ inline int to_int(string s)
 }
 
 //! return a filled vector of double ranging from 0 to max (excluded)
-template <class T> vector<T> vector_up_to(const size_t max,const T offset=0)
+template <class T>
+vector<T> vector_up_to(const size_t max,const T offset=0)
 {
   vector<T> x(max);
   for(size_t it=0;it<max;it++) x[it]=it+offset;
@@ -122,7 +126,8 @@ inline void set_to_zero(double &x)
 {x=0;}
 
 //! set to zero an eigen matr
-template <typename D> void set_to_zero(const Eigen::MatrixBase<D> &x)
+template <typename D>
+void set_to_zero(const Eigen::MatrixBase<D> &x)
 {x.Zero();}
 
 //! return a percentage
