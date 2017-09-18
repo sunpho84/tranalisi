@@ -58,13 +58,13 @@ public:
 
 const size_t QREV1=0; //< value to revert quark 1
 const size_t QREV2=1; //< value to revert quark 2
-const vector<QED_mes_pars_t> QED_mes_pars({{qU,qD,QREV2,0,"PiPlus"},
-					   {qS,qU,QREV1,1,"KPlus"},
-					   {qS,qD,QREV1,1,"K0"},
-					   {qC,qD,QREV2,2,"DPlus"},
-					   {qC,qU,QREV2,2,"D0"},
-					   {qC,qS,QREV2,3,"DsPlus"}});
-enum{iPiPlus,iKPlus,iK0,iDPlus,iD0,iDsPlus};
+const vector<QED_mes_pars_t> QED_mes_pars({{qD,qU,QREV2,0,"PiMinus"},
+					   {qU,qS,QREV1,1,"KMinus"},
+					   {qD,qS,QREV1,1,"K0bar"},
+					   {qD,qC,QREV2,2,"DMinus"},
+					   {qU,qC,QREV2,2,"D0bar"},
+					   {qS,qC,QREV2,3,"DsMinus"}});
+enum{iPiMinus,iKMinus,iK0bar,iDMinus,iD0bar,iDsMinus};
 const size_t &nQED_mes=QED_mes_pars.size();
 
 ////////////////////////////////////////////////////////////////////
@@ -103,7 +103,7 @@ const index_t ind_2pts({{"NMass",nqmass},{"NMass",nqmass},{"Nr",nr},{"RI",2}});
    Ds->Mu
    Ds->Tau */
 
-//! The decaying meson is always the positively charged one
+//! The decaying meson is always the negatively charged one
 vector<size_t> iQED_mes_of_proc({0,1,3,3,5,5}); //< index of the QED meson corresponding to a given process from the QED_mes_pars
 vector<size_t> imlep_of_proc({0,0,0,1,0,1}); //< index of the lepton mass corresponding to a given process
 
@@ -274,10 +274,12 @@ djvec_t jaM;
 djvec_t jDZA_QED_rel,jDZA_MASS_rel;
 djvec_t jSL_PP_QED,jSL_PP_MASS;
 djvec_t jSL_AP_QED,jSL_AP_MASS;
+djvec_t jSL;
 
 index_t ind_ens_QCD_mes;
 index_t ind_ens_QED_mes;
 djvec_t deltam_cr;
+vector<djvec_t> jAP_LO_exp_removed; //!< used to test circle
 void compute_basic_slopes()
 {
   ind_ens_QCD_mes.set_ranges({{"Ens",nens_used},{"Mes",nQCD_mes}});
@@ -298,6 +300,8 @@ void compute_basic_slopes()
   //
   jSL_AP_QED.resize(nens_QED_mes);
   jSL_AP_MASS.resize(nens_QED_mes);
+  //
+  jSL.resize(nens_QED_mes);
   
   vector<djvec_t> jPP_LO(nens_QCD_mes);
   vector<djvec_t> jPP_MASS(nens_QED_mes);
@@ -306,13 +310,14 @@ void compute_basic_slopes()
   vector<djvec_t> jAP_LO(nens_QCD_mes);
   vector<djvec_t> jAP_QED(nens_QED_mes);
   vector<djvec_t> jAP_MASS(nens_QED_mes);
+  jAP_LO_exp_removed.resize(nens_QCD_mes);
   
   //load everything
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_pars_t &ens=ens_pars[iens];
       deltam_cr[iens]=compute_deltam_cr(ens,ilight,iPi);
-      size_t TH=ens.T/2;
+      size_t T=ens.T,TH=T/2;
       
       for(size_t iQED_mes=0;iQED_mes<nQED_mes;iQED_mes++)
 	{
@@ -361,12 +366,18 @@ void compute_basic_slopes()
 	  //
 	  jDZA_MASS_rel[ind_QED]=DZ_AP_MASS_rel-DZ_P_MASS_rel;
 	  jDZA_QED_rel[ind_QED]=DZ_AP_QED_rel-DZ_P_QED_rel;
+	  jSL[ind_QED]=jSL_PP_QED[ind_QED]; //WARNING must include QED!!!!
 	  cout<<plots_path<<", (Z)A: "<<jZA[ind_QCD].ave_err()<<endl;
 	  cout<<plots_path<<", M_AP: "<<jaM[ind_QCD].ave_err()<<endl;
 	  cout<<plots_path<<", SL_AP: "<<djack_t(jSL_AP_QED[ind_QED]).ave_err()<<endl;
 	  cout<<plots_path<<", SL_PP: "<<djack_t(jSL_PP_QED[ind_QED]).ave_err()<<endl;
 	  cout<<plots_path<<", D(Z)A/(Z)A: "<<djack_t(jDZA_QED_rel[ind_QED]).ave_err()<<endl;
 	  cout<<plots_path<<", D(Z)A: "<<djack_t(jDZA_QED_rel[ind_QED]*jZA[ind_QCD]).ave_err()<<endl;
+	  
+	  //store for later test
+	  jAP_LO_exp_removed[ind_QCD]=jAP_LO[ind_QCD];
+	  for(int t=0;t<=(int)TH;t++)
+	    jAP_LO_exp_removed[ind_QCD][t]/=exp(-t*jaM[ind_QCD])+exp(-((int)T-t)*jaM[ind_QCD]);
 	}
       
       //print some info useful for retuning kappa for each quark
@@ -506,13 +517,13 @@ void compute_adml_bare()
 	  dboot_t ZP=lat_par[input_an_id].Z[ib];
 	  
 	  size_t ind_ens_K=ind_ens_QCD_mes({iens,iK});
-	  size_t ind_ens_Kplus=ind_ens_QED_mes({iens,iKPlus});
-	  size_t ind_ens_K0=ind_ens_QED_mes({iens,iK0});
+	  size_t ind_ens_Kminus=ind_ens_QED_mes({iens,iKMinus});
+	  size_t ind_ens_K0bar=ind_ens_QED_mes({iens,iK0bar});
 	  const double phys_dM2K=sqr(MKPLUS)-sqr(MK0);
 	  
 	  //compute the QED contribution
 	  dboot_t QED_dM2K;
-	  QED_dM2K=dboot_t(bi,jSL_PP_QED[ind_ens_Kplus]-jSL_PP_QED[ind_ens_K0]);
+	  QED_dM2K=dboot_t(bi,jSL_PP_QED[ind_ens_Kminus]-jSL_PP_QED[ind_ens_K0bar]);
 	  QED_dM2K*=e2*2*dboot_t(bi,jaM[ind_ens_K]);
 	  QED_dM2K-=dboot_t(bi,FVE_M2(jaM[ind_ens_K],ens.L));
 	  QED_dM2K/=sqr(a);
@@ -523,7 +534,7 @@ void compute_adml_bare()
 	  //compute the proportionality factor between the mass slope of
 	  //dM2K and aml_bare, needed to know by how much to multiply any mass correlator
 	  dboot_t QCD_dM2K_over_adm;
-	  QCD_dM2K_over_adm=dboot_t(bi,(jSL_PP_MASS[ind_ens_Kplus]-jSL_PP_MASS[ind_ens_K0])*2*jaM[ind_ens_K])/sqr(a);
+	  QCD_dM2K_over_adm=dboot_t(bi,(jSL_PP_MASS[ind_ens_Kminus]-jSL_PP_MASS[ind_ens_K0bar])*2*jaM[ind_ens_K])/sqr(a);
 	  adml_bare[ind]=QCD_dM2K/QCD_dM2K_over_adm;
 	  
 	  //subtract the bare quark mass eq.85 of PRD 2013
@@ -681,10 +692,10 @@ void load_all_hl()
 	{
 	  size_t iQED_mes=iQED_mes_of_proc[iproc];
 	  valarray<djvec_t>
-	    qVi_lVi_pV0_allins=load_and_correct_hl(iproc,iqVi_lVi,ipV0,evn,/*odd,*/iens,"ViVi"),
-	    qV0_lV0_pV0_allins=load_and_correct_hl(iproc,iqV0_lV0,ipV0,evn,/*odd,*/iens,"V0V0"),
-	    qAi_lVi_pV0_allins=load_and_correct_hl(iproc,iqAi_lVi,ipV0,evn,/*odd,*/iens,"AiVi"),
-	    qA0_lV0_pV0_allins=load_and_correct_hl(iproc,iqA0_lV0,ipV0,evn,/*odd,*/iens,"A0V0"),
+	    qVi_lVi_pV0_allins=load_and_correct_hl(iproc,iqVi_lVi,ipV0,evn,iens,"ViVi"),
+	    qV0_lV0_pV0_allins=load_and_correct_hl(iproc,iqV0_lV0,ipV0,evn,iens,"V0V0"),
+	    qAi_lVi_pV0_allins=load_and_correct_hl(iproc,iqAi_lVi,ipV0,evn,iens,"AiVi"),
+	    qA0_lV0_pV0_allins=load_and_correct_hl(iproc,iqA0_lV0,ipV0,evn,iens,"A0V0"),
 	    qV_lV_pV0_allins=qV0_lV0_pV0_allins+qVi_lVi_pV0_allins,
 	    qA_lV_pV0_allins=qA0_lV0_pV0_allins+qAi_lVi_pV0_allins;
 	  
@@ -820,9 +831,9 @@ void compute_corr(size_t iproc)
   if(not Wreg_contr_tab.good()) CRASH("unable to open %s",Wreg_contr_tab_path.c_str());
   
   //open a table for QED contribution
-  string QED_contr_tab_path="tables/QED_contr.txt";
-  static ofstream QED_contr_tab(QED_contr_tab_path);
-  if(not QED_contr_tab.good()) CRASH("unable to open %s",QED_contr_tab_path.c_str());
+  string qed_corr_tab_path="tables/QED_corr.txt";
+  static ofstream qed_corr_tab(qed_corr_tab_path);
+  if(not qed_corr_tab.good()) CRASH("unable to open %s",qed_corr_tab_path.c_str());
   
   //open a table for bc
   string bc_tab_path="tables/bc.txt";
@@ -855,6 +866,11 @@ void compute_corr(size_t iproc)
 	  
 	  size_t ib=ens.ib;
 	  size_t ind_proc=ind_ens_proc({iens,iproc});
+	  
+	  //test
+	  djvec_t loop=jLO_A_bare[ind_proc]/jAP_LO_exp_removed[ind_QCD];
+	  jAP_LO_exp_removed[ind_QCD].ave_err().write(combine("%s/plots_hl/loop_den_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
+	  loop.ave_err().write(combine("%s/plots_hl/loop_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  
 	  //compute the nasty diagram
 	  dbvec_t LO=Zv[ib]*dbvec_t(bi,-jLO_A_bare[ind_proc]);
@@ -894,13 +910,21 @@ void compute_corr(size_t iproc)
 	  //compute the internal+external contribution
 	  dboot_t external=2.0*dA_fr_A*e2; //nasty: CHECK IF A MINUS is present, I think no, because there should be one in dA and one in A
 	  dboot_t internal=2.0*dboot_t(bi,jDZA_QED_rel[ind_QED])*e2;
-	  dboot_t QED_contr=external+internal; //2*e2 included
-	  QED_contr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<
-	    ", external: "<<smart_print(external.ave_err())<<
-	    ", internal: "<<smart_print(internal.ave_err())<<
-	    ", QED_contr to amplitude: "<<smart_print(QED_contr.ave_err())<<endl;
+	  dboot_t rate_mass=-2.0*dboot_t(bi,jSL[ind_QED])*e2; //to be SUBTRACTED
+	  double marc_sirl=e2/(2*sqr(M_PI))*log(MZ/MW);
+	  dboot_t qed_corr=external+internal-rate_mass; //2*e2 included
+	  double DeltaE=0.029; //MeV - TO BE ADJUSTED
+	  dboot_t rate_pt=Gamma_pt(Mlep,Mmes,DeltaE)*e2; //only e2
 	  
-	  tot_corr[iens]=QED_contr-FSE_contr+W_contr;
+	  qed_corr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<
+	    ",\n external: "<<smart_print(external.ave_err())<<
+	    ",\n internal: "<<smart_print(internal.ave_err())<<
+	    ",\n rate mass: "<<smart_print(rate_mass.ave_err())<<
+	    ",\n rate pt: "<<smart_print(rate_pt.ave_err())<<
+	    ",\n marc sirl: "<<marc_sirl<<
+	    ",\n to corr to rate: "<<smart_print(qed_corr.ave_err())<<endl;
+	  
+	  tot_corr[iens]=qed_corr-FSE_contr+W_contr+marc_sirl;
 	}
       
       cout<<"Tot: "<<tot_corr.ave_err()<<endl;
@@ -928,6 +952,8 @@ int main(int narg,char **arg)
     compute_corr(iproc);
   
   cout<<endl<<"Total time: "<<time(0)-start<<" s"<<endl;
+  
+  cout<<"Remember that Kaon is not yet including mass correction to ml"<<endl;
   
   return 0;
 }
