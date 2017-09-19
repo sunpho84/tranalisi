@@ -237,13 +237,13 @@ djvec_t read_QED(const ens_pars_t &ens,size_t iQED_mes,const djack_t &deltam_cr,
   djvec_t(c_0M1/c_LO).ave_err().write(combine("%s/%s_0M1.xmg",ens_qpath.c_str(),name));
   djvec_t(c_0M2/c_LO).ave_err().write(combine("%s/%s_0M2.xmg",ens_qpath.c_str(),name));
   djvec_t(c_LL/c_LO).ave_err().write(combine("%s/%s_LL.xmg",ens_qpath.c_str(),name));
-  djvec_t c=-(c_LL+c_0T1+c_0M1+c_0T2+c_0M2); //minus due to slope definition
+  djvec_t c=c_LL+c_0T1+c_0M1+c_0T2+c_0M2;
   
   djvec_t c_0P1=-(read("0P",ens,iq2,iq1,-1,IM)*eq1*eq1); //remind that i missing means
   djvec_t c_0P2=-(read("0P",ens,iq1,iq2,-1,IM)*eq2*eq2); //to take imag part changed of sign
   djvec_t(c_0P1/c_LO).ave_err().write(combine("%s/%s_0P1.xmg",ens_qpath.c_str(),name));
   djvec_t(c_0P2/c_LO).ave_err().write(combine("%s/%s_0P2.xmg",ens_qpath.c_str(),name));
-  djvec_t d=djack_t(-deltam_cr)*(c_0P1+c_0P2); //minus coming from slopes
+  djvec_t d=deltam_cr*(c_0P1+c_0P2); //minus coming from slopes
   
   return c+d;
 }
@@ -272,9 +272,8 @@ djvec_t read_MASS(const ens_pars_t &ens,size_t iQED_mes,const djvec_t &c_LO,
 djvec_t jZP,jZA;
 djvec_t jaM;
 djvec_t jDZA_QED_rel,jDZA_MASS_rel;
-djvec_t jSL_PP_QED,jSL_PP_MASS;
-djvec_t jSL_AP_QED,jSL_AP_MASS;
-djvec_t jSL;
+djvec_t jDM_QED,jDM_MASS;
+djvec_t jDM,jDZA_rel;
 
 index_t ind_ens_QCD_mes;
 index_t ind_ens_QED_mes;
@@ -294,14 +293,12 @@ void compute_basic_slopes()
   //
   jDZA_QED_rel.resize(nens_QED_mes);
   jDZA_MASS_rel.resize(nens_QED_mes);
+  jDZA_rel.resize(nens_QED_mes);
   //
-  jSL_PP_QED.resize(nens_QED_mes);
-  jSL_PP_MASS.resize(nens_QED_mes);
+  jDM_QED.resize(nens_QED_mes);
+  jDM_MASS.resize(nens_QED_mes);
+  jDM.resize(nens_QED_mes);
   //
-  jSL_AP_QED.resize(nens_QED_mes);
-  jSL_AP_MASS.resize(nens_QED_mes);
-  //
-  jSL.resize(nens_QED_mes);
   
   vector<djvec_t> jPP_LO(nens_QCD_mes);
   vector<djvec_t> jPP_MASS(nens_QED_mes);
@@ -346,16 +343,18 @@ void compute_basic_slopes()
 	  
 	  //fit separately M in each channel, to be improved
 	  djack_t ZAP,ZPP;
+	  djack_t SL_AP_QED,SL_PP_QED;
 	  djack_t DZ_AP_QED_rel,DZ_PP_QED_rel;
+	  djack_t SL_AP_MASS,SL_PP_MASS;
 	  djack_t DZ_AP_MASS_rel,DZ_PP_MASS_rel;
-	  two_pts_with_ins_ratio_fit(ZAP         ,jaM[ind_QCD],DZ_AP_QED_rel,jSL_AP_QED[ind_QED],jAP_LO[ind_QCD],jAP_QED[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZAP         ,jaM[ind_QCD],DZ_AP_QED_rel,SL_AP_QED,jAP_LO[ind_QCD],jAP_QED[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_AP_LO1.xmg",plots_path+"/slope_AP_QED.xmg",-1);
-	  two_pts_with_ins_ratio_fit(ZAP         ,jaM[ind_QCD],DZ_AP_MASS_rel,jSL_AP_MASS[ind_QED],jAP_LO[ind_QCD],jAP_MASS[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZAP         ,jaM[ind_QCD],DZ_AP_MASS_rel,SL_AP_MASS,jAP_LO[ind_QCD],jAP_MASS[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_AP_LO2.xmg",plots_path+"/slope_AP_MASS.xmg",-1);
 	  //
-	  two_pts_with_ins_ratio_fit(ZPP,jaM[ind_QCD],DZ_PP_QED_rel,jSL_PP_QED[ind_QED],jPP_LO[ind_QCD],jPP_QED[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZPP,jaM[ind_QCD],DZ_PP_QED_rel,SL_PP_QED,jPP_LO[ind_QCD],jPP_QED[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_PP_LO1.xmg",plots_path+"/slope_PP_QED.xmg");
-	  two_pts_with_ins_ratio_fit(ZPP,jaM[ind_QCD],DZ_PP_MASS_rel,jSL_PP_MASS[ind_QED],jPP_LO[ind_QCD],jPP_MASS[ind_QED],TH,tmin,tmax,
+	  two_pts_with_ins_ratio_fit(ZPP,jaM[ind_QCD],DZ_PP_MASS_rel,SL_PP_MASS,jPP_LO[ind_QCD],jPP_MASS[ind_QED],TH,tmin,tmax,
 				     plots_path+"/effmass_PP_LO2.xmg",plots_path+"/slope_PP_MASS.xmg");
 	  //
 	  jZP[ind_QCD]=sqrt(ZPP);
@@ -366,11 +365,15 @@ void compute_basic_slopes()
 	  //
 	  jDZA_MASS_rel[ind_QED]=DZ_AP_MASS_rel-DZ_P_MASS_rel;
 	  jDZA_QED_rel[ind_QED]=DZ_AP_QED_rel-DZ_P_QED_rel;
-	  jSL[ind_QED]=jSL_PP_QED[ind_QED]; //WARNING must include QED!!!!
+	  jDM_QED[ind_QED]=-SL_PP_QED; //change signed due to slopw definition
+	  //jDM_MASS[ind_QED]=-SL_PP_MASS; //change signed due to slope definition
+	  jDM[ind_QED]=jDM_QED[ind_QED]; //WARNING must include QCD!!!!
+	  
+	  jDZA_rel[ind_QED]=jDZA_QED_rel[ind_QED];
 	  cout<<plots_path<<", (Z)A: "<<jZA[ind_QCD].ave_err()<<endl;
 	  cout<<plots_path<<", M_AP: "<<jaM[ind_QCD].ave_err()<<endl;
-	  cout<<plots_path<<", SL_AP: "<<djack_t(jSL_AP_QED[ind_QED]).ave_err()<<endl;
-	  cout<<plots_path<<", SL_PP: "<<djack_t(jSL_PP_QED[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", SL_AP: "<<djack_t(SL_AP_QED).ave_err()<<endl;
+	  cout<<plots_path<<", SL_PP: "<<djack_t(SL_PP_QED).ave_err()<<endl;
 	  cout<<plots_path<<", D(Z)A/(Z)A: "<<djack_t(jDZA_QED_rel[ind_QED]).ave_err()<<endl;
 	  cout<<plots_path<<", D(Z)A: "<<djack_t(jDZA_QED_rel[ind_QED]*jZA[ind_QCD]).ave_err()<<endl;
 	  
@@ -523,7 +526,7 @@ void compute_adml_bare()
 	  
 	  //compute the QED contribution
 	  dboot_t QED_dM2K;
-	  QED_dM2K=dboot_t(bi,jSL_PP_QED[ind_ens_Kminus]-jSL_PP_QED[ind_ens_K0bar]);
+	  QED_dM2K=dboot_t(bi,jDM_QED[ind_ens_Kminus]-jDM_QED[ind_ens_K0bar]);
 	  QED_dM2K*=e2*2*dboot_t(bi,jaM[ind_ens_K]);
 	  QED_dM2K-=dboot_t(bi,FVE_M2(jaM[ind_ens_K],ens.L));
 	  QED_dM2K/=sqr(a);
@@ -534,7 +537,7 @@ void compute_adml_bare()
 	  //compute the proportionality factor between the mass slope of
 	  //dM2K and aml_bare, needed to know by how much to multiply any mass correlator
 	  dboot_t QCD_dM2K_over_adm;
-	  QCD_dM2K_over_adm=dboot_t(bi,(jSL_PP_MASS[ind_ens_Kminus]-jSL_PP_MASS[ind_ens_K0bar])*2*jaM[ind_ens_K])/sqr(a);
+	  QCD_dM2K_over_adm=dboot_t(bi,(jDM_MASS[ind_ens_Kminus]-jDM_MASS[ind_ens_K0bar])*2*jaM[ind_ens_K])/sqr(a);
 	  adml_bare[ind]=QCD_dM2K/QCD_dM2K_over_adm;
 	  
 	  //subtract the bare quark mass eq.85 of PRD 2013
@@ -909,22 +912,23 @@ void compute_corr(size_t iproc)
 	  
 	  //compute the internal+external contribution
 	  dboot_t external=2.0*dA_fr_A*e2; //nasty: CHECK IF A MINUS is present, I think no, because there should be one in dA and one in A
-	  dboot_t internal=2.0*dboot_t(bi,jDZA_QED_rel[ind_QED])*e2;
-	  dboot_t rate_mass=-2.0*dboot_t(bi,jSL[ind_QED])*e2; //to be SUBTRACTED
+	  dboot_t internal=2.0*dboot_t(bi,jDZA_rel[ind_QED])*e2;
+	  dboot_t rate_mass=-2.0*dboot_t(bi,jDM[ind_QED]/jaM[ind_QCD])*e2; //to be SUBTRACTED
 	  double marc_sirl=e2/(2*sqr(M_PI))*log(MZ/MW);
-	  dboot_t qed_corr=external+internal-rate_mass; //2*e2 included
-	  double DeltaE=0.029; //MeV - TO BE ADJUSTED
+	  double DeltaE=0.0298; //MeV - TO BE ADJUSTED
 	  dboot_t rate_pt=Gamma_pt(Mlep,Mmes,DeltaE)*e2; //only e2
+	  tot_corr[iens]=external+internal+W_contr-FSE_contr+rate_mass+rate_pt+marc_sirl;
 	  
 	  qed_corr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<
 	    ",\n external: "<<smart_print(external.ave_err())<<
 	    ",\n internal: "<<smart_print(internal.ave_err())<<
+	    ",\n W contr: "<<smart_print(W_contr.ave_err())<<
+	    ",\n FSE contr: "<<smart_print(FSE_contr.ave_err())<<
 	    ",\n rate mass: "<<smart_print(rate_mass.ave_err())<<
+	    ",\n  (mass): "<<smart_print(jaM[ind_QCD].ave_err())<<
 	    ",\n rate pt: "<<smart_print(rate_pt.ave_err())<<
 	    ",\n marc sirl: "<<marc_sirl<<
-	    ",\n to corr to rate: "<<smart_print(qed_corr.ave_err())<<endl;
-	  
-	  tot_corr[iens]=qed_corr-FSE_contr+W_contr+marc_sirl;
+	    ",\n tot corr to rate: "<<smart_print(tot_corr[iens].ave_err())<<endl;
 	}
       
       cout<<"Tot: "<<tot_corr.ave_err()<<endl;
