@@ -4,6 +4,8 @@
 #include <array>
 #include <iostream>
 #include <string>
+
+#include <oper.hpp>
 #include <tools.hpp>
 
 using namespace std;
@@ -12,8 +14,12 @@ using namespace std;
 class index_t : vector<pair<string,size_t>>
 {
 public:
+  //! return a const reference to the base type
+  const vector<pair<string,size_t>> &base() const
+  {return *this;}
+  
   //! return the rank
-  const size_t rank() const
+  size_t rank() const
   {return size();}
   
   //! return the name of the  index
@@ -80,9 +86,30 @@ public:
     return out;
   }
   
+  //! return the maximal value of a component
+  size_t max(size_t icomp) const
+  {return ((*this)[icomp]).second;}
+  
+  //! get a flattened version of the index
+  index_t flattened() const
+  {
+    string name="";
+    for(auto it=this->begin();it!=this->end();it++)
+      {
+	if(it!=this->begin()) name+="_";
+	name+=it->first;
+      }
+    return index_t({{name,this->max()}});
+  }
+  
   index_t() : vector<pair<string,size_t>>() {}
   
   index_t(const vector<pair<string,size_t>> &list) : vector<pair<string,size_t>>(list) {}
 };
+
+//! return the tensor product of two indices
+inline index_t operator*(const index_t &first,const index_t &second)
+{return concat(first.base(),second.base());}
+
 
 #endif

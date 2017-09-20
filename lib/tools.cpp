@@ -11,6 +11,10 @@
 
 #include <tools.hpp>
 
+#ifdef USE_OMP
+ #include <omp.h>
+#endif
+
 using namespace std;
 
 //! write the list of called routines
@@ -104,7 +108,6 @@ void signal_handler(int sig)
   CRASH("signal %d (%s) detected, exiting",sig,name);
 }
 
-
 //! class to force call to initialization
 class initializer_t
 {
@@ -133,6 +136,12 @@ public:
     cout<<"Minuit2 ";
 #endif
     cout<<"to minimize"<<endl;
+
+#ifdef USE_OMP
+#pragma omp parallel
+#pragma omp master
+    cout<<"Using "<<omp_get_num_threads()<<" threads"<<endl;
+#endif
     
     cout<<endl;
   }

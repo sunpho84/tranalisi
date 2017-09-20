@@ -40,7 +40,7 @@ namespace grace
 };
 
 //! class to write a grace file
-class grace_file_t : public ofstream
+class grace_file_t : private ofstream
 {
   bool need_close_set;
   
@@ -71,6 +71,7 @@ class grace_file_t : public ofstream
   size_t iset; //<! set id
   string legend; //! legend of the set
   
+  grace::settype_t settype; //<! set type
   grace::symbol_t symbol; //<! symbol
   grace::color_t symbol_color; //<! color for symbol
   bool symbol_fill_pattern; //<! epmty or filled symbols
@@ -104,13 +105,60 @@ class grace_file_t : public ofstream
   
   unsigned short int transparency; //<! transparency of all fillings
   
+  //! write all props and start a new set
+  void close_cur_set()
+  {
+    if(need_close_set)
+      {
+	//line props
+	write_prop("line type "+to_string(line_type));
+	write_prop("linewidth "+to_string(linewidth));
+	write_prop("line linestyle "+to_string(line_linestyle));
+	write_prop("line color "+to_string(line_color));
+	//fill props
+	write_prop("fill color "+to_string(fill_color));
+	write_prop("fill type "+to_string(fill_type));
+	//symbol props
+	write_prop("symbol "+to_string(symbol));
+	write_prop("symbol size "+to_string(symbol_size));
+	write_prop("symbol linewidth "+to_string(symbol_linewidth));
+	write_prop("symbol color "+to_string(symbol_color));
+	write_prop("symbol fill color "+to_string(symbol_fill_color));
+	write_prop("symbol fill pattern "+to_string(symbol_fill_pattern));
+	//error props
+	write_prop("errorbar color "+to_string(errorbar_color));
+	write_prop("errorbar size "+to_string(errorbar_size));
+	write_prop("errorbar linewidth "+to_string(errorbar_linewidth));
+	write_prop("errorbar riser linewidth "+to_string(errorbar_riser_linewidth));
+	//transparency
+	(*this)<<"#QTGRACE_ADDITIONAL_PARAMETER: G 0 S "<<iset<<" ALPHA_CHANNELS {"<<transparency<<";"<<transparency<<";255;255;255;255}"<<endl;
+	//write legend
+	write_prop("legend \""+legend+"\"");
+	//point to the next set
+	(*this)<<"&"<<endl;
+	shift_iset();
+	(*this)<<"@target G0.S"<<iset<<endl;
+	//reset all props and force next call to ignore
+	reset_props();
+	need_close_set=false;
+      }
+  }
+  
 public:
+  //! close current set
+  bool get_need_close_set() const
+  {return need_close_set;}
+  
+  //! mark the current set as needing close
+  void set_need_close_set()
+  {need_close_set=true;}
+  
   //! set a color scheme
   void set_color_scheme(const initializer_list<grace::color_t> &oth)
   {color_scheme.assign(oth.begin(),oth.end());}
   void reset_cur_col()
   {cur_col=0;}
-
+  
   //! set a line color scheme
   void set_line_color_scheme(const initializer_list<grace::color_t> &oth)
   {line_color_scheme.assign(oth.begin(),oth.end());}
@@ -148,6 +196,7 @@ public:
     cur_line_col(0),
     cur_symbol(0),
     iset(0),
+    settype(grace::XY),
     xaxis_min(0),
     xaxis_max(1),
     yaxis_min(0),
@@ -240,45 +289,6 @@ public:
   void shift_iset(size_t how_many=1)
   {iset+=how_many;}
   
-  //! write all props and start a new set
-  void close_cur_set()
-  {
-    if(need_close_set)
-      {
-	//line props
-	write_prop("line type "+to_string(line_type));
-	write_prop("linewidth "+to_string(linewidth));
-	write_prop("line linestyle "+to_string(line_linestyle));
-	write_prop("line color "+to_string(line_color));
-	//fill props
-	write_prop("fill color "+to_string(fill_color));
-	write_prop("fill type "+to_string(fill_type));
-	//symbol props
-	write_prop("symbol "+to_string(symbol));
-	write_prop("symbol size "+to_string(symbol_size));
-	write_prop("symbol linewidth "+to_string(symbol_linewidth));
-	write_prop("symbol color "+to_string(symbol_color));
-	write_prop("symbol fill color "+to_string(symbol_fill_color));
-	write_prop("symbol fill pattern "+to_string(symbol_fill_pattern));
-	//error props
-	write_prop("errorbar color "+to_string(errorbar_color));
-	write_prop("errorbar size "+to_string(errorbar_size));
-	write_prop("errorbar linewidth "+to_string(errorbar_linewidth));
-	write_prop("errorbar riser linewidth "+to_string(errorbar_riser_linewidth));
-	//transparency
-	(*this)<<"#QTGRACE_ADDITIONAL_PARAMETER: G 0 S "<<iset<<" ALPHA_CHANNELS {"<<transparency<<";"<<transparency<<";255;255;255;255}"<<endl;
-	//write legend
-	write_prop("legend \""+legend+"\"");
-	//point to the next set
-	(*this)<<"&"<<endl;
-	shift_iset();
-	(*this)<<"@target G0.S"<<iset<<endl;
-	//reset all props and force next call to ignore
-	reset_props();
-	need_close_set=false;
-      }
-  }
-  
   //! start a new set of data type
   void new_data_set(grace::color_t col,grace::symbol_t sym)
   {
@@ -298,17 +308,22 @@ public:
   void write_prop(string what) {(*this)<<"@s"<<iset<<" "<<what<<endl;}
   
   //! symbol type
-  void set_settype(grace::settype_t settype)
+  void set_settype(grace::settype_t ext_settype)
   {
-    string how_s;
-    switch(settype)
+    if(this->settype!=ext_settype)
       {
-      case grace::XY: how_s="xy";break;
-      case grace::XYDY: how_s="xydy";break;
-      case grace::XYDXDY: how_s="xydxdy";break;
-      default: CRASH("Unknown type %d",settype);
+	string how_s;
+	switch(ext_settype)
+	  {
+	  case grace::XY: how_s="xy";break;
+	  case grace::XYDY: how_s="xydy";break;
+	  case grace::XYDXDY: how_s="xydxdy";break;
+	  default: CRASH("Unknown type %d",settype);
+	  }
+	(*this)<<"@type "<<how_s<<endl;
       }
-    (*this)<<"@type "<<how_s<<endl;
+    
+    this->settype=ext_settype;
   }
   
   //! set line style and filling
@@ -366,7 +381,8 @@ public:
   }
   
   //! write a polygon
-  template <class fun_t> void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  template <class fun_t>
+  void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
   {
     close_cur_set();
     
@@ -382,6 +398,7 @@ public:
     //! interval between points
     double dx=(xmax-xmin)/(npoints-1);
     //set x and y
+#pragma omp parallel for
     for(size_t ipoint=0;ipoint<npoints;ipoint++)
       {
 	x[ipoint]=xmin+dx*ipoint;
@@ -394,7 +411,8 @@ public:
     
     need_close_set=true;
   }
-  template <class fun_t> void write_polygon(const fun_t &fun,double xmin,double xmax,size_t npoints=100)
+  template <class fun_t>
+  void write_polygon(const fun_t &fun,double xmin,double xmax,size_t npoints=100)
   {write_polygon(fun,xmin,xmax,get_poly_col_and_increment(),npoints);}
   
   //! mark as a continuos line
@@ -415,25 +433,31 @@ public:
     //mark a continuous line
     this->continuous_line(col);
     
+    double x[npoints],y[npoints];
+#pragma omp parallel for
     for(size_t ipoint=0;ipoint<npoints;ipoint++)
       {
-	double x=xmin+(xmax-xmin)/(npoints-1)*ipoint;
-	double y=fun(x);
-	(*this)<<x<<" "<<y<<endl;
+	x[ipoint]=xmin+(xmax-xmin)/(npoints-1)*ipoint;
+	y[ipoint]=fun(x[ipoint]);
       }
+    for(size_t ipoint=0;ipoint<npoints;ipoint++)
+      (*this)<<x[ipoint]<<" "<<y[ipoint]<<endl;
     need_close_set=true;
   }
   void write_line(const function<double(double)> &fun,double xmin,double xmax,size_t npoints=100)
   {write_line(fun,xmin,xmax,get_line_col_and_increment(),npoints);}
   
   //! write a constant band
-  template <class T> void write_constant_band(double xmin,double xmax,const T &c,grace::color_t col)
+  template <class T>
+  void write_constant_band(double xmin,double xmax,const T &c,grace::color_t col)
   {this->write_polygon([&c](double x) -> T {return c;},xmin,xmax,col,2);}
-  template <class T> void write_constant_band(double xmin,double xmax,const T &c)
+  template <class T>
+  void write_constant_band(double xmin,double xmax,const T &c)
   {write_constant_band(xmin,xmax,c,get_line_col_and_increment());}
   
   //write a vector of data
-  void write_vec_ave_err(const vector<double> &x,const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
+  template <class TV,class=enable_if_vector_of_double<TV>>
+  void write_vec_ave_err(const TV &x,const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
   {
     new_data_set(col,sym);
     for(size_t i=0;i<data.size();i++)
@@ -442,30 +466,45 @@ public:
   }
   void write_vec_ave_err(const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym)
   {write_vec_ave_err(vector_up_to<double>(data.size()),data,col,sym);}
-    
+  
   void write_vec_ave_err(const vec_ave_err_t &data)
   {write_vec_ave_err(data,get_col_and_increment(),get_symbol_and_increment());}
-  void write_vec_ave_err(const vector<double> &x,const vec_ave_err_t &data)
+  template <class TV,class=enable_if_vector_of_double<TV>>
+  void write_vec_ave_err(const TV &x,const vec_ave_err_t &data)
   {write_vec_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
   
-  //write a single data
-  void write_ave_err(const double x,const ave_err_t &data,grace::color_t col,grace::symbol_t sym)
+  //! write a vector of data
+  template <class TV,class=enable_if_vector_of_double<TV>>
+  void write_vec_ave_err(const TV &x,const ave_err_t &data,grace::color_t col,grace::symbol_t sym)
   {
     new_data_set(col,sym);
     (*this)<<x<<" "<<data<<endl;
+    set_need_close_set();
   }
-  void write_ave_err(const double x,const ave_err_t &data)
-  {write_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
   
-  //write a single data
-  void write_ave_err(const ave_err_t x,const ave_err_t &data,grace::color_t col,grace::symbol_t sym)
+  //! write x and y
+  void write_xy(const double x,const double y)
   {
-    new_data_set(col,sym);
+    set_need_close_set();
+    set_settype(grace::XY);
+    (*this)<<x<<" "<<y<<endl;
+  }
+  
+  //! write a single data without error on x
+  void write_ave_err(const double x,const ave_err_t &data)
+  {
+    set_need_close_set();
+    set_settype(grace::XYDY);
+    (*this)<<x<<" "<<data.ave()<<" "<<data.err()<<endl;
+  }
+  
+  //! write a single data with error
+  void write_ave_err(const ave_err_t x,const ave_err_t &data)
+  {
+    set_need_close_set();
     set_settype(grace::XYDXDY);
     (*this)<<x.ave()<<" "<<data.ave()<<" "<<x.err()<<" "<<data.err()<<endl;
   }
-  void write_ave_err(const ave_err_t x,const ave_err_t &data)
-  {write_ave_err(x,data,get_col_and_increment(),get_symbol_and_increment());}
   
   //! close the file
   void close()
@@ -491,7 +530,8 @@ public:
 };
 
 //! prepare a plot with a band
-template <class TV,class T=typename TV::base_type,class fun_t> void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const vector<double> &x,const TV &y)
+template <class TV,class T=typename TV::base_type,class fun_t>
+void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const vector<double> &x,const TV &y)
 {
   grace_file_t out(path);
   out.write_polygon(fun,xmin,xmax);
@@ -499,19 +539,23 @@ template <class TV,class T=typename TV::base_type,class fun_t> void write_fit_pl
   out.write_vec_ave_err(x,y.ave_err());
   out.new_data_set();
 }
-template <class TV,class fun_t,class T=typename TV::base_type> void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const TV &y)
+template <class TV,class fun_t,class T=typename TV::base_type>
+void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const TV &y)
 {write_fit_plot(path,xmin,xmax,fun,vector_up_to<double>(y.size()),y);}
 
 //! prepare a plot with a polynomial
-template <class TV,class T=typename TV::base_type> void write_poly_fit_plot(const string &path,double xmin,double xmax,const TV &res,const vector<double> &x,const TV &y)
+template <class TV,class T=typename TV::base_type>
+void write_poly_fit_plot(const string &path,double xmin,double xmax,const TV &res,const vector<double> &x,const TV &y)
 {write_fit_plot(path,xmin,xmax,bind(poly_eval<TV>,res,_1),x,y);}
 template <class TV,class T=typename TV::base_type> void write_poly_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
 {write_poly_fit_plot(path,xmin,xmax,c,vector_up_to<double>(y.size()),y);}
 
 //! prepare a plot with a polynomial
-template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const vector<double> &x,const TV &y)
+template <class TV,class T=typename TV::base_type>
+void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const vector<double> &x,const TV &y)
 {write_fit_plot(path,xmin,xmax,[&c](double x){return c;},x,y);}
-template <class TV,class T=typename TV::base_type> void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
+template <class TV,class T=typename TV::base_type>
+void write_constant_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
 {write_constant_fit_plot(path,xmin,xmax,c,vector_up_to<double>(y.size()),y);}
 
 #undef INIT_TO

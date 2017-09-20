@@ -43,6 +43,7 @@ int main(int narg,char **arg)
   for(int t=0;t<T;t++) if(!(file_in>>data[t])) CRASH("Reading t=%zu",t);
   
   ofstream file_out(path_out);
+  file_out.precision(16);
   if(!file_out.good()) CRASH("Opening %s to write",path_out.c_str());
   for(int t=0;t<=T/2;t++) file_out<<t+1<<" "<<effective_mass(data[t],data[t+1],t,T/2,par)<<endl;
   

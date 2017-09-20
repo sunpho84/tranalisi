@@ -197,8 +197,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		  {
 		    
-		    fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-		      fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+		    fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		  }
 	    }
 	}
@@ -263,8 +262,7 @@ void plot_chir_fit_empty(const string path,const vector<cont_chir_fit_data_t> &e
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		  {
 		    
-		    fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-		      fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+		    fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		  }
 	    }
 	}
@@ -326,8 +324,7 @@ void plot_chir_fit1(const string path,const vector<cont_chir_fit_data_t> &ext_da
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		  {
 		    
-		    fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-		      fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+		    fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		  }
 	    }
 	}
@@ -393,8 +390,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		      {
 		    
-			fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-			  fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+			fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 			
 		      }
 		}
@@ -433,12 +429,11 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		      {
 		    
-			fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-			  fun_data(idata,without_with_fse,ib).ave_err()<<endl;
+			fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		      }
 		}
 	    }
-      
+	  
 	  //put back colors for data with fse
 	  if(without_with_fse==0) grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
 	      
@@ -513,9 +508,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		      {
 		    
-			fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-			  fun_data(idata,without_with_fse,ib).ave_err()<<endl;
-			
+			fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		      }
 		}
 	    }
@@ -551,11 +544,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 	      
 		  for(size_t idata=0;idata<ext_data.size();idata++)
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
-		      {
-		    
-			fit_file<<dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave()<<" "<<
-			  fun_data(idata,without_with_fse,ib).ave_err()<<endl;
-		      }
+		      fit_file.write_ave_err(dboot_t(ext_data[idata].aml/pars.fit_z[ib]/pars.fit_a[ib]).ave(),fun_data(idata,without_with_fse,ib).ave_err());
 		}
 	    }
       
@@ -570,43 +559,4 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
       fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
       fit_file.set_legend("physical point");
     }
-}
-
-vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const index_t &ind)
-{
-  if(ind.max()!=v.size()) CRASH("v has size %zu, fact has product %zu",v.size(),ind.max());
-  
-  vector<double> out(ind.rank(),0.0);
-  vector<double> partials=out; //<! ignoring mixed terms
-  
-  for(int iter=0;iter<2;iter++)
-    for(size_t i=0;i<v.size();i++)
-      for(size_t j=0;j<v.size();j++)
-	{
-	  vector<size_t> ci=ind(i);
-	  vector<size_t> cj=ind(j);
-	  // cout<<ci[0]<<" "<<ci[1]<<" "<<ci[2]<<endl;
-	  // cout<<cj[0]<<" "<<cj[1]<<" "<<cj[2]<<endl;
-	  double delta=v[i].ave()*(v[i].ave()-v[j].ave());
-	  
-	  //get the list of different components
-	  vector<size_t> mudiff;
-	  for(size_t mu=0;mu<ind.rank();mu++)
-	    if(ci[mu]!=cj[mu])
-	      mudiff.push_back(mu);
-	  //cout<<ndiff<<endl;
-	  if(iter==0) {if(mudiff.size()==1) partials[mudiff[0]]+=delta;}
-	  else
-	    if(mudiff.size()!=0)
-	      {
-		double norm=0;
-		for(auto &mu : mudiff) norm+=partials[mu];
-		if(norm) for(auto &mu : mudiff) out[mu]+=delta*partials[mu]/norm;
-	      }
-	}
-  
-  //normalize
-  for(size_t mu=0;mu<ind.rank();mu++) out[mu]=sqrt(out[mu]/(v.size()*(v.size()-1)));
-  
-  return out;
 }

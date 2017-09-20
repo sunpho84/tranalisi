@@ -5,7 +5,9 @@ lib_LIBRARIES=libtran.a
 libtran_a_SOURCES= \
 	ave_err.cpp \
 	boot.cpp \
+	Dirac.cpp \
 	effective.cpp \
+	file.cpp \
 	fit.cpp \
 	grace.cpp \
 	jack.cpp \
@@ -13,4 +15,5 @@ libtran_a_SOURCES= \
 	minimizer.cpp \
 	oper.cpp \
 	solve.cpp \
+	systematics.cpp \
 	tools.cpp

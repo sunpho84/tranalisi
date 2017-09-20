@@ -25,8 +25,8 @@ AC_ARG_WITH(gsl,
         AS_HELP_STRING([--with-gsl[=dir]], [Specify where to find gsl]),
         with_gsl="${withval}"
         CPPFLAGS="-I${with_gsl}/include/ $CPPFLAGS"
-        LDFLAGS="-L${with_gsl}/lib/ $LDFLAGS",
-        with_gsl=no)
+        LDFLAGS="-L${with_gsl}/lib/ $LDFLAGS")
+AC_MSG_RESULT([with gsl... $with_gsl])
 
 AC_CHECK_LIB([m],[cos])
 AC_CHECK_LIB([gslcblas],[cblas_dgemm],,AC_MSG_ERROR([Unable to find gslcblas]))
@@ -166,7 +166,7 @@ esac
 AC_DEFINE_UNQUOTED([MINIMIZER_TYPE],[$minimizer_type],[How to minimize])
 AC_MSG_RESULT([Enable minimizer... ${enable_minimizer}])
 
-#activate debug or not bootstrap
+#activate debug or not
 AC_ARG_ENABLE(debug,
         AS_HELP_STRING([--enable-debug=yes[,no]],[Enable debug]),
         debug="${enableval}",
@@ -178,10 +178,39 @@ case "$debug" in
 esac
 AC_MSG_RESULT([Enabling debug... $debug])
 
-#check eigen
+#check Eigen
+AC_ARG_WITH(Eigen,
+        AS_HELP_STRING([--with-Eigen[=dir]], [Specify where to find Eigen folder (include eigen3 in the argument!)]),
+        with_Eigen="${withval}"
+	CPPFLAGS="-I${with_Eigen} $CPPFLAGS")
+AC_MSG_RESULT([with Eigen... $with_Eigen])
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([Eigen/Dense],,AC_MSG_ERROR([Error! Eigen required]))
 AC_LANG_POP([C++])
+
+#activate arch optimization
+AC_ARG_ENABLE(arch-optimizations,
+        AS_HELP_STRING([--enable-arch-optimizations=val[-march=native]],[Enable architecture optimizations]),
+        arch_opt="${enableval}",
+        arch_opt=-march=native)
+case "$arch_opt" in
+     no) ;;
+     *) CXXFLAGS="${arch_opt} $CXXFLAGS";;
+esac
+AC_MSG_RESULT([Enabling architecture optimization... $arch_opt])
+
+
+#activate Eigen vectorization
+AC_ARG_ENABLE(Eigen_vec_opt,
+        AS_HELP_STRING([--enable-Eigen_vec_opt=yes[,no]],[Enable Eigen vectorization]),
+        Eigen_vec_opt="${enableval}",
+        Eigen_vec_opt=no)
+case "$Eigen_vec_opt" in
+     no) AC_DEFINE_UNQUOTED([EIGEN_DONT_VECTORIZE],,[Disable Eigen_vectorization]);;
+     yes) ;;
+     *) AC_MSG_ERROR(["Unkwnown Eigen_vec_opt method $Eigen_vec_opt"])
+esac
+AC_MSG_RESULT([Enabling Eigen vectorization... $Eigen_vec_opt])
 
 AC_CONFIG_FILES(Makefile
 	include/Makefile
@@ -189,5 +218,7 @@ AC_CONFIG_FILES(Makefile
 	projects/Makefile
 	projects/FPIEM/Makefile
 	projects/IB/Makefile
+	projects/MOM/Makefile
+	projects/SMETEST/Makefile
 	tools/Makefile)
 AC_OUTPUT

@@ -6,14 +6,11 @@
 #include <grace.hpp>
 #include <oper.hpp>
 
-void vec_ave_err_t::write(const string &path) const
+//! write to a path
+void vec_ave_err_t::write(const vector<double> &x,const string &path) const
 {
   grace_file_t gr(path);
-  gr.set_settype(grace::XYDY);
-  for(size_t it=0;it<this->size();it++)
-    if(!std::isnan((*this)[it].err()))
-      gr<<it<<" "<<(*this)[it]<<endl;
-  gr.new_data_set();
+  gr.write_vec_ave_err(x,*this);
 }
 
 //! shift by 10 left(if positive) or right(if negative)
@@ -39,16 +36,18 @@ string smart_print(double ave,const vector<double> &errors,int ndigits)
   double mel=*max_element(errors.begin(),errors.end());
   if(mel==0) out<<ave<<"(0)";
   else
-    {
-      int lem=(int)ceil(log(mel)/M_LN10);
-      int digit_to_round=lem-ndigits;
-      out.precision((lem<ndigits)*max(-digit_to_round,0));
-      
-      //truncate
-      out<<round_to_digit(ave,digit_to_round);
-      if(digit_to_round<=-ndigits) out.precision(0);
-      for(auto err : errors) out<<"("<<shift_by_10(round_to_digit(err,digit_to_round),(lem<=0)*(ndigits-lem))<<")";
-    }
+    if(isnan(mel)) out<<ave<<"(nan)"<<endl;
+    else
+      {
+	int lem=(int)ceil(log(mel)/M_LN10);
+	int digit_to_round=lem-ndigits;
+	out.precision((lem<ndigits)*max(-digit_to_round,0));
+	
+	//truncate
+	out<<round_to_digit(ave,digit_to_round);
+	if(digit_to_round<=-ndigits) out.precision(0);
+	for(auto err : errors) out<<"("<<shift_by_10(round_to_digit(err,digit_to_round),(lem<=0)*(ndigits-lem))<<")";
+      }
   
   return out.str();
 }

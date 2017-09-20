@@ -36,7 +36,7 @@ const double ed=-1.0/3; //< charge of down quark
 const double es=ed;     //< charge of strange quark
 const double ec=eu;     //< charge of charm
 const double MKPLUS=0.493677,MK0=0.497611;
-const double MW=80.385;
+const double MW=80.385,MZ=91.1876;
 
 //! charge of all quarks
 const double eq[3]={eu,es,ec};

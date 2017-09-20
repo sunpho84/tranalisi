@@ -4,6 +4,8 @@
 #include <boot.hpp>
 #include <file.hpp>
 #include <grace.hpp>
+#include <obs_file.hpp>
+#include <stopwatch.hpp>
 #include <tools.hpp>
 
 //! type defining a vector of measures
@@ -80,6 +82,14 @@ public:
     return out;
   }
   
+  //! compute average
+  vector<double> ave() const
+  {
+    vector<double> out(this->size());
+    for(size_t it=0;it<this->size();it++) out[it]=(*this)[it].ave();
+    return out;
+  }
+  
   //! write to a stream
   void bin_write(const raw_file_t &out)
   {out.bin_write(*this);}
@@ -117,8 +127,7 @@ public:
   //! return a subset including end
   vmeas_t subset(size_t beg,size_t end)
   {
-    if(beg>end or beg>this->size() or beg>this->size()) CRASH("Asked to extract from %zu to %zu a vector of length %zu",beg,end,this->size());
-    return (*this)[slice(beg,end-beg+1,1)];
+    return (*this)[slice(std::max(size_t(0),beg),std::min(end-beg+1,this->size()),1)];
   }
   
   //! return the tail-backked
@@ -172,20 +181,22 @@ public:
   //! put a specific "slice" of events
   void put_all_events(const vector<double> &in,size_t i)
   {for(size_t iel=0;iel<in.size();iel++) (*this)[iel][i]=in[iel];}
-
 };
+
+//! traits for vmeas_t
+template <class TS> class vector_traits<vmeas_t<TS>> : public true_vector_traits<TS> {};
 
 //! typically we use double
 using djvec_t=vmeas_t<jack_t<double>>;
 using dbvec_t=vmeas_t<boot_t<double>>;
 
 //! read a binary from file
-template <class T> T read_vec_meas(raw_file_t &file,size_t nel,size_t ind=0)
+template <class TV> TV read_vec_meas(raw_file_t &file,size_t nel,size_t ind=0)
 {
-  T out(nel);
+  TV out(nel);
   if(nel==0) CRASH("Nel==0");
   
-  file.set_pos(ind*sizeof(typename T::base_type::base_type)*out[0].size()*nel);
+  file.set_pos(ind*sizeof(base_type_t<base_type_t<TV>>)*out[0].size()*nel);
   out.bin_read(file);
   return out;
 }
@@ -221,7 +232,41 @@ template <class T> vmeas_t<boot_t<T>> bvec_from_jvec(const boot_init_t &iboot_in
   return out;
 }
 
-//! read from a set of confs
-djvec_t read_conf_set_t(string template_path,range_t range,size_t ntot_col,vector<size_t> cols,size_t nlines=1);
+//! read from a list of confs
+djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size_t ntot_col,const vector<size_t> &cols,size_t nlines,bool verbosity=VERBOSE);
+
+//! read from a range of confs
+djvec_t read_conf_set_t(const string &template_path,const range_t &range,size_t ntot_col,const vector<size_t> &cols,size_t nlines=1,bool verbosity=VERBOSE);
+
+//! integrate
+template <class TS>
+TS integrate_corr_up_to(const valarray<TS> &corr,size_t &upto,size_t ord=1)
+{
+  if(upto>=corr.size()) CRASH("Upto=%zu >= corr.size()=%zu",upto,corr.size());
+  
+  valarray<double> weight;
+  switch(ord)
+    {
+    case 0: weight={1};       break;
+    case 1: weight={1,1};     break;
+    case 2: weight={1,4,1};   break;
+    case 3: weight={3,9,9,3}; break;
+    default: CRASH("Unknwown order %zu",ord);
+    }
+  
+  size_t len=weight.size()-1;
+  double norm=weight.sum()/len;
+  
+  TS out;
+  out=0.0;
+  upto=size_t(upto/len)*len;
+  for(size_t t=0;t<upto;t+=len)
+    for(size_t j=0;j<=len;j++)
+      out+=corr[t+j]*weight[j];
+  
+  out/=norm;
+  
+  return out;
+}
 
 #endif

@@ -1,55 +1,37 @@
 #ifndef _TOOLS_HPP
 #define _TOOLS_HPP
 
+#include <Eigen/Dense>
+
 #include <array>
-#include <chrono>
+#include <iostream>
 #include <macros.hpp>
 #include <string>
 #include <valarray>
 #include <vector>
 
+#include <traits.hpp>
+
 using namespace std;
 
 DEFINE_HAS_METHOD(size);
-#define is_vector has_method_size
 
 DEFINE_HAS_METHOD(ave_err);
 
 DEFINE_HAS_METHOD(is_printable);
 
-//! measure time
-using instant_t=chrono::time_point<chrono::steady_clock>;
-inline instant_t take_time()
-{return chrono::steady_clock::now();}
-
-//! compute elapsed time
-inline string elapsed_time(const instant_t &start)
-{
-  auto diff=take_time()-start;
-  
-  double el_nano=chrono::duration<double,nano>(diff).count();
-  if(el_nano<1000) return to_string(el_nano)+" ns";
-  
-  double el_micro=chrono::duration<double,micro>(diff).count();
-  if(el_micro<1000) return to_string(el_micro)+" us";
-  
-  double el_milli=chrono::duration<double,milli>(diff).count();
-  if(el_milli<1000) return to_string(el_milli)+" ms";
-  
-  double el_sec=chrono::duration<double>(diff).count();
-  return to_string(el_sec)+" s";
-}
+//! crashes emitting the message
+void internal_crash(int line,const char *file,const char *temp,...);
 
 //! check if two quantities have the same sign
-template <class T> bool same_sign(const T &a,const T &b)
+template <class T>
+bool same_sign(const T &a,const T &b)
 {return (a<=0 and b<=0) or (a>=0 and b>=0);}
 
 //! check it two quantities have opposite sign
-template <class T> bool opposite_sign(const T &a,const T &b)
+template <class T>
+bool opposite_sign(const T &a,const T &b)
 {return !same_sign(a,b);}
-
-//! crashes emitting the message
-void internal_crash(int line,const char *file,const char *temp,...);
 
 //! combine arguments in a single string
 string combine(const char *format,...);
@@ -67,7 +49,8 @@ int dir_exists(string path);
 void signal_handler(int sig);
 
 //! check that a vector is orderd
-template <class T> inline void check_ordered(const initializer_list<T> &vec)
+template <class T>
+void check_ordered(const initializer_list<T> &vec)
 {
   auto prev=vec.begin();
   auto cur=prev+1;
@@ -96,6 +79,18 @@ public:
   size_t &each=(*this)[1];
   size_t &end=(*this)[2];
   
+  //! get an element
+  size_t operator()(size_t i) const
+  {
+    size_t id=i*each+start;
+    if(id>end) CRASH("Asking an element %zu beyond end %zu",id,end);
+    return id;
+  }
+  
+  //! number of elements
+  size_t size() const
+  {return (end-start)/each+1;}
+  
   //! default constructor
   range_t() {}
   
@@ -118,11 +113,26 @@ inline int to_int(string s)
 }
 
 //! return a filled vector of double ranging from 0 to max (excluded)
-template <class T> vector<T> vector_up_to(const size_t max,const T offset=0)
+template <class T>
+vector<T> vector_up_to(const size_t max,const T offset=0)
 {
   vector<T> x(max);
   for(size_t it=0;it<max;it++) x[it]=it+offset;
   return x;
 }
+
+//! set to zero a double
+inline void set_to_zero(double &x)
+{x=0;}
+
+//! set to zero an eigen matr
+template <typename D>
+void set_to_zero(const Eigen::MatrixBase<D> &x)
+{x.Zero();}
+
+//! return a percentage
+template <class T>
+double percentage(const T &num,const T& den)
+{return num*100.0/den;}
 
 #endif

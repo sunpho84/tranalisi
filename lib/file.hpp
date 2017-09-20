@@ -1,16 +1,8 @@
 #ifndef _FILE_HPP
 #define _FILE_HPP
 
-#include <cstdio>
-#include <cstring>
-#include <iostream>
-#include <jack.hpp>
-#include <map>
-#include <macros.hpp>
-#include <string>
-#include <tools.hpp>
-#include <typeinfo>
 #include <vector>
+#include <tools.hpp>
 
 using namespace std;
 
@@ -21,6 +13,7 @@ using line_t=char[max_line_length];
 
 //! class to format data
 template <class T> class format_str {public: static const enable_if<is_void<T>::value,char> *value(){return "";}};
+template <> class format_str<bool> {public: static const char *value(){return "%d";}};
 template <> class format_str<int> {public: static const char *value(){return "%d";}};
 template <> class format_str<size_t> {public: static const char *value(){return "%zu";}};
 template <> class format_str<double> {public: static const char *value(){return "%lg";}};
@@ -34,289 +27,14 @@ template<size_t N> struct return_type<char[N]> {typedef string type;};
 //! class to handle working type from reader
 template<class T> struct working_type {typedef T type;};
 template<> struct working_type<string> {typedef word_t type;};
+template<> struct working_type<bool> {typedef int type;};
 
 //! class to handle working type from reader
 template<class T> T *get_ptr(T &in) {return &in;}
 template<class T> T *get_ptr(T *in) {return in;}
 template<class T,size_t n> T *get_ptr(T in[n]) {return in;}
 
-//! open file, basic
-class raw_file_t
-{
-  FILE *file;
-  
-  //! copy constructor - made private, as for any class stream
-  raw_file_t(const raw_file_t& oth);
-  
-public:
-  //! open the file with error check
-  void open(const string &path,string mode)
-  {
-    file=fopen(path.c_str(),mode.c_str());
-    if(file==NULL) CRASH("Unable to open %s with mode %s",path.c_str(),mode.c_str());
-  }
-  
-  //! close the file
-  void close()
-  {if(file) fclose(file);file=NULL;}
-  
-  //! default constructor
-  raw_file_t() {file=NULL;}
-  
-  //! move constructor
-  raw_file_t(raw_file_t&& oth) : raw_file_t() {swap(file,oth.file);};
-  
-  //! creator with name
-  raw_file_t(const string &path,string mode)
-  {open(path,mode);}
-  
-  //! destructor
-  ~raw_file_t()
-  {close();}
-  
-  //! default
-  //template <class T,typename=void> void bin_write(const T &out);
-  
-  //! binary write, non-vector case
-  template <class T> auto bin_write(const T &out) const -> enable_if_t<is_pod<T>::value>
-  {if(fwrite(&out,sizeof(T),1,file)!=1) CRASH("Writing to file");}
-  
-  //! specialization for vector
-  template <class T> auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value>
-  {for(auto &it : out) bin_write(it);}
-  
-  //! binary read, non-vector case
-  template <class T> auto bin_read(T &out) const -> enable_if_t<is_pod<T>::value>
-  {int rc=fread(&out,sizeof(T),1,file); if(rc!=1) CRASH("Reading from file, rc: %d",rc);}
-  
-  //! specialization for vector
-  template <class T> auto bin_read(T &out) const -> enable_if_t<is_vector<T>::value>
-  {for(auto &it : out) bin_read(it);}
-  
-  //! return what read
-  template <class T> T bin_read()
-  {
-    T out;
-    bin_read(out);
-    return out;
-  }
-  
-  //! check that the token is found
-  void expect(const char *tok) const
-  {
-    word_t rea;
-    int rc=fscanf(file,"%s",rea);
-    if(rc!=1) CRASH("Obtained %d while expecting token %s",rc,tok);
-    if(strcasecmp(tok,rea)) CRASH("Obtained %s while expecting %s",rea,tok);
-  }
-  
-  //! expect a list of tokens
-  void expect(const initializer_list<string> &toks) const
-  {for(auto &tok : toks) expect(tok.c_str());}
-  
-  //! set the position to the passed value
-  long get_pos() {return ftell(file);}
-  
-  //! set the position to the passed value
-  void set_pos(long offset) {fseek(file,offset,SEEK_SET);}
-  
-  //! reset the position to the head
-  void go_to_head() {set_pos(0);}
-  
-  //! reset the position to the end
-  void go_to_end() {fseek(file,0,SEEK_END);}
-  
-  //! get the size of the file
-  long size()
-  {
-    long ori=get_pos();
-    //go to the end and get position
-    go_to_end();
-    long length=get_pos();
-    //return
-    set_pos(ori);
-    
-    return length;
-  }
-  
-  //! named or unnamed read
-  template <class T> typename return_type<T>::type read(const char *name=NULL) const
-  {
-    //check tag
-    if(name) expect(name);
-    
-    //read a type
-    typename working_type<T>::type out;
-    int rc=fscanf(file,format_str<T>::value(),get_ptr(out));
-    
-    //check and return
-    if(rc!=1) CRASH("Unable to read %s (%s) with name \"%s\" from file",format_str<T>::value(),typeid(T).name(),name);
-    return (typename return_type<T>::type)out;
-  }
-  
-  //! read with check
-  template <class T,class=enable_if_t<is_pod<T>::value>> void read(T &out,const char *name=NULL) const
-  {out=read<T>(name);}
-  //! read a string
-  void read(string &out,const char *name=NULL) const
-  {out=read<string>(name);}
-  
-  //! read a vector
-  template <class TV,class TS=typename TV::base_type,class=enable_if_t<is_vector<TV>::value>> void read(TV &out,const char *name=NULL) const
-  {if(name) expect(name);for(auto &o : out) read(o);}
-  
-  //! read a line and eliminate trailing new line
-  char *get_line(line_t line)
-  {
-    char *ret=fgets(line,max_line_length,file);
-    if(ret)
-      {
-	char *pos=strchr(line,'\n');
-	if(pos) *pos='\0';
-      }
-    return ret;
-  }
-  
-  //! skip a line
-  void skip_line(size_t nskip=1)
-  {
-    line_t skip;
-    for(size_t iskip=0;iskip<nskip;iskip++) get_line(skip);
-  }
-  
-  //! return whether we are at the end of file
-  bool feof()
-  {return std::feof(file);}
-};
-
-//! return the size of the passed path
-inline long file_size(const string &path) {return raw_file_t(path,"r").size();}
-
-///////////////////////////////////////////////////// file reading observables /////////////////////////////////////
-
-//! open a file for reading, skip commented lines, put columns one after the other
-class obs_file_t : public raw_file_t
-{
-  //! total number of columns
-  size_t ntot_cols;
-  
-  //! view of cols
-  vector<size_t> cols;
-  
-public:
-  //! init
-  obs_file_t(size_t ntot_cols=1) : ntot_cols(ntot_cols) {set_col_view(vector<size_t>{0});}
-  
-  //! init reading
-  obs_file_t(const string &path,size_t ntot_cols=1,const vector<size_t> &ext_cols={0}) : obs_file_t(ntot_cols)
-  {
-    set_col_view(ext_cols);
-    open(path);
-  }
-  
-  //! set the view on columns
-  void set_col_view(const vector<size_t> &ext_cols)
-  {
-    if(cols.size()>=ntot_cols) CRASH("Col=%zu >= NtotCol=%zu",cols.size(),ntot_cols);
-    cols=ext_cols;
-  }
-  
-  //! measure according to ncols
-  size_t length(size_t nlines)
-  {
-    //read the position and go to the head
-    long ori=get_pos();
-    go_to_head();
-    
-    //read until the end
-    size_t out=0,cur_length;
-    do
-      {
-	cur_length=this->read(nlines).size();
-	out+=cur_length;
-      }
-    while(cur_length);
-    
-    //go back to previous position
-    set_pos(ori);
-    
-    return out;
-  }
-  
-  //! set the view on columns
-  void set_col_view(size_t icol)
-  {set_col_view(vector<size_t>{icol});}
-  
-  //! open for reading obs
-  void open(const string &path)
-  {raw_file_t::open(path.c_str(),"r");}
-  
-  //! read
-  vector<double> read(size_t nlines=1)
-  {
-    //returned obj
-    vector<double> data(cols.size()*nlines);
-    
-    size_t iline=0;
-    do
-      {
-	//read a line
-	line_t line;
-	char *rc=get_line(line);
-	
-	//feed the line to the tokenizer
-	char *tok=NULL;
-	char *saveptr;
-	if(rc!=NULL) tok=strtok_r(line," \t",&saveptr);
-	
-	//skip blank line and comments
-	if(tok!=NULL and strcasecmp(tok,"#"))
-	  {
-	    //parse the line
-	    size_t nread_col=0;
-	    vector<double> temp(ntot_cols);
-	    do
-	      {
-		//read a double from the line
-		int rc=sscanf(tok,"%lg",&temp[nread_col]);
-		if(rc!=1) CRASH("Parsing col %d, rc %d from %s, line %s",nread_col,rc,tok,line);
-		//check not exceeding ntot_cols
-		if(nread_col>=ntot_cols) CRASH("nread_col=%d exceeded ntot_cols=%d",nread_col,ntot_cols);
-		
-		//search next tok
-		tok=strtok_r(NULL," \t",&saveptr);
-		nread_col++;
-	      }
-	    while(tok);
-	    
-	    //store
-	    for(size_t icol=0;icol<cols.size();icol++)
-	      data[iline+nlines*icol]=temp[cols[icol]];
-	    
-	    iline++;
-	  }
-      }
-    while(!feof() and iline<nlines);
-    
-    //invalidate failed reading
-    if(iline<nlines)
-      {
-	cout<<"Read "<<iline<<" lines instead of "<<nlines<<endl;
-	data.clear();
-      }
-    
-    return data;
-  }
-};
-
-//////////////////////////////////////////////// reading input files /////////////////////////////////////////
-
-//! open a file for reading, skip commented lines, put columns one after the other
-class input_file_t : public raw_file_t
-{
-public:
-  //! construct with a path
-  input_file_t(const string &path) : raw_file_t(path,"r") {};
-};
+//! get a vector of all id pointing to existing paths, on the basis of a certain template and range
+vector<size_t> get_existing_paths_in_range(const string &template_path,const range_t &range,bool verbosity=false);
 
 #endif

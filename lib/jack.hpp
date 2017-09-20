@@ -2,7 +2,8 @@
 #define _JACK_HPP
 
 #include <ave_err.hpp>
-#include <file.hpp>
+#include <complex>
+#include <raw_file.hpp>
 #include <fstream>
 #include <iostream>
 #include <random.hpp>
@@ -44,7 +45,10 @@ public:
   jack_t() : valarray<T>(njacks+1) {check_njacks_init();}
   
   //! create with size (only njacks is accepted)
-  explicit jack_t(size_t ext_njacks) : jack_t() {if(njacks!=ext_njacks) CRASH("NJacks %zu different from global value %zu",njacks,ext_njacks);}
+  //explicit jack_t(size_t ext_njacks) : jack_t() {if(njacks!=ext_njacks) CRASH("NJacks %zu different from global value %zu",ext_njacks,njacks);}
+  
+  //! create from double
+  jack_t(double ext) : jack_t() {*this=ext;}
   
   //! create from sliced array
   jack_t(const slice_array<jack_t> &slice) : valarray<T>(slice) {}
@@ -139,11 +143,11 @@ public:
   void clusterize(size_t clust_size=1)
   {
     //fill clusters and compute avarages
-    (*this)[njacks]=0;
+    set_to_zero((*this)[njacks]);
     for(size_t ijack=0;ijack<njacks;ijack++) (*this)[njacks]+=(*this)[ijack];
     
     //clusterize
-    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[ijack]=((*this)[njacks]-(*this)[ijack])/((njacks-1)*clust_size);
+    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[ijack]=((*this)[njacks]-(*this)[ijack])/double((njacks-1)*clust_size);
     (*this)[njacks]/=clust_size*njacks;
   }
   
@@ -187,11 +191,18 @@ public:
   const T* end() const {return &((*this)[0])+this->size();}
 };
 
+//! traits for jack_t
+template <class TS> class vector_traits<jack_t<TS>> : public true_vector_traits<TS> {};
+
 //! typically we use jackknives of double
 using djack_t=jack_t<double>;
 
+//! complex jackkinves
+using cdjack_t=complex<jack_t<double>>;
+
 //! return a string
-template <class T> string to_string(const jack_t<T> &obj)
+template <class T>
+string to_string(const jack_t<T> &obj)
 {
   ave_err_t ae=obj.ave_err();
   ostringstream os;
@@ -200,8 +211,39 @@ template <class T> string to_string(const jack_t<T> &obj)
 }
 
 //! get the size needed to init a jack_t
-template <class T> size_t init_nel(const jack_t<T> &obj)
+template <class T>
+size_t init_nel(const jack_t<T> &obj)
 {return njacks;}
+
+//! specify hot to print a jack_t
+template <class T>
+ostream& operator<<(ostream &out,const jack_t<T> &v)
+{return out<<v.ave_err();}
+
+//! trim a vector in such a way that its size is multiple of njacks, and return clust_size
+template <class T>
+size_t trim_to_njacks_multiple(vector<T> &v,bool verbosity=false)
+{
+  size_t clust_size=v.size()/njacks;
+  size_t n=clust_size*njacks;
+  if(verbosity) cout<<"Trimmed from "<<v.size()<<" to "<<n<<", clust_size="<<clust_size<<endl;
+  v.resize(n);
+  
+  return clust_size;
+}
+
+//! clusterize a generic vector
+template <class T>
+void clusterize(vector<T> &v,size_t clust_size=1)
+{
+  //compute avarages
+  v[njacks]=0.0;
+  for(size_t ijack=0;ijack<njacks;ijack++) v[njacks]+=v[ijack];
+  
+  //clusterize
+  for(size_t ijack=0;ijack<njacks;ijack++) v[ijack]=(v[njacks]-v[ijack])/double((njacks-1)*clust_size);
+  v[njacks]/=clust_size*njacks;
+}
 
 #undef EXTERN_JACK
 #undef INIT_TO
