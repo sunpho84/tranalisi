@@ -16,7 +16,9 @@ public:
   double eq;
   qpars_t(size_t iq,double dm,double eq) : iq(iq),dm(dm),eq(eq) {}
 };
-const qpars_t qU(0,1,eu),qD(0,-1,ed),qS(1,0,es),qC(2,0,ec);
+const int iqU=0,iqD=0,iqS=1,iqC=2;
+const int dmU=-1,dmD=+1,dmS=0,dmC=0;
+const qpars_t qU(iqU,dmU,eu),qD(iqD,dmD,ed),qS(iqS,dmS,es),qC(iqC,dmC,ec);
 const vector<qpars_t> all_qpars({qU,qD,qS,qC});
 
 ////////////////////////////////////////////////// QCD mesons //////////////////////////////////////////////
@@ -25,10 +27,10 @@ const vector<qpars_t> all_qpars({qU,qD,qS,qC});
 class QCD_mes_pars_t
 {
 public:
-  size_t iq1; //< index of quark 1
-  size_t iq2; //< index of quark 2
-  size_t itint; //< which interval range this meson has to use (0=Pi, 1=K, 2=D,Ds)
-  string name; //< name of the quark
+  size_t iq1; //!< index of quark 1
+  size_t iq2; //!< index of quark 2
+  size_t itint; //!< which interval range this meson has to use (0=Pi, 1=K, 2=D,Ds)
+  string name; //!< name of the quark
   QCD_mes_pars_t(const qpars_t &q1,const qpars_t &q2,size_t itint,const string &name) : iq1(q1.iq),iq2(q2.iq),itint(itint),name(name) {}
 };
 
@@ -43,56 +45,57 @@ const size_t &nQCD_mes=QCD_mes_pars.size();
 class QED_mes_pars_t
 {
 public:
-  size_t iq1; //< index of quark 1
-  size_t iq2; //< index of quark 2
-  double dm1; //< contribution by which scalar insertion on quark 1 must be added
-  double dm2; //< contribution by which scalar insertion on quark 2 must be added
-  double eq1; //< charge of quark 1
-  double eq2; //< charge of quark 2
-  size_t irev; //< quark line to be reversed
-  size_t iQCD; //< index of pure QCD meson corresponding to this meson
-  string name; //< name of the meson
-  QED_mes_pars_t(const qpars_t &q1,const qpars_t &q2,size_t irev,size_t iQCD,const string &name) :
-    iq1(q1.iq),iq2(q2.iq),dm1(q1.dm),dm2(q2.dm),eq1(q1.eq),eq2(q2.eq),irev(irev),iQCD(iQCD),name(name) {}
+  const size_t iq1; //!< index of quark 1
+  const size_t iq2; //!< index of quark 2
+  const double dm1; //!< contribution by which scalar insertion on quark 1 must be added
+  const double dm2; //!< contribution by which scalar insertion on quark 2 must be added
+  const double eq1; //!< charge of quark 1
+  const double eq2; //!< charge of quark 2
+  const size_t irev; //!< quark line to be reversed
+  const size_t iQCD; //!< index of pure QCD meson corresponding to this meson
+  const double M; //!< mass of the meson
+  const string name; //!< name of the meson
+  QED_mes_pars_t(const qpars_t &q1,const qpars_t &q2,const size_t irev,const size_t iQCD,const double M,const string &name) :
+    iq1(q1.iq),iq2(q2.iq),dm1(q1.dm),dm2(q2.dm),eq1(q1.eq),eq2(q2.eq),irev(irev),iQCD(iQCD),M(M),name(name) {}
 };
 
-const size_t QREV1=0; //< value to revert quark 1
-const size_t QREV2=1; //< value to revert quark 2
-const vector<QED_mes_pars_t> QED_mes_pars({{qD,qU,QREV2,0,"PiMinus"},
-					   {qU,qS,QREV1,1,"KMinus"},
-					   {qD,qS,QREV1,1,"K0bar"},
-					   {qD,qC,QREV2,2,"DMinus"},
-					   {qU,qC,QREV2,2,"D0bar"},
-					   {qS,qC,QREV2,3,"DsMinus"}});
+const size_t QREV1=0; //!< value to revert quark 1
+const size_t QREV2=1; //!< value to revert quark 2
+const vector<QED_mes_pars_t> QED_mes_pars({{qD,qU,QREV2,0,MPPLUS,"PiMinus"},
+                                           {qU,qS,QREV1,1,MKPLUS,"KMinus"},
+					   {qD,qS,QREV1,1,MK0,"K0bar"},
+					   {qD,qC,QREV2,2,MDPLUS,"DMinus"},
+					   {qU,qC,QREV2,2,MD0,"D0bar"},
+					   {qS,qC,QREV2,3,MDS,"DsMinus"}});
 enum{iPiMinus,iKMinus,iK0bar,iDMinus,iD0bar,iDsMinus};
 const size_t &nQED_mes=QED_mes_pars.size();
 
 ////////////////////////////////////////////////////////////////////
 
-const size_t nleps=2; //< number of leptons
-const size_t nmes_tint=3; //< number of time intervals
+const size_t nleps=2; //!< number of leptons
+const size_t nmes_tint=3; //!< number of time intervals
 
 class ens_pars_t
 {
 public:
-  size_t iult; //< input in the ultimate file
-  size_t ib; //< beta index
-  size_t T; //< time extent
-  size_t L; //< spatial size
-  double aml; //< bare light quark mass
-  double aMLep[nleps]; //< mass of leptons
-  double aMMes[4]; //< mass of mesons (0=Pi, 1=K, 2=D, 3=Ds)
-  int use_for_L; //< use for FSE analysis
-  string path; //< path (name)
+  size_t iult; //!< input in the ultimate file
+  size_t ib; //!< beta index
+  size_t T; //!< time extent
+  size_t L; //!< spatial size
+  double aml; //!< bare light quark mass
+  double aMLep[nleps]; //!< mass of leptons
+  double aMMes[4]; //!< mass of mesons (0=Pi, 1=K, 2=D, 3=Ds)
+  int use_for_L; //!< use for FSE analysis
+  string path; //!< path (name)
   
-  vector<size_t> tmin,tmax; //< range of fit
+  vector<size_t> tmin,tmax; //!< range of fit
   ens_pars_t() : tmin(nmes_tint),tmax(nmes_tint) {}
 };
-vector<ens_pars_t> ens_pars; //< parameters of all ensemble
-size_t nens_used; //< number of ensemble used
+vector<ens_pars_t> ens_pars; //!< parameters of all ensemble
+size_t nens_used; //!< number of ensemble used
 
-const size_t nqmass=3; //< number of quark mass
-const size_t nr=2; //< number of r
+const size_t nqmass=3; //!< number of quark mass
+const size_t nr=2; //!< number of r
 const index_t ind_2pts({{"NMass",nqmass},{"NMass",nqmass},{"Nr",nr},{"RI",2}});
 
 /* Processes are
@@ -104,8 +107,9 @@ const index_t ind_2pts({{"NMass",nqmass},{"NMass",nqmass},{"Nr",nr},{"RI",2}});
    Ds->Tau */
 
 //! The decaying meson is always the negatively charged one
-vector<size_t> iQED_mes_of_proc({0,1,3,3,5,5}); //< index of the QED meson corresponding to a given process from the QED_mes_pars
-vector<size_t> imlep_of_proc({0,0,0,1,0,1}); //< index of the lepton mass corresponding to a given process
+vector<size_t> iQED_mes_of_proc({0,1,3,3,5,5}); //!< index of the QED meson corresponding to a given process from the QED_mes_pars
+const double M_lep[2]={0.1056583745,1.77682};
+vector<size_t> imlep_of_proc({0,0,0,1,0,1}); //!< index of the lepton mass corresponding to a given process
 
 //! read or write z0 for FSE
 vector<double> z0;
@@ -273,7 +277,6 @@ djvec_t jZP,jZA;
 djvec_t jaM;
 djvec_t jDZA_QED_rel,jDZA_MASS_rel;
 djvec_t jDM_QED,jDM_MASS;
-djvec_t jDM,jDZA_rel;
 
 index_t ind_ens_QCD_mes;
 index_t ind_ens_QED_mes;
@@ -293,11 +296,9 @@ void compute_basic_slopes()
   //
   jDZA_QED_rel.resize(nens_QED_mes);
   jDZA_MASS_rel.resize(nens_QED_mes);
-  jDZA_rel.resize(nens_QED_mes);
   //
   jDM_QED.resize(nens_QED_mes);
   jDM_MASS.resize(nens_QED_mes);
-  jDM.resize(nens_QED_mes);
   //
   
   vector<djvec_t> jPP_LO(nens_QCD_mes);
@@ -360,22 +361,22 @@ void compute_basic_slopes()
 	  jZP[ind_QCD]=sqrt(ZPP);
 	  jZA[ind_QCD]=ZAP/jZP[ind_QCD];
 	  //
-	  djack_t DZ_P_MASS_rel=DZ_PP_MASS_rel/2;
-	  djack_t DZ_P_QED_rel=DZ_PP_QED_rel/2;
+	  djack_t DZ_P_MASS_rel=DZ_PP_MASS_rel/2.0;
+	  djack_t DZ_P_QED_rel=DZ_PP_QED_rel/2.0;
 	  //
 	  jDZA_MASS_rel[ind_QED]=DZ_AP_MASS_rel-DZ_P_MASS_rel;
 	  jDZA_QED_rel[ind_QED]=DZ_AP_QED_rel-DZ_P_QED_rel;
-	  jDM_QED[ind_QED]=-SL_PP_QED; //change signed due to slopw definition
-	  //jDM_MASS[ind_QED]=-SL_PP_MASS; //change signed due to slope definition
-	  jDM[ind_QED]=jDM_QED[ind_QED]; //WARNING must include QCD!!!!
+	  jDM_QED[ind_QED]=-SL_PP_QED; //change signed due to slope definition
+	  jDM_MASS[ind_QED]=-SL_PP_MASS; //change signed due to slope definition
 	  
-	  jDZA_rel[ind_QED]=jDZA_QED_rel[ind_QED];
-	  cout<<plots_path<<", (Z)A: "<<jZA[ind_QCD].ave_err()<<endl;
+	  cout<<plots_path<<", ZA: "<<jZA[ind_QCD].ave_err()<<endl;
 	  cout<<plots_path<<", M_AP: "<<jaM[ind_QCD].ave_err()<<endl;
-	  cout<<plots_path<<", SL_AP: "<<djack_t(SL_AP_QED).ave_err()<<endl;
-	  cout<<plots_path<<", SL_PP: "<<djack_t(SL_PP_QED).ave_err()<<endl;
-	  cout<<plots_path<<", D(Z)A/(Z)A: "<<djack_t(jDZA_QED_rel[ind_QED]).ave_err()<<endl;
-	  cout<<plots_path<<", D(Z)A: "<<djack_t(jDZA_QED_rel[ind_QED]*jZA[ind_QCD]).ave_err()<<endl;
+	  cout<<plots_path<<", SL_AP_QED: "<<djack_t(SL_AP_QED).ave_err()<<endl;
+	  cout<<plots_path<<", SL_PP_MASS: "<<djack_t(SL_PP_MASS).ave_err()<<endl;
+	  cout<<plots_path<<", (DZA/ZA)_QED: "<<djack_t(jDZA_QED_rel[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", (DZA/ZA)_MASS: "<<djack_t(jDZA_MASS_rel[ind_QED]).ave_err()<<endl;
+	  cout<<plots_path<<", DZ_AP_MASS_rel: "<<DZ_AP_MASS_rel.ave_err()<<endl;
+	  cout<<plots_path<<", DZ_P_MASS_rel: "<<DZ_P_MASS_rel.ave_err()<<endl;
 	  
 	  //store for later test
 	  jAP_LO_exp_removed[ind_QCD]=jAP_LO[ind_QCD];
@@ -544,7 +545,7 @@ void compute_adml_bare()
 	  dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*ZP*(6.0*log(mu_MS*a)-22.596)/(32.0*sqr(M_PI)));
 	  dboot_t ml=ens_pars[iens].aml/ZP/a;
 	  dboot_t dml_ren=adml_bare[ind]/ZP/a-ml/Z_QED;
-	  //cout<<"dm_ren["<<ind<<"]: "<<dml_ren.ave_err()<<endl;
+	  cout<<"dm_ren["<<ind<<"]: "<<dml_ren.ave_err()<<endl;
 	  
 	  //! add to the fit
 	  dboot_t dum;
@@ -566,24 +567,25 @@ void compute_adml_bare()
 	      vector<cont_chir_fit_data_t> &data_dml=((iFSE==1)?data_dml_all:data_dml_use_for_L);
 	      dml_ren_contlin[isyst]=cont_chir_fit_dml_ren(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,
 							   data_dml,lat_par[input_an_id].ml,combine("plots_dml/cont_chir_an%zu.xmg",isyst),isyst,false,beta_list);
+	      cout<<"dml (cont): "<<dml_ren_contlin[isyst].ave_err()<<endl;
 	    }
     }
 }
 
 ///////////////////////////////////////////////////// nasty diagram ////////////////////////////////////////////
 
-//const size_t nw=9; //< number of weak insertions
-const size_t norie=2; //< number of orientation of the meson
-const size_t nrev=2; //< number of possible reversion
-const size_t nqins=3; //< number of quarks inserted: 0(none), 1 or 2
-const size_t nprocess_max=6; //< number of processes computed
-const size_t nprocess=2; //< number of process to analyse
-const size_t nrlep=2; //< number of r for leptons
-const size_t nproj=1; //<number of projectors: 1, V0 only
+//const size_t nw=9; //!< number of weak insertions
+const size_t norie=2; //!< number of orientation of the meson
+const size_t nrev=2; //!< number of possible reversion
+const size_t nqins=3; //!< number of quarks inserted: 0(none), 1 or 2
+const size_t nprocess_max=6; //!< number of processes computed
+const size_t nprocess=2; //!< number of process to analyse
+const size_t nrlep=2; //!< number of r for leptons
+const size_t nproj=1; //!<number of projectors: 1, V0 only
 index_t ind_hl_corr;
 
-//! load hl correlations
-djvec_t load_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t qins,const ens_pars_t &ens,const string &name)
+//! read hl correlations
+djvec_t read_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t qins,const ens_pars_t &ens,const string &name)
 {
   size_t T=ens.T;
   djvec_t out(T);
@@ -615,6 +617,9 @@ djvec_t load_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t q
 	  //   }
 	}
   
+  //if insertion is made, change sign, due to wrong sign in the program
+  if(qins) out*=-1.0;
+  
   return out.symmetrized(1)/n*pow(ens.L,3);
 }
 
@@ -643,7 +648,7 @@ valarray<djvec_t> load_and_correct_hl(size_t iproc,size_t iw,size_t iproj,const 
   for(size_t qins=0;qins<3;qins++)
     {
       //load and remove around the world
-      djvec_t precorr=load_hl(iproc,iw,iproj,orie_par,qins,ens,name);
+      djvec_t precorr=read_hl(iproc,iw,iproj,orie_par,qins,ens,name);
       djvec_t postsub=hl_corr_subtract_around_world(precorr,M0);
       
       //remove mismatch in mass
@@ -786,7 +791,7 @@ djvec_t prepare_z_for_FSE(const string &path,const djack_t &jbetal)
 	  cout<<"jbetal stored agree, reading z"<<endl;
 	  fin.bin_read(jz);
 	}
-      else cout<<"jbetal stored not agrees"<<endl;
+      else cout<<"jbetal stored does not agree"<<endl;
     }
   
   //if to compute, write it
@@ -857,6 +862,7 @@ void compute_corr(size_t iproc)
 	  const size_t iQCD_mes=QED_mes_pars[iQED_mes].iQCD;
 	  const size_t ind_QCD=ind_ens_QCD_mes({iens,iQCD_mes});
 	  const size_t ind_QED=ind_ens_QED_mes({iens,iQED_mes});
+	  const size_t ind_an_ens=ind_adml({input_an_id,iens});
 	  ens_pars_t &ens=ens_pars[iens];
 	  double aMlep=ens.aMLep[ilep];
 	  djack_t jpi=find_pi(aMlep,jaM[ind_QCD]);
@@ -911,11 +917,16 @@ void compute_corr(size_t iproc)
 	  //compute the point-like contribution according to eq.9 of Silvano's note
 	  
 	  //compute the internal+external contribution
-	  dboot_t external=2.0*dA_fr_A*e2; //nasty: CHECK IF A MINUS is present, I think no, because there should be one in dA and one in A
-	  dboot_t internal=2.0*dboot_t(bi,jDZA_rel[ind_QED])*e2;
-	  dboot_t rate_mass=-2.0*dboot_t(bi,jDM[ind_QED]/jaM[ind_QCD])*e2; //to be SUBTRACTED
+	  dboot_t external=2.0*dA_fr_A*e2;
+	  dboot_t dZA_rel=dboot_t(bi,jDZA_QED_rel[ind_QED])*e2+dboot_t(bi,jDZA_MASS_rel[ind_QED])*adml_bare[ind_an_ens];
+	  dboot_t dM_rel=dboot_t(bi,jDM_QED[ind_QED]/jaM[ind_QCD])*e2+dboot_t(bi,jDM_MASS[ind_QED]/jaM[ind_QCD])*adml_bare[ind_an_ens];
+	  dboot_t internal=2.0*dZA_rel;
+	  dboot_t rate_mass=-2.0*dM_rel; //to be SUBTRACTED
 	  double marc_sirl=e2/(2*sqr(M_PI))*log(MZ/MW);
-	  double DeltaE=0.0298; //MeV - TO BE ADJUSTED
+	  int ilep=imlep_of_proc[iproc];
+	  double M_mes=QED_mes_pars[iQED_mes].M;
+	  double DeltaE=M_mes*(1-sqr(M_lep[ilep]/M_mes))/2.0;
+	  cout<<"DeltaE: "<<DeltaE<<endl;
 	  dboot_t rate_pt=Gamma_pt(Mlep,Mmes,DeltaE)*e2; //only e2
 	  tot_corr[iens]=external+internal+W_contr-FSE_contr+rate_mass+rate_pt+marc_sirl;
 	  

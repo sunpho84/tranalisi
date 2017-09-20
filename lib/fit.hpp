@@ -273,7 +273,7 @@ void two_pts_with_ins_ratio_fit(TS &Z2,TS &M,TS &DZ2_fr_Z2,TS &SL,const TV &corr
   TV eff_slope_offset=effective_squared_coupling_rel_corr(TV(corr_ins/corr),eff_mass,eff_slope,TH);
   DZ2_fr_Z2=constant_fit(eff_slope_offset,tmin,tmax,"/tmp/test_sq_coupling_rel_corr.xmg");
   
-  if(SL.err()!=0.0 and DZ2_fr_Z2.ave()!=0.0)
+  if(SL.err()!=0.0 and DZ2_fr_Z2.ave()!=0.0 and (not std::isnan(SL.err())) and (not std::isnan(DZ2_fr_Z2.ave())))
     {
       //! fit for real
       size_t iel=0;
@@ -313,7 +313,12 @@ void two_pts_with_ins_ratio_fit(TS &Z2,TS &M,TS &DZ2_fr_Z2,TS &SL,const TV &corr
       if(path_ins!="") write_fit_plot(path_ins,tmin,tmax,[M,DZ2_fr_Z2,SL,TH,par](double x)->TS
 				      {return two_pts_corr_with_ins_ratio_fun(M,DZ2_fr_Z2,SL,TH,x,par);},TV(corr_ins/corr));
     }
-  else two_pts_true_fit(Z2,M,corr,TH,tmin,tmax,path,par);
+  else
+    {
+      two_pts_true_fit(Z2,M,corr,TH,tmin,tmax,path,par);
+      SL=0.0;
+      DZ2_fr_Z2=0.0;
+    }
 }
 
 /////////////////////////////////////////////////////////////// multi x fit ///////////////////////////////////////////////////////////

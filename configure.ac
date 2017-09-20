@@ -202,7 +202,7 @@ AC_MSG_RESULT([Enabling architecture optimization... $arch_opt])
 
 #activate Eigen vectorization
 AC_ARG_ENABLE(Eigen_vec_opt,
-        AS_HELP_STRING([--enable-Eigen_vec_opt=yes[,no]],[Enable Eigen vectorization]),
+        AS_HELP_STRING([--enable-Eigen_vec_opt=yes[,no]],[Enable Eigen vectorization (default: no)]),
         Eigen_vec_opt="${enableval}",
         Eigen_vec_opt=no)
 case "$Eigen_vec_opt" in
