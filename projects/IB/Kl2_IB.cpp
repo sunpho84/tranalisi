@@ -579,7 +579,7 @@ const size_t norie=2; //!< number of orientation of the meson
 const size_t nrev=2; //!< number of possible reversion
 const size_t nqins=3; //!< number of quarks inserted: 0(none), 1 or 2
 const size_t nprocess_max=6; //!< number of processes computed
-const size_t nprocess=2; //!< number of process to analyse
+const size_t nprocess=3; //!< number of process to analyse
 const size_t nrlep=2; //!< number of r for leptons
 const size_t nproj=1; //!<number of projectors: 1, V0 only
 index_t ind_hl_corr;
@@ -630,7 +630,7 @@ djvec_t hl_corr_subtract_around_world(const djvec_t &in,const djack_t &M)
   djack_t fp=exp(M),fm=exp(-M);
   
   for(size_t t=1;t<out.size()-1;t++)
-    out[t]=(in[t]+(in[t-1]-in[t+1])/(fp-fm))/2;
+    out[t]=(in[t]+(in[t-1]*fp-in[t+1]*fm)/(fp-fm))/2;
   
   return out;
 }
@@ -868,7 +868,9 @@ void compute_corr(size_t iproc)
 	  djack_t jpi=find_pi(aMlep,jaM[ind_QCD]);
 	  
 	  djack_t jbetal=sqrt(3)*jpi/tm_quark_energy(jpi,aMlep);
-	  djvec_t jz=prepare_z_for_FSE(ens.path+"/z_FSE_proc"+to_string(iproc)+".dat",jbetal);
+	  djvec_t jz(nZ_FSE);
+	  if(iproc<2) jz=prepare_z_for_FSE(ens.path+"/z_FSE_proc"+to_string(iproc)+".dat",jbetal);
+	  else        jz=0.0;
 	  
 	  bi=jack_index[input_an_id][ens.iult];
 	  prepare_az(input_an_id);
@@ -918,24 +920,30 @@ void compute_corr(size_t iproc)
 	  
 	  //compute the internal+external contribution
 	  dboot_t external=2.0*dA_fr_A*e2;
-	  dboot_t dZA_rel=dboot_t(bi,jDZA_QED_rel[ind_QED])*e2+dboot_t(bi,jDZA_MASS_rel[ind_QED])*adml_bare[ind_an_ens];
-	  dboot_t dM_rel=dboot_t(bi,jDM_QED[ind_QED]/jaM[ind_QCD])*e2+dboot_t(bi,jDM_MASS[ind_QED]/jaM[ind_QCD])*adml_bare[ind_an_ens];
-	  dboot_t internal=2.0*dZA_rel;
-	  dboot_t rate_mass=-2.0*dM_rel; //to be SUBTRACTED
+	  dboot_t dZA_QED_rel=dboot_t(bi,jDZA_QED_rel[ind_QED])*e2;
+	  dboot_t dZA_MASS_rel=dboot_t(bi,jDZA_MASS_rel[ind_QED])*adml_bare[ind_an_ens];
+	  dboot_t dM_QED_rel=dboot_t(bi,jDM_QED[ind_QED]/jaM[ind_QCD])*e2;
+	  dboot_t dM_MASS_rel=dboot_t(bi,jDM_MASS[ind_QED]/jaM[ind_QCD])*adml_bare[ind_an_ens];
+	  dboot_t internal_QED=2.0*dZA_QED_rel;
+	  dboot_t internal_MASS=2.0*dZA_MASS_rel;
+	  dboot_t rate_QED_mass=-2.0*dM_QED_rel; //to be SUBTRACTED
+	  dboot_t rate_MASS_mass=-2.0*dM_MASS_rel; //and this as well
 	  double marc_sirl=e2/(2*sqr(M_PI))*log(MZ/MW);
 	  int ilep=imlep_of_proc[iproc];
 	  double M_mes=QED_mes_pars[iQED_mes].M;
 	  double DeltaE=M_mes*(1-sqr(M_lep[ilep]/M_mes))/2.0;
 	  cout<<"DeltaE: "<<DeltaE<<endl;
 	  dboot_t rate_pt=Gamma_pt(Mlep,Mmes,DeltaE)*e2; //only e2
-	  tot_corr[iens]=external+internal+W_contr-FSE_contr+rate_mass+rate_pt+marc_sirl;
+	  tot_corr[iens]=external+internal_QED+internal_MASS+W_contr-FSE_contr+rate_QED_mass+rate_MASS_mass+rate_pt+marc_sirl;
 	  
 	  qed_corr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<
 	    ",\n external: "<<smart_print(external.ave_err())<<
-	    ",\n internal: "<<smart_print(internal.ave_err())<<
+	    ",\n internal QED: "<<smart_print(internal_QED.ave_err())<<
+	    ",\n internal MASS: "<<smart_print(internal_MASS.ave_err())<<
 	    ",\n W contr: "<<smart_print(W_contr.ave_err())<<
 	    ",\n FSE contr: "<<smart_print(FSE_contr.ave_err())<<
-	    ",\n rate mass: "<<smart_print(rate_mass.ave_err())<<
+	    ",\n rate QED mass: "<<smart_print(rate_QED_mass.ave_err())<<
+	    ",\n rate MASS mass: "<<smart_print(rate_MASS_mass.ave_err())<<
 	    ",\n  (mass): "<<smart_print(jaM[ind_QCD].ave_err())<<
 	    ",\n rate pt: "<<smart_print(rate_pt.ave_err())<<
 	    ",\n marc sirl: "<<marc_sirl<<
@@ -967,8 +975,6 @@ int main(int narg,char **arg)
     compute_corr(iproc);
   
   cout<<endl<<"Total time: "<<time(0)-start<<" s"<<endl;
-  
-  cout<<"Remember that Kaon is not yet including mass correction to ml"<<endl;
   
   return 0;
 }
