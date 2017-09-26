@@ -423,6 +423,7 @@ djvec_t do_all_fits()
 	  ff_FSE[iens].resize(nth);
 	  a2Q2[iens].resize(nth);
 	  
+	  djvec_t c2(nth);
 	  for(size_t ith=0;ith<nth;ith++)
 	    {
 	      corr_PP[ith]=load_corr("pp",ith,1,ens);
@@ -436,7 +437,7 @@ djvec_t do_all_fits()
 	      aEcont[ith]=cont_en(aEfit[0],pi[ith]);
 	      aElat[ith]=latt_en(aEfit[0],pi[ith]);
 	      aE[ith]=aElat[ith];
-	      
+	      c2[ith]=djack_t(sqr(aEfit[ith])-sqr(aEfit[0]))/a2p2[ith];
 	      a2Q2[iens][ith]=4.0*a2p2[ith];
 	      aP0[ith]=2.0*aE[ith];
 	      a2P2[ith]=sqr(aP0[ith]);
@@ -444,6 +445,7 @@ djvec_t do_all_fits()
 	      eff_all.write_vec_ave_err(effective_mass(corr_PP[ith]).ave_err());
 	      eff_all.write_constant_band(ens.tmin_2pts+dtf,ens.tmax_2pts-dtf,aEfit[ith]);
 	    }
+	  c2[0]=1.0;
 	  
 	  //decay constant
 	  afPi[iens]=2*ens.aml*sqrt(Z2Pi[0])/sqr(aEfit[0]);
@@ -455,9 +457,13 @@ djvec_t do_all_fits()
 	  disprel.write_polygon([&aEfit](double a2p2){return djack_t(a2p2+sqr(aEfit[0]));},0,a2p2[nth-1]);
 	  disprel.write_polygon([&aEfit](double a2p2){return djack_t(sqr(latt_en(aEfit[0],sqrt(a2p2/3))));},0,a2p2[nth-1]);
 	  
+	  //write the dispersion relation violation
+	  grace_file_t disprel_viol(ppath+"disprel_viol.xmg");
+	  disprel_viol.write_vec_ave_err(a2p2,c2.ave_err());
+	  
 	  auto aperiodic_effective_mass=[](const djvec_t corr){return forward_derivative(djvec_t(log(corr)));};
 	  
-	  djvec_t mel(nth);
+	  djvec_t vector_ff0;
 	  for(size_t ith=0;ith<nth;ith++)
 	    {
 	      //load and improve
@@ -465,28 +471,29 @@ djvec_t do_all_fits()
 	      vector_ff=djvec_t(vector_ff+vector_ff.inverse()).subset(0,ens.T/4+1)/2;
 	      vector_ff[0]=vector_ff[1];
 	      
-	      //extract matrix element and print effective mass
-	      mel[ith]=constant_fit(vector_ff,ens.tmin_3pts+dtf,ens.tmax_3pts-dtf,ens.path+"/plots/vv_th"+to_string(ith)+".xmg");
-	      djvec_t vector_ff_effmass=aperiodic_effective_mass(vector_ff);
-	      vector_ff_effmass.ave_err().write(ens.path+"/plots/vv_effmass_th"+to_string(ith)+".xmg");
-	      
-	      vv_all.write_vec_ave_err(vector_ff.ave_err());
-	      vv_all.write_constant_band(ens.tmin_3pts+dtf,ens.tmax_3pts-dtf,mel[ith]);
-	      
 	      //compute ff
 	      size_t tsep=ens.T/2;
 	      switch(iRAT)
 		{
-		case AN_RAT: ff[iens][ith]=mel[ith]*2*aE[ith]*exp(aE[ith]*tsep);break; //see eq.20 of 0812.4042
-		case NU_RAT: ff[iens][ith]=mel[ith]/corr_PP[ith][tsep];break; //does not work better
+		case AN_RAT: vector_ff*=2*aE[ith]*exp(aE[ith]*tsep);break; //see eq.20 of 0812.4042
+		case NU_RAT: vector_ff/=corr_PP[ith][tsep];break; //does not work better
 		}
+	      
+	      //normalize
+	      if(ith==0) vector_ff0=vector_ff;
+	      vector_ff/=vector_ff0;
+	      
+	      //extract matrix element and print effective mass
+	      ff[iens][ith]=constant_fit(vector_ff,ens.tmin_3pts+dtf,ens.tmax_3pts-dtf,ens.path+"/plots/vv_th"+to_string(ith)+".xmg");
+	      djvec_t vector_ff_effmass=aperiodic_effective_mass(vector_ff);
+	      vector_ff_effmass.ave_err().write(ens.path+"/plots/vv_effmass_th"+to_string(ith)+".xmg");
+	      
+	      vv_all.write_vec_ave_err(vector_ff.ave_err());
+	      vv_all.write_constant_band(ens.tmin_3pts+dtf,ens.tmax_3pts-dtf,ff[iens][ith]);
 	      
 	      ff_FSE[iens][ith]=FSE_fun(aMPi[iens],ens.L,afPi[iens],ens.th[ith]/2,use_FSE);
 	      //cout<<"check:"<<ens.th[ith]<<" "<<ff_FSE[iens][ith]<<endl;
 	    }
-	  
-	  //normalize and renormalize
-	  ff[iens]/=(djack_t)(ff[iens][0]);
 	  
 	  //plot ff
 	  grace_file_t ff_plot(ppath+"ff.xmg");
@@ -510,6 +517,16 @@ djvec_t do_all_fits()
 
 int main(int narg,char **arg)
 {
+  double M=6.2161e-2;
+  double L=48;
+  double fpi=6.0388e-2;
+  double th=0.0898;
+  double k=2*th*M_PI/L;
+  //cout<<k<<endl;
+  vector<double> shifts(3,th);
+  cout<<shifted_mom_Tiburzi(M,L,fpi,0,shifts)<<endl;
+  CRASH("");
+  
   fpiem_initialize(narg,arg);
   
   cout<<"Studying "<<syst_ind.max()<<" systematics"<<endl;

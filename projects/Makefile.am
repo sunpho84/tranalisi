@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS=subdir-objects
 
 SUBDIRS= \
-	SMETEST \
 	FPIEM \
+	SMETEST \
 	MOM \
 	IB

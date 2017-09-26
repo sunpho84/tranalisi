@@ -135,4 +135,37 @@ template <class T>
 double percentage(const T &num,const T& den)
 {return num*100.0/den;}
 
+//! sum from n0 to infinity, with a given tolerance
+template <class T,class Fun>
+T series(int n0,int dn,const Fun &fun,T tol)
+{
+  T out=0;
+  T contr;
+  
+  //positive contribution
+  int n=n0,i=0;
+  bool get_out;
+  do
+    {
+      //compute, check nan and increment
+      contr=fun(n);
+      if(isnan(contr)) CRASH("nan found when evaluating %d in %s",n0,__PRETTY_FUNCTION__);
+      out+=contr;
+      
+      //check if we go out
+      if(fabs(out)==0.0) get_out=(i>10);
+      else               get_out=(fabs(contr/out)<tol);
+      
+      //debug
+      //cout<<"  "<<n<<" "<<out<<" "<<contr<<" "<<get_out<<endl;
+      
+      //increment
+      n+=dn;
+      i++;
+    }
+  while(not get_out);
+  
+  return out;
+}
+
 #endif

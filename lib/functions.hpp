@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <vector>
 
+#include <gsl/gsl_integration.h>
+
 #include <math.hpp>
 #include <tools.hpp>
 
@@ -110,7 +112,8 @@ template <class T> T latt_en(T m,double pi)
 {return 2*asinh((T)sqrt(3*sqr(sin(pi/2))+sqr((T)sinh(m/2))));}
 
 //! compute the value of the polynomial in the point
-template <class TV,class TS=typename TV::base_type> TS poly_eval(const TV &pars,double x)
+template <class TV,class TS=typename TV::base_type>
+TS poly_eval(const TV &pars,double x)
 {
   TS t=pars[0];
   double R=x;
@@ -121,5 +124,34 @@ template <class TV,class TS=typename TV::base_type> TS poly_eval(const TV &pars,
     }
   return t;
 }
+
+//! Elliptic theta function (Jacobi)
+//\theta(tau,theta)=\sum_{n=-\infty}^+\infty exp(-tau*(n+theta)^2)
+//\theta^\primed(tau,theta)=-\frac{1}{2*tau}\partial_theta \theta(tau,theta)
+//using Poisson summation formula if tau is too small
+template <class T>
+T ell_theta(T tau,T theta,bool primed=false,double tol=1e-14)
+{
+  //use Poission representation
+  if(tau<M_PI)
+    if(primed) return 2*pow(M_PI/tau,1.5)*series(0,1,[tau,theta](int n){return n/(1.0+(n==0))*n*exp(-sqr(M_PI*n)/tau)*sin(2*M_PI*n*theta);},tol);
+    else       return 2*sqrt(M_PI/tau)   *series(0,1,[tau,theta](int n){return 1/(1.0+(n==0))*(exp(-sqr(M_PI*n)/tau)*cos(2*M_PI*n*theta));},tol);
+  else
+    {
+      //contribution
+      auto fun=[tau,theta,primed](int n)
+	{
+	  T contr=exp(-tau*sqr(n+theta));
+	  if(primed) contr*=n+theta;
+	  
+	  return contr;
+	};
+      
+      return series(0,1,fun,tol)+series(-1,-1,fun,tol);
+    }
+}
+
+//! compute the shifted momenta according to eq.47 of 0812.4042, shifts are in units of 2*pi!!! NISSA uses pi... be careful!
+double shifted_mom_Tiburzi(const double M,const double L,const double fpi,const int i,const vector<double> &shifts_in_2pi);
 
 #endif
