@@ -847,9 +847,9 @@ namespace hl
   //! infinite volume extrapolation variations
   namespace FSE
   {
-    enum{WITHSTDEP,NOSTDEP,NOSMALLVOL};
-    const vector<int> variations={WITHSTDEP,NOSTDEP,NOSMALLVOL};
-    const vector<string> tag={"WITHSTDEP","NOSTDEP","NOSMALLVOL"};
+    enum{NOSTDEP,WITHSTDEP,NOSMALLVOL};
+    const vector<int> variations={NOSTDEP,WITHSTDEP,NOSMALLVOL};
+    const vector<string> tag={"NOSTDEP","WITHSTDEP","NOSMALLVOL"};
     const size_t nvariations=variations.size();
   }
   
