@@ -15,7 +15,7 @@ public:
   double stat; //!< pure statistics
   double wstat; //!< weighted statistics
   double totsy; //!< total systematics
-  double tot; //!< all systematics summed
+  double tot; //!< all statistics and systematics summed
   vector<double> syst; //!< separated systematics
 };
 

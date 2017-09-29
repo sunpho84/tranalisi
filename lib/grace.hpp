@@ -381,29 +381,15 @@ public:
   }
   
   //! write a polygon
-  template <class fun_t>
-  void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  void write_polygon(const vector<double> &x,const vec_ave_err_t &y,grace::color_t col)
   {
-    close_cur_set();
+    size_t npoints=x.size();
+    if(y.size()!=npoints) CRASH("x and y have different size, %zu and %zu",npoints,y.size());
+    
     
     //mark a closed polygon
+    close_cur_set();
     this->closed_polygon(col);
-    
-    if(npoints==0) CRASH("NPoints must be different from 0");
-    //! x coordinate
-    vector<double> x(npoints);
-    //! y coordinate
-    vec_ave_err_t y(npoints);
-    
-    //! interval between points
-    double dx=(xmax-xmin)/(npoints-1);
-    //set x and y
-#pragma omp parallel for
-    for(size_t ipoint=0;ipoint<npoints;ipoint++)
-      {
-	x[ipoint]=xmin+dx*ipoint;
-	y[ipoint]=fun(x[ipoint]).ave_err();
-      }
     
     //write forward and backward
     for(size_t ipoint=0;ipoint<npoints;ipoint++)         (*this)<<x[ipoint]<<" "<<y[ipoint].ave_minus_err()<<endl;
@@ -411,6 +397,28 @@ public:
     
     need_close_set=true;
   }
+  
+  //! write a polygon from a function
+  template <class fun_t>
+  void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  {
+    //! x coordinates
+    vector<double> x=vector_grid(xmin,xmax,npoints);
+    if(x.size()!=npoints) CRASH("error, x has size %zu and expected %zu points",x.size(),npoints);
+    //! y coordinate
+    vec_ave_err_t y(npoints);
+#pragma omp parallel for
+    for(size_t ipoint=0;ipoint<npoints;ipoint++)
+      y[ipoint]=fun(x[ipoint]).ave_err();
+    
+    write_polygon(x,y,col);
+  }
+  
+  //! write a polygon setting automatically col
+  void write_polygon(const vector<double> &x,const vec_ave_err_t &y)
+  {write_polygon(x,y,get_poly_col_and_increment());}
+  
+  //! write a polygon setting automatically col
   template <class fun_t>
   void write_polygon(const fun_t &fun,double xmin,double xmax,size_t npoints=100)
   {write_polygon(fun,xmin,xmax,get_poly_col_and_increment(),npoints);}

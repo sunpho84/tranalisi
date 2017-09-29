@@ -21,7 +21,7 @@ DEFINE_HAS_METHOD(ave_err);
 DEFINE_HAS_METHOD(is_printable);
 
 //! crashes emitting the message
-void internal_crash(int line,const char *file,const char *temp,...);
+void internal_crash(int line,const char *file,const char *fun,const char *temp,...);
 
 //! check if two quantities have the same sign
 template <class T>
@@ -112,13 +112,24 @@ inline int to_int(string s)
   return out;
 }
 
-//! return a filled vector of double ranging from 0 to max (excluded)
+//! return a filled vector ranging from offset(0) to max (excluded) each stride(1)
 template <class T>
-vector<T> vector_up_to(const size_t max,const T offset=0)
+vector<T> vector_up_to(const T max,const T offset=0,const T stride=1)
 {
-  vector<T> x(max);
-  for(size_t it=0;it<max;it++) x[it]=it+offset;
-  return x;
+  vector<T> v;
+  for(T x=offset;x<max;x+=stride) v.push_back(x);
+  return v;
+}
+
+//! return a vector filled witha a grid ranging from xmin to xmax (included), with n points (n-1 intervals)
+template <class T>
+vector<T> vector_grid(const T xmin,const T xmax,const size_t n)
+{
+  if(n==0) CRASH("n must be different from 0");
+  const T dx=(xmax-xmin)/(n-1);
+  vector<T> y(n);
+  for(size_t i=0;i<n;i++) y[i]=xmin+dx*i;
+  return y;
 }
 
 //! set to zero a double

@@ -57,7 +57,7 @@ dboot_t Za_perturb_QED(size_t im)
 template <class Tpars,class Tm,class Ta>
 Tpars cont_chir_ansatz_LO(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tm &aml,const Ta &a,const Tpars &adep,const Tpars &adep_ml,double L,const Tpars &L3dep,const size_t &isyst)
 {
-  Tpars xi=xi_fun(B0,aml,f0),M=M_fun(B0,aml);
+  Tpars xi=xi_fun(B0,aml,aml,f0),M=M_fun(B0,aml,aml);
   return C*(1+Kpi*xi+K2pi*xi*xi+a*a*(adep+xi*adep_ml))+FSE_LO(C,L3dep,xi,M,L,case_of<c_FSE>(isyst));
 }
 
@@ -103,7 +103,7 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
 		(size_t idata,bool without_with_fse,size_t ib)
 		{
 		  dboot_t aml=ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib];
-		  dboot_t xi=xi_fun(pars.fit_B0,aml,pars.fit_f0),M=M_fun(pars.fit_B0,aml);
+		  dboot_t xi=xi_fun(pars.fit_B0,aml,aml,pars.fit_f0),M=M_fun(pars.fit_B0,aml,aml);
 		  size_t L=ext_data[idata].L;
 		  return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_LO(pars.C,pars.L3dep,xi,M,L,case_of<c_FSE>(isyst)));},
 		ml_phys,phys_res,yaxis_title,beta_list,ind_syst.descr(isyst));
@@ -153,7 +153,7 @@ template <class Tpars> Tpars FSE_QED(const Tpars &C,const Tpars &L3dep,const dou
 template <class Tpars,class Tm,class Ta>
 Tpars cont_chir_ansatz_QED(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tm &aml,const Ta &a,const Tpars &adep,const Tpars &adep_ml,double L,const Tpars &L3dep,const Tpars &powL)
 {
-  Tpars xi=xi_fun(B0,aml,f0);
+  Tpars xi=xi_fun(B0,aml,aml,f0);
   return C*(1.0+Kpi*xi+Kpi*xi*xi+a*a*adep)+FSE_QED(C,L3dep,L,powL);
 }
 
@@ -266,7 +266,7 @@ template <class Tpars> Tpars FSE_RAT(const Tpars &C,const Tpars &L3dep,const dou
 template <class Tpars,class Tm,class Ta>
 Tpars cont_chir_ansatz_RAT(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tm &aml,const Ta &a,const Tpars &adep,const Tpars &adep_ml,double L,const Tpars &L3dep,const Tpars &powL)
 {
-  Tpars xi=xi_fun(B0,aml,f0);
+  Tpars xi=xi_fun(B0,aml,aml,f0);
   return C*(1.0+Kpi*xi+Kpi*xi*xi+a*a*adep)+FSE_RAT(C,L3dep,L,powL);
 }
 

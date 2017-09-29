@@ -134,7 +134,7 @@ T ell_theta(T tau,T theta,bool primed=false,double tol=1e-14)
 {
   //use Poission representation
   if(tau<M_PI)
-    if(primed) return 2*pow(M_PI/tau,1.5)*series(0,1,[tau,theta](int n){return n/(1.0+(n==0))*n*exp(-sqr(M_PI*n)/tau)*sin(2*M_PI*n*theta);},tol);
+    if(primed) return 2*pow(M_PI/tau,1.5)*series(1,1,[tau,theta](int n){return n*exp(-sqr(M_PI*n)/tau)*sin(2*M_PI*n*theta);},tol);
     else       return 2*sqrt(M_PI/tau)   *series(0,1,[tau,theta](int n){return 1/(1.0+(n==0))*(exp(-sqr(M_PI*n)/tau)*cos(2*M_PI*n*theta));},tol);
   else
     {

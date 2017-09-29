@@ -6,7 +6,7 @@
 
 using namespace std;
 
-#define CRASH(...) internal_crash(__LINE__,__FILE__,__VA_ARGS__)
+#define CRASH(...) internal_crash(__LINE__,__FILE__,__PRETTY_FUNCTION__,__VA_ARGS__)
 #define _CONCAT(X,Y) X##Y
 #define CONCAT(X,Y) _CONCAT(X,Y)
 #define CONCAT2(s1,s2) CONCAT(s1,s2)

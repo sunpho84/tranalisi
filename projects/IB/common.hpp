@@ -102,11 +102,12 @@ ave_err_t eq_28_analysis(const dbvec_t &v);
 class cont_chir_fit_data_t
 {
 public:
-  double aml,ams;
-  dboot_t aMaux;
-  size_t ib,L;
-  dboot_t wfse,wofse;
-  cont_chir_fit_data_t(double aml,double ams,dboot_t aMaux,size_t ib,size_t L,dboot_t wfse,dboot_t wofse) : aml(aml),ams(ams),aMaux(aMaux),ib(ib),L(L),wfse(wfse),wofse(wofse) {}
+  const double aml,ams;
+  const dboot_t aMaux;
+  const size_t ib,L;
+  const dboot_t wfse,wofse;
+  cont_chir_fit_data_t(double aml,double ams,dboot_t aMaux,size_t ib,size_t L,dboot_t wfse,dboot_t wofse) :
+    aml(aml),ams(ams),aMaux(aMaux),ib(ib),L(L),wfse(wfse),wofse(wofse) {}
 };
 
 //! holds index and out pars
@@ -320,26 +321,31 @@ inline void prepare_az(int input_an_id)
     }
 }
 
-template <class T1,class T2> T1 FVE_M2(const T1 &M,const T2 &L)
+template <class T1,class T2>
+T1 FVE_M2(const T1 &M,const T2 &L)
 {
   const double FVE_k=2.837297;
   return -FVE_k*alpha_em/L*(M+2.0/L);
 }
 
-template <class T1,class T2> T1 FVE_M(const T1 &M,const T2 &L)
+template <class T1,class T2>
+T1 FVE_M(const T1 &M,const T2 &L)
 {
   const double FVE_k=2.837297;
   return -FVE_k*alpha_em/L/2.0*(1.0+2.0/L/M);
 }
 
-template <class T,class Tm> T M2_fun(const T &B0,const Tm &aml)
-{return 2*B0*aml;}
+template <class T,class Tm>
+T M2_fun(const T &B0,const Tm &am1,const Tm &am2)
+{return B0*(am1+am2);}
 
-template <class T,class Tm> T M_fun(const T &B0,const Tm &aml)
-{return sqrt(M2_fun(B0,aml));}
+template <class T,class Tm>
+T M_fun(const T &B0,const Tm &am1,const Tm &am2)
+{return sqrt(M2_fun(B0,am1,am2));}
 
-template <class T,class Tm> T xi_fun(const T &B0,const Tm &aml,const T &f0)
-{return M2_fun(B0,aml)/sqr(T(4*M_PI*f0));}
+template <class T,class Tm>
+T xi_fun(const T &B0,const Tm &am1,const Tm &am2,const T &f0)
+{return M2_fun(B0,am1,am2)/sqr(T(4*M_PI*f0));}
 
 #undef INIT_TO
 #undef EXTERN_COMMON

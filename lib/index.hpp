@@ -56,7 +56,7 @@ public:
     size_t out=0;
     for(size_t i=0;i<rank();i++)
       {
-	if((*this)[i].second<=oth.begin()[i]) CRASH("Calling rank %zu with value %zu greater or equal to max %zu",i,oth.begin()[i],(*this)[i].second);
+	if((*this)[i].second<=oth.begin()[i]) CRASH("Calling rank %zu (%s) with value %zu greater or equal to max %zu",i,name(i).c_str(),oth.begin()[i],(*this)[i].second);
 	out=out*(*this)[i].second+oth.begin()[i];
       }
     return out;

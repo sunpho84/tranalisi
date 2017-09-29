@@ -4,8 +4,8 @@ AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
 LDADD=$(top_builddir)/lib/libtran.a
 
 bin_PROGRAMS= \
-	$(top_builddir)/bin/gm2_IB_sc \
 	$(top_builddir)/bin/Kl2_IB \
+	$(top_builddir)/bin/gm2_IB_sc \
 	$(top_builddir)/bin/manette \
 	$(top_builddir)/bin/manette2 \
 	$(top_builddir)/bin/meson_mass_IB \

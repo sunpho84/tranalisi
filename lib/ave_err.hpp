@@ -44,7 +44,8 @@ public:
 };
 
 //! compute average and stddev of a vector
-template <class T> ave_err_t range_ave_stddev(const valarray<T> &v,size_t size)
+template <class T>
+ave_err_t range_ave_stddev(const valarray<T> &v,size_t size)
 {
   ave_err_t ae;
   
@@ -75,7 +76,8 @@ public:
 };
 
 //! traits for jack_t
-template <> class vector_traits<vec_ave_err_t> : public true_vector_traits<vec_ave_err_t> {};
+template <>
+class vector_traits<vec_ave_err_t> : public true_vector_traits<vec_ave_err_t> {};
 
 //! output of ave_err_t
 ostream& operator<<(ostream &out,const ave_err_t &ae);
@@ -89,7 +91,8 @@ inline string smart_print(double ave,double error,int ndigits=2)
 inline string smart_print(const ave_err_t &ae,int ndigits=2)
 {return smart_print(ae.ave(),vector<double>({ae.err()}),ndigits);}
 
-template <class T,class=enable_if_t<has_method_ave_err<T>::value>> string smart_print(const T &o,int ndigits=2)
+template <class T,class=enable_if_t<has_method_ave_err<T>::value>>
+string smart_print(const T &o,int ndigits=2)
 {return smart_print(o.ave_err(),ndigits);}
 
 #endif
