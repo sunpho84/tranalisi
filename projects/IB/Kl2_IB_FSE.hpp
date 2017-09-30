@@ -31,11 +31,11 @@ TV FSE_corr(const TS &mlep,const TS &mmes,const vector<double> &z0,const TV &z,c
 {
   TV out(upto.size());
 
-    for(size_t iel=0;iel<out.size();iel++)
-      {
-	vector<double> temp=FSE_corr(mlep[iel],mmes[iel],z0,z.get_all_events(iel),L[iel],upto);
-	for(size_t iu=0;iu<upto.size();iu++) out[iu][iel]=temp[iu];
-      }
+  for(size_t iel=0;iel<out[0].size();iel++)
+    {
+      vector<double> temp=FSE_corr(mlep[iel],mmes[iel],z0,z.get_all_events(iel),L[iel],upto);
+      for(size_t iu=0;iu<upto.size();iu++) out[iu][iel]=temp[iu];
+    }
   
   return out;
 }

@@ -955,6 +955,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
   pars.iL2dep=boot_fit.add_fit_par(pars.L2dep,"L2dep",L2dep_guess.ave(),L2dep_guess.err());
   pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
+  boot_fit.fix_par_to(pars.iL3dep,0.0);
   
   //set FSE pars
   const size_t FSE_flag=case_of<c_FSE>(isyst);
@@ -1004,10 +1005,10 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   dboot_t phys_res=cont_chir_ansatz_corr_hl(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,ml_phys,ms_phys,MLep,a_cont,pars.adep,inf_vol,pars.L2dep,pars.L3dep,iproc,chir_flag);
   cout<<"result: "<<phys_res.ave_err()<<endl;
   
-  if(case_of<c_FSE>(isyst)==0)
+  if(case_of<c_FSE>(isyst)!=hl::FSE::NOSMALLVOL)
     {
-      grace::default_color_scheme={grace::RED,grace::RED,grace::RED,grace::BLUE,grace::BLUE,grace::GREEN4,grace::VIOLET};
-      grace::default_symbol_scheme={grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND};
+      grace::default_color_scheme= {grace::RED,    grace::RED,    grace::RED,     grace::BLUE,   grace::BLUE,    grace::GREEN4,  grace::VIOLET};
+      grace::default_symbol_scheme={grace::CIRCLE, grace::SQUARE, grace::DIAMOND, grace::SQUARE, grace::DIAMOND, grace::TRILEFT, grace::TRIUP};
     }
   else
     {
@@ -1050,7 +1051,7 @@ void compute_corr(size_t iproc)
   if(not Wreg_contr_tab.good()) CRASH("unable to open %s",Wreg_contr_tab_path.c_str());
   
   //open a table for QED contribution
-  string qed_corr_tab_path="tables/QED_corr.txt";
+  string qed_corr_tab_path="tables/QED_corr_proc"+to_string(iproc)+".txt";
   static ofstream qed_corr_tab(qed_corr_tab_path);
   if(not qed_corr_tab.good()) CRASH("unable to open %s",qed_corr_tab_path.c_str());
   
@@ -1076,6 +1077,7 @@ void compute_corr(size_t iproc)
   dbvec_t tot_corr_all(ind_an_ens_FSEmax_frange.max());
       
   //! loop over analysis
+  dbvec_t res(hl::ind_syst.max());
   for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
     for(size_t iens=0;iens<nens_used;iens++)
       {
@@ -1151,7 +1153,7 @@ void compute_corr(size_t iproc)
 	    const dboot_t rate_MASS_mass=-2.0*dM_MASS_rel; //and this as well
 	    const double marc_sirl=e2/(2*sqr(M_PI))*log(MZ/MW);
 	    const dboot_t rate_pt=Gamma_pt(MLep,Mmes,DeltaE)*e2; //only e2
-
+	    
 	    for(size_t iFSE_max=0;iFSE_max<FSE_max_orders.size();iFSE_max++)
 	      {
 		const dboot_t tot_corr=external+internal_QED+internal_MASS+W_contr-FSE_contr[iFSE_max]+rate_QED_mass+rate_MASS_mass+rate_pt+marc_sirl;
@@ -1209,8 +1211,10 @@ void compute_corr(size_t iproc)
 	}
       
       string cc_path=combine("plots_hl/cont_chir_iproc%zu_isyst%zu.xmg",iproc,isyst);
-      cont_chir_fit_corr_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,lat_par[input_an_id].ml,lat_par[input_an_id].ms,MLep[iproc],cc_path,iproc,isyst,use_cov,beta_list);
+      res[isyst]=cont_chir_fit_corr_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,lat_par[input_an_id].ml,lat_par[input_an_id].ms,MLep[iproc],cc_path,iproc,isyst,use_cov,beta_list);
     }
+  
+  perform_analysis(res,hl::ind_syst,"Res");
 }
 
 int main(int narg,char **arg)

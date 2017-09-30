@@ -177,6 +177,10 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
   // grace::default_symbol_scheme={grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND};
   for(int without_with_fse=0;without_with_fse<2;without_with_fse++)
     {
+      //put back colors for data with fse
+      fit_file.reset_cur_col();
+      fit_file.new_data_set();
+      
       for(size_t ib=0;ib<pars.fit_a.size();ib++)
 	{
 	  //make the list of volumes
@@ -198,9 +202,6 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 	      fit_file.new_data_set();
 	    }
 	}
-      
-      //put back colors for data with fse
-      if(without_with_fse==0) fit_file.reset_cur_col();
     }
   //data of the continuum-chiral limit
   fit_file.write_ave_err(ml_phys.ave_err(),phys_res.ave_err());
