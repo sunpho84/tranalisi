@@ -202,8 +202,7 @@ public:
   }
   
   //! default constructor
-  grace_file_t(const string &path) :
-    ofstream(path),
+  grace_file_t(const string &path="") :
     need_close_set(false),
     color_scheme(grace::default_color_scheme),
     line_color_scheme(grace::default_line_color_scheme),
@@ -219,6 +218,7 @@ public:
     yaxis_min(0),
     yaxis_max(1)
   {
+    if(path!="") ofstream::open(path);
     title_size=
       subtitle_size=
       xaxis_label_size=
@@ -228,6 +228,10 @@ public:
     reset_props();
     if(!this->good()) CRASH("Unable to open grace file %s",path.c_str());
   }
+  
+  //! open
+  void open(const string &path)
+  {ofstream::open(path);}
   
   //! set title of the graph
   void set_title(string label)
