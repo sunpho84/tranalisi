@@ -97,7 +97,6 @@ int main(int narg,char **arg)
   pi_obs_file.bin_write(pi_SL_p);
   
   //kaon
-
   djvec_t k_plain=load_P5P5("00",0,1);
   djvec_t k_exch=load_P5P5("LL",0,1);
   djvec_t k_self=load_P5P5("0M",1,0);
