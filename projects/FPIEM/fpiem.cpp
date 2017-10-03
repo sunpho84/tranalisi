@@ -192,10 +192,10 @@ Tpars fpi_inf_inv_fun(double a2Q2,Tx aMPi,Tx afPi,Tx ff_FSE,Tpars p6,Tpars p1,Tp
 }
 
 //! fitting
-djack_t fit_fpiinv(const vector<double> &ff_extr_x,vector<djvec_t> &ff_extr_y,const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarray<double>> &a2Q2,const vector<djvec_t> &ff,const vector<djvec_t> &ff_FSE,pion_masses_t use_pion_masses,chirord_t use_chirord,FSE_t use_FSE,double s_max,size_t isyst)
+void fit_fpiinv(djack_t &chrad,djack_t &LEC_6,const vector<double> &ff_extr_x,vector<djvec_t> &ff_extr_y,const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarray<double>> &a2Q2,const vector<djvec_t> &ff,const vector<djvec_t> &ff_FSE,pion_masses_t use_pion_masses,chirord_t use_chirord,FSE_t use_FSE,double s_max,size_t isyst)
 {
   jack_fit_t fitter;
-  djack_t C1,C2,LEC_6,B1,B2;
+  djack_t C1,C2,B1,B2;
   size_t iC1=fitter.add_fit_par(C1,"C1",{11.9*0,0.1});
   size_t iC2=fitter.add_fit_par(C2,"C2",{11.9*0,0.1});
   size_t iB1=fitter.add_fit_par(B1,"B1",{54.3,0.1});
@@ -352,14 +352,12 @@ djack_t fit_fpiinv(const vector<double> &ff_extr_x,vector<djvec_t> &ff_extr_y,co
   cout<<"B2: "<<B2<<endl;
   
   //compute and print charge radius
-  djack_t chrad=1.0/sqr(4*M_PI*fPi_phys)*(2*(LEC_6-1.0)+B1*xi_phys)*sqr(0.19731);
+  chrad=1.0/sqr(4*M_PI*fPi_phys)*(2*(LEC_6-1.0)+B1*xi_phys)*sqr(0.19731);
   cout<<"Charge radius: "<<chrad<<" fm^2"<<endl;
-  
-  return chrad;
 }
 
 //! do all fits and return radius of charge
-djvec_t do_all_fits()
+void do_all_fits(djvec_t &ch_rad,djvec_t &LEC_6)
 {
   //open ff plots
   grace_file_t ff_all("plots/ff_all.xmg");
@@ -376,8 +374,6 @@ djvec_t do_all_fits()
   table.precision(8);
   
   const size_t nsyst=syst_ind.max();
-  
-  djvec_t ch_rad(nsyst);
   
   //store extrapolated form factor
   const size_t npoints_extr=100;
@@ -569,7 +565,7 @@ djvec_t do_all_fits()
 	  table_sim<<"\\end{table}"<<endl;
 	}
       
-      ch_rad[isyst]=fit_fpiinv(ff_extr_x,ff_extr_y,aMPi,afPi,a2Q2,ff,ff_FSE,use_pion_masses,use_chirord,use_FSE,s_max,isyst);
+      fit_fpiinv(ch_rad[isyst],LEC_6[isyst],ff_extr_x,ff_extr_y,aMPi,afPi,a2Q2,ff,ff_FSE,use_pion_masses,use_chirord,use_FSE,s_max,isyst);
       
       //write fit plot
       {
@@ -587,8 +583,6 @@ djvec_t do_all_fits()
       ff_extr_band[ipoint]=ave_err_t(syst.ave,syst.tot);
     }
   grace_file_t("plots/ff_extr_all_systs.xmg").write_polygon(ff_extr_x,ff_extr_band);
-  
-  return ch_rad;
 }
 
 int main(int narg,char **arg)
@@ -597,15 +591,23 @@ int main(int narg,char **arg)
   
   cout<<"Studying "<<syst_ind.max()<<" systematics"<<endl;
   string ch_rad_path="ch_rad.dat";
-  djvec_t ch_rad(syst_ind.max());
-  if(file_exists(ch_rad_path)) ch_rad.bin_read(ch_rad_path);
+  djvec_t ch_rad(syst_ind.max()),LEC_6(syst_ind.max());
+  if(file_exists(ch_rad_path))
+    {
+      raw_file_t file(ch_rad_path,"r");
+      ch_rad.bin_read(file);
+      LEC_6.bin_read(file);
+    }
   else
     {
-      ch_rad=do_all_fits();
-      ch_rad.bin_write(ch_rad_path);
+      do_all_fits(ch_rad,LEC_6);
+      raw_file_t file(ch_rad_path,"w");
+      ch_rad.bin_write(file);
+      LEC_6.bin_write(file);
     }
   
   perform_analysis(ch_rad,syst_ind,"Charge radius");
+  perform_analysis(LEC_6,syst_ind,"LEC_6");
   
   return 0;
 }
