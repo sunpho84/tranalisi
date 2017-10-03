@@ -150,6 +150,7 @@ int main(int narg,char **arg)
   k_obs_file.bin_write(k_SL_selftad_revins);
   k_obs_file.bin_write(k_SL_p_revins);
   k_obs_file.bin_write(k_SL_s_revins);
+  k_obs_file.bin_write(k_A_s);
 
   //D meson
 
