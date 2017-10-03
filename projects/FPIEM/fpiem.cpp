@@ -64,8 +64,8 @@ index_t syst_ind({
 
 //! return xi
 template <class T>
-T xi_fun(const T &mpi,const T &fpi)
-{return sqr((T)(mpi/(4.0*M_PI*fpi)));}
+T xi_fun(const T &M,const T &F)
+{return sqr((T)(M/(4.0*M_PI*F)));}
 
 //! return s
 template <class T>
@@ -192,7 +192,7 @@ Tpars fpi_inf_inv_fun(double a2Q2,Tx aMPi,Tx afPi,Tx ff_FSE,Tpars p6,Tpars p1,Tp
 }
 
 //! fitting
-djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarray<double>> &a2Q2,const vector<djvec_t> &ff,const vector<djvec_t> &ff_FSE,pion_masses_t use_pion_masses,chirord_t use_chirord,FSE_t use_FSE,double s_max,size_t isyst)
+djack_t fit_fpiinv(const vector<double> &ff_extr_x,vector<djvec_t> &ff_extr_y,const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarray<double>> &a2Q2,const vector<djvec_t> &ff,const vector<djvec_t> &ff_FSE,pion_masses_t use_pion_masses,chirord_t use_chirord,FSE_t use_FSE,double s_max,size_t isyst)
 {
   jack_fit_t fitter;
   djack_t C1,C2,LEC_6,B1,B2;
@@ -234,7 +234,7 @@ djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarr
       break;
     }
   
-  def_nboots=10000;
+  // def_nboots=10000;
   
   size_t nens=aMPi.size();
   // size_t base_seed=234235;
@@ -300,8 +300,8 @@ djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarr
 			     "chpt ord: "+chirord_tag[iuse_chirord]+", "
 			     "dt: "+to_string(dtf)+", "
 			     "s max: "+to_string(s_max));
-      plot_mfix.set_xaxis_label("$$a^2Q^2");
-      plot_mfix.set_yaxis_label("$$1/f_+^\\pi");
+      plot_mfix.set_xaxis_label("$$Q^2/M_\\pi ^2");
+      plot_mfix.set_yaxis_label("$$1/F_\\pi");
       
       //write data, in 2 scansions
       djvec_t inv=1/ff[iens];
@@ -312,7 +312,7 @@ djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarr
 	  for(size_t ith=1;ith<ens_data[iens].nth();ith++)
 	    {
 	      bool th_used=(used[iens] and (s_max==0 or si_fun_Q2(a2Q2[iens][ith],aMPi[iens].ave())<s_max));
-	      if(it!=th_used) plot_mfix.write_ave_err(a2Q2[iens][ith],inv[ith].ave_err());
+	      if(it!=th_used) plot_mfix.write_ave_err(a2Q2[iens][ith]/sqr(aMPi[iens].ave()),inv[ith].ave_err());
 	    }
 	}
       
@@ -325,22 +325,33 @@ djack_t fit_fpiinv(const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarr
       if(Q2_int>Q2_max) Q2_int=Q2_max;
       double xmin[2]={Q2_min,Q2_int};
       double xmax[2]={Q2_int,Q2_max};
+      cout<<aMPi[iens]<<endl;
       for(size_t it=0;it<2;it++)
-	plot_mfix.write_polygon([&L,&aMPi,afPi,iens,LEC_6,B1,B2,C1,C2,use_FSE,xmin,xmax,it](double x)
+	plot_mfix.write_polygon([&L,&aMPi,afPi,iens,LEC_6,B1,B2,C1,C2,use_FSE,it](double x)
 				{
+				  x*=sqr(aMPi[iens].ave());
 				  auto th=th_fun_Q2(x,L);
 				  auto F=FSE_fun((djack_t)aMPi[iens],L,afPi[iens],th/2.0,use_FSE);
 				  //cout<<th<<" "<<F<<endl;
 				  return fpi_inf_inv_fun(x,aMPi[iens],afPi[iens],F,LEC_6,B1,B2,C1,C2,use_FSE);}
-				,xmin[it],xmax[it],50);
+				,xmin[it]/sqr(aMPi[iens].ave()),xmax[it]/sqr(aMPi[iens].ave()),50);
     }
   
+  //store extrapolation on all points
+  for(size_t ipoint=0;ipoint<ff_extr_x.size();ipoint++)
+    {
+      double x=ff_extr_x[ipoint];
+      ff_extr_y[ipoint][isyst]=1.0/fpi_inf_inv_fun(x,MPi_phys,fPi_phys,0.0,LEC_6,B1,B2,C1,C2,NO_FSE);
+    }
+  
+  //print LEC
   cout<<"C1: "<<C1<<endl;
   cout<<"C2: "<<C2<<endl;
   cout<<"LEC_6: "<<LEC_6<<endl;
   cout<<"B1: "<<B1<<endl;
   cout<<"B2: "<<B2<<endl;
   
+  //compute and print charge radius
   djack_t chrad=1.0/sqr(4*M_PI*fPi_phys)*(2*(LEC_6-1.0)+B1*xi_phys)*sqr(0.19731);
   cout<<"Charge radius: "<<chrad<<" fm^2"<<endl;
   
@@ -364,9 +375,16 @@ djvec_t do_all_fits()
   table<<fixed;
   table.precision(8);
   
-  djvec_t ch_rad(syst_ind.max());
+  const size_t nsyst=syst_ind.max();
   
-  for(size_t isyst=0;isyst<syst_ind.max();isyst++)
+  djvec_t ch_rad(nsyst);
+  
+  //store extrapolated form factor
+  const size_t npoints_extr=100;
+  const vector<double> ff_extr_x=vector_grid(1e-10,0.25,npoints_extr);
+  vector<djvec_t> ff_extr_y(npoints_extr,djvec_t(nsyst));
+  
+  for(size_t isyst=0;isyst<nsyst;isyst++)
     {
       cout<<"################################################## "<<isyst<<" ##################################################"<<endl;
       
@@ -423,6 +441,18 @@ djvec_t do_all_fits()
 	  ff_FSE[iens].resize(nth);
 	  a2Q2[iens].resize(nth);
 	  
+	  string table_sim_path=ens.path+"/table_sim.txt";
+	  ofstream table_sim(table_sim_path);
+	  
+	  table_sim<<"\\begin{table}"<<endl;
+	  table_sim<<"\\begin{centering}"<<endl;
+	  table_sim<<"\\begin{tabular}{|c|c|c|c|}"<<endl;
+	  table_sim<<"\\hline"<<endl;
+	  table_sim<<"$\\theta$ & $a^{2}p^{2}$ & $Q^{2}/M_{\\pi}^{2}$ & $F_{\\pi}(Q^2)$\\\\"<<endl;
+	  table_sim<<"\\hline"<<endl;
+	  table_sim<<"\\hline"<<endl;
+	  
+	  djvec_t c2(nth);
 	  for(size_t ith=0;ith<nth;ith++)
 	    {
 	      corr_PP[ith]=load_corr("pp",ith,1,ens);
@@ -436,7 +466,7 @@ djvec_t do_all_fits()
 	      aEcont[ith]=cont_en(aEfit[0],pi[ith]);
 	      aElat[ith]=latt_en(aEfit[0],pi[ith]);
 	      aE[ith]=aElat[ith];
-	      
+	      if(ith) c2[ith]=djack_t(sqr(aEfit[ith])-sqr(aEfit[0]))/a2p2[ith];
 	      a2Q2[iens][ith]=4.0*a2p2[ith];
 	      aP0[ith]=2.0*aE[ith];
 	      a2P2[ith]=sqr(aP0[ith]);
@@ -444,6 +474,8 @@ djvec_t do_all_fits()
 	      eff_all.write_vec_ave_err(effective_mass(corr_PP[ith]).ave_err());
 	      eff_all.write_constant_band(ens.tmin_2pts+dtf,ens.tmax_2pts-dtf,aEfit[ith]);
 	    }
+	  
+	  c2[0]=1.0;
 	  
 	  //decay constant
 	  afPi[iens]=2*ens.aml*sqrt(Z2Pi[0])/sqr(aEfit[0]);
@@ -455,9 +487,34 @@ djvec_t do_all_fits()
 	  disprel.write_polygon([&aEfit](double a2p2){return djack_t(a2p2+sqr(aEfit[0]));},0,a2p2[nth-1]);
 	  disprel.write_polygon([&aEfit](double a2p2){return djack_t(sqr(latt_en(aEfit[0],sqrt(a2p2/3))));},0,a2p2[nth-1]);
 	  
+	  //write the dispersion relation violation
+	  grace_file_t disprel_viol(ppath+"disprel_viol.xmg");
+	  disprel_viol.write_vec_ave_err(a2p2,c2.ave_err());
+	  const double aMPi_ave=aMPi[iens].ave();
+	  const double afPi_ave=afPi[iens].ave();
+	  disprel_viol.write_line(
+				  [&aMPi_ave,&afPi_ave,&ens](double a2p2)
+				  {
+				    double pi=sqrt(a2p2/3.0);
+				    double th_in_2pi=pi*ens.L/(2*M_PI);
+				    vector<double> shifts(3,th_in_2pi);
+				    double ki=shifted_mom_Tiburzi(aMPi_ave,ens.L,afPi_ave,0,shifts);
+				    //cout<<" pi: "<<pi<<" , ki: "<<ki<<endl;
+				    return sqr(1.0+ki/pi);
+				  },
+				  a2p2[1],a2p2.back());
+	  disprel_viol.write_polygon(
+				  [&aMPi,iens](double a2p2)
+				  {
+				    double pi=sqrt(a2p2/3.0);
+				    djack_t c2=(sqr(latt_en(aMPi[iens],pi))-sqr(latt_en(aMPi[iens],0)))/a2p2;
+				    return c2;
+				  },
+				  a2p2[1],a2p2.back());
+	  
 	  auto aperiodic_effective_mass=[](const djvec_t corr){return forward_derivative(djvec_t(log(corr)));};
 	  
-	  djvec_t mel(nth);
+	  djvec_t vector_ff0;
 	  for(size_t ith=0;ith<nth;ith++)
 	    {
 	      //load and improve
@@ -465,28 +522,29 @@ djvec_t do_all_fits()
 	      vector_ff=djvec_t(vector_ff+vector_ff.inverse()).subset(0,ens.T/4+1)/2;
 	      vector_ff[0]=vector_ff[1];
 	      
-	      //extract matrix element and print effective mass
-	      mel[ith]=constant_fit(vector_ff,ens.tmin_3pts+dtf,ens.tmax_3pts-dtf,ens.path+"/plots/vv_th"+to_string(ith)+".xmg");
-	      djvec_t vector_ff_effmass=aperiodic_effective_mass(vector_ff);
-	      vector_ff_effmass.ave_err().write(ens.path+"/plots/vv_effmass_th"+to_string(ith)+".xmg");
-	      
-	      vv_all.write_vec_ave_err(vector_ff.ave_err());
-	      vv_all.write_constant_band(ens.tmin_3pts+dtf,ens.tmax_3pts-dtf,mel[ith]);
-	      
 	      //compute ff
 	      size_t tsep=ens.T/2;
 	      switch(iRAT)
 		{
-		case AN_RAT: ff[iens][ith]=mel[ith]*2*aE[ith]*exp(aE[ith]*tsep);break; //see eq.20 of 0812.4042
-		case NU_RAT: ff[iens][ith]=mel[ith]/corr_PP[ith][tsep];break; //does not work better
+		case AN_RAT: vector_ff*=2*aE[ith]*exp(aE[ith]*tsep);break; //see eq.20 of 0812.4042
+		case NU_RAT: vector_ff/=corr_PP[ith][tsep];break; //does not work better
 		}
+	      
+	      //normalize
+	      if(ith==0) vector_ff0=vector_ff;
+	      vector_ff/=vector_ff0;
+	      
+	      //extract matrix element and print effective mass
+	      ff[iens][ith]=constant_fit(vector_ff,ens.tmin_3pts+dtf,ens.tmax_3pts-dtf,ens.path+"/plots/vv_th"+to_string(ith)+".xmg");
+	      djvec_t vector_ff_effmass=aperiodic_effective_mass(vector_ff);
+	      vector_ff_effmass.ave_err().write(ens.path+"/plots/vv_effmass_th"+to_string(ith)+".xmg");
+	      
+	      vv_all.write_vec_ave_err(vector_ff.ave_err());
+	      vv_all.write_constant_band(ens.tmin_3pts+dtf,ens.tmax_3pts-dtf,ff[iens][ith]);
 	      
 	      ff_FSE[iens][ith]=FSE_fun(aMPi[iens],ens.L,afPi[iens],ens.th[ith]/2,use_FSE);
 	      //cout<<"check:"<<ens.th[ith]<<" "<<ff_FSE[iens][ith]<<endl;
 	    }
-	  
-	  //normalize and renormalize
-	  ff[iens]/=(djack_t)(ff[iens][0]);
 	  
 	  //plot ff
 	  grace_file_t ff_plot(ppath+"ff.xmg");
@@ -496,14 +554,39 @@ djvec_t do_all_fits()
 	  ff_all.set_legend(ens.path);
 	  
 	  for(size_t ith=0;ith<nth;ith++)
-	    table<<ith<<"\t"<<a2p2[ith]<<"\t"<<a2Q2[iens][ith]<<"\t"<<aEfit[ith]<<"\t"<<ff[iens][ith]<<"\t"<<ff_FSE[iens][ith]<<endl;
-	  
+	    {
+	      table_sim<<ens.th[ith]<<" & "<<a2p2[ith]<<" & "<<a2Q2[iens][ith]/sqr(aEfit[0].ave())<<" & "<<smart_print(ff[iens][ith])<<"\\\\"<<endl;
+	      table_sim<<"\\hline"<<endl;
+	      
+	      table<<ith<<"\t"<<a2p2[ith]<<"\t"<<a2Q2[iens][ith]<<"\t"<<aEfit[ith]<<"\t"<<ff[iens][ith]<<"\t"<<ff_FSE[iens][ith]<<endl;
+	    }
 	  table<<endl;
 	  table<<"\tafPi="<<afPi[iens].ave_err()<<"\tML: "<<djack_t(aMPi[iens]*ens.L).ave_err()<<endl;
+	  
+	  table_sim<<"\\end{tabular}"<<endl;
+	  table_sim<<"\\par\\end{centering}"<<endl;
+	  table_sim<<"\\caption{"<<ens.path<<"}"<<endl;
+	  table_sim<<"\\end{table}"<<endl;
 	}
       
-      ch_rad[isyst]=fit_fpiinv(aMPi,afPi,a2Q2,ff,ff_FSE,use_pion_masses,use_chirord,use_FSE,s_max,isyst);
+      ch_rad[isyst]=fit_fpiinv(ff_extr_x,ff_extr_y,aMPi,afPi,a2Q2,ff,ff_FSE,use_pion_masses,use_chirord,use_FSE,s_max,isyst);
+      
+      //write fit plot
+      {
+	vec_ave_err_t temp(npoints_extr);
+	for(size_t ipoint=0;ipoint<npoints_extr;ipoint++) temp[ipoint]=ff_extr_y[ipoint][isyst].ave_err();
+	grace_file_t("plots/fit"+to_string(isyst)+"_ff_extr.xmg").write_polygon(ff_extr_x,temp);
+      }
     }
+  
+  //perform eq.28 analysis on the extrapolated curves and plot it
+  vec_ave_err_t ff_extr_band(npoints_extr);
+  for(size_t ipoint=0;ipoint<npoints_extr;ipoint++)
+    {
+      syst_t syst=perform_analysis(ff_extr_y[ipoint],syst_ind);
+      ff_extr_band[ipoint]=ave_err_t(syst.ave,syst.tot);
+    }
+  grace_file_t("plots/ff_extr_all_systs.xmg").write_polygon(ff_extr_x,ff_extr_band);
   
   return ch_rad;
 }

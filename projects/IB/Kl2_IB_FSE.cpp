@@ -13,7 +13,8 @@
 using namespace std;
 
 //! iterate until convergence reached
-template <class fun_t> double until_convergence(fun_t fun,int nmax,int incr=1,double eps=1e-12)
+template <class fun_t>
+double until_convergence(fun_t fun,int nmax,int incr=1,double eps=1e-12)
 {
   double res=0,ores;
   
@@ -29,7 +30,8 @@ template <class fun_t> double until_convergence(fun_t fun,int nmax,int incr=1,do
 }
 
 //! loop on omega
-template <class ...Tp,class fun_t> double iter_on_n3(int nmax,fun_t fun,Tp... args)
+template <class ...Tp,class fun_t>
+double iter_on_n3(int nmax,fun_t fun,Tp... args)
 {
   vector<double> p(3,1/sqrt(3));
   double res=0;
@@ -49,7 +51,7 @@ template <class ...Tp,class fun_t> double iter_on_n3(int nmax,fun_t fun,Tp... ar
   return res;
 }
 
-double fny(double y, void *params)
+double fny(double y,void *params)
 {
   double *dp=(double*)params;
   double betal  =dp[0];
@@ -235,7 +237,7 @@ vector<double> zeta_FSE(double betal,double ustar,double eps)
   return out;
 }
 
-double FSE_corr(double mlep,double mmes,const vector<double> &z0,const vector<double> &z,double L,size_t upto)
+vector<double> FSE_corr(double mlep,double mmes,const vector<double> &z0,const vector<double> &z,double L,const vector<size_t> &upto)
 {
   double rl=mlep/mmes;
   vector<double> c(4);
@@ -259,10 +261,17 @@ double FSE_corr(double mlep,double mmes,const vector<double> &z0,const vector<do
   // cout<<"cIR: "<<cIR<<endl;
   // cout<<"c: "<<endl<<c<<endl;
   
-  double out=cIR*log(sqr(mL))+c[0];
-  if(upto>=1) out+=c[1]/mL;
-  if(upto>=2) out+=c[2]/sqr(mL);
-  if(upto>=3) out+=c[3]/cube(mL);
+  vector<double> out(upto.size());
+
+  for(size_t i=0;i<upto.size();i++)
+    {
+      out[i]=cIR*log(sqr(mL))+c[0];
+      if(upto[i]>=1) out[i]+=c[1]/mL;
+      if(upto[i]>=2) out[i]+=c[2]/sqr(mL);
+      if(upto[i]>=3) out[i]+=c[3]/cube(mL);
+    }
+  
+  // cout<<out<<endl;
   
   return out;
 }

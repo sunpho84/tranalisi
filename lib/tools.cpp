@@ -31,7 +31,7 @@ void print_backtrace_list()
   free(strs);
 }
 
-void internal_crash(int line,const char *file,const char *format,...)
+void internal_crash(int line,const char *file,const char *func,const char *format,...)
 {
   char buffer[1024];
   va_list args;
@@ -40,7 +40,7 @@ void internal_crash(int line,const char *file,const char *format,...)
   vsprintf(buffer,format,args);
   va_end(args);
   
-  cerr<<"ERROR at line "<<line<<" of file "<<file<<": \""<<buffer<<"\""<<endl;
+  cerr<<"ERROR in function "<<func<<" at line "<<line<<" of file "<<file<<": \""<<buffer<<"\""<<endl;
   print_backtrace_list();
   exit(1);
 }

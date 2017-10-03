@@ -23,20 +23,26 @@ template <class TS,class TV=vmeas_t<TS>> TV zeta_FSE(const TS &betal,double usta
 }
 
 //! compute FSE corr according to eq.35-36 of Silvano's Nazario's note
-double FSE_corr(double mlep,double mmes,const vector<double> &z0,const vector<double> &z,double L,size_t upto=1);
+vector<double> FSE_corr(double mlep,double mmes,const vector<double> &z0,const vector<double> &z,double L,const vector<size_t> &upto={1});
 
 //! wrapper
 template <class TV,class TS=typename TV::base_type>
-TS FSE_corr(const TS &mlep,const TS &mmes,const vector<double> &z0,const TV &z,const TS &L,size_t upto=1)
+TV FSE_corr(const TS &mlep,const TS &mmes,const vector<double> &z0,const TV &z,const TS &L,const vector<size_t> &upto={1})
 {
-  TS out;
-  for(size_t iel=0;iel<out.size();iel++) out[iel]=FSE_corr(mlep[iel],mmes[iel],z0,z.get_all_events(iel),L[iel],upto);
+  TV out(upto.size());
+
+  for(size_t iel=0;iel<out[0].size();iel++)
+    {
+      vector<double> temp=FSE_corr(mlep[iel],mmes[iel],z0,z.get_all_events(iel),L[iel],upto);
+      for(size_t iu=0;iu<upto.size();iu++) out[iu][iel]=temp[iu];
+    }
+  
   return out;
 }
 
 DEFINE_FUNCTION(gsl_sf_dilog)
 
-//! point rate
+//! compute the point-like contribution according to eq.9 of Silvano's note
 template <class T>
 T Gamma_pt(T mlep,T mmes,double DeltaE)
 {

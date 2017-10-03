@@ -21,7 +21,7 @@ DEFINE_HAS_METHOD(ave_err);
 DEFINE_HAS_METHOD(is_printable);
 
 //! crashes emitting the message
-void internal_crash(int line,const char *file,const char *temp,...);
+void internal_crash(int line,const char *file,const char *fun,const char *temp,...);
 
 //! check if two quantities have the same sign
 template <class T>
@@ -112,13 +112,24 @@ inline int to_int(string s)
   return out;
 }
 
-//! return a filled vector of double ranging from 0 to max (excluded)
+//! return a filled vector ranging from offset(0) to max (excluded) each stride(1)
 template <class T>
-vector<T> vector_up_to(const size_t max,const T offset=0)
+vector<T> vector_up_to(const T max,const T offset=0,const T stride=1)
 {
-  vector<T> x(max);
-  for(size_t it=0;it<max;it++) x[it]=it+offset;
-  return x;
+  vector<T> v;
+  for(T x=offset;x<max;x+=stride) v.push_back(x);
+  return v;
+}
+
+//! return a vector filled witha a grid ranging from xmin to xmax (included), with n points (n-1 intervals)
+template <class T>
+vector<T> vector_grid(const T xmin,const T xmax,const size_t n)
+{
+  if(n==0) CRASH("n must be different from 0");
+  const T dx=(xmax-xmin)/(n-1);
+  vector<T> y(n);
+  for(size_t i=0;i<n;i++) y[i]=xmin+dx*i;
+  return y;
 }
 
 //! set to zero a double
@@ -134,5 +145,38 @@ void set_to_zero(const Eigen::MatrixBase<D> &x)
 template <class T>
 double percentage(const T &num,const T& den)
 {return num*100.0/den;}
+
+//! sum from n0 to infinity, with a given tolerance
+template <class T,class Fun>
+T series(int n0,int dn,const Fun &fun,T tol)
+{
+  T out=0;
+  T contr;
+  
+  //positive contribution
+  int n=n0,i=0;
+  bool get_out;
+  do
+    {
+      //compute, check nan and increment
+      contr=fun(n);
+      if(isnan(contr)) CRASH("nan found when evaluating %d in %s",n0,__PRETTY_FUNCTION__);
+      out+=contr;
+      
+      //check if we go out
+      if(fabs(out)==0.0) get_out=(i>10);
+      else               get_out=(fabs(contr/out)<tol);
+      
+      //debug
+      //cout<<"  "<<n<<" "<<out<<" "<<contr<<" "<<get_out<<endl;
+      
+      //increment
+      n+=dn;
+      i++;
+    }
+  while(not get_out);
+  
+  return out;
+}
 
 #endif

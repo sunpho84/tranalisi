@@ -9,6 +9,7 @@ libtran_a_SOURCES= \
 	effective.cpp \
 	file.cpp \
 	fit.cpp \
+	functions.cpp \
 	grace.cpp \
 	jack.cpp \
 	meas_vec.cpp \

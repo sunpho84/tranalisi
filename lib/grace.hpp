@@ -35,7 +35,7 @@ namespace grace
   EXTERN_GRACE double default_widths INIT_TO(2);
   EXTERN_GRACE double default_label_size INIT_TO(1.5);
   EXTERN_GRACE vector<grace::color_t> default_color_scheme INIT_TO({grace::RED,grace::BLUE,grace::GREEN4,grace::VIOLET});
-  EXTERN_GRACE vector<grace::color_t> default_line_color_scheme INIT_TO({grace::RED,grace::BLUE,grace::GREEN4});
+  EXTERN_GRACE vector<grace::color_t> default_line_color_scheme INIT_TO({grace::RED,grace::BLUE,grace::GREEN4,grace::VIOLET});
   EXTERN_GRACE vector<grace::symbol_t> default_symbol_scheme INIT_TO({grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND});
 };
 
@@ -48,7 +48,8 @@ class grace_file_t : private ofstream
   vector<grace::color_t> line_color_scheme;
   vector<grace::symbol_t> symbol_scheme;
   //! get a property and increment it
-  template <class T> T get_and_increment(const vector<T> &list,size_t &i)
+  template <class T>
+  T get_and_increment(const vector<T> &list,size_t &i)
   {
     T out=list[i];
     i=(i+1)%list.size();
@@ -145,6 +146,22 @@ class grace_file_t : private ofstream
   }
   
 public:
+  //! direct write
+  template <class T>
+  friend grace_file_t& operator<<(grace_file_t &file,const T& out)
+  {
+    static_cast<ofstream&>(file)<<out;
+    return file;
+  }
+  
+  //! return col
+  size_t get_col() const
+  {return cur_col;}
+  
+  //! return the color scheme
+  vector<grace::color_t> get_color_scheme()
+  {return color_scheme;}
+  
   //! close current set
   bool get_need_close_set() const
   {return need_close_set;}
@@ -381,36 +398,44 @@ public:
   }
   
   //! write a polygon
-  template <class fun_t>
-  void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  void write_polygon(const vector<double> &x,const vec_ave_err_t &y,grace::color_t col)
   {
-    close_cur_set();
+    size_t npoints=x.size();
+    if(y.size()!=npoints) CRASH("x and y have different size, %zu and %zu",npoints,y.size());
     
     //mark a closed polygon
+    close_cur_set();
     this->closed_polygon(col);
-    
-    if(npoints==0) CRASH("NPoints must be different from 0");
-    //! x coordinate
-    vector<double> x(npoints);
-    //! y coordinate
-    vec_ave_err_t y(npoints);
-    
-    //! interval between points
-    double dx=(xmax-xmin)/(npoints-1);
-    //set x and y
-#pragma omp parallel for
-    for(size_t ipoint=0;ipoint<npoints;ipoint++)
-      {
-	x[ipoint]=xmin+dx*ipoint;
-	y[ipoint]=fun(x[ipoint]).ave_err();
-      }
     
     //write forward and backward
     for(size_t ipoint=0;ipoint<npoints;ipoint++)         (*this)<<x[ipoint]<<" "<<y[ipoint].ave_minus_err()<<endl;
     for(size_t ipoint=npoints-1;ipoint<npoints;ipoint--) (*this)<<x[ipoint]<<" "<<y[ipoint].ave_plus_err()<<endl;
     
     need_close_set=true;
+    close_cur_set();
   }
+  
+  //! write a polygon from a function
+  template <class fun_t>
+  void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  {
+    //! x coordinates
+    vector<double> x=vector_grid(xmin,xmax,npoints);
+    if(x.size()!=npoints) CRASH("error, x has size %zu and expected %zu points",x.size(),npoints);
+    //! y coordinate
+    vec_ave_err_t y(npoints);
+#pragma omp parallel for
+    for(size_t ipoint=0;ipoint<npoints;ipoint++)
+      y[ipoint]=fun(x[ipoint]).ave_err();
+    
+    write_polygon(x,y,col);
+  }
+  
+  //! write a polygon setting automatically col
+  void write_polygon(const vector<double> &x,const vec_ave_err_t &y)
+  {write_polygon(x,y,get_poly_col_and_increment());}
+  
+  //! write a polygon setting automatically col
   template <class fun_t>
   void write_polygon(const fun_t &fun,double xmin,double xmax,size_t npoints=100)
   {write_polygon(fun,xmin,xmax,get_poly_col_and_increment(),npoints);}
