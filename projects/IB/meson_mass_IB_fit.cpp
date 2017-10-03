@@ -2076,3 +2076,92 @@ dboot_t cont_chir_linear_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont
   return phys_res;
 }
 */
+
+///////////////////////////////////////////////////////// DeltaFK ////////////////////////////////////////////////////////////////////////////
+
+//! ansatz fit
+template <class Tpars,class Tm,class Ta>
+Tpars cont_chir_ansatz_DeltaFK(const Tpars &f0,const Tpars &B0,const Tpars &Kc,const Tpars &K,const Tpars &Klog,const Tpars &quad_dep,const Tm &ml,
+			       const Ta &a,const Tpars &adep,double L,const Tpars &fvedep,const size_t an_flag)
+{
+  
+  Tpars
+    M2=2.0*B0*ml,
+    sqrtM2=pow(M2,0.5),
+    den=sqr(Tpars(4.0*M_PI*f0));
+  
+  Tpars chir_dep;
+  if(chir_an(an_flag)) chir_dep=Klog*ml*log(ml);
+  else                 chir_dep=quad_dep*pow(ml,2.0);
+
+  Tpars disc_eff;
+  if(cont_an(an_flag)) disc_eff=adep*sqr(a);
+  else                 disc_eff=0.0;
+
+  Tpars fitted_FSE;
+  if(FSE_an(an_flag))  fitted_FSE=fvedep*M2/den*exp(-sqrtM2*L)/pow(sqrtM2*L,1.5);
+  else                 fitted_FSE=0.0;
+
+  if(fit_debug)
+    {
+      cout<<"f0:"<<f0<<" "<<"B0:"<<B0<<" "<<"ml:"<<ml<<" "<<"a:"<<a<<" "<<"L:"<<L<<endl;
+      cout<<"Kc:"<<Kc<<" "<<"K:"<<K<<" "<<"Klog:"<<Klog<<" "<<"quad_dep:"<<quad_dep<<" "<<"adep:"<<adep<<" "<<"fvedep:"<<fvedep<<endl;
+    }
+
+  return Kc+chir_dep+K*ml+disc_eff+fitted_FSE;
+}
+
+//! perform the fit to the continuum limit
+dboot_t cont_chir_fit_DeltaFK(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t an_flag,bool cov_flag,const vector<string> &beta_list)
+{
+  if(fit_debug) set_printlevel(3);
+  
+  boot_fit_t boot_fit;
+  size_t nbeta=a.size();
+  cont_chir_fit_pars_t pars(nbeta);
+
+  ave_err_t adep_Guess={-5.0,1.0};
+  ave_err_t adep_ml_Guess={0.0,0.1};
+  ave_err_t C_Guess={-4.0,0.3};
+  ave_err_t KPi_Guess={-150.0,30.0};
+  ave_err_t KK_Guess={-70.0,11.0};
+  ave_err_t K2Pi_Guess={1.0,1.0};
+  ave_err_t K2K_Guess={0.0,0.1};
+  ave_err_t L3dep_Guess={0.0,1.0};
+  ave_err_t L4dep_Guess={0.0,0.1};
+  ave_err_t ML4dep_Guess={0.0,0.1};
+  
+  pars.add_common_pars(a,z,f0,B0,adep_Guess,adep_ml_Guess,boot_fit);
+  pars.add_LEC_pars(C_Guess,KPi_Guess,KK_Guess,K2Pi_Guess,K2K_Guess,boot_fit);
+  pars.add_fsedep_pars(L3dep_Guess,L4dep_Guess,ML4dep_Guess,boot_fit);
+  if(chir_an(an_flag)==0) boot_fit.fix_par_to(pars.iKK,0.0);
+  if(chir_an(an_flag)==1) boot_fit.fix_par_to(pars.iK2Pi,0.0);
+  if(cont_an(an_flag)==0) boot_fit.fix_par_to(pars.iadep,0.0);
+  if(FSE_an(an_flag)==0)  boot_fit.fix_par_to(pars.iL3dep,0.0);
+  boot_fit.fix_par(pars.iadep_ml);
+  boot_fit.fix_par(pars.iK2K);
+  boot_fit.fix_par(pars.iL4dep);
+  boot_fit.fix_par(pars.iML4dep);
+  
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,-1.0,1.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double MD,double ac,double L)
+			 {return cont_chir_ansatz_DeltaFK(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iKK],p[pars.iK2Pi],ml,ac,p[pars.iadep],L,p[pars.iL3dep],an_flag);},cov_flag);
+  
+  dboot_t phys_res=cont_chir_ansatz_DeltaFK(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,ml_phys,a_cont,pars.adep,inf_vol,pars.L3dep,an_flag);
+  cout<<"DeltaFK_over_Deltamud: "<<phys_res.ave_err()<<endl;
+
+  plot_chir_fit(path,ext_data,pars,
+		[&pars,an_flag]
+		(double x,size_t ib)
+		{return cont_chir_ansatz_DeltaFK<double,double,double>
+		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.KK.ave(),pars.K2Pi.ave(),x,
+		     pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),an_flag);},
+		bind(cont_chir_ansatz_DeltaFK<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,_1,
+		     a_cont,pars.adep,inf_vol,pars.L3dep,an_flag),
+		[&ext_data,&pars]
+		(size_t idata,bool without_with_fse,size_t ib)
+		{return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)*pars.fit_z[ib]*pars.fit_a[ib]-
+				without_with_fse*pars.L3dep*dboot_t(pow(2.0*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.25)/pow(4.0*M_PI*pars.fit_f0,2.0)*exp(-pow(2.0*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)*ext_data[idata].L)/pow(ext_data[idata].L,1.5)));},
+		ml_phys,phys_res,"[M\\S2\\N\\sK\\S0\\N\\h{0.2}-\\h{0.2}M\\S2\\N\\sK\\S+\\N]\\S\\f{Times-Italic}IB\\N\\f{}\\h{0.3}(GeV)",beta_list);
+  
+  return phys_res;
+}
