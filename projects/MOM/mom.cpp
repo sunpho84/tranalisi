@@ -179,8 +179,12 @@ int main(int narg,char **arg)
   
   //compute deltam_cr
   deltam_cr_time.start();
-  djack_t deltam_cr=compute_deltam_cr(conf_list,tmin,tmax,im_sea);
-  cout<<"Deltam cr: "<<deltam_cr<<endl;
+  djvec_t deltam_cr(nm);
+  for(size_t im=0;im<nm;im++)
+    {
+      deltam_cr[im]=compute_deltam_cr(conf_list,tmin,tmax,im);
+      cout<<"Deltam cr["<<im<<"]: "<<smart_print(deltam_cr[im])<<endl;
+    }
   deltam_cr_time.stop();
   
   size_t clust_size=trim_to_njacks_multiple(conf_list,true); //!< cluster size
@@ -241,8 +245,8 @@ int main(int narg,char **arg)
       if(use_QED)
 	{
 	  finish_EM_time.start();
-	  finish_jverts_EM(jverts,deltam_cr);
-	  finish_jprops_EM(jprops,deltam_cr);
+	  finish_jverts_EM(jverts,deltam_cr[im_sea]);
+	  finish_jprops_EM(jprops,deltam_cr[im_sea]);
 	  finish_EM_time.stop();
 	}
       
