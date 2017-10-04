@@ -207,6 +207,7 @@ int main(int narg,char **arg)
   djvec_t Zq_sig1_allmoms(im_r_imom_ind.max());
   djvec_t Zq_sig1_EM_allmoms(im_r_imom_ind.max());
   djvec_t Zbil_allmoms(im_r_im_r_iZbil_imom_ind.max());
+  djvec_t Zbil_QED_allmoms(im_r_im_r_iZbil_imom_ind.max());
   
   vector<m_r_mom_conf_props_t> props; //!< store props for individual conf
   
@@ -309,8 +310,14 @@ int main(int narg,char **arg)
 	  const size_t im_r1_imom=im_r_imom_ind(concat(im_r1_comp,imom));
 	  const size_t im_r2_imom=im_r_imom_ind(concat(im_r2_comp,imom));
 	  
-	  Zbil_allmoms[im_r_im_r_iZbil_imom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,imom})))]=
+	  const size_t im_r_im_r_iZbil_imom=im_r_im_r_iZbil_imom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,imom})));
+	  
+	  Zbil_allmoms[im_r_im_r_iZbil_imom]=
 	    sqrt(Zq_allmoms[im_r1_imom]*Zq_allmoms[im_r2_imom])/pr_bil_allmoms[im_r_im_r_iZbil];
+	  
+	  Zbil_QED_allmoms[im_r_im_r_iZbil_imom]=
+	    (pr_bil_a_allmoms[im_r_im_r_iZbil_imom]+pr_bil_b_allmoms[im_r_im_r_iZbil_imom]-pr_bil_EM_allmoms[im_r_im_r_iZbil_imom])/pr_bil_allmoms[im_r_im_r_iZbil_imom]+
+	    (Zq_sig1_EM_allmoms[im_r1_imom]/Zq_sig1_allmoms[im_r1_imom]+Zq_sig1_EM_allmoms[im_r2_imom]/Zq_sig1_allmoms[im_r2_imom])/2.0;
 	}
     }
   
@@ -338,6 +345,7 @@ int main(int narg,char **arg)
   const djvec_t Zq=average_equiv_moms(Zq_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
   const djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
   const djvec_t Zbil=average_equiv_moms(Zbil_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind);
+  const djvec_t Zbil_QED=average_equiv_moms(Zbil_QED_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind);
   
   // djvec_t Zq_sub=average_equiv_moms(Zq_allmoms_sub);
   // djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
@@ -380,21 +388,31 @@ int main(int narg,char **arg)
   
   // linfit_Z(Zbil_QED[iZV]*sqr(4*M_PI),"ZV_QED",-20.6178);
   // linfit_Z(Zbil_QED[iZA]*sqr(4*M_PI),"ZA_QED",-15.7963);
-  
-  grace_file_t out("plots/Zq_sig1_new.xmg");
-  out.set_settype(grace::XYDY);
-  for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
-    {
-      vector<size_t> im_r_comps=im_r_ind(im_r);
-      size_t im=im_r_comps[0],r=im_r_comps[1];
-      for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
-	{
-	  size_t im_r_imom=im_r_ind_imom_ind({im,r,ind_imom});
-	  size_t imom=equiv_imoms[ind_imom].first;
-	  out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zq_sig1[im_r_imom].ave_err());
-	}
-      out.new_data_set();
-    }
+
+  // //! list of p2tile
+  // vector<double> p2tilde(equiv_imoms.size());
+  // for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
+  //   {
+  //     size_t imom=equiv_imoms[ind_imom].first;
+  //     p2tilde[imom]=imoms[imom].p(L).tilde().norm2();
+  //   }
+
+  {
+    grace_file_t out("plots/Zq_sig1_new.xmg");
+    out.set_settype(grace::XYDY);
+    for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
+      {
+	vector<size_t> im_r_comps=im_r_ind(im_r);
+	size_t im=im_r_comps[0],r=im_r_comps[1];
+	for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
+	  {
+	    size_t im_r_imom=im_r_ind_imom_ind({im,r,ind_imom});
+	    size_t imom=equiv_imoms[ind_imom].first;
+	    out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zq_sig1[im_r_imom].ave_err());
+	  }
+	out.new_data_set();
+      }
+  }
   
   for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
     {
@@ -404,14 +422,18 @@ int main(int narg,char **arg)
       size_t im2=im_r_im_r_iZbil_comp[2],r2=im_r_im_r_iZbil_comp[3];
       size_t iZbil=im_r_im_r_iZbil_comp[4];
       
-      grace_file_t out(combine("plots/Z%c_im1%zu_r1%zu_im2%zu_r2%zu.xmg",Zbil_tag[iZbil],im1,r1,im2,r2));
-      out.set_settype(grace::XYDY);
+      grace_file_t out_Z(combine("plots/Z%c_im1_%zu_r1_%zu_im2_%zu_r2_%zu.xmg",Zbil_tag[iZbil],im1,r1,im2,r2));
+      grace_file_t out_Z_QED(combine("plots/Z_QED_%c_im1_%zu_r1_%zu_im2_%zu_r2_%zu.xmg",Zbil_tag[iZbil],im1,r1,im2,r2));
+      out_Z.set_settype(grace::XYDY);
+      out_Z_QED.set_settype(grace::XYDY);
       for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
 	{
 	  size_t imom=equiv_imoms[ind_imom].first;
-	  out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zbil[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
+	  out_Z.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zbil[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
+	  out_Z_QED.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zbil[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
 	}
-      out.new_data_set();
+      out_Z.new_data_set();
+      out_Z_QED.new_data_set();
     }
   
   cout<<ts<<endl;
