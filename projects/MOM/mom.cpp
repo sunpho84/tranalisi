@@ -396,14 +396,20 @@ int main(int narg,char **arg)
       out.new_data_set();
     }
   
-  for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+  for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
     {
-      grace_file_t out(combine("plots/Z%c.xmg",Zbil_tag[iZbil]));
+      //get comps
+      vector<size_t> im_r_im_r_iZbil_comp=im_r_im_r_iZbil_ind(im_r_im_r_iZbil);
+      size_t im1=im_r_im_r_iZbil_comp[0],r1=im_r_im_r_iZbil_comp[1];
+      size_t im2=im_r_im_r_iZbil_comp[2],r2=im_r_im_r_iZbil_comp[3];
+      size_t iZbil=im_r_im_r_iZbil_comp[4];
+      
+      grace_file_t out(combine("plots/Z%c_im1%zu_r1%zu_im2%zu_r2%zu.xmg",Zbil_tag[iZbil],im1,r1,im2,r2));
       out.set_settype(grace::XYDY);
       for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
 	{
 	  size_t imom=equiv_imoms[ind_imom].first;
-	  out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zbil[im_r_im_r_iZbil_ind_imom_ind({0,0,0,0,iZbil,ind_imom})].ave_err());
+	  out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zbil[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
 	}
       out.new_data_set();
     }
