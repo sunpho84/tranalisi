@@ -89,6 +89,7 @@ public:
   double aMLep[nleps]; //!< mass of leptons
   double aMMes[4]; //!< mass of mesons (0=Pi, 1=K, 2=D, 3=Ds)
   int use_for_L; //!< use for FSE analysis
+  int use_for_a; //!< use for cont analysis
   string path; //!< path (name)
   
   vector<size_t> tmin,tmax; //!< range of fit
@@ -111,13 +112,8 @@ const index_t ind_2pts({{"NMass",nqmass},{"NMass",nqmass},{"Nr",nr},{"RI",2}});
 
 //! The decaying meson is always the negatively charged one
 vector<size_t> iQED_mes_of_proc({0,1,3,3,5,5}); //!< index of the QED meson corresponding to a given process from the QED_mes_pars
-<<<<<<< HEAD
-const double M_lep[2]={0.1056583745,1.77682};
-vector<size_t> imlep_of_proc({0,0,0,1,0,1}); //!< index of the lepton mass corresponding to a given process
-=======
 const double MLep[2]={0.1056583745,1.77682};
 vector<size_t> iMLep_of_proc({0,0,0,1,0,1}); //!< index of the lepton mass corresponding to a given process
->>>>>>> 2fcdb2e7d85405637a162bd95dd7b96cdd4775bf
 
 //! read or write z0 for FSE
 vector<double> z0;
@@ -166,6 +162,8 @@ void initialize(int narg,char **arg)
       input.read(ens.aml);
       input.read(ens.L);
       input.read(ens.use_for_L);
+      //input.read(ens.use_for_a);
+      ens.use_for_a=(ens.ib!=0);
       input.read(ens.T);
       for(size_t itint=0;itint<nmes_tint;itint++)
 	{
@@ -421,7 +419,10 @@ namespace dml
 	{"FSE",nFSE_variations},
 	{"Cont",ncont_extrap}});
   enum syst{c_input,c_chir,c_FSE,c_cont};
-  template <syst comp> int case_of(int isyst){return ind_syst(isyst)[comp];}
+  
+  template <syst comp>
+  int case_of(int isyst)
+  {return ind_syst(isyst)[comp];}
 }
 
 //! finit size effects on delta ml
@@ -589,11 +590,7 @@ const size_t norie=2; //!< number of orientation of the meson
 const size_t nrev=2; //!< number of possible reversion
 const size_t nqins=3; //!< number of quarks inserted: 0(none), 1 or 2
 const size_t nprocess_max=6; //!< number of processes computed
-<<<<<<< HEAD
 const size_t nprocess=2; //!< number of process to analyse
-=======
-const size_t nprocess=1; //!< number of process to analyse
->>>>>>> 2fcdb2e7d85405637a162bd95dd7b96cdd4775bf
 const size_t nrlep=2; //!< number of r for leptons
 const size_t nproj=1; //!<number of projectors: 1, V0 only
 index_t ind_hl_corr;
@@ -911,10 +908,10 @@ Tpars chir_corr_hl(const Tpars &Kpi,const Tpars &K2pi,const Tpars &xi,const Tpar
       switch(iproc)
 	{
 	case 0:
-	  out+=(3.0-2.0*Z)/(16*sqr(M_PI))*log(xi);
+	  out+=(3.0-2.0*Z)*e2/(16*sqr(M_PI))*log(xi);
 	  break;
 	case 1:
-	  out+=-(3.0-Z)/(16*sqr(M_PI))*log(xi/xis);
+	  out+=-(3.0-Z)*e2/(16*sqr(M_PI))*log(xi/xis);
 	  break;
 	default:
 	  break;
@@ -967,7 +964,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   boot_fit.fix_par_to(pars.iL3dep,0.0);
   
   //set FSE pars
-  const size_t FSE_flag=case_of<c_FSE>(isyst);
+  const size_t FSE_flag=FSE::variations[case_of<c_FSE>(isyst)];
   switch(FSE_flag)
     {
       using namespace FSE;
@@ -981,7 +978,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
     }
   
   //set cont limit pars
-  const size_t cont_flag=case_of<c_cont>(isyst);
+  const size_t cont_flag=cont::variations[case_of<c_cont>(isyst)];
   boot_fit.fix_par_to(pars.iadep_ml,0.0);
   switch(cont_flag)
     {
@@ -994,7 +991,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
     }
   
   //set chir limit pars
-  const size_t chir_flag=case_of<c_chir>(isyst);
+  const size_t chir_flag=chir::variations[case_of<c_chir>(isyst)];
   switch(chir_flag)
     {
       using namespace chir;
@@ -1014,16 +1011,31 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   dboot_t phys_res=cont_chir_ansatz_corr_hl(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,ml_phys,ms_phys,MLep,a_cont,pars.adep,inf_vol,pars.L2dep,pars.L3dep,iproc,chir_flag);
   cout<<"result: "<<phys_res.ave_err()<<endl;
   
-  if(case_of<c_FSE>(isyst)!=hl::FSE::NOSMALLVOL)
-    {
-      grace::default_color_scheme= {grace::RED,    grace::RED,    grace::RED,     grace::BLUE,   grace::BLUE,    grace::GREEN4,  grace::VIOLET};
-      grace::default_symbol_scheme={grace::CIRCLE, grace::SQUARE, grace::DIAMOND, grace::SQUARE, grace::DIAMOND, grace::TRILEFT, grace::TRIUP};
-    }
+  bool include_small=(FSE::variations[case_of<c_FSE>(isyst)]!=hl::FSE::NOSMALLVOL);
+  bool include_coarse=(cont::variations[case_of<c_cont>(isyst)]!=hl::cont::CONSTANT);
+  
+  if(include_small)
+    if(include_coarse)
+      {
+	grace::default_color_scheme= {grace::RED,   grace::RED,   grace::RED,    grace::BLUE,  grace::BLUE,   grace::GREEN4, grace::VIOLET};
+	grace::default_symbol_scheme={grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND,grace::TRILEFT};
+      }
+    else
+      {
+	grace::default_color_scheme= {grace::BLUE,  grace::BLUE,   grace::GREEN4, grace::VIOLET};
+	grace::default_symbol_scheme={grace::SQUARE,grace::DIAMOND,grace::DIAMOND,grace::TRILEFT};
+      }
   else
-    {
-      grace::default_color_scheme={grace::RED,grace::BLUE,grace::GREEN4,grace::VIOLET};
-      grace::default_symbol_scheme={grace::DIAMOND,grace::DIAMOND,grace::DIAMOND};
-    }
+    if(include_coarse)
+      {
+	grace::default_color_scheme= {grace::RED,    grace::BLUE,   grace::GREEN4, grace::VIOLET};
+	grace::default_symbol_scheme={grace::DIAMOND,grace::DIAMOND,grace::DIAMOND,grace::TRILEFT};
+      }
+    else
+      {
+	grace::default_color_scheme= {grace::BLUE,   grace::GREEN4, grace::VIOLET};
+	grace::default_symbol_scheme={grace::DIAMOND,grace::DIAMOND,grace::TRILEFT};
+      }
   
   const string yaxis_title="$$\\delta m_l^{ren}";
   plot_chir_fit(path,ext_data,pars,
@@ -1050,22 +1062,22 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
 void compute_corr(size_t iproc)
 {
   //open a table for FSE contribution
-  string FSE_tab_path="tables/FSE_proc.txt";
-  static ofstream FSE_tab(FSE_tab_path);
+  string FSE_tab_path="tables/FSE_proc"+to_string(iproc)+".txt";
+  ofstream FSE_tab(FSE_tab_path);
   if(not FSE_tab.good()) CRASH("unable to open %s",FSE_tab_path.c_str());
   
   //open a table for Wreg contribution
-  string Wreg_contr_tab_path="tables/Wreg_contr.txt";
-  static ofstream Wreg_contr_tab(Wreg_contr_tab_path);
+  string Wreg_contr_tab_path="tables/Wreg_contr_proc"+to_string(iproc)+".txt";
+  ofstream Wreg_contr_tab(Wreg_contr_tab_path);
   if(not Wreg_contr_tab.good()) CRASH("unable to open %s",Wreg_contr_tab_path.c_str());
   
   //open a table for QED contribution
   string qed_corr_tab_path="tables/QED_corr_proc"+to_string(iproc)+".txt";
-  static ofstream qed_corr_tab(qed_corr_tab_path);
+  ofstream qed_corr_tab(qed_corr_tab_path);
   if(not qed_corr_tab.good()) CRASH("unable to open %s",qed_corr_tab_path.c_str());
   
   //open a table for bc
-  string bc_tab_path="tables/bc.txt";
+  string bc_tab_path="tables/bc_table"+to_string(iproc)+".txt";
   static ofstream bc_tab(bc_tab_path);
   if(not bc_tab.good()) CRASH("unable to open %s",bc_tab_path.c_str());
   
@@ -1084,7 +1096,13 @@ void compute_corr(size_t iproc)
 			       {"FSE max order",FSE_max_orders.size()},
 			       {"Fit range",nfit_range_variations}});
   dbvec_t tot_corr_all(ind_an_ens_FSEmax_frange.max());
-      
+  
+  //! output file for A40 data
+  grace_file_t A40_XX_file(combine("plots_hl/A40_proc%zu.xmg",iproc));
+  vector<grace_file_t> A40_XX_file_FSE_sub(FSE_max_orders.size());
+  for(size_t iFSE_max=0;iFSE_max<FSE_max_orders.size();iFSE_max++)
+    A40_XX_file_FSE_sub[iFSE_max].open(combine("plots_hl/A40_proc%zu_FSEord%zu.xmg",iproc,FSE_max_orders[iFSE_max]));
+  
   //! loop over analysis
   dbvec_t res(hl::ind_syst.max());
   for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
@@ -1146,7 +1164,7 @@ void compute_corr(size_t iproc)
 	const size_t itint=QCD_mes_pars[iQCD_mes].itint;
 	for(size_t ifrange=0;ifrange<nfit_range_variations;ifrange++)
 	  {
-	    const size_t rvar=frange_var[ifrange],tin=std::min(ens.tmin[itint],ens.T/4-rvar);
+	    const size_t rvar=frange_var[ifrange],tin=std::min(ens.tmin[itint],ens.T/4-1-rvar);
 	    const size_t tmin=tin+rvar,tmax=ens.T/2-tin-rvar;
 	    dboot_t dA_fr_A=constant_fit(rat_ext,tmin,tmax,combine("%s/plots_hl/QED_LO_ratio_iproc%zu_ian%zu_frange%zu.xmg",ens.path.c_str(),iproc,input_an_id,ifrange));
 	    
@@ -1163,9 +1181,15 @@ void compute_corr(size_t iproc)
 	    const double marc_sirl=e2/(2*sqr(M_PI))*log(MZ/MW);
 	    const dboot_t rate_pt=Gamma_pt(MLep,Mmes,DeltaE)*e2; //only e2
 	    
+	    const dboot_t tot_but_FSE=external+internal_QED+internal_MASS+W_contr+rate_QED_mass+rate_MASS_mass+rate_pt+marc_sirl;
+	    if(ifrange==0 and input_an_id==0 and ens.ib==0 and fabs(ens.aml-0.0040)<1e-6)
+	      A40_XX_file.write_ave_err(ens.L,tot_but_FSE.ave_err());
+	      
 	    for(size_t iFSE_max=0;iFSE_max<FSE_max_orders.size();iFSE_max++)
 	      {
-		const dboot_t tot_corr=external+internal_QED+internal_MASS+W_contr-FSE_contr[iFSE_max]+rate_QED_mass+rate_MASS_mass+rate_pt+marc_sirl;
+		const dboot_t tot_corr=tot_but_FSE-FSE_contr[iFSE_max];
+		if(ifrange==0 and input_an_id==0 and ens.ib==0 and fabs(ens.aml-0.0040)<1e-6)
+		  A40_XX_file_FSE_sub[iFSE_max].write_ave_err(ens.L,tot_corr.ave_err());
 		
 		qed_corr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<", ifrange: "<<ifrange<<", iFSE_max: "<<iFSE_max<<endl<<
 		  ",\n external: "<<smart_print(external.ave_err())<<
@@ -1196,7 +1220,8 @@ void compute_corr(size_t iproc)
       
       const size_t input_an_id=hl::case_of<hl::c_input>(isyst);
       const size_t ifrange=hl::case_of<hl::c_frange>(isyst);
-      const size_t FSE_FLAG=hl::case_of<hl::c_FSE>(isyst);
+      const size_t FSE_FLAG=hl::FSE::variations[hl::case_of<hl::c_FSE>(isyst)];
+      const size_t cont_FLAG=hl::cont::variations[hl::case_of<hl::c_cont>(isyst)];
       const bool use_cov=false;
       const size_t iFSE_max=(FSE_FLAG==hl::FSE::WITHSTDEP)?1:0; //ord_max={1,2} and with structure dep we take 2
       
@@ -1204,76 +1229,20 @@ void compute_corr(size_t iproc)
       vector<cont_chir_fit_data_t> fit_data;
       for(size_t iens=0;iens<nens_used;iens++)
 	{
-<<<<<<< HEAD
-	  const size_t iQCD_mes=QED_mes_pars[iQED_mes].iQCD;
-	  const size_t ind_QCD=ind_ens_QCD_mes({iens,iQCD_mes});
-	  const size_t ind_QED=ind_ens_QED_mes({iens,iQED_mes});
-	  const size_t ind_an_ens=ind_adml({input_an_id,iens});
-	  ens_pars_t &ens=ens_pars[iens];
-	  double aMlep=ens.aMLep[ilep];
-	  djack_t jpi=find_pi(aMlep,jaM[ind_QCD]);
-	  
-	  djack_t jbetal=sqrt(3)*jpi/tm_quark_energy(jpi,aMlep);
-	  djvec_t jz=prepare_z_for_FSE(ens.path+"/z_FSE_proc"+to_string(iproc)+".dat",jbetal);
-	  
-	  bi=jack_index[input_an_id][ens.iult];
-	  prepare_az(input_an_id);
-	  
-	  size_t ib=ens.ib;
-	  size_t ind_proc=ind_ens_proc({iens,iproc});
-	  
-	  //test
-	  djvec_t loop=jLO_A_bare[ind_proc]/jAP_LO_exp_removed[ind_QCD];
-	  jAP_LO_exp_removed[ind_QCD].ave_err().write(combine("%s/plots_hl/loop_den_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
-	  loop.ave_err().write(combine("%s/plots_hl/loop_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
-	  
-	  //compute the nasty diagram
-	  dbvec_t LO=Zv[ib]*dbvec_t(bi,-jLO_A_bare[ind_proc]);
-	  dbvec_t QED=Zv[ib]*dbvec_t(bi,-jQED_A_bare[ind_proc])+dbvec_t(bi,jQED_V_bare[ind_proc])*Za[ib]; //minus because V-A
-	  LO.ave_err().write(combine("%s/plots_hl/LO_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
-	  QED.ave_err().write(combine("%s/plots_hl/QED_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
-=======
 	  const ens_pars_t &ens=ens_pars[iens];
 	  const size_t idata=ind_an_ens_FSEmax_frange({input_an_id,iens,iFSE_max,ifrange});
->>>>>>> 2fcdb2e7d85405637a162bd95dd7b96cdd4775bf
 	  
 	  //check if to include
 	  bool include=true;
-	  if(FSE_FLAG==hl::FSE::NOSMALLVOL) include=ens.use_for_L;
+	  if(FSE_FLAG==hl::FSE::NOSMALLVOL) include&=ens.use_for_L;
+	  if(cont_FLAG==hl::cont::CONSTANT) include&=ens.use_for_a;
 	  
-<<<<<<< HEAD
-	  //compute the internal+external contribution
-	  dboot_t external=2.0*dA_fr_A*e2;
-	  dboot_t dZA_rel=dboot_t(bi,jDZA_QED_rel[ind_QED])*e2+dboot_t(bi,jDZA_MASS_rel[ind_QED])*adml_bare[ind_an_ens];
-	  dboot_t dM_rel=dboot_t(bi,jDM_QED[ind_QED]/jaM[ind_QCD])*e2+dboot_t(bi,jDM_MASS[ind_QED]/jaM[ind_QCD])*adml_bare[ind_an_ens];
-	  dboot_t internal=2.0*dZA_rel;
-	  dboot_t rate_mass=-2.0*dM_rel; //to be SUBTRACTED
-	  double marc_sirl=e2/(2*sqr(M_PI))*log(MZ/MW);
-	  int ilep=imlep_of_proc[iproc];
-	  double M_mes=QED_mes_pars[iQED_mes].M;
-	  double DeltaE=M_mes*(1-sqr(M_lep[ilep]/M_mes))/2.0;
-	  cout<<"DeltaE: "<<DeltaE<<endl;
-	  dboot_t rate_pt=Gamma_pt(Mlep,Mmes,DeltaE)*e2; //only e2
-	  tot_corr[iens]=external+internal+W_contr-FSE_contr+rate_mass+rate_pt+marc_sirl;
-	  
-	  qed_corr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<
-	    ",\n external: "<<smart_print(external.ave_err())<<
-	    ",\n internal: "<<smart_print(internal.ave_err())<<
-	    ",\n W contr: "<<smart_print(W_contr.ave_err())<<
-	    ",\n FSE contr: "<<smart_print(FSE_contr.ave_err())<<
-	    ",\n rate mass: "<<smart_print(rate_mass.ave_err())<<
-	    ",\n  (mass): "<<smart_print(jaM[ind_QCD].ave_err())<<
-	    ",\n rate pt: "<<smart_print(rate_pt.ave_err())<<
-	    ",\n marc sirl: "<<marc_sirl<<
-	    ",\n tot corr to rate: "<<smart_print(tot_corr[iens].ave_err())<<endl;
-=======
 	  if(include)
 	    {
 	      dboot_t aMaux;
 	      aMaux=ens.aMLep[ilep];
 	      fit_data.push_back(cont_chir_fit_data_t(ens.aml,ens.aml,aMaux,ens.ib,ens.L,tot_corr_all[idata],tot_corr_all[idata]));
 	    }
->>>>>>> 2fcdb2e7d85405637a162bd95dd7b96cdd4775bf
 	}
       
       string cc_path=combine("plots_hl/cont_chir_iproc%zu_isyst%zu.xmg",iproc,isyst);
