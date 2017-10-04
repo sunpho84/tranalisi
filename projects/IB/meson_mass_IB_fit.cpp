@@ -2102,19 +2102,13 @@ Tpars cont_chir_ansatz_DeltaFK(const Tpars &f0,const Tpars &B0,const Tpars &Kc,c
   if(FSE_an(an_flag))  fitted_FSE=fvedep*M2/den*exp(-sqrtM2*L)/pow(sqrtM2*L,1.5);
   else                 fitted_FSE=0.0;
 
-  if(fit_debug)
-    {
-      cout<<"f0:"<<f0<<" "<<"B0:"<<B0<<" "<<"ml:"<<ml<<" "<<"a:"<<a<<" "<<"L:"<<L<<endl;
-      cout<<"Kc:"<<Kc<<" "<<"K:"<<K<<" "<<"Klog:"<<Klog<<" "<<"quad_dep:"<<quad_dep<<" "<<"adep:"<<adep<<" "<<"fvedep:"<<fvedep<<endl;
-    }
-
   return Kc+chir_dep+K*ml+disc_eff+fitted_FSE;
 }
 
 //! perform the fit to the continuum limit
 dboot_t cont_chir_fit_DeltaFK(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t an_flag,bool cov_flag,const vector<string> &beta_list)
 {
-  if(fit_debug) set_printlevel(3);
+  //if(fit_debug) set_printlevel(3);
   
   boot_fit_t boot_fit;
   size_t nbeta=a.size();

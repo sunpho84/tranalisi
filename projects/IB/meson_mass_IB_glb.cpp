@@ -371,7 +371,7 @@ int main(int narg,char **arg)
 	    a2M2ddg[iens]=dd_meson;
 
 	    //////////DeltaFK////////////
-	    DeltaFK_over_Deltamud[iens]=-1.0/(raw_data[iens].ams+raw_data[iens].aml)+DG2K_fr_G2K[iens+input_an_id*raw_data.size()]/2.0+2.0*MK_sl_s[iens+input_an_id*raw_data.size()]/aMK[iens+input_an_id*raw_data.size()];
+	    DeltaFK_over_Deltamud[iens]=-1.0/(raw_data[iens].ams+raw_data[iens].aml)+DG2K_fr_G2K[iens+input_an_id*raw_data.size()]/2.0+2.0*MK_sl_s[iens+input_an_id*raw_data.size()]/aMK;
 	  }
 	
 	//prepare the list of a and z
@@ -544,7 +544,7 @@ int main(int narg,char **arg)
 	for(size_t iens=0;iens<raw_data.size();iens++)
 	  data_DeltaFK_over_Deltamud.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMD[iens+input_an_id*raw_data.size()],raw_data[iens].ibeta,raw_data[iens].L,
 									       DeltaFK_over_Deltamud[iens],DeltaFK_over_Deltamud[iens]));
-	if(input_an_id==7) fit_debug=1;	
+		
 	output_DeltaFK_over_Deltamud[ind_an({input_an_id,an_flag})]=cont_chir_fit_DeltaFK(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_DeltaFK_over_Deltamud,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_DeltaFK_over_Deltamud_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag,beta_list);
 	
 	cout<<"-----------------------------------------------"<<endl;
