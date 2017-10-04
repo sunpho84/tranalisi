@@ -61,7 +61,8 @@ public:
   }
   
   //! construct from expr
-  template<class _Dom> jack_t(const _Expr<_Dom,T> &oth) : valarray<T>(oth) {}
+  template<class _Dom>
+  jack_t(const _Expr<_Dom,T> &oth) : valarray<T>(oth) {}
   
   //! constrcutor specifying gauss_filler
   explicit jack_t(const gauss_filler_t &gf) : jack_t() {fill_gauss(gf);}
@@ -77,7 +78,9 @@ public:
   jack_t &operator=(const jack_t &oth) =default;
   
   //! assignement
-  template<class oth_t> jack_t &operator=(const oth_t &oth) {valarray<T>::operator=(oth);return *this;}
+  template<class oth_t>
+  jack_t &operator=(const oth_t &oth)
+  {valarray<T>::operator=(oth);return *this;}
   
   //! fill the central with the average
   void fill_ave_with_components_ave()
