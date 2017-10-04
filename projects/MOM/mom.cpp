@@ -425,7 +425,7 @@ int main(int narg,char **arg)
       size_t im2=im_r_im_r_iZbil_comp[2],r2=im_r_im_r_iZbil_comp[3];
       size_t iZbil=im_r_im_r_iZbil_comp[4];
       
-      grace_file_t out_Z(combine("plots/Z%c_im1_%zu_r1_%zu_im2_%zu_r2_%zu.xmg",Zbil_tag[iZbil],im1,r1,im2,r2));
+      grace_file_t out_Z(combine("plots/Z_%c_im1_%zu_r1_%zu_im2_%zu_r2_%zu.xmg",Zbil_tag[iZbil],im1,r1,im2,r2));
       grace_file_t out_Z_QED(combine("plots/Z_QED_%c_im1_%zu_r1_%zu_im2_%zu_r2_%zu.xmg",Zbil_tag[iZbil],im1,r1,im2,r2));
       out_Z.set_settype(grace::XYDY);
       out_Z_QED.set_settype(grace::XYDY);
@@ -433,7 +433,7 @@ int main(int narg,char **arg)
 	{
 	  size_t imom=equiv_imoms[ind_imom].first;
 	  out_Z.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zbil[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
-	  out_Z_QED.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zbil[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
+	  out_Z_QED.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zbil_QED[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
 	}
       out_Z.new_data_set();
       out_Z_QED.new_data_set();
