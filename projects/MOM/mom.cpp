@@ -315,9 +315,12 @@ int main(int narg,char **arg)
 	  Zbil_allmoms[im_r_im_r_iZbil_imom]=
 	    sqrt(Zq_allmoms[im_r1_imom]*Zq_allmoms[im_r2_imom])/pr_bil_allmoms[im_r_im_r_iZbil];
 	  
-	  Zbil_QED_allmoms[im_r_im_r_iZbil_imom]=
-	    (pr_bil_a_allmoms[im_r_im_r_iZbil_imom]+pr_bil_b_allmoms[im_r_im_r_iZbil_imom]-pr_bil_EM_allmoms[im_r_im_r_iZbil_imom])/pr_bil_allmoms[im_r_im_r_iZbil_imom]+
-	    (Zq_sig1_EM_allmoms[im_r1_imom]/Zq_sig1_allmoms[im_r1_imom]+Zq_sig1_EM_allmoms[im_r2_imom]/Zq_sig1_allmoms[im_r2_imom])/2.0;
+	  if(use_QED)
+	    {
+	      Zbil_QED_allmoms[im_r_im_r_iZbil_imom]=
+		(pr_bil_a_allmoms[im_r_im_r_iZbil]+pr_bil_b_allmoms[im_r_im_r_iZbil]-pr_bil_EM_allmoms[im_r_im_r_iZbil])/pr_bil_allmoms[im_r_im_r_iZbil]+
+		(Zq_sig1_EM_allmoms[im_r1_imom]/Zq_sig1_allmoms[im_r1_imom]+Zq_sig1_EM_allmoms[im_r2_imom]/Zq_sig1_allmoms[im_r2_imom])/2.0;
+	    }
 	}
     }
   
@@ -345,7 +348,7 @@ int main(int narg,char **arg)
   const djvec_t Zq=average_equiv_moms(Zq_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
   const djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
   const djvec_t Zbil=average_equiv_moms(Zbil_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind);
-  const djvec_t Zbil_QED=average_equiv_moms(Zbil_QED_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind);
+  const djvec_t Zbil_QED=use_QED?average_equiv_moms(Zbil_QED_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind):djvec_t();
   
   // djvec_t Zq_sub=average_equiv_moms(Zq_allmoms_sub);
   // djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
