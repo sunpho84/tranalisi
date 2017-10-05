@@ -213,18 +213,21 @@ int main(int narg,char **arg)
   //Zq for all moms, with and without EM
   djvec_t Zq_allmoms(im_r_imom_ind.max());
   djvec_t Zq_sig1_allmoms(im_r_imom_ind.max());
-  djvec_t Zq_sig1_EM_allmoms(im_r_imom_ind.max());
+  djvec_t Zq_sig1_EM_allmoms;
+  if(use_QED) Zq_sig1_EM_allmoms.resize(im_r_imom_ind.max());
   
   //Subtracted Zq, with and without EM, all moms
   djvec_t Zq_chir_allmoms(r_imom_ind.max());
   djvec_t Zq_sig1_chir_allmoms(r_imom_ind.max());
-  djvec_t Zq_sig1_EM_chir_allmoms(r_imom_ind.max());
+  djvec_t Zq_sig1_EM_chir_allmoms;
+  if(use_QED) Zq_sig1_EM_chir_allmoms.resize(r_imom_ind.max());
   
-  //! collect Zq to be elaborated
-  vector<tuple<djvec_t*,djvec_t*,string>> Zq_elab{
+  //list of task to chiral extrapolate
+  using Z_task_t=tuple<djvec_t*,djvec_t*,string>;
+  vector<Z_task_t> Zq_tasks{
     {&Zq_allmoms,&Zq_chir_allmoms,string("Zq")},
-    {&Zq_sig1_allmoms,&Zq_sig1_chir_allmoms,"Zq_sig1"},
-    {&Zq_sig1_EM_allmoms,&Zq_sig1_EM_chir_allmoms,"Zq_sig1_EM"}};
+    {&Zq_sig1_allmoms,&Zq_sig1_chir_allmoms,"Zq_sig1"}};
+  if(use_QED) Zq_tasks.push_back(make_tuple(&Zq_sig1_EM_allmoms,&Zq_sig1_EM_chir_allmoms,"Zq_sig1_EM"));
   
   djvec_t Zbil_allmoms(im_r_im_r_iZbil_imom_ind.max());
   djvec_t Zbil_QED_allmoms(im_r_im_r_iZbil_imom_ind.max());
