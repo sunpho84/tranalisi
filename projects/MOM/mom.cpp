@@ -299,27 +299,22 @@ int main(int narg,char **arg)
 	}
       
       //extrapolate to chiral limit Zq
-      for(size_t r_imom=0;r_imom<r_imom_ind.max();r_imom++)
-	{
-	  const vector<size_t> r_imom_comp=r_imom_ind(r_imom);
-	  const size_t r=r_imom_comp[0],imom=r_imom_comp[1];
-	  
-	  for(auto & p : vector<tuple<djvec_t*,djvec_t*,string>>{
-	      {&Zq_allmoms,&Zq_chir_allmoms,string("Zq")},
-		{&Zq_sig1_allmoms,&Zq_sig1_chir_allmoms,"Zq_sig1"},
-		  {&Zq_sig1_EM_allmoms,&Zq_sig1_EM_chir_allmoms,"Zq_sig1_EM"}})
-	    {
-	      djvec_t y(nm);
-	      const djvec_t &Z=(*get<0>(p));
-	      djvec_t &Z_chir=(*get<1>(p));
-	      const string &tag=get<2>(p);
-	      
-	      //slice m and fit
-	      for(size_t im=0;im<nm;im++) y[im]=Z[im_r_imom_ind({im,r,imom})];
-	      djvec_t coeffs=poly_fit(am,y,1,-1e30,1e30,"plots/chir_extr_"+tag+"_mom_"+to_string(imom));
-	      Z_chir[r_imom_ind({r,imom})]=coeffs[0];
-	    }
-	}
+      for(size_t r=0;r<nr;r++)
+	for(auto & p : vector<tuple<djvec_t*,djvec_t*,string>>{
+	    {&Zq_allmoms,&Zq_chir_allmoms,string("Zq")},
+	      {&Zq_sig1_allmoms,&Zq_sig1_chir_allmoms,"Zq_sig1"},
+		{&Zq_sig1_EM_allmoms,&Zq_sig1_EM_chir_allmoms,"Zq_sig1_EM"}})
+	  {
+	    djvec_t y(nm);
+	    const djvec_t &Z=(*get<0>(p));
+	    djvec_t &Z_chir=(*get<1>(p));
+	    const string &tag=get<2>(p);
+	    
+	    //slice m and fit
+	    for(size_t im=0;im<nm;im++) y[im]=Z[im_r_imom_ind({im,r,imom})];
+	    djvec_t coeffs=poly_fit(am,y,1,-1e30,1e30,"plots/chir_extr_"+tag+"_mom_"+to_string(imom));
+	    Z_chir[r_imom_ind({r,imom})]=coeffs[0];
+	  }
       
       proj_time.start();
       djvec_t pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_inv,im_r_ind);
