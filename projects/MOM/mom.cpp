@@ -370,19 +370,22 @@ int main(int narg,char **arg)
 		for(size_t im1=0;im1<nm;im1++)
 		  for(size_t im2=im1;im2<nm;im2++)
 		    {
+		      //compute mass sum
 		      x[i]=am[im1]+am[im2];
+		      //compute y and y_plot
 		      y_plot[i]=pr[im_r_im_r_iZbil_ind({im1,r1,im2,r2,iZbil})];
 		      if(sub_pole) y[i]=x[i]*y_plot[i];
 		      else         y[i]=y_plot[i];
+		      //increment
 		      i++;
 		    }
 		
 		//fit and write the result
-		djvec_t coeffs=poly_fit(x,y,1,0,2.0*am_max);
+		djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),0,2.0*am_max);
 		if(imom%20==0)
 		  {
 		    const string path="plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+"_mom_"+to_string(imom)+".xmg";
-		    write_poly_fit_plot(path,0,2.0*am_max,coeffs,x,y);
+		    write_fit_plot(path,1e-6,2*am_max,[&coeffs,sub_pole](double x){return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
 		  }
 		//extrapolated value
 		pr_chir[r_r_iZbil_ind({r1,r2,iZbil})]=coeffs[sub_pole?1:0];
