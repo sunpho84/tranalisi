@@ -134,6 +134,7 @@ int main(int narg,char **arg)
   nm=input.read<double>("Nm");
   am.resize(nm);
   for(size_t im=0;im<nm;im++) am[im]=input.read<double>();
+  const double am_max=*max_element(am.begin(),am.end())*1.1;
   nr=input.read<double>("Nr");
   
   size_t im_sea=input.read<double>("ImSea"); //!< index of sea mass
