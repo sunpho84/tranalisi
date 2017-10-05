@@ -204,6 +204,7 @@ int main(int narg,char **arg)
   im_r_ind_imom_ind.set_ranges({{"m",nm},{"r",nr},{"ind_mom",equiv_imoms.size()}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
   const index_t im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
+  const index_t r_r_iZbil_ind({{"r",nr},{"r",nr},{"iZbil",nZbil}});
   const index_t im_r_im_r_iZbil_ind=im_r_ind*im_r_ind*index_t({{"iZbil",nZbil}});
   const index_t im_r_im_r_iZbil_imom_ind=im_r_im_r_iZbil_ind*index_t({{"imom",imoms.size()}});
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
