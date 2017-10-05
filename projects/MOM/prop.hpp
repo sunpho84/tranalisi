@@ -14,6 +14,7 @@ using vprop_t=vector<prop_t>; //! vector of propagators
 using vjprop_t=vector<jprop_t>; //! vector of jackkniffed props
 
 EXTERN_PROP size_t nm; //!< number of masses
+EXTERN_PROP vector<double> am; //! quark mass
 EXTERN_PROP size_t nr; //!< number of r
 EXTERN_PROP size_t nmr; //!< total number of m and r
 

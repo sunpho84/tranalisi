@@ -23,6 +23,7 @@ string suff_hit="";
 
 index_t conf_ind; //!< index of a conf given ijack and i_in_clust
 index_t im_r_ind; //!< index of im,r
+index_t r_imom_ind; //!< index of r,imom combo
 index_t im_r_imom_ind; //!< index of im,r,imom combo
 index_t im_r_ind_imom_ind; //!< index of im,r,imom combo
 index_t i_in_clust_ihit_ind; //!< index of i_in_clust,ihit
@@ -128,6 +129,8 @@ int main(int narg,char **arg)
   const double beta=input.read<double>("Beta"); //!< beta
   const double plaq=input.read<double>("Plaq"); //!< plaquette
   nm=input.read<double>("Nm");
+  am.resize(nm);
+  for(size_t im=0;im<nm;im++) am[im]=input.read<double>();
   nr=input.read<double>("Nr");
   
   size_t im_sea=input.read<double>("ImSea"); //!< index of sea mass
@@ -193,6 +196,7 @@ int main(int narg,char **arg)
   
   conf_ind.set_ranges({{"ijack",njacks},{"i_in_clust",clust_size}});
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
+  r_imom_ind.set_ranges({{"r",nr},{"imom",imoms.size()}});
   im_r_imom_ind.set_ranges({{"m",nm},{"r",nr},{"imom",imoms.size()}});
   im_r_ind_imom_ind.set_ranges({{"m",nm},{"r",nr},{"ind_mom",equiv_imoms.size()}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
@@ -202,10 +206,16 @@ int main(int narg,char **arg)
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   const index_t im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});
   
-  //Zq for all moms, with and without em
+  //Zq for all moms, with and without EM
   djvec_t Zq_allmoms(im_r_imom_ind.max());
   djvec_t Zq_sig1_allmoms(im_r_imom_ind.max());
   djvec_t Zq_sig1_EM_allmoms(im_r_imom_ind.max());
+
+  //Subtracted Zq, with and without EM, all moms
+  djvec_t Zq_chir_allmoms(r_imom_ind.max());
+  djvec_t Zq_sig1_chir_allmoms(r_imom_ind.max());
+  djvec_t Zq_sig1_EM_chir_allmoms(r_imom_ind.max());
+  
   djvec_t Zbil_allmoms(im_r_im_r_iZbil_imom_ind.max());
   djvec_t Zbil_QED_allmoms(im_r_im_r_iZbil_imom_ind.max());
   
@@ -285,6 +295,29 @@ int main(int narg,char **arg)
 	      Zq_time.start();
 	      Zq_sig1_EM_allmoms[im_r_imom][ijack]=-compute_Zq_sig1(prop_EM_inv,imom);
 	      Zq_time.stop();
+	    }
+	}
+      
+      //extrapolate to chiral limit Zq
+      for(size_t r_imom=0;r_imom<r_imom_ind.max();r_imom++)
+	{
+	  const vector<size_t> r_imom_comp=r_imom_ind(r_imom);
+	  const size_t r=r_imom_comp[0],imom=r_imom_comp[1];
+	  
+	  for(auto & p : vector<tuple<djvec_t*,djvec_t*,string>>{
+	      {&Zq_allmoms,&Zq_chir_allmoms,string("Zq")},
+		{&Zq_sig1_allmoms,&Zq_sig1_chir_allmoms,"Zq_sig1"},
+		  {&Zq_sig1_EM_allmoms,&Zq_sig1_EM_chir_allmoms,"Zq_sig1_EM"}})
+	    {
+	      djvec_t y(nm);
+	      const djvec_t &Z=(*get<0>(p));
+	      djvec_t &Z_chir=(*get<1>(p));
+	      const string &tag=get<2>(p);
+	      
+	      //slice m and fit
+	      for(size_t im=0;im<nm;im++) y[im]=Z[im_r_imom_ind({im,r,imom})];
+	      djvec_t coeffs=poly_fit(am,y,1,-1e30,1e30,"plots/chir_extr_"+tag+"_mom_"+to_string(imom));
+	      Z_chir[r_imom_ind({r,imom})]=coeffs[0];
 	    }
 	}
       

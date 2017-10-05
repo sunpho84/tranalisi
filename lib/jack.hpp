@@ -227,10 +227,20 @@ ostream& operator<<(ostream &out,const jack_t<T> &v)
 template <class T>
 size_t trim_to_njacks_multiple(vector<T> &v,bool verbosity=false)
 {
+  //compute max n compatible to njacks
   size_t clust_size=v.size()/njacks;
   size_t n=clust_size*njacks;
-  if(verbosity) cout<<"Trimmed from "<<v.size()<<" to "<<n<<", clust_size="<<clust_size<<endl;
-  v.resize(n);
+  bool to_trim=(v.size()!=n);
+  
+  //output
+  if(verbosity)
+    {
+      if(to_trim) cout<<"Trimmed from "<<v.size()<<" to "<<n<<", clust_size="<<clust_size<<endl;
+      else        cout<<"No need to trim, keeping nconfs="<<n<<endl;
+    }
+  
+  //trim if needed
+  if(to_trim) v.resize(n);
   
   return clust_size;
 }
