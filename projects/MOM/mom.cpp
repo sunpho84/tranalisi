@@ -385,7 +385,7 @@ int main(int narg,char **arg)
 		if(imom%20==0)
 		  {
 		    const string path="plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+"_mom_"+to_string(imom)+".xmg";
-		    write_fit_plot(path,1e-6,2*am_max,[&coeffs,sub_pole](double x){return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		    write_fit_plot(path,1e-6,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
 		  }
 		//extrapolated value
 		pr_chir[r_r_iZbil_ind({r1,r2,iZbil})]=coeffs[sub_pole?1:0];
