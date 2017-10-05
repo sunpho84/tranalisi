@@ -369,16 +369,18 @@ int main(int narg,char **arg)
 		    {
 		      x[i]=am[im1]+am[im2];
 		      y[i]=pr[im_r_im_r_iZbil_ind({im1,r1,im2,r2,iZbil})];
-		      //fit and write the result
-		      djvec_t coeffs=poly_fit(am,y,1,0,am_max);
-		      if(imom%20==0)
-			{
-			  const string path="plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+"_mom_"+to_string(imom)+".xmg";
-			  write_poly_fit_plot(path,0,am_max,coeffs,x,y);
-			}
-		      //extrapolated value
-		      pr_chir[r_r_iZbil_ind({r1,r2,iZbil})]=coeffs[0];
+		      i++;
 		    }
+		
+		//fit and write the result
+		djvec_t coeffs=poly_fit(x,y,1,0,am_max);
+		if(imom%20==0)
+		  {
+		    const string path="plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+"_mom_"+to_string(imom)+".xmg";
+		    write_poly_fit_plot(path,0,am_max,coeffs,x,y);
+		  }
+		//extrapolated value
+		pr_chir[r_r_iZbil_ind({r1,r2,iZbil})]=coeffs[0];
 	      }
       
       //build Z
