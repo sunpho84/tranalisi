@@ -311,8 +311,9 @@ int main(int narg,char **arg)
 	    const string &tag=get<2>(p);
 	    
 	    //slice m and fit it
+	    double am_max=*max_element(am.begin(),am.end())*1.1;
 	    for(size_t im=0;im<nm;im++) y[im]=Z[im_r_imom_ind({im,r,imom})];
-	    djvec_t coeffs=poly_fit(am,y,1,0,am.back()*1.1,"plots/chir_extr_"+tag+"_mom_"+to_string(imom));
+	    djvec_t coeffs=poly_fit(am,y,1,0,am_max,"plots/chir_extr_"+tag+"_mom_"+to_string(imom));
 	    Z_chir[r_imom_ind({r,imom})]=coeffs[0];
 	  }
       
