@@ -25,6 +25,7 @@ index_t conf_ind; //!< index of a conf given ijack and i_in_clust
 index_t im_r_ind; //!< index of im,r
 index_t r_imom_ind; //!< index of r,imom combo
 index_t im_r_imom_ind; //!< index of im,r,imom combo
+index_t r_ind_imom_ind; //!< index of r,imom combo
 index_t im_r_ind_imom_ind; //!< index of im,r,imom combo
 index_t i_in_clust_ihit_ind; //!< index of i_in_clust,ihit
 
@@ -198,6 +199,7 @@ int main(int narg,char **arg)
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   r_imom_ind.set_ranges({{"r",nr},{"imom",imoms.size()}});
   im_r_imom_ind.set_ranges({{"m",nm},{"r",nr},{"imom",imoms.size()}});
+  r_ind_imom_ind.set_ranges({{"r",nr},{"ind_mom",equiv_imoms.size()}});
   im_r_ind_imom_ind.set_ranges({{"m",nm},{"r",nr},{"ind_mom",equiv_imoms.size()}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
   const index_t im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
@@ -379,6 +381,10 @@ int main(int narg,char **arg)
   const djvec_t Zbil=average_equiv_moms(Zbil_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind);
   const djvec_t Zbil_QED=use_QED?average_equiv_moms(Zbil_QED_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind):djvec_t();
   
+  //chirally extrapolated ones
+  const djvec_t Zq_chir=average_equiv_moms(Zq_chir_allmoms,r_ind_imom_ind,r_imom_ind);
+  const djvec_t Zq_sig1_chir=average_equiv_moms(Zq_sig1_chir_allmoms,r_ind_imom_ind,r_imom_ind);
+  
   // djvec_t Zq_sub=average_equiv_moms(Zq_allmoms_sub);
   // djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
   // djvec_t sig3=average_equiv_moms(sig3_allmoms);
@@ -432,6 +438,7 @@ int main(int narg,char **arg)
   {
     grace_file_t out("plots/Zq_sig1_new.xmg");
     out.set_settype(grace::XYDY);
+    //m and r
     for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
       {
 	vector<size_t> im_r_comps=im_r_ind(im_r);
@@ -444,6 +451,16 @@ int main(int narg,char **arg)
 	  }
 	out.new_data_set();
       }
+    
+    //chir extr
+    for(size_t r=0;r<nr;r++)
+      for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
+	{
+	  size_t r_imom=r_ind_imom_ind({r,ind_imom});
+	  size_t imom=equiv_imoms[ind_imom].first;
+	  out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zq_sig1_chir[r_imom].ave_err());
+	}
+    out.new_data_set();
   }
   
   for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
