@@ -210,7 +210,7 @@ int main(int narg,char **arg)
   djvec_t Zq_allmoms(im_r_imom_ind.max());
   djvec_t Zq_sig1_allmoms(im_r_imom_ind.max());
   djvec_t Zq_sig1_EM_allmoms(im_r_imom_ind.max());
-
+  
   //Subtracted Zq, with and without EM, all moms
   djvec_t Zq_chir_allmoms(r_imom_ind.max());
   djvec_t Zq_sig1_chir_allmoms(r_imom_ind.max());
@@ -231,7 +231,7 @@ int main(int narg,char **arg)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
 	    size_t i_in_clust_hit=i_in_clust_ihit_ind({i_in_clust,ihit});
-	    cout<<"Working on clust_entry "<<i_in_clust<<"/"<<clust_size<<", hit "<<ihit<<"/"<<nhits<<", momentum "<<imom+1<<"/"<<imoms.size()<<endl;
+	    cout<<"Working on clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", hit "<<ihit+1<<"/"<<nhits<<", momentum "<<imom+1<<"/"<<imoms.size()<<endl;
 	    read_time.start();
 	    read_tasks[i_in_clust_hit].assolve_all(RECYCLE);
 	    read_time.stop();
@@ -310,9 +310,9 @@ int main(int narg,char **arg)
 	    djvec_t &Z_chir=(*get<1>(p));
 	    const string &tag=get<2>(p);
 	    
-	    //slice m and fit
+	    //slice m and fit it
 	    for(size_t im=0;im<nm;im++) y[im]=Z[im_r_imom_ind({im,r,imom})];
-	    djvec_t coeffs=poly_fit(am,y,1,-1e30,1e30,"plots/chir_extr_"+tag+"_mom_"+to_string(imom));
+	    djvec_t coeffs=poly_fit(am,y,1,0,am.back()*1.1,"plots/chir_extr_"+tag+"_mom_"+to_string(imom));
 	    Z_chir[r_imom_ind({r,imom})]=coeffs[0];
 	  }
       
