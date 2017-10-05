@@ -135,6 +135,7 @@ int main(int narg,char **arg)
   am.resize(nm);
   for(size_t im=0;im<nm;im++) am[im]=input.read<double>();
   const double am_max=*max_element(am.begin(),am.end())*1.1;
+  const double am_min=*min_element(am.begin(),am.end())/1.1;
   nr=input.read<double>("Nr");
   
   size_t im_sea=input.read<double>("ImSea"); //!< index of sea mass
@@ -324,7 +325,7 @@ int main(int narg,char **arg)
 	    double am_max=*max_element(am.begin(),am.end())*1.1;
 	    for(size_t im=0;im<nm;im++) y[im]=Z[im_r_imom_ind({im,r,imom})];
 	    //fit and write the result
-	    djvec_t coeffs=poly_fit(am,y,1,0,am_max);
+	    djvec_t coeffs=poly_fit(am,y,1,am_min,am_max);
 	    if(imom%20==0) write_poly_fit_plot("plots/chir_extr_"+tag+"_r_"+to_string(r)+"_mom_"+to_string(imom)+".xmg",0,am_max,coeffs,am,y);
 	    //extrapolated value
 	    Z_chir[r_imom_ind({r,imom})]=coeffs[0];
@@ -381,11 +382,11 @@ int main(int narg,char **arg)
 		    }
 		
 		//fit and write the result
-		djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),0,2.0*am_max);
+		djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min,2.0*am_max);
 		if(imom%20==0)
 		  {
 		    const string path="plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+"_mom_"+to_string(imom)+".xmg";
-		    write_fit_plot(path,1e-6,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		    write_fit_plot(path,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
 		  }
 		//extrapolated value
 		pr_chir[r_r_iZbil_ind({r1,r2,iZbil})]=coeffs[sub_pole?1:0];
