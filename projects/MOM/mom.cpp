@@ -356,31 +356,36 @@ int main(int narg,char **arg)
 	  for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	    for(auto & p : pr_bil_tasks)
 	      {
-		djvec_t y(nm*(nm+1)/2);
 		const djvec_t &pr=(*get<0>(p));
 		djvec_t &pr_chir=(*get<1>(p));
 		const string &tag=get<2>(p);
 		
+		//check if we need to subtract the pole
+		const bool sub_pole=(iZbil==iZS or iZbil==iZP);
+		
 		//slice m and fit it
+		djvec_t y(nm*(nm+1)/2),y_plot(nm*(nm+1)/2);
 		vector<double> x(nm*(nm+1)/2);
 		int i=0;
 		for(size_t im1=0;im1<nm;im1++)
 		  for(size_t im2=im1;im2<nm;im2++)
 		    {
 		      x[i]=am[im1]+am[im2];
-		      y[i]=pr[im_r_im_r_iZbil_ind({im1,r1,im2,r2,iZbil})];
+		      y_plot[i]=pr[im_r_im_r_iZbil_ind({im1,r1,im2,r2,iZbil})];
+		      if(sub_pole) y[i]=x[i]*y_plot[i];
+		      else         y[i]=y_plot[i];
 		      i++;
 		    }
 		
 		//fit and write the result
-		djvec_t coeffs=poly_fit(x,y,1,0,am_max);
+		djvec_t coeffs=poly_fit(x,y,1,0,2.0*am_max);
 		if(imom%20==0)
 		  {
 		    const string path="plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+"_mom_"+to_string(imom)+".xmg";
-		    write_poly_fit_plot(path,0,am_max,coeffs,x,y);
+		    write_poly_fit_plot(path,0,2.0*am_max,coeffs,x,y);
 		  }
 		//extrapolated value
-		pr_chir[r_r_iZbil_ind({r1,r2,iZbil})]=coeffs[0];
+		pr_chir[r_r_iZbil_ind({r1,r2,iZbil})]=coeffs[sub_pole?1:0];
 	      }
       
       //build Z
