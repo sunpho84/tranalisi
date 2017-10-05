@@ -19,6 +19,8 @@
 #include <Zq.hpp>
 #include <Zq_sig1.hpp>
 
+const bool use_QED=true;
+
 string suff_hit="";
 
 index_t conf_ind; //!< index of a conf given ijack and i_in_clust
@@ -30,7 +32,7 @@ index_t im_r_ind_imom_ind; //!< index of im,r,imom combo
 index_t i_in_clust_ihit_ind; //!< index of i_in_clust,ihit
 
 //! prepare a list of reading task, to be executed in parallel
-vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,bool use_QED)
+vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list)
 {
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}}); //!< index of im,r,ijack combo
   props.resize(im_r_ijack_ind.max());
@@ -193,8 +195,6 @@ int main(int narg,char **arg)
   
   size_t clust_size=trim_to_njacks_multiple(conf_list,true); //!< cluster size
   
-  bool use_QED=true;
-  
   conf_ind.set_ranges({{"ijack",njacks},{"i_in_clust",clust_size}});
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   r_imom_ind.set_ranges({{"r",nr},{"imom",imoms.size()}});
@@ -218,17 +218,23 @@ int main(int narg,char **arg)
   djvec_t Zq_sig1_chir_allmoms(r_imom_ind.max());
   djvec_t Zq_sig1_EM_chir_allmoms(r_imom_ind.max());
   
+  //! collect Zq to be elaborated
+  vector<tuple<djvec_t*,djvec_t*,string>> Zq_elab{
+    {&Zq_allmoms,&Zq_chir_allmoms,string("Zq")},
+    {&Zq_sig1_allmoms,&Zq_sig1_chir_allmoms,"Zq_sig1"},
+    {&Zq_sig1_EM_allmoms,&Zq_sig1_EM_chir_allmoms,"Zq_sig1_EM"}};
+  
   djvec_t Zbil_allmoms(im_r_im_r_iZbil_imom_ind.max());
   djvec_t Zbil_QED_allmoms(im_r_im_r_iZbil_imom_ind.max());
   
   vector<m_r_mom_conf_props_t> props; //!< store props for individual conf
   
-  vector<task_list_t> read_tasks=prepare_read_prop_taks(props,conf_list,use_QED);
+  vector<task_list_t> read_tasks=prepare_read_prop_taks(props,conf_list);
+  vector<jm_r_mom_props_t> jprops(im_r_ind.max()); //!< jackknived props
+  jbil_vert_t jverts(im_r_im_r_igam_ind.max(),use_QED); //!< jackknived vertex
+  
   for(size_t imom=0;imom<imoms.size();imom++)
     {
-      vector<jm_r_mom_props_t> jprops(im_r_ind.max()); //!< jackknived props
-      jbil_vert_t jverts(im_r_im_r_igam_ind.max(),use_QED); //!< jackknived vertex
-      
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
@@ -435,33 +441,38 @@ int main(int narg,char **arg)
   //     p2tilde[imom]=imoms[imom].p(L).tilde().norm2();
   //   }
 
-  {
-    grace_file_t out("plots/Zq_sig1_new.xmg");
-    out.set_settype(grace::XYDY);
-    //m and r
-    for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
-      {
-	vector<size_t> im_r_comps=im_r_ind(im_r);
-	size_t im=im_r_comps[0],r=im_r_comps[1];
+  for(auto &p : Zq_elab)
+    {
+      const djvec_t &Zq=(*get<0>(p));
+      djvec_t &Zq_chir=(*get<1>(p));
+      const string &tag=get<2>(p);
+      
+      grace_file_t out("plots/"+tag+".xmg");
+      out.set_settype(grace::XYDY);
+      //m and r
+      for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
+	{
+	  vector<size_t> im_r_comps=im_r_ind(im_r);
+	  size_t im=im_r_comps[0],r=im_r_comps[1];
+	  for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
+	    {
+	      size_t im_r_imom=im_r_ind_imom_ind({im,r,ind_imom});
+	      size_t imom=equiv_imoms[ind_imom].first;
+	      out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zq[im_r_imom].ave_err());
+	    }
+	  out.new_data_set();
+	}
+      
+      //chir extr
+      for(size_t r=0;r<nr;r++)
 	for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
 	  {
-	    size_t im_r_imom=im_r_ind_imom_ind({im,r,ind_imom});
+	    size_t r_imom=r_ind_imom_ind({r,ind_imom});
 	    size_t imom=equiv_imoms[ind_imom].first;
-	    out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zq_sig1[im_r_imom].ave_err());
+	    out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zq_chir[r_imom].ave_err());
 	  }
-	out.new_data_set();
-      }
-    
-    //chir extr
-    for(size_t r=0;r<nr;r++)
-      for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
-	{
-	  size_t r_imom=r_ind_imom_ind({r,ind_imom});
-	  size_t imom=equiv_imoms[ind_imom].first;
-	  out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zq_sig1_chir[r_imom].ave_err());
-	}
-    out.new_data_set();
-  }
+      out.new_data_set();
+    }
   
   for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
     {
