@@ -49,7 +49,7 @@ vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,c
 	    vector<tup_in_t> list={{&l.LO,"0",1}};
 	    if(use_QED)
 	      {
-		list.push_back(tup_in_t(&l.P,"P",dcompl_t(0,-1)));
+		list.push_back(tup_in_t(&l.P,"P",dcompl_t(0,tau3[r])));
 		list.push_back(tup_in_t(&l.S,"S",dcompl_t(-1,0)));
 		list.push_back(tup_in_t(&l.T,"T",dcompl_t(1,0)));
 		list.push_back(tup_in_t(&l.F,"F",dcompl_t(1,0)));
