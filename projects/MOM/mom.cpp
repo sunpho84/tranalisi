@@ -20,6 +20,7 @@
 #include <Zq_sig1.hpp>
 
 bool use_QED;
+size_t print_each_mom;
 
 string suff_hit="";
 
@@ -157,6 +158,7 @@ int main(int narg,char **arg)
   const size_t tmax=input.read<size_t>("Tmax");
   
   use_QED=input.read<bool>("UseQED");
+  print_each_mom=input.read<bool>("PrintEachMom");
   
   //////////////////////////////////////////////////
   
@@ -333,7 +335,7 @@ int main(int narg,char **arg)
 	    for(size_t im=0;im<nm;im++) y[im]=Z[im_r_imom_ind({im,r,imom})];
 	    //fit and write the result
 	    djvec_t coeffs=poly_fit(am,y,1,am_min,am_max);
-	    if(imom%20==0) write_poly_fit_plot("plots/chir_extr_"+tag+"_r_"+to_string(r)+"_mom_"+to_string(imom)+".xmg",0,am_max,coeffs,am,y);
+	    if(imom%print_each_mom==0) write_poly_fit_plot("plots/chir_extr_"+tag+"_r_"+to_string(r)+"_mom_"+to_string(imom)+".xmg",0,am_max,coeffs,am,y);
 	    //extrapolated value
 	    Z_chir[r_imom_ind({r,imom})]=coeffs[0];
 	  }
@@ -390,7 +392,7 @@ int main(int narg,char **arg)
 		
 		//fit and write the result
 		djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min,2.0*am_max);
-		if(imom%20==0)
+		if(imom%print_each_mom==0)
 		  {
 		    grace_file_t plot("plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+"_mom_"+to_string(imom)+".xmg");
 		    write_fit_plot(plot,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
