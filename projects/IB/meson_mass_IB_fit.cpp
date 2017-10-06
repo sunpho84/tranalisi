@@ -2077,11 +2077,11 @@ dboot_t cont_chir_linear_fit(const dbvec_t &a,const dbvec_t &z,const vector<cont
 }
 */
 
-///////////////////////////////////////////////////////// DeltaFK ////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////// deltaFK ////////////////////////////////////////////////////////////////////////////
 
 //! ansatz fit
 template <class Tpars,class Tm,class Ta>
-Tpars cont_chir_ansatz_DeltaFK(const Tpars &f0,const Tpars &B0,const Tpars &Kc,const Tpars &K,const Tpars &Klog,const Tpars &quad_dep,const Tm &ml,
+Tpars cont_chir_ansatz_deltaFK(const Tpars &f0,const Tpars &B0,const Tpars &Kc,const Tpars &K,const Tpars &Klog,const Tpars &quad_dep,const Tm &ml,
 			       const Ta &a,const Tpars &adep,double L,const Tpars &fvedep,const size_t an_flag)
 {
   
@@ -2106,7 +2106,7 @@ Tpars cont_chir_ansatz_DeltaFK(const Tpars &f0,const Tpars &B0,const Tpars &Kc,c
 }
 
 //! perform the fit to the continuum limit
-dboot_t cont_chir_fit_DeltaFK(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t an_flag,bool cov_flag,const vector<string> &beta_list)
+dboot_t cont_chir_fit_deltaFK(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const string &path,size_t an_flag,bool cov_flag,const vector<string> &beta_list)
 {
   //if(fit_debug) set_printlevel(3);
   
@@ -2138,24 +2138,24 @@ dboot_t cont_chir_fit_DeltaFK(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   boot_fit.fix_par(pars.iML4dep);
   
   cont_chir_fit_minimize(ext_data,pars,boot_fit,-1.0,1.0,[an_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double MD,double ac,double L)
-			 {return cont_chir_ansatz_DeltaFK(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iKK],p[pars.iK2Pi],ml,ac,p[pars.iadep],L,p[pars.iL3dep],an_flag);},cov_flag);
+			 {return cont_chir_ansatz_deltaFK(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iKK],p[pars.iK2Pi],ml,ac,p[pars.iadep],L,p[pars.iL3dep],an_flag);},cov_flag);
   
-  dboot_t phys_res=cont_chir_ansatz_DeltaFK(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,ml_phys,a_cont,pars.adep,inf_vol,pars.L3dep,an_flag);
-  cout<<"DeltaFK_over_Deltamud: "<<phys_res.ave_err()<<endl;
+  dboot_t phys_res=cont_chir_ansatz_deltaFK(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,ml_phys,a_cont,pars.adep,inf_vol,pars.L3dep,an_flag);
+  cout<<"deltaFK_over_Deltamud: "<<phys_res.ave_err()<<endl;
 
   plot_chir_fit(path,ext_data,pars,
 		[&pars,an_flag]
 		(double x,size_t ib)
-		{return cont_chir_ansatz_DeltaFK<double,double,double>
+		{return cont_chir_ansatz_deltaFK<double,double,double>
 		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.KK.ave(),pars.K2Pi.ave(),x,
 		     pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),an_flag);},
-		bind(cont_chir_ansatz_DeltaFK<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,_1,
+		bind(cont_chir_ansatz_deltaFK<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,_1,
 		     a_cont,pars.adep,inf_vol,pars.L3dep,an_flag),
 		[&ext_data,&pars]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t((without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse)*pars.fit_z[ib]*pars.fit_a[ib]-
 				without_with_fse*pars.L3dep*dboot_t(pow(2.0*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.25)/pow(4.0*M_PI*pars.fit_f0,2.0)*exp(-pow(2.0*pars.fit_B0*ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib],0.5)*ext_data[idata].L)/pow(ext_data[idata].L,1.5)));},
-		ml_phys,phys_res,"[M\\S2\\N\\sK\\S0\\N\\h{0.2}-\\h{0.2}M\\S2\\N\\sK\\S+\\N]\\S\\f{Times-Italic}IB\\N\\f{}\\h{0.3}(GeV)",beta_list);
+		ml_phys,phys_res,"[F\\sK\\S+\\N\\h{0.2}-\\h{0.2}F\\sK\\S0\\N]\\S\\f{Times-Italic}IB\\N\\f{}/F\\sK\\N\\h{0.3}(GeV\\S-1\\N)",beta_list);
   
   return phys_res;
 }

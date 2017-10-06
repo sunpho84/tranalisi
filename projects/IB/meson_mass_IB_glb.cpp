@@ -204,7 +204,7 @@ int main(int narg,char **arg)
   //D meson + scalar densities
   dbvec_t MPi_sl_s(ninput_an*raw_data.size());
   dbvec_t MK_sl_s(ninput_an*raw_data.size());
-  dbvec_t DG2K_fr_G2K(ninput_an*raw_data.size());
+  dbvec_t DG2K_over_G2K(ninput_an*raw_data.size());
   dbvec_t MK_sl_s_revins(ninput_an*raw_data.size());
   dbvec_t aDeltam_cr_u(ninput_an*raw_data.size());
   dbvec_t aDeltam_cr_d(ninput_an*raw_data.size());
@@ -240,7 +240,7 @@ int main(int narg,char **arg)
   dbvec_t output_M2K0g(ninput_an*nan_syst);
   dbvec_t output_M2uug(ninput_an*nan_syst);
   dbvec_t output_M2ddg(ninput_an*nan_syst);
-  dbvec_t output_DeltaFK_over_Deltamud(ninput_an*nan_syst);
+  dbvec_t output_deltaFK_over_Deltamud(ninput_an*nan_syst);
 
   vector<ave_err_t> v_ave_an_dM2Pi(nan_syst);
   vector<ave_err_t> v_ave_an_dM2K_QED(nan_syst);
@@ -257,7 +257,7 @@ int main(int narg,char **arg)
   vector<ave_err_t> v_ave_an_M2K0g(nan_syst);
   vector<ave_err_t> v_ave_an_M2uug(nan_syst);
   vector<ave_err_t> v_ave_an_M2ddg(nan_syst);
-  vector<ave_err_t> v_ave_an_DeltaFK_over_Deltamud(nan_syst);
+  vector<ave_err_t> v_ave_an_deltaFK_over_Deltamud(nan_syst);
  
   bool cov_flag=false;
 
@@ -285,7 +285,7 @@ int main(int narg,char **arg)
 	dbvec_t a2M2K0g(raw_data.size());
 	dbvec_t a2M2uug(raw_data.size());
 	dbvec_t a2M2ddg(raw_data.size());
-	dbvec_t DeltaFK_over_Deltamud(raw_data.size());
+	dbvec_t deltaFK_over_Deltamud(raw_data.size());
 	
 	for(size_t iens=0;iens<raw_data.size();iens++)
 	  {
@@ -321,7 +321,7 @@ int main(int narg,char **arg)
 	    dboot_t MK_sl_p=dboot_t(bi,raw_data[iens].k_SL_p);
 	    dboot_t aMK_sl_selftad_revins=dboot_t(bi,raw_data[iens].k_SL_selftad_revins);
 	    dboot_t MK_sl_p_revins=dboot_t(bi,raw_data[iens].k_SL_p_revins);
-	    DG2K_fr_G2K[iens+input_an_id*raw_data.size()]=dboot_t(bi,raw_data[iens].k_A_s);
+	    DG2K_over_G2K[iens+input_an_id*raw_data.size()]=dboot_t(bi,raw_data[iens].k_A_s);
 	    
 	    dboot_t daMK_QED=
 	      -(aDeltam_cr_u[iens+input_an_id*raw_data.size()]-aDeltam_cr_d[iens+input_an_id*raw_data.size()])*MK_sl_p-2.0*ml[iens]*a*MK_sl_s[iens+input_an_id*raw_data.size()]/(Z_QED[iens+input_an_id*raw_data.size()]*2.0/(sqr(ed)-sqr(eu)))
@@ -370,8 +370,8 @@ int main(int narg,char **arg)
 	    a2M2uug[iens]=uu_meson;
 	    a2M2ddg[iens]=dd_meson;
 
-	    //////////DeltaFK////////////
-	    DeltaFK_over_Deltamud[iens]=-1.0/(raw_data[iens].ams+raw_data[iens].aml)+DG2K_fr_G2K[iens+input_an_id*raw_data.size()]/2.0+2.0*MK_sl_s[iens+input_an_id*raw_data.size()]/aMK;
+	    //////////deltaFK////////////
+	    deltaFK_over_Deltamud[iens]=-1.0/(raw_data[iens].ams+raw_data[iens].aml)+DG2K_over_G2K[iens+input_an_id*raw_data.size()]/2.0+2.0*MK_sl_s[iens+input_an_id*raw_data.size()]/aMK;
 	  }
 	
 	//prepare the list of a and z
@@ -389,7 +389,7 @@ int main(int narg,char **arg)
 	cout<<"                    input_an_id: "<<input_an_id<<endl;
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
-	/*
+	
 	cout<<"                         Pi "<<endl;
 	cout<<endl;
 	
@@ -536,16 +536,16 @@ int main(int narg,char **arg)
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
-	*/
-	cout<<"                      DeltaFK "<<endl;
+	
+	cout<<"                      deltaFK "<<endl;
 	cout<<endl;
 	
-	vector<cont_chir_fit_data_t> data_DeltaFK_over_Deltamud;
+	vector<cont_chir_fit_data_t> data_deltaFK_over_Deltamud;
 	for(size_t iens=0;iens<raw_data.size();iens++)
-	  data_DeltaFK_over_Deltamud.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMD[iens+input_an_id*raw_data.size()],raw_data[iens].ibeta,raw_data[iens].L,
-									       DeltaFK_over_Deltamud[iens],DeltaFK_over_Deltamud[iens]));
+	  data_deltaFK_over_Deltamud.push_back(cont_chir_fit_data_t(raw_data[iens].aml,raw_data[iens].ams,aMD[iens+input_an_id*raw_data.size()],raw_data[iens].ibeta,raw_data[iens].L,
+									       deltaFK_over_Deltamud[iens],deltaFK_over_Deltamud[iens]));
 		
-	output_DeltaFK_over_Deltamud[ind_an({input_an_id,an_flag})]=cont_chir_fit_DeltaFK(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_DeltaFK_over_Deltamud,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_DeltaFK_over_Deltamud_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag,beta_list);
+	output_deltaFK_over_Deltamud[ind_an({input_an_id,an_flag})]=cont_chir_fit_deltaFK(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,data_deltaFK_over_Deltamud,lat_par[input_an_id].ml,combine("plots/cont_chir_fit_deltaFK_over_Deltamud_flag%zu_an%zu.xmg",an_flag,input_an_id),an_flag,cov_flag,beta_list);
 	
 	cout<<"-----------------------------------------------"<<endl;
 	cout<<endl;
@@ -584,7 +584,7 @@ int main(int narg,char **arg)
 	plot_ens_data(combine("plots/MD_sl_s_revins_an%zu.xmg",input_an_id),ml,MD_sl_s_revins_o);
 		
       }
-  /*
+  
   ///////////////////masses//////////////////
   for(size_t iens=0;iens<raw_data.size();iens++)
     {
@@ -674,13 +674,13 @@ int main(int narg,char **arg)
   syst_analysis_sep(v_ave_an_dM2D_QED);
   for(size_t i=0;i<8;i++)
     cout<<"an_dM2D_QED: "<<v_ave_an_dM2D_QED[i]<<endl;
-  */
-  v_ave_an_DeltaFK_over_Deltamud=ave_analyses(output_DeltaFK_over_Deltamud);
-  cout<<"DeltaFK_over_Deltamud: "<<stat_analysis(v_ave_an_DeltaFK_over_Deltamud)<<" "<<syst_analysis(v_ave_an_DeltaFK_over_Deltamud)<<endl;
-  syst_analysis_sep(v_ave_an_DeltaFK_over_Deltamud);
+  
+  v_ave_an_deltaFK_over_Deltamud=ave_analyses(output_deltaFK_over_Deltamud);
+  cout<<"deltaFK_over_Deltamud: "<<stat_analysis(v_ave_an_deltaFK_over_Deltamud)<<" "<<syst_analysis(v_ave_an_deltaFK_over_Deltamud)<<endl;
+  syst_analysis_sep(v_ave_an_deltaFK_over_Deltamud);
   for(size_t i=0;i<8;i++)
-    cout<<"an_DeltaFK_over_Deltamud: "<<v_ave_an_DeltaFK_over_Deltamud[i]<<endl;
-  /*
+    cout<<"an_deltaFK_over_Deltamud: "<<v_ave_an_deltaFK_over_Deltamud[i]<<endl;
+  
   /////////////////epsilon///////////////
   dbvec_t epsilon_Pi0_ind(ninput_an*nan_syst);
   dbvec_t epsilon_K0_ind(ninput_an*nan_syst);
@@ -739,14 +739,14 @@ int main(int narg,char **arg)
   dbvec_t Deltamud_ind(ninput_an*nan_syst);
   dbvec_t Q2_col(ninput_an*nan_syst);
   dbvec_t Q2_col_ind(ninput_an*nan_syst);
-  dbvec_t DeltaFK(ninput_an*nan_syst);
+  dbvec_t deltaFK(ninput_an*nan_syst);
   vector<ave_err_t> v_ave_an_dM2K_QCD(nan_syst);
   vector<ave_err_t> v_ave_an_dM2K_QCD_ind(nan_syst);
   vector<ave_err_t> v_ave_an_Deltamud(nan_syst);
   vector<ave_err_t> v_ave_an_Deltamud_ind(nan_syst);
   vector<ave_err_t> v_ave_an_Q2_col(nan_syst);
   vector<ave_err_t> v_ave_an_Q2_col_ind(nan_syst);
-  vector<ave_err_t> v_ave_an_DeltaFK(nan_syst);
+  vector<ave_err_t> v_ave_an_deltaFK(nan_syst);
   dboot_t dM2K_exp,M2Pi_exp,M2K_exp;
   for(size_t iboot=0;iboot<nboots;iboot++)
     {
@@ -764,7 +764,7 @@ int main(int narg,char **arg)
 	Deltamud_ind[ind_an({input_an_id,an_flag})]=dboot_t(-dM2K_QCD_ind[ind_an({input_an_id,an_flag})]/output_dM2K_QCD_over_minus_two_Deltamud[ind_an({input_an_id,an_flag})]/2.0);
 	Q2_col[ind_an({input_an_id,an_flag})]=dboot_t(-M2K_exp*(M2K_exp-M2Pi_exp)/M2Pi_exp/(dM2K_QCD[ind_an({input_an_id,an_flag})]*1000.0));
 	Q2_col_ind[ind_an({input_an_id,an_flag})]=dboot_t(-M2K_exp*(M2K_exp-M2Pi_exp)/M2Pi_exp/(dM2K_QCD_ind[ind_an({input_an_id,an_flag})]*1000.0));
-	DeltaFK[ind_an({input_an_id,an_flag})]=dboot_t(Deltamud[ind_an({input_an_id,an_flag})]*output_DeltaFK_over_Deltamud[ind_an({input_an_id,an_flag})]);
+	deltaFK[ind_an({input_an_id,an_flag})]=dboot_t(Deltamud[ind_an({input_an_id,an_flag})]*output_deltaFK_over_Deltamud[ind_an({input_an_id,an_flag})]/1000.0);
       }
 
   v_ave_an_dM2K_QCD=ave_analyses(dM2K_QCD);
@@ -803,11 +803,11 @@ int main(int narg,char **arg)
   for(size_t i=0;i<8;i++)
     cout<<"an_Q2_col_ind: "<<v_ave_an_Q2_col_ind[i]<<endl;
 
-  v_ave_an_DeltaFK=ave_analyses(DeltaFK);
-  cout<<"DeltaFK: "<<stat_analysis(v_ave_an_DeltaFK)<<" "<<syst_analysis(v_ave_an_DeltaFK)<<endl;
-  syst_analysis_sep(v_ave_an_DeltaFK);
+  v_ave_an_deltaFK=ave_analyses(deltaFK);
+  cout<<"deltaFK: "<<stat_analysis(v_ave_an_deltaFK)<<" "<<syst_analysis(v_ave_an_deltaFK)<<endl;
+  syst_analysis_sep(v_ave_an_deltaFK);
   for(size_t i=0;i<8;i++)
-    cout<<"an_DeltaFK: "<<v_ave_an_DeltaFK[i]<<endl;
+    cout<<"an_deltaFK: "<<v_ave_an_deltaFK[i]<<endl;
   
   /////////////////R,Q2,mu/md/////////////////////
   dbvec_t R(ninput_an*nan_syst);
@@ -1146,6 +1146,6 @@ int main(int narg,char **arg)
   syst_analysis_sep(v_ave_an_MDs);
   for(size_t i=0;i<8;i++)
     cout<<"an_MDs: "<<v_ave_an_MDs[i]<<endl;
-  */
+  
   return 0;
 }
