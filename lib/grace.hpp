@@ -560,14 +560,21 @@ public:
 
 //! prepare a plot with a band
 template <class TV,class T=typename TV::base_type,class fun_t>
-void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const vector<double> &x,const TV &y)
+void write_fit_plot(grace_file_t &out,double xmin,double xmax,const fun_t &fun,const vector<double> &x,const TV &y)
 {
-  grace_file_t out(path);
+  //(path);
   out.write_polygon(fun,xmin,xmax);
   out.new_data_set();
   out.write_vec_ave_err(x,y.ave_err());
   out.new_data_set();
 }
+template <class TV,class T=typename TV::base_type,class fun_t>
+void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const vector<double> &x,const TV &y)
+{
+  grace_file_t out(path);
+  write_fit_plot(out,xmin,xmax,fun.x,y);
+}
+
 template <class TV,class fun_t,class T=typename TV::base_type>
 void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const TV &y)
 {write_fit_plot(path,xmin,xmax,fun,vector_up_to<double>(y.size()),y);}

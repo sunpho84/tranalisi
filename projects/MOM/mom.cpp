@@ -392,8 +392,9 @@ int main(int narg,char **arg)
 		djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min,2.0*am_max);
 		if(imom%20==0)
 		  {
-		    const string path="plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+"_mom_"+to_string(imom)+".xmg";
-		    write_fit_plot(path,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		    grace_file_t plot("plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+"_mom_"+to_string(imom)+".xmg");
+		    write_fit_plot(plot,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		    write_fit_plot(plot,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return coeffs[sub_pole?1:0];},x,y_plot);
 		  }
 		//extrapolated value
 		pr_chir[r_r_iZbil_ind({r1,r2,iZbil})]=coeffs[sub_pole?1:0];
