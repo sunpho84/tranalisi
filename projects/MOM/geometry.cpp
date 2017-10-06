@@ -90,7 +90,7 @@ void set_class_of_equiv_moms()
   //print details
   for(auto &e : equiv_imoms)
     {
-      for(auto &ei : imoms[e.first]) cout<<ei<<" , p2hat: "<<imoms[e.first].p(L).tilde().norm2();
+      for(auto &ei : imoms[e.first]) out<<ei<<" , p2hat: "<<imoms[e.first].p(L).tilde().norm2();
       out<<"Equivalent to: "<<e.second.size()<<" moms:"<<endl;
       for(auto &eq : e.second)
   	{
