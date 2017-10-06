@@ -94,18 +94,13 @@ void set_class_of_equiv_moms()
       out<<" Equivalent to: "<<e.second.size()<<" moms: "<<endl;
       for(auto &eq : e.second)
   	{
-  	  out<<"  ";
-  	  for(auto &eqi : imoms[eq])
+  	  out<<"  "<<eq<<"={";
+	  for(size_t mu=0;mu<NDIM;mu++)
 	    {
-	      out<<eqi<<"={";
-	      for(size_t mu=0;mu<NDIM;mu++)
-		{
-		  if(mu) out<<",";
-		  out<<imoms[eqi].p(L)[mu];
-		}
-	      out<<"} ";
+	      if(mu) out<<",";
+	      out<<imoms[eq][mu];
 	    }
-  	  out<<endl;
+	  out<<"} "<<endl;
   	}
     }
 }
