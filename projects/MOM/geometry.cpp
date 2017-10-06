@@ -65,8 +65,8 @@ void set_class_of_equiv_moms()
       //decide time component
       cr[0]=imoms[i][0];
       //periodicity
-      enum{UNK,PER,APE};
-      int pe=UNK;
+      enum pe_t{UNK,PER,APE};
+      pe_t pe=UNK;
       double p0=fabs(ph_mom[0]);
       if(fabs(p0)<1e-10) pe=PER;
       if(fabs(p0-0.5)<1e-10) pe=APE;
