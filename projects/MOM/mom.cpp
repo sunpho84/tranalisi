@@ -19,7 +19,7 @@
 #include <Zq.hpp>
 #include <Zq_sig1.hpp>
 
-const bool use_QED=true;
+bool use_QED;
 
 string suff_hit="";
 
@@ -156,6 +156,8 @@ int main(int narg,char **arg)
   const size_t tmin=input.read<size_t>("Tmin");
   const size_t tmax=input.read<size_t>("Tmax");
   
+  use_QED=input.read<bool>("UseQED");
+  
   //////////////////////////////////////////////////
   
   //set the number of jackknives
@@ -235,8 +237,8 @@ int main(int narg,char **arg)
   
   djvec_t Zbil_allmoms(im_r_im_r_iZbil_imom_ind.max());
   djvec_t Zbil_chir_allmoms(r_r_iZbil_imom_ind.max());
-  djvec_t Zbil_QED_chir_allmoms(im_r_im_r_iZbil_imom_ind.max());
-  djvec_t Zbil_QED_allmoms(r_r_iZbil_imom_ind.max());
+  djvec_t Zbil_QED_allmoms(im_r_im_r_iZbil_imom_ind.max());
+  djvec_t Zbil_QED_chir_allmoms(r_r_iZbil_imom_ind.max());
   
   vector<m_r_mom_conf_props_t> props; //!< store props for individual conf
   
@@ -420,7 +422,7 @@ int main(int narg,char **arg)
 	    }
 	}
       
-      //build Z
+      //build Z in the chiral limit
       for(size_t r_r_iZbil=0;r_r_iZbil<r_r_iZbil_ind.max();r_r_iZbil++)
 	{
 	  const vector<size_t> r_r_iZbil_comp=r_r_iZbil_ind(r_r_iZbil);
