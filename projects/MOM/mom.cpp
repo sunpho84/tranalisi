@@ -527,56 +527,50 @@ int main(int narg,char **arg)
 
   for(auto &p : Zq_tasks)
     {
+      //decript the tuple
       const djvec_t &Zq=(*get<0>(p));
       djvec_t &Zq_chir=(*get<1>(p));
       const string &tag=get<2>(p);
       
-      grace_file_t out("plots/"+tag+".xmg");
-      out.new_data_set();
-      
-      //m and r
-      for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
+      //loop over all r
+      for(size_t r=0;r<nr;r++)
 	{
-	  vector<size_t> im_r_comps=im_r_ind(im_r);
-	  size_t im=im_r_comps[0],r=im_r_comps[1];
-	  for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
-	    {
-	      size_t im_r_imom=im_r_ind_imom_ind({im,r,ind_imom});
-	      size_t imom=equiv_imoms[ind_imom].first;
-	      out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zq[im_r_imom].ave_err());
-	    }
+	  //open the file
+	  grace_file_t out("plots/"+tag+"_r_"+to_string(r)+".xmg");
+	  out.new_data_set();
+	  
+	  //m
+	  for(size_t im=0;im<=nm;im++)
+	    for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
+	      out.write_ave_err(imoms[equiv_imoms[ind_imom].first].p(L).tilde().norm2(),
+				((im==nm)?Zq_chir[r_ind_imom_ind({r,ind_imom})]:Zq[im_r_ind_imom_ind({im,r,ind_imom})]).ave_err());
 	  out.new_data_set();
 	}
-      
-      //chir extr
-      for(size_t r=0;r<nr;r++)
-	for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
-	  {
-	    size_t r_imom=r_ind_imom_ind({r,ind_imom});
-	    size_t imom=equiv_imoms[ind_imom].first;
-	    out.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zq_chir[r_imom].ave_err());
-	  }
-      out.new_data_set();
     }
   
   //! list of task to chiral extrapolate bilinears
   vector<Z_task_t> Zbil_tasks{{&Zbil,&Zbil_chir,string("Zbil")}};
   if(use_QED) Zbil_tasks.push_back(make_tuple(&Zbil_QED,&Zbil_QED_chir,"Zbil_EM"));
   
-  for(auto &p : Zq_tasks)
+  for(auto &p : Zbil_tasks)
     {
+      //decript tuple
       const djvec_t &Z=(*get<0>(p));
       const djvec_t &Z_chir=(*get<1>(p));
       const string &tag=get<2>(p);
       
       for(size_t r_r_iZbil=0;r_r_iZbil<r_r_iZbil_ind.max();r_r_iZbil++)
 	{
+	  //decript r1, r2 and the iZbil
 	  const vector<size_t> r_r_iZbil_comp=r_r_iZbil_ind(r_r_iZbil);
 	  const size_t r1=r_r_iZbil_comp[0],r2=r_r_iZbil_comp[1];
 	  const size_t iZbil=r_r_iZbil_comp[2];
+	  
+	  //open the file
 	  grace_file_t out("plots/"+tag+"_Z"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+".xmg");
 	  out.new_data_set();
 	  
+	  //write mass by mass, only half of the combos
 	  for(size_t im1=0;im1<nm;im1++)
 	    for(size_t im2=im1;im2<nm;im2++)
 	      {
@@ -584,6 +578,7 @@ int main(int narg,char **arg)
 		  out.write_ave_err(imoms[equiv_imoms[ind_imom].first].p(L).tilde().norm2(),Z[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
 		out.new_data_set();
 	      }
+	  //write chiral extrap
 	  for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
 	    out.write_ave_err(imoms[equiv_imoms[ind_imom].first].p(L).tilde().norm2(),Z_chir[r_r_iZbil_ind_imom_ind({r1,r2,iZbil,ind_imom})].ave_err());
 	  out.new_data_set();
