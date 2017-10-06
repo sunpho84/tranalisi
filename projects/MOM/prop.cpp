@@ -94,8 +94,6 @@ double M_of_p(const p_t &p,double kappa)
 
 prop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r)
 {
-  double tau3[2]={-1.0,+1.0};
-  
   const p_t p=pi.p(L);
   const p_t ptilde=p.tilde();
   
