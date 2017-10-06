@@ -64,9 +64,19 @@ void set_class_of_equiv_moms()
       
       //decide time component
       cr[0]=imoms[i][0];
+      //periodicity
+      enum{UNK,PER,APE};
+      int pe=UNK;
       double p0=fabs(ph_mom[0]);
-      if(fabs(p0)>1e-10 and fabs(p0-0.5)>1e-10) CRASH("phase on momentum 0 cannot be %lg",ph_mom[0]);
-      if(fabs(p0-0.5)<=1e-10 and cr[0]<0) cr[0]=-cr[0]-1;
+      if(fabs(p0)<1e-10) pe=PER;
+      if(fabs(p0-0.5)<1e-10) pe=APE;
+      
+      switch(pe)
+	{
+	case UNK: CRASH("phase on momentum 0 cannot be %lg",ph_mom[0]);break;
+	case PER: cr[0]=-cr[0];break;
+	case APE: cr[0]=-cr[0]-1;break;
+	}
       
       //decide space componnents
       for(size_t mu=1;mu<NDIM;mu++) cr[mu]=abs(imoms[i][mu]);
