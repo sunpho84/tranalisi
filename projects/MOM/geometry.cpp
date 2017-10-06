@@ -102,7 +102,7 @@ void set_class_of_equiv_moms()
 	      if(mu) out<<",";
 	      out<<imoms[eq][mu];
 	    }
-	  out<<"}"<<endl;
+	  out<<"}";
 	  //phat
   	  out<<"={";
 	  for(size_t mu=0;mu<NDIM;mu++)
