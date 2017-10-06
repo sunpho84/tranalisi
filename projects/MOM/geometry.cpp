@@ -84,22 +84,30 @@ void set_class_of_equiv_moms()
     }
   
   //print stats
-  cout<<"Found "<<equiv_imoms.size()<<" independent momenta "<<endl;
+  ofstream out("equiv_moms.txt");
+  out<<"Found "<<equiv_imoms.size()<<" independent momenta "<<endl;
   
   //print details
-  // auto Np=Np_class.begin();
-  // for(auto &e : equiv_imoms)
-  //   {
-  //     for(auto &ei : imoms[e.first]) cout<<ei<<" ";
-  //     cout<<"(Np="<<*(Np++)<<") ";
-  //     cout<<"Equivalent to: "<<e.second.size()<<" moms:"<<endl;
-  //     for(auto &eq : e.second)
-  // 	{
-  // 	  cout<<" ";
-  // 	  for(auto &eqi : imoms[eq]) cout<<eqi<<" ";
-  // 	  cout<<endl;
-  // 	}
-  //   }
+  for(auto &e : equiv_imoms)
+    {
+      for(auto &ei : imoms[e.first]) cout<<ei<<" , p2hat: "<<imoms[e.first].p(L).tilde().norm2();
+      out<<"Equivalent to: "<<e.second.size()<<" moms:"<<endl;
+      for(auto &eq : e.second)
+  	{
+  	  out<<" ";
+  	  for(auto &eqi : imoms[eq])
+	    {
+	      out<<eqi<<"={";
+	      for(size_t mu=0;mu<NDIM;mu++)
+		{
+		  if(mu) out<<",";
+		  out<<imoms[eqi].p(L)[mu];
+		}
+	      out<<"} ";
+	    }
+  	  out<<endl;
+  	}
+    }
 }
 
 void list_all_smom_pairs()
