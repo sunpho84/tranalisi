@@ -77,6 +77,7 @@ const size_t &nQED_mes=QED_mes_pars.size();
 
 const size_t nleps=2; //!< number of leptons
 const size_t nmes_tint=3; //!< number of time intervals
+const size_t nqmass=3; //!< number of quark mass
 
 class ens_pars_t
 {
@@ -85,7 +86,10 @@ public:
   size_t ib; //!< beta index
   size_t T; //!< time extent
   size_t L; //!< spatial size
-  double aml; //!< bare light quark mass
+  double am[nqmass]; //! quark mass
+  double &aml=am[0]; //!< bare light quark mass
+  double &ams=am[1]; //!< bare strange quark mass
+  double &amc=am[2]; //!< bare charm quark mass
   double aMLep[nleps]; //!< mass of leptons
   double aMMes[4]; //!< mass of mesons (0=Pi, 1=K, 2=D, 3=Ds)
   int use_for_L; //!< use for FSE analysis
@@ -98,7 +102,6 @@ public:
 vector<ens_pars_t> ens_pars; //!< parameters of all ensemble
 size_t nens_used; //!< number of ensemble used
 
-const size_t nqmass=3; //!< number of quark mass
 const size_t nr=2; //!< number of r
 const index_t ind_2pts({{"NMass",nqmass},{"NMass",nqmass},{"Nr",nr},{"RI",2}});
 
@@ -152,7 +155,7 @@ void initialize(int narg,char **arg)
   ens_pars.resize(nens_used);
   Za.resize(nbeta);
   
-  input.expect({"Ens","beta","aml","L","UseForL","T","TPi","TK","TD","path","aMLep0","aMLep1","aMMes0","aMMes1","aMMes2","aMMes3"});
+  input.expect({"Ens","beta","aml","ams","amc","L","UseForL","T","TPi","TK","TD","path","aMLep0","aMLep1","aMMes0","aMMes1","aMMes2","aMMes3"});
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_pars_t &ens=ens_pars[iens];
@@ -160,6 +163,8 @@ void initialize(int narg,char **arg)
       input.read(ens.iult);
       input.read(ens.ib);
       input.read(ens.aml);
+      input.read(ens.ams);
+      input.read(ens.amc);
       input.read(ens.L);
       input.read(ens.use_for_L);
       //input.read(ens.use_for_a);
@@ -231,12 +236,17 @@ djack_t compute_deltam_cr(const ens_pars_t &ens,size_t iq,size_t iQCD_mes)
 djvec_t read_QED(const ens_pars_t &ens,size_t iQED_mes,const djack_t &deltam_cr,const djvec_t &c_LO,
 		 djvec_t(*read)(const char *what,const ens_pars_t &ens,size_t iq1,size_t iq2,int rpar,size_t reim),const char *name)
 {
-  string ens_qpath=ens.path+"/plots_"+QED_mes_pars[iQED_mes].name;
+  const QED_mes_pars_t &pars=QED_mes_pars[iQED_mes];
+  string ens_qpath=ens.path+"/plots_"+pars.name;
   
-  size_t iq1=QED_mes_pars[iQED_mes].iq1;
-  size_t iq2=QED_mes_pars[iQED_mes].iq2;
-  double eq1=QED_mes_pars[iQED_mes].eq1;
-  double eq2=QED_mes_pars[iQED_mes].eq2;
+  size_t iq1=pars.iq1;
+  size_t iq2=pars.iq2;
+  double eq1=pars.eq1;
+  double eq2=pars.eq2;
+  double am1=ens.am[iq1];
+  double am2=ens.am[iq2];
+  const double a=1/lat_par[0].ainv[ens.ib][0];
+  
   djvec_t c_0T1=read("0T",ens,iq2,iq1,1,RE)*eq1*eq1;
   djvec_t c_0T2=read("0T",ens,iq1,iq2,1,RE)*eq2*eq2;
   djvec_t c_0M1=read("0M",ens,iq2,iq1,1,RE)*eq1*eq1;
@@ -253,7 +263,20 @@ djvec_t read_QED(const ens_pars_t &ens,size_t iQED_mes,const djack_t &deltam_cr,
   djvec_t c_0P2=-(read("0P",ens,iq1,iq2,-1,IM)*eq2*eq2); //to take imag part changed of sign
   djvec_t(c_0P1/c_LO).ave_err().write(combine("%s/%s_0P1.xmg",ens_qpath.c_str(),name));
   djvec_t(c_0P2/c_LO).ave_err().write(combine("%s/%s_0P2.xmg",ens_qpath.c_str(),name));
-  djvec_t d=deltam_cr*(c_0P1+c_0P2); //minus coming from slopes
+  djvec_t d=deltam_cr*(c_0P1+c_0P2);
+  
+  //subtract the bare quark mass eq.85 of PRD 2013
+  double Z_QED=(6.0*log(mu_MS*a)-22.596)/(16.0*sqr(M_PI));
+  
+  //the insertion is of the scalar density, but
+  //the correction is given by the lagrangian
+  //insertion, where -S is present
+  djvec_t c_0S1=-read("0S",ens,iq2,iq1,1,RE)*am1*sqr(eq1)*Z_QED;
+  djvec_t c_0S2=-read("0S",ens,iq1,iq2,1,RE)*am2*sqr(eq2)*Z_QED;
+  
+  djvec_t(c_0S1/c_LO).ave_err().write(combine("%s/%s_0S1.xmg",ens_qpath.c_str(),name));
+  djvec_t(c_0S2/c_LO).ave_err().write(combine("%s/%s_0S2.xmg",ens_qpath.c_str(),name));
+  djvec_t e=c_0S1+c_0S2;
   
   return c+d;
 }
@@ -266,16 +289,16 @@ djvec_t read_MASS(const ens_pars_t &ens,size_t iQED_mes,const djvec_t &c_LO,
   const QED_mes_pars_t &pars=QED_mes_pars[iQED_mes];
   size_t iq1=pars.iq1;
   size_t iq2=pars.iq2;
-  djvec_t c_0S1=read("0S",ens,iq2,iq1,1,RE)*pars.dm1;
-  djvec_t c_0S2=read("0S",ens,iq1,iq2,1,RE)*pars.dm2;
+  //the insertion is of the scalar density, but
+  //the correction is given by the lagrangian
+  //insertion, where -S is present
+  djvec_t c_0S1=-read("0S",ens,iq2,iq1,1,RE)*pars.dm1;
+  djvec_t c_0S2=-read("0S",ens,iq1,iq2,1,RE)*pars.dm2;
   
   djvec_t(c_0S1/c_LO).ave_err().write(combine("%s/%s_0S1.xmg",ens_qpath.c_str(),name));
   djvec_t(c_0S2/c_LO).ave_err().write(combine("%s/%s_0S2.xmg",ens_qpath.c_str(),name));
   
-  //the insertion is of the scalar density, but
-  //the correction is given by the lagrangian
-  //insertion, where -S is present
-  return -(c_0S1+c_0S2);
+  return c_0S1+c_0S2;
 }
 
 //slopes and Z for all mesons and masses
