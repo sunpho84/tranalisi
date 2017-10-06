@@ -266,7 +266,7 @@ djvec_t read_QED(const ens_pars_t &ens,size_t iQED_mes,const djack_t &deltam_cr,
   djvec_t d=deltam_cr*(c_0P1+c_0P2);
   
   //subtract the bare quark mass eq.85 of PRD 2013
-  double Z_QED=(6.0*log(mu_MS*a)-22.596)/(16.0*sqr(M_PI));
+  double Z_QED=(6.0*log(mu_MS*a)-22.5954)/(16.0*sqr(M_PI));
   
   //the insertion is of the scalar density, but
   //the correction is given by the lagrangian
@@ -278,7 +278,7 @@ djvec_t read_QED(const ens_pars_t &ens,size_t iQED_mes,const djack_t &deltam_cr,
   djvec_t(c_0S2/c_LO).ave_err().write(combine("%s/%s_0S2.xmg",ens_qpath.c_str(),name));
   djvec_t e=c_0S1+c_0S2;
   
-  return c+d;
+  return c+d+e;
 }
 
 //! read MASS corrections
@@ -576,9 +576,9 @@ void compute_adml_bare()
 	  adml_bare[ind]=QCD_dM2K/QCD_dM2K_over_adm;
 	  
 	  //subtract the bare quark mass eq.85 of PRD 2013
-	  dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*ZP*(6.0*log(mu_MS*a)-22.596)/(32.0*sqr(M_PI)));
+	  //dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*ZP*(6.0*log(mu_MS*a)-22.5954)/(32.0*sqr(M_PI)));
 	  dboot_t ml=ens_pars[iens].aml/ZP/a;
-	  dboot_t dml_ren=adml_bare[ind]/ZP/a-ml/Z_QED;
+	  dboot_t dml_ren=adml_bare[ind]/ZP/a;//-2.0*ml/Z_QED;
 	  cout<<"dm_ren["<<ind<<"]: "<<dml_ren.ave_err()<<endl;
 	  
 	  //! add to the fit
