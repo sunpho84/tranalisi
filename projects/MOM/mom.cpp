@@ -544,10 +544,12 @@ int main(int narg,char **arg)
 	  
 	  //m
 	  for(size_t im=0;im<=nm;im++)
-	    for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
-	      out.write_ave_err(imoms[equiv_imoms[ind_imom].first].p(L).tilde().norm2(),
-				((im==nm)?Zq_chir[r_ind_imom_ind({r,ind_imom})]:Zq[im_r_ind_imom_ind({im,r,ind_imom})]).ave_err());
-	  out.new_data_set();
+	    {
+	      for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
+		out.write_ave_err(imoms[equiv_imoms[ind_imom].first].p(L).tilde().norm2(),
+				  ((im==nm)?Zq_chir[r_ind_imom_ind({r,ind_imom})]:Zq[im_r_ind_imom_ind({im,r,ind_imom})]).ave_err());
+	      out.new_data_set();
+	    }
 	}
     }
   
