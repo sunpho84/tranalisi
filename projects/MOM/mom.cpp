@@ -428,8 +428,8 @@ int main(int narg,char **arg)
 	  const vector<size_t> r_r_iZbil_comp=r_r_iZbil_ind(r_r_iZbil);
 	  const size_t r1=r_r_iZbil_comp[0],r2=r_r_iZbil_comp[1];
 	  const size_t r_r_iZbil_imom=r_r_iZbil_imom_ind(concat(r_r_iZbil_comp,imom));
-	  const size_t r1_imom=im_r_imom_ind({r1,imom});
-	  const size_t r2_imom=im_r_imom_ind({r2,imom});
+	  const size_t r1_imom=r_imom_ind({r1,imom});
+	  const size_t r2_imom=r_imom_ind({r2,imom});
 	  
 	  Zbil_chir_allmoms[r_r_iZbil_imom]=
 	    sqrt(Zq_chir_allmoms[r1_imom]*Zq_allmoms[r2_imom])/pr_bil_chir_allmoms[r_r_iZbil];
