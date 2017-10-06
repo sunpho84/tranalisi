@@ -90,11 +90,11 @@ void set_class_of_equiv_moms()
   //print details
   for(auto &e : equiv_imoms)
     {
-      for(auto &ei : imoms[e.first]) out<<ei<<" , p2hat: "<<imoms[e.first].p(L).tilde().norm2();
-      out<<"Equivalent to: "<<e.second.size()<<" moms:"<<endl;
+      out<<e.first<<" , p2hat: "<<imoms[e.first].p(L).tilde().norm2()<<endl;
+      out<<" Equivalent to: "<<e.second.size()<<" moms: "<<endl;
       for(auto &eq : e.second)
   	{
-  	  out<<" ";
+  	  out<<"  ";
   	  for(auto &eqi : imoms[eq])
 	    {
 	      out<<eqi<<"={";
