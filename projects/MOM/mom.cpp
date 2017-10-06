@@ -207,6 +207,7 @@ int main(int narg,char **arg)
   const index_t im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
   const index_t r_r_iZbil_ind({{"r",nr},{"r",nr},{"iZbil",nZbil}});
   const index_t im_r_im_r_iZbil_ind=im_r_ind*im_r_ind*index_t({{"iZbil",nZbil}});
+  const index_t r_r_iZbil_imom_ind=r_r_iZbil_ind*index_t({{"imom",imoms.size()}});
   const index_t im_r_im_r_iZbil_imom_ind=im_r_im_r_iZbil_ind*index_t({{"imom",imoms.size()}});
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   const index_t im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});
@@ -223,15 +224,19 @@ int main(int narg,char **arg)
   djvec_t Zq_sig1_EM_chir_allmoms;
   if(use_QED) Zq_sig1_EM_chir_allmoms.resize(r_imom_ind.max());
   
-  //list of task to chiral extrapolate
+  //! task to chiral extrapolate
   using Z_task_t=tuple<djvec_t*,djvec_t*,string>;
+  
+  //! list of task to chirally extrapolate Zq
   vector<Z_task_t> Zq_tasks{
     {&Zq_allmoms,&Zq_chir_allmoms,string("Zq")},
     {&Zq_sig1_allmoms,&Zq_sig1_chir_allmoms,"Zq_sig1"}};
   if(use_QED) Zq_tasks.push_back(make_tuple(&Zq_sig1_EM_allmoms,&Zq_sig1_EM_chir_allmoms,"Zq_sig1_EM"));
   
   djvec_t Zbil_allmoms(im_r_im_r_iZbil_imom_ind.max());
-  djvec_t Zbil_QED_allmoms(im_r_im_r_iZbil_imom_ind.max());
+  djvec_t Zbil_chir_allmoms(r_r_iZbil_imom_ind.max());
+  djvec_t Zbil_QED_chir_allmoms(im_r_im_r_iZbil_imom_ind.max());
+  djvec_t Zbil_QED_allmoms(r_r_iZbil_imom_ind.max());
   
   vector<m_r_mom_conf_props_t> props; //!< store props for individual conf
   
@@ -333,8 +338,8 @@ int main(int narg,char **arg)
       
       proj_time.start();
       djvec_t pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_inv,im_r_ind);
-      djvec_t pr_bil_allmoms_chir(r_r_iZbil_ind.max());
-      vector<Z_task_t> pr_bil_tasks{{&pr_bil_allmoms,&pr_bil_allmoms_chir,string("pr_bil")}};
+      djvec_t pr_bil_chir_allmoms(r_r_iZbil_ind.max());
+      vector<Z_task_t> pr_bil_tasks{{&pr_bil_allmoms,&pr_bil_chir_allmoms,string("pr_bil")}};
       
       //QED
       djvec_t pr_bil_EM_allmoms,pr_bil_a_allmoms,pr_bil_b_allmoms;
@@ -414,6 +419,27 @@ int main(int narg,char **arg)
 		(Zq_sig1_EM_allmoms[im_r1_imom]/Zq_sig1_allmoms[im_r1_imom]+Zq_sig1_EM_allmoms[im_r2_imom]/Zq_sig1_allmoms[im_r2_imom])/2.0;
 	    }
 	}
+      
+      //build Z
+      for(size_t r_r_iZbil=0;r_r_iZbil<r_r_iZbil_ind.max();r_r_iZbil++)
+	{
+	  const vector<size_t> r_r_iZbil_comp=r_r_iZbil_ind(r_r_iZbil);
+	  const size_t r1=r_r_iZbil_comp[0],r2=r_r_iZbil_comp[1];
+	  const size_t r_r_iZbil_imom=r_r_iZbil_imom_ind(concat(r_r_iZbil_comp,imom));
+	  const size_t r1_imom=im_r_imom_ind({r1,imom});
+	  const size_t r2_imom=im_r_imom_ind({r2,imom});
+	  
+	  Zbil_chir_allmoms[r_r_iZbil_imom]=
+	    sqrt(Zq_chir_allmoms[r1_imom]*Zq_allmoms[r2_imom])/pr_bil_chir_allmoms[r_r_iZbil];
+	  
+	  if(use_QED)
+	    {
+	      Zbil_QED_chir_allmoms[r_r_iZbil_imom]=
+		(pr_bil_a_chir_allmoms[r_r_iZbil]+pr_bil_b_chir_allmoms[r_r_iZbil]-pr_bil_EM_chir_allmoms[r_r_iZbil])/pr_bil_chir_allmoms[r_r_iZbil]+
+		(Zq_sig1_EM_chir_allmoms[r1_imom]/Zq_sig1_chir_allmoms[r1_imom]+Zq_sig1_EM_chir_allmoms[r2_imom]/Zq_sig1_chir_allmoms[r2_imom])/2.0;
+	    }
+	}
+      
     }
   
   // //compute Zq, Zq_sig1 and Zbil for all moms
@@ -434,17 +460,20 @@ int main(int narg,char **arg)
   // 	pr_bil_allmoms_sub[iZbil][imom]-=g2tilde*pr_bil_a2(act,mom,L,iZbil);
   //   }
   
+  const index_t r_r_iZbil_ind_imom_ind=r_r_iZbil_ind*index_t({{"ind_mom",equiv_imoms.size()}});
   const index_t im_r_im_r_iZbil_ind_imom_ind=im_r_im_r_iZbil_ind*index_t({{"ind_mom",equiv_imoms.size()}});
   
   //average equiv moms
   const djvec_t Zq=average_equiv_moms(Zq_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
   const djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
-  const djvec_t Zbil=average_equiv_moms(Zbil_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind);
-  const djvec_t Zbil_QED=use_QED?average_equiv_moms(Zbil_QED_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind):djvec_t();
+  djvec_t Zbil=average_equiv_moms(Zbil_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind);
+  djvec_t Zbil_QED=use_QED?average_equiv_moms(Zbil_QED_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind):djvec_t();
   
   //chirally extrapolated ones
   const djvec_t Zq_chir=average_equiv_moms(Zq_chir_allmoms,r_ind_imom_ind,r_imom_ind);
   const djvec_t Zq_sig1_chir=average_equiv_moms(Zq_sig1_chir_allmoms,r_ind_imom_ind,r_imom_ind);
+  djvec_t Zbil_chir=average_equiv_moms(Zbil_chir_allmoms,r_r_iZbil_ind_imom_ind,r_r_iZbil_imom_ind);
+  djvec_t Zbil_QED_chir=use_QED?average_equiv_moms(Zbil_QED_chir_allmoms,r_r_iZbil_ind_imom_ind,r_r_iZbil_imom_ind):djvec_t();
   
   // djvec_t Zq_sub=average_equiv_moms(Zq_allmoms_sub);
   // djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
@@ -503,7 +532,8 @@ int main(int narg,char **arg)
       const string &tag=get<2>(p);
       
       grace_file_t out("plots/"+tag+".xmg");
-      out.set_settype(grace::XYDY);
+      out.new_data_set();
+      
       //m and r
       for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
 	{
@@ -529,32 +559,35 @@ int main(int narg,char **arg)
       out.new_data_set();
     }
   
-  for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
+  //! list of task to chiral extrapolate bilinears
+  vector<Z_task_t> Zbil_tasks{{&Zbil,&Zbil_chir,string("Zbil")}};
+  if(use_QED) Zbil_tasks.push_back(make_tuple(&Zbil_QED,&Zbil_QED_chir,"Zbil_EM"));
+  
+  for(auto &p : Zq_tasks)
     {
-      //get comps
-      vector<size_t> im_r_im_r_iZbil_comp=im_r_im_r_iZbil_ind(im_r_im_r_iZbil);
-      size_t im1=im_r_im_r_iZbil_comp[0],r1=im_r_im_r_iZbil_comp[1];
-      size_t im2=im_r_im_r_iZbil_comp[2],r2=im_r_im_r_iZbil_comp[3];
-      size_t iZbil=im_r_im_r_iZbil_comp[4];
+      const djvec_t &Z=(*get<0>(p));
+      const djvec_t &Z_chir=(*get<1>(p));
+      const string &tag=get<2>(p);
       
-      grace_file_t out_Z(combine("plots/Z_%c_im1_%zu_r1_%zu_im2_%zu_r2_%zu.xmg",Zbil_tag[iZbil],im1,r1,im2,r2));
-      out_Z.set_settype(grace::XYDY);
-      grace_file_t out_Z_QED;
-      if(use_QED)
+      for(size_t r_r_iZbil=0;r_r_iZbil<r_r_iZbil_ind.max();r_r_iZbil++)
 	{
-	  out_Z_QED.open(combine("plots/Z_QED_%c_im1_%zu_r1_%zu_im2_%zu_r2_%zu.xmg",Zbil_tag[iZbil],im1,r1,im2,r2));
-	  out_Z_QED.set_settype(grace::XYDY);
+	  const vector<size_t> r_r_iZbil_comp=r_r_iZbil_ind(r_r_iZbil);
+	  const size_t r1=r_r_iZbil_comp[0],r2=r_r_iZbil_comp[1];
+	  const size_t iZbil=r_r_iZbil_comp[2];
+	  grace_file_t out("plots/"+tag+"_Z"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+".xmg");
+	  out.new_data_set();
+	  
+	  for(size_t im1=0;im1<nm;im1++)
+	    for(size_t im2=im1;im2<nm;im2++)
+	      {
+		for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
+		  out.write_ave_err(imoms[equiv_imoms[ind_imom].first].p(L).tilde().norm2(),Z[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
+		out.new_data_set();
+	      }
+	  for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
+	    out.write_ave_err(imoms[equiv_imoms[ind_imom].first].p(L).tilde().norm2(),Z_chir[r_r_iZbil_ind_imom_ind({r1,r2,iZbil,ind_imom})].ave_err());
+	  out.new_data_set();
 	}
-      
-      for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
-	{
-	  size_t imom=equiv_imoms[ind_imom].first;
-	  out_Z.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zbil[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
-	  if(use_QED) out_Z_QED.write_ave_err(imoms[imom].p(L).tilde().norm2(),Zbil_QED[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
-	}
-      
-      out_Z.new_data_set();
-      if(use_QED) out_Z_QED.new_data_set();
     }
   
   cout<<ts<<endl;
