@@ -572,7 +572,7 @@ template <class TV,class T=typename TV::base_type,class fun_t>
 void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,const vector<double> &x,const TV &y)
 {
   grace_file_t out(path);
-  write_fit_plot(out,xmin,xmax,fun.x,y);
+  write_fit_plot(out,xmin,xmax,fun,x,y);
 }
 
 template <class TV,class fun_t,class T=typename TV::base_type>
