@@ -245,7 +245,7 @@ djvec_t read_QED(const ens_pars_t &ens,size_t iQED_mes,const djack_t &deltam_cr,
   double eq2=pars.eq2;
   double am1=ens.am[iq1];
   double am2=ens.am[iq2];
-  const double a=1/lat_par[0].ainv[ens.ib][0];
+  const double a=1/lat_par[0].ainv[ens.ib].ave();
   
   djvec_t c_0T1=read("0T",ens,iq2,iq1,1,RE)*eq1*eq1;
   djvec_t c_0T2=read("0T",ens,iq1,iq2,1,RE)*eq2*eq2;
@@ -576,9 +576,7 @@ void compute_adml_bare()
 	  adml_bare[ind]=QCD_dM2K/QCD_dM2K_over_adm;
 	  
 	  //subtract the bare quark mass eq.85 of PRD 2013
-	  //dboot_t Z_QED=1.0/((sqr(ed)-sqr(eu))*e2*ZP*(6.0*log(mu_MS*a)-22.5954)/(32.0*sqr(M_PI)));
-	  dboot_t ml=ens_pars[iens].aml/ZP/a;
-	  dboot_t dml_ren=adml_bare[ind]/ZP/a;//-2.0*ml/Z_QED;
+	  dboot_t dml_ren=adml_bare[ind]/ZP/a;
 	  cout<<"dm_ren["<<ind<<"]: "<<dml_ren.ave_err()<<endl;
 	  
 	  //! add to the fit
