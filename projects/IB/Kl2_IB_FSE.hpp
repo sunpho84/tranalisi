@@ -44,7 +44,7 @@ DEFINE_FUNCTION(gsl_sf_dilog)
 
 //! compute the point-like contribution according to eq.9 of Silvano's note
 template <class T>
-T Gamma_pt(T mlep,T mmes,double DeltaE)
+T Gamma_pt(const T &mlep,const T &mmes,const T &DeltaE)
 {
   T rl=mlep/mmes;
   T rl2=sqr(rl);
