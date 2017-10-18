@@ -327,7 +327,7 @@ void fit_fpiinv(djack_t &chrad,djack_t &LEC_6,const vector<double> &ff_extr_x,ve
       double xmax[2]={Q2_int,Q2_max};
       cout<<aMPi[iens]<<endl;
       for(size_t it=0;it<2;it++)
-	plot_mfix.write_polygon([&L,&aMPi,afPi,iens,LEC_6,B1,B2,C1,C2,use_FSE,it](double x)
+	plot_mfix.write_polygon([&L,&aMPi,afPi,iens,LEC_6,B1,B2,C1,C2,use_FSE](double x)
 				{
 				  x*=sqr(aMPi[iens].ave());
 				  auto th=th_fun_Q2(x,L);
