@@ -130,6 +130,24 @@ public:
     return (*this)[slice(std::max(size_t(0),beg),std::min(end-beg+1,this->size()),1)];
   }
   
+  //! return a filtered vector
+  template <class filter_fun_t>
+  vmeas_t filter(const filter_fun_t &filter_fun) const
+  {
+    size_t n=0;
+    for(size_t i=0;i<this->size();i++) n+=filter_fun(i);
+    
+    vmeas_t out(n);
+    size_t j=0;
+    for(size_t i=0;i<this->size();i++)
+      {
+	bool f=filter_fun(i);
+	if(f) out[j++]=(*this)[i];
+      }
+    
+    return out;
+  }
+  
   //! return the tail-backked
   vmeas_t inverse()
   {
