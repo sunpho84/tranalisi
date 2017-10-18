@@ -380,6 +380,23 @@ void do_all_fits(djvec_t &ch_rad,djvec_t &LEC_6)
   const vector<double> ff_extr_x=vector_grid(1e-10,0.25,npoints_extr);
   vector<djvec_t> ff_extr_y(npoints_extr,djvec_t(nsyst));
   
+  ofstream out_Zv("tables/Zv.txt");
+  for(size_t iens=0;iens<ens_data.size();iens++)
+    {
+      ens_data_t &ens=ens_data[iens];
+      djvec_t vector_ff=load_corr("vv",0,ODD,ens);
+      vector_ff=djvec_t(vector_ff+vector_ff.inverse()).subset(0,ens.T/4+1)/2;
+      djvec_t corr_PP=load_corr("pp",0,1,ens);
+      djvec_t Zv_corr=vector_ff/corr_PP[ens.T/2];
+      const size_t each=8;
+      djvec_t Zv_corr_filtered=Zv_corr.filter([](int i){return i%each==0;});
+      size_t xmin=8,xmax=ens.T/2-xmin;
+      cout<<ens.path<<" "<<xmax/each-xmin/each<<endl;
+      djack_t Zv=constant_fit(Zv_corr_filtered,xmin/each,xmax/each);
+      write_constant_fit_plot(ens.path+"/plots/Zv.xmg",xmin,xmax,Zv,vector_up_to<double>(Zv_corr.size()),Zv_corr);
+      out_Zv<<iens<<" "<<ens.path<<" "<<Zv.ave_err()<<endl;
+    }
+  
   for(size_t isyst=0;isyst<nsyst;isyst++)
     {
       cout<<"################################################## "<<isyst<<" ##################################################"<<endl;
