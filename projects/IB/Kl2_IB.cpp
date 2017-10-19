@@ -636,7 +636,8 @@ djvec_t read_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t q
   for(size_t r2=0;r2<nr;r2++)
     for(size_t orie=0;orie<norie;orie++)
       for(size_t rl=0;rl<nr;rl++)
-	{
+	if(r2_weight[r2]*rl_weight[rl])
+	  {
 	  size_t ri=0; //only real part
 	  size_t ic=ind_hl_corr({iproc,qins,irev,r2,orie,rl,iw,iproj,ri});
 	  djvec_t corr=read_djvec(ens.path+"/data/corr_hl",T,ic);
