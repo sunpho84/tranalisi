@@ -622,7 +622,7 @@ const size_t nproj=1; //!<number of projectors: 1, V0 only
 index_t ind_hl_corr;
 
 //! read hl correlations
-djvec_t read_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t qins,const ens_pars_t &ens,const string &name)
+djvec_t read_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t qins,const ens_pars_t &ens,const string &name,const array<int,2> &r2_weight={1,1},const array<int,2> rl_weight={1,1})
 {
   size_t T=ens.T;
   djvec_t out(T);
@@ -641,8 +641,9 @@ djvec_t read_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t q
 	  size_t ic=ind_hl_corr({iproc,qins,irev,r2,orie,rl,iw,iproj,ri});
 	  djvec_t corr=read_djvec(ens.path+"/data/corr_hl",T,ic);
 	  
-	  out+=orie_par[orie]*corr;
-	  n++;
+	  out+=orie_par[orie]*corr*r2_weight[r2]*rl_weight[rl];
+	  n+=abs(r2_weight[r2]);
+	  n+=abs(rl_weight[rl]);
 	  
 	  // if(name!="")
 	  //   {
