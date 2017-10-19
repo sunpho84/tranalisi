@@ -675,7 +675,7 @@ djvec_t hl_corr_subtract_around_world(const djvec_t &in,const djack_t &M)
 }
 
 //! load the correlation and correct for around-the-world effect
-valarray<djvec_t> load_and_correct_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t iens,const string &name)
+valarray<djvec_t> load_and_correct_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t iens,const string &name,const array<int,2> &r2_weight={1,1},const array<int,2> rl_weight={1,1})
 {
   ens_pars_t &ens=ens_pars[iens];
   size_t iQCD_mes=QED_mes_pars[iQED_mes_of_proc[iproc]].iQCD;
@@ -714,7 +714,7 @@ valarray<djvec_t> load_and_correct_hl(size_t iproc,size_t iw,size_t iproj,const 
 //! load all correlation hl
 vector<djvec_t> jLO_A_bare,jQED_V_bare,jQED_A_bare;
 index_t ind_ens_proc;
-void load_all_hl()
+void load_all_hl(const array<int,2> &r2_weight={1,1},const array<int,2> rl_weight={1,1})
 {
   ind_ens_proc.set_ranges({{"Ens",nens_used},{"Proc",nprocess}});
   size_t nens_proc=ind_ens_proc.max();
@@ -739,10 +739,10 @@ void load_all_hl()
 	{
 	  size_t iQED_mes=iQED_mes_of_proc[iproc];
 	  valarray<djvec_t>
-	    qVi_lVi_pV0_allins=load_and_correct_hl(iproc,iqVi_lVi,ipV0,evn,iens,"ViVi"),
-	    qV0_lV0_pV0_allins=load_and_correct_hl(iproc,iqV0_lV0,ipV0,evn,iens,"V0V0"),
-	    qAi_lVi_pV0_allins=load_and_correct_hl(iproc,iqAi_lVi,ipV0,evn,iens,"AiVi"),
-	    qA0_lV0_pV0_allins=load_and_correct_hl(iproc,iqA0_lV0,ipV0,evn,iens,"A0V0"),
+	    qVi_lVi_pV0_allins=load_and_correct_hl(iproc,iqVi_lVi,ipV0,evn,iens,"ViVi",r2_weight,rl_weight),
+	    qV0_lV0_pV0_allins=load_and_correct_hl(iproc,iqV0_lV0,ipV0,evn,iens,"V0V0",r2_weight,rl_weight),
+	    qAi_lVi_pV0_allins=load_and_correct_hl(iproc,iqAi_lVi,ipV0,evn,iens,"AiVi",r2_weight,rl_weight),
+	    qA0_lV0_pV0_allins=load_and_correct_hl(iproc,iqA0_lV0,ipV0,evn,iens,"A0V0",r2_weight,rl_weight),
 	    qV_lV_pV0_allins=qV0_lV0_pV0_allins+qVi_lVi_pV0_allins,
 	    qA_lV_pV0_allins=qA0_lV0_pV0_allins+qAi_lVi_pV0_allins;
 	  
@@ -1319,6 +1319,12 @@ void compute_corr(size_t iproc)
   perform_analysis(res,hl::ind_syst,"Res");
 }
 
+void test_factorization()
+{
+  load_all_hl({1,0});
+
+}
+
 int main(int narg,char **arg)
 {
   int start=time(0);
@@ -1333,6 +1339,10 @@ int main(int narg,char **arg)
   
   compute_basic_slopes();
   compute_adml_bare();
+  
+  //preliminary test for factorization
+  test_factorization();
+  
   load_all_hl();
   
   //loop over process
