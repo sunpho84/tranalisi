@@ -1056,7 +1056,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
     {
       using namespace chir;
     case(LINEARLOG):
-      boot_fit.fix_par_to(pars.iK2Pi,0.0);
+      //boot_fit.fix_par_to(pars.iK2Pi,0.0);
       break;
     case(QUADRATIC):
       //boot_fit.fix_par_to(pars.iKK,0.0);
@@ -1322,7 +1322,18 @@ void compute_corr(size_t iproc)
 void test_factorization()
 {
   load_all_hl({1,0});
-
+  vector<djvec_t> jLO_A_bare_r0=jLO_A_bare;
+  vector<djvec_t> jQED_V_bare_r0=jQED_V_bare;
+  vector<djvec_t> jQED_A_bare_r0=jQED_A_bare;
+  
+  load_all_hl({0,1});
+  
+  vector<djvec_t> jLO_A_bare_r1=jLO_A_bare;
+  vector<djvec_t> jQED_V_bare_r1=jQED_V_bare;
+  vector<djvec_t> jQED_A_bare_r1=jQED_A_bare;
+  
+  
+  
 }
 
 int main(int narg,char **arg)
