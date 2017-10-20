@@ -403,6 +403,7 @@ void compute_basic_slopes()
 	  jDM_QED[ind_QED]=-SL_PP_QED; //change signed due to slope definition
 	  jDM_MASS[ind_QED]=-SL_PP_MASS; //change signed due to slope definition
 	  
+	  cout<<plots_path<<", corr[0]: "<<jPP_LO[ind_QCD][0]<<endl;
 	  cout<<plots_path<<", ZA: "<<jZA[ind_QCD].ave_err()<<endl;
 	  cout<<plots_path<<", M_AP: "<<jaM[ind_QCD].ave_err()<<endl;
 	  cout<<plots_path<<", SL_AP_QED: "<<djack_t(SL_AP_QED).ave_err()<<endl;
