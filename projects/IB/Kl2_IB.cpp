@@ -789,6 +789,14 @@ template <class T> T naive_massless_quark_energy(T pi)
   return asinh(sqrt(sinh2E));
 }
 
+template <class T> T leptonic_trace(T pi,T mass)
+{
+  T sinp=3*sqr(sin(pi));
+  T sinhE=sinh(tm_quark_energy(pi,mass));
+
+  return mass/(sinhE-sqrt(sinp));
+}
+
 //! compute the non-offshellness
 double offshellness(double pi,double lep_mass,double mes_mass)
 {
@@ -1320,7 +1328,7 @@ void compute_corr(size_t iproc)
   perform_analysis(res,hl::ind_syst,"Res");
 }
 
-void test_factorization()
+void test_factorization(size_t iproc)
 {
   load_all_hl({1,0});
   vector<djvec_t> jLO_A_bare_r0=jLO_A_bare;
@@ -1328,14 +1336,158 @@ void test_factorization()
   vector<djvec_t> jQED_A_bare_r0=jQED_A_bare;
   
   load_all_hl({0,1});
-  
   vector<djvec_t> jLO_A_bare_r1=jLO_A_bare;
   vector<djvec_t> jQED_V_bare_r1=jQED_V_bare;
   vector<djvec_t> jQED_A_bare_r1=jQED_A_bare;
   
+  vector<djvec_t> jLO_A_bare_ave=(jLO_A_bare_r0+jLO_A_bare_r1)/2.0;
+  vector<djvec_t> jQED_V_bare_ave=(jQED_V_bare_r0+jQED_V_bare_r1)/2.0;
+  vector<djvec_t> jQED_A_bare_ave=(jQED_A_bare_r0+jQED_A_bare_r1)/2.0;
+
+  size_t ilep=iMLep_of_proc[iproc];
+  size_t iQED_mes=iQED_mes_of_proc[iproc];
+
+  const double uss=1/(16*sqr(M_PI));
+  double Z3=uss*1.607;
+  double Z4=uss*-3.214;
+  double Wreg_contr_fact=Z3-Z4;
   
-  
+  //! loop over analysis
+  for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
+    for(size_t iens=0;iens<nens_used;iens++)
+      {
+	const size_t iQCD_mes=QED_mes_pars[iQED_mes].iQCD;
+	const size_t ind_QCD=ind_ens_QCD_mes({iens,iQCD_mes});
+	//const size_t ind_QED=ind_ens_QED_mes({iens,iQED_mes});
+	//const size_t ind_an_ens=ind_adml({input_an_id,iens});
+	const ens_pars_t &ens=ens_pars[iens];
+	const double aMLep=ens.aMLep[ilep];
+		
+	bi=jack_index[input_an_id][ens.iult];
+	prepare_az(input_an_id);
+	
+	const size_t ib=ens.ib;
+	const size_t ind_proc=ind_ens_proc({iens,iproc});
+		
+	//compute the nasty diagram
+	const dbvec_t LO_r0=Zv[ib]*dbvec_t(bi,-jLO_A_bare_r0[ind_proc]);
+	const dbvec_t QED_r0=Zv[ib]*dbvec_t(bi,-jQED_A_bare_r0[ind_proc])+dbvec_t(bi,jQED_V_bare_r0[ind_proc])*Za[ib];
+	const dbvec_t LO_ave=Zv[ib]*dbvec_t(bi,-jLO_A_bare_ave[ind_proc]);
+	const dbvec_t QED_ave=Zv[ib]*dbvec_t(bi,-jQED_A_bare_ave[ind_proc])+dbvec_t(bi,jQED_V_bare_ave[ind_proc])*Za[ib];
+	LO_r0.ave_err().write(combine("%s/plots_hl/LO_r0_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
+	QED_r0.ave_err().write(combine("%s/plots_hl/QED_r0_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
+	
+	const double pi_bare=find_pi(aMLep,ens.aMMes[iQCD_mes]);
+	
+	//cout<<"betal for ensemble "<<ens.path<<": "<<betal.ave_err()<<endl;
+	const dboot_t a=1/lat_par[input_an_id].ainv[ib];
+	const dboot_t L=ens.L*a;
+	const dboot_t MLep=aMLep/a;
+	const dboot_t Mmes=dboot_t(bi,jaM[ind_QCD])/a;
+	
+	//extract dA/A from nasty diagram ratio
+	dbvec_t rat_ext_r0=QED_r0/LO_r0;
+	rat_ext_r0[rat_ext_r0.size()-1]=rat_ext_r0[0]=0.0; //set to zero the contact term
+	dbvec_t rat_ext_ave=QED_ave/LO_ave;
+	rat_ext_ave[rat_ext_ave.size()-1]=rat_ext_ave[0]=0.0;
+
+	dbvec_t Z_fact=(rat_ext_r0-rat_ext_ave)/(Za[ib]/Zv[ib]*Wreg_contr_fact*jZP[ind_QCD]/jZA[ind_QCD]*leptonic_trace(pi_bare,aMLep));
+      }
 }
+
+	// /////////////////////////////////////////////////////////
+// 	const size_t itint=QCD_mes_pars[iQCD_mes].itint;
+// 	for(size_t ifrange=0;ifrange<nfit_range_variations;ifrange++)
+// 	  {
+// 	    const size_t rvar=frange_var[ifrange],tin=std::min(ens.tmin[itint],ens.T/4-1-rvar);
+// 	    const size_t tmin=tin+rvar,tmax=ens.T/2-tin-rvar;
+// 	    const string dA_fr_A_path=combine("%s/plots_hl/QED_LO_ratio_iproc%zu_ian%zu_frange%zu.xmg",ens.path.c_str(),iproc,input_an_id,ifrange);
+// 	    dboot_t dA_fr_A=constant_fit(rat_ext,tmin,tmax,dA_fr_A_path);
+	    
+// 	    //compute the internal+external contribution
+// 	    const dboot_t external=2.0*dA_fr_A*e2;
+// 	    const dboot_t dZA_QED_rel=dboot_t(bi,jDZA_QED_rel[ind_QED])*e2;
+// 	    const dboot_t dZA_MASS_rel=dboot_t(bi,jDZA_MASS_rel[ind_QED])*adml_bare[ind_an_ens];
+// 	    const dboot_t dM_QED_rel=dboot_t(bi,jDM_QED[ind_QED]/jaM[ind_QCD])*e2;
+// 	    const dboot_t dM_MASS_rel=dboot_t(bi,jDM_MASS[ind_QED]/jaM[ind_QCD])*adml_bare[ind_an_ens];
+// 	    const dboot_t internal_QED=2.0*dZA_QED_rel;
+// 	    const dboot_t internal_MASS=2.0*dZA_MASS_rel;
+// 	    const dboot_t rate_QED_mass=-2.0*dM_QED_rel; //to be SUBTRACTED
+// 	    const dboot_t rate_MASS_mass=-2.0*dM_MASS_rel; //and this as well
+	    
+// 	    const dboot_t tot_but_FSE=external+internal_QED+internal_MASS+W_contr+rate_QED_mass+rate_MASS_mass+rate_pt+marc_sirl;
+// 	    if(ifrange==0 and input_an_id==0 and ens.ib==0 and fabs(ens.aml-0.0040)<1e-6)
+// 	      A40_XX_file.write_ave_err(ens.L,tot_but_FSE.ave_err());
+	      
+// 	    for(size_t iFSE_max=0;iFSE_max<FSE_max_orders.size();iFSE_max++)
+// 	      {
+// 		const dboot_t tot_corr=tot_but_FSE-FSE_contr[iFSE_max];
+// 		if(ifrange==0 and input_an_id==0 and ens.ib==0 and fabs(ens.aml-0.0040)<1e-6)
+// 		  A40_XX_file_FSE_sub[iFSE_max].write_ave_err(ens.L,tot_corr.ave_err());
+		
+// 		qed_corr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<", ifrange: "<<ifrange<<", iFSE_max: "<<iFSE_max<<
+// 		  ",\n external: "<<smart_print(external.ave_err())<<
+// 		  ",\n internal QED: "<<smart_print(internal_QED.ave_err())<<
+// 		  ",\n internal MASS: "<<smart_print(internal_MASS.ave_err())<<
+// 		  ",\n W contr: "<<smart_print(W_contr.ave_err())<<
+// 		  ",\n FSE contr: "<<smart_print(FSE_contr[iFSE_max].ave_err())<<
+// 		  ",\n rate QED mass: "<<smart_print(rate_QED_mass.ave_err())<<
+// 		  ",\n rate MASS mass: "<<smart_print(rate_MASS_mass.ave_err())<<
+// 		  ",\n  (mass): "<<smart_print(jaM[ind_QCD].ave_err())<<
+// 		  ",\n rate pt: "<<smart_print(rate_pt.ave_err())<<
+// 		  ",\n marc sirl: "<<marc_sirl<<
+// 		  ",\n tot corr to rate: "<<smart_print(tot_corr.ave_err())<<endl<<endl;
+		
+// 		cout<<"Tot: "<<tot_corr.ave_err()<<endl;
+// 		size_t i=ind_an_ens_FSEmax_frange({input_an_id,iens,iFSE_max,ifrange});
+// 		tot_corr_all[i]=tot_corr;
+// 	      }
+// 	  }
+//       }
+  
+//   //! perform fit
+//   for(size_t isyst=0;isyst<hl::ind_syst.max();isyst++)
+//     {
+//       cout<<"------------------------------------------------- "<<isyst<<" -------------------------------------------------"<<endl;
+      
+//       cout<<hl::ind_syst.descr(isyst)<<endl;
+//       cout<<"CONT: "<<hl::cont::tag[hl::case_of<hl::c_cont>(isyst)]<<endl;
+//       cout<<"CHIR: "<<hl::chir::tag[hl::case_of<hl::c_chir>(isyst)]<<endl;
+//       cout<<"FSE: "<<hl::FSE::tag[hl::case_of<hl::c_FSE>(isyst)]<<endl;
+      
+//       const size_t input_an_id=hl::case_of<hl::c_input>(isyst);
+//       const size_t ifrange=hl::case_of<hl::c_frange>(isyst);
+//       const size_t FSE_FLAG=hl::FSE::variations[hl::case_of<hl::c_FSE>(isyst)];
+//       //const size_t cont_FLAG=hl::cont::variations[hl::case_of<hl::c_cont>(isyst)];
+//       const bool use_cov=false;
+//       const size_t iFSE_max=(FSE_FLAG==hl::FSE::WITHSTDEP)?1:0; //ord_max={1,2} and with structure dep we take 2
+      
+//       //! add to the fit
+//       vector<cont_chir_fit_data_t> fit_data;
+//       for(size_t iens=0;iens<nens_used;iens++)
+// 	{
+// 	  const ens_pars_t &ens=ens_pars[iens];
+// 	  const size_t idata=ind_an_ens_FSEmax_frange({input_an_id,iens,iFSE_max,ifrange});
+	  
+// 	  //check if to include
+// 	  bool include=true;
+// 	  if(FSE_FLAG==hl::FSE::NOSMALLVOL) include&=ens.use_for_L;
+// 	  //if(cont_FLAG==hl::cont::CONSTANT) include&=ens.use_for_a;
+	  
+// 	  if(include)
+// 	    {
+// 	      dboot_t aMaux;
+// 	      aMaux=ens.aMLep[ilep];
+// 	      fit_data.push_back(cont_chir_fit_data_t(ens.aml,ens.aml,aMaux,ens.ib,ens.L,tot_corr_all[idata],tot_corr_all[idata]));
+// 	    }
+// 	}
+      
+//       string cc_path=combine("plots_hl/cont_chir_iproc%zu_isyst%zu.xmg",iproc,isyst);
+//       res[isyst]=cont_chir_fit_corr_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,lat_par[input_an_id].ml,lat_par[input_an_id].ms,MLep[iproc],cc_path,iproc,isyst,use_cov,beta_list);
+//     }
+  
+//   perform_analysis(res,hl::ind_syst,"Res");
+// }
 
 int main(int narg,char **arg)
 {
@@ -1353,7 +1505,7 @@ int main(int narg,char **arg)
   compute_adml_bare();
   
   //preliminary test for factorization
-  test_factorization();
+  test_factorization(0);
   
   load_all_hl();
   
