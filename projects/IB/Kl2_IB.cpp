@@ -989,6 +989,35 @@ Tpars cont_chir_ansatz_corr_hl(const Tpars &f0,const Tpars &B0,const Tpars &C,co
     FSE_corr_hl(L2dep,L3dep,xi,MLep,M2PS,L*a);
 }
 
+template<class T>
+void set_default_grace(const vector<T> &ext_data)
+{
+  //list of possible colors
+  vector<grace::color_t> color_per_ib={grace::RED,grace::BLUE,grace::GREEN4};
+  map<size_t,grace::symbol_t> symbol_per_L={{20,grace::CIRCLE},{24,grace::SQUARE},{32,grace::DIAMOND},{40,grace::TRIDOWN},{48,grace::TRIUP}};
+  
+  //make the list of volumes and beta
+  set<pair<size_t,size_t>> list;
+  for(size_t ib=0;ib<nbeta;ib++)
+    {
+      for(size_t idata=0;idata<ext_data.size();idata++)
+	if(ext_data[idata].ib==ib)
+	  list.insert(make_pair(ext_data[idata].ib,ext_data[idata].L));
+    }
+  
+  //add the listed cols and symbols
+  grace::default_symbol_scheme.clear();
+  grace::default_color_scheme.clear();
+  for(auto &p : list)
+    {
+      grace::default_color_scheme.push_back(color_per_ib[p.first]);
+      grace::default_symbol_scheme.push_back(symbol_per_L[p.second]);
+    }
+  //add c.l
+  grace::default_color_scheme.push_back(grace::VIOLET);
+  grace::default_symbol_scheme.push_back(grace::TRILEFT);
+}
+
 //! perform the fit to the continuum limit of correction of process
 dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const double &MLep,const string &path,const size_t iproc,const size_t isyst,const bool cov_flag,const vector<string> &beta_list)
 {
@@ -1087,30 +1116,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   //bool include_small_vol=(FSE::variations[case_of<c_FSE>(isyst)]!=hl::FSE::NOSMALLVOL);
   //bool include_coarse=(cont::variations[case_of<c_cont>(isyst)]!=hl::cont::CONSTANT);
   
-  //list of possible colors
-  vector<grace::color_t> color_per_ib={grace::RED,grace::BLUE,grace::GREEN4};
-  map<size_t,grace::symbol_t> symbol_per_L={{20,grace::CIRCLE},{24,grace::SQUARE},{32,grace::DIAMOND},{40,grace::TRIDOWN},{48,grace::TRIUP}};
-  
-  //make the list of volumes and beta
-  set<pair<size_t,size_t>> list;
-  for(size_t ib=0;ib<pars.fit_a.size();ib++)
-    {
-      for(size_t idata=0;idata<ext_data.size();idata++)
-	if(ext_data[idata].ib==ib)
-	  list.insert(make_pair(ext_data[idata].ib,ext_data[idata].L));
-    }
-  
-  //add the listed cols and symbols
-  grace::default_symbol_scheme.clear();
-  grace::default_color_scheme.clear();
-  for(auto &p : list)
-    {
-      grace::default_color_scheme.push_back(color_per_ib[p.first]);
-      grace::default_symbol_scheme.push_back(symbol_per_L[p.second]);
-    }
-  //add c.l
-  grace::default_color_scheme.push_back(grace::VIOLET);
-  grace::default_symbol_scheme.push_back(grace::TRILEFT);
+  set_default_grace(ext_data);
   
   const string yaxis_title="$$\\delta m_l^{ren}";
   plot_chir_fit(path,ext_data,pars,
@@ -1334,6 +1340,8 @@ void compute_corr(size_t iproc)
 
 void test_factorization(size_t iproc)
 {
+  set_default_grace(ens_pars);
+  
   load_all_hl({1,0},{1,0});
   const vector<djvec_t> jLO_A_bare_r0=jLO_A_bare;
   const vector<djvec_t> jQED_V_bare_r0=jQED_V_bare;
@@ -1415,7 +1423,33 @@ void test_factorization(size_t iproc)
 	  ml_ren[iens]=dboot_t(ens.aml*lat_par[input_an_id].ainv[ib]/lat_par[input_an_id].Z[ib]).ave();
 	}
       
-      Z_fact.ave_err().write(ml_ren,"plots_hl/Z_fact_an"+to_string(input_an_id)+".xmg");
+      //prepare plot
+      grace_file_t fit_file("plots_hl/Z_fact_an"+to_string(input_an_id)+".xmg");
+      fit_file.set_subtitle("Z_fact");
+      fit_file.set_xaxis_label("$$m_{light} (\\overline{MS},2 GeV) [GeV]");
+      fit_file.set_yaxis_label("Z");
+      fit_file.set_xaxis_max(0.05);
+      fit_file.new_data_set();
+      
+      for(size_t ib=0;ib<nbeta;ib++)
+	{
+	  //make the list of volumes
+	  set<size_t> L_list;
+	  for(size_t idata=0;idata<ens_pars.size();idata++)
+	    if(ens_pars[idata].ib==ib)
+	      L_list.insert(ens_pars[idata].L);
+	  
+	  //loop over the list of volumes
+	  for(auto &L : L_list)
+	    {
+	      fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+	      
+	      for(size_t idata=0;idata<ens_pars.size();idata++)
+		if(ens_pars[idata].ib==ib and ens_pars[idata].L==L)
+		    fit_file.write_ave_err(dboot_t(ens_pars[idata].aml/lat_par[input_an_id].Z[ib]*lat_par[input_an_id].ainv[ib]).ave(),Z_fact[idata].ave_err());
+	      fit_file.new_data_set();
+	    }
+	}
     }
 }
 
