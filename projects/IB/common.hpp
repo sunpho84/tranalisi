@@ -41,6 +41,15 @@ const double MDPLUS=1.86962,MD0=1.86484;
 const double MDS=1.96847;
 const double MW=80.385,MZ=91.1876;
 
+EXTERN_COMMON dboot_t fP0,fK0;
+const ave_err_t fP0_ave_err(0.13041,0.00020);
+const ave_err_t fK0_ave_err(0.1562,0.0007);
+inline void init_phys_decconstant()
+{
+  fP0.fill_gauss(fP0_ave_err,2352325);
+  fK0.fill_gauss(fK0_ave_err,7896744);
+}
+
 //! charge of all quarks
 const double eq[3]={eu,es,ec};
 
@@ -303,6 +312,191 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		   const function<dboot_t(double x)> &fun_poly_cont_lin,
 		   const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
 		   const dboot_t &ml_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,size_t univ_full_sub,size_t FSE_flag);
+
+
+
+
+
+//! hold data for continuum chiral infvol extrapolation
+class cont_chir_fit_xi_data_t
+{
+public:
+  const dboot_t xi;
+  const dboot_t xi_s;
+  const dboot_t MMes;
+  const dboot_t aMaux;
+  const size_t ib,L;
+  const dboot_t wfse,wofse;
+  cont_chir_fit_xi_data_t(const dboot_t &xi,const dboot_t &xi_s,const dboot_t &MMes,const dboot_t &aMaux,const size_t ib,const size_t L,const dboot_t &wfse,const dboot_t &wofse) :
+    xi(xi),xi_s(xi_s),MMes(MMes),aMaux(aMaux),ib(ib),L(L),wfse(wfse),wofse(wofse) {}
+};
+
+//! holds index and out pars
+class cont_chir_fit_xi_pars_t
+{
+public:
+  dbvec_t ori_a,ori_z;
+  dboot_t ori_f0,ori_B0;
+  size_t nbeta;
+  vector<size_t> ipara,iparz;
+  size_t if0,iB0;
+  size_t iadep,iadep_xi,iL2dep,iL3dep,iL4dep,iML4dep;
+  size_t iC,iKPi,iKK,iK2Pi,iK2K;
+  bool fitting_a,fitting_z;
+  dbvec_t fit_a,fit_z;
+  dboot_t fit_C,fit_f0,fit_B0,fit_L2dep,fit_L3dep,fit_L4dep,fit_ML4dep;
+  dboot_t adep,adep_xi,L2dep,L3dep,L4dep,ML4dep;
+  dboot_t C,KPi,KK,K2Pi,K2K;
+  
+  cont_chir_fit_xi_pars_t(size_t nbeta)
+    :
+    nbeta(nbeta),
+    ipara(nbeta),
+    iparz(nbeta),
+    fitting_a(true),
+    fitting_z(true),
+    fit_a(nbeta),
+    fit_z(nbeta)
+  {}
+  
+  //! return a
+  double get_a(const vector<double> &p,size_t ib,size_t iel) const
+  {
+    if(fitting_a) return p[ipara[ib]];
+    else          return ori_a[ib][iel];
+  }
+  
+  //! return z
+  double get_z(const vector<double> &p,size_t ib,size_t iel) const
+  {
+    if(fitting_z) return p[iparz[ib]];
+    else          return ori_z[ib][iel];
+  }
+  
+  //! add a and az to be self-fitted
+  void add_az_pars(const dbvec_t &a,const dbvec_t &z,boot_fit_t &boot_fit)
+  {
+    ori_a=a;
+    ori_z=z;
+    for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+      {
+	ipara[ibeta]=boot_fit.add_self_fitted_point(fit_a[ibeta],combine("a[%zu]",ibeta),a[ibeta],DO_NOT_CORRELATE);
+	iparz[ibeta]=boot_fit.add_self_fitted_point(fit_z[ibeta],combine("z[%zu]",ibeta),z[ibeta],DO_NOT_CORRELATE);
+      }
+  }
+  
+  //! add adep and adep_xi
+  void add_adep_pars(const ave_err_t &adep_guess,const ave_err_t &adep_xi_guess,boot_fit_t &boot_fit)
+  {
+    // adep, adep_xi
+    iadep=boot_fit.add_fit_par(adep,"adep",adep_guess.ave(),adep_guess.err());
+    iadep_xi=boot_fit.add_fit_par(adep_xi,"adep_xi",adep_xi_guess.ave(),adep_xi_guess.err());
+  }
+  
+  //! add fsedep
+  void add_fsedep_pars(const ave_err_t &L3dep_guess,const ave_err_t &L4dep_guess,const ave_err_t &ML4dep_guess,boot_fit_t &boot_fit,const bool flag_prior=true)
+  {
+    if(flag_prior)
+      {
+	iL3dep=boot_fit.add_fit_par(L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
+	iL4dep=boot_fit.add_fit_par(L4dep,"L4dep",L4dep_guess.ave(),L4dep_guess.err());
+	iML4dep=boot_fit.add_fit_par(ML4dep,"ML4dep",ML4dep_guess.ave(),ML4dep_guess.err());
+      }
+    else
+      {
+	iL3dep=boot_fit.add_self_fitted_point(fit_L3dep,"L3dep_prior",{3.0,2.0});
+	iL4dep=boot_fit.add_self_fitted_point(fit_L4dep,"L4dep_prior",{0.0,0.1});
+	iML4dep=boot_fit.add_self_fitted_point(fit_ML4dep,"ML4dep_prior",{0.0,0.1});
+      }
+  }
+  
+  //! add all common pars
+  void add_common_pars(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,
+		       const ave_err_t &adep_guess,const ave_err_t &adep_xi_guess,boot_fit_t &boot_fit)
+  {
+    add_az_pars(a,z,boot_fit);
+    add_adep_pars(adep_guess,adep_xi_guess,boot_fit);
+    //f0 and B0
+    ori_f0=f0;
+    ori_B0=B0;
+    if0=boot_fit.add_self_fitted_point(fit_f0,"f0",f0,DO_NOT_CORRELATE);
+    iB0=boot_fit.add_self_fitted_point(fit_B0,"B0",B0,DO_NOT_CORRELATE);
+  }
+  
+  //! add the low energy constants
+  void add_LEC_pars(const ave_err_t &C_guess,const ave_err_t &KPi_guess,const ave_err_t &KK_guess,const ave_err_t &K2Pi_guess,const ave_err_t &K2K_guess,boot_fit_t &boot_fit,const bool flag_prior=true)
+  {
+    if(flag_prior)
+      {
+	iC=boot_fit.add_fit_par(C,"C",C_guess.ave(),C_guess.err());
+	
+      }
+    else
+      {
+	iC=boot_fit.add_self_fitted_point(fit_C,"C_prior",{3.54e-5,1.0e-5});
+      }
+    
+    iKPi=boot_fit.add_fit_par(KPi,"KPi",KPi_guess.ave(),KPi_guess.err());
+    iKK=boot_fit.add_fit_par(KK,"KK",KK_guess.ave(),KK_guess.err());
+    iK2Pi=boot_fit.add_fit_par(K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
+    iK2K=boot_fit.add_fit_par(K2K,"K2K",K2K_guess.ave(),K2K_guess.err());
+    
+  }
+  
+  //////////////////////////////////////////////////////////////////////
+  
+  void print_common_pars() const
+  {
+    for(size_t ia=0;ia<ori_a.size();ia++)
+      cout<<"a["<<ia<<"]: "<<fit_a[ia].ave_err()<<", orig: "<<ori_a[ia].ave_err()<<", ratio: "<<dboot_t(ori_a[ia]/fit_a[ia]-1.0).ave_err()<<endl;
+    for(size_t iz=0;iz<ori_z.size();iz++)
+      cout<<"Zp["<<iz<<"]: "<<fit_z[iz].ave_err()<<", orig: "<<ori_z[iz].ave_err()<<", ratio: "<<dboot_t(ori_z[iz]/fit_z[iz]-1.0).ave_err()<<endl;
+    //
+    cout<<"f0: "<<fit_f0.ave_err()<<", orig: "<<ori_f0.ave_err()<<", ratio: "<<dboot_t(fit_f0/ori_f0-1).ave_err()<<endl;
+    cout<<"B0: "<<fit_B0.ave_err()<<", orig: "<<ori_B0.ave_err()<<", ratio: "<<dboot_t(fit_B0/ori_B0-1).ave_err()<<endl;
+    //
+    cout<<"Adep: "<<adep.ave_err()<<endl;
+    cout<<"Adep_xi: "<<adep_xi.ave_err()<<endl;
+    cout<<"L2dep: "<<L2dep.ave_err()<<endl;
+    cout<<"L3dep: "<<L3dep.ave_err()<<endl;
+    cout<<"L4dep: "<<L4dep.ave_err()<<endl;
+    cout<<"ML4dep: "<<ML4dep.ave_err()<<endl;
+    cout<<"L3dep_prior: "<<fit_L3dep.ave_err()<<endl;
+    cout<<"L4dep_prior: "<<fit_L4dep.ave_err()<<endl;
+    cout<<"ML4dep_prior: "<<fit_ML4dep.ave_err()<<endl;
+  }
+  
+  //! print the value
+  void print_LEC_pars() const
+  {
+    cout<<"C: "<<C.ave_err()<<endl;
+    cout<<"C_prior: "<<fit_C.ave_err()<<endl;
+    cout<<"KPi: "<<KPi.ave_err()<<endl;
+    cout<<"KK: "<<KK.ave_err()<<endl;
+    cout<<"K2Pi: "<<K2Pi.ave_err()<<endl;
+    cout<<"K2K: "<<K2K.ave_err()<<endl;
+  }
+};
+
+//! perform the fit to the continuum limit
+void cont_chir_fit_xi_minimize
+(const vector<cont_chir_fit_xi_data_t> &ext_data,const cont_chir_fit_xi_pars_t &pars,boot_fit_t &boot_fit,double apow,double zpow,
+ const function<double(const vector<double> &p,const cont_chir_fit_xi_pars_t &pars,double xi,double xi_s,double MMes,double Maux,double ac,double L)> &cont_chir_ansatz,bool cov_flag);
+
+//! plot the continuum-chiral extrapolation
+void plot_chir_fit_xi(const string &path,const vector<cont_chir_fit_xi_data_t> &ext_data,const cont_chir_fit_xi_pars_t &pars,
+		      const function<double(double x,size_t ib)> &fun_line_per_beta,
+		      const function<dboot_t(double x)> &fun_poly_cont_lin,
+		      const function<dboot_t(size_t idata,bool without_with_fse,size_t ib)> &fun_data,
+		      const dboot_t &xi_phys,const dboot_t &phys_res,const string &yaxis_label,const vector<string> &beta_list,const string &subtitle="");
+
+
+
+
+
+
+
+
 
 vector<double> syst_analysis_sep_bis(const vector<ave_err_t> &v,const index_t &fact);
 
