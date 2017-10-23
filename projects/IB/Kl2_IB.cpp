@@ -455,7 +455,8 @@ namespace dml
 }
 
 //! finit size effects on delta ml
-template <class Tpars> Tpars FSE_dml_ren(const Tpars &C,const Tpars &L3dep,const double &L,const Tpars &powL)
+template <class Tpars>
+Tpars FSE_dml_ren(const Tpars &C,const Tpars &L3dep,const double &L,const Tpars &powL)
 {return C*L3dep*pow(L,powL);}
 
 //! ansatz fit
@@ -937,8 +938,8 @@ Tpars elep(const double &MLep,const Tpars &M2PS)
 }
 
 //! finite size effects
-template <class Tpars,class TL>
-Tpars FSE_corr_hl(const Tpars &L2dep,const Tpars &L3dep,const Tpars &xi,const double &MLep,const Tpars M2PS,const TL &L)
+template <class Tpars,class Txi,class TL>
+Tpars FSE_corr_hl(const Tpars &L2dep,const Tpars &L3dep,const double &MLep,const Txi &M2PS,const TL &L)
 {
   // Tpars c1=1/(M2PS*sqr(L));
   // Tpars c2=sqr(Tpars(elep(MLep,M2PS)*L));
@@ -953,8 +954,8 @@ Tpars FSE_corr_hl(const Tpars &L2dep,const Tpars &L3dep,const Tpars &xi,const do
 }
 
 //! chiral behaviour
-template <class Tpars>
-Tpars chir_corr_hl(const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Tpars &xi,const Tpars &xis,const size_t iproc,const size_t chir_flag)
+template <class Tpars,class Txi>
+Tpars chir_corr_hl(const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Txi &xi,const Txi &xi_s,const size_t iproc,const size_t chir_flag)
 {
   Tpars out=Kpi*xi+K2pi*sqr(xi);
   
@@ -966,7 +967,7 @@ Tpars chir_corr_hl(const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Tpars
 	  out+=(3.0-2.0*Z)*e2/(16*sqr(M_PI))*log(xi);
 	  break;
 	case 1:
-	  out+=-(3.0-Z)*e2/(16*sqr(M_PI))*log(xi/xis);
+	  out+=-(3.0-Z)*e2/(16*sqr(M_PI))*log(xi/xi_s);
 	  break;
 	default:
 	  break;
@@ -977,16 +978,14 @@ Tpars chir_corr_hl(const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Tpars
 }
 
 //! ansatz fit
-template <class Tpars,class Tm,class Ta>
-Tpars cont_chir_ansatz_corr_hl(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Tm &ml,const Tm &ms,const double MLep,const Ta &a,const Tpars &adep,double L,const Tpars &L2dep,const Tpars &L3dep,const size_t iproc,const size_t chir_flag)
+template <class Tpars,class Txi,class Ta>
+Tpars cont_chir_ansatz_corr_hl(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Txi &xi,const Txi &xi_s,const Txi &Mmes,const double MLep,const Ta &a,const Tpars &adep,double L,const Tpars &L2dep,const Tpars &L3dep,const size_t iproc,const size_t chir_flag)
 {
-  Tpars M2PS=M2_fun(B0,ml,ml);
-  Tpars xi=xi_fun(B0,ml,ml,f0);
-  Tpars xi_s=xi_fun(B0,ml,ms,f0);
+  Txi M2PS=sqr(Mmes);
   return C+
     chir_corr_hl(Kpi,K2pi,Z,xi,xi_s,iproc,chir_flag)+
     a*a*adep+
-    FSE_corr_hl(L2dep,L3dep,xi,MLep,M2PS,L*a);
+    FSE_corr_hl(L2dep,L3dep,MLep,M2PS,L*a);
 }
 
 template<class T>
@@ -1081,7 +1080,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   
   //set cont limit pars
   const size_t cont_flag=cont::variations[case_of<c_cont>(isyst)];
-  boot_fit.fix_par_to(pars.iadep_ml,0.0);
+  boot_fit.fix_par_to(pars.iadep_xi,0.0);
   switch(cont_flag)
     {
       using namespace cont;
@@ -1119,23 +1118,24 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   set_default_grace(ext_data);
   
   const string yaxis_title="$$\\delta m_l^{ren}";
-  plot_chir_fit(path,ext_data,pars,
-		[&pars,&MLep,&ms_phys,iproc,chir_flag]
+  plot_chir_fit_xi(path,ext_data,pars,
+		[&pars,&MLep,&xi_s_phys,&MMes_phys,iproc,chir_flag]
 		(double x,size_t ib)
 		{return cont_chir_ansatz_corr_hl<double,double,double>
-		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),pars.KK.ave(),x,ms_phys.ave(),MLep,pars.fit_a[ib].ave(),pars.adep.ave(),
+		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),pars.KK.ave(),x,xi_s_phys.ave(),MMes_phys.ave(),MLep,pars.fit_a[ib].ave(),pars.adep.ave(),
 		     inf_vol,0.0*pars.L2dep.ave(),0.0*pars.L3dep.ave(),iproc,chir_flag);},
-		bind(cont_chir_ansatz_corr_hl<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,_1,ms_phys.ave(),MLep,a_cont,pars.adep,
+		bind(cont_chir_ansatz_corr_hl<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,_1,xi_s_phys.ave(),MMes_phys.ave(),MLep,a_cont,pars.adep,
 		     inf_vol,dboot_t(0.0*pars.L2dep),dboot_t(pars.L3dep),iproc,chir_flag),
 		[&ext_data,&pars,&MLep]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{
 		  dboot_t a=pars.fit_a[ib];
 		  dboot_t z=pars.fit_z[ib];
-		  dboot_t ml=ext_data[idata].aml/a/z;
-		  return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_corr_hl(pars.L2dep,pars.L3dep,xi_fun(pars.fit_B0,ml,ml,pars.fit_f0),
-										   MLep,M2_fun(pars.fit_B0,ml,ml),ext_data[idata].L*a));},
-		ml_phys,phys_res,yaxis_title,beta_list,ind_syst.descr(isyst));
+		  dboot_t xi=ext_data[idata].xi;
+		  dboot_t xi_s=ext_data[idata].xi_s;
+		  dboot_t MMes=ext_data[idata].MMes;
+		  return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_corr_hl(pars.L2dep,pars.L3dep,MLep,sqr(MMes),ext_data[idata].L*a));},
+		   xi_phys,phys_res,yaxis_title,beta_list,ind_syst.descr(isyst));
   return phys_res;
 }
 

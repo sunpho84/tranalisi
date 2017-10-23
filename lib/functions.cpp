@@ -12,11 +12,11 @@ public:
   const int i;
   const vector<double> shifts;
   
-  shifted_mom_Tiburzi_pars_t(const double ML,const int i,const vector<double> &shifts) : ML(ML),i(i),shifts(shifts) {}
+  shifted_mom_Tiburzi_pars_t(const double &ML,const int &i,const vector<double> &shifts) : ML(ML),i(i),shifts(shifts) {}
 };
 
 //! compute the kernel
-double shifted_mom_Tiburzi_kernel(double tau,const double &ML,const int &i,const vector<double> &shifts)
+double shifted_mom_Tiburzi_kernel(const double &tau,const double &ML,const int &i,const vector<double> &shifts)
 {  
   //compute product of theta and theta primed
   double ret=1.0;
@@ -37,7 +37,7 @@ double shifted_mom_Tiburzi_kernel_wrapper(double tau,void *_params)
   return shifted_mom_Tiburzi_kernel(tau,ML,i,shifts);;
 }
 
-double shifted_mom_Tiburzi(const double M,const double L,const double fpi,const int i,const vector<double> &shifts)
+double shifted_mom_Tiburzi(const double &M,const double &L,const double &fpi,const int &i,const vector<double> &shifts)
 {
   //set parameters
   shifted_mom_Tiburzi_pars_t pars(M*L,i,shifts);
