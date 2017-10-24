@@ -2,6 +2,8 @@
  #include <config.hpp>
 #endif
 
+//#define XI
+
 #include <set>
 
 #include <tranalisi.hpp>
@@ -397,7 +399,7 @@ void compute_basic_slopes()
 	  jZA[ind_QCD]=ZAP/jZP[ind_QCD];
 	  djack_t jaf=jZP[ind_QCD]*(ens.am[iq1]+ens.am[iq2])/sqr(jaM[ind_QCD]);
 	  jxi[ind_QCD]=sqr(djack_t(jaM[ind_QCD]/(4*M_PI*jaf)));
-	  
+	  cout<<"xi"<<iQCD_mes<<" "<<ens.path<<" "<<jxi[ind_QCD]<<endl;
 	  //
 	  djack_t DZ_P_MASS_rel=DZ_PP_MASS_rel/2.0;
 	  djack_t DZ_P_QED_rel=DZ_PP_QED_rel/2.0;
@@ -943,11 +945,27 @@ Tpars elep(const double &MLep,const Tpars &M2PS)
 
 //! finite size effects
 template <class Tpars,class Txi,class TL>
-Tpars FSE_corr_hl(const Tpars &L2dep,const Tpars &L3dep,const double &MLep,const Txi &M2PS,const TL &L)
+Tpars FSE_corr_xi_hl(const Tpars &L2dep,const Tpars &L3dep,const double &MLep,const Txi &M2PS,const TL &L)
 {
   // Tpars c1=1/(M2PS*sqr(L));
   // Tpars c2=sqr(Tpars(elep(MLep,M2PS)*L));
+  
+  // cout<<M2PS<<" "<<L<<endl;
+  // cout<<c1<<endl;
+  // cout<<c2<<endl;
+  
+  return
+    L2dep/(M2PS*sqr(L))+
+    L3dep/sqr(Tpars(elep(MLep,M2PS)*L));
+}
 
+//! finite size effects
+template <class Tpars,class TL>
+Tpars FSE_corr_hl(const Tpars &L2dep,const Tpars &L3dep,const Tpars &xi,const double &MLep,const Tpars M2PS,const TL &L)
+{
+  // Tpars c1=1/(M2PS*sqr(L));
+  // Tpars c2=sqr(Tpars(elep(MLep,M2PS)*L));
+  
   // cout<<M2PS<<" "<<L<<endl;
   // cout<<c1<<endl;
   // cout<<c2<<endl;
@@ -959,7 +977,7 @@ Tpars FSE_corr_hl(const Tpars &L2dep,const Tpars &L3dep,const double &MLep,const
 
 //! chiral behaviour
 template <class Tpars,class Txi>
-Tpars chir_corr_hl(const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Txi &xi,const Txi &xi_s,const size_t iproc,const size_t chir_flag)
+Tpars chir_corr_xi_hl(const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Txi &xi,const Txi &xi_s,const size_t iproc,const size_t chir_flag)
 {
   Tpars out=Kpi*xi+K2pi*sqr(xi);
   
@@ -981,16 +999,53 @@ Tpars chir_corr_hl(const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Txi &
   return out;
 }
 
+//! chiral behaviour
+template <class Tpars>
+Tpars chir_corr_hl(const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Tpars &xi,const Tpars &xis,const size_t iproc,const size_t chir_flag)
+{
+  Tpars out=Kpi*xi+K2pi*sqr(xi);
+  
+  if(chir_flag==hl::chir::LINEARLOG)
+    {
+      switch(iproc)
+        {
+        case 0:
+          out+=(3.0-2.0*Z)*e2/(16*sqr(M_PI))*log(xi);
+          break;
+        case 1:
+          out+=-(3.0-Z)*e2/(16*sqr(M_PI))*log(xi/xis);
+          break;
+        default:
+          break;
+        }
+    }
+  
+  return out;
+}
+
 //! ansatz fit
 template <class Tpars,class Txi,class Ta>
-Tpars cont_chir_ansatz_corr_hl(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Txi &xi,const Txi &xi_s,const Txi &Mmes,const double MLep,const Ta &a,const Tpars &adep,double L,const Tpars &L2dep,const Tpars &L3dep,const size_t iproc,const size_t chir_flag)
+Tpars cont_chir_ansatz_corr_xi_hl(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Txi &xi,const Txi &xi_s,const Txi &Mmes,const double MLep,const Ta &a,const Tpars &adep,double L,const Tpars &L2dep,const Tpars &L3dep,const size_t iproc,const size_t chir_flag)
 {
   Txi M2PS=sqr(Mmes);
   Tpars res=C+
-    chir_corr_hl(Kpi,K2pi,Z,xi,xi_s,iproc,chir_flag)+
+    chir_corr_xi_hl(Kpi,K2pi,Z,xi,xi_s,iproc,chir_flag)+
     a*a*adep;
-  if(L>0) res+=FSE_corr_hl(L2dep,L3dep,MLep,M2PS,L*a);
+  if(L>0) res+=FSE_corr_xi_hl(L2dep,L3dep,MLep,M2PS,L*a);
   return res;
+}
+
+//! ansatz fit
+template <class Tpars,class Tm,class Ta>
+Tpars cont_chir_ansatz_corr_hl(const Tpars &f0,const Tpars &B0,const Tpars &C,const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Tm &ml,const Tm &ms,const double MLep,const Ta &a,const Tpars &adep,double L,const Tpars &L2dep,const Tpars &L3dep,const size_t iproc,const size_t chir_flag)
+{
+  Tpars M2PS=M2_fun(B0,ml,ml);
+  Tpars xi=xi_fun(B0,ml,ml,f0);
+  Tpars xi_s=xi_fun(B0,ml,ms,f0);
+  return C+
+    chir_corr_hl(Kpi,K2pi,Z,xi,xi_s,iproc,chir_flag)+
+    a*a*adep+
+    FSE_corr_hl(L2dep,L3dep,xi,MLep,M2PS,Ta(L*a));
 }
 
 template<class T>
@@ -1023,7 +1078,7 @@ void set_default_grace(const vector<T> &ext_data)
 }
 
 //! perform the fit to the continuum limit of correction of process
-dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_xi_data_t> &ext_data,const dboot_t &xi_phys,const dboot_t &xi_s_phys,const double MMes_phys,const double &MLep,const string &path,const size_t iproc,const size_t isyst,const bool cov_flag,const vector<string> &beta_list)
+dboot_t cont_chir_fit_corr_xi_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_xi_data_t> &ext_data,const dboot_t &xi_phys,const dboot_t &xi_s_phys,const double MMes_phys,const double &MLep,const string &path,const size_t iproc,const size_t isyst,const bool cov_flag,const vector<string> &beta_list)
 {
   using namespace hl;
   
@@ -1110,10 +1165,10 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
     }
   
   cont_chir_fit_xi_minimize(ext_data,pars,boot_fit,0.0,0.0,[iproc,chir_flag](const vector<double> &p,const cont_chir_fit_xi_pars_t &pars,double xi,double xi_s,double MMes,double MLep,double ac,double L)
-			    {return cont_chir_ansatz_corr_hl(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],p[pars.iKK],xi,xi_s,MMes,MLep,ac,p[pars.iadep],L,p[pars.iL2dep],p[pars.iL3dep],iproc,chir_flag);}
+			    {return cont_chir_ansatz_corr_xi_hl(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],p[pars.iKK],xi,xi_s,MMes,MLep,ac,p[pars.iadep],L,p[pars.iL2dep],p[pars.iL3dep],iproc,chir_flag);}
 			 ,cov_flag);
   
-  dboot_t phys_res=cont_chir_ansatz_corr_hl(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,xi_phys,xi_s_phys,dboot_t(MMes_phys),MLep,1,dboot_t(pars.adep*0.0),-1,(dboot_t)(0.0*pars.L2dep),dboot_t(0.0*pars.L3dep),iproc,chir_flag);
+  dboot_t phys_res=cont_chir_ansatz_corr_xi_hl(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,xi_phys,xi_s_phys,dboot_t(MMes_phys),MLep,1,dboot_t(pars.adep*0.0),-1,(dboot_t)(0.0*pars.L2dep),dboot_t(0.0*pars.L3dep),iproc,chir_flag);
   cout<<"result: "<<phys_res.ave_err()<<", "<<phys_res[0]<<endl;
   
   //bool include_small_vol=(FSE::variations[case_of<c_FSE>(isyst)]!=hl::FSE::NOSMALLVOL);
@@ -1125,10 +1180,10 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   plot_chir_fit_xi(path,ext_data,pars,
 		[&pars,&MLep,&xi_s_phys,&MMes_phys,iproc,chir_flag]
 		(double x,size_t ib)
-		{return cont_chir_ansatz_corr_hl<double,double,double>
+		{return cont_chir_ansatz_corr_xi_hl<double,double,double>
 		    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),pars.KK.ave(),x,xi_s_phys.ave(),MMes_phys,MLep,pars.fit_a[ib].ave(),pars.adep.ave(),
 		     inf_vol,0.0*pars.L2dep.ave(),0.0*pars.L3dep.ave(),iproc,chir_flag);},
-		   bind(cont_chir_ansatz_corr_hl<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,_1,xi_s_phys.ave(),MMes_phys,MLep,1.0,dboot_t(pars.adep*0.0),
+		   bind(cont_chir_ansatz_corr_xi_hl<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,_1,xi_s_phys.ave(),MMes_phys,MLep,1.0,dboot_t(pars.adep*0.0),
 			-1,dboot_t(0.0*pars.L2dep),dboot_t(0.0*pars.L3dep),iproc,chir_flag),
 		[&ext_data,&pars,&MLep]
 		(size_t idata,bool without_with_fse,size_t ib)
@@ -1138,8 +1193,176 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
 		  dboot_t xi=ext_data[idata].xi;
 		  dboot_t xi_s=ext_data[idata].xi_s;
 		  dboot_t MMes=ext_data[idata].MMes;
-		  return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_corr_hl(pars.L2dep,pars.L3dep,MLep,sqr(MMes),ext_data[idata].L*a));},
+		  return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_corr_xi_hl(pars.L2dep,pars.L3dep,MLep,sqr(MMes),ext_data[idata].L*a));},
 		   xi_phys,phys_res,yaxis_title,beta_list,ind_syst.descr(isyst));
+  return phys_res;
+}
+
+//! perform the fit to the continuum limit of correction of process
+dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const double &MLep,const string &path,const size_t iproc,const size_t isyst,const bool cov_flag,const vector<string> &beta_list)
+{
+  using namespace hl;
+  
+  //set_printlevel(3);
+  
+  boot_fit_t boot_fit;
+  size_t nbeta=a.size();
+  cont_chir_fit_pars_t pars(nbeta);
+  
+  //guesses
+  ave_err_t L2dep_guess;
+  ave_err_t L3dep_guess;
+  const ave_err_t C_guess(0.021,0.001);
+  const ave_err_t KPi_guess(-0.34,0.01);
+  const ave_err_t K2Pi_guess(1.0,0.5);
+  const ave_err_t Z_guess={0.658,0.040};
+  const ave_err_t adep_guess={0.003,0.006};
+  const ave_err_t adep_ml_guess={0,0.001};
+  
+  const size_t FSE_flag=FSE::variations[case_of<c_FSE>(isyst)];
+  switch(FSE_flag)
+    {
+      using namespace FSE;
+    case NOSTDEP:
+      L2dep_guess=ave_err_t(-0.16,0.1);
+      L3dep_guess=ave_err_t(0.04,0.03);
+      break;
+    case WITHSTDEP:
+      L2dep_guess=ave_err_t(-0.068,0.09);
+      L3dep_guess=ave_err_t(-0.03,0.03);
+      break;
+    case NOSMALLVOL:
+      L2dep_guess=ave_err_t(0.0,0.1);
+      L3dep_guess=ave_err_t(0.0,0.1);
+    }
+  
+  //set parameters
+  pars.add_common_pars(a,z,f0,B0,adep_guess,adep_ml_guess,boot_fit);
+  pars.iC=boot_fit.add_fit_par(pars.C,"C_guess",C_guess.ave(),C_guess.err());
+  pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess.ave(),KPi_guess.err());
+  pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
+  pars.iL2dep=boot_fit.add_fit_par(pars.L2dep,"L2dep",L2dep_guess.ave(),L2dep_guess.err());
+  pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
+  pars.iKK=boot_fit.add_self_fitted_point(pars.KK,"Z",Z_guess);
+  //boot_fit.fix_par_to(pars.iL3dep,0.0);
+  
+  //set FSE pars
+  switch(FSE_flag)
+    {
+     using namespace FSE;
+    case NOSMALLVOL:
+      boot_fit.fix_par_to(pars.iL2dep,0.0);
+      boot_fit.fix_par_to(pars.iL3dep,0.0);
+      break;
+    case NOSTDEP:
+    case WITHSTDEP:
+      break;
+    }
+  
+  //set cont limit pars
+  const size_t cont_flag=cont::variations[case_of<c_cont>(isyst)];
+  boot_fit.fix_par_to(pars.iadep_ml,0.0);
+  switch(cont_flag)
+    {
+      using namespace cont;
+    case(CONSTANT):
+      boot_fit.fix_par_to(pars.iadep,0.0);
+    break;
+    case(LINEAR):
+      break;
+    }
+  
+  //set chir limit pars
+  const size_t chir_flag=chir::variations[case_of<c_chir>(isyst)];
+  switch(chir_flag)
+    {
+      using namespace chir;
+    case(LINEARLOG):
+      //boot_fit.fix_par_to(pars.iK2Pi,0.0);
+      break;
+    case(QUADRATIC):
+      //boot_fit.fix_par_to(pars.iKK,0.0);
+      break;
+    }
+  
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[iproc,chir_flag](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double MLep,double ac,double L)
+                         {return cont_chir_ansatz_corr_hl(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],p[pars.iKK],ml,ms,MLep,ac,p[pars.iadep],L,p[pars.iL2dep],p[pars.iL3dep],iproc,chir_flag);}
+                         ,cov_flag);
+  
+  double a_cont=1e-5;
+  dboot_t phys_res=cont_chir_ansatz_corr_hl(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,ml_phys,ms_phys,MLep,a_cont,pars.adep,inf_vol,(dboot_t)(0.0*pars.L2dep),dboot_t(0.0*pars.L3dep),iproc,chir_flag);
+  cout<<"result: "<<phys_res.ave_err()<<endl;
+  
+  //bool include_small_vol=(FSE::variations[case_of<c_FSE>(isyst)]!=hl::FSE::NOSMALLVOL);
+  //bool include_coarse=(cont::variations[case_of<c_cont>(isyst)]!=hl::cont::CONSTANT);
+  
+  set_default_grace(ext_data);
+  
+  const string yaxis_title="$$\\delta m_l^{ren}";
+  plot_chir_fit(path,ext_data,pars,
+                [&pars,&MLep,&ms_phys,iproc,chir_flag]
+                (double x,size_t ib)
+                {return cont_chir_ansatz_corr_hl<double,double,double>
+                    (pars.fit_f0.ave(),pars.fit_B0.ave(),pars.C.ave(),pars.KPi.ave(),pars.K2Pi.ave(),pars.KK.ave(),x,ms_phys.ave(),MLep,pars.fit_a[ib].ave(),pars.adep.ave(),
+                     inf_vol,0.0*pars.L2dep.ave(),0.0*pars.L3dep.ave(),iproc,chir_flag);},
+                bind(cont_chir_ansatz_corr_hl<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,_1,ms_phys.ave(),MLep,a_cont,pars.adep,
+                     inf_vol,dboot_t(0.0*pars.L2dep),dboot_t(pars.L3dep),iproc,chir_flag),
+                [&ext_data,&pars,&MLep]
+                (size_t idata,bool without_with_fse,size_t ib)
+                {
+                  dboot_t a=pars.fit_a[ib];
+                  dboot_t z=pars.fit_z[ib];
+                  dboot_t ml=ext_data[idata].aml/a/z;
+                  return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_corr_hl(pars.L2dep,pars.L3dep,xi_fun(pars.fit_B0,ml,ml,pars.fit_f0),
+                                                                                   MLep,M2_fun(pars.fit_B0,ml,ml),ext_data[idata].L*a));},
+                ml_phys,phys_res,yaxis_title,beta_list,ind_syst.descr(isyst));
+  
+  //! output file for A40 data
+  vector<size_t> syst_comp=ind_syst(isyst);
+  size_t iFSE=syst_comp[c_FSE];
+  if(accumulate(syst_comp.begin(),syst_comp.end(),-iFSE)==0)
+    {
+      grace_file_t A40_XX_file_FSE_full_sub;
+      size_t iFSE=case_of<c_FSE>(isyst);
+      A40_XX_file_FSE_full_sub.open(combine("plots_hl/A40_proc%zu_FSEord%zu_fullsub.xmg",iproc,iFSE));
+      
+      dboot_t ml;
+      
+      //! two sets of data, with and without FSE
+      for(size_t without_with=0;without_with<=1;without_with++)
+	{
+	  A40_XX_file_FSE_full_sub.new_data_set();
+	  for(size_t iens=0;iens<nens_used;iens++)
+	    {
+	      const ens_pars_t &ens=ens_pars[iens];
+	      const size_t ib=ens.ib;
+	      if(fabs(ens_pars[iens].aml-0.0040)<1e-6)
+		{
+		  const dboot_t &a=pars.fit_a[ib];
+		  const dboot_t &z=pars.fit_z[ib];
+		  ml=ext_data[iens].aml/a/z;
+		  const dboot_t &out=ext_data[iens].wfse-without_with*
+		    FSE_corr_hl(pars.L2dep,pars.L3dep,xi_fun(pars.fit_B0,ml,ml,pars.fit_f0),MLep,M2_fun(pars.fit_B0,ml,ml),ext_data[iens].L*a);
+		  A40_XX_file_FSE_full_sub.write_ave_err(sqr(1.0/ens.L),out.ave_err());
+		}
+	    }
+	}
+      
+      //fit band
+      const double O_ov_L_min=sqr(0.001),O_ov_L_max=3e-3;
+      A40_XX_file_FSE_full_sub.write_polygon(
+		    [&pars,&MLep,&ms_phys,&ml,iproc,chir_flag]
+		    (double x)
+		    {return cont_chir_ansatz_corr_hl<dboot_t,dboot_t,dboot_t>
+			(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,ml,ms_phys,MLep,pars.fit_a[0],pars.adep,
+			 1/sqrt(x),pars.L2dep,pars.L3dep,iproc,chir_flag);},
+					     O_ov_L_min,O_ov_L_max);
+      
+      //infinite volume extrapolate
+      dboot_t out=cont_chir_ansatz_corr_hl(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,ml,ms_phys,MLep,pars.fit_a[0],pars.adep,inf_vol,(dboot_t)(0.0*pars.L2dep),dboot_t(0.0*pars.L3dep),iproc,chir_flag);
+      A40_XX_file_FSE_full_sub.write_constant_band(O_ov_L_min,O_ov_L_max,out);
+    }
+  
   return phys_res;
 }
 
@@ -1319,12 +1542,15 @@ void compute_corr(size_t iproc)
       const size_t iFSE_max=(FSE_FLAG==hl::FSE::WITHSTDEP)?1:0; //ord_max={1,2} and with structure dep we take 2
       
       //! add to the fit
+#ifdef XI
       vector<cont_chir_fit_xi_data_t> fit_data;
+#else
+      vector<cont_chir_fit_data_t> fit_data;
+#endif
       for(size_t iens=0;iens<nens_used;iens++)
 	{
 	  const ens_pars_t &ens=ens_pars[iens];
 	  const size_t idata=ind_an_ens_FSEmax_frange({input_an_id,iens,iFSE_max,ifrange});
-	  const size_t iens_QCD_mes=ind_ens_QCD_mes({iens,iQCD_mes});
 	  
 	  //check if to include
 	  bool include=true;
@@ -1335,19 +1561,28 @@ void compute_corr(size_t iproc)
 	    {
 	      dboot_t aMaux;
 	      aMaux=ens.aMLep[ilep];
+#ifdef XI
+	      const size_t iens_QCD_mes=ind_ens_QCD_mes({iens,iQCD_mes});
 	      dboot_t xi=dboot_t(bi,jxi[iens_QCD_mes]);
 	      dboot_t xi_s=dboot_t(bi,jxi[iens_QCD_mes]);
 	      dboot_t MMes=dboot_t(bi,jaM[iens_QCD_mes]);
 	      fit_data.push_back(cont_chir_fit_xi_data_t(xi,xi_s,MMes,aMaux,ens.ib,ens.L,tot_corr_all[idata],tot_corr_all[idata]));
+#else
+              fit_data.push_back(cont_chir_fit_data_t(ens.aml,ens.aml,aMaux,ens.ib,ens.L,tot_corr_all[idata],tot_corr_all[idata]));
+#endif
 	    }
 	}
       
       const string cc_path=combine("plots_hl/cont_chir_iproc%zu_isyst%zu.xmg",iproc,isyst);
       
+#ifdef XI
       const dboot_t xi_phys=sqr(dboot_t(MP0/(4*M_PI*fP0)));
       const dboot_t xi_s_phys=sqr(dboot_t(MK0/(4*M_PI*fK0)));
       const double MMes_phys((iproc==0)?MP0:MK0);
-      res[isyst]=cont_chir_fit_corr_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,xi_phys,xi_s_phys,MMes_phys,MLep[iproc],cc_path,iproc,isyst,use_cov,beta_list);
+      res[isyst]=cont_chir_fit_corr_xi_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,xi_phys,xi_s_phys,MMes_phys,MLep[iproc],cc_path,iproc,isyst,use_cov,beta_list);
+#else
+      res[isyst]=cont_chir_fit_corr_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,lat_par[input_an_id].ml,lat_par[input_an_id].ms,MLep[iproc],cc_path,iproc,isyst,use_cov,beta_list);
+#endif
     }
   
   perform_analysis(res,hl::ind_syst,"Res");
