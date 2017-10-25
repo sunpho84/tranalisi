@@ -219,5 +219,6 @@ AC_CONFIG_FILES(Makefile
 	projects/IB/Makefile
 	projects/MOM/Makefile
 	projects/SMETEST/Makefile
+	projects/SPIPOLLO/Makefile
 	tools/Makefile)
 AC_OUTPUT

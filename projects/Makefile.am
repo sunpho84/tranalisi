@@ -4,4 +4,5 @@ SUBDIRS= \
 	FPIEM \
 	IB \
 	SMETEST \
+	SPIPOLLO \
 	MOM
