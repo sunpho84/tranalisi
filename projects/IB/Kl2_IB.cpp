@@ -629,6 +629,8 @@ const size_t nrlep=2; //!< number of r for leptons
 const size_t nproj=1; //!<number of projectors: 1, V0 only
 index_t ind_hl_corr;
 
+enum{STUDY_PI,STUDY_K_M_PI,STUDY_K};
+
 //! holds the systematics for the estimate of hadroleptonic
 namespace hl
 {
@@ -1216,7 +1218,6 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
 {
   using namespace hl;
   
-  size_t iguess=(procs.size()==2);
   //set_printlevel(3);
   
   boot_fit_t boot_fit;
@@ -1226,43 +1227,85 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   //guesses
   ave_err_t L2dep_guess;
   ave_err_t L3dep_guess;
-  const ave_err_t C_guess[2]={{0.021,0.001},{-0.012,0.001}};
-  const ave_err_t KPi_guess[2]={{-0.34,0.01},{0.01,0.01}};
-  const ave_err_t K2Pi_guess(1.0,0.5);
+  ave_err_t C_guess[3];
+  C_guess[STUDY_PI]={0.021,0.001};
+  C_guess[STUDY_K]={0.003,0.001};
+  C_guess[STUDY_K_M_PI]={-0.018,0.001};  
+  ave_err_t KPi_guess[3];
+  KPi_guess[STUDY_PI]={-0.34,0.01};
+  KPi_guess[STUDY_K]={0.00,0.03};
+  KPi_guess[STUDY_K_M_PI]={0.39,0.01};
+  ave_err_t K2Pi_guess[3];
+  K2Pi_guess[STUDY_PI]={1,0.5};
+  K2Pi_guess[STUDY_K]={0.0,0.1};
+  K2Pi_guess[STUDY_K_M_PI]={-3,0.5};
   const ave_err_t Z_guess={0.658,0.040};
   const ave_err_t adep_guess={0.003,0.006};
   const ave_err_t adep_ml_guess={0,0.001};
   
   const size_t FSE_flag=FSE::variations[case_of<c_FSE>(isyst)];
-  if(iguess==0)
-    switch(FSE_flag)
-      {
-	using namespace FSE;
-      case NOSTDEP:
-	L2dep_guess=ave_err_t(-0.16,0.1);
-	L3dep_guess=ave_err_t(0.04,0.03);
-	break;
-      case WITHSTDEP:
-	L2dep_guess=ave_err_t(-0.068,0.09);
-	L3dep_guess=ave_err_t(-0.03,0.03);
-	break;
-      case NOSMALLVOL:
-	L2dep_guess=ave_err_t(0.0,0.1);
-	L3dep_guess=ave_err_t(0.0,0.1);
-      }
-  else
+  switch(istudy)
     {
-      L2dep_guess=ave_err_t(0.01,0.1);
-      L3dep_guess=ave_err_t(0.01,0.1);
+    case STUDY_PI:
+      switch(FSE_flag)
+	{
+	  using namespace FSE;
+	case NOSTDEP:
+	  L2dep_guess=ave_err_t(-0.16,0.1);
+	  L3dep_guess=ave_err_t(0.04,0.03);
+	  break;
+	case WITHSTDEP:
+	  L2dep_guess=ave_err_t(-0.068,0.09);
+	  L3dep_guess=ave_err_t(-0.03,0.03);
+	  break;
+	case NOSMALLVOL:
+	  L2dep_guess=ave_err_t(0.0,0.1);
+	  L3dep_guess=ave_err_t(0.0,0.1);
+	}
+      break;
+    case STUDY_K_M_PI:
+      switch(FSE_flag)
+	{
+	  using namespace FSE;
+	case NOSTDEP:
+	  L2dep_guess=ave_err_t(-0.27,0.1);
+	  L3dep_guess=ave_err_t(0.1,0.03);
+	  break;
+	case WITHSTDEP:
+	  L2dep_guess=ave_err_t(-0.24,0.1);
+	  L3dep_guess=ave_err_t(0.05,0.03);
+	  break;
+	case NOSMALLVOL:
+	  L2dep_guess=ave_err_t(0.0,0.1);
+	  L3dep_guess=ave_err_t(0.0,0.1);
+	}
+      break;
+      case STUDY_K:
+	switch(FSE_flag)
+	  {
+	    using namespace FSE;
+	  case NOSTDEP:
+	    L2dep_guess=ave_err_t(0.16,0.1);
+	    L3dep_guess=ave_err_t(-0.04,0.03);
+	    break;
+	  case WITHSTDEP:
+	    L2dep_guess=ave_err_t(0.068,0.09);
+	    L3dep_guess=ave_err_t(0.03,0.03);
+	    break;
+	  case NOSMALLVOL:
+	    L2dep_guess=ave_err_t(0.0,0.1);
+	    L3dep_guess=ave_err_t(0.0,0.1);
+	  }
+      break;
     }
   
   //set parameters
   pars.add_common_pars(a,z,f0,B0,adep_guess,adep_ml_guess,boot_fit);
-  pars.iC=boot_fit.add_fit_par(pars.C,"C_guess",C_guess[iguess].ave(),C_guess[iguess].err());
-  cout<<"C_guess "<<C_guess[iguess].ave()<<" "<<C_guess[iguess].err()<<endl;
+  pars.iC=boot_fit.add_fit_par(pars.C,"C_guess",C_guess[istudy].ave(),C_guess[istudy].err());
+  cout<<"C_guess "<<C_guess[istudy].ave()<<" "<<C_guess[istudy].err()<<endl;
   cout<<"L2dep_guess "<<L2dep_guess.ave()<<" "<<L2dep_guess.err()<<endl;
-  pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess[iguess].ave(),KPi_guess[iguess].err());
-  pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess.ave(),K2Pi_guess.err());
+  pars.iKPi=boot_fit.add_fit_par(pars.KPi,"KPi",KPi_guess[istudy].ave(),KPi_guess[istudy].err());
+  pars.iK2Pi=boot_fit.add_fit_par(pars.K2Pi,"K2Pi",K2Pi_guess[istudy].ave(),K2Pi_guess[istudy].err());
   pars.iL2dep=boot_fit.add_fit_par(pars.L2dep,"L2dep",L2dep_guess.ave(),L2dep_guess.err());
   pars.iL3dep=boot_fit.add_fit_par(pars.L3dep,"L3dep",L3dep_guess.ave(),L3dep_guess.err());
   pars.iKK=boot_fit.add_self_fitted_point(pars.KK,"Z",Z_guess);
@@ -1750,10 +1793,10 @@ int main(int narg,char **arg)
   for(size_t iproc=0;iproc<nprocess;iproc++)
     tot_corr_proc[iproc]=compute_corr(iproc);
   
-  const size_t STUDY_PI=0,STUDY_K_M_PI=1;
   const size_t iLEP=0;
   extrapolate_corr(tot_corr_proc[iK]-tot_corr_proc[iPi],{{iK,+1.0},{iPi,-1.0}},STUDY_K_M_PI,iLEP);
   extrapolate_corr(tot_corr_proc[iPi],{{iPi,1.0}},STUDY_PI,iLEP);
+  extrapolate_corr(tot_corr_proc[iK],{{iK,1.0}},STUDY_K,iLEP);
   
   cout<<endl<<"Total time: "<<time(0)-start<<" s"<<endl;
   
