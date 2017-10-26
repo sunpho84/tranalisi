@@ -2,6 +2,9 @@
  #include <config.hpp>
 #endif
 
+const bool EXCLUDE_SMALL_VOLS=false;
+const bool EXCLUDE_HIGH_MASSES=false;
+
 //#define XI
 
 #include <set>
@@ -96,8 +99,9 @@ public:
   double &amc=am[2]; //!< bare charm quark mass
   double aMLep[nleps]; //!< mass of leptons
   double aMMes[4]; //!< mass of mesons (0=Pi, 1=K, 2=D, 3=Ds)
-  int use_for_L; //!< use for FSE analysis
-  //int use_for_a; //!< use for cont analysis
+  bool use_for_L; //!< use for FSE analysis
+  bool use_for_chir; //!< use for chiral analysis
+  //bool use_for_a; //!< use for cont analysis
   string path; //!< path (name)
   
   vector<size_t> tmin,tmax; //!< range of fit
@@ -184,7 +188,11 @@ void initialize(int narg,char **arg)
       for(size_t iQCD_mes=0;iQCD_mes<nQCD_mes;iQCD_mes++) input.read(ens.aMMes[iQCD_mes]);
       
       //replace use_for_L with a made-up one
-      ens.use_for_L=(ens.L*ens.aMMes[0]>4.5);
+      if(EXCLUDE_SMALL_VOLS) ens.use_for_L=(ens.L*ens.aMMes[0]>4.5);
+      else                   ens.use_for_L=true;
+      //switch chir inclusion
+      if(EXCLUDE_HIGH_MASSES) ens.use_for_chir=(ens.aMMes[0]*lat_par[0].ainv[ens.ib].ave()<=0.350);
+      else                    ens.use_for_chir=true;
     }
 }
 
@@ -369,6 +377,7 @@ void compute_basic_slopes()
 	  size_t iq2=QED_mes_pars[iQED_mes].iq2;
 	  //load LO for PP
 	  jPP_LO[ind_QCD]=read_PP("00",ens,iq1,iq2,1,RE);
+	  cout<<"jPP: "<<jPP_LO[ind_QCD][1]<<endl; //check normalization
 	  //load corrections for PP
 	  jPP_MASS[ind_QED]=read_MASS(ens,iQED_mes,jPP_LO[ind_QCD],read_PP,"PP");
 	  jPP_QED[ind_QED]=read_QED(ens,iQED_mes,deltam_cr[iens],jPP_LO[ind_QCD],read_PP,"PP");
@@ -637,9 +646,9 @@ namespace hl
   //! chiral extrapolation variations
   namespace chir
   {
-    enum{QUADRATIC,LINEARLOG};
-    const vector<int> variations={QUADRATIC,LINEARLOG};
-    const vector<string> tag={"QUADRATIC","LINEARLOG"};
+    enum{QUADRATIC,QUADRATICLOG};
+    const vector<int> variations={QUADRATIC,QUADRATICLOG};
+    const vector<string> tag={"QUADRATIC","QUADRATICLOG"};
     const size_t nvariations=variations.size();
   }
   
@@ -647,8 +656,10 @@ namespace hl
   namespace FSE
   {
     enum{NOSTDEP,WITHSTDEP,NOSMALLVOL};
-    const vector<int> variations={NOSTDEP,WITHSTDEP,NOSMALLVOL};
-    const vector<string> tag={"NOSTDEP","WITHSTDEP","NOSMALLVOL"};
+    const vector<int> variations={NOSTDEP,// WITHSTDEP,
+				  NOSMALLVOL};
+    const vector<string> tag={"NOSTDEP",// "WITHSTDEP",
+			      "NOSMALLVOL"};
     const size_t nvariations=variations.size();
   }
   
@@ -746,6 +757,7 @@ valarray<djvec_t> load_and_correct_hl(size_t iproc,size_t iw,size_t iproj,const 
     {
       //load and remove around the world
       djvec_t precorr=read_hl(iproc,iw,iproj,orie_par,qins,ens,name,r2_weight,rl_weight);
+      cout<<"precorr["<<qins<<"]: "<<precorr[1]<<endl; //check normalization
       djvec_t postsub=hl_corr_subtract_around_world(precorr,M0);
       
       //remove mismatch in mass
@@ -930,13 +942,19 @@ dboot_t Wreg_contr(const dboot_t &a)
   // dboot_t Z1=uss*(5.0*log(a*MW)-5.056);
   // double Z2=uss*0.323;
   
+  dboot_t Zmarci=uss*(-1.5-2.0*log(a*MW)-11.852);
+  
   //pure Wilson photon
-  dboot_t Z1=uss*(5.0*log(a*MW)-8.863);
-  double Z2=uss*0.536;
+  dboot_t Z11=uss*(4.0*log(a*MW)-15.539)-0.5*Zmarci;
+  double Z12=uss*0.536;
+  
+  // double Z21=uss*0.536;
+  // dboot_t Z22=uss*(2.0*log(a*MW)-14.850)-0.5*Zmarci;
   
   //cout<<"Z1 (e2 included): "<<dboot_t(Z1*e2).ave_err()<<", Z2 (idem): "<<Z2*e2<<endl;
   
-  return Z1+Z2;
+  //return 0.5*(Z11+Z12+Z21+Z22);
+  return Z11+Z12;
 }
 
 //////////////////////////////////////////////////////////////////// cont chir extrap for hl //////////////////////////////////////////////////////
@@ -992,7 +1010,7 @@ Tpars FSE_corr_hl(const Tpars &L2dep,const Tpars &L3dep,const double &MLep,const
 // {
 //   Tpars out=Kpi*xi+K2pi*sqr(xi);
   
-//   if(chir_flag==hl::chir::LINEARLOG)
+//   if(chir_flag==hl::chir::QUADRATICLOG)
 //     {
 //       switch(iproc)
 // 	{
@@ -1016,7 +1034,7 @@ Tpars chir_corr_hl(const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Tpars
 {
   Tpars out=Kpi*xi+K2pi*sqr(xi);
   
-  if(chir_flag==hl::chir::LINEARLOG)
+  if(chir_flag==hl::chir::QUADRATICLOG)
     for(auto &proc : procs)
       {
 	size_t iproc=proc.first;
@@ -1171,7 +1189,7 @@ void set_default_grace(const vector<T> &ext_data)
 //   switch(chir_flag)
 //     {
 //       using namespace chir;
-//     case(LINEARLOG):
+//     case(QUADRATICLOG):
 //       //boot_fit.fix_par_to(pars.iK2Pi,0.0);
 //       break;
 //     case(QUADRATIC):
@@ -1230,7 +1248,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   ave_err_t C_guess[3];
   C_guess[STUDY_PI]={0.021,0.001};
   C_guess[STUDY_K]={0.003,0.001};
-  C_guess[STUDY_K_M_PI]={-0.018,0.001};  
+  C_guess[STUDY_K_M_PI]={-0.018,0.001};
   ave_err_t KPi_guess[3];
   KPi_guess[STUDY_PI]={-0.34,0.01};
   KPi_guess[STUDY_K]={0.00,0.03};
@@ -1343,7 +1361,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   switch(chir_flag)
     {
       using namespace chir;
-    case(LINEARLOG):
+    case(QUADRATICLOG):
       //boot_fit.fix_par_to(pars.iK2Pi,0.0);
       break;
     case(QUADRATIC):
@@ -1434,7 +1452,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
 }
 
 //! compute the correction to the process
-dbvec_t compute_corr(size_t iproc)
+dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
 {
   //! data to extrapolate
   dbvec_t tot_corr_all(hl::ind_an_ens_FSEmax_frange.max());
@@ -1544,9 +1562,9 @@ dbvec_t compute_corr(size_t iproc)
 	      const dboot_t dM_QED_rel=dboot_t(bi,jDM_QED[ind_QED]/jaM[ind_QCD])*e2;
 	      const dboot_t dM_MASS_rel=dboot_t(bi,jDM_MASS[ind_QED]/jaM[ind_QCD])*adml_bare[ind_an_ens];
 	      const dboot_t internal_QED=2.0*dZA_QED_rel;
-	      const dboot_t internal_MASS=2.0*dZA_MASS_rel;
+	      const dboot_t internal_MASS=2.0*dZA_MASS_rel*include_stong_IB;
 	      const dboot_t rate_QED_mass=-2.0*dM_QED_rel; //to be SUBTRACTED
-	      const dboot_t rate_MASS_mass=-2.0*dM_MASS_rel; //and this as well
+	      const dboot_t rate_MASS_mass=-2.0*dM_MASS_rel*include_stong_IB; //and this as well
 	      const double marc_sirl=e2/(2*sqr(M_PI))*log(MZ/MW);
 	      const dboot_t rate_pt=Gamma_pt(MLep,Mmes,DeltaE)*e2; //only e2
 	      
@@ -1602,6 +1620,7 @@ dbvec_t compute_corr(size_t iproc)
       const size_t input_an_id=hl::case_of<hl::c_input>(isyst);
       const size_t ifrange=hl::case_of<hl::c_frange>(isyst);
       const size_t FSE_FLAG=hl::FSE::variations[hl::case_of<hl::c_FSE>(isyst)];
+      const size_t chir_FLAG=hl::chir::variations[hl::case_of<hl::c_chir>(isyst)];
       //const size_t cont_FLAG=hl::cont::variations[hl::case_of<hl::c_cont>(isyst)];
       const bool use_cov=false;
       const size_t iFSE_max=(FSE_FLAG==hl::FSE::WITHSTDEP)?1:0; //ord_max={1,2} and with structure dep we take 2
@@ -1620,6 +1639,7 @@ dbvec_t compute_corr(size_t iproc)
 	  //check if to include
 	  bool include=true;
 	  if(FSE_FLAG==hl::FSE::NOSMALLVOL) include&=ens.use_for_L;
+	  if(chir_FLAG==hl::chir::QUADRATICLOG) include&=ens.use_for_chir;
 	  //if(cont_FLAG==hl::cont::CONSTANT) include&=ens.use_for_a;
 	  
 	  if(include)
@@ -1788,15 +1808,17 @@ int main(int narg,char **arg)
   
   load_all_hl();
   
+  enum{EXCLUDE_IB,INCLUDE_IB};
+  
   //loop over process
   dbvec_t tot_corr_proc[nprocess];
   for(size_t iproc=0;iproc<nprocess;iproc++)
-    tot_corr_proc[iproc]=compute_corr(iproc);
+    tot_corr_proc[iproc]=compute_corr(iproc,INCLUDE_IB);
   
   const size_t iLEP=0;
   extrapolate_corr(tot_corr_proc[iK]-tot_corr_proc[iPi],{{iK,+1.0},{iPi,-1.0}},STUDY_K_M_PI,iLEP);
-  extrapolate_corr(tot_corr_proc[iPi],{{iPi,1.0}},STUDY_PI,iLEP);
-  extrapolate_corr(tot_corr_proc[iK],{{iK,1.0}},STUDY_K,iLEP);
+  //extrapolate_corr(tot_corr_proc[iPi],{{iPi,1.0}},STUDY_PI,iLEP);
+  //extrapolate_corr(tot_corr_proc[iK],{{iK,1.0}},STUDY_K,iLEP);
   
   cout<<endl<<"Total time: "<<time(0)-start<<" s"<<endl;
   
