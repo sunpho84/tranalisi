@@ -31,7 +31,7 @@ size_t nops;
 size_t clust_size;
 size_t nconfs;
 
-//! filter an observable on the basis of a function
+//! filter an observable
 djack_t get_obs(const vector<obs_t> &obs,const index_t &ind,const size_t itime,const size_t iflav,const size_t iop,size_t iobs)
 {
   djack_t out;
@@ -43,7 +43,7 @@ djack_t get_obs(const vector<obs_t> &obs,const index_t &ind,const size_t itime,c
 	size_t iclust=iconf/clust_size;
 	out[iclust]+=obs[ind({iconf,icopy,itime,iflav,iop})][iobs];
       }
-
+  
   out.clusterize();
   
   return out;
@@ -51,7 +51,7 @@ djack_t get_obs(const vector<obs_t> &obs,const index_t &ind,const size_t itime,c
 
 int main()
 {
-  set_njacks(15);
+  set_njacks(3);
   
   set<tmeas_t> tmeas_list;
   set<flav_t> flav_list;
@@ -115,7 +115,8 @@ int main()
       cout<<"rat: "<<smart_print(rat)<<endl;
       djack_t Q=get_obs(obs_list,ind,ntimes-1,iflav,i_sigma_xy,TOT_CHARGE);
       cout<<"Q: "<<smart_print(Q)<<endl;
-      djack_t Q2=get_obs(obs_list,ind,ntimes-1,iflav,i_sigma_xy,TOT_CHARGE2);
+      size_t glb_vol=110592;
+      djack_t Q2=get_obs(obs_list,ind,ntimes-1,iflav,i_sigma_xy,TOT_CHARGE2)/glb_vol;
       cout<<"Q2: "<<smart_print(Q2)<<endl;
       djack_t C_f=Qsigma_zt/(sigma_xy*sqrt(Q2));
       cout<<"C_f: "<<smart_print(C_f)<<endl;
