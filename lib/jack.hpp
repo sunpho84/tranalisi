@@ -145,6 +145,8 @@ public:
   //! clusterize
   void clusterize(size_t clust_size=1)
   {
+    if(clust_size==0) CRASH("clust_size is zero");
+    
     //fill clusters and compute avarages
     set_to_zero((*this)[njacks]);
     for(size_t ijack=0;ijack<njacks;ijack++) (*this)[njacks]+=(*this)[ijack];
