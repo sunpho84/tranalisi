@@ -13,11 +13,11 @@
 
 #include <prop.hpp>
 
-void build_jackknifed_vert_Gamma(jprop_t &jvert,const prop_t &prop1,size_t iG,const prop_t &prop2,size_t ijack)
-{jvert[ijack]+=prop1*Gamma[iG]*Gamma[5]*prop2.adjoint()*Gamma[5];}
+void build_jackknifed_vert_Gamma(jprop_t &jvert,const prop_t &prop1,size_t iG,const prop_t &prop2,double w,size_t ijack)
+{jvert[ijack]+=w*prop1*Gamma[iG]*Gamma[5]*prop2.adjoint()*Gamma[5];}
 
 void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_props_t> &props,
-					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED)
+					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED,const djvec_t &deltam_cr)
 {
   //! help finding the bilinear/jack combo
   index_t ind({{"i",im_r_im_r_igam_ind.max()},{"ijack",njacks}});
@@ -40,21 +40,23 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
       const m_r_mom_conf_props_t &p2=props[im_r_ijack_ind({im_bw,r_bw,ijack})];
       
       //create list of operations
-      vector<tuple<jprop_t*,const prop_t*,const prop_t*>> list={{&jbil.LO[im_r_im_r_igam],&p1.LO,&p2.LO}};
+      vector<tuple<jprop_t*,const prop_t*,const prop_t*,double>> list={{&jbil.LO[im_r_im_r_igam],&p1.LO,&p2.LO,1.0}};
       if(use_QED)
-	for(auto &o : vector<tuple<jprop_t*,const prop_t*,const prop_t*>>({
-	    {&jbil.EM[im_r_im_r_igam],&p1.F,&p2.F},
-	    {&jbil.EM[im_r_im_r_igam],&p1.FF,&p2.LO},
-            {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.FF},
-            {&jbil.EM[im_r_im_r_igam],&p1.T,&p2.LO},
-            {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.T},
-            {&jbil.S[im_r_im_r_igam],&p1.S,&p2.LO},
-            {&jbil.S[im_r_im_r_igam],&p1.LO,&p2.S}}))
+	for(auto &o : vector<tuple<jprop_t*,const prop_t*,const prop_t*,double>>({
+	      {&jbil.EM[im_r_im_r_igam],&p1.F,&p2.F,1.0},
+	      {&jbil.EM[im_r_im_r_igam],&p1.FF,&p2.LO,1.0},
+	      {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.FF,1.0},
+	      {&jbil.EM[im_r_im_r_igam],&p1.T,&p2.LO,1.0},
+	      {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.T,1.0},
+	      {&jbil.EM[im_r_im_r_igam],&p1.P,&p2.LO,-deltam_cr[im_fw][ijack]},
+	      {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.P,-deltam_cr[im_bw][ijack]},
+	      {&jbil.S[im_r_im_r_igam],&p1.S,&p2.LO,1.0},
+	      {&jbil.S[im_r_im_r_igam],&p1.LO,&p2.S,1.0}}))
 	  list.push_back(o);
       
       //create the vertex
       for(auto &o : list)
-	build_jackknifed_vert_Gamma(*get<0>(o),*get<1>(o),iG,*get<2>(o),ijack);
+	build_jackknifed_vert_Gamma(*get<0>(o),*get<1>(o),iG,*get<2>(o),get<3>(o),ijack);
     }
 }
 

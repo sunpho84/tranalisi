@@ -271,7 +271,7 @@ int main(int narg,char **arg)
 	    build_props_time.stop();
 	    
 	    build_verts_time.start();
-	    build_all_mr_gbil_jackknifed_verts(jverts,props,im_r_im_r_igam_ind,im_r_ijack_ind,use_QED);
+	    build_all_mr_gbil_jackknifed_verts(jverts,props,im_r_im_r_igam_ind,im_r_ijack_ind,use_QED,deltam_cr);
 	    build_verts_time.stop();
 	  }
       
