@@ -26,10 +26,12 @@ string suff_hit="";
 
 index_t conf_ind; //!< index of a conf given ijack and i_in_clust
 index_t im_r_ind; //!< index of im,r
+index_t imom_ind; //!< index of imom (trivial)
 index_t r_imom_ind; //!< index of r,imom combo
 index_t im_r_imom_ind; //!< index of im,r,imom combo
-index_t r_ind_imom_ind; //!< index of r,imom combo
-index_t im_r_ind_imom_ind; //!< index of im,r,imom combo
+index_t indep_imom_ind; //!< index of indep imom (trivial)
+index_t r_indep_imom_ind; //!< index of r,indep imom combo
+index_t im_r_indep_imom_ind; //!< index of im,r,indep imom combo
 index_t i_in_clust_ihit_ind; //!< index of i_in_clust,ihit
 
 //! prepare a list of reading task, to be executed in parallel
@@ -69,6 +71,7 @@ vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,c
 		  size_t iconf=conf_ind({ijack,i_in_clust});
 		  string path=combine("out/%04zu/fft_",conf_list[iconf])+get_prop_tag(im,r,get<1>(psc))+combine(suff_hit.c_str(),ihit);
 		  read_tasks[i_i_in_clust_ihit].push_back(incapsulate_task(read_prop,get<0>(psc),raw_file_t(path,"r"),get<2>(psc)));
+		  //cout<<"Binding "<<im_r_ijack<<"=(im="<<im<<"r"<<r<<"ijack"<<ijack<<") to file "<<path<<endl;
 		}
 	  }
     }
@@ -108,7 +111,6 @@ int main(int narg,char **arg)
   stopwatch_t &build_verts_time=ts.add("build verts");
   stopwatch_t &clust_time=ts.add("clusterize");
   stopwatch_t &invert_time=ts.add("invert the props");
-  stopwatch_t &finish_EM_time=ts.add("finish EM");
   stopwatch_t &proj_time=ts.add("project bilinears");
   stopwatch_t &Zq_time=ts.add("compute Zq");
   stopwatch_t &deltam_cr_time=ts.add("compute deltam_cr");
@@ -140,6 +142,7 @@ int main(int narg,char **arg)
   nr=input.read<double>("Nr");
   
   size_t im_sea=input.read<double>("ImSea"); //!< index of sea mass
+  cout<<"ImSea: "<<im_sea<<endl;
   
   const string mom_list_path=input.read<string>("MomList"); //!< list of momenta
   const size_t ext_njacks=input.read<size_t>("NJacks"); //!< number of jacks
@@ -194,8 +197,8 @@ int main(int narg,char **arg)
   djvec_t deltam_cr(nm);
   for(size_t im=0;im<nm;im++)
     {
-      deltam_cr[im]=compute_deltam_cr(conf_list,tmin,tmax,im);
-      cout<<"Deltam cr["<<im<<"]: "<<smart_print(deltam_cr[im])<<endl;
+      deltam_cr[im]=compute_deltam_cr(conf_list,tmin,tmax,im,nr);
+      cout<<"Deltam cr["<<im<<"]: "<<deltam_cr[im]<<endl;
     }
   deltam_cr_time.stop();
   
@@ -203,15 +206,17 @@ int main(int narg,char **arg)
   
   conf_ind.set_ranges({{"ijack",njacks},{"i_in_clust",clust_size}});
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
+  imom_ind.set_ranges({{"imom",imoms.size()}});
   r_imom_ind.set_ranges({{"r",nr},{"imom",imoms.size()}});
   im_r_imom_ind.set_ranges({{"m",nm},{"r",nr},{"imom",imoms.size()}});
-  r_ind_imom_ind.set_ranges({{"r",nr},{"ind_mom",equiv_imoms.size()}});
-  im_r_ind_imom_ind.set_ranges({{"m",nm},{"r",nr},{"ind_mom",equiv_imoms.size()}});
+  indep_imom_ind.set_ranges({{"indep_mom",equiv_imoms.size()}});
+  r_indep_imom_ind.set_ranges({{"r",nr},{"indep_mom",equiv_imoms.size()}});
+  im_r_indep_imom_ind.set_ranges({{"m",nm},{"r",nr},{"indep_mom",equiv_imoms.size()}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
   const index_t im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
   const index_t r_r_iZbil_ind({{"r",nr},{"r",nr},{"iZbil",nZbil}});
   const index_t im_r_im_r_iZbil_ind=im_r_ind*im_r_ind*index_t({{"iZbil",nZbil}});
-  const index_t r_r_iZbil_imom_ind=r_r_iZbil_ind*index_t({{"imom",imoms.size()}});
+  const index_t iZbil_imom_ind({{"iZbil",nZbil},{"imom",imoms.size()}});
   const index_t im_r_im_r_iZbil_imom_ind=im_r_im_r_iZbil_ind*index_t({{"imom",imoms.size()}});
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   const index_t im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});
@@ -222,34 +227,35 @@ int main(int narg,char **arg)
   djvec_t Zq_sig1_EM_allmoms;
   if(use_QED) Zq_sig1_EM_allmoms.resize(im_r_imom_ind.max());
   
-  //Subtracted Zq, with and without EM, all moms
-  djvec_t Zq_chir_allmoms(r_imom_ind.max());
-  djvec_t Zq_sig1_chir_allmoms(r_imom_ind.max());
+  //Subtracted Zq, with and without EM, all moms, averaged r
+  djvec_t Zq_chir_allmoms(imoms.size());
+  djvec_t Zq_sig1_chir_allmoms(imoms.size());
   djvec_t Zq_sig1_EM_chir_allmoms;
-  if(use_QED) Zq_sig1_EM_chir_allmoms.resize(r_imom_ind.max());
+  if(use_QED) Zq_sig1_EM_chir_allmoms.resize(imoms.size());
   
   //! task to chiral extrapolate
   using Z_task_t=tuple<djvec_t*,djvec_t*,string>;
   
   //! list of task to chirally extrapolate Zq
-  vector<Z_task_t> Zq_tasks{
+  vector<Z_task_t> Zq_chirextr_tasks{
     {&Zq_allmoms,&Zq_chir_allmoms,string("Zq")},
     {&Zq_sig1_allmoms,&Zq_sig1_chir_allmoms,"Zq_sig1"}};
-  if(use_QED) Zq_tasks.push_back(make_tuple(&Zq_sig1_EM_allmoms,&Zq_sig1_EM_chir_allmoms,"Zq_sig1_EM"));
+  if(use_QED) Zq_chirextr_tasks.push_back(make_tuple(&Zq_sig1_EM_allmoms,&Zq_sig1_EM_chir_allmoms,"Zq_sig1_EM"));
   
   djvec_t Zbil_allmoms(im_r_im_r_iZbil_imom_ind.max());
-  djvec_t Zbil_chir_allmoms(r_r_iZbil_imom_ind.max());
+  djvec_t Zbil_chir_allmoms(iZbil_imom_ind.max());
   djvec_t Zbil_QED_allmoms(im_r_im_r_iZbil_imom_ind.max());
-  djvec_t Zbil_QED_chir_allmoms(r_r_iZbil_imom_ind.max());
+  djvec_t Zbil_QED_chir_allmoms(iZbil_imom_ind.max());
   
   vector<m_r_mom_conf_props_t> props; //!< store props for individual conf
   
   vector<task_list_t> read_tasks=prepare_read_prop_taks(props,conf_list);
-  vector<jm_r_mom_props_t> jprops(im_r_ind.max()); //!< jackknived props
-  jbil_vert_t jverts(im_r_im_r_igam_ind.max(),use_QED); //!< jackknived vertex
   
   for(size_t imom=0;imom<imoms.size();imom++)
     {
+      vector<jm_r_mom_props_t> jprops(im_r_ind.max()); //!< jackknived props
+      jbil_vert_t jverts(im_r_im_r_igam_ind.max(),use_QED); //!< jackknived vertex
+      
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
@@ -261,7 +267,7 @@ int main(int narg,char **arg)
 	    
 	    //build all props
 	    build_props_time.start();
-	    build_all_mr_jackknifed_props(jprops,props,use_QED,im_r_ind);
+	    build_all_mr_jackknifed_props(jprops,props,use_QED,im_r_ind,deltam_cr);
 	    build_props_time.stop();
 	    
 	    build_verts_time.start();
@@ -275,29 +281,21 @@ int main(int narg,char **arg)
       jverts.clusterize_all(use_QED,clust_size);
       clust_time.stop();
       
-      //finish EM
-      if(use_QED)
-	{
-	  finish_EM_time.start();
-	  finish_jverts_EM(jverts,deltam_cr[im_sea]);
-	  finish_jprops_EM(jprops,deltam_cr[im_sea]);
-	  finish_EM_time.stop();
-	}
-      
       vector<jprop_t> jprop_inv(im_r_ind.max()); //!< inverse propagator
       vector<jprop_t> jprop_EM_inv(im_r_ind.max()); //!< inverse propagator with em insertion
 #pragma omp parallel for reduction(+:invert_time,Zq_time)
       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
 	{
 	  //decript indices
-	  vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
-	  size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
-	  size_t im_r=im_r_ind({im,r});
-	  size_t im_r_imom=im_r_imom_ind({im,r,imom});
+	  const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
+	  const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
+	  const size_t im_r=im_r_ind({im,r});
+	  const size_t im_r_imom=im_r_imom_ind({im,r,imom});
 	  
 	  //compute inverse
 	  invert_time.start();
 	  prop_t prop_inv=jprops[im_r].LO[ijack].inverse();
+	  //if(im_r_ijack==0) cout<<jprops[im_r].LO[ijack](0,0)<<endl;
 	  jprop_inv[im_r][ijack]=prop_inv;
 	  invert_time.stop();
 	  
@@ -319,26 +317,44 @@ int main(int narg,char **arg)
 	      Zq_sig1_EM_allmoms[im_r_imom][ijack]=-compute_Zq_sig1(prop_EM_inv,imom);
 	      Zq_time.stop();
 	    }
+	  
+	  //if(ijack==0) cout<<"im_r_imom: "<<im_r_imom<<"=(im"<<im<<"r"<<r<<"imom"<<imom<<"): "<<Zq_sig1_allmoms[im_r_imom][0]<<endl;
 	}
       
       //extrapolate to chiral limit Zq
-      for(size_t r=0;r<nr;r++)
-	for(auto & p : Zq_tasks)
-	  {
-	    djvec_t y(nm);
-	    const djvec_t &Z=(*get<0>(p));
-	    djvec_t &Z_chir=(*get<1>(p));
-	    const string &tag=get<2>(p);
-	    
-	    //slice m
-	    double am_max=*max_element(am.begin(),am.end())*1.1;
-	    for(size_t im=0;im<nm;im++) y[im]=Z[im_r_imom_ind({im,r,imom})];
-	    //fit and write the result
-	    djvec_t coeffs=poly_fit(am,y,1,am_min,am_max);
-	    if(imom%print_each_mom==0) write_poly_fit_plot("plots/chir_extr_"+tag+"_r_"+to_string(r)+"_mom_"+to_string(imom)+".xmg",0,am_max,coeffs,am,y);
-	    //extrapolated value
-	    Z_chir[r_imom_ind({r,imom})]=coeffs[0];
-	  }
+      for(auto & p : Zq_chirextr_tasks)
+	{
+	  djvec_t y(nm);
+	  const djvec_t &Zq=(*get<0>(p));
+	  djvec_t &Zq_chir=(*get<1>(p));
+	  const string &tag=get<2>(p);
+	  
+	  //slice m
+	  double am_max=*max_element(am.begin(),am.end())*1.1;
+	  for(size_t im=0;im<nm;im++)
+	    {
+	      //averages r if both asked
+	      y[im]=0.0;
+	      for(size_t r=0;r<nr;r++)
+		{
+		  size_t i=im_r_imom_ind({im,r,imom});
+		  y[im]+=Zq[i]/nr;
+		  cout<<tag<<"["<<i<<"=(im"<<im<<"r"<<r<<"imom"<<imom<<")], mom "<<imoms[imom].p(L).norm2()<<": "<<Zq[i].ave_err()<<endl;
+		}
+	      cout<<tag<<"[im"<<im<<"imom"<<imom<<"]: "<<y[im][0]<<" "<<y[im].err()<<endl;
+	    }
+	  
+	  //fit and write the result
+	  djvec_t coeffs=poly_fit(am,y,1,am_min,am_max);
+	  if(imom%print_each_mom==0)
+	    {
+	      grace_file_t plot("plots/chir_extr_"+tag+"_mom_"+to_string(imom)+".xmg");
+	      write_fit_plot(plot,0,am_max,bind(poly_eval<djvec_t>,coeffs,_1),am,y);
+	      plot.write_ave_err(0,coeffs[0].ave_err());
+	    }
+	  //extrapolated value
+	  Zq_chir[imom]=coeffs[0];
+	}
       
       proj_time.start();
       djvec_t pr_bil_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_inv,im_r_ind);
@@ -346,61 +362,60 @@ int main(int narg,char **arg)
       vector<Z_task_t> pr_bil_tasks{{&pr_bil_allmoms,&pr_bil_chir_allmoms,string("pr_bil")}};
       
       //QED
-      djvec_t pr_bil_EM_allmoms,pr_bil_a_allmoms,pr_bil_b_allmoms;
-      djvec_t pr_bil_EM_chir_allmoms(r_r_iZbil_ind.max()),pr_bil_a_chir_allmoms(r_r_iZbil_ind.max()),pr_bil_b_chir_allmoms(r_r_iZbil_ind.max());
+      djvec_t pr_bil_QED_allmoms;
+      djvec_t pr_bil_QED_chir_allmoms(nZbil);
       if(use_QED)
 	{
-	  pr_bil_EM_allmoms=compute_proj_bil(jprop_inv,jverts.EM,jprop_inv,im_r_ind);
-	  pr_bil_a_allmoms=compute_proj_bil(jprop_EM_inv,jverts.LO,jprop_inv,im_r_ind);
-	  pr_bil_b_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_EM_inv,im_r_ind);
+	  djvec_t pr_bil_EM_allmoms=compute_proj_bil(jprop_inv,jverts.EM,jprop_inv,im_r_ind);
+	  djvec_t pr_bil_a_allmoms=compute_proj_bil(jprop_EM_inv,jverts.LO,jprop_inv,im_r_ind);
+	  djvec_t pr_bil_b_allmoms=compute_proj_bil(jprop_inv,jverts.LO,jprop_EM_inv,im_r_ind);
+	  pr_bil_QED_allmoms=pr_bil_a_allmoms+pr_bil_b_allmoms-pr_bil_EM_allmoms;
 	  
-	  pr_bil_tasks.push_back(make_tuple(&pr_bil_EM_allmoms,&pr_bil_EM_chir_allmoms,string("pr_bil_EM")));
-	  pr_bil_tasks.push_back(make_tuple(&pr_bil_a_allmoms,&pr_bil_a_chir_allmoms,string("pr_bil_a")));
-	  pr_bil_tasks.push_back(make_tuple(&pr_bil_b_allmoms,&pr_bil_b_chir_allmoms,string("pr_bil_b")));
+	  pr_bil_tasks.push_back(make_tuple(&pr_bil_QED_allmoms,&pr_bil_QED_chir_allmoms,string("pr_bil_QED")));
 	}
       proj_time.stop();
       
       //extrapolate to chiral limit the projected bilinears
-      for(size_t r1=0;r1<nr;r1++)
-	for(size_t r2=0;r2<nr;r2++)
-	  for(size_t iZbil=0;iZbil<nZbil;iZbil++)
-	    for(auto & p : pr_bil_tasks)
+      for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+	for(auto & p : pr_bil_tasks)
+	  {
+	    const djvec_t &pr=(*get<0>(p));
+	    djvec_t &pr_chir=(*get<1>(p));
+	    const string &tag=get<2>(p);
+	    
+	    //check if we need to subtract the pole
+	    const bool sub_pole=(iZbil==iZS or iZbil==iZP);
+	    
+	    //slice m and fit it
+	    djvec_t y(nm*(nm+1)/2),y_plot(nm*(nm+1)/2);
+	    vector<double> x(nm*(nm+1)/2);
+	    int i=0;
+	    for(size_t im1=0;im1<nm;im1++)
+	      for(size_t im2=im1;im2<nm;im2++)
+		{
+		  //compute mass sum
+		  x[i]=am[im1]+am[im2];
+		  //compute y and y_plot
+		  y_plot[i]=0.0;
+		  for(size_t r=0;r<nr;r++) y_plot[i]+=pr[im_r_im_r_iZbil_ind({im1,r,im2,r,iZbil})]/nr;
+		  
+		  if(sub_pole) y[i]=x[i]*y_plot[i];
+		  else         y[i]=y_plot[i];
+		  //increment
+		  i++;
+		}
+	    
+	    //fit and write the result
+	    djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min,2.0*am_max);
+	    if(imom%print_each_mom==0)
 	      {
-		const djvec_t &pr=(*get<0>(p));
-		djvec_t &pr_chir=(*get<1>(p));
-		const string &tag=get<2>(p);
-		
-		//check if we need to subtract the pole
-		const bool sub_pole=(iZbil==iZS or iZbil==iZP);
-		
-		//slice m and fit it
-		djvec_t y(nm*(nm+1)/2),y_plot(nm*(nm+1)/2);
-		vector<double> x(nm*(nm+1)/2);
-		int i=0;
-		for(size_t im1=0;im1<nm;im1++)
-		  for(size_t im2=im1;im2<nm;im2++)
-		    {
-		      //compute mass sum
-		      x[i]=am[im1]+am[im2];
-		      //compute y and y_plot
-		      y_plot[i]=pr[im_r_im_r_iZbil_ind({im1,r1,im2,r2,iZbil})];
-		      if(sub_pole) y[i]=x[i]*y_plot[i];
-		      else         y[i]=y_plot[i];
-		      //increment
-		      i++;
-		    }
-		
-		//fit and write the result
-		djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min,2.0*am_max);
-		if(imom%print_each_mom==0)
-		  {
-		    grace_file_t plot("plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+"_mom_"+to_string(imom)+".xmg");
-		    write_fit_plot(plot,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
-		    plot.write_polygon([&coeffs,sub_pole](double x)->djack_t{return coeffs[sub_pole?1:0];},2*am_min,2*am_max);
-		  }
-		//extrapolated value
-		pr_chir[r_r_iZbil_ind({r1,r2,iZbil})]=coeffs[sub_pole?1:0];
+		grace_file_t plot("plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_mom_"+to_string(imom)+".xmg");
+		write_fit_plot(plot,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		plot.write_ave_err(0.0,coeffs[sub_pole?1:0].ave_err());
 	      }
+	    //extrapolated value
+	    pr_chir[iZbil]=coeffs[sub_pole?1:0];
+	  }
       
       //build Z
       for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
@@ -420,31 +435,25 @@ int main(int narg,char **arg)
 	  if(use_QED)
 	    {
 	      Zbil_QED_allmoms[im_r_im_r_iZbil_imom]=
-		(pr_bil_a_allmoms[im_r_im_r_iZbil]+pr_bil_b_allmoms[im_r_im_r_iZbil]-pr_bil_EM_allmoms[im_r_im_r_iZbil])/pr_bil_allmoms[im_r_im_r_iZbil]+
+		pr_bil_QED_allmoms[im_r_im_r_iZbil]/pr_bil_allmoms[im_r_im_r_iZbil]+
 		(Zq_sig1_EM_allmoms[im_r1_imom]/Zq_sig1_allmoms[im_r1_imom]+Zq_sig1_EM_allmoms[im_r2_imom]/Zq_sig1_allmoms[im_r2_imom])/2.0;
 	    }
 	}
       
       //build Z in the chiral limit
-      for(size_t r_r_iZbil=0;r_r_iZbil<r_r_iZbil_ind.max();r_r_iZbil++)
+      for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	{
-	  const vector<size_t> r_r_iZbil_comp=r_r_iZbil_ind(r_r_iZbil);
-	  const size_t r1=r_r_iZbil_comp[0],r2=r_r_iZbil_comp[1];
-	  const size_t r_r_iZbil_imom=r_r_iZbil_imom_ind(concat(r_r_iZbil_comp,imom));
-	  const size_t r1_imom=r_imom_ind({r1,imom});
-	  const size_t r2_imom=r_imom_ind({r2,imom});
-	  
-	  Zbil_chir_allmoms[r_r_iZbil_imom]=
-	    sqrt(Zq_chir_allmoms[r1_imom]*Zq_allmoms[r2_imom])/pr_bil_chir_allmoms[r_r_iZbil];
+	  const size_t iZbil_imom=iZbil_imom_ind({iZbil,imom});
+	  Zbil_chir_allmoms[iZbil_imom]=
+	    sqrt(Zq_chir_allmoms[imom]*Zq_chir_allmoms[imom])/pr_bil_chir_allmoms[iZbil];
 	  
 	  if(use_QED)
 	    {
-	      Zbil_QED_chir_allmoms[r_r_iZbil_imom]=
-		(pr_bil_a_chir_allmoms[r_r_iZbil]+pr_bil_b_chir_allmoms[r_r_iZbil]-pr_bil_EM_chir_allmoms[r_r_iZbil])/pr_bil_chir_allmoms[r_r_iZbil]+
-		(Zq_sig1_EM_chir_allmoms[r1_imom]/Zq_sig1_chir_allmoms[r1_imom]+Zq_sig1_EM_chir_allmoms[r2_imom]/Zq_sig1_chir_allmoms[r2_imom])/2.0;
+	      Zbil_QED_chir_allmoms[iZbil_imom]=
+		pr_bil_QED_chir_allmoms[iZbil]/pr_bil_chir_allmoms[iZbil]+
+		    (Zq_sig1_EM_chir_allmoms[imom]/Zq_sig1_chir_allmoms[imom]+Zq_sig1_EM_chir_allmoms[imom]/Zq_sig1_chir_allmoms[imom])/2.0;
 	    }
 	}
-      
     }
   
   // //compute Zq, Zq_sig1 and Zbil for all moms
@@ -465,20 +474,20 @@ int main(int narg,char **arg)
   // 	pr_bil_allmoms_sub[iZbil][imom]-=g2tilde*pr_bil_a2(act,mom,L,iZbil);
   //   }
   
-  const index_t r_r_iZbil_ind_imom_ind=r_r_iZbil_ind*index_t({{"ind_mom",equiv_imoms.size()}});
-  const index_t im_r_im_r_iZbil_ind_imom_ind=im_r_im_r_iZbil_ind*index_t({{"ind_mom",equiv_imoms.size()}});
+  const index_t iZbil_indep_imom_ind({{"Zbil",nZbil},{"indep_mom",equiv_imoms.size()}});
+  const index_t im_r_im_r_iZbil_indep_imom_ind=im_r_im_r_iZbil_ind*index_t({{"indep_mom",equiv_imoms.size()}});
   
   //average equiv moms
-  const djvec_t Zq=average_equiv_moms(Zq_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
-  const djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms,im_r_ind_imom_ind,im_r_imom_ind);
-  djvec_t Zbil=average_equiv_moms(Zbil_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind);
-  djvec_t Zbil_QED=use_QED?average_equiv_moms(Zbil_QED_allmoms,im_r_im_r_iZbil_ind_imom_ind,im_r_im_r_iZbil_imom_ind):djvec_t();
+  djvec_t Zq=average_equiv_moms(Zq_allmoms,im_r_indep_imom_ind,im_r_imom_ind);
+  djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms,im_r_indep_imom_ind,im_r_imom_ind);
+  djvec_t Zbil=average_equiv_moms(Zbil_allmoms,im_r_im_r_iZbil_indep_imom_ind,im_r_im_r_iZbil_imom_ind);
+  djvec_t Zbil_QED=use_QED?average_equiv_moms(Zbil_QED_allmoms,im_r_im_r_iZbil_indep_imom_ind,im_r_im_r_iZbil_imom_ind):djvec_t();
   
   //chirally extrapolated ones
-  const djvec_t Zq_chir=average_equiv_moms(Zq_chir_allmoms,r_ind_imom_ind,r_imom_ind);
-  const djvec_t Zq_sig1_chir=average_equiv_moms(Zq_sig1_chir_allmoms,r_ind_imom_ind,r_imom_ind);
-  djvec_t Zbil_chir=average_equiv_moms(Zbil_chir_allmoms,r_r_iZbil_ind_imom_ind,r_r_iZbil_imom_ind);
-  djvec_t Zbil_QED_chir=use_QED?average_equiv_moms(Zbil_QED_chir_allmoms,r_r_iZbil_ind_imom_ind,r_r_iZbil_imom_ind):djvec_t();
+  djvec_t Zq_chir=average_equiv_moms(Zq_chir_allmoms,indep_imom_ind,imom_ind);
+  djvec_t Zq_sig1_chir=average_equiv_moms(Zq_sig1_chir_allmoms,indep_imom_ind,imom_ind);
+  djvec_t Zbil_chir=average_equiv_moms(Zbil_chir_allmoms,iZbil_indep_imom_ind,iZbil_imom_ind);
+  djvec_t Zbil_QED_chir=use_QED?average_equiv_moms(Zbil_QED_chir_allmoms,iZbil_indep_imom_ind,iZbil_imom_ind):djvec_t();
   
   // djvec_t Zq_sub=average_equiv_moms(Zq_allmoms_sub);
   // djvec_t Zq_sig1=average_equiv_moms(Zq_sig1_allmoms);
@@ -524,13 +533,19 @@ int main(int narg,char **arg)
 
   // //! list of p2tile
   // vector<double> p2tilde(equiv_imoms.size());
-  // for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
+  // for(size_t indep_imom=0;indep_imom<equiv_imoms.size();indep_imom++)
   //   {
-  //     size_t imom=equiv_imoms[ind_imom].first;
+  //     size_t imom=equiv_imoms[indep_imom].first;
   //     p2tilde[imom]=imoms[imom].p(L).tilde().norm2();
   //   }
-
-  for(auto &p : Zq_tasks)
+  
+  //! list of task to chirally extrapolate Zq
+  vector<Z_task_t> Zq_plot_tasks{
+    {&Zq,&Zq_chir,string("Zq")},
+    {&Zq_sig1,&Zq_sig1_chir,"Zq_sig1"}};
+  //if(use_QED) Zq_plot_tasks.push_back(make_tuple(&Zq_sig1_EM,&Zq_sig1_EM_chir,"Zq_sig1_EM"));
+  
+  for(auto &p : Zq_plot_tasks)
     {
       //decript the tuple
       const djvec_t &Zq=(*get<0>(p));
@@ -547,15 +562,15 @@ int main(int narg,char **arg)
 	  //m
 	  for(size_t im=0;im<=nm;im++)
 	    {
-	      for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
-		out.write_ave_err(imoms[equiv_imoms[ind_imom].first].p(L).tilde().norm2(),
-				  ((im==nm)?Zq_chir[r_ind_imom_ind({r,ind_imom})]:Zq[im_r_ind_imom_ind({im,r,ind_imom})]).ave_err());
+	      for(size_t indep_imom=0;indep_imom<equiv_imoms.size();indep_imom++)
+		out.write_ave_err(imoms[equiv_imoms[indep_imom].first].p(L).tilde().norm2(),
+				  ((im==nm)?Zq_chir[indep_imom]:Zq[im_r_indep_imom_ind({im,r,indep_imom})]).ave_err());
 	      out.new_data_set();
 	    }
 	}
     }
   
-  //! list of task to chiral extrapolate bilinears
+  //! list of task to print the chiral extrapolate bilinears
   vector<Z_task_t> Zbil_tasks{{&Zbil,&Zbil_chir,string("Zbil")}};
   if(use_QED) Zbil_tasks.push_back(make_tuple(&Zbil_QED,&Zbil_QED_chir,"Zbil_EM"));
   
@@ -566,29 +581,29 @@ int main(int narg,char **arg)
       const djvec_t &Z_chir=(*get<1>(p));
       const string &tag=get<2>(p);
       
-      for(size_t r_r_iZbil=0;r_r_iZbil<r_r_iZbil_ind.max();r_r_iZbil++)
+      for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	{
-	  //decript r1, r2 and the iZbil
-	  const vector<size_t> r_r_iZbil_comp=r_r_iZbil_ind(r_r_iZbil);
-	  const size_t r1=r_r_iZbil_comp[0],r2=r_r_iZbil_comp[1];
-	  const size_t iZbil=r_r_iZbil_comp[2];
-	  
 	  //open the file
-	  grace_file_t out("plots/"+tag+"_Z"+Zbil_tag[iZbil]+"_r1_"+to_string(r1)+"_r2_"+to_string(r2)+".xmg");
+	  grace_file_t out("plots/"+tag+"_Z"+Zbil_tag[iZbil]+".xmg");
 	  out.new_data_set();
 	  
 	  //write mass by mass, only half of the combos
 	  for(size_t im1=0;im1<nm;im1++)
 	    for(size_t im2=im1;im2<nm;im2++)
 	      {
-		for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
-		  out.write_ave_err(imoms[equiv_imoms[ind_imom].first].p(L).tilde().norm2(),Z[im_r_im_r_iZbil_ind_imom_ind({im1,r1,im2,r2,iZbil,ind_imom})].ave_err());
+		for(size_t indep_imom=0;indep_imom<equiv_imoms.size();indep_imom++)
+		  {
+		    djack_t y;
+		    y=0.0;
+		    for(size_t r=0;r<nr;r++) y+=Z[im_r_im_r_iZbil_indep_imom_ind({im1,r,im2,r,iZbil,indep_imom})]/nr;
+		    
+		    out.write_ave_err(imoms[equiv_imoms[indep_imom].first].p(L).tilde().norm2(),y.ave_err());
+		  }
 		out.new_data_set();
 	      }
 	  //write chiral extrap
-	  for(size_t ind_imom=0;ind_imom<equiv_imoms.size();ind_imom++)
-	    out.write_ave_err(imoms[equiv_imoms[ind_imom].first].p(L).tilde().norm2(),Z_chir[r_r_iZbil_ind_imom_ind({r1,r2,iZbil,ind_imom})].ave_err());
-	  out.new_data_set();
+	  for(size_t indep_imom=0;indep_imom<equiv_imoms.size();indep_imom++)
+	    out.write_ave_err(imoms[equiv_imoms[indep_imom].first].p(L).tilde().norm2(),Z_chir[iZbil_indep_imom_ind({iZbil,indep_imom})].ave_err());
 	}
     }
   

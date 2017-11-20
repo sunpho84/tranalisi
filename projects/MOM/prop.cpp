@@ -45,7 +45,7 @@ vjprop_t get_all_mr_props_inv(const vjprop_t &jprop)
   return jprop_inv;
 }
 
-void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ind)
+void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ind,const djvec_t &deltam_cr)
 {
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   
@@ -62,8 +62,8 @@ void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector
       
       j.LO[ijack]+=p.LO;
       if(set_QED)
-	for(auto &jp_p : vector<pair<jprop_t*,const prop_t*>>({{&j.EM,&p.FF},{&j.EM,&p.T},{&j.P,&p.P},{&j.S,&p.S}}))
-	  (*jp_p.first)[ijack]+=*jp_p.second;
+	for(auto &jp_p : vector<tuple<jprop_t*,const prop_t*,double>>({{&j.EM,&p.FF,1.0},{&j.EM,&p.T,1.0},{&j.EM,&p.P,-deltam_cr[im][ijack]},{&j.S,&p.S,1.0}}))
+	  (*get<0>(jp_p))[ijack]+=*get<1>(jp_p)*get<2>(jp_p);
     }
 }
 
@@ -72,18 +72,6 @@ void clusterize_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,bool us
 #pragma omp parallel for
   for(size_t iprop=0;iprop<jprops.size();iprop++)
     jprops[iprop].clusterize_all_mr_props(use_QED,clust_size);
-}
-
-void finish_jprops_EM(vector<jm_r_mom_props_t> &jprops,const djack_t &deltam_cr)
-{
-  index_t ind({{"iprop",jprops.size()},{"ijack",njacks+1}});
-#pragma omp parallel for
-  for(size_t i=0;i<ind.max();i++)
-    {
-      const vector<size_t> comp=ind(i);
-      const size_t iprop=comp[0],ijack=comp[1];
-      jprops[iprop].EM[ijack]-=jprops[iprop].P[ijack]*deltam_cr[ijack];
-    }
 }
 
 double m0_of_kappa(double kappa)

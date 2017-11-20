@@ -69,7 +69,7 @@ public:
 };
 
 //! add the prop of a given conf on the jackknife
-void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ind);
+void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ind,const djvec_t &deltam_cr);
 
 //! compute the inverse of all mr props
 vjprop_t get_all_mr_props_inv(const vjprop_t &jprop);
@@ -79,9 +79,6 @@ void clusterize_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,bool us
 
 //! return the propagator at maximal twist
 prop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r);
-
-//! finish computing em prop
-void finish_jprops_EM(vector<jm_r_mom_props_t> &jprops,const djack_t &deltam_cr);
 
 #undef EXTERN_PROP
 #undef INIT_TO

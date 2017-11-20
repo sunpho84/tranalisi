@@ -48,8 +48,6 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
             {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.FF},
             {&jbil.EM[im_r_im_r_igam],&p1.T,&p2.LO},
             {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.T},
-            {&jbil.P[im_r_im_r_igam],&p1.P,&p2.LO},
-            {&jbil.P[im_r_im_r_igam],&p1.LO,&p2.P},
             {&jbil.S[im_r_im_r_igam],&p1.S,&p2.LO},
             {&jbil.S[im_r_im_r_igam],&p1.LO,&p2.S}}))
 	  list.push_back(o);
@@ -58,15 +56,6 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
       for(auto &o : list)
 	build_jackknifed_vert_Gamma(*get<0>(o),*get<1>(o),iG,*get<2>(o),ijack);
     }
-}
-
-void finish_jverts_EM(jbil_vert_t &jverts,const djack_t &deltam_cr)
-{
-  auto &vem=jverts.EM,&vP=jverts.P;
-#pragma omp parallel for
-  for(size_t i=0;i<vem.size();i++)
-    for(size_t ijack=0;ijack<=njacks;ijack++)
-    vem[i][ijack]-=vP[i][ijack]*deltam_cr[ijack];
 }
 
 djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jverts,const vjprop_t &jprop_inv2,const index_t &im_r_ind)
