@@ -644,8 +644,7 @@ djvec_t read_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t q
 	  djvec_t corr=read_djvec(ens.path+"/data/corr_hl",T,ic);
 	  
 	  out+=orie_par[orie]*corr*r2_weight[r2]*rl_weight[rl];
-	  n+=abs(r2_weight[r2]);
-	  n+=abs(rl_weight[rl]);
+	  n+=abs(r2_weight[r2]*rl_weight[rl]);
 	  
 	  // if(name!="")
 	  //   {
@@ -713,7 +712,7 @@ valarray<djvec_t> load_and_correct_hl(size_t iproc,size_t iw,size_t iproj,const 
 }
 
 //! load all correlation hl
-vector<djvec_t> jLO_A_bare,jQED_V_bare,jQED_A_bare;
+vector<djvec_t> jLO_A_bare,jQED_V_bare,jQED_A_bare,jQED_qA0_lV0_bare,jQED_qV0_lV0_bare,jQED_qAi_lVi_bare,jQED_qVi_lVi_bare;
 index_t ind_ens_proc;
 void load_all_hl(const array<int,2> &r2_weight={1,1},const array<int,2> rl_weight={1,1})
 {
@@ -722,6 +721,11 @@ void load_all_hl(const array<int,2> &r2_weight={1,1},const array<int,2> rl_weigh
   jLO_A_bare.resize(nens_proc);
   jQED_V_bare.resize(nens_proc);
   jQED_A_bare.resize(nens_proc);
+  /////////////////test Z_fact//////////////
+  jQED_qA0_lV0_bare.resize(nens_proc);
+  jQED_qV0_lV0_bare.resize(nens_proc);
+  jQED_qAi_lVi_bare.resize(nens_proc);
+  jQED_qVi_lVi_bare.resize(nens_proc);
   
   const size_t nw=9;
   ind_hl_corr.set_ranges({{"NProcess",nprocess_max},{"NQIns",nqins},{"NRev",nrev},{"Nr2",nr},{"NOrie",norie},{"Nrlep",nrlep},{"NWeak",nw},{"NProj",nproj},{"RI",2}});
@@ -755,6 +759,11 @@ void load_all_hl(const array<int,2> &r2_weight={1,1},const array<int,2> rl_weigh
 	  double eq1=QED_mes_pars[iQED_mes].eq1,eq2=QED_mes_pars[iQED_mes].eq2;
 	  jQED_V_bare[ind]=el*(eq1*qV_lV_pV0_allins[1]+eq2*qV_lV_pV0_allins[2]);
 	  jQED_A_bare[ind]=el*(eq1*qA_lV_pV0_allins[1]+eq2*qA_lV_pV0_allins[2]);
+	  /////////////////test Z_fact//////////////
+	  jQED_qA0_lV0_bare[ind]=el*(eq1*qA0_lV0_pV0_allins[1]+eq2*qA0_lV0_pV0_allins[2]);
+	  jQED_qV0_lV0_bare[ind]=el*(eq1*qV0_lV0_pV0_allins[1]+eq2*qV0_lV0_pV0_allins[2]);
+	  jQED_qAi_lVi_bare[ind]=el*(eq1*qAi_lVi_pV0_allins[1]+eq2*qAi_lVi_pV0_allins[2]);
+	  jQED_qVi_lVi_bare[ind]=el*(eq1*qVi_lVi_pV0_allins[1]+eq2*qVi_lVi_pV0_allins[2]);
 	}
     }
 }
@@ -792,7 +801,7 @@ T naive_massless_quark_energy(const T &pi)
 }
 
 template <class T>
-T leptonic_trace(const T &pi,const T &mass)
+T ratio_Wreg_leptonic_traces(const T &pi,const T &mass)
 {
   T sinp=3*sqr(sin(pi));
   T sinhE=sinh(tm_quark_energy(pi,mass));
@@ -1341,20 +1350,58 @@ void compute_corr(size_t iproc)
 void test_factorization(size_t iproc)
 {
   set_default_grace(ens_pars);
-  
+
   load_all_hl({1,0},{1,0});
-  const vector<djvec_t> jLO_A_bare_r0=jLO_A_bare;
-  const vector<djvec_t> jQED_V_bare_r0=jQED_V_bare;
-  const vector<djvec_t> jQED_A_bare_r0=jQED_A_bare;
-  
+  const vector<djvec_t> jLO_A_bare_00=jLO_A_bare;
+  const vector<djvec_t> jQED_qA0_lV0_bare_00=jQED_qA0_lV0_bare;
+  const vector<djvec_t> jQED_qV0_lV0_bare_00=jQED_qV0_lV0_bare;
+  const vector<djvec_t> jQED_qAi_lVi_bare_00=jQED_qAi_lVi_bare;
+  const vector<djvec_t> jQED_qVi_lVi_bare_00=jQED_qVi_lVi_bare;
+
+  load_all_hl({1,0},{0,1});
+  const vector<djvec_t> jLO_A_bare_01=jLO_A_bare;
+  const vector<djvec_t> jQED_qA0_lV0_bare_01=jQED_qA0_lV0_bare;
+  const vector<djvec_t> jQED_qV0_lV0_bare_01=jQED_qV0_lV0_bare;
+  const vector<djvec_t> jQED_qAi_lVi_bare_01=jQED_qAi_lVi_bare;
+  const vector<djvec_t> jQED_qVi_lVi_bare_01=jQED_qVi_lVi_bare;
+
   load_all_hl({0,1},{1,0});
-  const vector<djvec_t> jLO_A_bare_r1=jLO_A_bare;
-  const vector<djvec_t> jQED_V_bare_r1=jQED_V_bare;
-  const vector<djvec_t> jQED_A_bare_r1=jQED_A_bare;
-  
-  const vector<djvec_t> jLO_A_bare_ave=(jLO_A_bare_r0+jLO_A_bare_r1)/2.0;
-  const vector<djvec_t> jQED_V_bare_ave=(jQED_V_bare_r0+jQED_V_bare_r1)/2.0;
-  const vector<djvec_t> jQED_A_bare_ave=(jQED_A_bare_r0+jQED_A_bare_r1)/2.0;
+  const vector<djvec_t> jLO_A_bare_10=jLO_A_bare;
+  const vector<djvec_t> jQED_qA0_lV0_bare_10=jQED_qA0_lV0_bare;
+  const vector<djvec_t> jQED_qV0_lV0_bare_10=jQED_qV0_lV0_bare;
+  const vector<djvec_t> jQED_qAi_lVi_bare_10=jQED_qAi_lVi_bare;
+  const vector<djvec_t> jQED_qVi_lVi_bare_10=jQED_qVi_lVi_bare;
+
+  load_all_hl({0,1},{0,1});
+  const vector<djvec_t> jLO_A_bare_11=jLO_A_bare;
+  const vector<djvec_t> jQED_qA0_lV0_bare_11=jQED_qA0_lV0_bare;
+  const vector<djvec_t> jQED_qV0_lV0_bare_11=jQED_qV0_lV0_bare;
+  const vector<djvec_t> jQED_qAi_lVi_bare_11=jQED_qAi_lVi_bare;
+  const vector<djvec_t> jQED_qVi_lVi_bare_11=jQED_qVi_lVi_bare;
+
+  const vector<djvec_t> jLO_A_bare_1=(jLO_A_bare_00+jLO_A_bare_11)/2.0;
+  const vector<djvec_t> jQED_qA0_lV0_bare_1=(jQED_qA0_lV0_bare_00+jQED_qA0_lV0_bare_11)/2.0;
+  const vector<djvec_t> jQED_qV0_lV0_bare_1=(jQED_qV0_lV0_bare_00+jQED_qV0_lV0_bare_11)/2.0;
+  const vector<djvec_t> jQED_qAi_lVi_bare_1=(jQED_qAi_lVi_bare_00+jQED_qAi_lVi_bare_11)/2.0;
+  const vector<djvec_t> jQED_qVi_lVi_bare_1=(jQED_qVi_lVi_bare_00+jQED_qVi_lVi_bare_11)/2.0;
+  const vector<djvec_t> jQED_A_bare_1=jQED_qA0_lV0_bare_1+jQED_qAi_lVi_bare_1;
+  const vector<djvec_t> jQED_V_bare_1=jQED_qV0_lV0_bare_1+jQED_qVi_lVi_bare_1;
+
+  const vector<djvec_t> jLO_A_bare_0=(jLO_A_bare_01+jLO_A_bare_10)/2.0;
+  const vector<djvec_t> jQED_qA0_lV0_bare_0=(jQED_qA0_lV0_bare_01+jQED_qA0_lV0_bare_10)/2.0;
+  const vector<djvec_t> jQED_qV0_lV0_bare_0=(jQED_qV0_lV0_bare_01+jQED_qV0_lV0_bare_10)/2.0;
+  const vector<djvec_t> jQED_qAi_lVi_bare_0=(jQED_qAi_lVi_bare_01+jQED_qAi_lVi_bare_10)/2.0;
+  const vector<djvec_t> jQED_qVi_lVi_bare_0=(jQED_qVi_lVi_bare_01+jQED_qVi_lVi_bare_10)/2.0;
+  const vector<djvec_t> jQED_A_bare_0=jQED_qA0_lV0_bare_0+jQED_qAi_lVi_bare_0;
+  const vector<djvec_t> jQED_V_bare_0=jQED_qV0_lV0_bare_0+jQED_qVi_lVi_bare_0;
+
+  const vector<djvec_t> jLO_A_bare_ave=(jLO_A_bare_0+jLO_A_bare_1)/2.0;
+  const vector<djvec_t> jQED_qA0_lV0_bare_ave=(jQED_qA0_lV0_bare_0+jQED_qA0_lV0_bare_1)/2.0;
+  const vector<djvec_t> jQED_qV0_lV0_bare_ave=(jQED_qV0_lV0_bare_0+jQED_qV0_lV0_bare_1)/2.0;
+  const vector<djvec_t> jQED_qAi_lVi_bare_ave=(jQED_qAi_lVi_bare_0+jQED_qAi_lVi_bare_1)/2.0;
+  const vector<djvec_t> jQED_qVi_lVi_bare_ave=(jQED_qVi_lVi_bare_0+jQED_qVi_lVi_bare_1)/2.0;
+  const vector<djvec_t> jQED_A_bare_ave=jQED_qA0_lV0_bare_ave+jQED_qAi_lVi_bare_ave;
+  const vector<djvec_t> jQED_V_bare_ave=jQED_qV0_lV0_bare_ave+jQED_qVi_lVi_bare_ave;
   
   size_t ilep=iMLep_of_proc[iproc];
   size_t iQED_mes=iQED_mes_of_proc[iproc];
@@ -1362,22 +1409,28 @@ void test_factorization(size_t iproc)
   const double uss=1/(16*sqr(M_PI));
   const double Z3=uss*1.607;
   const double Z4=uss*-3.214;
-  const double Wreg_contr_fact=Z3-Z4;
+  const double Wreg_contr_Z3_Z4=Z3-Z4;
   
   //! loop over analysis
   for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
     {
-      dbvec_t Z_fact(nens_used);
+      dbvec_t dA_fr_A_Wreg_dev_1(nens_used);
+      dbvec_t dA_fr_A_Wreg_dev_0(nens_used);
+      dbvec_t dA_fr_A_Wreg_dev_rdep_1(nens_used);
+      dbvec_t dA_fr_A_Wreg_dev_rdep_0(nens_used);
+      dbvec_t dA_fr_A_Wreg_dev_Zfact_1(nens_used);
+      dbvec_t dA_fr_A_Wreg_dev_Zfact_0(nens_used);
       vector<double> ml_ren(nens_used);
       
       for(size_t iens=0;iens<nens_used;iens++)
 	{
 	  const size_t iQCD_mes=QED_mes_pars[iQED_mes].iQCD;
 	  const size_t ind_QCD=ind_ens_QCD_mes({iens,iQCD_mes});
-	  //const size_t ind_QED=ind_ens_QED_mes({iens,iQED_mes});
-	  //constant_fit size_t ind_an_ens=ind_adml({input_an_id,iens});
 	  const ens_pars_t &ens=ens_pars[iens];
 	  const double aMLep=ens.aMLep[ilep];
+
+	  const size_t tmin=QCD_mes_pars[iQCD_mes].itint;
+	  const size_t tmax=ens.T/2-tmin;
 	  
 	  bi=jack_index[input_an_id][ens.iult];
 	  prepare_az(input_an_id);
@@ -1386,13 +1439,27 @@ void test_factorization(size_t iproc)
 	  const size_t ind_proc=ind_ens_proc({iens,iproc});
 	  
 	  //compute the nasty diagram
-	  const dbvec_t LO_r0=Zv[ib]*dbvec_t(bi,-jLO_A_bare_r0[ind_proc]);
-	  const dbvec_t QED_r0=Zv[ib]*dbvec_t(bi,-jQED_A_bare_r0[ind_proc])+dbvec_t(bi,jQED_V_bare_r0[ind_proc])*Za[ib];
-	  const dbvec_t QED_r1=Zv[ib]*dbvec_t(bi,-jQED_A_bare_r1[ind_proc])+dbvec_t(bi,jQED_V_bare_r1[ind_proc])*Za[ib];
+	  const dbvec_t QED_qA0_lV0_1=Zv[ib]*dbvec_t(bi,-jQED_qA0_lV0_bare_1[ind_proc]);
+	  const dbvec_t QED_qV0_lV0_1=Za[ib]*dbvec_t(bi,jQED_qV0_lV0_bare_1[ind_proc]);
+	  const dbvec_t QED_qAi_lVi_1=Zv[ib]*dbvec_t(bi,-jQED_qAi_lVi_bare_1[ind_proc]);
+	  const dbvec_t QED_qVi_lVi_1=Za[ib]*dbvec_t(bi,jQED_qVi_lVi_bare_1[ind_proc]);
+	  
+	  const dbvec_t QED_qA0_lV0_0=Zv[ib]*dbvec_t(bi,-jQED_qA0_lV0_bare_0[ind_proc]);
+	  const dbvec_t QED_qV0_lV0_0=Za[ib]*dbvec_t(bi,jQED_qV0_lV0_bare_0[ind_proc]);
+	  const dbvec_t QED_qAi_lVi_0=Zv[ib]*dbvec_t(bi,-jQED_qAi_lVi_bare_0[ind_proc]);
+	  const dbvec_t QED_qVi_lVi_0=Za[ib]*dbvec_t(bi,jQED_qVi_lVi_bare_0[ind_proc]);
+	  
+	  const dbvec_t QED_qA0_lV0_ave=Zv[ib]*dbvec_t(bi,-jQED_qA0_lV0_bare_ave[ind_proc]);
+	  const dbvec_t QED_qV0_lV0_ave=Za[ib]*dbvec_t(bi,jQED_qV0_lV0_bare_ave[ind_proc]);
+	  const dbvec_t QED_qAi_lVi_ave=Zv[ib]*dbvec_t(bi,-jQED_qAi_lVi_bare_ave[ind_proc]);
+	  const dbvec_t QED_qVi_lVi_ave=Za[ib]*dbvec_t(bi,jQED_qVi_lVi_bare_ave[ind_proc]);
+
+	  const dbvec_t LO_1=Zv[ib]*dbvec_t(bi,-jLO_A_bare_1[ind_proc]);
+	  const dbvec_t LO_0=Zv[ib]*dbvec_t(bi,-jLO_A_bare_0[ind_proc]);
 	  const dbvec_t LO_ave=Zv[ib]*dbvec_t(bi,-jLO_A_bare_ave[ind_proc]);
+	  const dbvec_t QED_1=Zv[ib]*dbvec_t(bi,-jQED_A_bare_1[ind_proc])+dbvec_t(bi,jQED_V_bare_1[ind_proc])*Za[ib];
+	  const dbvec_t QED_0=Zv[ib]*dbvec_t(bi,-jQED_A_bare_0[ind_proc])+dbvec_t(bi,jQED_V_bare_0[ind_proc])*Za[ib];
 	  const dbvec_t QED_ave=Zv[ib]*dbvec_t(bi,-jQED_A_bare_ave[ind_proc])+dbvec_t(bi,jQED_V_bare_ave[ind_proc])*Za[ib];
-	  LO_r0.ave_err().write(combine("%s/plots_hl/LO_r0_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
-	  QED_r0.ave_err().write(combine("%s/plots_hl/QED_r0_iproc%zu_ian%zu.xmg",ens.path.c_str(),iproc,input_an_id));
 	  
 	  const double pi_bare=find_pi(aMLep,ens.aMMes[iQCD_mes]);
 	  
@@ -1403,23 +1470,54 @@ void test_factorization(size_t iproc)
 	  const dboot_t Mmes=dboot_t(bi,jaM[ind_QCD])/a;
 	  
 	  //extract dA/A from nasty diagram ratio
-	  dbvec_t rat_ext_r0=QED_r0/LO_r0;
-	  rat_ext_r0[rat_ext_r0.size()-1]=rat_ext_r0[0]=0.0; //set to zero the contact term
+	  dbvec_t rat_ext_1=QED_1/LO_1;
+	  rat_ext_1[rat_ext_1.size()-1]=rat_ext_1[0]=0.0; //set to zero the contact term
+	  dbvec_t rat_ext_0=QED_0/LO_0;
+	  rat_ext_0[rat_ext_0.size()-1]=rat_ext_0[0]=0.0;
 	  dbvec_t rat_ext_ave=QED_ave/LO_ave;
 	  rat_ext_ave[rat_ext_ave.size()-1]=rat_ext_ave[0]=0.0;
-	  
-	  const dbvec_t rat_ext_dev=rat_ext_r0-rat_ext_ave;
+
 	  const dboot_t reno_coeff=Za[ib]/Zv[ib];
 	  const dboot_t ZP_fr_ZA=reno_coeff*dboot_t(bi,jZP[ind_QCD])/dboot_t(bi,jZA[ind_QCD]);
-	  dbvec_t Z_fact_corr=rat_ext_dev/ZP_fr_ZA;
-	  Z_fact_corr/=leptonic_trace(pi_bare,aMLep);
-	  Z_fact_corr/=Wreg_contr_fact;
+	  dboot_t rdep=Wreg_contr_Z3_Z4*ZP_fr_ZA*ratio_Wreg_leptonic_traces(pi_bare,aMLep);
 	  
-	  // grace_file_t out(ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_an"+to_string(input_an_id)+".xmg");
-	  // out.write_vec_ave_err(QED_r0.ave_err());
-	  // out.write_vec_ave_err(QED_r1.ave_err());
+	  const double Zfact=0.75;
+
+	  dboot_t rdep_Zfact=rdep*Zfact;
 	  
-	  Z_fact[iens]=constant_fit(Z_fact_corr,16,20,ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_an"+to_string(input_an_id)+".xmg");
+	  const dbvec_t rat_ext_Wreg_dev_1=rat_ext_1-rat_ext_ave;
+	  const dbvec_t rat_ext_Wreg_dev_0=rat_ext_0-rat_ext_ave;
+	  
+	  const dbvec_t rat_ext_Wreg_dev_rdep_1=rat_ext_Wreg_dev_1-rdep;
+	  const dbvec_t rat_ext_Wreg_dev_rdep_0=rat_ext_Wreg_dev_0+rdep;
+
+	  const dbvec_t rat_ext_Wreg_dev_Zfact_1=rat_ext_Wreg_dev_1-rdep_Zfact;
+	  const dbvec_t rat_ext_Wreg_dev_Zfact_0=rat_ext_Wreg_dev_0+rdep_Zfact;
+	    
+	  grace_file_t outA0V0(ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_qA0_lV0_an"+to_string(input_an_id)+".xmg");
+	  outA0V0.write_vec_ave_err(QED_qA0_lV0_1.ave_err());
+	  outA0V0.write_vec_ave_err(QED_qA0_lV0_0.ave_err());
+	  outA0V0.write_vec_ave_err(QED_qA0_lV0_ave.ave_err());
+	  grace_file_t outV0V0(ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_qV0_lV0_an"+to_string(input_an_id)+".xmg");
+	  outV0V0.write_vec_ave_err(QED_qV0_lV0_1.ave_err());
+	  outV0V0.write_vec_ave_err(QED_qV0_lV0_0.ave_err());
+	  outV0V0.write_vec_ave_err(QED_qV0_lV0_ave.ave_err());
+	  grace_file_t outAiVi(ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_qAi_lVi_an"+to_string(input_an_id)+".xmg");
+	  outAiVi.write_vec_ave_err(QED_qAi_lVi_1.ave_err());
+	  outAiVi.write_vec_ave_err(QED_qAi_lVi_0.ave_err());
+	  outAiVi.write_vec_ave_err(QED_qAi_lVi_ave.ave_err());
+	  grace_file_t outViVi(ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_qVi_lVi_an"+to_string(input_an_id)+".xmg");
+	  outViVi.write_vec_ave_err(QED_qVi_lVi_1.ave_err());
+	  outViVi.write_vec_ave_err(QED_qVi_lVi_0.ave_err());
+	  outViVi.write_vec_ave_err(QED_qVi_lVi_ave.ave_err());
+
+	  dA_fr_A_Wreg_dev_1[iens]=constant_fit(rat_ext_Wreg_dev_1,tmin,tmax,ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_an"+to_string(input_an_id)+"dev_1.xmg");
+	  dA_fr_A_Wreg_dev_0[iens]=constant_fit(rat_ext_Wreg_dev_0,tmin,tmax,ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_an"+to_string(input_an_id)+"dev_0.xmg");
+	  dA_fr_A_Wreg_dev_rdep_1[iens]=constant_fit(rat_ext_Wreg_dev_rdep_1,tmin,tmax,ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_an"+to_string(input_an_id)+"dev_rdep_1.xmg");
+	  dA_fr_A_Wreg_dev_rdep_0[iens]=constant_fit(rat_ext_Wreg_dev_rdep_0,tmin,tmax,ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_an"+to_string(input_an_id)+"dev_rdep_0.xmg");
+	  dA_fr_A_Wreg_dev_Zfact_1[iens]=constant_fit(rat_ext_Wreg_dev_Zfact_1,tmin,tmax,ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_an"+to_string(input_an_id)+"dev_Zfact_1.xmg");
+	  dA_fr_A_Wreg_dev_Zfact_0[iens]=constant_fit(rat_ext_Wreg_dev_Zfact_0,tmin,tmax,ens.path+"/plots_Zfact/proc_"+to_string(iproc)+"_an"+to_string(input_an_id)+"dev_Zfact_0.xmg");
+	  
 	  ml_ren[iens]=dboot_t(ens.aml*lat_par[input_an_id].ainv[ib]/lat_par[input_an_id].Z[ib]).ave();
 	}
       
@@ -1427,29 +1525,54 @@ void test_factorization(size_t iproc)
       grace_file_t fit_file("plots_hl/Z_fact_an"+to_string(input_an_id)+".xmg");
       fit_file.set_subtitle("Z_fact");
       fit_file.set_xaxis_label("$$m_{light} (\\overline{MS},2 GeV) [GeV]");
-      fit_file.set_yaxis_label("Z");
+      fit_file.set_yaxis_label("Z_fact");
       fit_file.set_xaxis_max(0.05);
       fit_file.new_data_set();
       
       for(size_t ib=0;ib<nbeta;ib++)
-	{
-	  //make the list of volumes
-	  set<size_t> L_list;
-	  for(size_t idata=0;idata<ens_pars.size();idata++)
-	    if(ens_pars[idata].ib==ib)
-	      L_list.insert(ens_pars[idata].L);
+      	{
+      	  //make the list of volumes
+      	  set<size_t> L_list;
+      	  for(size_t idata=0;idata<ens_pars.size();idata++)
+      	    if(ens_pars[idata].ib==ib)
+      	      L_list.insert(ens_pars[idata].L);
 	  
-	  //loop over the list of volumes
-	  for(auto &L : L_list)
-	    {
-	      fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+      	  //loop over the list of volumes
+      	  for(auto &L : L_list)
+      	    {
+      	      fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
 	      
+      	      for(size_t idata=0;idata<ens_pars.size();idata++)
+      	      	if(ens_pars[idata].ib==ib and ens_pars[idata].L==L)
+      	      	    fit_file.write_ave_err(dboot_t(ens_pars[idata].aml/lat_par[input_an_id].Z[ib]*lat_par[input_an_id].ainv[ib]).ave(),dA_fr_A_Wreg_dev_1[idata].ave_err());
+      	      fit_file.new_data_set();
+
 	      for(size_t idata=0;idata<ens_pars.size();idata++)
-		if(ens_pars[idata].ib==ib and ens_pars[idata].L==L)
-		    fit_file.write_ave_err(dboot_t(ens_pars[idata].aml/lat_par[input_an_id].Z[ib]*lat_par[input_an_id].ainv[ib]).ave(),Z_fact[idata].ave_err());
+      	      	if(ens_pars[idata].ib==ib and ens_pars[idata].L==L)
+      	      	    fit_file.write_ave_err(dboot_t(ens_pars[idata].aml/lat_par[input_an_id].Z[ib]*lat_par[input_an_id].ainv[ib]).ave(),dA_fr_A_Wreg_dev_0[idata].ave_err());
 	      fit_file.new_data_set();
-	    }
-	}
+
+	      for(size_t idata=0;idata<ens_pars.size();idata++)
+      	      	if(ens_pars[idata].ib==ib and ens_pars[idata].L==L)
+      	      	    fit_file.write_ave_err(dboot_t(ens_pars[idata].aml/lat_par[input_an_id].Z[ib]*lat_par[input_an_id].ainv[ib]).ave(),dA_fr_A_Wreg_dev_rdep_1[idata].ave_err());
+	      fit_file.new_data_set();
+
+	      for(size_t idata=0;idata<ens_pars.size();idata++)
+      	      	if(ens_pars[idata].ib==ib and ens_pars[idata].L==L)
+      	      	    fit_file.write_ave_err(dboot_t(ens_pars[idata].aml/lat_par[input_an_id].Z[ib]*lat_par[input_an_id].ainv[ib]).ave(),dA_fr_A_Wreg_dev_rdep_0[idata].ave_err());
+	      fit_file.new_data_set();
+
+	      for(size_t idata=0;idata<ens_pars.size();idata++)
+      	      	if(ens_pars[idata].ib==ib and ens_pars[idata].L==L)
+      	      	    fit_file.write_ave_err(dboot_t(ens_pars[idata].aml/lat_par[input_an_id].Z[ib]*lat_par[input_an_id].ainv[ib]).ave(),dA_fr_A_Wreg_dev_Zfact_1[idata].ave_err());
+	      fit_file.new_data_set();
+
+	      for(size_t idata=0;idata<ens_pars.size();idata++)
+      	      	if(ens_pars[idata].ib==ib and ens_pars[idata].L==L)
+      	      	    fit_file.write_ave_err(dboot_t(ens_pars[idata].aml/lat_par[input_an_id].Z[ib]*lat_par[input_an_id].ainv[ib]).ave(),dA_fr_A_Wreg_dev_Zfact_0[idata].ave_err());
+	      fit_file.new_data_set();
+      	    }
+      	}
     }
 }
 
