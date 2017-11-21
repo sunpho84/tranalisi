@@ -29,7 +29,7 @@ class jbil_vert_t
   {
     vector<vector<jprop_t>*> out={&LO};
     if(use_QED)
-      for(auto &p : {&EM,&P,&S})
+      for(auto &p : {&EM,&S})
 	out.push_back(p);
     return out;
   }
@@ -38,7 +38,6 @@ public:
   vector<jprop_t> LO; //!< jackkniffed vertex
   
   vector<jprop_t> EM; //!< jackkniffed vertex with all em corrs
-  vector<jprop_t> P; //!< jackkniffed P vertex
   vector<jprop_t> S; //!< jackkniffed S vertex
   
   jbil_vert_t(size_t size,bool use_QED)
@@ -68,10 +67,7 @@ djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jvert
 
 //! compute all vertices for a certain conf
 void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_props_t> &props,
-					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED);
-
-//! finish computing the em verts
-void finish_jverts_EM(jbil_vert_t &jverts,const djack_t &deltam_cr);
+					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED,const djvec_t &deltam_cr);
 
 #undef EXTERN_ZBIL
 #undef INIT_TO

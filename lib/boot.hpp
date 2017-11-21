@@ -51,7 +51,8 @@ public:
 //////////////////////////////////////////////////////////////// boot_t /////////////////////////////////////////////////////
 
 //! type defining boot
-template <class T> class boot_t : public valarray<T>
+template <class T>
+class boot_t : public valarray<T>
 {
 public:
   //! base type of the boot
@@ -81,7 +82,8 @@ public:
   }
   
   //! construct from expr
-  template<class _Dom> boot_t(const _Expr<_Dom,T> &oth) : valarray<T>(oth) {}
+  template<class _Dom>
+  boot_t(const _Expr<_Dom,T> &oth) : valarray<T>(oth) {}
   
   //! copy constructor
   boot_t(const boot_t &oth) : valarray<T>(oth) {

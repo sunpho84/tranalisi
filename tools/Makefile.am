@@ -4,6 +4,7 @@ AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
 LDADD=$(top_builddir)/lib/libtran.a
 
 bin_PROGRAMS= \
+	backstab \
 	combine_vdoubles \
 	djvec_load \
 	effective_mass \
@@ -11,6 +12,8 @@ bin_PROGRAMS= \
 	prepare_jackknives \
 	simple_effective_mass \
 	two_pts_fit
+
+backstab_SOURCES=backstab.cpp
 
 combine_vdoubles_SOURCES=combine_vdoubles.cpp
 

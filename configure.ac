@@ -178,6 +178,18 @@ case "$debug" in
 esac
 AC_MSG_RESULT([Enabling debug... $debug])
 
+#activate Eigen vectorization
+AC_ARG_ENABLE(Eigen_vec_opt,
+        AS_HELP_STRING([--enable-Eigen_vec_opt=yes[,no]],[Enable Eigen vectorization (default: no)]),
+        Eigen_vec_opt="${enableval}",
+        Eigen_vec_opt=no)
+case "$Eigen_vec_opt" in
+     no) AC_DEFINE_UNQUOTED([EIGEN_DONT_VECTORIZE],,[Disable Eigen_vectorization]);;
+     yes) ;;
+     *) AC_MSG_ERROR(["Unkwnown Eigen_vec_opt method $Eigen_vec_opt"])
+esac
+AC_MSG_RESULT([Enabling Eigen vectorization... $Eigen_vec_opt])
+
 #check Eigen
 AC_ARG_WITH(Eigen,
         AS_HELP_STRING([--with-Eigen[=dir]], [Specify where to find Eigen folder (include eigen3 in the argument!)]),
@@ -199,19 +211,6 @@ case "$arch_opt" in
 esac
 AC_MSG_RESULT([Enabling architecture optimization... $arch_opt])
 
-
-#activate Eigen vectorization
-AC_ARG_ENABLE(Eigen_vec_opt,
-        AS_HELP_STRING([--enable-Eigen_vec_opt=yes[,no]],[Enable Eigen vectorization (default: no)]),
-        Eigen_vec_opt="${enableval}",
-        Eigen_vec_opt=no)
-case "$Eigen_vec_opt" in
-     no) AC_DEFINE_UNQUOTED([EIGEN_DONT_VECTORIZE],,[Disable Eigen_vectorization]);;
-     yes) ;;
-     *) AC_MSG_ERROR(["Unkwnown Eigen_vec_opt method $Eigen_vec_opt"])
-esac
-AC_MSG_RESULT([Enabling Eigen vectorization... $Eigen_vec_opt])
-
 AC_CONFIG_FILES(Makefile
 	include/Makefile
 	lib/Makefile
@@ -220,5 +219,7 @@ AC_CONFIG_FILES(Makefile
 	projects/IB/Makefile
 	projects/MOM/Makefile
 	projects/SMETEST/Makefile
+	projects/SPIPOLLO/Makefile
+	projects/STEP_SCALING/Makefile
 	tools/Makefile)
 AC_OUTPUT
