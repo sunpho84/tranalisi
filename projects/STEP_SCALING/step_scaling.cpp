@@ -29,15 +29,22 @@ int main()
   
   V0P5.ave_err().write("plots/V0P5.xmg");
   V0_P_P5.ave_err().write("plots/V0_P_P5.xmg");
-
+  
   //pion mass
   djack_t MPi=constant_fit(effective_mass(P5P5),tmin,TH,"plots/P5P5.xmg");
   cout<<"MPi: "<<smart_print(MPi)<<endl;
   
   //m_cr
-  djvec_t m_cr_corr=forward_derivative(V0P5)/(2.0*P5P5);
-  djack_t m_cr=constant_fit(m_cr_corr,tmin,TH,"plots/m_cr_t.xmg");
-  cout<<"m_cr: "<<smart_print(m_cr.ave_err())<<endl;
+  djvec_t m_cr_corr_fw=forward_derivative(V0P5)/(2.0*P5P5);
+  djvec_t m_cr_corr_symm=(forward_derivative(V0P5)+backward_derivative(V0P5))/(4.0*P5P5);
+  //fit
+  djack_t m_cr_fw=constant_fit(m_cr_corr_fw,tmin,TH,"plots/m_cr_fw_t.xmg");
+  djack_t m_cr_symm=constant_fit(m_cr_corr_symm,tmin,TH,"plots/m_cr_symm_t.xmg");
+  djack_t m_cr_symm_p2=constant_fit(m_cr_corr_symm,tmin+2,TH,"plots/m_cr_symm_t_p2.xmg");
+  //out
+  cout<<"m_cr_fw: "<<smart_print(m_cr_fw.ave_err())<<endl;
+  cout<<"m_cr_symm: "<<smart_print(m_cr_symm.ave_err())<<endl;
+  cout<<"m_cr_symm_p2: "<<smart_print(m_cr_symm_p2.ave_err())<<endl;
   
   djvec_t num_deltam_cr=V0P5;
   djvec_t den_deltam_cr=V0_P_P5;
