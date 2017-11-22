@@ -237,11 +237,8 @@ int main(int narg,char **arg)
       Zq_sig1_EM_chir_allmoms_sub.resize(imoms.size());
     }
   
-  //! task to chiral extrapolate
-  using Z_task_t=tuple<djvec_t*,djvec_t*,string>;
-  
   //! list of task to chirally extrapolate Zq
-  vector<Z_task_t> Zq_chirextr_tasks{
+  vector<tuple<djvec_t*,djvec_t*,string>> Zq_chirextr_tasks{
     {&Zq_allmoms,&Zq_chir_allmoms,string("Zq")},
     {&Zq_sig1_allmoms,&Zq_sig1_chir_allmoms,"Zq_sig1"}};
   if(use_QED) Zq_chirextr_tasks.push_back(make_tuple(&Zq_sig1_EM_allmoms,&Zq_sig1_EM_chir_allmoms,"Zq_sig1_EM"));
@@ -390,16 +387,30 @@ int main(int narg,char **arg)
 	}
       proj_time.stop();
       
+      //compute subtractions
+      djvec_t pr_bil_mom_correction(nZbil);
+      djvec_t pr_bil_QED_mom_correction(nZbil);
+      for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+	{
+	  pr_bil_mom_correction[iZbil]=g2tilde*pr_bil_a2(act,gf::LANDAU,group::SU3,mom,L,iZbil);
+	  if(use_QED) pr_bil_QED_mom_correction[iZbil]=1.0*pr_bil_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L,iZbil);
+	}
+      
       //extrapolate to chiral limit the projected bilinears
-      vector<Z_task_t> pr_bil_chirextr_tasks{{&pr_bil_mom,&pr_bil_chir_mom,string("pr_bil")}};
-      if(use_QED) pr_bil_chirextr_tasks.push_back(make_tuple(&pr_bil_QED_mom,&pr_bil_QED_chir_mom,string("pr_bil_QED")));
+      djvec_t pr_bil_chir_mom_sub(nZbil);
+      djvec_t pr_bil_QED_chir_mom_sub(nZbil);
+      vector<tuple<djvec_t*,djvec_t*,djvec_t*,djvec_t*,string>>
+	pr_bil_chirextr_tasks{{&pr_bil_mom,&pr_bil_chir_mom,&pr_bil_chir_mom_sub,&pr_bil_mom_correction,string("pr_bil")}};
+      if(use_QED) pr_bil_chirextr_tasks.push_back(make_tuple(&pr_bil_QED_mom,&pr_bil_QED_chir_mom,&pr_bil_QED_chir_mom_sub,&pr_bil_QED_mom_correction,string("pr_bil_QED")));
       
       for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	for(auto & p : pr_bil_chirextr_tasks)
 	  {
 	    const djvec_t &pr=(*get<0>(p));
 	    djvec_t &pr_chir=(*get<1>(p));
-	    const string &tag=get<2>(p);
+	    djvec_t &pr_chir_sub=(*get<2>(p));
+	    djvec_t &pr_corr=(*get<3>(p));
+	    const string &tag=get<4>(p);
 	    
 	    //check if we need to subtract the pole
 	    const bool sub_pole=(iZbil==iZS or iZbil==iZP);
@@ -423,26 +434,22 @@ int main(int narg,char **arg)
 		  i++;
 		}
 	    
-	    //fit and write the result
+	    //fit and store extrapolated value
 	    djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min,2.0*am_max);
+	    pr_chir[iZbil]=coeffs[sub_pole?1:0];
+	    
+	    //subtract from bilinear
+	    pr_chir_sub[iZbil]=pr_chir[iZbil]-pr_corr[iZbil];
+	    
+	    //plot
 	    if(imom%print_each_mom==0)
 	      {
 		grace_file_t plot("plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_mom_"+to_string(imom)+".xmg");
 		write_fit_plot(plot,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
-		plot.write_ave_err(0.0,coeffs[sub_pole?1:0].ave_err());
+		plot.write_ave_err(0.0,pr_chir[iZbil].ave_err());
+		plot.new_data_set();
+		plot.write_ave_err(0.0,pr_chir_sub[iZbil].ave_err());
 	      }
-	    //extrapolated value
-	    pr_chir[iZbil]=coeffs[sub_pole?1:0];
-	  }
-      
-      //subtract from bilinear
-      djvec_t pr_bil_chir_mom_sub(nZbil);
-      djvec_t pr_bil_QED_chir_mom_sub(nZbil);
-      
-      for(size_t iZbil=0;iZbil<nZbil;iZbil++)
-	{
-	   pr_bil_chir_mom_sub[iZbil]=pr_bil_chir_mom[iZbil]-g2tilde*pr_bil_a2(act,gf::LANDAU,group::SU3,mom,L,iZbil);
-	   if(use_QED) pr_bil_QED_chir_mom_sub[iZbil]=pr_bil_QED_chir_mom[iZbil]-1.0*pr_bil_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L,iZbil);
 	}
       
       //build Z
@@ -458,7 +465,7 @@ int main(int narg,char **arg)
 	  const size_t im_r_im_r_iZbil_imom=im_r_im_r_iZbil_imom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,imom})));
 	  
 	  Zbil_allmoms[im_r_im_r_iZbil_imom]=
-	    sqrt(Zq_allmoms[im_r1_imom]*Zq_allmoms[im_r2_imom])/pr_bil_mom[im_r_im_r_iZbil];
+	    sqrt(Zq_sig1_allmoms[im_r1_imom]*Zq_sig1_allmoms[im_r2_imom])/pr_bil_mom[im_r_im_r_iZbil];
 	  
 	  if(use_QED)
 	    {
@@ -472,10 +479,8 @@ int main(int narg,char **arg)
       for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	{
 	  const size_t iZbil_imom=iZbil_imom_ind({iZbil,imom});
-	  Zbil_chir_allmoms[iZbil_imom]=
-	    sqrt(Zq_chir_allmoms[imom]*Zq_chir_allmoms[imom])/pr_bil_chir_mom[iZbil];
-	  Zbil_chir_allmoms_sub[iZbil_imom]=
-	    sqrt(Zq_chir_allmoms_sub[imom]*Zq_chir_allmoms_sub[imom])/pr_bil_chir_mom_sub[iZbil];
+	  Zbil_chir_allmoms[iZbil_imom]=sqrt(Zq_sig1_chir_allmoms[imom]*Zq_sig1_chir_allmoms[imom])/pr_bil_chir_mom[iZbil];
+	  Zbil_chir_allmoms_sub[iZbil_imom]=sqrt(Zq_sig1_chir_allmoms_sub[imom]*Zq_sig1_chir_allmoms_sub[imom])/pr_bil_chir_mom_sub[iZbil];
 	  
 	  if(use_QED)
 	    {
@@ -512,47 +517,9 @@ int main(int narg,char **arg)
   djvec_t Zbil_QED_chir=use_QED?average_equiv_moms(Zbil_QED_chir_allmoms,iZbil_indep_imom_ind,iZbil_imom_ind):djvec_t();
   djvec_t Zbil_QED_chir_sub=use_QED?average_equiv_moms(Zbil_QED_chir_allmoms_sub,iZbil_indep_imom_ind,iZbil_imom_ind):djvec_t();
   
-  //     Zbil_QED_allmoms[iZbil]=(pr_bil_a_allmoms[iZbil]+pr_bil_b_allmoms[iZbil]-pr_bil_em_allmoms[iZbil])/pr_bil_allmoms[iZbil]+Zq_sig1_em_allmoms/Zq_sig1_allmoms;
-  //     Zbil_sub[iZbil]=average_equiv_moms(Zq_allmoms_sub/pr_bil_allmoms_sub[iZbil]);
-  //     Zbil_QED[iZbil]=average_equiv_moms(Zbil_QED_allmoms[iZbil]);
-  //   }
-  
-  // write_Z("Zq_sig1_allmoms",Zq_sig1_allmoms,get_pt2());
-  // write_Z("sig3_allmoms",sig3_allmoms,get_pt2());
-  // write_Z("sig3_em_allmoms",sig3_em_allmoms,get_pt2());
-  
-  // write_Z("Zq",Zq,get_indep_pt2());
-  // write_Z("Zq_sub",Zq_sub,get_indep_pt2());
-  // write_Z("Zq_sig1",Zq_sig1,get_indep_pt2());
-  // write_Z("sig3",sig3,get_indep_pt2());
-  // write_Z("sig3_em",sig3_em,get_indep_pt2());
-  // write_Z("Zq_sig1_em",Zq_sig1_em,get_indep_pt2());
-  // write_Z("Zq_sig1_sub",Zq_sig1_sub,get_indep_pt2());
-  // for(size_t iZbil=0;iZbil<nZbil;iZbil++)
-  //   {
-  //     write_Z(combine("Z%c",Zbil_tag[iZbil]),Zbil[iZbil],get_indep_pt2());
-  //     write_Z(combine("Z%c_QED_allmoms",Zbil_tag[iZbil]),Zbil_QED_allmoms[iZbil],get_pt2());
-  //     write_Z(combine("Z%c_QED",Zbil_tag[iZbil]),Zbil_QED[iZbil],get_indep_pt2());
-  //     write_Z(combine("Z%c_sub",Zbil_tag[iZbil]),Zbil_sub[iZbil],get_indep_pt2());
-  //   }
-  
-  // write_Z("Zq_sub",Zq_sub,get_indep_pt2());
-  // write_Z("Zq_sig1_sub",Zq_sig1_sub,get_indep_pt2());
-  
-  // linfit_Z(Zbil_QED[iZV]*sqr(4*M_PI),"ZV_QED",-20.6178);
-  // linfit_Z(Zbil_QED[iZA]*sqr(4*M_PI),"ZA_QED",-15.7963);
-
-  // //! list of p2tile
-  // vector<double> p2tilde(equiv_imoms.size());
-  // for(size_t indep_imom=0;indep_imom<equiv_imoms.size();indep_imom++)
-  //   {
-  //     size_t imom=equiv_imoms[indep_imom].first;
-  //     p2tilde[imom]=imoms[imom].p(L).tilde().norm2();
-  //   }
-  
   using Z_plot_task_t=tuple<djvec_t*,djvec_t*,djvec_t*,string>;
   
-  //! list of task to chirally extrapolate Zq
+  //! list of task to plot chiral extrapolation Zq
   vector<Z_plot_task_t> Zq_plot_tasks{
     {&Zq,&Zq_chir,&Zq_chir_sub,string("Zq")},
     {&Zq_sig1,&Zq_sig1_chir,&Zq_sig1_chir_sub,"Zq_sig1"}};
@@ -624,15 +591,18 @@ int main(int narg,char **arg)
 	      }
 	  
 	  //write chiral extrap and subtracted
-	  for(auto *Z : {&Z_chir,&Z_chir_sub})
+	  for(auto &Ztag : vector<tuple<const djvec_t*,string>>{{&Z_chir,"chir"},{&Z_chir_sub,"sub"}})
 	    {
+	      out.set_legend(get<1>(Ztag));
 	      for(size_t indep_imom=0;indep_imom<equiv_imoms.size();indep_imom++)
-		out.write_ave_err(imoms[equiv_imoms[indep_imom].first].p(L).tilde().norm2(),(*Z)[iZbil_indep_imom_ind({iZbil,indep_imom})].ave_err());
+		out.write_ave_err(imoms[equiv_imoms[indep_imom].first].p(L).tilde().norm2(),(*get<0>(Ztag))[iZbil_indep_imom_ind({iZbil,indep_imom})].ave_err());
 	      out.new_data_set();
 	    }
 	}
     }
   
+  
+  //print time statistics
   cout<<ts<<endl;
   
   return 0;
