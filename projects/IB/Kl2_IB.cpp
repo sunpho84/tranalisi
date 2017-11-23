@@ -1629,7 +1629,7 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
 	      const double marc_sirl=e2/(2*sqr(M_PI))*log(MZ/MW);
 	      const dboot_t rate_pt=Gamma_pt(MLep,Mmes,DeltaE)*e2; //only e2
 
-	      const double Z_fact=1.0;
+	      const double Z_fact=0.75;
 	      
 	      const dboot_t tot_but_FSE=external+internal_QED+internal_MASS+(W1_contr+W2_contr)*Z_fact+rate_QED_mass+rate_MASS_mass+rate_pt+marc_sirl;
 	      if(ifrange==0 and input_an_id==0 and ens.ib==0 and fabs(ens.aml-0.0040)<1e-6)
@@ -1995,8 +1995,8 @@ int main(int narg,char **arg)
   const size_t iLEP=0;
   //iFSE_max=0 -> max_ord=1, iFSE_max=1 -> max_ord=2, defined in FSE_max_orders
   extrapolate_corr(tot_corr_proc[iK]-tot_corr_proc[iPi],{{iK,+1.0},{iPi,-1.0}},STUDY_K_M_PI,iLEP,/*iFSE_max*/ 0);
-  //extrapolate_corr(tot_corr_proc[iPi],{{iPi,1.0}},STUDY_PI,iLEP);
-  //extrapolate_corr(tot_corr_proc[iK],{{iK,1.0}},STUDY_K,iLEP);
+  //extrapolate_corr(tot_corr_proc[iPi],{{iPi,1.0}},STUDY_PI,iLEP,0);
+  //extrapolate_corr(tot_corr_proc[iK],{{iK,1.0}},STUDY_K,iLEP,0);
   
   cout<<endl<<"Total time: "<<time(0)-start<<" s"<<endl;
   
