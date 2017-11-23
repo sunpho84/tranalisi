@@ -325,8 +325,6 @@ int main(int narg,char **arg)
 	      Zq_sig1_EM_allmoms[im_r_imom][ijack]=-compute_Zq_sig1(prop_EM_inv,imom);
 	      Zq_time.stop();
 	    }
-	  
-	  //if(ijack==0) cout<<"im_r_imom: "<<im_r_imom<<"=(im"<<im<<"r"<<r<<"imom"<<imom<<"): "<<Zq_sig1_allmoms[im_r_imom][0]<<endl;
 	}
       
       //extrapolate to chiral limit Zq
