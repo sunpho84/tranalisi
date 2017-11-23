@@ -655,11 +655,11 @@ namespace hl
   //! infinite volume extrapolation variations
   namespace FSE
   {
-    enum{NOSTDEP,WITHSTDEP,NOSMALLVOL};
-    const vector<int> variations={NOSTDEP,// WITHSTDEP,
-				  NOSMALLVOL};
-    const vector<string> tag={"NOSTDEP",// "WITHSTDEP",
-			      "NOSMALLVOL"};
+    enum{WITHSTDEP,NOSMALLVOL,NOSTDEP};
+    const vector<int> variations={WITHSTDEP,// NOSMALLVOL,
+				  NOSTDEP};
+    const vector<string> tag={"WITHSTDEP",// "NOSMALLVOL",
+			      "NOSTDEP"};
     const size_t nvariations=variations.size();
   }
   
@@ -1149,15 +1149,15 @@ void set_default_grace(const vector<T> &ext_data)
 //   switch(FSE_flag)
 //     {
 //       using namespace FSE;
-//     case NOSTDEP:
+//     case WITHSTDEP:
 //       L2dep_guess=ave_err_t(-0.16,0.1);
 //       L3dep_guess=ave_err_t(0.04,0.03);
 //       break;
-//     case WITHSTDEP:
+//     case NOSMALLVOL:
 //       L2dep_guess=ave_err_t(-0.068,0.09);
 //       L3dep_guess=ave_err_t(-0.03,0.03);
 //       break;
-//     case NOSMALLVOL:
+//     case NOSTDEP:
 //       L2dep_guess=ave_err_t(0.0,0.1);
 //       L3dep_guess=ave_err_t(0.0,0.1);
 //     }
@@ -1176,12 +1176,12 @@ void set_default_grace(const vector<T> &ext_data)
 //   switch(FSE_flag)
 //     {
 //       using namespace FSE;
-//     case NOSMALLVOL:
+//     case NOSTDEP:
 //       boot_fit.fix_par_to(pars.iL2dep,0.0);
 //       boot_fit.fix_par_to(pars.iL3dep,0.0);
 //       break;
-//     case NOSTDEP:
 //     case WITHSTDEP:
+//     case NOSMALLVOL:
 //       break;
 //     }
   
@@ -1218,7 +1218,7 @@ void set_default_grace(const vector<T> &ext_data)
 //   dboot_t phys_res=cont_chir_ansatz_corr_xi_hl(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,xi_phys,xi_s_phys,dboot_t(MMes_phys),MLep,1,dboot_t(pars.adep*0.0),-1,(dboot_t)(0.0*pars.L2dep),dboot_t(0.0*pars.L3dep),iproc,chir_flag);
 //   cout<<"result: "<<phys_res.ave_err()<<", "<<phys_res[0]<<endl;
   
-//   //bool include_small_vol=(FSE::variations[case_of<c_FSE>(isyst)]!=hl::FSE::NOSMALLVOL);
+//   //bool include_small_vol=(FSE::variations[case_of<c_FSE>(isyst)]!=hl::FSE::NOSTDEP);
 //   //bool include_coarse=(cont::variations[case_of<c_cont>(isyst)]!=hl::cont::CONSTANT);
   
 //   set_default_grace(ext_data);
@@ -1280,15 +1280,15 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
       switch(FSE_flag)
 	{
 	  using namespace FSE;
-	case NOSTDEP:
+	case WITHSTDEP:
 	  L2dep_guess=ave_err_t(-0.16,0.1);
 	  L3dep_guess=ave_err_t(0.04,0.03);
 	  break;
-	case WITHSTDEP:
+	case NOSMALLVOL:
 	  L2dep_guess=ave_err_t(-0.068,0.09);
 	  L3dep_guess=ave_err_t(-0.03,0.03);
 	  break;
-	case NOSMALLVOL:
+	case NOSTDEP:
 	  L2dep_guess=ave_err_t(0.0,0.1);
 	  L3dep_guess=ave_err_t(0.0,0.1);
 	  break;
@@ -1316,15 +1316,15 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
       switch(FSE_flag)
 	{
 	  using namespace FSE;
-	case NOSTDEP:
+	case WITHSTDEP:
 	  L2dep_guess=ave_err_t(-0.27,0.1);
 	  L3dep_guess=ave_err_t(0.1,0.03);
 	  break;
-	case WITHSTDEP:
+	case NOSMALLVOL:
 	  L2dep_guess=ave_err_t(-0.24,0.1);
 	  L3dep_guess=ave_err_t(0.05,0.03);
 	  break;
-	case NOSMALLVOL:
+	case NOSTDEP:
 	  L2dep_guess=ave_err_t(0.0,0.1);
 	  L3dep_guess=ave_err_t(0.0,0.1);
 	  break;
@@ -1339,15 +1339,15 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
       switch(FSE_flag)
 	{
 	  using namespace FSE;
-	case NOSTDEP:
+	case WITHSTDEP:
 	  L2dep_guess=ave_err_t(0.16,0.1);
 	  L3dep_guess=ave_err_t(-0.04,0.03);
 	  break;
-	case WITHSTDEP:
+	case NOSMALLVOL:
 	  L2dep_guess=ave_err_t(0.068,0.09);
 	  L3dep_guess=ave_err_t(0.03,0.03);
 	  break;
-	case NOSMALLVOL:
+	case NOSTDEP:
 	  L2dep_guess=ave_err_t(0.0,0.1);
 	  L3dep_guess=ave_err_t(0.0,0.1);
 	}
@@ -1370,13 +1370,13 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   switch(FSE_flag)
     {
      using namespace FSE;
-    case NOSMALLVOL:
+    case NOSTDEP:
       cout<<"Fixing Ldep"<<endl;
       boot_fit.fix_par_to(pars.iL2dep,0.0);
       boot_fit.fix_par_to(pars.iL3dep,0.0);
       break;
-    case NOSTDEP:
     case WITHSTDEP:
+    case NOSMALLVOL:
       //if(istudy==STUDY_K_M_PI) boot_fit.fix_par_to(pars.iL3dep,0.0);
       break;
     }
@@ -1414,7 +1414,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   dboot_t phys_res=cont_chir_ansatz_corr_hl(pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,pars.KK,ml_phys,ms_phys,MLep,a_cont,pars.adep,inf_vol,(dboot_t)(0.0*pars.L2dep),dboot_t(0.0*pars.L3dep),procs,chir_flag);
   cout<<"result: "<<phys_res.ave_err()<<endl;
   
-  //bool include_small_vol=(FSE::variations[case_of<c_FSE>(isyst)]!=hl::FSE::NOSMALLVOL);
+  //bool include_small_vol=(FSE::variations[case_of<c_FSE>(isyst)]!=hl::FSE::NOSTDEP);
   //bool include_coarse=(cont::variations[case_of<c_cont>(isyst)]!=hl::cont::CONSTANT);
   
   set_default_grace(ext_data);
@@ -1660,7 +1660,7 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
       const size_t chir_FLAG=hl::chir::variations[hl::case_of<hl::c_chir>(isyst)];
       //const size_t cont_FLAG=hl::cont::variations[hl::case_of<hl::c_cont>(isyst)];
       const bool use_cov=false;
-      const size_t iFSE_max=(FSE_FLAG==hl::FSE::WITHSTDEP)?1:0; //ord_max={1,2} and with structure dep we take 2
+      const size_t iFSE_max=(FSE_FLAG==hl::FSE::NOSMALLVOL)?1:0; //ord_max={1,2} and with structure dep we take 2
       
       //! add to the fit
 #ifdef XI
@@ -1675,7 +1675,7 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
 	  
 	  //check if to include
 	  bool include=true;
-	  if(FSE_FLAG==hl::FSE::NOSMALLVOL) include&=ens.use_for_L;
+	  if(FSE_FLAG==hl::FSE::NOSTDEP) include&=ens.use_for_L;
 	  if(chir_FLAG==hl::chir::QUADRATICLOG) include&=ens.use_for_chir;
 	  //if(cont_FLAG==hl::cont::CONSTANT) include&=ens.use_for_a;
 	  
