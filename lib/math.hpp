@@ -37,7 +37,11 @@ namespace Impl
   {
     template <class T>
     static constexpr T get(T x)
-    {return x*PowN<N-1>::get(x);}
+    {
+      return
+	PowN<N/2>::get(x)*
+	PowN<N-N/2>::get(x);
+    }
   };
   
   //! special case, N=0, terminator for the recursion
@@ -47,6 +51,15 @@ namespace Impl
     template <class T>
     static constexpr T get(T x)
     {return 1;}
+  };
+  
+  //! special case, N=0, terminator for the recursion
+  template <>
+  struct PowN<1>
+  {
+    template <class T>
+    static constexpr T get(T x)
+    {return x;}
   };
 }
 
