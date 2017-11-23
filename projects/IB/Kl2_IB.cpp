@@ -943,7 +943,7 @@ djvec_t prepare_z_for_FSE(const string &path,const djack_t &jbetal)
 }
 
 //! implements eq.50 of Silvano note BUT not dA/A
-dboot_t Wreg_contr(const dboot_t &a)
+dboot_t Wreg1_contr(const dboot_t &a)
 {
   const double uss=1/(16*sqr(M_PI));
   
@@ -964,6 +964,20 @@ dboot_t Wreg_contr(const dboot_t &a)
   
   //return 0.5*(Z11+Z12+Z21+Z22);
   return Z11+Z12;
+}
+
+//! (mixing and rotation op.2)
+dboot_t Wreg2_contr(const dboot_t &a)
+{
+  const double uss=1/(16*sqr(M_PI));
+ 
+  dboot_t Zmarci=uss*(-1.5-2.0*log(a*MW)-11.852);
+  
+  //pure Wilson photon
+  dboot_t Z11=uss*(4.0*log(a*MW)-15.539)-0.5*Zmarci;
+  dboot_t Z22=uss*(2.0*log(a*MW)-14.850)-0.5*Zmarci;
+
+  return Z11-Z22;
 }
 
 //////////////////////////////////////////////////////////////////// cont chir extrap for hl //////////////////////////////////////////////////////
@@ -1499,10 +1513,15 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
   ofstream FSE_tab(FSE_tab_path);
   if(not FSE_tab.good()) CRASH("unable to open %s",FSE_tab_path.c_str());
   
-  //open a table for Wreg contribution
-  string Wreg_contr_tab_path="tables/Wreg_contr_proc"+to_string(iproc)+".txt";
-  ofstream Wreg_contr_tab(Wreg_contr_tab_path);
-  if(not Wreg_contr_tab.good()) CRASH("unable to open %s",Wreg_contr_tab_path.c_str());
+  //open a table for Wreg1 contribution
+  string Wreg1_contr_tab_path="tables/Wreg1_contr_proc"+to_string(iproc)+".txt";
+  ofstream Wreg1_contr_tab(Wreg1_contr_tab_path);
+  if(not Wreg1_contr_tab.good()) CRASH("unable to open %s",Wreg1_contr_tab_path.c_str());
+
+  //open a table for Wreg2 contribution
+  string Wreg2_contr_tab_path="tables/Wreg2_contr_proc"+to_string(iproc)+".txt";
+  ofstream Wreg2_contr_tab(Wreg2_contr_tab_path);
+  if(not Wreg2_contr_tab.good()) CRASH("unable to open %s",Wreg2_contr_tab_path.c_str());
   
   //open a table for QED contribution
   string qed_corr_tab_path="tables/QED_corr_proc"+to_string(iproc)+".txt";
@@ -1572,10 +1591,15 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
 	  FSE_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<endl;
 	  for(size_t i=0;i<FSE_contr.size();i++) FSE_tab<<" "<<i<<" "<<FSE_contr[i].ave_err()<<endl;
 	  
-	  //! contribution due to W reg (2*e2 added)
-	  const dboot_t W_contr=2*Wreg_contr(a)*e2;
-	  Wreg_contr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<", Wreg_contr to amplitude: "<<
-	    smart_print(W_contr.ave_err())<<endl;
+	  //! contribution due to W reg1 (2*e2 added)
+	  const dboot_t W1_contr=2*Wreg1_contr(a)*e2;
+	  Wreg1_contr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<", Wreg1_contr to amplitude: "<<
+	    smart_print(W1_contr.ave_err())<<endl;
+
+	  //! contribution due to W reg2 (2*e2 added)
+	  const dboot_t W2_contr=2*Wreg2_contr(a)*e2*(Za[ib]-Zv[ib])/(2*Zv[ib]);
+	  Wreg2_contr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<", Wreg2_contr to amplitude: "<<
+	    smart_print(W2_contr.ave_err())<<endl;
 	  
 	  //! maximum energy for emitted photon
 	  const dboot_t DeltaE=Mmes*(1-sqr((dboot_t)(MLep[ilep]/Mmes)))/2.0;
@@ -1604,8 +1628,10 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
 	      const dboot_t rate_MASS_mass=-2.0*dM_MASS_rel*include_stong_IB; //and this as well
 	      const double marc_sirl=e2/(2*sqr(M_PI))*log(MZ/MW);
 	      const dboot_t rate_pt=Gamma_pt(MLep,Mmes,DeltaE)*e2; //only e2
+
+	      const double Z_fact=1.0;
 	      
-	      const dboot_t tot_but_FSE=external+internal_QED+internal_MASS+W_contr+rate_QED_mass+rate_MASS_mass+rate_pt+marc_sirl;
+	      const dboot_t tot_but_FSE=external+internal_QED+internal_MASS+(W1_contr+W2_contr)*Z_fact+rate_QED_mass+rate_MASS_mass+rate_pt+marc_sirl;
 	      if(ifrange==0 and input_an_id==0 and ens.ib==0 and fabs(ens.aml-0.0040)<1e-6)
 		A40_XX_file.write_ave_err(ens.L,tot_but_FSE.ave_err());
 	      
@@ -1619,7 +1645,8 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
 		    ",\n external: "<<smart_print(external.ave_err())<<
 		    ",\n internal QED: "<<smart_print(internal_QED.ave_err())<<
 		    ",\n internal MASS: "<<smart_print(internal_MASS.ave_err())<<
-		    ",\n W contr: "<<smart_print(W_contr.ave_err())<<
+		    ",\n W1 contr: "<<smart_print(W1_contr.ave_err())<<
+		    ",\n W2 contr: "<<smart_print(W2_contr.ave_err())<<
 		    ",\n FSE contr: "<<smart_print(FSE_contr[iFSE_max].ave_err())<<
 		    ",\n rate QED mass: "<<smart_print(rate_QED_mass.ave_err())<<
 		    ",\n rate MASS mass: "<<smart_print(rate_MASS_mass.ave_err())<<
