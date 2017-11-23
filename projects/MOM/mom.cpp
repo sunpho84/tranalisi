@@ -164,6 +164,10 @@ int main(int narg,char **arg)
   use_QED=input.read<bool>("UseQED");
   print_each_mom=input.read<bool>("PrintEachMom");
   
+  double ainv=input.read<double>("aInv");
+  ev::Nf_t Nf=ev::Nf_t_of_Nf(input.read<int>("Nf"));
+  int ord=3;
+  
   //////////////////////////////////////////////////
   
   //set the number of jackknives
@@ -228,15 +232,13 @@ int main(int narg,char **arg)
   //Subtracted Zq, with and without EM, all moms, averaged r
   djvec_t Zq_chir_allmoms(imoms.size());
   djvec_t Zq_chir_allmoms_sub(imoms.size());
+  djvec_t Zq_chir_allmoms_sub_evolved(imoms.size());
   djvec_t Zq_sig1_chir_allmoms(imoms.size());
   djvec_t Zq_sig1_chir_allmoms_sub(imoms.size());
-  djvec_t Zq_sig1_EM_chir_allmoms;
-  djvec_t Zq_sig1_EM_chir_allmoms_sub;
-  if(use_QED)
-    {
-      Zq_sig1_EM_chir_allmoms.resize(imoms.size());
-      Zq_sig1_EM_chir_allmoms_sub.resize(imoms.size());
-    }
+  djvec_t Zq_sig1_chir_allmoms_sub_evolved(imoms.size());
+  djvec_t Zq_sig1_EM_chir_allmoms(imoms.size());
+  djvec_t Zq_sig1_EM_chir_allmoms_sub(imoms.size());
+  djvec_t Zq_sig1_EM_chir_allmoms_sub_evolved(imoms.size());
   
   //! list of task to chirally extrapolate Zq
   vector<tuple<djvec_t*,djvec_t*,string>> Zq_chirextr_tasks{
@@ -245,11 +247,13 @@ int main(int narg,char **arg)
   if(use_QED) Zq_chirextr_tasks.push_back(make_tuple(&Zq_sig1_EM_allmoms,&Zq_sig1_EM_chir_allmoms,"Zq_sig1_EM"));
   
   djvec_t Zbil_allmoms(im_r_im_r_iZbil_imom_ind.max());
-  djvec_t Zbil_chir_allmoms_sub(iZbil_imom_ind.max());
   djvec_t Zbil_chir_allmoms(iZbil_imom_ind.max());
+  djvec_t Zbil_chir_allmoms_sub(iZbil_imom_ind.max());
+  djvec_t Zbil_chir_allmoms_sub_evolved(iZbil_imom_ind.max());
   djvec_t Zbil_QED_allmoms(im_r_im_r_iZbil_imom_ind.max());
   djvec_t Zbil_QED_chir_allmoms(iZbil_imom_ind.max());
   djvec_t Zbil_QED_chir_allmoms_sub(iZbil_imom_ind.max());
+  djvec_t Zbil_QED_chir_allmoms_sub_evolved(iZbil_imom_ind.max());
   
   vector<m_r_mom_conf_props_t> props; //!< store props for individual conf
   
@@ -371,6 +375,15 @@ int main(int narg,char **arg)
 	  Zq_sig1_EM_chir_allmoms_sub[imom]=Zq_sig1_EM_chir_allmoms[imom]-sub_EM;
 	}
       
+      //evolver
+      double p2=mom.p(L).norm2();
+      double evolver_Zq=evolution_Zq_to_RIp(Nf,ord,ainv,p2);
+      cout<<"EvolverZq["<<p2<<"]="<<evolver_Zq<<endl;
+      
+      Zq_chir_allmoms_sub_evolved[imom]=Zq_chir_allmoms_sub[imom]/evolver_Zq;
+      Zq_sig1_chir_allmoms_sub_evolved[imom]=Zq_sig1_chir_allmoms_sub[imom]/evolver_Zq;
+      Zq_sig1_EM_chir_allmoms_sub_evolved[imom]=Zq_sig1_EM_chir_allmoms_sub[imom]/evolver_Zq;
+      
       proj_time.start();
       djvec_t pr_bil_mom=compute_proj_bil(jprop_inv,jverts.LO,jprop_inv,im_r_ind);
       djvec_t pr_bil_chir_mom(nZbil);
@@ -476,12 +489,17 @@ int main(int narg,char **arg)
 	    }
 	}
       
-      //build Z in the chiral limit
+      //builds Z in the chiral limit and evolves it
       for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	{
 	  const size_t iZbil_imom=iZbil_imom_ind({iZbil,imom});
+	  
+	  double p2=mom.p(L).norm2();
+	  const double evolver_Zbil=evolution_Zbil_to_RIp(iZbil_t_list[iZbil],Nf,ord,ainv,p2);
+	  cout<<"EvolverZ"<<Zbil_tag[iZbil]<<"["<<p2<<"]="<<evolver_Zbil<<endl;
 	  Zbil_chir_allmoms[iZbil_imom]=sqrt(Zq_sig1_chir_allmoms[imom]*Zq_sig1_chir_allmoms[imom])/pr_bil_chir_mom[iZbil];
 	  Zbil_chir_allmoms_sub[iZbil_imom]=sqrt(Zq_sig1_chir_allmoms_sub[imom]*Zq_sig1_chir_allmoms_sub[imom])/pr_bil_chir_mom_sub[iZbil];
+	  Zbil_chir_allmoms_sub_evolved[iZbil_imom]=Zbil_chir_allmoms_sub[iZbil_imom]/evolver_Zbil;
 	  
 	  if(use_QED)
 	    {
@@ -491,6 +509,8 @@ int main(int narg,char **arg)
 	      Zbil_QED_chir_allmoms_sub[iZbil_imom]=
 		pr_bil_QED_chir_mom_sub[iZbil]/pr_bil_chir_mom_sub[iZbil]+
 		    (Zq_sig1_EM_chir_allmoms_sub[imom]/Zq_sig1_chir_allmoms_sub[imom]+Zq_sig1_EM_chir_allmoms_sub[imom]/Zq_sig1_chir_allmoms_sub[imom])/2.0;
+	      Zbil_QED_chir_allmoms_sub_evolved[iZbil_imom]=
+		Zbil_QED_chir_allmoms_sub[iZbil_imom]/evolver_Zbil;
 	    }
 	}
     }
@@ -508,31 +528,37 @@ int main(int narg,char **arg)
   //chirally extrapolated ones
   djvec_t Zq_chir=average_equiv_moms(Zq_chir_allmoms,indep_imom_ind,imom_ind);
   djvec_t Zq_chir_sub=average_equiv_moms(Zq_chir_allmoms_sub,indep_imom_ind,imom_ind);
+  djvec_t Zq_chir_sub_evolved=average_equiv_moms(Zq_chir_allmoms_sub_evolved,indep_imom_ind,imom_ind);
   djvec_t Zq_sig1_chir=average_equiv_moms(Zq_sig1_chir_allmoms,indep_imom_ind,imom_ind);
   djvec_t Zq_sig1_EM_chir=average_equiv_moms(Zq_sig1_EM_chir_allmoms,indep_imom_ind,imom_ind);
   djvec_t Zq_sig1_chir_sub=average_equiv_moms(Zq_sig1_chir_allmoms_sub,indep_imom_ind,imom_ind);
+  djvec_t Zq_sig1_chir_sub_evolved=average_equiv_moms(Zq_sig1_chir_allmoms_sub_evolved,indep_imom_ind,imom_ind);
   djvec_t Zq_sig1_EM_chir_sub=average_equiv_moms(Zq_sig1_EM_chir_allmoms_sub,indep_imom_ind,imom_ind);
+  djvec_t Zq_sig1_EM_chir_sub_evolved=average_equiv_moms(Zq_sig1_EM_chir_allmoms_sub_evolved,indep_imom_ind,imom_ind);
   
   djvec_t Zbil_chir=average_equiv_moms(Zbil_chir_allmoms,iZbil_indep_imom_ind,iZbil_imom_ind);
   djvec_t Zbil_chir_sub=average_equiv_moms(Zbil_chir_allmoms_sub,iZbil_indep_imom_ind,iZbil_imom_ind);
+  djvec_t Zbil_chir_sub_evolved=average_equiv_moms(Zbil_chir_allmoms_sub_evolved,iZbil_indep_imom_ind,iZbil_imom_ind);
   djvec_t Zbil_QED_chir=use_QED?average_equiv_moms(Zbil_QED_chir_allmoms,iZbil_indep_imom_ind,iZbil_imom_ind):djvec_t();
   djvec_t Zbil_QED_chir_sub=use_QED?average_equiv_moms(Zbil_QED_chir_allmoms_sub,iZbil_indep_imom_ind,iZbil_imom_ind):djvec_t();
+  djvec_t Zbil_QED_chir_sub_evolved=use_QED?average_equiv_moms(Zbil_QED_chir_allmoms_sub_evolved,iZbil_indep_imom_ind,iZbil_imom_ind):djvec_t();
   
-  using Z_plot_task_t=tuple<djvec_t*,djvec_t*,djvec_t*,string>;
+  using Z_plot_task_t=tuple<djvec_t*,djvec_t*,djvec_t*,djvec_t*,string>;
   
   //! list of task to plot chiral extrapolation Zq
   vector<Z_plot_task_t> Zq_plot_tasks{
-    {&Zq,&Zq_chir,&Zq_chir_sub,string("Zq")},
-    {&Zq_sig1,&Zq_sig1_chir,&Zq_sig1_chir_sub,"Zq_sig1"}};
-  if(use_QED) Zq_plot_tasks.push_back(make_tuple(&Zq_sig1_EM,&Zq_sig1_EM_chir,&Zq_sig1_EM_chir_sub,"Zq_sig1_EM"));
+    {&Zq,&Zq_chir,&Zq_chir_sub,&Zq_chir_sub_evolved,string("Zq")},
+    {&Zq_sig1,&Zq_sig1_chir,&Zq_sig1_chir_sub,&Zq_sig1_chir_sub_evolved,"Zq_sig1"}};
+  if(use_QED) Zq_plot_tasks.push_back(make_tuple(&Zq_sig1_EM,&Zq_sig1_EM_chir,&Zq_sig1_EM_chir_sub,&Zq_sig1_EM_chir_sub_evolved,"Zq_sig1_EM"));
   
   for(auto &p : Zq_plot_tasks)
     {
       //decript the tuple
       const djvec_t &Zq=(*get<0>(p));
-      djvec_t &Zq_chir=(*get<1>(p));
-      djvec_t &Zq_chir_sub=(*get<2>(p));
-      const string &tag=get<3>(p);
+      const djvec_t &Zq_chir=(*get<1>(p));
+      const djvec_t &Zq_chir_sub=(*get<2>(p));
+      const djvec_t &Zq_chir_sub_evolved=(*get<3>(p));
+      const string &tag=get<4>(p);
       
       //loop over all r
       for(size_t r=0;r<nr;r++)
@@ -542,7 +568,7 @@ int main(int narg,char **arg)
 	  out.new_data_set();
 	  
 	  //m
-	  for(size_t im=0;im<nm+2;im++)
+	  for(size_t im=0;im<nm+3;im++)
 	    {
 	      for(size_t indep_imom=0;indep_imom<equiv_imoms.size();indep_imom++)
 		{
@@ -550,6 +576,7 @@ int main(int narg,char **arg)
 		  if(im<nm) y=Zq[im_r_indep_imom_ind({im,r,indep_imom})];
 		  if(im==nm+0) y=Zq_chir[indep_imom];
 		  if(im==nm+1) y=Zq_chir_sub[indep_imom];
+		  if(im==nm+2) y=Zq_chir_sub_evolved[indep_imom];
 		  
 		  out.write_ave_err(imoms[equiv_imoms[indep_imom].first].p(L).tilde().norm2(),y.ave_err());
 		}
@@ -559,8 +586,8 @@ int main(int narg,char **arg)
     }
   
   //! list of task to print the chiral extrapolate bilinears
-  vector<Z_plot_task_t> Zbil_tasks{{&Zbil,&Zbil_chir,&Zbil_chir_sub,string("Zbil")}};
-  if(use_QED) Zbil_tasks.push_back(make_tuple(&Zbil_QED,&Zbil_QED_chir,&Zbil_QED_chir_sub,"Zbil_EM"));
+  vector<Z_plot_task_t> Zbil_tasks{{&Zbil,&Zbil_chir,&Zbil_chir_sub,&Zbil_chir_sub_evolved,string("Zbil")}};
+  if(use_QED) Zbil_tasks.push_back(make_tuple(&Zbil_QED,&Zbil_QED_chir,&Zbil_QED_chir_sub,&Zbil_QED_chir_sub_evolved,"Zbil_EM"));
   
   for(auto &p : Zbil_tasks)
     {
@@ -568,7 +595,8 @@ int main(int narg,char **arg)
       const djvec_t &Z=(*get<0>(p));
       const djvec_t &Z_chir=(*get<1>(p));
       const djvec_t &Z_chir_sub=(*get<2>(p));
-      const string &tag=get<3>(p);
+      const djvec_t &Z_chir_sub_evolved=(*get<3>(p));
+      const string &tag=get<4>(p);
       
       for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	{
@@ -592,7 +620,7 @@ int main(int narg,char **arg)
 	      }
 	  
 	  //write chiral extrap and subtracted
-	  for(auto &Ztag : vector<tuple<const djvec_t*,string>>{{&Z_chir,"chir"},{&Z_chir_sub,"sub"}})
+	  for(auto &Ztag : vector<tuple<const djvec_t*,string>>{{&Z_chir,"chir"},{&Z_chir_sub,"sub"},{&Z_chir_sub_evolved,"evo"}})
 	    {
 	      out.set_legend(get<1>(Ztag));
 	      for(size_t indep_imom=0;indep_imom<equiv_imoms.size();indep_imom++)
@@ -601,7 +629,6 @@ int main(int narg,char **arg)
 	    }
 	}
     }
-  
   
   //print time statistics
   cout<<ts<<endl;

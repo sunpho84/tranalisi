@@ -15,11 +15,14 @@
 #endif
 
 //! bilinears Z
-enum iZbil{iZS,iZA,iZP,iZV,iZT};
+enum iZbil_t{iZS,iZA,iZP,iZV,iZT};
 const string Zbil_tag="SAPVT";
 
 //! number of Z
 const size_t nZbil=5;
+
+//! holds all iZbil_t
+const iZbil_t iZbil_t_list[nZbil]={iZS,iZA,iZP,iZV,iZT};
 
 //! holds jackkniffed vertex for an mr combo and for a given mom
 class jbil_vert_t
