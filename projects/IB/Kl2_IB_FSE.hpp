@@ -15,7 +15,8 @@ const double def_ustar=1.0,def_eps=1e-12;
 vector<double> zeta_FSE(double betal,double ustar=def_ustar,double eps=def_eps);
 
 //! wrapper for vector type
-template <class TS,class TV=vmeas_t<TS>> TV zeta_FSE(const TS &betal,double ustar=def_ustar,double eps=def_eps)
+template <class TS,class TV=vmeas_t<TS>>
+TV zeta_FSE(const TS &betal,double ustar=def_ustar,double eps=def_eps)
 {
   TV out(nZ_FSE);
   for(size_t iel=0;iel<betal.size();iel++) out.put_all_events(zeta_FSE(betal[iel],ustar,eps),iel);

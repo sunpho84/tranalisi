@@ -1640,7 +1640,7 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
 }
 
 //! extrapolate a single corr
- void extrapolate_corr(const dbvec_t &tot_corr_all,const procs_t &procs,const size_t istudy,const size_t ilep)
+void extrapolate_corr(const dbvec_t &tot_corr_all,const procs_t &procs,const size_t istudy,const size_t ilep,const size_t iFSE_max)
 {
   dbvec_t res(hl::ind_syst.max());
   
@@ -1660,7 +1660,6 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
       const size_t chir_FLAG=hl::chir::variations[hl::case_of<hl::c_chir>(isyst)];
       //const size_t cont_FLAG=hl::cont::variations[hl::case_of<hl::c_cont>(isyst)];
       const bool use_cov=false;
-      const size_t iFSE_max=(FSE_FLAG==hl::FSE::NOSMALLVOL)?1:0; //ord_max={1,2} and with structure dep we take 2
       
       //! add to the fit
 #ifdef XI
@@ -1967,7 +1966,8 @@ int main(int narg,char **arg)
     tot_corr_proc[iproc]=compute_corr(iproc,INCLUDE_IB);
   
   const size_t iLEP=0;
-  extrapolate_corr(tot_corr_proc[iK]-tot_corr_proc[iPi],{{iK,+1.0},{iPi,-1.0}},STUDY_K_M_PI,iLEP);
+  //iFSE_max=0 -> max_ord=1, iFSE_max=1 -> max_ord=2, defined in FSE_max_orders
+  extrapolate_corr(tot_corr_proc[iK]-tot_corr_proc[iPi],{{iK,+1.0},{iPi,-1.0}},STUDY_K_M_PI,iLEP,/*iFSE_max*/ 0);
   //extrapolate_corr(tot_corr_proc[iPi],{{iPi,1.0}},STUDY_PI,iLEP);
   //extrapolate_corr(tot_corr_proc[iK],{{iK,1.0}},STUDY_K,iLEP);
   
