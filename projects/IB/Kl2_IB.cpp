@@ -646,27 +646,36 @@ namespace hl
   //! chiral extrapolation variations
   namespace chir
   {
-    enum{QUADRATIC,QUADRATICLOG};
+    enum t{QUADRATIC,QUADRATICLOG};
     const vector<int> variations={QUADRATIC,QUADRATICLOG};
     const vector<string> tag={"QUADRATIC","QUADRATICLOG"};
     const size_t nvariations=variations.size();
   }
-  
-  //! infinite volume extrapolation variations
+
   namespace FSE
   {
-    enum{WITHSTDEP,NOSMALLVOL,NOSTDEP};
-    const vector<int> variations={WITHSTDEP,// NOSMALLVOL,
-				  NOSTDEP};
-    const vector<string> tag={"WITHSTDEP",// "NOSMALLVOL",
-			      "NOSTDEP"};
-    const size_t nvariations=variations.size();
+    //! variations of data subtraction of FSE
+    namespace SUB_STDEP
+    {
+      enum t{NO,YES};
+      const vector<string> tag={"SUB_STDEP_NO","SUB_STDEP_YES"};
+    }
+    
+    //! variations of fit of FSE
+    namespace FIT_STDEP
+    {
+      enum t{NO,YES};
+      const vector<string> tag={"FIT_STDEP_NO","FIT_STDEP_YES"};
+    }
+    
+    //! consider two variations for the fit
+    const size_t nvariations=2;
   }
   
   //! continuum extrapolation variations
   namespace cont
   {
-    enum{LINEAR,CONSTANT};
+    enum t{LINEAR,CONSTANT};
     const vector<int> variations={LINEAR,CONSTANT};
     const vector<string> tag={"LINEAR","CONSTANT"};
     const size_t nvariations=variations.size();
@@ -1260,7 +1269,7 @@ void set_default_grace(const vector<T> &ext_data)
 // }
 
 //! perform the fit to the continuum limit of correction of process
-dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const double &MLep,const string &path,const procs_t &procs,const size_t isyst,const bool cov_flag,const vector<string> &beta_list,const size_t istudy)
+dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const double &MLep,const string &path,const procs_t &procs,const size_t isyst,const bool cov_flag,const vector<string> &beta_list,const size_t istudy,const vector<hl::FSE::FIT_STDEP::t> &FSE_fit_variations)
 {
   using namespace hl;
   
@@ -1280,7 +1289,7 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   ave_err_t adep_guess;
   const ave_err_t adep_ml_guess={0,0.001};
   
-  const size_t FSE_flag=FSE::variations[case_of<c_FSE>(isyst)];
+  const size_t FSE_FIT_flag=FSE_fit_variations[case_of<c_FSE>(isyst)];
   const size_t chir_flag=chir::variations[case_of<c_chir>(isyst)];
   
   switch(istudy)
@@ -1291,22 +1300,9 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
       K2Pi_guess={1,0.5};
       adep_guess={0.003,0.006};
       
-      switch(FSE_flag)
-	{
-	  using namespace FSE;
-	case WITHSTDEP:
-	  L2dep_guess=ave_err_t(-0.16,0.1);
-	  L3dep_guess=ave_err_t(0.04,0.03);
-	  break;
-	case NOSMALLVOL:
-	  L2dep_guess=ave_err_t(-0.068,0.09);
-	  L3dep_guess=ave_err_t(-0.03,0.03);
-	  break;
-	case NOSTDEP:
-	  L2dep_guess=ave_err_t(0.0,0.1);
-	  L3dep_guess=ave_err_t(0.0,0.1);
-	  break;
-	}
+      //we always fit FSE
+      L2dep_guess=ave_err_t(-0.16,0.1);
+      L3dep_guess=ave_err_t(0.04,0.03);
       break;
       
     case STUDY_K_M_PI:
@@ -1327,18 +1323,14 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
 	  break;
 	}
       
-      switch(FSE_flag)
+      switch(FSE_FIT_flag)
 	{
-	  using namespace FSE;
-	case WITHSTDEP:
+	  using namespace FSE::FIT_STDEP;
+	case YES:
 	  L2dep_guess=ave_err_t(-0.27,0.1);
 	  L3dep_guess=ave_err_t(0.1,0.03);
 	  break;
-	case NOSMALLVOL:
-	  L2dep_guess=ave_err_t(-0.24,0.1);
-	  L3dep_guess=ave_err_t(0.05,0.03);
-	  break;
-	case NOSTDEP:
+	case NO:
 	  L2dep_guess=ave_err_t(0.0,0.1);
 	  L3dep_guess=ave_err_t(0.0,0.1);
 	  break;
@@ -1350,21 +1342,10 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
       KPi_guess={0.00,0.03};
       K2Pi_guess={0.0,0.1};
       adep_guess={0.003,0.006};
-      switch(FSE_flag)
-	{
-	  using namespace FSE;
-	case WITHSTDEP:
-	  L2dep_guess=ave_err_t(0.16,0.1);
-	  L3dep_guess=ave_err_t(-0.04,0.03);
-	  break;
-	case NOSMALLVOL:
-	  L2dep_guess=ave_err_t(0.068,0.09);
-	  L3dep_guess=ave_err_t(0.03,0.03);
-	  break;
-	case NOSTDEP:
-	  L2dep_guess=ave_err_t(0.0,0.1);
-	  L3dep_guess=ave_err_t(0.0,0.1);
-	}
+      
+      //we always fit FSE
+      L2dep_guess=ave_err_t(0.16,0.1);
+      L3dep_guess=ave_err_t(-0.04,0.03);
       break;
     }
   
@@ -1381,17 +1362,15 @@ dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
   //boot_fit.fix_par_to(pars.iL3dep,0.0);
   
   //set FSE pars
-  switch(FSE_flag)
+  switch(FSE_FIT_flag)
     {
-     using namespace FSE;
-    case NOSTDEP:
+      using namespace FSE::FIT_STDEP;
+    case NO:
       cout<<"Fixing Ldep"<<endl;
       boot_fit.fix_par_to(pars.iL2dep,0.0);
       boot_fit.fix_par_to(pars.iL3dep,0.0);
       break;
-    case WITHSTDEP:
-    case NOSMALLVOL:
-      //if(istudy==STUDY_K_M_PI) boot_fit.fix_par_to(pars.iL3dep,0.0);
+    case YES:
       break;
     }
   
@@ -1667,7 +1646,8 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
 }
 
 //! extrapolate a single corr
-void extrapolate_corr(const dbvec_t &tot_corr_all,const procs_t &procs,const size_t istudy,const size_t ilep,const size_t iFSE_max)
+void extrapolate_corr(const dbvec_t &tot_corr_all,const procs_t &procs,const size_t istudy,const size_t ilep,
+		      const vector<hl::FSE::SUB_STDEP::t> FSE_sub_variations,const vector<hl::FSE::FIT_STDEP::t> &FSE_fit_variations)
 {
   dbvec_t res(hl::ind_syst.max());
   
@@ -1677,13 +1657,16 @@ void extrapolate_corr(const dbvec_t &tot_corr_all,const procs_t &procs,const siz
       cout<<"------------------------------------------------- "<<isyst<<" -------------------------------------------------"<<endl;
       
       cout<<hl::ind_syst.descr(isyst)<<endl;
+      const size_t iFSE_variation=hl::case_of<hl::c_FSE>(isyst);
+      const hl::FSE::FIT_STDEP::t FSE_fit=FSE_fit_variations[iFSE_variation];
+      const hl::FSE::SUB_STDEP::t FSE_sub=FSE_sub_variations[iFSE_variation];
       cout<<"CONT: "<<hl::cont::tag[hl::case_of<hl::c_cont>(isyst)]<<endl;
       cout<<"CHIR: "<<hl::chir::tag[hl::case_of<hl::c_chir>(isyst)]<<endl;
-      cout<<"FSE: "<<hl::FSE::tag[hl::case_of<hl::c_FSE>(isyst)]<<endl;
+      cout<<"FSE_FIT: "<<hl::FSE::FIT_STDEP::tag[FSE_fit]<<endl;
+      cout<<"FSE_SUB: "<<hl::FSE::SUB_STDEP::tag[FSE_sub]<<endl;
       
       const size_t input_an_id=hl::case_of<hl::c_input>(isyst);
       const size_t ifrange=hl::case_of<hl::c_frange>(isyst);
-      const size_t FSE_FLAG=hl::FSE::variations[hl::case_of<hl::c_FSE>(isyst)];
       const size_t chir_FLAG=hl::chir::variations[hl::case_of<hl::c_chir>(isyst)];
       //const size_t cont_FLAG=hl::cont::variations[hl::case_of<hl::c_cont>(isyst)];
       const bool use_cov=false;
@@ -1697,11 +1680,11 @@ void extrapolate_corr(const dbvec_t &tot_corr_all,const procs_t &procs,const siz
       for(size_t iens=0;iens<nens_used;iens++)
 	{
 	  const ens_pars_t &ens=ens_pars[iens];
-	  const size_t idata=hl::ind_an_ens_FSEmax_frange({input_an_id,iens,iFSE_max,ifrange});
+	  const size_t idata=hl::ind_an_ens_FSEmax_frange({input_an_id,iens,FSE_sub,ifrange});
 	  
 	  //check if to include
 	  bool include=true;
-	  if(FSE_FLAG==hl::FSE::NOSTDEP) include&=ens.use_for_L;
+	  //include&=ens.use_for_L;
 	  if(chir_FLAG==hl::chir::QUADRATICLOG) include&=ens.use_for_chir;
 	  //if(cont_FLAG==hl::cont::CONSTANT) include&=ens.use_for_a;
 	  
@@ -1729,7 +1712,7 @@ void extrapolate_corr(const dbvec_t &tot_corr_all,const procs_t &procs,const siz
       const double MMes_phys((iproc==0)?MP0:MK0);
       res[isyst]=cont_chir_fit_corr_xi_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,xi_phys,xi_s_phys,MMes_phys,MLep[iproc],cc_path,iproc,isyst,use_cov,beta_list);
 #else
-      res[isyst]=cont_chir_fit_corr_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,lat_par[input_an_id].ml,lat_par[input_an_id].ms,MLep[ilep],cc_path,procs,isyst,use_cov,beta_list,istudy);
+      res[isyst]=cont_chir_fit_corr_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,lat_par[input_an_id].ml,lat_par[input_an_id].ms,MLep[ilep],cc_path,procs,isyst,use_cov,beta_list,istudy,FSE_fit_variations);
 #endif
     }
   
@@ -1994,10 +1977,12 @@ int main(int narg,char **arg)
   
   const size_t iLEP=0;
   //iFSE_max=0 -> max_ord=1, iFSE_max=1 -> max_ord=2, defined in FSE_max_orders
-  extrapolate_corr(tot_corr_proc[iK]-tot_corr_proc[iPi],{{iK,+1.0},{iPi,-1.0}},STUDY_K_M_PI,iLEP,/*iFSE_max*/ 0);
-  //extrapolate_corr(tot_corr_proc[iPi],{{iPi,1.0}},STUDY_PI,iLEP,0);
-  //extrapolate_corr(tot_corr_proc[iK],{{iK,1.0}},STUDY_K,iLEP,0);
-  
+  extrapolate_corr(tot_corr_proc[iK]-tot_corr_proc[iPi],{{iK,+1.0},{iPi,-1.0}},STUDY_K_M_PI,iLEP,
+		   {hl::FSE::SUB_STDEP::NO,hl::FSE::SUB_STDEP::NO},
+		   {hl::FSE::FIT_STDEP::YES,hl::FSE::FIT_STDEP::NO});
+  //extrapolate_corr(tot_corr_proc[iPi],{{iPi,1.0}},STUDY_PI,iLEP);
+  //extrapolate_corr(tot_corr_proc[iK],{{iK,1.0}},STUDY_K,iLEP);
+
   cout<<endl<<"Total time: "<<time(0)-start<<" s"<<endl;
   
   return 0;
