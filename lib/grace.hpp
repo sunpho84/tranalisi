@@ -26,7 +26,7 @@ namespace grace
   enum line_style_t{NO_LINE,CONTINUOUS_LINE,SHORT_DASHED_LINE,DASHED_LINE};
   enum fill_type_t{NO_FILL,AS_POLYGON,TO_BASELINE};
   enum symbol_fill_pattern_t{EMPTY_SYMBOL,FILLED_SYMBOL};
-  enum settype_t{XY,XYDY,XYDXDY};
+  enum settype_t{XY,XYDY,XYDX,XYDXDY};
   
   EXTERN_GRACE symbol_t default_symbol INIT_TO(SQUARE);
   EXTERN_GRACE double default_symbol_size INIT_TO(0.8);
@@ -337,6 +337,7 @@ public:
 	switch(ext_settype)
 	  {
 	  case grace::XY: how_s="xy";break;
+	  case grace::XYDX: how_s="xydx";break;
 	  case grace::XYDY: how_s="xydy";break;
 	  case grace::XYDXDY: how_s="xydxdy";break;
 	  default: CRASH("Unknown type %d",settype);
