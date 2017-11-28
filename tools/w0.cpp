@@ -7,20 +7,24 @@ djvec_t load(const string &path)
   raw_file_t fin(path,"r");
   
   set<size_t> tlist;
-  vector<double> p;
+  vector<double> E;
   char line[1024];
   while(fin.get_line(line)!=NULL)
     {
       size_t iconf,imeas,acc;
-      double _p;
-      if(sscanf(line,"%zu %zu %zu %lg",&iconf,&acc,&imeas,&_p)!=4) CRASH("parsing %s",line);
+      double p,r;
+      double e;
+      if(sscanf(line,"%zu %zu %zu %lg %lg %lg",&iconf,&acc,&imeas,&p,&r,&e)!=6) CRASH("parsing %s",line);
+      //if(sscanf(line,"%zu %zu %zu %lg",&iconf,&acc,&imeas,&e)!=4) CRASH("parsing %s",line);
       tlist.insert(imeas);
-      p.push_back(_p);
+      //const double c1=-1.0/12,c0=1-8*c1;
+      //E.push_back(c0*6.0*(1.0-p)+c1*12.0*(1.0-r));
+      E.push_back(e);
     };
   fin.close();
   
   const size_t nt=tlist.size();
-  const size_t nlines=p.size();
+  const size_t nlines=E.size();
   const size_t nconfs_poss=nlines/nt;
   const size_t clust_size=nconfs_poss/njacks;
   const size_t nconfs=clust_size*njacks;
@@ -44,17 +48,21 @@ djvec_t load(const string &path)
     {
       const size_t iclust=iconf/clust_size;
       for(size_t it=0;it<nt;it++)
-	res[it][iclust]+=p[conf_t_id({iconf,it})];
+	res[it][iclust]+=E[conf_t_id({iconf,it})];
     }
   res.clusterize(clust_size);
   
   return res;
 }
 
-djack_t find_w0(const vector<double> &t,const djvec_t &p,const size_t ord=1,const double w0_ref=0.3)
+djack_t find_w0(const vector<double> &t,const djvec_t &E,const size_t ord=5,const double w0_ref=0.3)
 {
   const double dt=t[1]-t[0];
-  const size_t nt=p.size();
+  const size_t nt=E.size();
+  
+  djvec_t t2E(nt);
+  for(size_t it=0;it<nt;it++) t2E[it]=E[it]*sqr(t[it]);
+  t2E.ave_err().write(t,"plots/t2E.xmg");
   
   //compute derivative of t2^p2 and multiply by t
   djvec_t r(nt);
@@ -62,13 +70,13 @@ djack_t find_w0(const vector<double> &t,const djvec_t &p,const size_t ord=1,cons
     {
       bool bw=(it>0),fw=(it+1<nt);
       djack_t d=0.0;
-      if(bw) d+=(p[it]*sqr(t[it])-p[it-1]*sqr(t[it-1]))/dt;
-      if(fw) d+=(p[it+1]*sqr(t[it+1])-p[it]*sqr(t[it]))/dt;
+      if(bw) d+=(t2E[it]-t2E[it-1])/dt;
+      if(fw) d+=(t2E[it+1]-t2E[it])/dt;
       d/=(bw+fw);
       
       r[it]=d*t[it];
     }
-  r.ave_err().write(t,"plots/tdt2p.xmg");
+  r.ave_err().write(t,"plots/tdt2E.xmg");
   
   double guess_t=0.0;
   //finds where average pass ref
@@ -84,19 +92,19 @@ djack_t find_w0(const vector<double> &t,const djvec_t &p,const size_t ord=1,cons
   djack_t w02_fr_a2;
   for(size_t ijack=0;ijack<=njacks;ijack++)
     w02_fr_a2[ijack]=Brent_solve(
-			     [w0_ref,&coeffs,ijack](double x)
-			     {
-			       double out=-w0_ref,e=1;
-			       for(size_t deg=0;deg<coeffs.size();deg++)
+				 [w0_ref,&coeffs,ijack](double x)
 				 {
-				   out+=coeffs[deg][ijack]*e;
-				   e*=x;
-				 }
-			       return out;
-			     },
-			     guess_t_min,guess_t_max);
+				   double out=-w0_ref,e=1;
+				   for(size_t deg=0;deg<coeffs.size();deg++)
+				     {
+				       out+=coeffs[deg][ijack]*e;
+				       e*=x;
+				     }
+				   return out;
+				 },
+				 guess_t_min,guess_t_max);
   
-  cout<<smart_print(w02_fr_a2.ave_err())<<endl;
+  cout<<"Intercept: "<<smart_print(w02_fr_a2.ave_err())<<endl;
   
   //print the fit
   grace_file_t fout("plots/fit.xmg");
