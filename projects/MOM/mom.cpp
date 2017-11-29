@@ -200,7 +200,7 @@ int main(int narg,char **arg)
   if(use_QED)
     for(size_t im=0;im<nm;im++)
       {
-	deltam_cr[im]=compute_deltam_cr(conf_list,tmin,tmax,im,nr);
+	deltam_cr[im]=compute_deltam_cr(conf_list,tmin,tmax,im,nr,use_QED);
 	cout<<"Deltam cr["<<im<<"]: "<<deltam_cr[im]<<endl;
       }
   deltam_cr_time.stop();
