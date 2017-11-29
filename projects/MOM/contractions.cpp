@@ -19,7 +19,11 @@ djvec_t get_contraction(const string &combo,const string &ID,vector<size_t> &con
   const size_t ncols=2;
   const string templ="out/%04zu/mes_contr_"+combo;
   const djvec_t data=read_conf_set_t(templ,conf_list,ncols,{0,1},T,SILENT);
-  if(data.size()==0) CRASH("No file opened for template %s",templ.c_str());
+  if(data.size()==0)
+    {
+      cout<<conf_list<<endl;
+      CRASH("No file opened for template %s",templ.c_str());
+    }
   
   const auto pos=find(cID.begin(),cID.end(),ID);
   if(pos==cID.end()) CRASH("Unknown %s",ID.c_str());
