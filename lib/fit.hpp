@@ -698,7 +698,8 @@ public:
 void cont_chir_fit_pol(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t_pol> &ext_data,const dboot_t &ml_phys,const string &path,dboot_t &output);
 
 //! solve a linear system
-template <class TV> TV lin_solve(vector<double> A,TV b)
+template <class TV>
+TV lin_solve(vector<double> A,TV b)
 {
   if(A.size()!=sqr(b.size())) CRASH("A has different size from b^2, size A = %zu, size b = %zu",A.size(),b.size());
   
@@ -739,7 +740,8 @@ template <class TV> TV lin_solve(vector<double> A,TV b)
 }
 
 //! perform polynomial fit
-template <class TV> TV poly_fit(const vector<double> &x,const TV &y,int d,double xmin=-1e300,double xmax=1e300,const string path="")
+template <class TV>
+TV poly_fit(const vector<double> &x,const TV &y,int d,double xmin=-1e300,double xmax=1e300,const string path="")
 {
   if(x.size()!=y.size()) CRASH("x and y have different sizes, %zu %zu",x.size(),y.size());
   
@@ -793,11 +795,14 @@ template <class TV> typename TV::base_type poly_integrate(const vector<double> &
   
   return out;
 }
-template <class TV> typename TV::base_type poly_integrate(const TV &y)
+
+template <class TV>
+typename TV::base_type poly_integrate(const TV &y)
 {return poly_integrate(vector_up_to<double>(y.size()),y);}
 
 //! compute the ch2 of a polynomial fit
-template <class TV,class TS=typename TV::base_type> TS chi2_poly_fit(const vector<double> &x,const TV &y,int d,double xmin,double xmax,const TV &pars)
+template <class TV,class TS=typename TV::base_type> TS
+chi2_poly_fit(const vector<double> &x,const TV &y,int d,double xmin,double xmax,const TV &pars)
 {
   TS ch2;
   int ndof=-pars.size();
@@ -813,7 +818,9 @@ template <class TV,class TS=typename TV::base_type> TS chi2_poly_fit(const vecto
   
   return ch2;
 }
-template <class TV,class TS=typename TV::base_type> TS chi2_poly_fit(const TV &y,int d,const TV &pars)
+
+template <class TV,class TS=typename TV::base_type>
+TS chi2_poly_fit(const TV &y,int d,const TV &pars)
 {return chi2_poly_fit(vector_up_to<double>(y.size()+1),y,d,-0.5,y.size()+0.5,pars);}
 
 #undef EXTERN_FIT
