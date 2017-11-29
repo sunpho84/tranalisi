@@ -58,7 +58,7 @@ djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size
   djvec_t P5P5_00=get("0","0","P5P5",RE,EVN,EVN);
   
   //measure mcrit according to eq.3 of hep-lat/0701012
-  djvec_t V0P5_00=get("0","0","V0P5",IM,ODD,EVN);
+  djvec_t V0P5_00=get("0","0","V0P5",IM,ODD,ODD);
   djvec_t m_cr_corr=forward_derivative(V0P5_00)/(2.0*P5P5_00);
   djack_t m_cr=constant_fit(m_cr_corr,tmin,tmax,"plots/m_cr.xmg");
   
