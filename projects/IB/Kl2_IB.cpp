@@ -1574,7 +1574,7 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
 	  const dboot_t W1_contr=2*Wreg1_contr(a)*e2;
 	  Wreg1_contr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<", Wreg1_contr to amplitude: "<<
 	    smart_print(W1_contr.ave_err())<<endl;
-
+	  
 	  //! contribution due to W reg2 (2*e2 added)
 	  const dboot_t W2_contr=2*Wreg2_contr(a)*e2*(Za[ib]-Zv[ib])/(2*Zv[ib]);
 	  Wreg2_contr_tab<<"Ensemble: "<<ens.path<<", proc: "<<iproc<<", input_an_id: "<<input_an_id<<", Wreg2_contr to amplitude: "<<
@@ -1584,7 +1584,7 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
 	  const dboot_t DeltaE=Mmes*(1-sqr((dboot_t)(MLep[ilep]/Mmes)))/2.0;
 	  cout<<"DeltaE: "<<DeltaE.ave_err()<<endl;
 	  
-	  //extract dA/A from nasty diagram ratio
+	  //! extract dA/A from nasty diagram ratio
 	  dbvec_t rat_ext=QED/LO;
 	  rat_ext[rat_ext.size()-1]=rat_ext[0]=0.0; //set to zero the contact term
 	  const size_t itint=QCD_mes_pars[iQCD_mes].itint;
