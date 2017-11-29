@@ -369,7 +369,7 @@ int main(int narg,char **arg)
       Zq_sig1_chir_allmoms_sub[imom]=Zq_sig1_chir_allmoms[imom]-sub;
       if(use_QED)
 	{
-	  double sub_EM=1.0*/*coupling*/sig1_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L);
+	  double sub_EM=-1.0*/*coupling gets -1 due to definition of expansion*/sig1_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L);
 	  Zq_sig1_EM_chir_allmoms_sub[imom]=Zq_sig1_EM_chir_allmoms[imom]-sub_EM*
 	    Zq_sig1_chir_allmoms[imom]; //factorization hypotesis
 	}
