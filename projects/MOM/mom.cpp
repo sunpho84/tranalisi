@@ -370,7 +370,8 @@ int main(int narg,char **arg)
       if(use_QED)
 	{
 	  double sub_EM=1.0*/*coupling*/sig1_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L);
-	  Zq_sig1_EM_chir_allmoms_sub[imom]=Zq_sig1_EM_chir_allmoms[imom]-sub_EM;
+	  Zq_sig1_EM_chir_allmoms_sub[imom]=Zq_sig1_EM_chir_allmoms[imom]-sub_EM*
+	    Zq_sig1_chir_allmoms[imom]; //factorization hypotesis
 	}
       
       //evolver
@@ -405,7 +406,7 @@ int main(int narg,char **arg)
       for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	{
 	  pr_bil_mom_correction[iZbil]=g2tilde*pr_bil_a2(act,gf::LANDAU,group::SU3,mom,L,iZbil);
-	  if(use_QED) pr_bil_QED_mom_correction[iZbil]=1.0*pr_bil_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L,iZbil);
+	  if(use_QED) pr_bil_QED_mom_correction[iZbil]=1.0*pr_bil_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L,iZbil)*pr_bil_chir_mom[iZbil]; //factorization hypotesis
 	}
       
       //extrapolate to chiral limit the projected bilinears
