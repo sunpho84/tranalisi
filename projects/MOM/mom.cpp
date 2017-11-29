@@ -162,7 +162,7 @@ int main(int narg,char **arg)
   const size_t tmax=input.read<size_t>("Tmax");
   
   use_QED=input.read<bool>("UseQED");
-  print_each_mom=input.read<bool>("PrintEachMom");
+  print_each_mom=input.read<int>("PrintEachMom");
   
   double ainv=input.read<double>("aInv");
   ev::Nf_t Nf=ev::Nf_t_of_Nf(input.read<int>("Nf"));
