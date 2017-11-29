@@ -57,9 +57,8 @@ djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size
     };
   
   djvec_t P5P5_00=get("0","0","P5P5",RE,EVN,EVN);
-  P5P5_00.ave_err().write("plots/m_P_"+to_string(im)+".xmg");
-  //djack_t m_P=constant_fit(effective_mass(P5P5_00),tmin,tmax,"plots/m_P_"+to_string(im)+".xmg");
-  //  cout<<"M["<<im<<": "<<m_P<<endl;
+  djack_t m_P=constant_fit(effective_mass(P5P5_00),tmin,tmax,"plots/m_P_"+to_string(im)+".xmg");
+  cout<<"M["<<im<<": "<<m_P<<endl;
   
   //measure mcrit according to eq.3 of hep-lat/0701012
   djvec_t V0P5_00=get("0","0","V0P5",IM,ODD,ODD);
