@@ -9,6 +9,7 @@
 #define EXTERN_ZBIL
  #include <Zbil.hpp>
 
+#include <ingredients.hpp>
 #include <oper.hpp>
 
 #include <prop.hpp>
@@ -64,12 +65,11 @@ djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jvert
 {
   const size_t nm=im_r_ind.max(0),nr=im_r_ind.max(1);
   index_t im_r_im_r_iG_ind({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"igamma",nGamma}});
-  index_t im_r_im_r_ibil_ind({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"ibil",nZbil}});
-  index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks+1}});
+  index_t ind({{"rest",im_r_im_r_iZbil_ind.max()},{"ijack",njacks+1}});
   
   //combine the 16 bilinears to form the 6 vertex
   const vector<vector<size_t>> iG_of_Zbil={{0},{1,2,3,4},{5},{6,7,8,9},{10,11,12,13,14,15}};
-  djvec_t pr(im_r_im_r_ibil_ind.max());
+  djvec_t pr(im_r_im_r_iZbil_ind.max());
   
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
@@ -77,7 +77,7 @@ djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jvert
       //split im_r_im_r_ibil and ijack
       vector<size_t> i_comp=ind(i);
       const size_t im_r_im_r_ibil=i_comp[0],ijack=i_comp[1];
-      const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_ibil_ind(im_r_im_r_ibil);
+      const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_iZbil_ind(im_r_im_r_ibil);
       
       //get im and r for fw and back, and ibil
       const size_t im_fw=im_r_im_r_ibil_comp[0],r_fw=im_r_im_r_ibil_comp[1];

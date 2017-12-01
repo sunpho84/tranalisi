@@ -10,9 +10,12 @@ __top_builddir__bin_mom_SOURCES= \
 	corrections.cpp \
 	contractions.cpp \
 	geometry.cpp \
+	ingredients.cpp \
 	mom.cpp \
 	prop.cpp \
+	read.cpp \
 	sig3.cpp \
+	timings.cpp \
 	Zbil.cpp \
 	Zq.cpp \
 	Zq_sig1.cpp

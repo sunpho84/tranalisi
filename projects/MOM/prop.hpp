@@ -18,6 +18,14 @@ EXTERN_PROP vector<double> am; //! quark mass
 EXTERN_PROP size_t nr; //!< number of r
 EXTERN_PROP size_t nmr; //!< total number of m and r
 
+EXTERN_PROP index_t im_r_ind; //!< index of im,r
+EXTERN_PROP index_t i_in_clust_ihit_ind; //!< index of i_in_clust,ihit
+EXTERN_PROP index_t conf_ind; //!< index of a conf given ijack and i_in_clust
+
+EXTERN_PROP string suff_hit INIT_TO(""); //!< suffix for each source
+
+EXTERN_PROP bool use_QED; //!< perform or not the QED analysis
+
 const double tau3[2]={-1.0,+1.0}; //!< tau entering the propagator
 
 //! read a propagator
