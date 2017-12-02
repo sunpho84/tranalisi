@@ -237,7 +237,7 @@ int main(int narg,char **arg)
 	  const size_t im_r_im_r_iZbil_imom=im_r_im_r_iZbil_imom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,imom})));
 	  
 	  Zbil_allmoms[im_r_im_r_iZbil_imom]=
-	    sqrt(ing.Zq_sig1_allmoms[im_r1_imom]*ing.Zq_sig1_allmoms[im_r2_imom])/ing.pr_bil_mom[im_r_im_r_iZbil];
+	    sqrt(ing.Zq_sig1_allmoms[im_r1_imom]*ing.Zq_sig1_allmoms[im_r2_imom])/ing.pr_bil_mom[im_r_im_r_iZbil_imom];
 	  
 	  if(use_QED)
 	    {
