@@ -15,7 +15,8 @@ void get_deltam_cr()
   if(use_QED) deltam_cr.resize(nm);
 
   const string deltam_cr_path="deltam_cr";
-  if(file_exists(deltam_cr_path))
+  if(file_exists(deltam_cr_path)) deltam_cr.bin_read(deltam_cr_path);
+  else
     {
       deltam_cr_time.start();
       for(size_t im=0;im<nm;im++)
@@ -26,6 +27,5 @@ void get_deltam_cr()
       deltam_cr_time.stop();
       deltam_cr.bin_write(deltam_cr_path);
     }
-  else deltam_cr.bin_read(deltam_cr_path);
 }
 
