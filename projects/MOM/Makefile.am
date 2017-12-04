@@ -9,6 +9,7 @@ bin_PROGRAMS= \
 __top_builddir__bin_mom_SOURCES= \
 	corrections.cpp \
 	contractions.cpp \
+	deltam_cr.cpp \
 	geometry.cpp \
 	ingredients.cpp \
 	mom.cpp \

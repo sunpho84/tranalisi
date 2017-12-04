@@ -5,32 +5,19 @@
 #define EXTERN_INGREDIENTS
  #include <ingredients.hpp>
 
+#include <deltam_cr.hpp>
 #include <Zq.hpp>
 #include <Zq_sig1.hpp>
 
 //! Constructor
 ingredients_t::ingredients_t()
 {
-  deltam_cr.resize(nm);
-  
   Zq_allmoms.resize(im_r_imom_ind.max());
   Zq_sig1_allmoms.resize(im_r_imom_ind.max());
   if(use_QED) Zq_sig1_EM_allmoms.resize(im_r_imom_ind.max());
   
   pr_bil_mom.resize(im_r_im_r_iZbil_imom_ind.max());
   if(use_QED) pr_bil_QED_mom.resize(im_r_im_r_iZbil_imom_ind.max());
-}
-
-//compute deltam_cr
-void ingredients_t::compute_deltam_cr()
-{
-  deltam_cr_time.start();
-  for(size_t im=0;im<nm;im++)
-    {
-      deltam_cr[im]=::compute_deltam_cr(conf_list,tmin,tmax,im,nr,use_QED);
-      cout<<"Deltam cr["<<im<<"]: "<<deltam_cr[im]<<endl;
-    }
-  deltam_cr_time.stop();
 }
 
 void ingredients_t::ri_mom()
@@ -130,20 +117,17 @@ void ingredients_t::ri_mom()
 	for(size_t iall=0;iall<im_r_im_r_iZbil_ind.max();iall++)
 	  (*t.first)[all_imom_ind({iall,imom})]=(*t.second)[iall];
       
-      
       proj_time.stop();
     }
 }
 
 void ingredients_t::bin_read(raw_file_t &file)
 {
-  deltam_cr.bin_read(file);
   for(djvec_t *o: {&Zq_allmoms,&Zq_sig1_allmoms,&Zq_sig1_EM_allmoms,&pr_bil_mom,&pr_bil_QED_mom}) o->bin_read(file);
 }
 
 void ingredients_t::bin_write(raw_file_t &file) const
 {
-  deltam_cr.bin_write(file);
   for(const djvec_t *o: {&Zq_allmoms,&Zq_sig1_allmoms,&Zq_sig1_EM_allmoms,&pr_bil_mom,&pr_bil_QED_mom}) o->bin_write(file);
 }
 

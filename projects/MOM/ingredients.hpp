@@ -30,8 +30,6 @@ EXTERN_INGREDIENTS index_t im_r_ijackp1_ind;
 
 struct ingredients_t
 {
-  djvec_t deltam_cr;
-  
   //Zq for all moms, with and without EM
   djvec_t Zq_allmoms;
   djvec_t Zq_sig1_allmoms;
@@ -43,9 +41,6 @@ struct ingredients_t
   
   //! Constructor
   ingredients_t();
-  
-  //! compute deltam_cr
-  void compute_deltam_cr();
   
   //! fill all the ingredients according to ri-mom
   void ri_mom();

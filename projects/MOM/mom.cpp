@@ -9,6 +9,7 @@
 #include <tranalisi.hpp>
 
 #include <contractions.hpp>
+#include <deltam_cr.hpp>
 #include <corrections.hpp>
 #include <evolutions.hpp>
 #include <geometry.hpp>
@@ -51,6 +52,8 @@ int main(int narg,char **arg)
   if(narg>=2) input_path=arg[1];
   read_input(input_path);
 
+  get_deltam_cr();
+  
   const string ingredients_path="ingredients.dat";
   ingredients_t ing;
   if(file_exists(ingredients_path)) ing.bin_read(ingredients_path);
