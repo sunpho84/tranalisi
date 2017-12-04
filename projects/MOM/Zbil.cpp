@@ -64,8 +64,9 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
 djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jverts,const vjprop_t &jprop_inv2,const index_t &im_r_ind)
 {
   const size_t nm=im_r_ind.max(0),nr=im_r_ind.max(1);
-  index_t im_r_im_r_iG_ind({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"igamma",nGamma}});
-  index_t ind({{"rest",im_r_im_r_iZbil_ind.max()},{"ijack",njacks+1}});
+  const index_t im_r_im_r_iG_ind({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"igamma",nGamma}});
+  const index_t im_r_im_r_iZbil_ind=im_r_ind*im_r_ind*index_t({{"Zbil",nZbil}});
+  const index_t ind({{"rest",im_r_im_r_iZbil_ind.max()},{"ijack",njacks+1}});
   
   //combine the 16 bilinears to form the 6 vertex
   const vector<vector<size_t>> iG_of_Zbil={{0},{1,2,3,4},{5},{6,7,8,9},{10,11,12,13,14,15}};
@@ -106,4 +107,3 @@ djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jvert
   
   return pr;
 }
-

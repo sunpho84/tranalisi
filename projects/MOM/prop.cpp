@@ -38,7 +38,7 @@ vjprop_t get_all_mr_props_inv(const vjprop_t &jprop)
   vjprop_t jprop_inv(jprop.size());
   
 #pragma omp parallel for
-  for(size_t imr=0;imr<nmr;imr++)
+  for(size_t imr=0;imr<glb::nmr;imr++)
     for(size_t ijack=0;ijack<=njacks;ijack++)
       jprop_inv[imr][ijack]=jprop[imr][ijack].inverse();
   

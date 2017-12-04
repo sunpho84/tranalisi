@@ -13,12 +13,16 @@
 using vprop_t=vector<prop_t>; //! vector of propagators
 using vjprop_t=vector<jprop_t>; //! vector of jackkniffed props
 
-EXTERN_PROP size_t nm; //!< number of masses
-EXTERN_PROP vector<double> am; //! quark mass
-EXTERN_PROP size_t nr; //!< number of r
-EXTERN_PROP size_t nmr; //!< total number of m and r
+namespace glb
+{
+  EXTERN_PROP size_t nm; //!< number of masses
+  EXTERN_PROP vector<double> am; //! quark mass
+  EXTERN_PROP size_t nr; //!< number of r
+  EXTERN_PROP size_t nmr; //!< total number of m and r
+  
+  EXTERN_PROP index_t im_r_ind; //!< index of im,r
+}
 
-EXTERN_PROP index_t im_r_ind; //!< index of im,r
 EXTERN_PROP index_t i_in_clust_ihit_ind; //!< index of i_in_clust,ihit
 EXTERN_PROP index_t conf_ind; //!< index of a conf given ijack and i_in_clust
 

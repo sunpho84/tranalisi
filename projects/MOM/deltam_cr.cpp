@@ -12,9 +12,11 @@
 
 void get_deltam_cr()
 {
+  using namespace glb;
+  
   if(use_QED) deltam_cr.resize(nm);
-
-  const string deltam_cr_path="deltam_cr";
+  
+  const string deltam_cr_path="deltam_cr.dat";
   if(file_exists(deltam_cr_path)) deltam_cr.bin_read(deltam_cr_path);
   else
     {

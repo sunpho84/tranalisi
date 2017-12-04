@@ -12,7 +12,7 @@ double compute_Zq(const prop_t &prop_inv,size_t imom)
 {
   double Zq;
   
-  p_t ptilde=imoms[imom].p(L).tilde();
+  p_t ptilde=glb_moms[imom].p(L).tilde();
   double pt2=ptilde.norm2();
   prop_t pslash=slash(ptilde);
   
@@ -25,7 +25,7 @@ djack_t compute_Zq(const jprop_t &jprop_inv,size_t imom)
 {
   djack_t Zq;
   
-  p_t ptilde=imoms[imom].p(L).tilde();
+  p_t ptilde=glb_moms[imom].p(L).tilde();
   double pt2=ptilde.norm2();
   prop_t pslash=slash(ptilde);
   
@@ -37,10 +37,10 @@ djack_t compute_Zq(const jprop_t &jprop_inv,size_t imom)
 
 djvec_t compute_Zq(const vjprop_t &jprop_inv)
 {
-  djvec_t Zq(imoms.size()); //!< Z of quark field
+  djvec_t Zq(glb_moms.size()); //!< Z of quark field
   
 #pragma omp parallel for
-  for(size_t imom=0;imom<imoms.size();imom++) Zq[imom]=compute_Zq(jprop_inv[imom],imom);
+  for(size_t imom=0;imom<glb_moms.size();imom++) Zq[imom]=compute_Zq(jprop_inv[imom],imom);
   
   return Zq;
 }

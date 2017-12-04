@@ -14,6 +14,8 @@
 
 void read_input(const string &input_path)
 {
+  using namespace glb;
+  
   raw_file_t input(input_path,"r");
   
   const size_t Ls=input.read<size_t>("L"); //!< lattice spatial size
@@ -71,8 +73,8 @@ void read_input(const string &input_path)
   for(size_t mu=1;mu<NDIM;mu++) L[mu]=Ls;
   
   //initialize momenta
-  set_list_of_moms(mom_list_path);
-  set_class_of_equiv_moms();
+  set_glb_list_of_moms(mom_list_path);
+  //  set_class_of_equiv_moms();
   //list_all_smom_pairs();
   
   //create the list of all confs available
@@ -84,24 +86,17 @@ void read_input(const string &input_path)
   
   conf_ind.set_ranges({{"ijack",njacks},{"i_in_clust",clust_size}});
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
-  imom_ind.set_ranges({{"imom",imoms.size()}});
-  r_imom_ind.set_ranges({{"r",nr},{"imom",imoms.size()}});
-  im_r_imom_ind.set_ranges({{"m",nm},{"r",nr},{"imom",imoms.size()}});
-  indep_imom_ind.set_ranges({{"indep_mom",equiv_imoms.size()}});
-  r_indep_imom_ind.set_ranges({{"r",nr},{"indep_mom",equiv_imoms.size()}});
-  im_r_indep_imom_ind.set_ranges({{"m",nm},{"r",nr},{"indep_mom",equiv_imoms.size()}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
   im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
   r_r_iZbil_ind.set_ranges({{"r",nr},{"r",nr},{"iZbil",nZbil}});
-  im_r_im_r_iZbil_ind=im_r_ind*im_r_ind*index_t({{"iZbil",nZbil}});
-  iZbil_imom_ind.set_ranges({{"iZbil",nZbil},{"imom",imoms.size()}});
-  im_r_im_r_iZbil_imom_ind=im_r_im_r_iZbil_ind*index_t({{"imom",imoms.size()}});
   im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});
 }
 
 vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list)
 {
+  using namespace glb;
+  
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}}); //!< index of im,r,ijack combo
   props.resize(im_r_ijack_ind.max());
   

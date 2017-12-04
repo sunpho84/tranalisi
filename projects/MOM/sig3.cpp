@@ -10,10 +10,10 @@
 
 djvec_t compute_sig3(const vjprop_t &jprop_inv)
 {
-  djvec_t sigma3(imoms.size());
+  djvec_t sigma3(glb_moms.size());
   
 #pragma omp parallel for
-  for(size_t imom=0;imom<imoms.size();imom++)
+  for(size_t imom=0;imom<glb_moms.size();imom++)
     for(size_t ijack=0;ijack<=njacks;ijack++)
       sigma3[imom][ijack]=
 	(jprop_inv[imom][ijack]*Gamma[5]).trace().imag()/
