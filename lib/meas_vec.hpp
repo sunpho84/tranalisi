@@ -96,7 +96,10 @@ public:
   
   //! wrapper with name
   void bin_write(const char *path) const
-  {bin_write(raw_file_t(path,"w"));}
+  {
+    raw_file_t fout(path,"w");
+    bin_write(fout);
+  }
   
   //! wrapper with name
   void bin_write(const string &path) const
@@ -108,7 +111,10 @@ public:
   
   //! wrapper with name
   void bin_read(const char *path)
-  {bin_read(raw_file_t(path,"r"));}
+  {
+    raw_file_t fin(path,"r");
+    bin_read(fin);
+  }
   
   //! wrapper with name
   void bin_read(const string &path)
