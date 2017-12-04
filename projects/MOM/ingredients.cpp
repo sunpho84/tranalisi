@@ -134,3 +134,17 @@ void ingredients_t::ri_mom()
       proj_time.stop();
     }
 }
+
+void ingredients_t::bin_read(raw_file_t &file)
+{
+  deltam_cr.bin_read(file);
+  for(djvec_t *o: {&Zq_allmoms,&Zq_sig1_allmoms,&Zq_sig1_EM_allmoms,&pr_bil_mom,&pr_bil_QED_mom}) o->bin_read(file);
+}
+
+void ingredients_t::bin_write(raw_file_t &file) const
+{
+  deltam_cr.bin_write(file);
+  for(const djvec_t *o: {&Zq_allmoms,&Zq_sig1_allmoms,&Zq_sig1_EM_allmoms,&pr_bil_mom,&pr_bil_QED_mom}) o->bin_write(file);
+}
+
+

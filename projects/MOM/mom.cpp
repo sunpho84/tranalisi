@@ -50,6 +50,17 @@ int main(int narg,char **arg)
   string input_path="input.txt";
   if(narg>=2) input_path=arg[1];
   read_input(input_path);
+
+  const string ingredients_path="ingredients.dat";
+  ingredients_t ing;
+  if(file_exists(ingredients_path)) ing.bin_read(ingredients_path);
+  else
+    {
+      ing.ri_mom();
+      ing.bin_write(ingredients_path);
+    }
+  
+  //read or write?
   
   //Subtracted Zq, with and without EM, all moms, averaged r
   djvec_t Zq_chir_allmoms(imoms.size());
@@ -61,9 +72,6 @@ int main(int narg,char **arg)
   djvec_t Zq_sig1_EM_chir_allmoms(imoms.size());
   djvec_t Zq_sig1_EM_chir_allmoms_sub(imoms.size());
   djvec_t Zq_sig1_EM_chir_allmoms_sub_evolved(imoms.size());
-  
-  ingredients_t ing;
-  ing.ri_mom();
   
   //! list of task to chirally extrapolate Zq
   vector<tuple<djvec_t*,djvec_t*,string>> Zq_chirextr_tasks{

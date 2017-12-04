@@ -49,6 +49,26 @@ struct ingredients_t
   
   //! fill all the ingredients according to ri-mom
   void ri_mom();
+  
+  //! read from binary
+  void bin_read(raw_file_t &file);
+  
+  //! write to binary
+  void bin_write(raw_file_t &file) const;
+  
+  //! read from a path
+  inline void bin_read(const string &path)
+  {
+    raw_file_t fin(path,"r");
+    this->bin_read(fin);
+  }
+  
+  //! write to a path
+  inline void bin_write(const string &path) const
+  {
+    raw_file_t fout(path,"w");
+    this->bin_write(fout);
+  }
 };
 
 #undef EXTERN_INGREDIENTS
