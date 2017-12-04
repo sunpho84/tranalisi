@@ -91,15 +91,15 @@ public:
   }
   
   //! write to a stream
-  void bin_write(const raw_file_t &out)
+  void bin_write(raw_file_t &out) const
   {out.bin_write(*this);}
   
   //! wrapper with name
-  void bin_write(const char *path)
+  void bin_write(const char *path) const
   {bin_write(raw_file_t(path,"w"));}
   
   //! wrapper with name
-  void bin_write(const string &path)
+  void bin_write(const string &path) const
   {bin_write(path.c_str());}
   
   //! read from a stream
