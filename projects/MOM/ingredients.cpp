@@ -557,3 +557,25 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   
   return out;
 }
+
+void ingredients_t::plot_Z(const string &suffix) const
+{
+  vector<tuple<const djvec_t*,string>> Zq_tasks={{&Zq,"Zq"},{&Zq_sig1,"Zq_sig1"}};
+  if(use_QED) Zq_tasks.push_back(make_tuple(&Zq_sig1_EM,"Zq_sig1_EM"));
+  for(const auto &p : Zq_tasks)
+    {
+      const djvec_t &Z=*get<0>(p);
+      const string &tag=get<1>(p);
+      grace_file_t out("plots/"+tag+(suffix!=""?("_"+suffix):string(""))+".xmg");
+      
+      for(size_t i=0;i<im_r_imom_ind.max();i++)
+	{
+	  const vector<size_t> im_r_imom_comp=im_r_imom_ind(i);
+	  const size_t imom_combo=im_r_imom_comp[2];
+	  const size_t imom=mom_combo[imom_combo][0];
+	  
+	  const double p2hat=glb_moms[imom].p(L).tilde().norm2();
+	  out.write_ave_err(p2hat,Z[i].ave_err());
+	}
+    }
+}

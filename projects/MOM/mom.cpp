@@ -56,7 +56,9 @@ int main(int narg,char **arg)
   
   ingredients_t ing;
   ing.create_from_scratch();
-    
+  
+  ing.plot_Z();
+  
   ingredients_t chir=ing.chir_extrap();
   
   ingredients_t sub=chir.subtract_Oa2();
@@ -65,45 +67,14 @@ int main(int narg,char **arg)
   
   ingredients_t ave=evo.average_equiv_momenta();
   
+  
+  
   // //! list of task to plot chiral extrapolation Zq
   // vector<Z_plot_task_t> Zq_plot_tasks{
   //   {&ing.Zq,&chir.Zq,&sub.Zq,&evo.Zq,string("Zq")},
   //   {&ing.Zq_sig1,&chir.Zq_sig1,&sub.Zq_sig1,&evo.Zq_sig1,"Zq_sig1"}};
   // if(use_QED) Zq_plot_tasks.push_back(make_tuple(&ing.Zq_sig1_EM,&chir.Zq_sig1_EM,&sub.Zq_sig1_EM,&evo.Zq_sig1_EM,"Zq_sig1_EM"));
   
-  // for(auto &p : Zq_plot_tasks)
-  //   {
-  //     //decript the tuple
-  //     const djvec_t &Zq=(*get<0>(p));
-  //     const djvec_t &Zq_chir=(*get<1>(p));
-  //     const djvec_t &Zq_chir_sub=(*get<2>(p));
-  //     const djvec_t &Zq_chir_sub_evolved=(*get<3>(p));
-  //     const string &tag=get<4>(p);
-      
-  //     //loop over all r
-  //     for(size_t r=0;r<nr;r++)
-  // 	{
-  // 	  //open the file
-  // 	  grace_file_t out("plots/"+tag+"_r_"+to_string(r)+".xmg");
-  // 	  out.new_data_set();
-	  
-  // 	  //m
-  // 	  for(size_t im=0;im<nm+3;im++)
-  // 	    {
-  // 	      for(size_t indep_imom=0;indep_imom<equiv_imoms.size();indep_imom++)
-  // 		{
-  // 		  djack_t y;
-  // 		  if(im<nm) y=Zq[im_r_indep_imom_ind({im,r,indep_imom})];
-  // 		  if(im==nm+0) y=Zq_chir[indep_imom];
-  // 		  if(im==nm+1) y=Zq_chir_sub[indep_imom];
-  // 		  if(im==nm+2) y=Zq_chir_sub_evolved[indep_imom];
-		  
-  // 		  out.write_ave_err(imoms[equiv_imoms[indep_imom].first].p(L).tilde().norm2(),y.ave_err());
-  // 		}
-  // 	      out.new_data_set();
-  // 	    }
-  // 	}
-  //   }
   
   // //! list of task to print the chiral extrapolate bilinears
   // vector<Z_plot_task_t> Zbil_tasks{{&Zbil,&Zbil_chir,&Zbil_chir_sub,&Zbil_chir_sub_evolved,string("Zbil")}};
