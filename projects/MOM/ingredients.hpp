@@ -26,7 +26,7 @@ enum scheme_t{RI_MOM};
 EXTERN_INGREDIENTS scheme_t scheme;
 
 //! passed to force recomputing Zbil
-gstatic const bool FORCE_RECOMPUTE_ZBIL=true;
+static const bool FORCE_RECOMPUTE_ZBIL=true;
 
 struct ingredients_t
 {
