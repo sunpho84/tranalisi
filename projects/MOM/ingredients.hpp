@@ -25,6 +25,9 @@ enum scheme_t{RI_MOM};
 //! reno scheme used
 EXTERN_INGREDIENTS scheme_t scheme;
 
+//! passed to force recomputing Zbil
+[[maybe_unused]] static const bool FORCE_RECOMPUTE_ZBIL=true;
+
 struct ingredients_t
 {
   size_t _nm;
@@ -43,6 +46,7 @@ struct ingredients_t
   djvec_t pr_bil_QED;
   
   //bilinear Z
+  bool Zbil_computed{false};
   djvec_t Zbil;
   djvec_t Zbil_QED;
   
@@ -102,13 +106,13 @@ struct ingredients_t
   ingredients_t chir_extrap() const;
   
   //! subtract O(a^2)
-  ingredients_t subtract_Oa2() const;
+  ingredients_t subtract_Oa2(const bool recompute_Zbil=false) const;
   
   //! evolve to a common scale
   ingredients_t evolve() const;
   
   //! average equivalent momenta
-  ingredients_t average_equiv_momenta() const;
+  ingredients_t average_equiv_momenta(const bool recompute_Zbil=false) const;
 };
 
 #undef EXTERN_INGREDIENTS

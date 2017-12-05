@@ -192,6 +192,8 @@ void ingredients_t::create_from_scratch(const string ingredients_path)
 
 void ingredients_t::compute_Zbil()
 {
+  Zbil_computed=true;
+  
   for(size_t imom=0;imom<mom_combo.size();imom++)
     for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
       {
@@ -224,6 +226,7 @@ ingredients_t ingredients_t::chir_extrap() const
   out._nm=1;
   out._am={0.0};
   out.mom_combo=mom_combo;
+  out.Zbil_computed=Zbil_computed;
   
   out.set_indices();
   out.allocate();
@@ -330,7 +333,7 @@ ingredients_t ingredients_t::chir_extrap() const
   return out;
 }
 
-ingredients_t ingredients_t::subtract_Oa2() const
+ingredients_t ingredients_t::subtract_Oa2(const bool recompute_Zbil) const
 {
   ingredients_t out=(*this);
   
@@ -371,7 +374,9 @@ ingredients_t ingredients_t::subtract_Oa2() const
 	}
     }
    
-   return out;
+  if(not Zbil_computed or recompute_Zbil) out.compute_Zbil();
+  
+  return out;
 }
 
 ingredients_t ingredients_t::evolve() const
@@ -395,6 +400,8 @@ ingredients_t ingredients_t::evolve() const
       if(use_QED) out.Zq_sig1_EM[i]=Zq_sig1_EM[i]/evolver_Zq; //neglecting QED evolution
     }
   
+  if(not Zbil_computed) CRASH("Cannot evolve before computing Zbil");
+  
   //evolve bil
   for(size_t i=0;i<im_r_im_r_iZbil_imom_ind.max();i++)
     {
@@ -415,12 +422,13 @@ ingredients_t ingredients_t::evolve() const
   return out;
 }
 
-ingredients_t ingredients_t::average_equiv_momenta() const
+ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) const
 {
   ingredients_t out;
   out._nm=_nm;
   out._nr=_nr;
   out._am=_am;
+  out.Zbil_computed=Zbil_computed;
   
   const size_t np=mom_combo[0].size(); //number of momenta defining the combo
   
@@ -460,16 +468,25 @@ ingredients_t ingredients_t::average_equiv_momenta() const
       equiv_mom_combo_map[cr].push_back(imom_combo);
     }
   
-  //set the index
+  //prepare the index of the output
   const size_t nequiv=equiv_mom_combo_map.size();
   out.mom_combo.reserve(nequiv);
+  
+  //store the output vector to which the input contributes
+  vector<vector<size_t>> equiv_of_combo;
+  
+  //fill the output index and write it to file
   ofstream mom_out("equiv_mom_combo.txt");
   mom_out<<"Found "<<nequiv<<" independent momenta combo"<<endl;
   for(auto &combo_class : equiv_mom_combo_map)
     {
+      //add to the output list of momenta
       const size_t combo_repr=combo_class.second[0]; //take the first real combo as the key could not exist
       out.mom_combo.push_back(mom_combo[combo_repr]);
       const size_t imom=mom_combo[combo_repr][0];
+      
+      //trasform map into vector
+      equiv_of_combo.push_back(combo_class.second);
       
       //print details
       mom_out<<imom<<" , p2hat: "<<glb_moms[imom].p(L).tilde().norm2()<<endl;
@@ -496,41 +513,47 @@ ingredients_t ingredients_t::average_equiv_momenta() const
   out.set_indices();
   out.allocate();
   
-  //manca da trasformare la mappa in vettore
+  //average Zq
+  vector<tuple<const djvec_t*,djvec_t*>>
+    Zq_ave_tasks{{&Zq,&out.Zq},{&Zq_sig1,&out.Zq_sig1}};
+  if(use_QED) Zq_ave_tasks.push_back({&Zq_sig1_EM,&out.Zq_sig1_EM});
+  for(size_t i=0;i<out.im_r_imom_ind.max();i++)
+    {
+      const vector<size_t> out_im_r_imom_comp=out.im_r_imom_ind(i);
+      const size_t out_imom_combo=out_im_r_imom_comp[2];
+      
+      for(const auto &p : Zq_ave_tasks)
+	{
+	  djack_t &ave=(*get<1>(p))[i];
+	  ave=0.0;
+	  for(const size_t ieq : equiv_of_combo[out_imom_combo]) ave+=(*get<0>(p))[ieq];
+	  ave/=equiv_of_combo[out_imom_combo].size();
+	}
+    }
   
-  // //evolve Zq
-  // for(size_t i=0;i<out.im_r_imom_ind.max();i++)
-  //   {
-  //     const vector<size_t> im_r_imom_comp=im_r_imom_ind(i);
-  //     const size_t imom_combo=im_r_imom_comp[2];
+  //average pr_bil
+  vector<tuple<const djvec_t*,djvec_t*>>
+    bil_ave_tasks{{&pr_bil,&out.pr_bil},{&Zbil,&out.Zbil}};
+  if(use_QED)
+    {
+      bil_ave_tasks.push_back({&pr_bil_QED,&out.pr_bil_QED});
+      bil_ave_tasks.push_back({&Zbil_QED,&out.Zbil_QED});
+    }
+  for(size_t i=0;i<out.im_r_im_r_iZbil_imom_ind.max();i++)
+    {
+      const vector<size_t> out_im_r_im_r_iZbil_imom_comp=out.im_r_im_r_iZbil_imom_ind(i);
+      const size_t out_imom_combo=out_im_r_im_r_iZbil_imom_comp[5];
       
-  //     imom_t mom=glb_moms[imom];
-  //     double p2=mom.p(L).norm2();
-  //     double evolver_Zq=evolution_Zq_to_RIp(Nf,ord,ainv,p2);
-  //     cout<<"EvolverZq["<<p2<<"]="<<evolver_Zq<<endl;
-      
-  //     out.Zq[i]=Zq[i]/evolver_Zq;
-  //     out.Zq_sig1[i]=Zq_sig1[imom]/evolver_Zq;
-  //     if(use_QED) out.Zq_sig1_EM[i]=Zq_sig1_EM[i]/evolver_Zq; //neglecting QED evolution
-  //   }
+      for(const auto &p : bil_ave_tasks)
+	{
+	  djack_t &ave=(*get<1>(p))[i];
+	  ave=0.0;
+	  for(const size_t ieq : equiv_of_combo[out_imom_combo]) ave+=(*get<0>(p))[ieq];
+	  ave/=equiv_of_combo[out_imom_combo].size();
+	}
+    }
   
-  // //evolve bil
-  // for(size_t i=0;i<im_r_im_r_iZbil_imom_ind.max();i++)
-  //   {
-  //     const vector<size_t> im_r_im_r_iZbil_imom_comp=im_r_im_r_iZbil_imom_ind(i);
-  //     const size_t iZbil=im_r_im_r_iZbil_imom_comp[4];
-  //     const size_t imom_combo=im_r_im_r_iZbil_imom_comp[5];
-  //     const size_t imom=mom_combo[imom_combo][0];
-      
-  //     const imom_t mom=glb_moms[imom];
-  //     const double p2=mom.p(L).norm2();
-  //     const double evolver_Zbil=evolution_Zbil_to_RIp(iZbil_t_list[iZbil],Nf,ord,ainv,p2);
-  //     cout<<"EvolverZ"<<Zbil_tag[iZbil]<<"["<<p2<<"]="<<evolver_Zbil<<endl;
-      
-  //     out.Zbil[i]=Zbil[i]/evolver_Zbil;
-  //     if(use_QED) out.Zbil[i]=Zbil[i]/evolver_Zbil;
-  //   }
-
+  if(not Zbil_computed or recompute_Zbil) out.compute_Zbil();
   
   return out;
 }

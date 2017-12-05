@@ -56,9 +56,7 @@ int main(int narg,char **arg)
   
   ingredients_t ing;
   ing.create_from_scratch();
-  
-  ing.compute_Zbil(); //check if explicitly needed
-  
+    
   ingredients_t chir=ing.chir_extrap();
   
   ingredients_t sub=chir.subtract_Oa2();

@@ -53,6 +53,84 @@ size_t get_mir_mom(size_t imom,size_t imir)
   
   return distance(glb_moms.begin(),ret);
 }
+
+// void set_class_of_equiv_moms()
+// {
+//   //periodicity
+//   enum pe_t{UNK,PER,APE};
+//   const string pe_tag[3]={"UNK","PE","APE"};
+//   pe_t pe=UNK;
+//   double p0=fabs(ph_mom[0]);
+//   if(fabs(p0)<1e-10) pe=PER;
+//   if(fabs(p0-0.5)<1e-10) pe=APE;
+//   cout<<"Periodicity: "<<pe_tag[pe]<<endl;
+  
+//   map<imom_t,vector<size_t>> equiv_imoms_map;
+//   for(size_t i=0;i<imoms.size();i++)
+//     {
+//       //get representative
+//       imom_t cr;
+      
+//       //decide time component
+//       cr[0]=imoms[i][0];
+      
+//       if(cr[0]<0)
+// 	switch(pe)
+// 	  {
+// 	  case UNK: CRASH("phase on momentum 0 cannot be %lg",ph_mom[0]);break;
+// 	  case PER: cr[0]=-cr[0];break;
+// 	  case APE: cr[0]=-cr[0]-1;break;
+// 	  }
+      
+//       //decide space componnents
+//       for(size_t mu=1;mu<NDIM;mu++) cr[mu]=abs(imoms[i][mu]);
+//       sort(&cr[1],cr.end());
+      
+//       //store the index to equvalents
+//       equiv_imoms_map[cr].push_back(i);
+//     }
+  
+//   //trasform map into vector
+//   for(auto &mom_class : equiv_imoms_map)
+//     {
+//       imom_t repr=imoms[mom_class.second[0]]; //take the first real mom, as the key could not exist
+//       auto it=find(imoms.begin(),imoms.end(),repr);
+//       if(it==imoms.end()) CRASH("Something went wrong with %zu %zu %zu %zu",repr[0],repr[1],repr[2],repr[3]);
+//       equiv_imoms.push_back(make_pair(distance(imoms.begin(),it),mom_class.second));
+//     }
+  
+//   //print stats
+//   ofstream out("equiv_moms.txt");
+//   out<<"Found "<<equiv_imoms.size()<<" independent momenta "<<endl;
+  
+//   //print details
+//   for(auto &e : equiv_imoms)
+//     {
+//       out<<e.first<<" , p2hat: "<<imoms[e.first].p(L).tilde().norm2()<<endl;
+//       out<<" Equivalent to: "<<e.second.size()<<" moms: "<<endl;
+//       for(auto &eq : e.second)
+//   	{
+//   	  out<<"  "<<eq;
+// 	  //components
+//   	  out<<"={";
+// 	  for(size_t mu=0;mu<NDIM;mu++)
+// 	    {
+// 	      if(mu) out<<",";
+// 	      out<<imoms[eq][mu];
+// 	    }
+// 	  out<<"}";
+// 	  //phat
+//   	  out<<"={";
+// 	  for(size_t mu=0;mu<NDIM;mu++)
+// 	    {
+// 	      if(mu) out<<",";
+// 	      out<<imoms[eq].p(L).hat()[mu];
+// 	    }
+// 	  out<<"}"<<endl;
+//   	}
+//     }
+// }
+
 // void list_all_smom_pairs()
 // {
 //   size_t npairs=0;
