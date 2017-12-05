@@ -67,7 +67,7 @@ int main(int narg,char **arg)
   
   ingredients_t ave=evo.average_equiv_momenta();
   
-  
+  ave.plot_Z("ave");
   
   // //! list of task to plot chiral extrapolation Zq
   // vector<Z_plot_task_t> Zq_plot_tasks{

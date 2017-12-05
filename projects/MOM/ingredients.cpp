@@ -25,8 +25,13 @@ void ingredients_t::set_pars_for_scratch()
 
 void ingredients_t::set_ri_mom_moms()
 {
-  mom_combo.resize(glb_moms.size());
-  for(size_t imom=0;imom<glb_moms.size();imom++) mom_combo[imom].push_back(imom);
+  linmoms.resize(glb_moms.size());
+  bilmoms.resize(glb_moms.size());
+  for(size_t imom=0;imom<glb_moms.size();imom++)
+    {
+      linmoms[imom]={imom};
+      bilmoms[imom]={imom,imom,imom};
+    }
 }
 
 void ingredients_t::ri_mom()
@@ -35,8 +40,10 @@ void ingredients_t::ri_mom()
   
   vector<task_list_t> read_tasks=prepare_read_prop_taks(props,conf_list);
   
-  for(size_t imom=0;imom<mom_combo.size();imom++)
+  for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     {
+      const size_t ilinmom=ibilmom;
+      
       vector<jm_r_mom_props_t> jprops(glb::im_r_ind.max()); //!< jackknived props
       jbil_vert_t jverts(im_r_im_r_igam_ind.max(),use_QED); //!< jackknived vertex
       
@@ -44,7 +51,7 @@ void ingredients_t::ri_mom()
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
 	    size_t i_in_clust_hit=i_in_clust_ihit_ind({i_in_clust,ihit});
-	    cout<<"Working on clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", hit "<<ihit+1<<"/"<<nhits<<", momentum "<<imom+1<<"/"<<mom_combo.size()<<endl;
+	    cout<<"Working on clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", hit "<<ihit+1<<"/"<<nhits<<", momentum "<<ibilmom+1<<"/"<<bilmoms.size()<<endl;
 	    read_time.start();
 	    read_tasks[i_in_clust_hit].assolve_all(RECYCLE);
 	    read_time.stop();
@@ -74,7 +81,7 @@ void ingredients_t::ri_mom()
 	  const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
 	  const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
 	  const size_t im_r=glb::im_r_ind({im,r});
-	  const size_t im_r_imom=im_r_imom_ind({im,r,imom});
+	  const size_t im_r_ilinmom=im_r_ilinmom_ind({im,r,ilinmom});
 	  
 	  //compute inverse
 	  invert_time.start();
@@ -85,8 +92,8 @@ void ingredients_t::ri_mom()
 	  
 	  //compute Zq
 	  Zq_time.start();
-	  Zq[im_r_imom][ijack]=compute_Zq(prop_inv,imom);
-	  Zq_sig1[im_r_imom][ijack]=compute_Zq_sig1(prop_inv,imom);
+	  Zq[im_r_ilinmom][ijack]=compute_Zq(prop_inv,ilinmom);
+	  Zq_sig1[im_r_ilinmom][ijack]=compute_Zq_sig1(prop_inv,ilinmom);
 	  Zq_time.stop();
 	  
 	  //do the same with QED
@@ -98,13 +105,13 @@ void ingredients_t::ri_mom()
 	      invert_time.stop();
 	      
 	      Zq_time.start();
-	      Zq_sig1_EM[im_r_imom][ijack]=-compute_Zq_sig1(prop_EM_inv,imom);
+	      Zq_sig1_EM[im_r_ilinmom][ijack]=-compute_Zq_sig1(prop_EM_inv,ilinmom);
 	      Zq_time.stop();
 	    }
 	}
       
       //! an index running on all packed combo, and momenta
-      const index_t all_imom_ind({{"All",im_r_im_r_iZbil_ind.max()},{"mom",mom_combo.size()}});
+      const index_t all_ibilmom_ind({{"All",im_r_im_r_iZbil_ind.max()},{"bilmom",bilmoms.size()}});
       
       proj_time.start();
       djvec_t pr_bil_temp=compute_proj_bil(jprop_inv,jverts.LO,jprop_inv,glb::im_r_ind);
@@ -124,7 +131,7 @@ void ingredients_t::ri_mom()
       if(use_QED) store_task.push_back({&pr_bil_QED,&pr_bil_QED_temp});
       for(auto &t : store_task)
 	for(size_t iall=0;iall<im_r_im_r_iZbil_ind.max();iall++)
-	  (*t.first)[all_imom_ind({iall,imom})]=(*t.second)[iall];
+	  (*t.first)[all_ibilmom_ind({iall,ibilmom})]=(*t.second)[iall];
       
       proj_time.stop();
     }
@@ -144,27 +151,23 @@ void ingredients_t::set_indices()
 {
   im_r_ind.set_ranges({{"m",_nm},{"r",_nr}});
   im_r_im_r_iZbil_ind=im_r_ind*im_r_ind*index_t({{"iZbil",nZbil}});;
-  imom_ind.set_ranges({{"mom",mom_combo.size()}});
-  r_imom_ind.set_ranges({{"r",_nr},{"mom",mom_combo.size()}});
-  im_r_imom_ind.set_ranges({{"m",_nm},{"r",_nr},{"mom",mom_combo.size()}});
-  // indep_imom_ind.set_ranges({{"indep_mom",equiv_imoms.size()}});
-  // r_indep_imom_ind.set_ranges({{"r",nr},{"indep_mom",equiv_imoms.size()}});
-  // im_r_indep_imom_ind.set_ranges({{"m",nm},{"r",nr},{"indep_mom",equiv_imoms.size()}});
-  iZbil_imom_ind.set_ranges({{"iZbil",nZbil},{"mom",mom_combo.size()}});
-  im_r_im_r_iZbil_imom_ind=im_r_im_r_iZbil_ind*index_t({{"mom",mom_combo.size()}});
+  r_ilinmom_ind.set_ranges({{"r",_nr},{"linmom",linmoms.size()}});
+  im_r_ilinmom_ind.set_ranges({{"m",_nm},{"r",_nr},{"linmom",linmoms.size()}});
+  iZbil_ibilmom_ind.set_ranges({{"iZbil",nZbil},{"bilmom",bilmoms.size()}});
+  im_r_im_r_iZbil_ibilmom_ind=im_r_im_r_iZbil_ind*index_t({{"bilmom",bilmoms.size()}});
 }
 
 void ingredients_t::allocate()
 {
-  Zq.resize(im_r_imom_ind.max());
-  Zq_sig1.resize(im_r_imom_ind.max());
-  if(use_QED) Zq_sig1_EM.resize(im_r_imom_ind.max());
+  Zq.resize(im_r_ilinmom_ind.max());
+  Zq_sig1.resize(im_r_ilinmom_ind.max());
+  if(use_QED) Zq_sig1_EM.resize(im_r_ilinmom_ind.max());
   
-  pr_bil.resize(im_r_im_r_iZbil_imom_ind.max());
-  if(use_QED) pr_bil_QED.resize(im_r_im_r_iZbil_imom_ind.max());
+  pr_bil.resize(im_r_im_r_iZbil_ibilmom_ind.max());
+  if(use_QED) pr_bil_QED.resize(im_r_im_r_iZbil_ibilmom_ind.max());
   
-  Zbil.resize(im_r_im_r_iZbil_imom_ind.max());
-  if(use_QED) Zbil_QED.resize(im_r_im_r_iZbil_imom_ind.max());
+  Zbil.resize(im_r_im_r_iZbil_ibilmom_ind.max());
+  if(use_QED) Zbil_QED.resize(im_r_im_r_iZbil_ibilmom_ind.max());
 }
 
 void ingredients_t::create_from_scratch(const string ingredients_path)
@@ -194,27 +197,29 @@ void ingredients_t::compute_Zbil()
 {
   Zbil_computed=true;
   
-  for(size_t imom=0;imom<mom_combo.size();imom++)
+  for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
       {
 	const vector<size_t> im_r_im_r_iZbil_comp=im_r_im_r_iZbil_ind(im_r_im_r_iZbil);
 	const vector<size_t> im_r1_comp=subset(im_r_im_r_iZbil_comp,0,2);
 	const vector<size_t> im_r2_comp=subset(im_r_im_r_iZbil_comp,2,4);
 	const size_t iZbil=im_r_im_r_iZbil_comp[4];
-	const size_t im_r1_imom=im_r_imom_ind(concat(im_r1_comp,imom));
-	const size_t im_r2_imom=im_r_imom_ind(concat(im_r2_comp,imom));
+	const size_t ilinmom1=bilmoms[ibilmom][1];
+	const size_t ilinmom2=bilmoms[ibilmom][2];
+	const size_t im_r1_ilinmom1=im_r_ilinmom_ind(concat(im_r1_comp,ilinmom1));
+	const size_t im_r2_ilinmom2=im_r_ilinmom_ind(concat(im_r2_comp,ilinmom2));
 	
-	const size_t im_r_im_r_iZbil_imom=im_r_im_r_iZbil_imom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,imom})));
+	const size_t im_r_im_r_iZbil_ibilmom=im_r_im_r_iZbil_ibilmom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,ibilmom})));
 	
-	Zbil[im_r_im_r_iZbil_imom]=
-	  sqrt(Zq_sig1[im_r1_imom]*Zq_sig1[im_r2_imom])/pr_bil[im_r_im_r_iZbil_imom];
+	Zbil[im_r_im_r_iZbil_ibilmom]=
+	  sqrt(Zq_sig1[im_r1_ilinmom1]*Zq_sig1[im_r2_ilinmom2])/pr_bil[im_r_im_r_iZbil_ibilmom];
 	
 	if(use_QED)
 	  {
-	    Zbil_QED[im_r_im_r_iZbil_imom]=
-	      pr_bil_QED[im_r_im_r_iZbil_imom]/pr_bil[im_r_im_r_iZbil_imom]+
-	      (Zq_sig1_EM[im_r1_imom]/Zq_sig1[im_r1_imom]+Zq_sig1_EM[im_r2_imom]/
-	       Zq_sig1[im_r2_imom])/2.0;
+	    Zbil_QED[im_r_im_r_iZbil_ibilmom]=
+	      pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]+
+	      (Zq_sig1_EM[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+Zq_sig1_EM[im_r2_ilinmom2]/
+	       Zq_sig1[im_r2_ilinmom2])/2.0;
 	  }
       }
 }
@@ -225,7 +230,8 @@ ingredients_t ingredients_t::chir_extrap() const
   out._nr=1;
   out._nm=1;
   out._am={0.0};
-  out.mom_combo=mom_combo;
+  out.linmoms=linmoms;
+  out.bilmoms=bilmoms;
   out.Zbil_computed=Zbil_computed;
   
   out.set_indices();
@@ -242,47 +248,46 @@ ingredients_t ingredients_t::chir_extrap() const
     pr_bil_chirextr_tasks{{&pr_bil,&out.pr_bil,string("pr_bil")}};
   if(use_QED) pr_bil_chirextr_tasks.push_back(make_tuple(&pr_bil_QED,&out.pr_bil_QED,string("pr_bil_QED")));
   
-  for(size_t imom_combo=0;imom_combo<mom_combo.size();imom_combo++)
-    {
-      const size_t imom=mom_combo[imom_combo][0];
-      
-      //extrapolate to chiral limit Zq
-      for(auto & p : Zq_chirextr_tasks)
-  	{
-  	  djvec_t y(_nm);
-  	  const djvec_t &Zq=(*get<0>(p));
-  	  djvec_t &Zq_chir=(*get<1>(p));
-  	  const string &tag=get<2>(p);
-	  
-  	  //slice m
-  	  double am_max=*max_element(_am.begin(),_am.end())*1.1;
-  	  for(size_t im=0;im<_nm;im++)
-  	    {
-  	      //averages r if both asked
-  	      y[im]=0.0;
-  	      for(size_t r=0;r<_nr;r++)
-  		{
-  		  size_t i=im_r_imom_ind({im,r,imom_combo});
-  		  y[im]+=Zq[i]/_nr;
-  		  cout<<tag<<"["<<i<<"=(im"<<im<<"r"<<r<<"imom_combo"<<imom_combo<<")], mom "<<glb_moms[imom].p(L).norm2()<<": "<<Zq[i].ave_err()<<endl;
-  		}
-  	      cout<<tag<<"[im"<<im<<"imom"<<imom<<"]: "<<y[im][0]<<" "<<y[im].err()<<endl;
-  	    }
-	  
-  	  //fit and write the result
-  	  djvec_t coeffs=poly_fit(_am,y,1,am_min,am_max);
-  	  if(imom%print_each_mom==0)
-  	    {
-  	      grace_file_t plot("plots/chir_extr_"+tag+"_mom_"+to_string(imom)+".xmg");
-  	      write_fit_plot(plot,0,am_max,bind(poly_eval<djvec_t>,coeffs,_1),_am,y);
-  	      plot.write_ave_err(0,coeffs[0].ave_err());
-  	    }
-  	  //extrapolated value
-  	  Zq_chir[imom]=coeffs[0];
-  	}
-      
-      //extrapolate to chiral limit bil
-      for(auto & p : pr_bil_chirextr_tasks)
+  for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
+    for(auto & p : Zq_chirextr_tasks)
+      {
+	const size_t imom=linmoms[ilinmom][0];
+	
+	djvec_t y(_nm);
+	const djvec_t &Zq=(*get<0>(p));
+	djvec_t &Zq_chir=(*get<1>(p));
+	const string &tag=get<2>(p);
+	
+	//slice m
+	double am_max=*max_element(_am.begin(),_am.end())*1.1;
+	for(size_t im=0;im<_nm;im++)
+	  {
+	    //averages r if both asked
+	    y[im]=0.0;
+	    for(size_t r=0;r<_nr;r++)
+	      {
+		size_t i=im_r_ilinmom_ind({im,r,ilinmom});
+		y[im]+=Zq[i]/_nr;
+		cout<<tag<<"["<<i<<"=(im"<<im<<"r"<<r<<"imom"<<ilinmom<<")], mom "<<glb_moms[imom].p(L).norm2()<<": "<<Zq[i].ave_err()<<endl;
+	      }
+	    cout<<tag<<"[im"<<im<<"imom"<<ilinmom<<"]: "<<y[im][0]<<" "<<y[im].err()<<endl;
+	  }
+	
+	//fit and write the result
+	djvec_t coeffs=poly_fit(_am,y,1,am_min,am_max);
+	if(ilinmom%print_each_mom==0)
+	  {
+	    grace_file_t plot("plots/chir_extr_"+tag+"_mom_"+to_string(ilinmom)+".xmg");
+	    write_fit_plot(plot,0,am_max,bind(poly_eval<djvec_t>,coeffs,_1),_am,y);
+	    plot.write_ave_err(0,coeffs[0].ave_err());
+	  }
+	//extrapolated value
+	Zq_chir[ilinmom]=coeffs[0];
+      }
+  
+  //extrapolate to chiral limit bil
+  for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
+    for(auto & p : pr_bil_chirextr_tasks)
 	for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	  {
 	    const djvec_t &pr=(*get<0>(p));
@@ -303,7 +308,7 @@ ingredients_t ingredients_t::chir_extrap() const
   		  x[i]=_am[im1]+_am[im2];
   		  //compute y and y_plot
   		  y_plot[i]=0.0;
-  		  for(size_t r=0;r<_nr;r++) y_plot[i]+=pr[im_r_im_r_iZbil_imom_ind({im1,r,im2,r,iZbil,imom})]/_nr;
+  		  for(size_t r=0;r<_nr;r++) y_plot[i]+=pr[im_r_im_r_iZbil_ibilmom_ind({im1,r,im2,r,iZbil,ibilmom})]/_nr;
 		  
   		  if(sub_pole) y[i]=x[i]*y_plot[i];
   		  else         y[i]=y_plot[i];
@@ -312,20 +317,19 @@ ingredients_t ingredients_t::chir_extrap() const
   		}
 	    
   	    //fit and store extrapolated value
-	    const size_t iout=out.im_r_im_r_iZbil_imom_ind({0,0,0,0,iZbil,imom});
+	    const size_t iout=out.im_r_im_r_iZbil_ibilmom_ind({0,0,0,0,iZbil,ibilmom});
   	    const djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min,2.0*am_max);
   	    pr_chir[iout]=coeffs[sub_pole?1:0];
 	    
   	    //plot
-  	    if(imom%print_each_mom==0)
+  	    if(ibilmom%print_each_mom==0)
   	      {
-  		grace_file_t plot("plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_mom_"+to_string(imom)+".xmg");
+  		grace_file_t plot("plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_bilmom_"+to_string(ibilmom)+".xmg");
   		write_fit_plot(plot,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
   		plot.write_ave_err(0.0,pr_chir[iout].ave_err());
   	      }
   	  }
-    }
-  
+
   /////////////////////////////////////////////
   
   out.compute_Zbil();
@@ -338,16 +342,15 @@ ingredients_t ingredients_t::subtract_Oa2(const bool recompute_Zbil) const
   ingredients_t out=(*this);
   
   //subtract Zq
-  for(size_t i=0;i<im_r_imom_ind.max();i++)
+  for(size_t i=0;i<im_r_ilinmom_ind.max();i++)
     {
-      const vector<size_t> im_r_imom_comp=im_r_imom_ind(i);
-      const size_t imom_combo=im_r_imom_comp[2];
-      const size_t imom=mom_combo[imom_combo][0];
-      
-      imom_t mom=glb_moms[imom];
-      double sub=g2tilde*sig1_a2(act,gf::LANDAU,group::SU3,mom,L);
+      const vector<size_t> im_r_ilinmom_comp=im_r_ilinmom_ind(i);
+      const size_t ilinmom=im_r_ilinmom_comp[2];
+      const size_t imom=linmoms[ilinmom][0];
+      const imom_t mom=glb_moms[imom];
+      const double sub=g2tilde*sig1_a2(act,gf::LANDAU,group::SU3,mom,L);
       out.Zq[i]=Zq[i]-sub;
-      out.Zq_sig1[i]=Zq_sig1[imom]-sub;
+      out.Zq_sig1[i]=Zq_sig1[ilinmom]-sub;
       if(use_QED)
 	{
 	  double sub_EM=-1.0*/*coupling gets -1 due to definition of expansion*/sig1_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L);
@@ -356,12 +359,12 @@ ingredients_t ingredients_t::subtract_Oa2(const bool recompute_Zbil) const
     }
   
   //subtract bil
-  for(size_t i=0;i<im_r_im_r_iZbil_imom_ind.max();i++)
+  for(size_t i=0;i<im_r_im_r_iZbil_ibilmom_ind.max();i++)
     {
-      const vector<size_t> im_r_im_r_iZbil_imom_comp=im_r_im_r_iZbil_imom_ind(i);
-      const size_t iZbil=im_r_im_r_iZbil_imom_comp[4];
-      const size_t imom_combo=im_r_im_r_iZbil_imom_comp[5];
-      const size_t imom=mom_combo[imom_combo][0];
+      const vector<size_t> im_r_im_r_iZbil_ibilmom_comp=im_r_im_r_iZbil_ibilmom_ind(i);
+      const size_t iZbil=im_r_im_r_iZbil_ibilmom_comp[4];
+      const size_t ibilmom=im_r_im_r_iZbil_ibilmom_comp[5];
+      const size_t imom=bilmoms[ibilmom][0];
       
       imom_t mom=glb_moms[imom];
       double sub;
@@ -384,11 +387,11 @@ ingredients_t ingredients_t::evolve() const
   ingredients_t out=(*this);
   
   //evolve Zq
-  for(size_t i=0;i<im_r_imom_ind.max();i++)
+  for(size_t i=0;i<im_r_ilinmom_ind.max();i++)
     {
-      const vector<size_t> im_r_imom_comp=im_r_imom_ind(i);
-      const size_t imom_combo=im_r_imom_comp[2];
-      const size_t imom=mom_combo[imom_combo][0];
+      const vector<size_t> im_r_ilinmom_comp=im_r_ilinmom_ind(i);
+      const size_t ilinmom=im_r_ilinmom_comp[2];
+      const size_t imom=linmoms[ilinmom][0];
       
       imom_t mom=glb_moms[imom];
       double p2=mom.p(L).norm2();
@@ -396,19 +399,19 @@ ingredients_t ingredients_t::evolve() const
       cout<<"EvolverZq["<<p2<<"]="<<evolver_Zq<<endl;
       
       out.Zq[i]=Zq[i]/evolver_Zq;
-      out.Zq_sig1[i]=Zq_sig1[imom]/evolver_Zq;
+      out.Zq_sig1[i]=Zq_sig1[ilinmom]/evolver_Zq;
       if(use_QED) out.Zq_sig1_EM[i]=Zq_sig1_EM[i]/evolver_Zq; //neglecting QED evolution
     }
   
   if(not Zbil_computed) CRASH("Cannot evolve before computing Zbil");
   
   //evolve bil
-  for(size_t i=0;i<im_r_im_r_iZbil_imom_ind.max();i++)
+  for(size_t i=0;i<im_r_im_r_iZbil_ibilmom_ind.max();i++)
     {
-      const vector<size_t> im_r_im_r_iZbil_imom_comp=im_r_im_r_iZbil_imom_ind(i);
-      const size_t iZbil=im_r_im_r_iZbil_imom_comp[4];
-      const size_t imom_combo=im_r_im_r_iZbil_imom_comp[5];
-      const size_t imom=mom_combo[imom_combo][0];
+      const vector<size_t> im_r_im_r_iZbil_ibilmom_comp=im_r_im_r_iZbil_ibilmom_ind(i);
+      const size_t iZbil=im_r_im_r_iZbil_ibilmom_comp[4];
+      const size_t ibilmom=im_r_im_r_iZbil_ibilmom_comp[5];
+      const size_t imom=bilmoms[ibilmom][0];
       
       const imom_t mom=glb_moms[imom];
       const double p2=mom.p(L).norm2();
@@ -430,84 +433,22 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   out._am=_am;
   out.Zbil_computed=Zbil_computed;
   
-  const size_t np=mom_combo[0].size(); //number of momenta defining the combo
+  //build out lin list
+  vector<vector<size_t>> equiv_linmom_combos=get_equiv_list(linmoms,"equiv_linmoms.txt");
+  for(const auto &p : equiv_linmom_combos)
+    out.linmoms.push_back({p[0]});
   
-  //periodicity
-  enum pe_t{UNK,PER,APE};
-  const string pe_tag[3]={"UNK","PE","APE"};
-  pe_t pe=UNK;
-  double p0=fabs(ph_mom[0]);
-  if(fabs(p0)<1e-10) pe=PER;
-  if(fabs(p0-0.5)<1e-10) pe=APE;
-  cout<<"Periodicity: "<<pe_tag[pe]<<endl;
+  //build out bil combo
+  vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(linmoms,"equiv_bilmoms.txt");
+  fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
   
-  map<vector<imom_t>,vector<size_t>> equiv_mom_combo_map;
-  for(size_t imom_combo=0;imom_combo<mom_combo.size();imom_combo++)
+  cout<<"Equiv bil:"<<endl;
+  for(auto &p : out.bilmoms)
+  // for(auto &p : equiv_bilmom_combo)
     {
-      //get representative
-      vector<imom_t> cr(np);
-      for(size_t ip=0;ip<np;ip++)
-	{
-	  const size_t imom=mom_combo[imom_combo][ip];
-	  //decide time component
-	  cr[ip][0]=glb_moms[imom][0];
-	  if(cr[ip][0]<0)
-	    switch(pe)
-	      {
-	      case UNK: CRASH("phase on momentum 0 cannot be %lg",ph_mom[0]);break;
-	      case PER: cr[ip][0]=-cr[ip][0];break;
-	      case APE: cr[ip][0]=-cr[ip][0]-1;break;
-	      }
-	  
-	  //decide space components
-	  for(size_t mu=1;mu<NDIM;mu++) cr[ip][mu]=abs(glb_moms[imom][mu]);
-	  sort(&cr[ip][1],cr[ip].end());
-	}
-      sort(cr.begin(),cr.end());
-      //store the index to equvalents
-      equiv_mom_combo_map[cr].push_back(imom_combo);
-    }
-  
-  //prepare the index of the output
-  const size_t nequiv=equiv_mom_combo_map.size();
-  out.mom_combo.reserve(nequiv);
-  
-  //store the output vector to which the input contributes
-  vector<vector<size_t>> equiv_of_combo;
-  
-  //fill the output index and write it to file
-  ofstream mom_out("equiv_mom_combo.txt");
-  mom_out<<"Found "<<nequiv<<" independent momenta combo"<<endl;
-  for(auto &combo_class : equiv_mom_combo_map)
-    {
-      //add to the output list of momenta
-      const size_t combo_repr=combo_class.second[0]; //take the first real combo as the key could not exist
-      out.mom_combo.push_back(mom_combo[combo_repr]);
-      const size_t imom=mom_combo[combo_repr][0];
-      
-      //trasform map into vector
-      equiv_of_combo.push_back(combo_class.second);
-      
-      //print details
-      mom_out<<imom<<" , p2hat: "<<glb_moms[imom].p(L).tilde().norm2()<<endl;
-      mom_out<<" Equivalent to: "<<combo_class.second.size()<<" mom combos: "<<endl;
-      for(auto &eq_combo : combo_class.second)
-  	{
-	  for(size_t ip=0;ip<np;ip++)
-	    {
-	      const size_t imom=mom_combo[eq_combo][ip];
-	      mom_out<<"  "<<imom<<"=";
-	      //components
-	      mom_out<<"{";
-	      for(size_t mu=0;mu<NDIM;mu++)
-		{
-		  if(mu) mom_out<<",";
-		  mom_out<<glb_moms[imom][mu];
-		}
-	      mom_out<<"}";
-	    }
-	  mom_out<<endl;
-	}
+      for(auto &pi : p)
+	cout<<pi<<endl;
+      cout<<endl;
     }
   
   out.set_indices();
@@ -517,18 +458,18 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   vector<tuple<const djvec_t*,djvec_t*>>
     Zq_ave_tasks{{&Zq,&out.Zq},{&Zq_sig1,&out.Zq_sig1}};
   if(use_QED) Zq_ave_tasks.push_back({&Zq_sig1_EM,&out.Zq_sig1_EM});
-  for(size_t i=0;i<out.im_r_imom_ind.max();i++)
+  for(size_t i=0;i<out.im_r_ilinmom_ind.max();i++)
     {
-      const vector<size_t> out_im_r_imom_comp=out.im_r_imom_ind(i);
-      const size_t out_imom_combo=out_im_r_imom_comp[2];
+      const vector<size_t> out_im_r_ilinmom_comp=out.im_r_ilinmom_ind(i);
+      const size_t out_ilinmom_combo=out_im_r_ilinmom_comp[2];
       
       for(const auto &p : Zq_ave_tasks)
-	{
-	  djack_t &ave=(*get<1>(p))[i];
-	  ave=0.0;
-	  for(const size_t ieq : equiv_of_combo[out_imom_combo]) ave+=(*get<0>(p))[ieq];
-	  ave/=equiv_of_combo[out_imom_combo].size();
-	}
+  	{
+  	  djack_t &ave=(*get<1>(p))[i];
+  	  ave=0.0;
+  	  for(const size_t ieq : equiv_linmom_combos[out_ilinmom_combo]) ave+=(*get<0>(p))[ieq];
+  	  ave/=equiv_linmom_combos[out_ilinmom_combo].size();
+  	}
     }
   
   //average pr_bil
@@ -539,18 +480,18 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
       bil_ave_tasks.push_back({&pr_bil_QED,&out.pr_bil_QED});
       bil_ave_tasks.push_back({&Zbil_QED,&out.Zbil_QED});
     }
-  for(size_t i=0;i<out.im_r_im_r_iZbil_imom_ind.max();i++)
+  for(size_t i=0;i<out.im_r_im_r_iZbil_ibilmom_ind.max();i++)
     {
-      const vector<size_t> out_im_r_im_r_iZbil_imom_comp=out.im_r_im_r_iZbil_imom_ind(i);
-      const size_t out_imom_combo=out_im_r_im_r_iZbil_imom_comp[5];
+      const vector<size_t> out_im_r_im_r_iZbil_ibilmom_comp=out.im_r_im_r_iZbil_ibilmom_ind(i);
+      const size_t out_imom_combo=out_im_r_im_r_iZbil_ibilmom_comp[5];
       
       for(const auto &p : bil_ave_tasks)
-	{
-	  djack_t &ave=(*get<1>(p))[i];
-	  ave=0.0;
-	  for(const size_t ieq : equiv_of_combo[out_imom_combo]) ave+=(*get<0>(p))[ieq];
-	  ave/=equiv_of_combo[out_imom_combo].size();
-	}
+  	{
+  	  djack_t &ave=(*get<1>(p))[i];
+  	  ave=0.0;
+  	  for(const size_t ieq : equiv_bilmom_combos[out_imom_combo]) ave+=(*get<0>(p))[ieq];
+  	  ave/=equiv_bilmom_combos[out_imom_combo].size();
+  	}
     }
   
   if(not Zbil_computed or recompute_Zbil) out.compute_Zbil();
@@ -568,14 +509,15 @@ void ingredients_t::plot_Z(const string &suffix) const
       const string &tag=get<1>(p);
       grace_file_t out("plots/"+tag+(suffix!=""?("_"+suffix):string(""))+".xmg");
       
-      for(size_t i=0;i<im_r_imom_ind.max();i++)
-	{
-	  const vector<size_t> im_r_imom_comp=im_r_imom_ind(i);
-	  const size_t imom_combo=im_r_imom_comp[2];
-	  const size_t imom=mom_combo[imom_combo][0];
-	  
-	  const double p2hat=glb_moms[imom].p(L).tilde().norm2();
-	  out.write_ave_err(p2hat,Z[i].ave_err());
-	}
+      for(size_t im=0;im<_nm;im++)
+  	for(size_t r=0;r<_nr;r++)
+	  {
+	    out.new_data_set();
+	    for(size_t imom=0;imom<linmoms.size();imom++)
+	      {
+		const double p2hat=glb_moms[imom].p(L).tilde().norm2();
+		out.write_ave_err(p2hat,Z[im_r_ilinmom_ind({im,r,imom})].ave_err());
+	      }
+	  }
     }
 }
