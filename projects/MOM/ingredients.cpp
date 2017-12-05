@@ -515,7 +515,7 @@ void ingredients_t::plot_Z(const string &suffix) const
 	    out.new_data_set();
 	    for(size_t imom=0;imom<linmoms.size();imom++)
 	      {
-		const double p2hat=glb_moms[imom].p(L).tilde().norm2();
+		const double p2hat=glb_moms[linmoms[imom]].p(L).tilde().norm2();
 		out.write_ave_err(p2hat,Z[im_r_ilinmom_ind({im,r,imom})].ave_err());
 	      }
 	  }
