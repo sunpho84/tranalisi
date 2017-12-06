@@ -33,6 +33,7 @@ public:
   //! open the file with error check
   void open(const string &_path,const string &mode)
   {
+    cout<<"Opening "<<path<<endl;
     path=_path;
     file=fopen(path.c_str(),mode.c_str());
     if(file==NULL) CRASH("Unable to open %s with mode %s",path.c_str(),mode.c_str());
@@ -44,7 +45,14 @@ public:
   
   //! close the file
   void close()
-  {if(file) fclose(file);file=NULL;}
+  {
+    if(file)
+      {
+	cout<<"Closing "<<path<<endl;
+	fclose(file);
+      }
+    file=NULL;
+  }
   
   //! default constructor
   raw_file_t() {file=NULL;}
