@@ -74,8 +74,11 @@ void read_input(const string &input_path)
   
   //initialize momenta
   set_glb_list_of_moms(mom_list_path);
-  //  set_class_of_equiv_moms();
-  //list_all_smom_pairs();
+}
+
+void prepare_list_of_confs()
+{
+  using namespace glb;
   
   //create the list of all confs available
   string test_path="out/%04zu/fft_S_M0_R0_0";
@@ -131,7 +134,6 @@ vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,c
 		  size_t iconf=conf_ind({ijack,i_in_clust});
 		  string path=combine("out/%04zu/fft_",conf_list[iconf])+get_prop_tag(im,r,get<1>(psc))+combine(suff_hit.c_str(),ihit);
 		  read_tasks[i_i_in_clust_ihit].push_back(incapsulate_task(read_prop,get<0>(psc),raw_file_t(path,"r"),get<2>(psc)));
-		  //cout<<"Binding "<<im_r_ijack<<"=(im="<<im<<"r"<<r<<"ijack"<<ijack<<") to file "<<path<<endl;
 		}
 	  }
     }

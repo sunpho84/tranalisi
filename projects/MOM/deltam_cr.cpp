@@ -16,10 +16,13 @@ void get_deltam_cr()
   
   if(use_QED) deltam_cr.resize(nm);
   
+  //if file exists open it, otherwise compute it
   const string deltam_cr_path="deltam_cr.dat";
   if(file_exists(deltam_cr_path)) deltam_cr.bin_read(deltam_cr_path);
   else
     {
+      prepare_list_of_confs();
+      
       deltam_cr_time.start();
       for(size_t im=0;im<nm;im++)
 	{

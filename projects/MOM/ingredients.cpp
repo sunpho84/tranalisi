@@ -178,9 +178,12 @@ void ingredients_t::create_from_scratch(const string ingredients_path)
   
   allocate();
   
+  //if ingredients exists read it, otherwise compute it
   if(file_exists(ingredients_path)) bin_read(ingredients_path);
   else
     {
+      prepare_list_of_confs();
+      
       switch(scheme)
 	{
 	case RI_MOM:
@@ -501,6 +504,7 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
 
 void ingredients_t::plot_Z(const string &suffix) const
 {
+  //Zq
   vector<tuple<const djvec_t*,string>> Zq_tasks={{&Zq,"Zq"},{&Zq_sig1,"Zq_sig1"}};
   if(use_QED) Zq_tasks.push_back(make_tuple(&Zq_sig1_EM,"Zq_sig1_EM"));
   for(const auto &p : Zq_tasks)
@@ -519,5 +523,35 @@ void ingredients_t::plot_Z(const string &suffix) const
 		out.write_ave_err(p2hat,Z[im_r_ilinmom_ind({im,r,imom})].ave_err());
 	      }
 	  }
+    }
+  
+  //Zbil
+  vector<tuple<const djvec_t*,string>> Zbil_tasks{{&Zbil,"Zbil"}};
+  if(use_QED) Zbil_tasks.push_back({&Zbil_QED,"Zbil_EM"});
+  for(const auto &p : Zbil_tasks)
+    {
+      //decript tuple
+      const djvec_t &Z=*get<0>(p);
+      const string &tag=get<1>(p);
+      
+      for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+  	{
+	  grace_file_t out("plots/"+tag+"_"+Zbil_tag[iZbil]+(suffix!=""?("_"+suffix):string(""))+".xmg");
+	  
+	  //write mass by mass, only half of the combos
+  	  for(size_t im1=0;im1<_nm;im1++)
+	    for(size_t im2=im1;im2<_nm;im2++)
+	      for(size_t r=0;r<_nr;r++)
+		{
+		  out.new_data_set();
+		  
+		  for(size_t imom=0;imom<linmoms.size();imom++)
+		    {
+		      const double p2hat=glb_moms[bilmoms[imom][0]].p(L).tilde().norm2();
+		      out.write_ave_err(p2hat,Z[im_r_im_r_iZbil_ibilmom_ind({im1,r,im2,r,iZbil,imom})].ave_err());
+		    }
+		  out.new_data_set();
+		}
+	}
     }
 }

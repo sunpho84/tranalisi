@@ -54,9 +54,11 @@ EXTERN_READ vector<size_t> conf_list;
 //! cluster size
 EXTERN_READ size_t clust_size;
 
-
 //! read input file and setup basic things
 void read_input(const string &input_path);
+
+//! prepare the list of confs
+void prepare_list_of_confs();
 
 //! prepare a list of reading task, to be executed in parallel
 vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list);
