@@ -17,7 +17,7 @@
 void build_jackknifed_vert_Gamma(jprop_t &jvert,const prop_t &prop1,size_t iG,const prop_t &prop2,double w,size_t ijack)
 {jvert[ijack]+=w*prop1*Gamma[iG]*Gamma[5]*prop2.adjoint()*Gamma[5];}
 
-void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_props_t> &props,
+void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_props_t> &props1,const vector<m_r_mom_conf_props_t> &props2,
 					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED,const djvec_t &deltam_cr)
 {
   //! help finding the bilinear/jack combo
@@ -37,8 +37,8 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
       const size_t iG=im_r_im_r_igam_comp[4];
       
       //proxy for vector and props
-      const m_r_mom_conf_props_t &p1=props[im_r_ijack_ind({im_fw,r_fw,ijack})];
-      const m_r_mom_conf_props_t &p2=props[im_r_ijack_ind({im_bw,r_bw,ijack})];
+      const m_r_mom_conf_props_t &p1=props1[im_r_ijack_ind({im_fw,r_fw,ijack})];
+      const m_r_mom_conf_props_t &p2=props2[im_r_ijack_ind({im_bw,r_bw,ijack})];
       
       //create list of operations
       vector<tuple<jprop_t*,const prop_t*,const prop_t*,double>> list={{&jbil.LO[im_r_im_r_igam],&p1.LO,&p2.LO,1.0}};

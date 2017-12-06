@@ -96,6 +96,12 @@ struct ingredients_t
   index_t im_r_im_r_iZbil_ind;
   index_t im_r_im_r_iZbil_ibilmom_ind;
   
+  //! compute all mom-scheme propagator
+  void mom_compute_prop();
+  
+  //! compute all mom-scheme vertices
+  void mom_compute_bil();
+  
   //! fill all the ingredients according to ri-mom
   void ri_mom();
   

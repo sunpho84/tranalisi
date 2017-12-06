@@ -61,7 +61,7 @@ void read_input(const string &input_path);
 void prepare_list_of_confs();
 
 //! prepare a list of reading task, to be executed in parallel
-vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list);
+vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,const vector<size_t> &conf_list,const size_t imom);
 
 #undef EXTERN_READ
 #undef INIT_TO

@@ -15,8 +15,10 @@
 #include <geometry.hpp>
 #include <types.hpp>
 
-void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact)
+void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom)
 {
+  file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
+  
   for(size_t is_so=0;is_so<NSPIN;is_so++)
     for(size_t ic_so=0;ic_so<NCOL;ic_so++)
       for(size_t is_si=0;is_si<NSPIN;is_si++)

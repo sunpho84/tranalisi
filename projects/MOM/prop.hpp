@@ -33,7 +33,7 @@ EXTERN_PROP bool use_QED; //!< perform or not the QED analysis
 const double tau3[2]={-1.0,+1.0}; //!< tau entering the propagator
 
 //! read a propagator
-void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact);
+void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom);
 
 //! holds a given l r and momentum, for a fized conf
 class m_r_mom_conf_props_t
