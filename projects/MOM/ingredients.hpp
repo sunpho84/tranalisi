@@ -41,15 +41,53 @@ struct ingredients_t
   djvec_t Zq;
   djvec_t Zq_sig1;
   djvec_t Zq_sig1_EM;
+
+  //! task to do someting
+  struct task_t
+  {
+    //! input vector
+    const djvec_t *in;
+    //! output vector
+    djvec_t *out;
+    //! name of the task
+    const string tag;
+    //! contructor
+    task_t(const djvec_t *in,djvec_t *out,const string tag) : in(in),out(out),tag(tag) {}
+  };
+  
+  //! return a list of tasks for Zq
+  vector<task_t> get_Zq_tasks(ingredients_t &out) const
+  {
+    vector<task_t> Zq_tasks={{&Zq,&out.Zq,"Zq"},{&Zq_sig1,&out.Zq_sig1,"Zq_sig1"}};
+    if(use_QED) Zq_tasks.push_back({&Zq_sig1_EM,&out.Zq_sig1_EM,"Zq_sig1_EM"});
+    return Zq_tasks;
+  }
   
   //projected bilinears with and without EM
   djvec_t pr_bil;
   djvec_t pr_bil_QED;
   
+  //! return a list of tasks for bilinears projected vertex
+  vector<task_t> get_pr_bil_tasks(ingredients_t &out) const
+  {
+    vector<task_t> pr_bil_tasks={{&pr_bil,&out.pr_bil,"pr_bil"}};
+    if(use_QED) pr_bil_tasks.push_back({&pr_bil_QED,&out.pr_bil_QED,"pr_bil_QED"});
+    return pr_bil_tasks;
+  }
+  
   //bilinear Z
   bool Zbil_computed{false};
   djvec_t Zbil;
   djvec_t Zbil_QED;
+  
+  //! return a list of tasks for bilinears Z
+  vector<task_t> get_Zbil_tasks(ingredients_t &out) const
+  {
+    vector<task_t> Zbil_tasks={{&Zbil,&out.Zbil,"Zbil"}};
+    if(use_QED) Zbil_tasks.push_back({&Zbil_QED,&out.Zbil_QED,"Zbil_QED"});
+    
+    return Zbil_tasks;
+  }
   
   index_t r_ilinmom_ind;
   index_t im_r_ilinmom_ind;
@@ -95,6 +133,9 @@ struct ingredients_t
   
   //! computes all bilinear Z
   void compute_Zbil();
+  
+  //! average r
+  ingredients_t average_r(const bool recompute_Zbil=false) const;
   
   //allocate all vectors
   void allocate();

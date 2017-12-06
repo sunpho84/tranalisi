@@ -58,8 +58,10 @@ int main(int narg,char **arg)
   ing.create_from_scratch();
   
   ing.plot_Z();
+
+  ingredients_t rave=ing.average_r();
   
-  ingredients_t chir=ing.chir_extrap();
+  ingredients_t chir=rave.chir_extrap();
   
   ingredients_t sub=chir.subtract_Oa2();
   

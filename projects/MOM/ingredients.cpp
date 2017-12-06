@@ -196,6 +196,68 @@ void ingredients_t::create_from_scratch(const string ingredients_path)
   compute_Zbil();
 }
 
+ingredients_t ingredients_t::average_r(const bool recompute_Zbil) const
+{
+  ingredients_t out;
+  
+  out._nr=1;
+  out._nm=_nm;
+  out._am=_am;
+  out.linmoms=linmoms;
+  out.bilmoms=bilmoms;
+  out.Zbil_computed=Zbil_computed;
+  
+  out.set_indices();
+  out.allocate();
+  
+  //average Zq
+  for(auto &t : get_Zq_tasks(out))
+    {
+      const djvec_t &Zq=*t.in;
+      djvec_t &Zq_rave=*t.out;
+      
+      for(size_t out_i=0;out_i<out.im_r_ilinmom_ind.max();out_i++)
+	{
+	  const vector<size_t> out_im_r_ilinmom_comp=out.im_r_ilinmom_ind(out_i);
+	  vector<size_t> im_r_ilinmom_comp=out_im_r_ilinmom_comp;
+	  
+	  Zq_rave[out_i]=0.0;
+	  for(size_t r=0;r<_nr;r++)
+	    {
+	      im_r_ilinmom_comp[1]=r;
+	      const size_t i=im_r_ilinmom_ind(im_r_ilinmom_comp);
+	      Zq_rave[out_i]+=Zq[i];
+	    }
+	  Zq_rave[out_i]/=_nr;
+	}
+    }
+  
+  //average pr_bil
+  for(auto &t : get_pr_bil_tasks(out))
+    {
+      const djvec_t &pr=*t.in;
+      djvec_t &pr_rave=*t.out;
+      
+      for(size_t out_i=0;out_i<out.im_r_im_r_iZbil_ibilmom_ind.max();out_i++)
+	{
+	  const vector<size_t> out_im_r_im_r_iZbil_ibilmom_comp=out.im_r_im_r_iZbil_ibilmom_ind(out_i);
+	  vector<size_t> im_r_im_r_iZbil_ibilmom_comp=out_im_r_im_r_iZbil_ibilmom_comp;
+	  
+	  pr_rave[out_i]=0.0;
+	  for(size_t r=0;r<_nr;r++)
+	    {
+	      im_r_im_r_iZbil_ibilmom_comp[1]=
+		im_r_im_r_iZbil_ibilmom_comp[3]=r;
+	      const size_t i=im_r_im_r_iZbil_ibilmom_ind(im_r_im_r_iZbil_ibilmom_comp);
+	      pr_rave[out_i]+=pr[i];
+	    }
+	  pr_rave[out_i]/=_nr;
+	}
+    }
+   
+  return out;
+}
+
 void ingredients_t::compute_Zbil()
 {
   Zbil_computed=true;
@@ -230,7 +292,7 @@ void ingredients_t::compute_Zbil()
 ingredients_t ingredients_t::chir_extrap() const
 {
   ingredients_t out;
-  out._nr=1;
+  out._nr=_nr;
   out._nm=1;
   out._am={0.0};
   out.linmoms=linmoms;
@@ -240,99 +302,92 @@ ingredients_t ingredients_t::chir_extrap() const
   out.set_indices();
   out.allocate();
   
-  //! list of task to chirally extrapolate Zq
-  vector<tuple<const djvec_t*,djvec_t*,string>> Zq_chirextr_tasks{
-    {&Zq,&out.Zq,string("Zq")},
-    {&Zq_sig1,&out.Zq_sig1,"Zq_sig1"}};
-  if(use_QED) Zq_chirextr_tasks.push_back(make_tuple(&Zq_sig1_EM,&out.Zq_sig1_EM,"Zq_sig1_EM"));
-  
-  //! list of tasks to chirally extrapolate bilinears
-  vector<tuple<const djvec_t*,djvec_t*,string>>
-    pr_bil_chirextr_tasks{{&pr_bil,&out.pr_bil,string("pr_bil")}};
-  if(use_QED) pr_bil_chirextr_tasks.push_back(make_tuple(&pr_bil_QED,&out.pr_bil_QED,string("pr_bil_QED")));
-  
-  for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
-    for(auto & p : Zq_chirextr_tasks)
-      {
-	const size_t imom=linmoms[ilinmom][0];
-	
-	djvec_t y(_nm);
-	const djvec_t &Zq=(*get<0>(p));
-	djvec_t &Zq_chir=(*get<1>(p));
-	const string &tag=get<2>(p);
-	
-	//slice m
-	double am_max=*max_element(_am.begin(),_am.end())*1.1;
-	for(size_t im=0;im<_nm;im++)
-	  {
-	    //averages r if both asked
-	    y[im]=0.0;
-	    for(size_t r=0;r<_nr;r++)
-	      {
-		size_t i=im_r_ilinmom_ind({im,r,ilinmom});
-		y[im]+=Zq[i]/_nr;
-		cout<<tag<<"["<<i<<"=(im"<<im<<"r"<<r<<"imom"<<ilinmom<<")], mom "<<glb_moms[imom].p(L).norm2()<<": "<<Zq[i].ave_err()<<endl;
-	      }
-	    cout<<tag<<"[im"<<im<<"imom"<<ilinmom<<"]: "<<y[im][0]<<" "<<y[im].err()<<endl;
-	  }
-	
-	//fit and write the result
-	djvec_t coeffs=poly_fit(_am,y,1,am_min,am_max);
-	if(ilinmom%print_each_mom==0)
-	  {
-	    grace_file_t plot("plots/chir_extr_"+tag+"_mom_"+to_string(ilinmom)+".xmg");
-	    write_fit_plot(plot,0,am_max,bind(poly_eval<djvec_t>,coeffs,_1),_am,y);
-	    plot.write_ave_err(0,coeffs[0].ave_err());
-	  }
-	//extrapolated value
-	Zq_chir[ilinmom]=coeffs[0];
-      }
+  //extrapolate to chiral limit Zq
+  for(auto &t : get_Zq_tasks(out))
+    {
+      const djvec_t &Zq=*t.in;
+      djvec_t &Zq_chir=*t.out;
+      const string &tag=t.tag;
+      
+      for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
+	{
+	  //open the plot file if needed
+	  const string plot_path="plots/chir_extr_"+tag+"_mom_"+to_string(ilinmom)+".xmg";
+	  grace_file_t *plot=nullptr;
+	  if(ilinmom%print_each_mom==0) plot=new grace_file_t(plot_path);
+	  
+	  for(size_t r=0;r<_nr;r++)
+	    {
+	      //slice m
+	      djvec_t y(_nm);
+	      for(size_t im=0;im<_nm;im++) y[im]=Zq[im_r_ilinmom_ind({im,r,ilinmom})];
+	      
+	      //fit, store and write the result
+	      djvec_t coeffs=poly_fit(_am,y,1,am_min,am_max);
+	      Zq_chir[out.im_r_ilinmom_ind({0,r,ilinmom})]=coeffs[0];
+	      if(plot!=nullptr)
+		{
+		  write_fit_plot(*plot,0,am_max,bind(poly_eval<djvec_t>,coeffs,_1),_am,y);
+		  plot->write_ave_err(0,coeffs[0].ave_err());
+		}
+	    }
+	  
+	  if(plot!=nullptr) delete plot;
+	}
+    }
   
   //extrapolate to chiral limit bil
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
-    for(auto & p : pr_bil_chirextr_tasks)
+    for(auto &t : get_pr_bil_tasks(out))
 	for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	  {
-	    const djvec_t &pr=(*get<0>(p));
-	    djvec_t &pr_chir=(*get<1>(p));
-	    const string &tag=get<2>(p);
+	    const djvec_t &pr=*t.in;
+	    djvec_t &pr_chir=*t.out;
+	    const string &tag=t.tag;
 	    
 	    //check if we need to subtract the pole
 	    const bool sub_pole=(iZbil==iZS or iZbil==iZP);
+	    const size_t coeff_to_take=(sub_pole?1:0);
 	    
-	    //slice m and fit it
-	    djvec_t y(_nm*(_nm+1)/2),y_plot(_nm*(_nm+1)/2);
-  	    vector<double> x(_nm*(_nm+1)/2);
-  	    int i=0;
-  	    for(size_t im1=0;im1<_nm;im1++)
-  	      for(size_t im2=im1;im2<_nm;im2++)
-  		{
-  		  //compute mass sum
-  		  x[i]=_am[im1]+_am[im2];
-  		  //compute y and y_plot
-  		  y_plot[i]=0.0;
-  		  for(size_t r=0;r<_nr;r++) y_plot[i]+=pr[im_r_im_r_iZbil_ibilmom_ind({im1,r,im2,r,iZbil,ibilmom})]/_nr;
+	    //open the plot file if needed
+	    const string plot_path="plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_bilmom_"+to_string(ibilmom)+".xmg";
+	    grace_file_t *plot=nullptr;
+	    if(ibilmom%print_each_mom==0) plot=new grace_file_t(plot_path);
+	    
+	    for(size_t r1=0;r1<_nr;r1++)
+	      for(size_t r2=0;r2<_nr;r2++)
+		{
+		  //slice m and fit it
+		  djvec_t y(_nm*(_nm+1)/2),y_plot(_nm*(_nm+1)/2);
+		  vector<double> x(_nm*(_nm+1)/2);
+		  int i=0;
+		  for(size_t im1=0;im1<_nm;im1++)
+		    for(size_t im2=im1;im2<_nm;im2++)
+		      {
+			//compute mass sum
+			x[i]=_am[im1]+_am[im2];
+			//compute y and y_plot
+			y_plot[i]=pr[im_r_im_r_iZbil_ibilmom_ind({im1,r1,im2,r2,iZbil,ibilmom})];
+			//fit x*y if pole present
+			if(sub_pole) y[i]=x[i]*y_plot[i];
+			else         y[i]=y_plot[i];
+			//increment the number of mass combos
+			i++;
+		      }
 		  
-  		  if(sub_pole) y[i]=x[i]*y_plot[i];
-  		  else         y[i]=y_plot[i];
-  		  //increment
-  		  i++;
-  		}
-	    
-  	    //fit and store extrapolated value
-	    const size_t iout=out.im_r_im_r_iZbil_ibilmom_ind({0,0,0,0,iZbil,ibilmom});
-  	    const djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min,2.0*am_max);
-  	    pr_chir[iout]=coeffs[sub_pole?1:0];
-	    
-  	    //plot
-  	    if(ibilmom%print_each_mom==0)
-  	      {
-  		grace_file_t plot("plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_bilmom_"+to_string(ibilmom)+".xmg");
-  		write_fit_plot(plot,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
-  		plot.write_ave_err(0.0,pr_chir[iout].ave_err());
-  	      }
-  	  }
-
+		  //fit, store and write the result
+		  const djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min,2.0*am_max);
+		  const size_t iout=out.im_r_im_r_iZbil_ibilmom_ind({0,r1,0,r2,iZbil,ibilmom});
+		  pr_chir[iout]=coeffs[coeff_to_take];
+		  if(plot!=nullptr)
+		    {
+		      write_fit_plot(*plot,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		      plot->write_ave_err(0.0,pr_chir[iout].ave_err());
+		    }
+		}
+	    if(plot) delete plot;
+	  }
+  
   /////////////////////////////////////////////
   
   out.compute_Zbil();
@@ -399,7 +454,7 @@ ingredients_t ingredients_t::evolve() const
       imom_t mom=glb_moms[imom];
       double p2=mom.p(L).norm2();
       double evolver_Zq=evolution_Zq_to_RIp(Nf,ord,ainv,p2);
-      cout<<"EvolverZq["<<p2<<"]="<<evolver_Zq<<endl;
+      //cout<<"EvolverZq["<<p2<<"]="<<evolver_Zq<<endl;
       
       out.Zq[i]=Zq[i]/evolver_Zq;
       out.Zq_sig1[i]=Zq_sig1[ilinmom]/evolver_Zq;
@@ -419,7 +474,7 @@ ingredients_t ingredients_t::evolve() const
       const imom_t mom=glb_moms[imom];
       const double p2=mom.p(L).norm2();
       const double evolver_Zbil=evolution_Zbil_to_RIp(iZbil_t_list[iZbil],Nf,ord,ainv,p2);
-      cout<<"EvolverZ"<<Zbil_tag[iZbil]<<"["<<p2<<"]="<<evolver_Zbil<<endl;
+      //cout<<"EvolverZ"<<Zbil_tag[iZbil]<<"["<<p2<<"]="<<evolver_Zbil<<endl;
       
       out.Zbil[i]=Zbil[i]/evolver_Zbil;
       if(use_QED) out.Zbil[i]=Zbil[i]/evolver_Zbil;
@@ -446,53 +501,43 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
   
   cout<<"Equiv bil:"<<endl;
-  for(auto &p : out.bilmoms)
+  // for(auto &p : out.bilmoms)
   // for(auto &p : equiv_bilmom_combo)
-    {
-      for(auto &pi : p)
-	cout<<pi<<endl;
-      cout<<endl;
-    }
+  // {
+  //   for(auto &pi : p)
+  // 	cout<<pi<<endl;
+  //   cout<<endl;
+  // }
   
   out.set_indices();
   out.allocate();
   
   //average Zq
-  vector<tuple<const djvec_t*,djvec_t*>>
-    Zq_ave_tasks{{&Zq,&out.Zq},{&Zq_sig1,&out.Zq_sig1}};
-  if(use_QED) Zq_ave_tasks.push_back({&Zq_sig1_EM,&out.Zq_sig1_EM});
   for(size_t i=0;i<out.im_r_ilinmom_ind.max();i++)
     {
       const vector<size_t> out_im_r_ilinmom_comp=out.im_r_ilinmom_ind(i);
       const size_t out_ilinmom_combo=out_im_r_ilinmom_comp[2];
       
-      for(const auto &p : Zq_ave_tasks)
-  	{
-  	  djack_t &ave=(*get<1>(p))[i];
+      for(const auto &t : get_Zq_tasks(out))
+	{
+  	  djack_t &ave=(*t.out)[i];
   	  ave=0.0;
-  	  for(const size_t ieq : equiv_linmom_combos[out_ilinmom_combo]) ave+=(*get<0>(p))[ieq];
+  	  for(const size_t ieq : equiv_linmom_combos[out_ilinmom_combo]) ave+=(*t.in)[ieq];
   	  ave/=equiv_linmom_combos[out_ilinmom_combo].size();
   	}
     }
   
-  //average pr_bil
-  vector<tuple<const djvec_t*,djvec_t*>>
-    bil_ave_tasks{{&pr_bil,&out.pr_bil},{&Zbil,&out.Zbil}};
-  if(use_QED)
-    {
-      bil_ave_tasks.push_back({&pr_bil_QED,&out.pr_bil_QED});
-      bil_ave_tasks.push_back({&Zbil_QED,&out.Zbil_QED});
-    }
+  //average pr_bil and Z
   for(size_t i=0;i<out.im_r_im_r_iZbil_ibilmom_ind.max();i++)
     {
       const vector<size_t> out_im_r_im_r_iZbil_ibilmom_comp=out.im_r_im_r_iZbil_ibilmom_ind(i);
       const size_t out_imom_combo=out_im_r_im_r_iZbil_ibilmom_comp[5];
       
-      for(const auto &p : bil_ave_tasks)
+      for(const auto &t : concat(get_pr_bil_tasks(out),get_Zbil_tasks(out)))
   	{
-  	  djack_t &ave=(*get<1>(p))[i];
+  	  djack_t &ave=(*t.out)[i];
   	  ave=0.0;
-  	  for(const size_t ieq : equiv_bilmom_combos[out_imom_combo]) ave+=(*get<0>(p))[ieq];
+  	  for(const size_t ieq : equiv_bilmom_combos[out_imom_combo]) ave+=(*t.in)[ieq];
   	  ave/=equiv_bilmom_combos[out_imom_combo].size();
   	}
     }
@@ -504,13 +549,14 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
 
 void ingredients_t::plot_Z(const string &suffix) const
 {
+  ingredients_t dum;
+  
   //Zq
-  vector<tuple<const djvec_t*,string>> Zq_tasks={{&Zq,"Zq"},{&Zq_sig1,"Zq_sig1"}};
-  if(use_QED) Zq_tasks.push_back(make_tuple(&Zq_sig1_EM,"Zq_sig1_EM"));
-  for(const auto &p : Zq_tasks)
+  for(auto &t : get_Zq_tasks(dum))
     {
-      const djvec_t &Z=*get<0>(p);
-      const string &tag=get<1>(p);
+      const djvec_t &Z=*t.in;
+      const string &tag=t.tag;
+      
       grace_file_t out("plots/"+tag+(suffix!=""?("_"+suffix):string(""))+".xmg");
       
       for(size_t im=0;im<_nm;im++)
@@ -526,13 +572,11 @@ void ingredients_t::plot_Z(const string &suffix) const
     }
   
   //Zbil
-  vector<tuple<const djvec_t*,string>> Zbil_tasks{{&Zbil,"Zbil"}};
-  if(use_QED) Zbil_tasks.push_back({&Zbil_QED,"Zbil_EM"});
-  for(const auto &p : Zbil_tasks)
+  for(const auto &t : get_Zbil_tasks(dum))
     {
       //decript tuple
-      const djvec_t &Z=*get<0>(p);
-      const string &tag=get<1>(p);
+      const djvec_t &Z=*t.in;
+      const string &tag=t.tag;
       
       for(size_t iZbil=0;iZbil<nZbil;iZbil++)
   	{
