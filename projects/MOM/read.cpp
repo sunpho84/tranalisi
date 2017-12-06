@@ -129,10 +129,10 @@ vector<task_list_t> prepare_read_prop_taks(vector<m_r_mom_conf_props_t> &props,c
 	    for(auto &psc : list)
 	      for(size_t i_i_in_clust_ihit=0;i_i_in_clust_ihit<i_in_clust_ihit_ind.max();i_i_in_clust_ihit++)
 		{
-		  vector<size_t> i_in_clust_ihit=i_in_clust_ihit_ind(i_i_in_clust_ihit);
-		  size_t i_in_clust=i_in_clust_ihit[0],ihit=i_in_clust_ihit[1];
-		  size_t iconf=conf_ind({ijack,i_in_clust});
-		  string path=combine("out/%04zu/fft_",conf_list[iconf])+get_prop_tag(im,r,get<1>(psc))+combine(suff_hit.c_str(),ihit);
+		  const vector<size_t> i_in_clust_ihit=i_in_clust_ihit_ind(i_i_in_clust_ihit);
+		  const size_t i_in_clust=i_in_clust_ihit[0],ihit=i_in_clust_ihit[1];
+		  const size_t iconf=conf_ind({ijack,i_in_clust});
+		  const string path=combine("out/%04zu/fft_",conf_list[iconf])+get_prop_tag(im,r,get<1>(psc))+combine(suff_hit.c_str(),ihit);
 		  read_tasks[i_i_in_clust_ihit].push_back(incapsulate_task(read_prop,get<0>(psc),raw_file_t(path,"r"),get<2>(psc)));
 		}
 	  }
