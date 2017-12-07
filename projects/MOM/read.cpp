@@ -101,7 +101,7 @@ namespace
   using namespace glb;
   index_t get_im_r_iconf_ihit_ikind_ind()
   {
-    return im_r_ijack_ind*index_t({{"conf",conf_list.size()},{"hit",nhits},{"kind",m_r_mom_conf_props_t::nprop_kind()}});
+    return im_r_ind*index_t({{"conf",conf_list.size()},{"hit",nhits},{"kind",m_r_mom_conf_props_t::nprop_kind()}});
   }
 }
 
