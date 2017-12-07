@@ -20,6 +20,9 @@ void ingredients_t::set_pars_for_scratch()
     case RI_MOM:
       set_ri_mom_moms();
       break;
+    case SMOM:
+      set_smom_moms();
+      break;
     }
 }
 
@@ -34,9 +37,60 @@ void ingredients_t::set_ri_mom_moms()
     }
 }
 
+void ingredients_t::set_smom_moms()
+{
+  linmoms.resize(glb_moms.size());
+  for(size_t imom=0;imom<glb_moms.size();imom++)
+    linmoms[imom]={imom};
+  
+  const double tol=1e-10;
+  for(size_t i=0;i<glb_moms.size();i++)
+    {
+      //get norm of p[i]
+      p_t pi=glb_moms[i].p(L);
+      double pi2=pi.norm2();
+      
+      for(size_t j=0;j<glb_moms.size();j++)
+	{
+	  //get norm of p[j]
+	  p_t pj=glb_moms[j].p(L);
+	  double pj2=pj.norm2();
+	  
+	  //check that norm of the two incoming vector is the same
+	  if(2.0*fabs(pi2-pj2)<(pi2+pj2)*tol)
+	    {
+	      //sum and get norm
+	      imom_t momk;
+	      for(size_t mu=0;mu<NDIM;mu++)
+		momk[mu]=glb_moms[i][mu]+glb_moms[j][mu];
+	      auto posk=find(glb_moms.begin(),glb_moms.end(),momk);
+	      if(posk==glb_moms.end())
+		{
+		  cerr<<"Searching for mom {"<<momk[0];
+		  for(size_t mu=1;mu<NDIM;mu++) cerr<<","<<momk[mu];
+		  cerr<<endl;
+		  CRASH("Unable to find it");
+		}
+	      const size_t k=distance(glb_moms.begin(),posk);
+	      double pk2=glb_moms[k].p(L).norm2();
+	      
+	      cerr<<2.0*fabs(pi2-pk2)/(pi2+pk2)<<" "<<pi2<<" "<<pj2<<" "<<pk2<<endl;
+	      
+	      if(2.0*fabs(pi2-pk2)<(pi2+pk2)*tol)
+		{
+		  cout<<"Found smom pair: "<<i<<" "<<j<<" -> "<<endl;
+		  bilmoms.push_back({k,i,j});
+		}
+	    }
+	}
+    }
+  
+  cout<<"Number of smom pairs: "<<bilmoms.size()<<endl;
+}
+
 void ingredients_t::mom_compute_prop()
 {
-  //!< store props for individual conf
+  vector<raw_file_t> files=setup_read_all_props_mom(conf_list);
   
   for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
     {
@@ -48,7 +102,7 @@ void ingredients_t::mom_compute_prop()
 	    size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
 	    cout<<"Working on clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", hit "<<ihit+1<<"/"<<nhits<<", momentum "<<ilinmom+1<<"/"<<linmoms.size()<<endl;
 	    read_time.start();
-	    const vector<m_r_mom_conf_props_t> props=read_all_props_mom(conf_list,i_in_clust_ihit,linmoms[ilinmom][0]);
+	    const vector<m_r_mom_conf_props_t> props=read_all_props_mom(files,i_in_clust_ihit,linmoms[ilinmom][0]);
 	    read_time.stop();
 	    
 	    //build all props
@@ -104,6 +158,8 @@ void ingredients_t::mom_compute_prop()
 
 void ingredients_t::mom_compute_bil()
 {
+  vector<raw_file_t> files=setup_read_all_props_mom(conf_list);
+  
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     {
       const size_t imom1=bilmoms[ibilmom][1];
@@ -119,8 +175,8 @@ void ingredients_t::mom_compute_bil()
 	    size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
 	    cout<<"Working on clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", hit "<<ihit+1<<"/"<<nhits<<", momentum "<<ibilmom+1<<"/"<<bilmoms.size()<<endl;
 	    read_time.start();
-	    const vector<m_r_mom_conf_props_t> props1=read_all_props_mom(conf_list,i_in_clust_ihit,imom1);
-	    const vector<m_r_mom_conf_props_t> props2=(imom1==imom2)?props1:read_all_props_mom(conf_list,i_in_clust_ihit,imom2);
+	    const vector<m_r_mom_conf_props_t> props1=read_all_props_mom(files,i_in_clust_ihit,imom1);
+	    const vector<m_r_mom_conf_props_t> props2=(imom1==imom2)?props1:read_all_props_mom(files,i_in_clust_ihit,imom2);
 	    read_time.stop();
 	    
 	    //build all props
@@ -203,6 +259,11 @@ void ingredients_t::ri_mom()
   mom_compute_bil();
 }
 
+void ingredients_t::smom()
+{
+  ri_mom();
+}
+
 void ingredients_t::bin_read(raw_file_t &file)
 {
   for(djvec_t *o: {&Zq,&Zq_sig1,&Zq_sig1_EM,&pr_bil,&pr_bil_QED}) o->bin_read(file);
@@ -254,6 +315,9 @@ void ingredients_t::create_from_scratch(const string ingredients_path)
 	{
 	case RI_MOM:
 	  ri_mom();
+	  break;
+	case SMOM:
+	  smom();
 	  break;
 	}
       bin_write(ingredients_path);

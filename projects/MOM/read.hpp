@@ -60,8 +60,11 @@ void read_input(const string &input_path);
 //! prepare the list of confs
 void prepare_list_of_confs();
 
+//! open all props
+vector<raw_file_t> setup_read_all_props_mom(const vector<size_t> &conf_list);
+
 //! real all propagators for a given i_in_clust_ihit and imom
-vector<m_r_mom_conf_props_t> read_all_props_mom(const vector<size_t> &conf_list,const size_t i_in_clust_ihit,const size_t imom);
+vector<m_r_mom_conf_props_t> read_all_props_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
 
 #undef EXTERN_READ
 #undef INIT_TO

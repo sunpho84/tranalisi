@@ -20,7 +20,7 @@ EXTERN_INGREDIENTS index_t im_r_ijack_ind;
 EXTERN_INGREDIENTS index_t im_r_ijackp1_ind;
 
 //! kind of scheme supported
-enum scheme_t{RI_MOM};
+enum scheme_t{RI_MOM,SMOM};
 
 //! reno scheme used
 EXTERN_INGREDIENTS scheme_t scheme;
@@ -102,8 +102,11 @@ struct ingredients_t
   //! compute all mom-scheme vertices
   void mom_compute_bil();
   
-  //! fill all the ingredients according to ri-mom
+  //! compute according to ri-mom scheme
   void ri_mom();
+  
+  //! compute according to smom scheme
+  void smom();
   
   //! read from binary
   void bin_read(raw_file_t &file);
@@ -128,8 +131,11 @@ struct ingredients_t
   //! create using files
   void create_from_scratch(const string ingredients_path="ingredients.dat");
   
-  //! set momenta for ri-moms
+  //! set momenta for ri-mom
   void set_ri_mom_moms();
+  
+  //! set momenta for smom
+  void set_smom_moms();
   
   //! set basic pars
   void set_pars_for_scratch();
