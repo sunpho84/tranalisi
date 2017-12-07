@@ -36,21 +36,19 @@ void ingredients_t::set_ri_mom_moms()
 
 void ingredients_t::mom_compute_prop()
 {
-  vector<m_r_mom_conf_props_t> props; //!< store props for individual conf
+  //!< store props for individual conf
   
   for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
     {
-      vector<task_list_t> read_tasks=prepare_read_prop_taks(props,conf_list,linmoms[ilinmom][0]);
-      
       vector<jm_r_mom_props_t> jprops(glb::im_r_ind.max()); //!< jackknived props
       
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
-	    size_t i_in_clust_hit=i_in_clust_ihit_ind({i_in_clust,ihit});
+	    size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
 	    cout<<"Working on clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", hit "<<ihit+1<<"/"<<nhits<<", momentum "<<ilinmom+1<<"/"<<linmoms.size()<<endl;
 	    read_time.start();
-	    read_tasks[i_in_clust_hit].assolve_all(RECYCLE);
+	    const vector<m_r_mom_conf_props_t> props=read_all_props_mom(conf_list,i_in_clust_ihit,linmoms[ilinmom][0]);
 	    read_time.stop();
 	    
 	    //build all props
@@ -106,15 +104,10 @@ void ingredients_t::mom_compute_prop()
 
 void ingredients_t::mom_compute_bil()
 {
-  vector<m_r_mom_conf_props_t> props1,props2; //!< store props for individual conf
-  
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     {
       const size_t imom1=bilmoms[ibilmom][1];
       const size_t imom2=bilmoms[ibilmom][2];
-      vector<task_list_t> read_tasks1=prepare_read_prop_taks(props1,conf_list,imom1);
-      vector<task_list_t> read_tasks2;
-      if(imom2!=imom1) read_tasks2=prepare_read_prop_taks(props2,conf_list,imom2);
       
       vector<jm_r_mom_props_t> jprops1(glb::im_r_ind.max()); //!< jackknived props
       vector<jm_r_mom_props_t> jprops2(glb::im_r_ind.max()); //!< jackknived props
@@ -123,12 +116,11 @@ void ingredients_t::mom_compute_bil()
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
-	    size_t i_in_clust_hit=i_in_clust_ihit_ind({i_in_clust,ihit});
+	    size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
 	    cout<<"Working on clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", hit "<<ihit+1<<"/"<<nhits<<", momentum "<<ibilmom+1<<"/"<<bilmoms.size()<<endl;
 	    read_time.start();
-	    read_tasks1[i_in_clust_hit].assolve_all(RECYCLE);
-	    if(imom2!=imom1) read_tasks1[i_in_clust_hit].assolve_all(RECYCLE);
-	    else             props2=props1;
+	    const vector<m_r_mom_conf_props_t> props1=read_all_props_mom(conf_list,i_in_clust_ihit,imom1);
+	    const vector<m_r_mom_conf_props_t> props2=(imom1==imom2)?props1:read_all_props_mom(conf_list,i_in_clust_ihit,imom2);
 	    read_time.stop();
 	    
 	    //build all props
