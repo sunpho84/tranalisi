@@ -105,7 +105,6 @@ vector<m_r_mom_conf_props_t> read_all_props_mom(const vector<size_t> &conf_list,
   
   vector<tuple<prop_t*,raw_file_t*,const dcompl_t>> list_to_read;
   
-#pragma omp parallel for collapse(3)
   for(size_t ijack=0;ijack<njacks;ijack++)
     for(size_t im=0;im<nm;im++)
       for(size_t r=0;r<nr;r++)
