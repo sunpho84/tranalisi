@@ -175,18 +175,18 @@ double evolution_to_RIp(double ainv,double mu_2)
 
 //! parse Ord
 template<int Iz,int Nf>
-inline double evolution_to_RIp(int ord,double ainv,double mu_2)
+inline double evolution_to_RIp(int evo_ord,double ainv,double mu_2)
 {
   double e=0.0;
   
-  switch(ord)
+  switch(evo_ord)
     {
     case 0:e=evolution_to_RIp<Iz,Nf,0>(ainv,mu_2);break;
     case 1:e=evolution_to_RIp<Iz,Nf,1>(ainv,mu_2);break;
     case 2:e=evolution_to_RIp<Iz,Nf,2>(ainv,mu_2);break;
     case 3:e=evolution_to_RIp<Iz,Nf,3>(ainv,mu_2);break;
     default:
-      CRASH("Not defined for ord %d",ord);
+      CRASH("Not defined for ord %d",evo_ord);
     }
   
   return e;

@@ -15,7 +15,7 @@
 
 using namespace std;
 
-double ph_mom[NDIM]={0.5,0,0,0};
+double ph_mom[NDIM]={0,0,0,0};
 
 void set_glb_list_of_moms(const string &path,double thresh)
 {

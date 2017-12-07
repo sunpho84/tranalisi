@@ -11,6 +11,8 @@
 
 void ingredients_t::set_pars_for_scratch()
 {
+  using namespace reno_scheme;
+  
   _nm=glb::nm;
   _nr=glb::nr;
   _am=glb::am;
@@ -63,23 +65,25 @@ void ingredients_t::set_smom_moms()
 	      imom_t momk;
 	      for(size_t mu=0;mu<NDIM;mu++)
 		momk[mu]=glb_moms[i][mu]+glb_moms[j][mu];
-	      auto posk=find(glb_moms.begin(),glb_moms.end(),momk);
-	      if(posk==glb_moms.end())
-		{
-		  cerr<<"Searching for mom {"<<momk[0];
-		  for(size_t mu=1;mu<NDIM;mu++) cerr<<","<<momk[mu];
-		  cerr<<endl;
-		  CRASH("Unable to find it");
-		}
-	      const size_t k=distance(glb_moms.begin(),posk);
-	      double pk2=glb_moms[k].p(L).norm2();
+	      double pk2=momk.p(L).norm2();
 	      
-	      cerr<<2.0*fabs(pi2-pk2)/(pi2+pk2)<<" "<<pi2<<" "<<pj2<<" "<<pk2<<endl;
+	      //debug info
+	      //cerr<<"pi2: "<<pi2<<" pk2: "<<pk2<<" "<<2.0*fabs(pi2-pk2)/(pi2+pk2)<<" "<<pi2<<" "<<pj2<<" "<<pk2<<endl;
 	      
 	      if(2.0*fabs(pi2-pk2)<(pi2+pk2)*tol)
 		{
-		  cout<<"Found smom pair: "<<i<<" "<<j<<" -> "<<endl;
-		  bilmoms.push_back({k,i,j});
+		  //search in list
+		  auto posk=find(glb_moms.begin(),glb_moms.end(),momk);
+		  //take position if found
+		  if(posk!=glb_moms.end())
+		    {
+		      const size_t k=distance(glb_moms.begin(),posk);
+		      //inform and add to the list
+		      //cout<<"Found smom pair: "<<i<<" "<<glb_moms[i]<<" + j "<<glb_moms[j]<<" = "<<k<<" "<<momk<<endl;
+		      bilmoms.push_back({k,i,j});
+		    }
+		  // else
+		  //    cout<<"Unable to find it"<<momk<<"="<<glb_moms[i]<<"+"<<glb_moms[j]<<endl;
 		}
 	    }
 	}
@@ -311,6 +315,8 @@ void ingredients_t::create_from_scratch(const string ingredients_path)
   else
     {
       prepare_list_of_confs();
+      
+      using namespace reno_scheme;
       
       switch(scheme)
 	{
@@ -584,7 +590,7 @@ ingredients_t ingredients_t::evolve() const
       
       imom_t mom=glb_moms[imom];
       double p2=mom.p(L).norm2();
-      double evolver_Zq=evolution_Zq_to_RIp(Nf,ord,ainv,p2);
+      double evolver_Zq=evolution_Zq_to_RIp(Nf,evo_ord,ainv,p2);
       //cout<<"EvolverZq["<<p2<<"]="<<evolver_Zq<<endl;
       
       out.Zq[i]=Zq[i]/evolver_Zq;
@@ -604,7 +610,7 @@ ingredients_t ingredients_t::evolve() const
       
       const imom_t mom=glb_moms[imom];
       const double p2=mom.p(L).norm2();
-      const double evolver_Zbil=evolution_Zbil_to_RIp(iZbil_t_list[iZbil],Nf,ord,ainv,p2);
+      const double evolver_Zbil=evolution_Zbil_to_RIp(iZbil_t_list[iZbil],Nf,evo_ord,ainv,p2);
       //cout<<"EvolverZ"<<Zbil_tag[iZbil]<<"["<<p2<<"]="<<evolver_Zbil<<endl;
       
       out.Zbil[i]=Zbil[i]/evolver_Zbil;
@@ -628,7 +634,7 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
     out.linmoms.push_back({p[0]});
   
   //build out bil combo
-  vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(linmoms,"equiv_bilmoms.txt");
+  vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(bilmoms,"equiv_bilmoms.txt");
   fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
   
   cout<<"Equiv bil:"<<endl;

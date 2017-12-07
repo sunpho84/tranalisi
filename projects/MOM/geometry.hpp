@@ -80,6 +80,15 @@ inline prop_t slash(const p_t &p)
 //! phase of momenta
 extern double ph_mom[NDIM];
 
+//! kind of boundary condition supported
+namespace temporal_bc
+{
+  enum type_t{ANTIPERIODIC,PERIODIC};
+  const map<string,tuple<type_t,double>> decr{{"Antiperiodic",{ANTIPERIODIC,0.5}},{"Periodic",{PERIODIC,0.0}}};
+  EXTERN_GEOMETRY type_t bc;
+  const size_t n=decr.size();
+}
+
 //! holds the components of a momentum
 class imom_t : public coords_t
 {
@@ -111,6 +120,16 @@ public:
     for(size_t mu=0;mu<NDIM;mu++) out+=((*this)[mu])<<mu;
     return out;
   }
+  
+  //! operator to print
+  friend ostream& operator<<(ostream &os,const imom_t &m)
+  {
+    os<<"{"<<m[0];
+    for(size_t mu=1;mu<NDIM;mu++) os<<","<<m[mu];
+    os<<"}";
+    
+    return os;
+  }
 };
 
 EXTERN_GEOMETRY coords_t L; //!< lattice sizes
@@ -119,10 +138,7 @@ EXTERN_GEOMETRY vector<imom_t> glb_moms; //!< list of momenta
 EXTERN_GEOMETRY vector<bool> filt_moms; //!< store if a momentum passed the filter
 
 //! reads the list of momenta from file
-void set_glb_list_of_moms(const string &path,double thresh=0.28);
-
-//! set a list of imom from filter moms
-void set_filtered_moms(const double thresh=0.28);
+void set_glb_list_of_moms(const string &path,double thresh);
 
 //! get a vector of pt2 for filtered moms
 vector<double> get_filtered_pt2();

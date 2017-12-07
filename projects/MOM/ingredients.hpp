@@ -20,10 +20,15 @@ EXTERN_INGREDIENTS index_t im_r_ijack_ind;
 EXTERN_INGREDIENTS index_t im_r_ijackp1_ind;
 
 //! kind of scheme supported
-enum scheme_t{RI_MOM,SMOM};
+namespace reno_scheme
+{
+  enum type_t{RI_MOM,SMOM};
+  const map<string,type_t> decr={{"RI_MOM",RI_MOM},{"SMOM",SMOM}};
+  const size_t n=2;
+}
 
 //! reno scheme used
-EXTERN_INGREDIENTS scheme_t scheme;
+EXTERN_INGREDIENTS reno_scheme::type_t scheme;
 
 //! passed to force recomputing Zbil
 static const bool FORCE_RECOMPUTE_ZBIL=true;
@@ -41,7 +46,7 @@ struct ingredients_t
   djvec_t Zq;
   djvec_t Zq_sig1;
   djvec_t Zq_sig1_EM;
-
+  
   //! task to do someting
   struct task_t
   {
@@ -212,15 +217,6 @@ struct ingredients_t
   template <size_t N>
   vector<vector<size_t>> get_equiv_list(const vector<array<size_t,N>> &combo,const string &listpath) const
   {
-    //periodicity
-    enum pe_t{UNK,PER,APE};
-    const string pe_tag[3]={"UNK","PE","APE"};
-    pe_t pe=UNK;
-    double p0=fabs(ph_mom[0]);
-    if(fabs(p0)<1e-10) pe=PER;
-    if(fabs(p0-0.5)<1e-10) pe=APE;
-    cout<<"Periodicity: "<<pe_tag[pe]<<endl;
-    
     //prepare the index of the output
     map<array<imom_t,N>,vector<size_t>> equiv_combo_map;
     for(size_t icombo=0;icombo<combo.size();icombo++)
@@ -235,12 +231,15 @@ struct ingredients_t
 	    //decide time component
 	    cr[ip][0]=glb_moms[imom][0];
 	    if(cr[ip][0]<0)
-	      switch(pe)
-		{
-		case UNK: CRASH("phase on momentum 0 cannot be %lg",ph_mom[0]);break;
-		case PER: cr[ip][0]=-cr[ip][0];break;
-		case APE: cr[ip][0]=-cr[ip][0]-1;break;
-		}
+	      {
+		using namespace temporal_bc;
+		
+		switch(bc)
+		  {
+		  case PERIODIC:     cr[ip][0]=-cr[ip][0];break;
+		  case ANTIPERIODIC: cr[ip][0]=-cr[ip][0]-1;break;
+		  }
+	      }
 	    
 	    //decide space components
 	    for(size_t mu=1;mu<NDIM;mu++) cr[ip][mu]=abs(glb_moms[imom][mu]);
@@ -275,15 +274,7 @@ struct ingredients_t
 	    for(size_t ip=0;ip<N;ip++)
 	      {
 		const size_t imom=combo[eq_combo][ip];
-		mom_out<<"  "<<imom<<"=";
-		//components
-		mom_out<<"{";
-		for(size_t mu=0;mu<NDIM;mu++)
-		  {
-		    if(mu) mom_out<<",";
-		    mom_out<<glb_moms[imom][mu];
-		  }
-		mom_out<<"}";
+		mom_out<<"  "<<imom<<glb_moms[imom];
 	      }
 	    mom_out<<endl;
 	  }

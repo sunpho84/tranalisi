@@ -56,20 +56,22 @@ int main(int narg,char **arg)
   
   ingredients_t ing;
   ing.create_from_scratch();
+  ing.plot_Z("");
   
-  ing.plot_Z();
-
   ingredients_t rave=ing.average_r();
+  rave.plot_Z("rave");
   
   ingredients_t chir=rave.chir_extrap();
+  chir.plot_Z("rave_chir");
   
   ingredients_t sub=chir.subtract_Oa2();
+  sub.plot_Z("rave_chir_sub");
   
   ingredients_t evo=sub.evolve();
+  evo.plot_Z("rave_chir_sub_evo");
   
   ingredients_t ave=evo.average_equiv_momenta();
-  
-  ave.plot_Z("ave");
+  ave.plot_Z("rave_chir_sub_evo_ave");
   
   //print time statistics
   cout<<ts<<endl;

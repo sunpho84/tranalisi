@@ -21,10 +21,13 @@ void read_input(const string &input_path)
   const size_t Ls=input.read<size_t>("L"); //!< lattice spatial size
   L[0]=input.read<size_t>("T");
   
-  const string act_str=input.read<string>("Action"); //!< action name
-  auto act_key=gaz::decr.find(act_str); //!< key in the map of act
-  if(act_key==gaz::decr.end()) CRASH("Unable to decript %s",act_str.c_str());
-  act=act_key->second;
+  {
+    using namespace gaz;
+    const string act_str=input.read<string>("Action"); //!< action name
+    auto act_key=decr.find(act_str); //!< key in the map of actions
+    if(act_key==decr.end()) CRASH("Unable to decript %s",act_str.c_str());
+    act=act_key->second;
+  }
   
   beta=input.read<double>("Beta");
   plaq=input.read<double>("Plaq");
@@ -38,6 +41,7 @@ void read_input(const string &input_path)
   im_sea=input.read<double>("ImSea");
   
   const string mom_list_path=input.read<string>("MomList"); //!< list of momenta
+  const double filter_thresh=input.read<double>("FilterThresh"); //!< Filter for democracy
   set_njacks(input.read<size_t>("NJacks")); //!< number of jacks
   
   input.expect("ConfRange");
@@ -57,7 +61,24 @@ void read_input(const string &input_path)
   ainv=input.read<double>("aInv");
   Nf=ev::Nf_t_of_Nf(input.read<int>("Nf"));
   
-  ord=input.read<size_t>("Ord");
+  {
+    using namespace reno_scheme;
+    const string scheme_str=input.read<string>("Scheme"); //!< scheme name
+    auto scheme_key=decr.find(scheme_str); //!< key in the map of schemes
+    if(scheme_key==decr.end()) CRASH("Unable to decript %s",scheme_str.c_str());
+    scheme=scheme_key->second;
+  }
+  
+  {
+    using namespace temporal_bc;
+    const string bc_str=input.read<string>("BC"); //!< boundary condition name
+    auto bc_key=decr.find(bc_str); //!< key in the map of boundary condition
+    if(bc_key==decr.end()) CRASH("Unable to decript %s",bc_str.c_str());
+    bc=get<0>(bc_key->second);
+    ph_mom[0]=get<1>(bc_key->second);
+  }
+  
+  evo_ord=input.read<size_t>("EvoOrd");
   
   //////////////////////////////////////////////////
   
@@ -73,7 +94,7 @@ void read_input(const string &input_path)
   for(size_t mu=1;mu<NDIM;mu++) L[mu]=Ls;
   
   //initialize momenta
-  set_glb_list_of_moms(mom_list_path);
+  set_glb_list_of_moms(mom_list_path,filter_thresh);
 }
 
 void prepare_list_of_confs()

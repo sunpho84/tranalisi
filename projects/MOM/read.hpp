@@ -44,7 +44,7 @@ EXTERN_READ range_t conf_range;
 //! number of flavour
 EXTERN_READ ev::Nf_t Nf;
 //! order of alpha to use
-EXTERN_READ size_t ord;
+EXTERN_READ size_t evo_ord;
 //! coupling
 EXTERN_READ double g2;
 //! boosted coupling
