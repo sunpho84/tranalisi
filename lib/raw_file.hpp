@@ -36,7 +36,11 @@ public:
     path=_path;
     //cout<<"Opening "<<path<<endl;
     file=fopen(path.c_str(),mode.c_str());
-    if(file==nullptr) CRASH("Unable to open %s with mode %s",path.c_str(),mode.c_str());
+    if(file==nullptr)
+      {
+	perror("for this reason:");
+	CRASH("Unable to open \"%s\" with mode %s",path.c_str(),mode.c_str());
+      }
   }
   
   //! return the path
