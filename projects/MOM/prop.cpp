@@ -15,6 +15,8 @@
 #include <geometry.hpp>
 #include <types.hpp>
 
+const char m_r_mom_conf_props_t::tag[NPROP_WITH_QED][3]={"0","FF","F","T","S","P"};
+
 void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom)
 {
   file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
@@ -30,8 +32,10 @@ void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t i
 	  }
 }
 
-string get_prop_tag(size_t im,size_t ir,const string &ins)
-{return combine("S_M%zu_R%zu_%s",im,ir,ins.c_str());}
+string get_prop_tag(const size_t im,const size_t ir,const size_t ikind)
+{
+  return combine("S_M%zu_R%zu_%s",im,ir,m_r_mom_conf_props_t::tag[ikind]);
+}
 
 vjprop_t get_all_mr_props_inv(const vjprop_t &jprop)
 {
@@ -77,10 +81,14 @@ void clusterize_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,bool us
 }
 
 double m0_of_kappa(double kappa)
-{return 1.0/(2.0*kappa)-4;}
+{
+  return 1.0/(2.0*kappa)-4;
+}
 
 double M_of_p(const p_t &p,double kappa)
-{return m0_of_kappa(kappa)+p.hat().norm2()/2.0;}
+{
+  return m0_of_kappa(kappa)+p.hat().norm2()/2.0;
+}
 
 prop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r)
 {

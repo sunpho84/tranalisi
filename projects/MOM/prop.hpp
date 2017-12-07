@@ -42,14 +42,43 @@ public:
   prop_t LO; //!< propagator with no insertion
   
   prop_t FF; //!< propagator with 2 photon insertions
-  prop_t F; //!< propagator with 1 photon insertion
-  prop_t T; //!< propagator with Tadpole insertion
-  prop_t S; //!< propagator with Scalar insertion
-  prop_t P; //!< propagator with Pseudoscalar insertion
+  prop_t F;  //!< propagator with 1 photon insertion
+  prop_t T;  //!< propagator with Tadpole insertion
+  prop_t S;  //!< propagator with Scalar insertion
+  prop_t P;  //!< propagator with Pseudoscalar insertion
+  
+  //! number of all kinds
+  static const size_t NPROP_WITH_QED=6;
+  //! tag to read
+  static const char tag[NPROP_WITH_QED][3];
+  //! kind of propagator
+  array<prop_t*,NPROP_WITH_QED> kind{&LO,&FF,&F,&T,&S,&P};
+  
+  //! number of propagator kind
+  static size_t nprop_kind()
+  {
+    if(use_QED) return NPROP_WITH_QED;
+    else        return 1;
+  }
+  
+  //! return the coefficient for reading the kind
+  static dcompl_t coeff_to_read(const size_t ikind,const size_t r)
+  {
+    const size_t nmax=m_r_mom_conf_props_t::nprop_kind();
+    if(ikind>=nmax) CRASH("cannot ask for coeff of kind %zu, maximum is %zu",ikind,nmax);
+    
+    if(ikind==5) //P
+      return dcompl_t(0,tau3[r]);
+    else
+      if(ikind==4) //S
+	return -1.0;
+      else //others
+	return 1.0;
+  }
 };
 
 //! return the tag of a prop
-string get_prop_tag(size_t im,size_t ir,const string &ins);
+string get_prop_tag(const size_t im,const size_t ir,const size_t ikind);
 
 //! holds a given m and r, all jackks
 class jm_r_mom_props_t
