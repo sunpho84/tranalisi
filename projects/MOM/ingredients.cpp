@@ -164,6 +164,7 @@ void ingredients_t::mom_compute_bil()
     {
       const size_t imom1=bilmoms[ibilmom][1];
       const size_t imom2=bilmoms[ibilmom][2];
+      const bool read2=(imom1!=imom2);
       
       vector<jm_r_mom_props_t> jprops1(glb::im_r_ind.max()); //!< jackknived props
       vector<jm_r_mom_props_t> jprops2(glb::im_r_ind.max()); //!< jackknived props
@@ -176,7 +177,7 @@ void ingredients_t::mom_compute_bil()
 	    cout<<"Working on clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", hit "<<ihit+1<<"/"<<nhits<<", momentum "<<ibilmom+1<<"/"<<bilmoms.size()<<endl;
 	    read_time.start();
 	    const vector<m_r_mom_conf_props_t> props1=read_all_props_mom(files,i_in_clust_ihit,imom1);
-	    const vector<m_r_mom_conf_props_t> props2=(imom1==imom2)?props1:read_all_props_mom(files,i_in_clust_ihit,imom2);
+	    const vector<m_r_mom_conf_props_t> props2=(read2)?read_all_props_mom(files,i_in_clust_ihit,imom2):props1;
 	    read_time.stop();
 	    
 	    //build all props
