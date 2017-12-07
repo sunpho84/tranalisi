@@ -34,7 +34,7 @@ public:
   void open(const string &_path,const string &mode)
   {
     path=_path;
-    //cout<<"Opening "<<path<<endl;
+    cout<<"Opening "<<path<<endl;
     file=fopen(path.c_str(),mode.c_str());
     if(file==nullptr)
       {
@@ -45,15 +45,17 @@ public:
   
   //! return the path
   string get_path()
-  {return path;}
+  {
+    return path;
+  }
   
   //! close the file
   void close()
   {
-    //cout<<"Should close "<<path<<": "<<(file!=nullptr)<<endl;
+    cout<<"Should close "<<path<<": "<<(file!=nullptr)<<endl;
     if(file!=nullptr)
       {
-	//cout<<"Closing "<<path<<endl;
+	cout<<"Closing "<<path<<endl;
 	fclose(file);
       }
     file=nullptr;
