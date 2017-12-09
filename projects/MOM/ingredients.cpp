@@ -41,7 +41,7 @@ void ingredients_t::set_ri_mom_moms()
 
 void ingredients_t::set_smom_moms()
 {
-  CRAH("Fix: list linmom only useful for smom, set other two components of bimomd relatively to linmom, not glb");
+  CRASH("Fix: list linmom only useful for smom, set other two components of bimomd relatively to linmom, not glb");
   
   for(size_t imom=0;imom<glb_moms.size();imom++)
     if(filt_moms[imom])
