@@ -16,7 +16,6 @@
 #include <ingredients.hpp>
 #include <prop.hpp>
 #include <read.hpp>
-#include <sig3.hpp>
 #include <timings.hpp>
 #include <types.hpp>
 #include <Zbil.hpp>

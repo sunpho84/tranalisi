@@ -8,39 +8,27 @@
 
 #include <Zq.hpp>
 
-double compute_Zq(const prop_t &prop_inv,size_t imom)
+double compute_Zq(const prop_t &prop_inv,const size_t glb_mom)
 {
-  double Zq;
+  const p_t ptilde=glb_moms[glb_mom].p(L).tilde();
+  const double pt2=ptilde.norm2();
+  const prop_t pslash=slash(ptilde);
   
-  p_t ptilde=glb_moms[imom].p(L).tilde();
-  double pt2=ptilde.norm2();
-  prop_t pslash=slash(ptilde);
-  
-  Zq=(prop_inv*pslash).trace().imag()/(12.0*pt2*V);
+  const double Zq=(prop_inv*pslash).trace().imag()/(12.0*pt2*V);
   
   return Zq;
 }
 
-djack_t compute_Zq(const jprop_t &jprop_inv,size_t imom)
+djack_t compute_Zq(const jprop_t &jprop_inv,const size_t glb_mom)
 {
   djack_t Zq;
   
-  p_t ptilde=glb_moms[imom].p(L).tilde();
-  double pt2=ptilde.norm2();
-  prop_t pslash=slash(ptilde);
+  const p_t ptilde=glb_moms[glb_mom].p(L).tilde();
+  const double pt2=ptilde.norm2();
+  const prop_t pslash=slash(ptilde);
   
   for(size_t ijack=0;ijack<=njacks;ijack++)
     Zq[ijack]=(jprop_inv[ijack]*pslash).trace().imag()/(12.0*pt2*V);
-  
-  return Zq;
-}
-
-djvec_t compute_Zq(const vjprop_t &jprop_inv)
-{
-  djvec_t Zq(glb_moms.size()); //!< Z of quark field
-  
-#pragma omp parallel for
-  for(size_t imom=0;imom<glb_moms.size();imom++) Zq[imom]=compute_Zq(jprop_inv[imom],imom);
   
   return Zq;
 }

@@ -15,7 +15,6 @@ __top_builddir__bin_mom_SOURCES= \
 	mom.cpp \
 	prop.cpp \
 	read.cpp \
-	sig3.cpp \
 	timings.cpp \
 	Zbil.cpp \
 	Zq.cpp \

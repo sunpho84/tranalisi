@@ -31,7 +31,6 @@ void set_glb_list_of_moms(const string &path,double thresh)
       if(mom_file.good())
 	{
 	  bool filt=(c.p(L).tilde().p4_fr_p22()<thresh);
-	  if(filt) glb_moms.push_back(c);
 	  filt_moms.push_back(filt);
 	}
     }

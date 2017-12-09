@@ -7,12 +7,9 @@
 #include <prop.hpp>
 
 //! compute for a single jack
-double compute_Zq(const prop_t &prop_inv,size_t imom);
+double compute_Zq(const prop_t &prop_inv,const size_t imom);
 
 //! compute for a djack_t
-djack_t compute_Zq(const jprop_t &jprop_inv,size_t imom);
-
-//! compute Zq for all moms
-djvec_t compute_Zq(const vjprop_t &jprop_inv);
+djack_t compute_Zq(const jprop_t &jprop_inv,const size_t imom);
 
 #endif

@@ -30,64 +30,65 @@ void ingredients_t::set_pars_for_scratch()
 
 void ingredients_t::set_ri_mom_moms()
 {
-  linmoms.resize(glb_moms.size());
-  bilmoms.resize(glb_moms.size());
   for(size_t imom=0;imom<glb_moms.size();imom++)
-    {
-      linmoms[imom]={imom};
-      bilmoms[imom]={imom,imom,imom};
+    if(filt_moms[imom])
+      {
+	linmoms.push_back({imom});
+	bilmoms.push_back({imom,imom,imom});
     }
 }
 
 void ingredients_t::set_smom_moms()
 {
-  linmoms.resize(glb_moms.size());
   for(size_t imom=0;imom<glb_moms.size();imom++)
-    linmoms[imom]={imom};
+    if(filt_moms[imom])
+      linmoms.push_back({imom});
   
   const double tol=1e-10;
   for(size_t i=0;i<glb_moms.size();i++)
-    {
-      //get norm of p[i]
-      p_t pi=glb_moms[i].p(L);
-      double pi2=pi.norm2();
-      
-      for(size_t j=0;j<glb_moms.size();j++)
-	{
-	  //get norm of p[j]
-	  p_t pj=glb_moms[j].p(L);
-	  double pj2=pj.norm2();
-	  
-	  //check that norm of the two incoming vector is the same
-	  if(2.0*fabs(pi2-pj2)<(pi2+pj2)*tol)
+    if(filt_moms[i])
+      {
+	//get norm of p[i]
+	p_t pi=glb_moms[i].p(L);
+	double pi2=pi.norm2();
+	
+	for(size_t j=0;j<glb_moms.size();j++)
+	  if(filt_moms[j])
 	    {
-	      //sum and get norm
-	      imom_t momk;
-	      for(size_t mu=0;mu<NDIM;mu++)
-		momk[mu]=glb_moms[i][mu]+glb_moms[j][mu];
-	      double pk2=momk.p(L).norm2();
+	      //get norm of p[j]
+	      p_t pj=glb_moms[j].p(L);
+	      double pj2=pj.norm2();
 	      
-	      //debug info
-	      //cerr<<"pi2: "<<pi2<<" pk2: "<<pk2<<" "<<2.0*fabs(pi2-pk2)/(pi2+pk2)<<" "<<pi2<<" "<<pj2<<" "<<pk2<<endl;
-	      
-	      if(2.0*fabs(pi2-pk2)<(pi2+pk2)*tol)
+	      //check that norm of the two incoming vector is the same
+	      if(2.0*fabs(pi2-pj2)<(pi2+pj2)*tol)
 		{
-		  //search in list
-		  auto posk=find(glb_moms.begin(),glb_moms.end(),momk);
-		  //take position if found
-		  if(posk!=glb_moms.end())
+		  //sum and get norm
+		  imom_t momk;
+		  for(size_t mu=0;mu<NDIM;mu++)
+		    momk[mu]=glb_moms[i][mu]+glb_moms[j][mu];
+		  double pk2=momk.p(L).norm2();
+		  
+		  //debug info
+		  //cerr<<"pi2: "<<pi2<<" pk2: "<<pk2<<" "<<2.0*fabs(pi2-pk2)/(pi2+pk2)<<" "<<pi2<<" "<<pj2<<" "<<pk2<<endl;
+		  
+		  if(2.0*fabs(pi2-pk2)<(pi2+pk2)*tol)
 		    {
-		      const size_t k=distance(glb_moms.begin(),posk);
-		      //inform and add to the list
-		      //cout<<"Found smom pair: "<<i<<" "<<glb_moms[i]<<" + j "<<glb_moms[j]<<" = "<<k<<" "<<momk<<endl;
-		      bilmoms.push_back({k,i,j});
+		      //search in list
+		      auto posk=find(glb_moms.begin(),glb_moms.end(),momk);
+		      //take position if found
+		      if(posk!=glb_moms.end())
+			{
+			  const size_t k=distance(glb_moms.begin(),posk);
+			  //inform and add to the list
+			  //cout<<"Found smom pair: "<<i<<" "<<glb_moms[i]<<" + j "<<glb_moms[j]<<" = "<<k<<" "<<momk<<endl;
+			  bilmoms.push_back({k,i,j});
+			}
+		      // else
+		      //    cout<<"Unable to find it"<<momk<<"="<<glb_moms[i]<<"+"<<glb_moms[j]<<endl;
 		    }
-		  // else
-		  //    cout<<"Unable to find it"<<momk<<"="<<glb_moms[i]<<"+"<<glb_moms[j]<<endl;
 		}
 	    }
-	}
-    }
+      }
   
   cout<<"Number of smom pairs: "<<bilmoms.size()<<endl;
 }
