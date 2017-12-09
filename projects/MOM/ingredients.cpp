@@ -33,13 +33,16 @@ void ingredients_t::set_ri_mom_moms()
   for(size_t imom=0;imom<glb_moms.size();imom++)
     if(filt_moms[imom])
       {
+	const size_t linmom=linmoms.size();
 	linmoms.push_back({imom});
-	bilmoms.push_back({imom,imom,imom});
+	bilmoms.push_back({imom,linmom,linmom});
     }
 }
 
 void ingredients_t::set_smom_moms()
 {
+  CRAH("Fix: list linmom only useful for smom, set other two components of bimomd relatively to linmom, not glb");
+  
   for(size_t imom=0;imom<glb_moms.size();imom++)
     if(filt_moms[imom])
       linmoms.push_back({imom});

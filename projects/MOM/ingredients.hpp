@@ -40,7 +40,7 @@ struct ingredients_t
   vector<double> _am;
   
   vector<array<size_t,1>> linmoms; //!< list of momenta used for Z, relative to glb list
-  vector<array<size_t,3>> bilmoms; //!< list of momenta used for bilinear, forst relative to glb list, then to linmoms
+  vector<array<size_t,3>> bilmoms; //!< list of momenta used for bilinear, first relative to glb list, then to linmoms
   
   //Zq, with and without EM
   djvec_t Zq;
