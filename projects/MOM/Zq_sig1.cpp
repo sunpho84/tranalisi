@@ -31,6 +31,7 @@ djack_t compute_Zq_sig1(const jprop_t &jprop_inv,const size_t glb_mom)
 {
   djack_t Zq;
   
+  cout<<"Computing Zq_sig1 for mom "<<glb_mom<<endl;
   const p_t ptilde=glb_moms[glb_mom].p(L).tilde();
   
   for(size_t ijack=0;ijack<=njacks;ijack++)
