@@ -137,7 +137,7 @@ void ingredients_t::mom_compute_prop()
 	  
 	  //compute inverse
 	  invert_time.start();
-	  prop_t prop_inv=jprops[im_r].LO[ijack].inverse();
+	  const prop_t prop_inv=jprops[im_r].LO[ijack].inverse();
 	  //if(im_r_ijack==0) cout<<jprops[im_r].LO[ijack](0,0)<<endl;
 	  jprop_inv[im_r][ijack]=prop_inv;
 	  invert_time.stop();

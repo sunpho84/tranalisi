@@ -30,18 +30,22 @@ void set_glb_list_of_moms(const string &path,double thresh)
       //if coords good, store them
       if(mom_file.good())
 	{
-	  bool filt=(c.p(L).tilde().p4_fr_p22()<thresh);
+	  //store in any case
 	  glb_moms.push_back(c);
+	  
+	  //mark if filtered or not
+	  bool filt=(c.p(L).tilde().p4_fr_p22()<thresh);
 	  filt_moms.push_back(filt);
 	}
     }
   while(mom_file.good());
   
-  const size_t nthresh=count_if(filt_moms.begin(),filt_moms.end(),[](bool i){return i;});
+  //count the number of momenta that passed the filter
+  const size_t nthresh=count_if(filt_moms.begin(),filt_moms.end(),[](const bool &i){return i;});
   
   //print stats
   cout<<"Read "<<filt_moms.size()<<" momenta"<<endl;
-  cout<<"NFiltered moms (p4/p2^2<"<<nthresh<<"): "<<glb_moms.size()<<endl;
+  cout<<"NFiltered moms (p4/p2^2<"<<thresh<<"): "<<nthresh<<endl;
 }
 
 size_t get_mir_mom(size_t imom,size_t imir)

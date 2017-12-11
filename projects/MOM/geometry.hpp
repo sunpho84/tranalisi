@@ -29,11 +29,15 @@ class p_t : public array<double,NDIM>
 public:
   //! return a single component of ptilde
   double tilde_mu(size_t mu) const
-  {return sin((*this)[mu]);}
+  {
+    return sin((*this)[mu]);
+  }
   
   //! return a single component of phat
   double hat_mu(size_t mu) const
-  {return 2.0*sin((*this)[mu]/2.0);}
+  {
+    return 2.0*sin((*this)[mu]/2.0);
+  }
   
   //! return the ptilde
   p_t tilde() const
@@ -62,20 +66,28 @@ public:
   
   //! return p2
   double norm2() const
-  {return normx(2);}
+  {
+    return normx(2);
+  }
   
   //! return p4
   double norm4() const
-  {return normx(4);}
+  {
+    return normx(4);
+  }
   
   //! return \sum_nu(p_nu^4)/\sum_nu(p_nu^2)^2
   double p4_fr_p22()
-  {return norm4()/sqr(norm2());}
+  {
+    return norm4()/sqr(norm2());
+  }
 };
 
 //! return pslash
 inline prop_t slash(const p_t &p)
-{return Gamma[4]*p[0]+Gamma[1]*p[1]+Gamma[2]*p[2]+Gamma[3]*p[3];}
+{
+  return Gamma[4]*p[0]+Gamma[1]*p[1]+Gamma[2]*p[2]+Gamma[3]*p[3];
+}
 
 //! phase of momenta
 extern double ph_mom[NDIM];
@@ -95,7 +107,9 @@ class imom_t : public coords_t
 public:
   //! return a single component of p
   double p_mu(size_t mu,const coords_t &L) const
-  {return 2*M_PI*((*this)[mu]+ph_mom[mu])/L[mu];}
+  {
+    return 2*M_PI*((*this)[mu]+ph_mom[mu])/L[mu];
+  }
   
   //! return the number of components different from 0
   size_t Np() const
@@ -121,7 +135,7 @@ public:
     return out;
   }
   
-  //! operator to print
+  //! operator to print a imom_t
   friend ostream& operator<<(ostream &os,const imom_t &m)
   {
     os<<"{"<<m[0];
