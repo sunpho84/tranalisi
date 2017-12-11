@@ -19,9 +19,15 @@ double ph_mom[NDIM]={0,0,0,0};
 
 void set_glb_list_of_moms(const string &path,double thresh)
 {
-  //open the file
+  //open the file to read momentum
   ifstream mom_file(path);
   if(not mom_file.good()) CRASH("Unable to open %s",path.c_str());
+  
+  //open the file to write filtered momentumm
+  const string filt_path="filt_mom.txt";
+  ofstream filt_file(filt_path);
+  if(not filt_file.good()) CRASH("Unable to open %s",filt_path.c_str());
+  
   do
     {
       //temporary read the coords
@@ -36,6 +42,8 @@ void set_glb_list_of_moms(const string &path,double thresh)
 	  //mark if filtered or not
 	  bool filt=(c.p(L).tilde().p4_fr_p22()<thresh);
 	  filt_moms.push_back(filt);
+	  
+	  filt_file<<c<<" = "<<c.p(L)<<" , filt: "<<filt<<endl;
 	}
     }
   while(mom_file.good());

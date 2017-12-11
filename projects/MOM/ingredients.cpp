@@ -26,6 +26,18 @@ void ingredients_t::set_pars_for_scratch()
       set_smom_moms();
       break;
     }
+  
+  //write all linear momenta
+  const string linpath="linmoms.txt";
+  ofstream linmom_file(linpath);
+  if(not linmom_file.good()) CRASH("Failed to open %s",linpath.c_str());
+  for(const auto &m : linmoms) linmom_file<<m[0]<<"\t=\t"<<glb_moms[m[0]]<<endl;
+  
+  //write all bilinear combo
+  const string bilpath="bilmoms.txt";
+  ofstream bilmom_file(bilpath);
+  if(not bilmom_file.good()) CRASH("Failed to open %s",bilpath.c_str());
+  for(const auto &m : bilmoms) bilmom_file<<m[0]<<"\t"<<m[1]<<"\t"<<m[2]<<endl;
 }
 
 void ingredients_t::set_ri_mom_moms()
@@ -107,10 +119,15 @@ void ingredients_t::mom_compute_prop()
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
-	    size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
-	    cout<<"Working on clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", hit "<<ihit+1<<"/"<<nhits<<", momentum "<<ilinmom+1<<"/"<<linmoms.size()<<endl;
+	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
+	    const size_t mom=linmoms[ilinmom][0];
+	    cout<<"Working on "
+	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
+	      "hit "<<ihit+1<<"/"<<nhits<<", "
+	      "momentum "<<ilinmom+1<<"/"<<linmoms.size()<<", "
+	      "mom: "<<mom<<endl;
 	    read_time.start();
-	    const vector<m_r_mom_conf_props_t> props=read_all_props_mom(files,i_in_clust_ihit,linmoms[ilinmom][0]);
+	    const vector<m_r_mom_conf_props_t> props=read_all_props_mom(files,i_in_clust_ihit,mom);
 	    read_time.stop();
 	    
 	    //build all props

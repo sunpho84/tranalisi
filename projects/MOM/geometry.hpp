@@ -81,6 +81,16 @@ public:
   {
     return norm4()/sqr(norm2());
   }
+  
+  //! operator to print a imom_t
+  friend ostream& operator<<(ostream &os,const p_t &m)
+  {
+    os<<"{"<<m[0];
+    for(size_t mu=1;mu<NDIM;mu++) os<<","<<m[mu];
+    os<<"}";
+    
+    return os;
+  }
 };
 
 //! return pslash
