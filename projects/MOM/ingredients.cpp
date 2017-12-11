@@ -198,11 +198,17 @@ void ingredients_t::mom_compute_bil()
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
-	    size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
-	    cout<<"Working on clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", hit "<<ihit+1<<"/"<<nhits<<", momentum combo "<<ibilmom+1<<"/"<<bilmoms.size()<<endl;
+	    const size_t mom1=linmoms[imom1][0];
+	    const size_t mom2=linmoms[imom2][0];
+	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
+	    cout<<"Working on "
+	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
+	      "hit "<<ihit+1<<"/"<<nhits<<", "
+	      "momentum combo "<<ibilmom+1<<"/"<<bilmoms.size()<<", "
+	      "moms: "<<mom1<<" "<<mom2<<endl;
 	    read_time.start();
-	    const vector<m_r_mom_conf_props_t> props1=read_all_props_mom(files,i_in_clust_ihit,imom1);
-	    const vector<m_r_mom_conf_props_t> props2=(read2)?read_all_props_mom(files,i_in_clust_ihit,imom2):props1;
+	    const vector<m_r_mom_conf_props_t> props1=read_all_props_mom(files,i_in_clust_ihit,mom1);
+	    const vector<m_r_mom_conf_props_t> props2=(read2)?read_all_props_mom(files,i_in_clust_ihit,mom2):props1;
 	    read_time.stop();
 	    
 	    //build all props
