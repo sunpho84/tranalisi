@@ -19,7 +19,7 @@ const char m_r_mom_conf_props_t::tag[NPROP_WITH_QED][3]={"0","FF","F","T","S","P
 
 void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom)
 {
-  cout<<"Seeking to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
+  cout<<"Seeking file "<<file.get_path()<<" to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
   file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
   
   for(size_t is_so=0;is_so<NSPIN;is_so++)
