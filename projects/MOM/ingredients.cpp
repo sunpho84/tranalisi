@@ -238,12 +238,12 @@ void ingredients_t::mom_compute_bil()
 	      "moms: "<<mom1<<" "<<mom2<<endl;
 	    read_time.start();
 	    
-	    if(first_read or prev_mom1==mom1)
+	    if(first_read or prev_mom1!=mom1)
 	      props1=read_all_props_mom(files,i_in_clust_ihit,mom1);
 	    else
 	      cout<<"Skipping reading prop1: (first_read: "<<first_read<<"), prev_mom1==mom1: "<<(prev_mom1==mom1)<<endl;
 	    
-	    if(first_read or prev_mom2==mom2)
+	    if(first_read or prev_mom2!=mom2)
 	      if(read2)
 		props2=read_all_props_mom(files,i_in_clust_ihit,mom2);
 	      else
