@@ -14,7 +14,7 @@ void get_deltam_cr()
 {
   using namespace glb;
   
-  if(use_QED) deltam_cr.resize(nm);
+  deltam_cr.resize(nm);
   
   //if file exists open it, otherwise compute it
   const string deltam_cr_path="deltam_cr.dat";
