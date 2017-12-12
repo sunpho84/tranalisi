@@ -10,7 +10,7 @@
 
 double compute_Zq(const prop_t &prop_inv,const size_t glb_mom)
 {
-  const p_t ptilde=glb_moms[glb_mom].p(L).tilde();
+  const p_t ptilde=all_moms[glb_mom].p(L).tilde();
   const double pt2=ptilde.norm2();
   const prop_t pslash=slash(ptilde);
   
@@ -23,7 +23,7 @@ djack_t compute_Zq(const jprop_t &jprop_inv,const size_t glb_mom)
 {
   djack_t Zq;
   
-  const p_t ptilde=glb_moms[glb_mom].p(L).tilde();
+  const p_t ptilde=all_moms[glb_mom].p(L).tilde();
   const double pt2=ptilde.norm2();
   const prop_t pslash=slash(ptilde);
   

@@ -158,11 +158,12 @@ public:
 
 EXTERN_GEOMETRY coords_t L; //!< lattice sizes
 EXTERN_GEOMETRY size_t V; //!< lattice volume
-EXTERN_GEOMETRY vector<imom_t> glb_moms; //!< list of momenta
+EXTERN_GEOMETRY vector<imom_t> all_moms; //!< list of momenta registered in the system
+EXTERN_GEOMETRY size_t ncomp_moms; //!< number of momenta for which the propagator has been computed (first in list)
 EXTERN_GEOMETRY vector<bool> filt_moms; //!< store if a momentum passed the filter
 
 //! reads the list of momenta from file
-void set_glb_list_of_moms(const string &path,double thresh);
+void set_comp_list_of_moms(const string &path,double thresh);
 
 //! get a vector of pt2 for filtered moms
 vector<double> get_filtered_pt2();

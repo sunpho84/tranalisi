@@ -30,13 +30,16 @@ void ingredients_t::set_pars_for_scratch()
   //write all linear momenta
   const string linpath="linmoms.txt";
   ofstream linmom_file(linpath);
-  if(not linmom_file.good()) CRASH("Failed to open %s",linpath.c_str());
-  for(const auto &m : linmoms) linmom_file<<m[0]<<"\t=\t"<<glb_moms[m[0]]<<endl;
+  if(not linmom_file.good())
+    CRASH("Failed to open %s",linpath.c_str());
+  for(const auto &m : linmoms)
+    linmom_file<<m[0]<<"\t=\t"<<all_moms[m[0]]<<endl;
   
   //write all bilinear combo
   const string bilpath="bilmoms.txt";
   ofstream bilmom_file(bilpath);
-  if(not bilmom_file.good()) CRASH("Failed to open %s",bilpath.c_str());
+  if(not bilmom_file.good())
+    CRASH("Failed to open %s",bilpath.c_str());
   for(const auto &m : bilmoms)
     {
       const size_t mom=m[0];
@@ -44,15 +47,15 @@ void ingredients_t::set_pars_for_scratch()
       const size_t ilinmom2=m[2];
       const size_t mom1=linmoms[ilinmom1][0];
       const size_t mom2=linmoms[ilinmom2][0];
-      bilmom_file<<mom<<glb_moms[mom]<<"\t"
-		 <<mom1<<glb_moms[mom1]<<"\t"
-		 <<mom2<<glb_moms[mom2]<<endl;
+      bilmom_file<<mom<<all_moms[mom]<<"\t"
+		 <<mom1<<all_moms[mom1]<<"\t"
+		 <<mom2<<all_moms[mom2]<<endl;
     }
 }
 
 void ingredients_t::set_ri_mom_moms()
 {
-  for(size_t imom=0;imom<glb_moms.size();imom++)
+  for(size_t imom=0;imom<ncomp_moms;imom++)
     if(filt_moms[imom])
       {
 	const size_t linmom=linmoms.size();
@@ -67,18 +70,18 @@ void ingredients_t::set_smom_moms()
   bilmoms.clear();
   
   const double tol=1e-10;
-  for(size_t i=0;i<glb_moms.size();i++)
+  for(size_t i=0;i<ncomp_moms;i++)
     if(filt_moms[i])
       {
 	//get norm of p[i]
-	p_t pi=glb_moms[i].p(L);
+	p_t pi=all_moms[i].p(L);
 	double pi2=pi.norm2();
 	
-	for(size_t j=0;j<glb_moms.size();j++)
+	for(size_t j=0;j<ncomp_moms;j++)
 	  if(filt_moms[j])
 	    {
 	      //get norm of p[j]
-	      p_t pj=glb_moms[j].p(L);
+	      p_t pj=all_moms[j].p(L);
 	      double pj2=pj.norm2();
 	      
 	      //check that norm of the two incoming vector is the same
@@ -87,7 +90,7 @@ void ingredients_t::set_smom_moms()
 		  //sum and get norm
 		  imom_t momk;
 		  for(size_t mu=0;mu<NDIM;mu++)
-		    momk[mu]=glb_moms[i][mu]-glb_moms[j][mu];
+		    momk[mu]=all_moms[i][mu]-all_moms[j][mu];
 		  double pk2=momk.p(L).norm2();
 		  
 		  //debug info
@@ -95,27 +98,29 @@ void ingredients_t::set_smom_moms()
 		  
 		  if(2.0*fabs(pi2-pk2)<(pi2+pk2)*tol)
 		    {
-		      // //search in list
-		      // auto posk=find(glb_moms.begin(),glb_moms.end(),momk);
+		      //search in list
+		      auto posk=find(all_moms.begin(),all_moms.end(),momk);
 		      
-		      // //if not found, push into the list of glb_moms
-		      // if(posk==glb_moms.end())
-		      // 	{
-		      // 	  posk=glb_moms.end();
-		      // 	  glb_moms.push_back(momk);
-		      // 	}
+		      //if not found, push into the list of glb_moms
+		      if(posk==all_moms.end())
+		      	{
+		      	  posk=all_moms.end();
+		      	  all_moms.push_back(momk);
+		      	}
 		      
 		      constexpr bool debug=false;
 		      
-		      // const size_t k=distance(glb_moms.begin(),posk);
+		       const size_t k=distance(all_moms.begin(),posk);
 		      //inform
-		      if(debug) cout<<"Found smom pair: "<<i<<glb_moms[i]<<pi2<<" + "<<j<<glb_moms[j]<<pj2<<" = "<<momk<<pk2<<endl;
+		      if(debug)
+			cout<<"Found smom pair: "<<i<<all_moms[i]<<pi2<<" + "<<j<<all_moms[j]<<pj2<<" = "<<momk<<pk2<<endl;
 		      vector<size_t> pos;
 		      
 		      //search in the linmoms: if found take the distance, otherwise add
 		      for(const size_t ic : {i,j})
 			{
-			  if(debug) cout<<"searching for "<<ic<<endl;
+			  if(debug)
+			    cout<<"searching for "<<ic<<endl;
 			  auto pos_ic=find(linmoms.begin(),linmoms.end(),array<size_t,1>{ic});
 			  size_t d;
 			  if(pos_ic==linmoms.end())
@@ -124,21 +129,24 @@ void ingredients_t::set_smom_moms()
 			      d=linmoms.size();
 			      //include it
 			      linmoms.push_back({ic});
-			      if(debug) cout<<" not found"<<endl;
+			      if(debug)
+				cout<<" not found"<<endl;
 			    }
 			  else
 			    {
 			      d=distance(linmoms.begin(),pos_ic);
-			      if(debug) cout<<" found"<<endl;
+			      if(debug)
+				cout<<" found"<<endl;
 			    }
 			  
 			  //add to the list
-			  if(debug) cout<<"Position: "<<d<<endl;
+			  if(debug)
+			    cout<<"Position: "<<d<<endl;
 			  pos.push_back(d);
 			}
 		      
-		      //storing using i as a reference
-		      bilmoms.push_back({i,pos[0],pos[1]});
+		      //store
+		      bilmoms.push_back({k,pos[0],pos[1]});
 		    }
 		  // else
 		  //    cout<<"Unable to find it"<<momk<<"="<<glb_moms[i]<<"+"<<glb_moms[j]<<endl;
@@ -618,7 +626,7 @@ ingredients_t ingredients_t::subtract_Oa2(const bool recompute_Zbil) const
       const vector<size_t> im_r_ilinmom_comp=im_r_ilinmom_ind(i);
       const size_t ilinmom=im_r_ilinmom_comp[2];
       const size_t imom=linmoms[ilinmom][0];
-      const imom_t mom=glb_moms[imom];
+      const imom_t mom=all_moms[imom];
       const double sub=g2tilde*sig1_a2(act,gf::LANDAU,group::SU3,mom,L);
       out.Zq[i]=Zq[i]-sub;
       out.Zq_sig1[i]=Zq_sig1[ilinmom]-sub;
@@ -637,7 +645,7 @@ ingredients_t ingredients_t::subtract_Oa2(const bool recompute_Zbil) const
       const size_t ibilmom=im_r_im_r_iZbil_ibilmom_comp[5];
       const size_t imom=bilmoms[ibilmom][0];
       
-      imom_t mom=glb_moms[imom];
+      imom_t mom=all_moms[imom];
       double sub;
       sub=g2tilde*pr_bil_a2(act,gf::LANDAU,group::SU3,mom,L,iZbil);
       out.pr_bil[i]=pr_bil[i]-sub;
@@ -664,7 +672,7 @@ ingredients_t ingredients_t::evolve() const
       const size_t ilinmom=im_r_ilinmom_comp[2];
       const size_t imom=linmoms[ilinmom][0];
       
-      imom_t mom=glb_moms[imom];
+      imom_t mom=all_moms[imom];
       double p2=mom.p(L).norm2();
       double evolver_Zq=evolution_Zq_to_RIp(Nf,evo_ord,ainv,p2);
       //cout<<"EvolverZq["<<p2<<"]="<<evolver_Zq<<endl;
@@ -684,7 +692,7 @@ ingredients_t ingredients_t::evolve() const
       const size_t ibilmom=im_r_im_r_iZbil_ibilmom_comp[5];
       const size_t imom=bilmoms[ibilmom][0];
       
-      const imom_t mom=glb_moms[imom];
+      const imom_t mom=all_moms[imom];
       const double p2=mom.p(L).norm2();
       const double evolver_Zbil=evolution_Zbil_to_RIp(iZbil_t_list[iZbil],Nf,evo_ord,ainv,p2);
       //cout<<"EvolverZ"<<Zbil_tag[iZbil]<<"["<<p2<<"]="<<evolver_Zbil<<endl;
@@ -784,7 +792,7 @@ void ingredients_t::plot_Z(const string &suffix) const
 	    out.new_data_set();
 	    for(size_t imom=0;imom<linmoms.size();imom++)
 	      {
-		const double p2hat=glb_moms[linmoms[imom][0]].p(L).tilde().norm2();
+		const double p2hat=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
 		out.write_ave_err(p2hat,Z[im_r_ilinmom_ind({im,r,imom})].ave_err());
 	      }
 	  }
@@ -810,7 +818,7 @@ void ingredients_t::plot_Z(const string &suffix) const
 		  
 		  for(size_t imom=0;imom<linmoms.size();imom++)
 		    {
-		      const double p2hat=glb_moms[bilmoms[imom][0]].p(L).tilde().norm2();
+		      const double p2hat=all_moms[bilmoms[imom][0]].p(L).tilde().norm2();
 		      out.write_ave_err(p2hat,Z[im_r_im_r_iZbil_ibilmom_ind({im1,r,im2,r,iZbil,imom})].ave_err());
 		    }
 		  out.new_data_set();

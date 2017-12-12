@@ -17,9 +17,9 @@ using namespace std;
 
 double ph_mom[NDIM]={0,0,0,0};
 
-void set_glb_list_of_moms(const string &path,double thresh)
+void set_comp_list_of_moms(const string &path,double thresh)
 {
-  //slichtly increment thresh to include border
+  //slightly increment thresh to include border
   thresh*=1+1e-10;
   
   //open the file to read momentum
@@ -40,7 +40,7 @@ void set_glb_list_of_moms(const string &path,double thresh)
       if(mom_file.good())
 	{
 	  //store in any case
-	  glb_moms.push_back(c);
+	  all_moms.push_back(c);
 	  
 	  //mark if filtered or not
 	  const double discr=c.p(L).tilde().p4_fr_p22();
@@ -52,6 +52,9 @@ void set_glb_list_of_moms(const string &path,double thresh)
     }
   while(mom_file.good());
   
+  //count the computed momenta
+  ncomp_moms=all_moms.size();
+  
   //count the number of momenta that passed the filter
   const size_t nthresh=count_if(filt_moms.begin(),filt_moms.end(),[](const bool &i){return i;});
   
@@ -62,12 +65,12 @@ void set_glb_list_of_moms(const string &path,double thresh)
 
 size_t get_mir_mom(size_t imom,size_t imir)
 {
-  coords_t cm=glb_moms[imom];
+  coords_t cm=all_moms[imom];
   
   if(imir&1) cm[0]=-cm[0]-1;
   for(size_t mu=1;mu<NDIM;mu++) cm[mu]*=(1-2*((imir>>mu)&1));
-  auto ret=find(glb_moms.begin(),glb_moms.end(),cm);
-  if(ret==glb_moms.end()) CRASH("searching imir=%zu of %zu",imom,imom);
+  auto ret=find(all_moms.begin(),all_moms.end(),cm);
+  if(ret==all_moms.end()) CRASH("searching imir=%zu of %zu",imom,imom);
   
-  return distance(glb_moms.begin(),ret);
+  return distance(all_moms.begin(),ret);
 }

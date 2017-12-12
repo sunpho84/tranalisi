@@ -94,7 +94,7 @@ void read_input(const string &input_path)
   for(size_t mu=1;mu<NDIM;mu++) L[mu]=Ls;
   
   //initialize momenta
-  set_glb_list_of_moms(mom_list_path,filter_thresh);
+  set_comp_list_of_moms(mom_list_path,filter_thresh);
 }
 
 void prepare_list_of_confs()

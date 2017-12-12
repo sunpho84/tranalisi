@@ -12,7 +12,7 @@ double compute_Zq_sig1(const prop_t &prop_inv,const size_t glb_mom)
 {
   double Zq;
   
-  const p_t ptilde=glb_moms[glb_mom].p(L).tilde();
+  const p_t ptilde=all_moms[glb_mom].p(L).tilde();
   
   for(size_t ijack=0;ijack<=njacks;ijack++)
     {
@@ -21,7 +21,7 @@ double compute_Zq_sig1(const prop_t &prop_inv,const size_t glb_mom)
 	if(fabs(ptilde[mu])>1e-10)
 	  Zq+=
 	    (prop_inv*Gamma[igmu[mu]]).trace().imag()/
-	    (12.0*ptilde[mu]*V*glb_moms[glb_mom].Np());
+	    (12.0*ptilde[mu]*V*all_moms[glb_mom].Np());
     }
   
   return Zq;
@@ -31,7 +31,7 @@ djack_t compute_Zq_sig1(const jprop_t &jprop_inv,const size_t glb_mom)
 {
   djack_t Zq;
   
-  const p_t ptilde=glb_moms[glb_mom].p(L).tilde();
+  const p_t ptilde=all_moms[glb_mom].p(L).tilde();
   
   for(size_t ijack=0;ijack<=njacks;ijack++)
     {
@@ -40,7 +40,7 @@ djack_t compute_Zq_sig1(const jprop_t &jprop_inv,const size_t glb_mom)
 	if(fabs(ptilde[mu])>1e-10)
 	  Zq[ijack]+=
 	    (jprop_inv[ijack]*Gamma[igmu[mu]]).trace().imag()/
-	    (12.0*ptilde[mu]*V*glb_moms[glb_mom].Np());
+	    (12.0*ptilde[mu]*V*all_moms[glb_mom].Np());
     }
   
   return Zq;

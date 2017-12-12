@@ -231,7 +231,7 @@ struct ingredients_t
 	    if(ip>0) imom=linmoms[imom][0];
 	    
 	    //decide time component
-	    cr[ip][0]=glb_moms[imom][0];
+	    cr[ip][0]=all_moms[imom][0];
 	    if(cr[ip][0]<0)
 	      {
 		using namespace temporal_bc;
@@ -244,7 +244,7 @@ struct ingredients_t
 	      }
 	    
 	    //decide space components
-	    for(size_t mu=1;mu<NDIM;mu++) cr[ip][mu]=abs(glb_moms[imom][mu]);
+	    for(size_t mu=1;mu<NDIM;mu++) cr[ip][mu]=abs(all_moms[imom][mu]);
 	    
 	    //sort the components, differentiating the time one if it has different L[0] or phase
 	    size_t ifirst=0;
@@ -275,7 +275,7 @@ struct ingredients_t
 	const size_t imom=combo[combo_repr][0];
 	
 	//print details
-	mom_out<<imom<<" , p2hat: "<<glb_moms[imom].p(L).tilde().norm2()<<endl;
+	mom_out<<imom<<" , p2hat: "<<all_moms[imom].p(L).tilde().norm2()<<endl;
 	mom_out<<" Equivalent to: "<<combo_class.second.size()<<" mom combos: "<<endl;
 	for(auto &eq_combo : combo_class.second)
 	  {
@@ -286,7 +286,7 @@ struct ingredients_t
 		//dereference
 		if(ip>0) imom=linmoms[imom][0];
 		
-		mom_out<<"  "<<imom<<glb_moms[imom];
+		mom_out<<"  "<<imom<<all_moms[imom];
 	      }
 	    mom_out<<endl;
 	  }
