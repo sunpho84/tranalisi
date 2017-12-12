@@ -114,6 +114,7 @@ void ingredients_t::mom_compute_prop()
   
   for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
     {
+      const size_t mom=linmoms[ilinmom][0];
       vector<jm_r_mom_props_t> jprops(glb::im_r_ind.max()); //!< jackknived props
       
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
@@ -161,8 +162,8 @@ void ingredients_t::mom_compute_prop()
 	  
 	  //compute Zq
 	  Zq_time.start();
-	  Zq[im_r_ilinmom][ijack]=compute_Zq(prop_inv,ilinmom);
-	  Zq_sig1[im_r_ilinmom][ijack]=compute_Zq_sig1(prop_inv,ilinmom);
+	  Zq[im_r_ilinmom][ijack]=compute_Zq(prop_inv,mom);
+	  Zq_sig1[im_r_ilinmom][ijack]=compute_Zq_sig1(prop_inv,mom);
 	  Zq_time.stop();
 	  
 	  //do the same with QED
@@ -174,7 +175,7 @@ void ingredients_t::mom_compute_prop()
 	      invert_time.stop();
 	      
 	      Zq_time.start();
-	      Zq_sig1_EM[im_r_ilinmom][ijack]=-compute_Zq_sig1(prop_EM_inv,ilinmom);
+	      Zq_sig1_EM[im_r_ilinmom][ijack]=-compute_Zq_sig1(prop_EM_inv,mom);
 	      Zq_time.stop();
 	    }
 	}
