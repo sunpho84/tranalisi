@@ -233,11 +233,11 @@ void ingredients_t::mom_compute_bil()
 	      "hit "<<ihit+1<<"/"<<nhits<<", "
 	      "momentum combo "<<ibilmom+1<<"/"<<bilmoms.size()<<", "
 	      "moms: "<<mom1<<" "<<mom2<<endl;
-	    read_time.start();
 	    
+	    //read
+	    read_time.start();
 	    const vector<m_r_mom_conf_props_t> props1=read_all_props_mom(files,i_in_clust_ihit,mom1);
 	    const vector<m_r_mom_conf_props_t> props2=(read2?read_all_props_mom(files,i_in_clust_ihit,mom2):props1);
-	    
 	    read_time.stop();
 	    
 	    //build all props
@@ -246,6 +246,7 @@ void ingredients_t::mom_compute_bil()
 	    build_all_mr_jackknifed_props(jprops2,props2,use_QED,glb::im_r_ind,deltam_cr);
 	    build_props_time.stop();
 	    
+	    //build all verts
 	    build_verts_time.start();
 	    build_all_mr_gbil_jackknifed_verts(jverts,props1,props2,im_r_im_r_igam_ind,im_r_ijack_ind,use_QED,deltam_cr);
 	    build_verts_time.stop();
@@ -447,7 +448,9 @@ ingredients_t ingredients_t::average_r(const bool recompute_Zbil) const
 	  pr_rave[out_i]/=_nr;
 	}
     }
-   
+  
+  if(not Zbil_computed or recompute_Zbil) out.compute_Zbil();
+  
   return out;
 }
 
