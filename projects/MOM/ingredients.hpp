@@ -226,6 +226,8 @@ struct ingredients_t
 	for(size_t ip=0;ip<N;ip++)
 	  {
 	    size_t imom=combo[icombo][ip];
+	    
+	    //dereference components larger than 0
 	    if(ip>0) imom=linmoms[imom][0];
 	    
 	    //decide time component
@@ -243,9 +245,15 @@ struct ingredients_t
 	    
 	    //decide space components
 	    for(size_t mu=1;mu<NDIM;mu++) cr[ip][mu]=abs(glb_moms[imom][mu]);
-	    sort(&cr[ip][1],cr[ip].end());
+	    
+	    //sort the components, differentiating the time one if it has different L[0] or phase
+	    size_t ifirst=0;
+	    if(temporal_bc::bc!=temporal_bc::PERIODIC or L[0]!=L[1]) ifirst=1;
+	    sort(&cr[ip][ifirst],cr[ip].end());
 	  }
-	sort(cr.begin(),cr.end());
+	
+	//sort starting from the defining momenta
+	sort(&cr[1],cr.end());
 	
 	//store the index to equvalents
 	equiv_combo_map[cr].push_back(icombo);
@@ -273,7 +281,11 @@ struct ingredients_t
 	  {
 	    for(size_t ip=0;ip<N;ip++)
 	      {
-		const size_t imom=combo[eq_combo][ip];
+		size_t imom=combo[eq_combo][ip];
+		
+		//dereference
+		if(ip>0) imom=linmoms[imom][0];
+		
 		mom_out<<"  "<<imom<<glb_moms[imom];
 	      }
 	    mom_out<<endl;
