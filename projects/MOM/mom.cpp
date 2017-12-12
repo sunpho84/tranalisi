@@ -60,17 +60,20 @@ int main(int narg,char **arg)
   ingredients_t rave=ing.average_r();
   rave.plot_Z("rave");
   
-  ingredients_t chir=rave.chir_extrap();
-  chir.plot_Z("rave_chir");
+  ingredients_t rave_chir=rave.chir_extrap();
+  rave_chir.plot_Z("rave_chir");
   
-  ingredients_t sub=chir.subtract_Oa2();
-  sub.plot_Z("rave_chir_sub");
+  ingredients_t rave_chir_sub=rave_chir.subtract_Oa2();
+  rave_chir_sub.plot_Z("rave_chir_sub");
   
-  ingredients_t evo=sub.evolve();
-  evo.plot_Z("rave_chir_sub_evo");
+  ingredients_t rave_chir_sub_ave=rave_chir_sub.average_equiv_momenta();
+  rave_chir_sub_ave.plot_Z("rave_chir_sub_ave");
   
-  ingredients_t ave=evo.average_equiv_momenta();
-  ave.plot_Z("rave_chir_sub_evo_ave");
+  ingredients_t rave_chir_sub_evo=rave_chir_sub.evolve();
+  rave_chir_sub_evo.plot_Z("rave_chir_sub_evo");
+  
+  ingredients_t rave_chir_sub_evo_ave=rave_chir_sub_evo.average_equiv_momenta();
+  rave_chir_sub_evo_ave.plot_Z("rave_chir_sub_evo_ave");
   
   //print time statistics
   cout<<ts<<endl;

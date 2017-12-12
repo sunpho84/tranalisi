@@ -37,7 +37,17 @@ void ingredients_t::set_pars_for_scratch()
   const string bilpath="bilmoms.txt";
   ofstream bilmom_file(bilpath);
   if(not bilmom_file.good()) CRASH("Failed to open %s",bilpath.c_str());
-  for(const auto &m : bilmoms) bilmom_file<<m[0]<<"\t"<<m[1]<<"\t"<<m[2]<<endl;
+  for(const auto &m : bilmoms)
+    {
+      const size_t mom=m[0];
+      const size_t ilinmom1=m[1];
+      const size_t ilinmom2=m[2];
+      const size_t mom1=linmoms[ilinmom1][0];
+      const size_t mom2=linmoms[ilinmom2][0];
+      bilmom_file<<mom<<glb_moms[mom]<<"\t"
+		 <<mom1<<glb_moms[mom1]<<"\t"
+		 <<mom2<<glb_moms[mom2]<<endl;
+    }
 }
 
 void ingredients_t::set_ri_mom_moms()
@@ -696,7 +706,7 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(bilmoms,"equiv_bilmoms.txt");
   fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
   
-  cout<<"Equiv bil:"<<endl;
+  // cout<<"Equiv bil:"<<endl;
   // for(auto &p : out.bilmoms)
   // for(auto &p : equiv_bilmom_combo)
   // {
