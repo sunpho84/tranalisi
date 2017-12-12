@@ -53,11 +53,8 @@ void ingredients_t::set_ri_mom_moms()
 
 void ingredients_t::set_smom_moms()
 {
-  CRASH("Fix: list linmom only useful for smom, set other two components of bimomd relatively to linmom, not glb");
-  
-  for(size_t imom=0;imom<glb_moms.size();imom++)
-    if(filt_moms[imom])
-      linmoms.push_back({imom});
+  linmoms.clear();
+  bilmoms.clear();
   
   const double tol=1e-10;
   for(size_t i=0;i<glb_moms.size();i++)
@@ -94,9 +91,32 @@ void ingredients_t::set_smom_moms()
 		      if(posk!=glb_moms.end())
 			{
 			  const size_t k=distance(glb_moms.begin(),posk);
-			  //inform and add to the list
+			  //inform
 			  //cout<<"Found smom pair: "<<i<<" "<<glb_moms[i]<<" + j "<<glb_moms[j]<<" = "<<k<<" "<<momk<<endl;
-			  bilmoms.push_back({k,i,j});
+			  vector<size_t> pos;
+			  
+			  //search in the linmoms: if found take the distance, otherwise add
+			  for(size_t ic : {i,j})
+			    {
+			      cout<<"searching for "<<ic<<endl;
+			      auto pos_ic=find(linmoms.begin(),linmoms.end(),array<size_t,1>{ic});
+			      if(pos_ic==linmoms.end())
+				{
+				  //the position will be the end
+				  pos.push_back(linmoms.size());
+				  //include it
+				  linmoms.push_back({ic});
+				  cout<<"not found: "<<ic<<endl;
+				}
+			      else
+				{
+				  const size_t d=distance(linmoms.begin(),pos_ic);
+				  cout<<"found: "<<d<<endl;
+				  pos.push_back(d);
+				}
+			    }
+			  
+			  bilmoms.push_back({k,pos[0],pos[1]});
 			}
 		      // else
 		      //    cout<<"Unable to find it"<<momk<<"="<<glb_moms[i]<<"+"<<glb_moms[j]<<endl;
