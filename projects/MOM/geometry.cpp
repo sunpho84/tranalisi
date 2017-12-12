@@ -44,7 +44,7 @@ void set_glb_list_of_moms(const string &path,double thresh)
 	  
 	  //mark if filtered or not
 	  const double discr=c.p(L).tilde().p4_fr_p22();
-	  const bool filt=(discr<);
+	  const bool filt=(discr<thresh);
 	  filt_moms.push_back(filt);
 	  
 	  filt_file<<c<<" = "<<c.p(L)<<" , discr: "<<discr<<" , filt: "<<filt<<endl;
