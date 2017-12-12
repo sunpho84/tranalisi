@@ -97,48 +97,54 @@ void ingredients_t::set_smom_moms()
 		    {
 		      //search in list
 		      auto posk=find(glb_moms.begin(),glb_moms.end(),momk);
-		      //take position if found
-		      if(posk!=glb_moms.end())
+		      
+		      //if not found, push into the list of glb_moms
+		      if(posk==glb_moms.end())
 			{
-			  const size_t k=distance(glb_moms.begin(),posk);
-			  //inform
-			  //cout<<"Found smom pair: "<<i<<" "<<glb_moms[i]<<" + j "<<glb_moms[j]<<" = "<<k<<" "<<momk<<endl;
-			  vector<size_t> pos;
-			  
-			  //search in the linmoms: if found take the distance, otherwise add
-			  for(size_t ic : {i,j})
+			  posk=glb_moms.end();
+			  glb_moms.push_back(momk);
+			}
+		      
+		      const bool debug=true;
+		      
+		      const size_t k=distance(glb_moms.begin(),posk);
+		      //inform
+		      if(debug) cout<<"Found smom pair: "<<i<<glb_moms[i]<<pi2<<" + "<<j<<glb_moms[j]<<pj2<<" = "<<k<<" "<<momk<<pk2<<endl;
+		      vector<size_t> pos;
+		      
+		      //search in the linmoms: if found take the distance, otherwise add
+		      for(const size_t ic : {i,j})
+			{
+			  if(debug) cout<<"searching for "<<ic<<endl;
+			  auto pos_ic=find(linmoms.begin(),linmoms.end(),array<size_t,1>{ic});
+			  size_t d;
+			  if(pos_ic==linmoms.end())
 			    {
-			      //cout<<"searching for "<<ic<<endl;
-			      auto pos_ic=find(linmoms.begin(),linmoms.end(),array<size_t,1>{ic});
-			      size_t d;
-			      if(pos_ic==linmoms.end())
-				{
-				  //the position will be the end
-				  d=linmoms.size();
-				  //include it
-				  linmoms.push_back({ic});
-				  //cout<<" not found"<<endl;
-				}
-			      else
-				{
-				  d=distance(linmoms.begin(),pos_ic);
-				  //cout<<" found"<<endl;
-				}
-			      
-			      //add to the list
-			      //cout<<"Position: "<<d<<endl;
-			      pos.push_back(d);
+			      //the position will be the end
+			      d=linmoms.size();
+			      //include it
+			      linmoms.push_back({ic});
+			      if(debug) cout<<" not found"<<endl;
+			    }
+			  else
+			    {
+			      d=distance(linmoms.begin(),pos_ic);
+			      if(debug) cout<<" found"<<endl;
 			    }
 			  
-			  bilmoms.push_back({k,pos[0],pos[1]});
+			  //add to the list
+			  if(debug) cout<<"Position: "<<d<<endl;
+			  pos.push_back(d);
 			}
-		      // else
-		      //    cout<<"Unable to find it"<<momk<<"="<<glb_moms[i]<<"+"<<glb_moms[j]<<endl;
+		      
+		      bilmoms.push_back({k,pos[0],pos[1]});
 		    }
+		  // else
+		  //    cout<<"Unable to find it"<<momk<<"="<<glb_moms[i]<<"+"<<glb_moms[j]<<endl;
 		}
 	    }
       }
-  
+
   cout<<"Number of smom pairs: "<<bilmoms.size()<<endl;
 }
 
