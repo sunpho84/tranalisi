@@ -87,7 +87,7 @@ void ingredients_t::set_smom_moms()
 		  //sum and get norm
 		  imom_t momk;
 		  for(size_t mu=0;mu<NDIM;mu++)
-		    momk[mu]=glb_moms[i][mu]+glb_moms[j][mu];
+		    momk[mu]=glb_moms[i][mu]-glb_moms[j][mu];
 		  double pk2=momk.p(L).norm2();
 		  
 		  //debug info
