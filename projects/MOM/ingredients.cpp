@@ -733,7 +733,13 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   	{
   	  djack_t &ave=(*t.out)[i];
   	  ave=0.0;
-  	  for(const size_t ieq : equiv_bilmom_combos[out_imom_combo]) ave+=(*t.in)[ieq];
+  	  for(const size_t ieq_mom : equiv_bilmom_combos[out_imom_combo])
+	    {
+	      vector<size_t> im_r_im_r_iZbil_ibilmom_comp=out_im_r_im_r_iZbil_ibilmom_comp;
+	      im_r_im_r_iZbil_ibilmom_comp[5]=ieq_mom;
+	      const size_t ieq=im_r_im_r_iZbil_ibilmom_ind(im_r_im_r_iZbil_ibilmom_comp);
+	      ave+=(*t.in)[ieq];
+	    }
   	  ave/=equiv_bilmom_combos[out_imom_combo].size();
   	}
     }
