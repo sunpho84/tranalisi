@@ -98,7 +98,7 @@ void ingredients_t::set_smom_moms()
 			  //search in the linmoms: if found take the distance, otherwise add
 			  for(size_t ic : {i,j})
 			    {
-			      cout<<"searching for "<<ic<<endl;
+			      //cout<<"searching for "<<ic<<endl;
 			      auto pos_ic=find(linmoms.begin(),linmoms.end(),array<size_t,1>{ic});
 			      size_t d;
 			      if(pos_ic==linmoms.end())
@@ -107,16 +107,16 @@ void ingredients_t::set_smom_moms()
 				  d=linmoms.size();
 				  //include it
 				  linmoms.push_back({ic});
-				  cout<<" not found"<<endl;
+				  //cout<<" not found"<<endl;
 				}
 			      else
 				{
 				  d=distance(linmoms.begin(),pos_ic);
-				  cout<<" found"<<endl;
+				  //cout<<" found"<<endl;
 				}
 			      
 			      //add to the list
-			      cout<<"Position: "<<d<<endl;
+			      //cout<<"Position: "<<d<<endl;
 			      pos.push_back(d);
 			    }
 			  
