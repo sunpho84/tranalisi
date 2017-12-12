@@ -95,21 +95,21 @@ void ingredients_t::set_smom_moms()
 		  
 		  if(2.0*fabs(pi2-pk2)<(pi2+pk2)*tol)
 		    {
-		      //search in list
-		      auto posk=find(glb_moms.begin(),glb_moms.end(),momk);
+		      // //search in list
+		      // auto posk=find(glb_moms.begin(),glb_moms.end(),momk);
 		      
-		      //if not found, push into the list of glb_moms
-		      if(posk==glb_moms.end())
-			{
-			  posk=glb_moms.end();
-			  glb_moms.push_back(momk);
-			}
+		      // //if not found, push into the list of glb_moms
+		      // if(posk==glb_moms.end())
+		      // 	{
+		      // 	  posk=glb_moms.end();
+		      // 	  glb_moms.push_back(momk);
+		      // 	}
 		      
 		      const bool debug=true;
 		      
-		      const size_t k=distance(glb_moms.begin(),posk);
+		      // const size_t k=distance(glb_moms.begin(),posk);
 		      //inform
-		      if(debug) cout<<"Found smom pair: "<<i<<glb_moms[i]<<pi2<<" + "<<j<<glb_moms[j]<<pj2<<" = "<<k<<" "<<momk<<pk2<<endl;
+		      if(debug) cout<<"Found smom pair: "<<i<<glb_moms[i]<<pi2<<" + "<<j<<glb_moms[j]<<pj2<<" = "<<momk<<pk2<<endl;
 		      vector<size_t> pos;
 		      
 		      //search in the linmoms: if found take the distance, otherwise add
@@ -137,7 +137,8 @@ void ingredients_t::set_smom_moms()
 			  pos.push_back(d);
 			}
 		      
-		      bilmoms.push_back({k,pos[0],pos[1]});
+		      //storing using i as a reference
+		      bilmoms.push_back({i,pos[0],pos[1]});
 		    }
 		  // else
 		  //    cout<<"Unable to find it"<<momk<<"="<<glb_moms[i]<<"+"<<glb_moms[j]<<endl;
