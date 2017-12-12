@@ -19,6 +19,9 @@ double ph_mom[NDIM]={0,0,0,0};
 
 void set_glb_list_of_moms(const string &path,double thresh)
 {
+  //slichtly increment thresh to include border
+  thresh*=1+1e-10;
+  
   //open the file to read momentum
   ifstream mom_file(path);
   if(not mom_file.good()) CRASH("Unable to open %s",path.c_str());
@@ -41,7 +44,7 @@ void set_glb_list_of_moms(const string &path,double thresh)
 	  
 	  //mark if filtered or not
 	  const double discr=c.p(L).tilde().p4_fr_p22();
-	  const bool filt=(discr<thresh);
+	  const bool filt=(discr<);
 	  filt_moms.push_back(filt);
 	  
 	  filt_file<<c<<" = "<<c.p(L)<<" , discr: "<<discr<<" , filt: "<<filt<<endl;
