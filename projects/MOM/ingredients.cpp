@@ -100,20 +100,24 @@ void ingredients_t::set_smom_moms()
 			    {
 			      cout<<"searching for "<<ic<<endl;
 			      auto pos_ic=find(linmoms.begin(),linmoms.end(),array<size_t,1>{ic});
+			      size_t d;
 			      if(pos_ic==linmoms.end())
 				{
 				  //the position will be the end
-				  pos.push_back(linmoms.size());
+				  d=linmoms.size();
 				  //include it
 				  linmoms.push_back({ic});
-				  cout<<"not found: "<<ic<<endl;
+				  cout<<" not found"<<endl;
 				}
 			      else
 				{
-				  const size_t d=distance(linmoms.begin(),pos_ic);
-				  cout<<"found: "<<d<<endl;
-				  pos.push_back(d);
+				  d=distance(linmoms.begin(),pos_ic);
+				  cout<<" found"<<endl;
 				}
+			      
+			      //add to the list
+			      cout<<"Position: "<<d<<endl;
+			      pos.push_back(d);
 			    }
 			  
 			  bilmoms.push_back({k,pos[0],pos[1]});
