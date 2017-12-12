@@ -105,7 +105,7 @@ void ingredients_t::set_smom_moms()
 		      // 	  glb_moms.push_back(momk);
 		      // 	}
 		      
-		      const bool debug=true;
+		      constexpr bool debug=false;
 		      
 		      // const size_t k=distance(glb_moms.begin(),posk);
 		      //inform
