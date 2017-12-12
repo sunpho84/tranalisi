@@ -40,10 +40,11 @@ void set_glb_list_of_moms(const string &path,double thresh)
 	  glb_moms.push_back(c);
 	  
 	  //mark if filtered or not
-	  bool filt=(c.p(L).tilde().p4_fr_p22()<thresh);
+	  const double discr=c.p(L).tilde().p4_fr_p22();
+	  const bool filt=(discr<thresh);
 	  filt_moms.push_back(filt);
 	  
-	  filt_file<<c<<" = "<<c.p(L)<<" , filt: "<<filt<<endl;
+	  filt_file<<c<<" = "<<c.p(L)<<" , discr: "<<discr<<" , filt: "<<filt<<endl;
 	}
     }
   while(mom_file.good());
