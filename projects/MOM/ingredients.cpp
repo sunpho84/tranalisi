@@ -211,9 +211,6 @@ void ingredients_t::mom_compute_bil()
   vector<raw_file_t> files=setup_read_all_props_mom(conf_list);
   
   //! propagators to be read
-  bool first_read=true;
-  size_t prev_mom1=0,prev_mom2=0;
-  vector<m_r_mom_conf_props_t> props1,props2;
   
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     {
@@ -238,26 +235,8 @@ void ingredients_t::mom_compute_bil()
 	      "moms: "<<mom1<<" "<<mom2<<endl;
 	    read_time.start();
 	    
-	    if(first_read or prev_mom1!=mom1)
-	      props1=read_all_props_mom(files,i_in_clust_ihit,mom1);
-	    else
-	      cout<<"Skipping reading prop1: (first_read: "<<first_read<<"), prev_mom1==mom1: "<<(prev_mom1==mom1)<<endl;
-	    
-	    if(first_read or prev_mom2!=mom2)
-	      if(read2)
-		props2=read_all_props_mom(files,i_in_clust_ihit,mom2);
-	      else
-		{
-		  props2=props1;
-		  cout<<"Skipping reading prop2: copying from prop1"<<endl;
-		}
-	    else
-	      cout<<"Skipping reading prop2: (first_read: "<<first_read<<"), prev_mom2==mom2: "<<(prev_mom2==mom2)<<endl;
-	    
-	    //store prev mom
-	    prev_mom1=mom1;
-	    prev_mom2=mom2;
-	    first_read=false;
+	    const vector<m_r_mom_conf_props_t> props1=read_all_props_mom(files,i_in_clust_ihit,mom1);
+	    const vector<m_r_mom_conf_props_t> props2=(read2?read_all_props_mom(files,i_in_clust_ihit,mom2):props1);
 	    
 	    read_time.stop();
 	    
