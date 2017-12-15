@@ -15,7 +15,9 @@
 #include <prop.hpp>
 
 void build_jackknifed_vert_Gamma(jprop_t &jvert,const prop_t &prop1,size_t iG,const prop_t &prop2,double w,size_t ijack)
-{jvert[ijack]+=w*prop1*Gamma[iG]*Gamma[5]*prop2.adjoint()*Gamma[5];}
+{
+  jvert[ijack]+=w*prop1*Gamma[iG]*Gamma[5]*prop2.adjoint()*Gamma[5];
+}
 
 void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_props_t> &props1,const vector<m_r_mom_conf_props_t> &props2,
 					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED,const djvec_t &deltam_cr)
@@ -68,7 +70,7 @@ djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jvert
   const index_t im_r_im_r_iZbil_ind=im_r_ind*im_r_ind*index_t({{"Zbil",nZbil}});
   const index_t ind({{"rest",im_r_im_r_iZbil_ind.max()},{"ijack",njacks+1}});
   
-  //combine the 16 bilinears to form the 6 vertex
+  //combine the 16 bilinears to form the 5 vertex
   const vector<vector<size_t>> iG_of_Zbil={{0},{1,2,3,4},{5},{6,7,8,9},{10,11,12,13,14,15}};
   djvec_t pr(im_r_im_r_iZbil_ind.max());
   

@@ -66,6 +66,7 @@ void ingredients_t::set_ri_mom_moms()
 
 void ingredients_t::set_smom_moms()
 {
+  //http://xxx.lanl.gov/pdf/0901.2599v2
   linmoms.clear();
   bilmoms.clear();
   
