@@ -77,21 +77,21 @@ djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jvert
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
     {
-      //split im_r_im_r_ibil and ijack
+      //split im_r_im_r_iZbil and ijack
       vector<size_t> i_comp=ind(i);
-      const size_t im_r_im_r_ibil=i_comp[0],ijack=i_comp[1];
-      const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_iZbil_ind(im_r_im_r_ibil);
+      const size_t im_r_im_r_iZbil=i_comp[0],ijack=i_comp[1];
+      const vector<size_t> im_r_im_r_iZbil_comp=im_r_im_r_iZbil_ind(im_r_im_r_iZbil);
       
-      //get im and r for fw and back, and ibil
-      const size_t im_fw=im_r_im_r_ibil_comp[0],r_fw=im_r_im_r_ibil_comp[1];
-      const size_t im_bw=im_r_im_r_ibil_comp[2],r_bw=im_r_im_r_ibil_comp[3];
-      const size_t ibil=im_r_im_r_ibil_comp[4];
+      //get im and r for fw and back, and iZbil
+      const size_t im_fw=im_r_im_r_iZbil_comp[0],r_fw=im_r_im_r_iZbil_comp[1];
+      const size_t im_bw=im_r_im_r_iZbil_comp[2],r_bw=im_r_im_r_iZbil_comp[3];
+      const size_t iZbil=im_r_im_r_iZbil_comp[4];
       
       //loop on all gammas
-      djack_t &out=pr[im_r_im_r_ibil];
-      for(auto & iG : iG_of_Zbil[ibil])
+      djack_t &out=pr[im_r_im_r_iZbil];
+      for(auto & iG : iG_of_Zbil[iZbil])
 	{
-	  vector<size_t> im_r_im_r_iG_comp=im_r_im_r_ibil_comp;
+	  vector<size_t> im_r_im_r_iG_comp=im_r_im_r_iZbil_comp;
 	  im_r_im_r_iG_comp[4]=iG;
 	  const size_t im_r_im_r_iG=im_r_im_r_iG_ind(im_r_im_r_iG_comp);
 	  
@@ -103,7 +103,7 @@ djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jvert
 	  const prop_t &vert=jverts[im_r_im_r_iG][ijack];
 	  
 	  prop_t amp_vert=prop_inv1*vert*Gamma[5]*prop_inv2.adjoint()*Gamma[5];
-	  out[ijack]+=(amp_vert*Gamma[iG].adjoint()).trace().real()/(12.0*iG_of_Zbil[ibil].size());
+	  out[ijack]+=(amp_vert*Gamma[iG].adjoint()).trace().real()/(12.0*iG_of_Zbil[iZbil].size());
 	}
     }
   
