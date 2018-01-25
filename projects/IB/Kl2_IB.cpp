@@ -229,20 +229,20 @@ djvec_t read_AP(const char *what,const ens_pars_t &ens,size_t iq1,size_t iq2,int
 //! compute the critical deltam
 djack_t compute_deltam_cr(const ens_pars_t &ens,size_t iq,size_t iQCD_mes)
 {
-  string ens_qpath=ens.path+"/plots_mcrit";
+  const string ens_qpath=ens.path+"/plots_mcrit";
   
-  djvec_t V0P5_LL=read_VP("LL",ens,iq,iq,-1,IM);
-  djvec_t V0P5_0M=read_VP("0M",ens,iq,iq,-1,IM);
-  djvec_t V0P5_0T=read_VP("0T",ens,iq,iq,-1,IM);
-  djvec_t num_deltam_cr=forward_derivative(djvec_t(V0P5_LL+2.0*djvec_t(V0P5_0M+V0P5_0T)));
+  const djvec_t V0P5_LL=read_VP("LL",ens,iq,iq,-1,IM);
+  const djvec_t V0P5_0M=read_VP("0M",ens,iq,iq,-1,IM);
+  const djvec_t V0P5_0T=read_VP("0T",ens,iq,iq,-1,IM);
+  const djvec_t num_deltam_cr=forward_derivative(djvec_t(V0P5_LL+2.0*djvec_t(V0P5_0M+V0P5_0T)));
   num_deltam_cr.ave_err().write(combine("%s/num_deltam_cr.xmg",ens_qpath.c_str()));
   
-  djvec_t V0P5_0P=read_VP("0P",ens,iq,iq,+1,RE);
-  djvec_t den_deltam_cr=forward_derivative(V0P5_0P);
+  const djvec_t V0P5_0P=read_VP("0P",ens,iq,iq,+1,RE);
+  const djvec_t den_deltam_cr=forward_derivative(V0P5_0P);
   den_deltam_cr.ave_err().write(combine("%s/den_deltam_cr.xmg",ens_qpath.c_str()));
   
   const size_t itint=QCD_mes_pars[iQCD_mes].itint;
-  djack_t deltam_cr=constant_fit(djvec_t(-num_deltam_cr/(2.0*den_deltam_cr)),ens.tmin[itint],ens.tmax[itint],combine("%s/deltam_cr_t.xmg",ens_qpath.c_str()));
+  const djack_t deltam_cr=constant_fit(djvec_t(-num_deltam_cr/(2.0*den_deltam_cr)),ens.tmin[itint],ens.tmax[itint],combine("%s/deltam_cr_t.xmg",ens_qpath.c_str()));
   
   return deltam_cr;
 }
