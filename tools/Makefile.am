@@ -8,6 +8,7 @@ bin_PROGRAMS= \
 	combine_vdoubles \
 	djvec_load \
 	effective_mass \
+	linfit \
 	onlinemeas \
 	prepare_jackknives \
 	simple_effective_mass \
@@ -19,6 +20,8 @@ backstab_SOURCES=backstab.cpp
 combine_vdoubles_SOURCES=combine_vdoubles.cpp
 
 djvec_load_SOURCES=djvec_load.cpp
+
+linfit_SOURCES=linfit.cpp
 
 effective_mass_SOURCES=effective_mass.cpp
 

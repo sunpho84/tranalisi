@@ -698,7 +698,8 @@ public:
 void cont_chir_fit_pol(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_fit_data_t_pol> &ext_data,const dboot_t &ml_phys,const string &path,dboot_t &output);
 
 //! solve a linear system
-template <class TV>
+template <class TV,
+	  class Base=typename TV::base_type>
 TV lin_solve(vector<double> A,TV b)
 {
   if(A.size()!=sqr(b.size())) CRASH("A has different size from b^2, size A = %zu, size b = %zu",A.size(),b.size());
@@ -729,7 +730,7 @@ TV lin_solve(vector<double> A,TV b)
   TV x(d);
   for(int k=d-1;k>=0;k--)
     {
-      typename TV::base_type S;
+      Base S;
       S=0.0;
       
       for(int i=k+1;i<d;i++) S+=A[k*d+i]*x[i];
