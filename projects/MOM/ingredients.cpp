@@ -425,7 +425,6 @@ ingredients_t ingredients_t::average_r(const bool recompute_Zbil) const
   out._am=_am;
   out.linmoms=linmoms;
   out.bilmoms=bilmoms;
-  out.Zbil_computed=Zbil_computed;
   
   out.set_indices();
   out.allocate();
@@ -475,15 +474,14 @@ ingredients_t ingredients_t::average_r(const bool recompute_Zbil) const
 	}
     }
   
-  if(not Zbil_computed or recompute_Zbil) out.compute_Zbil();
+  if(recompute_Zbil)
+    out.compute_Zbil();
   
   return out;
 }
 
 void ingredients_t::compute_Zbil()
 {
-  Zbil_computed=true;
-  
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
       {
@@ -519,7 +517,6 @@ ingredients_t ingredients_t::chir_extrap() const
   out._am={0.0};
   out.linmoms=linmoms;
   out.bilmoms=bilmoms;
-  out.Zbil_computed=Zbil_computed;
   
   out.set_indices();
   out.allocate();
@@ -656,8 +653,9 @@ ingredients_t ingredients_t::subtract_Oa2(const bool recompute_Zbil) const
 	  out.pr_bil[i]=pr_bil[i]-sub_QED;
 	}
     }
-   
-  if(not Zbil_computed or recompute_Zbil) out.compute_Zbil();
+  
+  if(recompute_Zbil)
+    out.compute_Zbil();
   
   return out;
 }
@@ -682,8 +680,6 @@ ingredients_t ingredients_t::evolve() const
       out.Zq_sig1[i]=Zq_sig1[ilinmom]/evolver_Zq;
       if(use_QED) out.Zq_sig1_EM[i]=Zq_sig1_EM[i]/evolver_Zq; //neglecting QED evolution
     }
-  
-  if(not Zbil_computed) CRASH("Cannot evolve before computing Zbil");
   
   //evolve bil
   for(size_t i=0;i<im_r_im_r_iZbil_ibilmom_ind.max();i++)
@@ -711,7 +707,6 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   out._nm=_nm;
   out._nr=_nr;
   out._am=_am;
-  out.Zbil_computed=Zbil_computed;
   
   //build out lin list
   vector<vector<size_t>> equiv_linmom_combos=get_equiv_list(linmoms,"equiv_linmoms.txt");
@@ -770,7 +765,8 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   	}
     }
   
-  if(not Zbil_computed or recompute_Zbil) out.compute_Zbil();
+  if(recompute_Zbil)
+    out.compute_Zbil();
   
   return out;
 }

@@ -43,7 +43,10 @@ EXTERN_INGREDIENTS chir_extr::type_t chir_extr_method;
 EXTERN_INGREDIENTS reno_scheme::type_t scheme;
 
 //! passed to force recomputing Zbil
-static const bool FORCE_RECOMPUTE_ZBIL=true;
+static const bool RECOMPUTE_ZBIL=true;
+
+//! passed to disable recomputing Zbil
+static const bool DONT_RECOMPUTE_ZBIL=false;
 
 struct ingredients_t
 {
@@ -93,7 +96,6 @@ struct ingredients_t
   }
   
   //bilinear Z
-  bool Zbil_computed{false};
   djvec_t Zbil;
   djvec_t Zbil_QED;
   
@@ -164,7 +166,7 @@ struct ingredients_t
   void compute_Zbil();
   
   //! average r
-  ingredients_t average_r(const bool recompute_Zbil=false) const;
+  ingredients_t average_r(const bool recompute_Zbil) const;
   
   //allocate all vectors
   void allocate();
@@ -173,7 +175,7 @@ struct ingredients_t
   ingredients_t chir_extrap() const;
   
   //! subtract O(a^2)
-  ingredients_t subtract_Oa2(const bool recompute_Zbil=false) const;
+  ingredients_t subtract_Oa2(const bool recompute_Zbil) const;
   
   //! evolve to a common scale
   ingredients_t evolve() const;
@@ -220,7 +222,7 @@ struct ingredients_t
   void fill_output_equivalent_momenta() const;
   
   //! average equivalent momenta
-  ingredients_t average_equiv_momenta(const bool recompute_Zbil=false) const;
+  ingredients_t average_equiv_momenta(const bool recompute_Zbil) const;
   
   //! plots all Z
   void plot_Z(const string &suffix="") const;
