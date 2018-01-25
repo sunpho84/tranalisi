@@ -650,7 +650,7 @@ ingredients_t ingredients_t::subtract_Oa2(const bool recompute_Zbil) const
       if(use_QED)
 	{
 	  djack_t sub_QED=1.0*pr_bil_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L,iZbil)*pr_bil[i]; //factorization hypotesis
-	  out.pr_bil[i]=pr_bil[i]-sub_QED;
+	  out.pr_bil_QED[i]=pr_bil_QED[i]-sub_QED;
 	}
     }
   
