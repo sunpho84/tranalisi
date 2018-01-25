@@ -7,6 +7,7 @@
 
 #include <Dirac.hpp>
 #include <meas_vec.hpp>
+#include <types.hpp>
 
 #ifndef EXTERN_GEOMETRY
  #define EXTERN_GEOMETRY extern
@@ -109,6 +110,7 @@ namespace temporal_bc
   const map<string,tuple<type_t,double>> decr{{"Antiperiodic",{ANTIPERIODIC,0.5}},{"Periodic",{PERIODIC,0.0}}};
   EXTERN_GEOMETRY type_t bc;
   const size_t n=decr.size();
+  PROVIDE_DECRYPTER;
 }
 
 //! holds the components of a momentum

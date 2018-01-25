@@ -6,6 +6,7 @@
 #include <contractions.hpp>
 #include <read.hpp>
 #include <timings.hpp>
+#include <types.hpp>
 
 #ifndef EXTERN_INGREDIENTS
  #define EXTERN_INGREDIENTS extern
@@ -25,7 +26,18 @@ namespace reno_scheme
   enum type_t{RI_MOM,SMOM};
   const map<string,type_t> decr={{"RI_MOM",RI_MOM},{"SMOM",SMOM}};
   const size_t n=2;
+  PROVIDE_DECRYPTER;
 }
+
+//! chiral extrapolation
+namespace chir_extr
+{
+  enum type_t{MQUARK,MMES};
+  const map<string,type_t> decr={{"MQuark",MQUARK},{"MMes",MMES}};
+  const size_t n=2;
+  PROVIDE_DECRYPTER;
+}
+EXTERN_INGREDIENTS chir_extr::type_t chir_extr_method;
 
 //! reno scheme used
 EXTERN_INGREDIENTS reno_scheme::type_t scheme;

@@ -17,13 +17,16 @@ namespace gaz
   enum type_t{PLAQ,TLSYM,IWA};
   const map<string,type_t> decr={{"Plaq",PLAQ},{"tlSym",TLSYM},{"Iwa",IWA}};
   const size_t n=3;
+  PROVIDE_DECRYPTER;
 }
 
 namespace gf
 {
   enum type_t{FEYNMAN,LANDAU};
-  const double lambda[2]={1.0,0.0};
+  const map<string,type_t> decr={{"Feynman",FEYNMAN},{"Landau",LANDAU}};
   const size_t n=2;
+  PROVIDE_DECRYPTER;
+  const double lambda[2]={1.0,0.0};
 }
 
 const valarray<double> c1={0,-1.0/12,-0.331};

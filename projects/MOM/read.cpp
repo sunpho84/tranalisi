@@ -21,13 +21,7 @@ void read_input(const string &input_path)
   const size_t Ls=input.read<size_t>("L"); //!< lattice spatial size
   L[0]=input.read<size_t>("T");
   
-  {
-    using namespace gaz;
-    const string act_str=input.read<string>("Action"); //!< action name
-    auto act_key=decr.find(act_str); //!< key in the map of actions
-    if(act_key==decr.end()) CRASH("Unable to decript %s",act_str.c_str());
-    act=act_key->second;
-  }
+  act=gaz::decrypt(input.read<string>("Action")); //!< action name
   
   beta=input.read<double>("Beta");
   plaq=input.read<double>("Plaq");
@@ -39,6 +33,7 @@ void read_input(const string &input_path)
   nr=input.read<double>("Nr");
   
   im_sea=input.read<double>("ImSea");
+  chir_extr_method=chir_extr::decrypt(input.read<string>("ChirExtr"));
   
   const string mom_list_path=input.read<string>("MomList"); //!< list of momenta
   const double filter_thresh=input.read<double>("FilterThresh"); //!< Filter for democracy
@@ -61,22 +56,11 @@ void read_input(const string &input_path)
   ainv=input.read<double>("aInv");
   Nf=ev::Nf_t_of_Nf(input.read<int>("Nf"));
   
-  {
-    using namespace reno_scheme;
-    const string scheme_str=input.read<string>("Scheme"); //!< scheme name
-    auto scheme_key=decr.find(scheme_str); //!< key in the map of schemes
-    if(scheme_key==decr.end()) CRASH("Unable to decript %s",scheme_str.c_str());
-    scheme=scheme_key->second;
-  }
+  scheme=reno_scheme::decrypt(input.read<string>("Scheme"));
   
-  {
-    using namespace temporal_bc;
-    const string bc_str=input.read<string>("BC"); //!< boundary condition name
-    auto bc_key=decr.find(bc_str); //!< key in the map of boundary condition
-    if(bc_key==decr.end()) CRASH("Unable to decript %s",bc_str.c_str());
-    bc=get<0>(bc_key->second);
-    ph_mom[0]=get<1>(bc_key->second);
-  }
+  auto bc_key=temporal_bc::decrypt(input.read<string>("BC"));
+  temporal_bc::bc=get<0>(bc_key);
+  ph_mom[0]=get<1>(bc_key);
   
   evo_ord=input.read<size_t>("EvoOrd");
   
