@@ -14,6 +14,7 @@
 #include <evolutions.hpp>
 #include <geometry.hpp>
 #include <ingredients.hpp>
+#include <meson_masses.hpp>
 #include <prop.hpp>
 #include <read.hpp>
 #include <timings.hpp>
@@ -52,6 +53,9 @@ int main(int narg,char **arg)
   read_input(input_path);
   
   get_deltam_cr();
+  
+  if(chir_extr_method==chir_extr::MMES)
+    compute_meson_masses();
   
   ingredients_t ing;
   ing.create_from_scratch();

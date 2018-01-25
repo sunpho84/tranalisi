@@ -12,6 +12,7 @@ __top_builddir__bin_mom_SOURCES= \
 	deltam_cr.cpp \
 	geometry.cpp \
 	ingredients.cpp \
+	meson_masses.cpp \
 	mom.cpp \
 	prop.cpp \
 	read.cpp \

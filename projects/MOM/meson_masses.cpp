@@ -5,10 +5,8 @@
 #include <contractions.hpp>
 #include <tools.hpp>
 
-void get_meson_masses()
+void compute_meson_masses()
 {
-  using namespace glb;
-  
   CRASH("finisci");
   
   //mmes.resize(nm*nm);

@@ -88,3 +88,21 @@ djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size
     }
   else return djack_t{};
 }
+
+djack_t compute_meson_mass(vector<size_t> &conf_list,const size_t tmin,const size_t tmax,const size_t im1,const size_t im2,const size_t nr)
+{
+  djvec_t P5P5_corr(L[0]/2+1);
+  P5P5_corr=0.0;
+  for(size_t r=0;r<nr;r++)
+    {
+      string name="M"+to_string(im1)+"_R"+to_string(r)+"_0_M"+to_string(im2)+"_R"+to_string(r)+"_0";
+      djvec_t contr=get_contraction(name,"P5P5",conf_list,RE,EVN);
+      P5P5_corr+=contr;
+    }
+  P5P5_corr/=nr;
+  
+  const djack_t m_P=constant_fit(effective_mass(P5P5_corr),tmin,tmax,"plots/m_P_"+to_string(im1)+"_"+to_string(im1)+".xmg");
+  cout<<"M["<<im1<<","<<im2<<"]: "<<m_P<<endl;
+  
+  return m_P;
+}
