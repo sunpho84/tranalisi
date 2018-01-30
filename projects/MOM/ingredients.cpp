@@ -710,8 +710,7 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   
   //build out lin list
   vector<vector<size_t>> equiv_linmom_combos=get_equiv_list(linmoms,"equiv_linmoms.txt");
-  for(const auto &p : equiv_linmom_combos)
-    out.linmoms.push_back({p[0]});
+  fill_output_equivalent_momenta(out.linmoms,equiv_linmom_combos,equiv_linmom_combos,linmoms);
   
   //build out bil combo
   vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(bilmoms,"equiv_bilmoms.txt");
