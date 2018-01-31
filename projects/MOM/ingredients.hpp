@@ -260,7 +260,7 @@ struct ingredients_t
 	    //decide space components
 	    for(size_t mu=1;mu<NDIM;mu++) cr[ip][mu]=abs(all_moms[imom][mu]);
 	    
-	    //sort the components, differentiating the time one if it has different L[0] or phase
+	    //sort the components, treating differently the time component if it has different L[0] or phase
 	    size_t ifirst=0;
 	    if(temporal_bc::bc!=temporal_bc::PERIODIC or L[0]!=L[1]) ifirst=1;
 	    sort(&cr[ip][ifirst],cr[ip].end());
