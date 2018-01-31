@@ -179,9 +179,6 @@ vector<double> get_pt2();
 //! list all smom pairs
 void list_all_smom_pairs();
 
-//! average all equivalent momenta, using an index to access moments (assumed to be last component)
-djvec_t average_equiv_moms(const djvec_t &in,const index_t &oth_ind_mom_ind,const index_t &oth_mom_ind);
-
 //! take a vector of indep moms and returns the list of filtered moms
 djvec_t get_filtered_moms(const djvec_t &in);
 
