@@ -18,5 +18,6 @@ __top_builddir__bin_mom_SOURCES= \
 	read.cpp \
 	timings.cpp \
 	Zbil.cpp \
+	Zmeslep.cpp \
 	Zq.cpp \
 	Zq_sig1.cpp

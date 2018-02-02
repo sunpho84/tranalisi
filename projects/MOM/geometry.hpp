@@ -94,10 +94,22 @@ public:
   }
 };
 
-//! return pslash
-inline qprop_t slash(const p_t &p)
+//! return pslash with a given set of gamma
+inline auto slash(const vector<Dirac_t> &Gamma,const p_t &p)
 {
   return Gamma[4]*p[0]+Gamma[1]*p[1]+Gamma[2]*p[2]+Gamma[3]*p[3];
+}
+
+//! return pslash for quark
+inline qprop_t qua_slash(const p_t &p)
+{
+  return slash(quaGamma,p);
+}
+
+//! return pslash
+inline lprop_t lep_slash(const p_t &p)
+{
+  return slash(lepGamma,p);
 }
 
 //! phase of momenta

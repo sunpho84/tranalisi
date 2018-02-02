@@ -16,21 +16,21 @@
 
 void build_jackknifed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,size_t iG,const qprop_t &prop2,double w,size_t ijack)
 {
-  jvert[ijack]+=w*prop1*Gamma[iG]*Gamma[5]*prop2.adjoint()*Gamma[5];
+  jvert[ijack]+=w*prop1*quaGamma[iG]*quaGamma[5]*prop2.adjoint()*quaGamma[5];
 }
 
-void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_props_t> &props1,const vector<m_r_mom_conf_props_t> &props2,
-					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED,const djvec_t &deltam_cr)
+void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
+					const index_t &im_r_im_r_igam_ind,const index_t &im_r_iclust_ind,bool use_QED,const djvec_t &deltam_cr)
 {
-  //! help finding the bilinear/jack combo
-  index_t ind({{"i",im_r_im_r_igam_ind.max()},{"ijack",njacks}});
+  //! help finding the bilinear/clust combo
+  index_t ind({{"i",im_r_im_r_igam_ind.max()},{"iclust",njacks}});
   
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
     {
       //decript bilinar/jack
       vector<size_t> ind_comp=ind(i);
-      const size_t im_r_im_r_igam=ind_comp[0],ijack=ind_comp[1];
+      const size_t im_r_im_r_igam=ind_comp[0],iclust=ind_comp[1];
       
       //decript props to combine and which Gamma to create
       const vector<size_t> im_r_im_r_igam_comp=im_r_im_r_igam_ind(im_r_im_r_igam);
@@ -39,8 +39,8 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
       const size_t iG=im_r_im_r_igam_comp[4];
       
       //proxy for vector and props
-      const m_r_mom_conf_props_t &p1=props1[im_r_ijack_ind({im_fw,r_fw,ijack})];
-      const m_r_mom_conf_props_t &p2=props2[im_r_ijack_ind({im_bw,r_bw,ijack})];
+      const m_r_mom_conf_qprops_t &p1=props1[im_r_iclust_ind({im_fw,r_fw,iclust})];
+      const m_r_mom_conf_qprops_t &p2=props2[im_r_iclust_ind({im_bw,r_bw,iclust})];
       
       //create list of operations
       vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*,double>> list={{&jbil.LO[im_r_im_r_igam],&p1.LO,&p2.LO,1.0}};
@@ -51,15 +51,15 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
 	      {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.FF,1.0},
 	      {&jbil.EM[im_r_im_r_igam],&p1.T,&p2.LO,1.0},
 	      {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.T,1.0},
-	      {&jbil.EM[im_r_im_r_igam],&p1.P,&p2.LO,-deltam_cr[im_fw][ijack]},
-	      {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.P,-deltam_cr[im_bw][ijack]},
+	      {&jbil.EM[im_r_im_r_igam],&p1.P,&p2.LO,-deltam_cr[im_fw][iclust]},
+	      {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.P,-deltam_cr[im_bw][iclust]},
 	      {&jbil.S[im_r_im_r_igam],&p1.S,&p2.LO,1.0},
 	      {&jbil.S[im_r_im_r_igam],&p1.LO,&p2.S,1.0}}))
 	  list.push_back(o);
       
       //create the vertex
       for(auto &o : list)
-	build_jackknifed_vert_Gamma(*get<0>(o),*get<1>(o),iG,*get<2>(o),get<3>(o),ijack);
+	build_jackknifed_vert_Gamma(*get<0>(o),*get<1>(o),iG,*get<2>(o),get<3>(o),iclust);
     }
 }
 
@@ -102,8 +102,8 @@ djvec_t compute_proj_bil(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jve
 	  
 	  const qprop_t &vert=jverts[im_r_im_r_iG][ijack];
 	  
-	  qprop_t amp_vert=prop_inv1*vert*Gamma[5]*prop_inv2.adjoint()*Gamma[5];
-	  out[ijack]+=(amp_vert*Gamma[iG].adjoint()).trace().real()/(12.0*iG_of_Zbil[iZbil].size());
+	  qprop_t amp_vert=prop_inv1*vert*quaGamma[5]*prop_inv2.adjoint()*quaGamma[5];
+	  out[ijack]+=(amp_vert*quaGamma[iG].adjoint()).trace().real()/(12.0*iG_of_Zbil[iZbil].size());
 	}
     }
   

@@ -16,6 +16,7 @@
 #endif
 
 EXTERN_INGREDIENTS index_t im_r_im_r_igam_ind;
+EXTERN_INGREDIENTS index_t im_r_im_r_igam_iprojlep_ind;
 EXTERN_INGREDIENTS index_t r_r_iZbil_ind;
 EXTERN_INGREDIENTS index_t im_r_ijack_ind;
 EXTERN_INGREDIENTS index_t im_r_ijackp1_ind;
@@ -116,10 +117,13 @@ struct ingredients_t
   index_t im_r_im_r_iZbil_ibilmom_ind;
   
   //! compute all mom-scheme propagator
-  void mom_compute_prop();
+  void mom_compute_qprop();
   
   //! compute all mom-scheme vertices
   void mom_compute_bil();
+  
+  //! compute all mom-scheme mesoleptonic vertices
+  void mom_compute_meslep(double q1,double q2);
   
   //! compute according to ri-mom scheme
   void ri_mom();

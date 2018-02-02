@@ -15,9 +15,10 @@
 #include <geometry.hpp>
 #include <types.hpp>
 
-const char m_r_mom_conf_props_t::tag[NPROP_WITH_QED][3]={"0","FF","F","T","S","P"};
+const char m_r_mom_conf_qprops_t::tag[NPROP_WITH_QED][3]={"0","FF","F","T","S","P"};
+const char mom_conf_lprops_t::tag[NPROP_WITH_QED][3]={"0","F"};
 
-void read_prop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom)
+void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom)
 {
   //cout<<"Seeking file "<<file.get_path()<<" to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
   file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
@@ -33,12 +34,33 @@ void read_prop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t 
 	  }
 }
 
-string get_prop_tag(const size_t im,const size_t ir,const size_t ikind)
+void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom)
 {
-  return combine("S_M%zu_R%zu_%s",im,ir,m_r_mom_conf_props_t::tag[ikind]);
+  //cout<<"Seeking file "<<file.get_path()<<" to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
+  file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
+  
+  for(size_t is_so=0;is_so<NSPIN;is_so++)
+    for(size_t ic_so=0;ic_so<NCOL;ic_so++)
+      for(size_t is_si=0;is_si<NSPIN;is_si++)
+	for(size_t ic_si=0;ic_si<NCOL;ic_si++)
+	  {
+	    dcompl_t c;
+	    file.bin_read(c);
+	    (*prop)(is_si,is_so)=c*fact;
+	  }
 }
 
-vjqprop_t get_all_mr_props_inv(const vjqprop_t &jprop)
+string get_qprop_tag(const size_t im,const size_t ir,const size_t ikind)
+{
+  return combine("S_M%zu_R%zu_%s",im,ir,m_r_mom_conf_qprops_t::tag[ikind]);
+}
+
+string get_lprop_tag(const size_t ikind)
+{
+  return combine("L_%s",mom_conf_lprops_t::tag[ikind]);
+}
+
+vjqprop_t get_all_mr_qprops_inv(const vjqprop_t &jprop)
 {
   cout<<"Inverting all props"<<endl;
   
@@ -52,7 +74,7 @@ vjqprop_t get_all_mr_props_inv(const vjqprop_t &jprop)
   return jprop_inv;
 }
 
-void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ind,const djvec_t &deltam_cr)
+void build_all_mr_jackknifed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props,bool set_QED,const index_t &im_r_ind,const djvec_t &deltam_cr)
 {
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   
@@ -64,8 +86,8 @@ void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector
       size_t im_r=im_r_ind({im,r});
       //cout<<"Building jack prop im="<<im<<", r="<<r<<", ijack="<<ijack<<endl;
       
-      jm_r_mom_props_t &j=jprops[im_r];
-      const m_r_mom_conf_props_t &p=props[i_im_r_ijack];
+      jm_r_mom_qprops_t &j=jprops[im_r];
+      const m_r_mom_conf_qprops_t &p=props[i_im_r_ijack];
       
       j.LO[ijack]+=p.LO;
       if(set_QED)
@@ -74,7 +96,7 @@ void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector
     }
 }
 
-void clusterize_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,bool use_QED,size_t clust_size)
+void clusterize_all_mr_jackknifed_qprops(vector<jm_r_mom_qprops_t> &jprops,bool use_QED,size_t clust_size)
 {
 #pragma omp parallel for
   for(size_t iprop=0;iprop<jprops.size();iprop++)
@@ -91,7 +113,7 @@ double M_of_p(const p_t &p,double kappa)
   return m0_of_kappa(kappa)+p.hat().norm2()/2.0;
 }
 
-qprop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r)
+lprop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r)
 {
   const p_t p=pi.p(L);
   const p_t ptilde=p.tilde();
@@ -99,7 +121,7 @@ qprop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r)
   double M=M_of_p(p,kappa);
   dcompl_t I=dcompl_t(0.0,1.0);
   
-  qprop_t out=-I*slash(ptilde)+mu*Gamma[0]+I*M*Gamma[5]*tau3[r];
+  lprop_t out=-I*lep_slash(ptilde)+mu*lepGamma[0]+I*M*lepGamma[5]*tau3[r];
   out/=sqr(M)+sqr(mu)+ptilde.norm2();
   out/=V;
   

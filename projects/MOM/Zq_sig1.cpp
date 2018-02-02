@@ -20,7 +20,7 @@ double compute_Zq_sig1(const qprop_t &prop_inv,const size_t glb_mom)
       for(size_t mu=0;mu<NDIM;mu++)
 	if(fabs(ptilde[mu])>1e-10)
 	  Zq+=
-	    (prop_inv*Gamma[igmu[mu]]).trace().imag()/
+	    (prop_inv*quaGamma[igmu[mu]]).trace().imag()/
 	    (12.0*ptilde[mu]*V*all_moms[glb_mom].Np());
     }
   
@@ -39,7 +39,7 @@ djack_t compute_Zq_sig1(const jqprop_t &jprop_inv,const size_t glb_mom)
       for(size_t mu=0;mu<NDIM;mu++)
 	if(fabs(ptilde[mu])>1e-10)
 	  Zq[ijack]+=
-	    (jprop_inv[ijack]*Gamma[igmu[mu]]).trace().imag()/
+	    (jprop_inv[ijack]*quaGamma[igmu[mu]]).trace().imag()/
 	    (12.0*ptilde[mu]*V*all_moms[glb_mom].Np());
     }
   
