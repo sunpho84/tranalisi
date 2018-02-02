@@ -14,7 +14,7 @@
 
 #include <prop.hpp>
 
-void build_jackknifed_vert_Gamma(jprop_t &jvert,const prop_t &prop1,size_t iG,const prop_t &prop2,double w,size_t ijack)
+void build_jackknifed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,size_t iG,const qprop_t &prop2,double w,size_t ijack)
 {
   jvert[ijack]+=w*prop1*Gamma[iG]*Gamma[5]*prop2.adjoint()*Gamma[5];
 }
@@ -43,9 +43,9 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
       const m_r_mom_conf_props_t &p2=props2[im_r_ijack_ind({im_bw,r_bw,ijack})];
       
       //create list of operations
-      vector<tuple<jprop_t*,const prop_t*,const prop_t*,double>> list={{&jbil.LO[im_r_im_r_igam],&p1.LO,&p2.LO,1.0}};
+      vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*,double>> list={{&jbil.LO[im_r_im_r_igam],&p1.LO,&p2.LO,1.0}};
       if(use_QED)
-	for(auto &o : vector<tuple<jprop_t*,const prop_t*,const prop_t*,double>>({
+	for(auto &o : vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*,double>>({
 	      {&jbil.EM[im_r_im_r_igam],&p1.F,&p2.F,1.0},
 	      {&jbil.EM[im_r_im_r_igam],&p1.FF,&p2.LO,1.0},
 	      {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.FF,1.0},
@@ -63,7 +63,7 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
     }
 }
 
-djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jverts,const vjprop_t &jprop_inv2,const index_t &im_r_ind)
+djvec_t compute_proj_bil(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv2,const index_t &im_r_ind)
 {
   const size_t nm=im_r_ind.max(0),nr=im_r_ind.max(1);
   const index_t im_r_im_r_iG_ind({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"igamma",nGamma}});
@@ -97,12 +97,12 @@ djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jvert
 	  
 	  const size_t ip1=im_r_ind({im_fw,r_fw});
 	  const size_t ip2=im_r_ind({im_bw,r_bw});
-	  const prop_t &prop_inv1=jprop_inv1[ip1][ijack];
-	  const prop_t &prop_inv2=jprop_inv2[ip2][ijack];
+	  const qprop_t &prop_inv1=jprop_inv1[ip1][ijack];
+	  const qprop_t &prop_inv2=jprop_inv2[ip2][ijack];
 	  
-	  const prop_t &vert=jverts[im_r_im_r_iG][ijack];
+	  const qprop_t &vert=jverts[im_r_im_r_iG][ijack];
 	  
-	  prop_t amp_vert=prop_inv1*vert*Gamma[5]*prop_inv2.adjoint()*Gamma[5];
+	  qprop_t amp_vert=prop_inv1*vert*Gamma[5]*prop_inv2.adjoint()*Gamma[5];
 	  out[ijack]+=(amp_vert*Gamma[iG].adjoint()).trace().real()/(12.0*iG_of_Zbil[iZbil].size());
 	}
     }

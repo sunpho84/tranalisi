@@ -192,8 +192,8 @@ void ingredients_t::mom_compute_prop()
       clusterize_all_mr_jackknifed_props(jprops,use_QED,clust_size);
       clust_time.stop();
       
-      vector<jprop_t> jprop_inv(glb::im_r_ind.max()); //!< inverse propagator
-      vector<jprop_t> jprop_EM_inv(glb::im_r_ind.max()); //!< inverse propagator with em insertion
+      vector<jqprop_t> jprop_inv(glb::im_r_ind.max()); //!< inverse propagator
+      vector<jqprop_t> jprop_EM_inv(glb::im_r_ind.max()); //!< inverse propagator with em insertion
 #pragma omp parallel for reduction(+:invert_time,Zq_time)
       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
 	{
@@ -205,7 +205,7 @@ void ingredients_t::mom_compute_prop()
 	  
 	  //compute inverse
 	  invert_time.start();
-	  const prop_t prop_inv=jprops[im_r].LO[ijack].inverse();
+	  const qprop_t prop_inv=jprops[im_r].LO[ijack].inverse();
 	  //if(im_r_ijack==0) cout<<jprops[im_r].LO[ijack](0,0)<<endl;
 	  jprop_inv[im_r][ijack]=prop_inv;
 	  invert_time.stop();
@@ -220,7 +220,7 @@ void ingredients_t::mom_compute_prop()
 	  if(use_QED)
 	    {
 	      invert_time.start();
-	      prop_t prop_EM_inv=prop_inv*jprops[im_r].EM[ijack]*prop_inv;
+	      qprop_t prop_EM_inv=prop_inv*jprops[im_r].EM[ijack]*prop_inv;
 	      jprop_EM_inv[im_r][ijack]=prop_EM_inv;
 	      invert_time.stop();
 	      
@@ -285,10 +285,10 @@ void ingredients_t::mom_compute_bil()
       jverts.clusterize_all(use_QED,clust_size);
       clust_time.stop();
       
-      vector<jprop_t> jprop_inv1(glb::im_r_ind.max()); //!< inverse propagator1
-      vector<jprop_t> jprop_inv2(glb::im_r_ind.max()); //!< inverse propagator2
-      vector<jprop_t> jprop_EM_inv1(glb::im_r_ind.max()); //!< inverse propagator1 with em insertion
-      vector<jprop_t> jprop_EM_inv2(glb::im_r_ind.max()); //!< inverse propagator2 with em insertion
+      vector<jqprop_t> jprop_inv1(glb::im_r_ind.max()); //!< inverse propagator1
+      vector<jqprop_t> jprop_inv2(glb::im_r_ind.max()); //!< inverse propagator2
+      vector<jqprop_t> jprop_EM_inv1(glb::im_r_ind.max()); //!< inverse propagator1 with em insertion
+      vector<jqprop_t> jprop_EM_inv2(glb::im_r_ind.max()); //!< inverse propagator2 with em insertion
 #pragma omp parallel for reduction(+:invert_time)
       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
 	{
@@ -299,8 +299,8 @@ void ingredients_t::mom_compute_bil()
 	  
 	  //compute inverse
 	  invert_time.start();
-	  prop_t prop_inv1=jprop_inv1[im_r][ijack]=jprops1[im_r].LO[ijack].inverse();
-	  prop_t prop_inv2=jprop_inv2[im_r][ijack]=jprops2[im_r].LO[ijack].inverse();
+	  qprop_t prop_inv1=jprop_inv1[im_r][ijack]=jprops1[im_r].LO[ijack].inverse();
+	  qprop_t prop_inv2=jprop_inv2[im_r][ijack]=jprops2[im_r].LO[ijack].inverse();
 	  //if(im_r_ijack==0) cout<<jprops[im_r].LO[ijack](0,0)<<endl;
 	  invert_time.stop();
 	  

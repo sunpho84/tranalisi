@@ -28,9 +28,9 @@ const iZbil_t iZbil_t_list[nZbil]={iZS,iZA,iZP,iZV,iZT};
 class jbil_vert_t
 {
   //! return a list of pointers to all internal data
-  vector<vector<jprop_t>*> get_all_ptrs(bool use_QED)
+  vector<vector<jqprop_t>*> get_all_ptrs(bool use_QED)
   {
-    vector<vector<jprop_t>*> out={&LO};
+    vector<vector<jqprop_t>*> out={&LO};
     if(use_QED)
       for(auto &p : {&EM,&S})
 	out.push_back(p);
@@ -38,10 +38,10 @@ class jbil_vert_t
   }
   
 public:
-  vector<jprop_t> LO; //!< jackkniffed vertex
+  vector<jqprop_t> LO; //!< jackkniffed vertex
   
-  vector<jprop_t> EM; //!< jackkniffed vertex with all em corrs
-  vector<jprop_t> S; //!< jackkniffed S vertex
+  vector<jqprop_t> EM; //!< jackkniffed vertex with all em corrs
+  vector<jqprop_t> S; //!< jackkniffed S vertex
   
   jbil_vert_t(size_t size,bool use_QED)
   {for(auto &p : get_all_ptrs(use_QED)) p->resize(size);}
@@ -49,7 +49,7 @@ public:
   //! clusterize
   void clusterize_all(bool use_QED,size_t clust_size)
   {
-    vector<vector<jprop_t>*> ps=get_all_ptrs(use_QED);
+    vector<vector<jqprop_t>*> ps=get_all_ptrs(use_QED);
     index_t ind({{"type",ps.size()},{"icombo",ps[0]->size()}});
     
     //cout<<"Clusterizing all verts, clust_size="<<clust_size<<endl;
@@ -66,7 +66,7 @@ public:
 };
 
 //! compute the projected bilinears
-djvec_t compute_proj_bil(const vjprop_t &jprop_inv1,const vector<jprop_t> &jverts,const vjprop_t &jprop_inv2,const index_t &im_r_ind);
+djvec_t compute_proj_bil(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv2,const index_t &im_r_ind);
 
 //! compute all vertices for a certain conf
 void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_props_t> &props1,const vector<m_r_mom_conf_props_t> &props2,

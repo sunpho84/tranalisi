@@ -10,8 +10,8 @@
  #define INIT_TO(...) = __VA_ARGS__
 #endif
 
-using vprop_t=vector<prop_t>; //! vector of propagators
-using vjprop_t=vector<jprop_t>; //! vector of jackkniffed props
+using vprop_t=vector<qprop_t>; //! vector of propagators
+using vjqprop_t=vector<jqprop_t>; //! vector of jackkniffed props
 
 namespace glb
 {
@@ -33,26 +33,26 @@ EXTERN_PROP bool use_QED; //!< perform or not the QED analysis
 const double tau3[2]={-1.0,+1.0}; //!< tau entering the propagator
 
 //! read a propagator
-void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom);
+void read_prop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom);
 
 //! holds a given l r and momentum, for a fized conf
 class m_r_mom_conf_props_t
 {
 public:
-  prop_t LO; //!< propagator with no insertion
+  qprop_t LO; //!< propagator with no insertion
   
-  prop_t FF; //!< propagator with 2 photon insertions
-  prop_t F;  //!< propagator with 1 photon insertion
-  prop_t T;  //!< propagator with Tadpole insertion
-  prop_t S;  //!< propagator with Scalar insertion
-  prop_t P;  //!< propagator with Pseudoscalar insertion
+  qprop_t FF; //!< propagator with 2 photon insertions
+  qprop_t F;  //!< propagator with 1 photon insertion
+  qprop_t T;  //!< propagator with Tadpole insertion
+  qprop_t S;  //!< propagator with Scalar insertion
+  qprop_t P;  //!< propagator with Pseudoscalar insertion
   
   //! number of all kinds
   static const size_t NPROP_WITH_QED=6;
   //! tag to read
   static const char tag[NPROP_WITH_QED][3];
   //! kind of propagator
-  array<prop_t*,NPROP_WITH_QED> kind{&LO,&FF,&F,&T,&S,&P};
+  array<qprop_t*,NPROP_WITH_QED> kind{&LO,&FF,&F,&T,&S,&P};
   
   //! number of propagator kind
   static size_t nprop_kind()
@@ -84,9 +84,9 @@ string get_prop_tag(const size_t im,const size_t ir,const size_t ikind);
 class jm_r_mom_props_t
 {
   //! return a list of pointers to all internal data
-  vector<jprop_t*> get_all_ptrs(bool use_QED)
+  vector<jqprop_t*> get_all_ptrs(bool use_QED)
   {
-    vector<jprop_t*> out={&LO};
+    vector<jqprop_t*> out={&LO};
     if(use_QED)
       for(auto &p : {&EM,&P,&S})
 	out.push_back(p);
@@ -94,11 +94,11 @@ class jm_r_mom_props_t
   }
   
 public:
-  jprop_t LO; //!< propagator with no photon, given momentum, all m and r
+  jqprop_t LO; //!< propagator with no photon, given momentum, all m and r
   
-  jprop_t EM; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
-  jprop_t P; //!< propagator with Pseudoscalar inserion
-  jprop_t S; //!< propagator with Scalar insertion
+  jqprop_t EM; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
+  jqprop_t P; //!< propagator with Pseudoscalar inserion
+  jqprop_t S; //!< propagator with Scalar insertion
   
   //! clusterize the propagators
   void clusterize_all_mr_props(bool use_QED,size_t clust_size)
@@ -113,13 +113,13 @@ public:
 void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector<m_r_mom_conf_props_t> &props,bool set_QED,const index_t &im_r_ind,const djvec_t &deltam_cr);
 
 //! compute the inverse of all mr props
-vjprop_t get_all_mr_props_inv(const vjprop_t &jprop);
+vjqprop_t get_all_mr_props_inv(const vjqprop_t &jprop);
 
 //! clusterize all props
 void clusterize_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,bool use_QED,size_t clust_size);
 
 //! return the propagator at maximal twist
-prop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r);
+qprop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r);
 
 #undef EXTERN_PROP
 #undef INIT_TO

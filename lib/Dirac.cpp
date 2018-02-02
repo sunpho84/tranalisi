@@ -94,9 +94,9 @@ vector<Dirac_t> Gamma=init_all_Gamma(Gamma_data);
 
 vector<Dirac_t> vit_Gamma=init_all_Gamma(vit_Gamma_data);
 
-prop_t convert_basis(const prop_t &p,const Gamma_data_t *rec,const Gamma_data_t *pro)
+qprop_t convert_basis(const qprop_t &p,const Gamma_data_t *rec,const Gamma_data_t *pro)
 {
-  prop_t pv;
+  qprop_t pv;
   pv.Zero();
   for(size_t iG=0;iG<nGamma;iG++)
     for(size_t ic1=0;ic1<NCOL;ic1++)
@@ -107,15 +107,15 @@ prop_t convert_basis(const prop_t &p,const Gamma_data_t *rec,const Gamma_data_t 
   return pv;
 }
 
-prop_t convert_to_Vit_basis(const prop_t &p)
+qprop_t convert_to_Vit_basis(const qprop_t &p)
 {return convert_basis(p,vit_Gamma_data,Gamma_data);}
 
-prop_t convert_from_Vit_basis(const prop_t &p)
+qprop_t convert_from_Vit_basis(const qprop_t &p)
 {return convert_basis(p,Gamma_data,vit_Gamma_data);}
 
-jprop_t invert(const jprop_t &in)
+jqprop_t invert(const jqprop_t &in)
 {
-  jprop_t out;
+  jqprop_t out;
   for(size_t ijack=0;ijack<=njacks;ijack++) out[ijack]=in[ijack].inverse();
   return out;
 }

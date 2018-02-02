@@ -8,7 +8,7 @@
 
 #include <Zq.hpp>
 
-double compute_Zq_sig1(const prop_t &prop_inv,const size_t glb_mom)
+double compute_Zq_sig1(const qprop_t &prop_inv,const size_t glb_mom)
 {
   double Zq;
   
@@ -27,7 +27,7 @@ double compute_Zq_sig1(const prop_t &prop_inv,const size_t glb_mom)
   return Zq;
 }
 
-djack_t compute_Zq_sig1(const jprop_t &jprop_inv,const size_t glb_mom)
+djack_t compute_Zq_sig1(const jqprop_t &jprop_inv,const size_t glb_mom)
 {
   djack_t Zq;
   

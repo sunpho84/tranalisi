@@ -95,7 +95,7 @@ public:
 };
 
 //! return pslash
-inline prop_t slash(const p_t &p)
+inline qprop_t slash(const p_t &p)
 {
   return Gamma[4]*p[0]+Gamma[1]*p[1]+Gamma[2]*p[2]+Gamma[3]*p[3];
 }

@@ -17,7 +17,7 @@
 
 const char m_r_mom_conf_props_t::tag[NPROP_WITH_QED][3]={"0","FF","F","T","S","P"};
 
-void read_prop(prop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom)
+void read_prop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom)
 {
   //cout<<"Seeking file "<<file.get_path()<<" to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
   file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
@@ -38,11 +38,11 @@ string get_prop_tag(const size_t im,const size_t ir,const size_t ikind)
   return combine("S_M%zu_R%zu_%s",im,ir,m_r_mom_conf_props_t::tag[ikind]);
 }
 
-vjprop_t get_all_mr_props_inv(const vjprop_t &jprop)
+vjqprop_t get_all_mr_props_inv(const vjqprop_t &jprop)
 {
   cout<<"Inverting all props"<<endl;
   
-  vjprop_t jprop_inv(jprop.size());
+  vjqprop_t jprop_inv(jprop.size());
   
 #pragma omp parallel for
   for(size_t imr=0;imr<glb::nmr;imr++)
@@ -69,7 +69,7 @@ void build_all_mr_jackknifed_props(vector<jm_r_mom_props_t> &jprops,const vector
       
       j.LO[ijack]+=p.LO;
       if(set_QED)
-	for(auto &jp_p : vector<tuple<jprop_t*,const prop_t*,double>>({{&j.EM,&p.FF,1.0},{&j.EM,&p.T,1.0},{&j.EM,&p.P,-deltam_cr[im][ijack]},{&j.S,&p.S,1.0}}))
+	for(auto &jp_p : vector<tuple<jqprop_t*,const qprop_t*,double>>({{&j.EM,&p.FF,1.0},{&j.EM,&p.T,1.0},{&j.EM,&p.P,-deltam_cr[im][ijack]},{&j.S,&p.S,1.0}}))
 	  (*get<0>(jp_p))[ijack]+=*get<1>(jp_p)*get<2>(jp_p);
     }
 }
@@ -91,7 +91,7 @@ double M_of_p(const p_t &p,double kappa)
   return m0_of_kappa(kappa)+p.hat().norm2()/2.0;
 }
 
-prop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r)
+qprop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r)
 {
   const p_t p=pi.p(L);
   const p_t ptilde=p.tilde();
@@ -99,7 +99,7 @@ prop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r)
   double M=M_of_p(p,kappa);
   dcompl_t I=dcompl_t(0.0,1.0);
   
-  prop_t out=-I*slash(ptilde)+mu*Gamma[0]+I*M*Gamma[5]*tau3[r];
+  qprop_t out=-I*slash(ptilde)+mu*Gamma[0]+I*M*Gamma[5]*tau3[r];
   out/=sqr(M)+sqr(mu)+ptilde.norm2();
   out/=V;
   

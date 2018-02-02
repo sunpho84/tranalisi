@@ -23,8 +23,9 @@ const size_t NCOL=3; //< Number of colors
 const size_t NSPIN=4; //< Number of spin components
 const int NSPINCOL=NSPIN*NCOL; //< Total number of spin and color components
 
-using prop_t=Matrix<dcompl_t,NSPINCOL,NSPINCOL>; //< Matrix of complex
-using jprop_t=jack_t<prop_t>;
+using lprop_t=Matrix<dcompl_t,NSPIN,NSPIN>; //< Matrix of complex with spin
+using qprop_t=Matrix<dcompl_t,NSPINCOL,NSPINCOL>; //< Matrix of complex, with spin and color
+using jqprop_t=jack_t<qprop_t>;
 
 //! number of matrices in Clifford basis
 const size_t nGamma=16;
@@ -40,18 +41,18 @@ const size_t igmu[4]={4,1,2,3};
 //! get a single Gamma
 Dirac_t init_Gamma(const int *irow,const int *re,const int *im);
 
-//! return the colorspin index
+//! return the spincolor index
 inline size_t isc(size_t is,size_t ic)
 {return ic+NCOL*is;}
 
 //! convert to Vittorio's basis
-prop_t convert_to_Vit_basis(const prop_t &p);
+qprop_t convert_to_Vit_basis(const qprop_t &p);
 
 //! convert from Vittorio's basis
-prop_t convert_from_Vit_basis(const prop_t &p);
+qprop_t convert_from_Vit_basis(const qprop_t &p);
 
 //! invert the jprop
-jprop_t invert(const jprop_t &in);
+jqprop_t invert(const jqprop_t &in);
 
 #undef EXTERN_DIRAC
 #undef INIT_TO
