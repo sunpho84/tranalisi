@@ -123,7 +123,7 @@ struct ingredients_t
   void mom_compute_bil();
   
   //! compute all mom-scheme mesoleptonic vertices
-  void mom_compute_meslep(double q1,double q2);
+  void mom_compute_meslep();
   
   //! compute according to ri-mom scheme
   void ri_mom();

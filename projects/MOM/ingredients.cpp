@@ -185,13 +185,13 @@ void ingredients_t::mom_compute_qprop()
 	    
 	    //build all props
 	    build_props_time.start();
-	    build_all_mr_jackknifed_qprops(jprops,props,use_QED,glb::im_r_ind,deltam_cr);
+	    build_all_mr_jackkniffed_qprops(jprops,props,use_QED,glb::im_r_ind,deltam_cr);
 	    build_props_time.stop();
 	  }
       
       //clusterize
       clust_time.start();
-      clusterize_all_mr_jackknifed_qprops(jprops,use_QED,clust_size);
+      clusterize_all_mr_jackkniffed_qprops(jprops,use_QED,clust_size);
       clust_time.stop();
       
       vector<jqprop_t> jprop_inv(glb::im_r_ind.max()); //!< inverse propagator
@@ -270,20 +270,20 @@ void ingredients_t::mom_compute_bil()
 	    
 	    //build all props
 	    build_props_time.start();
-	    build_all_mr_jackknifed_qprops(jprops1,props1,use_QED,glb::im_r_ind,deltam_cr);
-	    build_all_mr_jackknifed_qprops(jprops2,props2,use_QED,glb::im_r_ind,deltam_cr);
+	    build_all_mr_jackkniffed_qprops(jprops1,props1,use_QED,glb::im_r_ind,deltam_cr);
+	    build_all_mr_jackkniffed_qprops(jprops2,props2,use_QED,glb::im_r_ind,deltam_cr);
 	    build_props_time.stop();
 	    
-	    //build all verts
+	    //build all bilinear verts
 	    build_verts_time.start();
-	    build_all_mr_gbil_jackknifed_verts(jverts,props1,props2,im_r_im_r_igam_ind,im_r_ijack_ind,use_QED,deltam_cr);
+	    build_all_mr_gbil_jackkniffed_verts(jverts,props1,props2,im_r_im_r_igam_ind,im_r_ijack_ind,use_QED,deltam_cr);
 	    build_verts_time.stop();
 	  }
       
       //clusterize
       clust_time.start();
-      clusterize_all_mr_jackknifed_qprops(jprops1,use_QED,clust_size);
-      clusterize_all_mr_jackknifed_qprops(jprops2,use_QED,clust_size);
+      clusterize_all_mr_jackkniffed_qprops(jprops1,use_QED,clust_size);
+      clusterize_all_mr_jackkniffed_qprops(jprops2,use_QED,clust_size);
       jverts.clusterize_all(use_QED,clust_size);
       clust_time.stop();
       
@@ -316,9 +316,6 @@ void ingredients_t::mom_compute_bil()
 	    }
 	}
       
-      //! an index running on all packed combo, and momenta
-      const index_t all_ibilmom_ind({{"All",im_r_im_r_iZbil_ind.max()},{"bilmom",bilmoms.size()}});
-      
       proj_time.start();
       djvec_t pr_bil_temp=compute_proj_bil(jprop_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
       
@@ -332,6 +329,9 @@ void ingredients_t::mom_compute_bil()
 	  pr_bil_QED_temp=pr_bil_a+pr_bil_b-pr_bil_EM;
 	}
       
+      //! an index running on all packed combo, and momenta
+      const index_t all_ibilmom_ind({{"All",im_r_im_r_iZbil_ind.max()},{"bilmom",bilmoms.size()}});
+      
       //store
       vector<pair<djvec_t*,djvec_t*>> store_task={{&pr_bil,&pr_bil_temp}};
       if(use_QED) store_task.push_back({&pr_bil_QED,&pr_bil_QED_temp});
@@ -343,8 +343,11 @@ void ingredients_t::mom_compute_bil()
     }
 }
 
-void ingredients_t::mom_compute_meslep(double q1,double q2)
+void ingredients_t::mom_compute_meslep()
 {
+  const double q1=+2.0/3.0;
+  const double q2=-1.0/3.0;
+  
   vector<raw_file_t> qfiles=setup_read_all_qprops_mom(conf_list);
   vector<raw_file_t> lfiles=setup_read_all_lprops_mom(conf_list);
   
@@ -382,59 +385,47 @@ void ingredients_t::mom_compute_meslep(double q1,double q2)
 	    
 	    //build all props
 	    build_props_time.start();
-	    build_all_mr_jackknifed_qprops(jprops1,props1,use_QED,glb::im_r_ind,deltam_cr);
-	    build_all_mr_jackknifed_qprops(jprops2,props2,use_QED,glb::im_r_ind,deltam_cr);
+	    build_all_mr_jackkniffed_qprops(jprops1,props1,use_QED,glb::im_r_ind,deltam_cr);
+	    build_all_mr_jackkniffed_qprops(jprops2,props2,use_QED,glb::im_r_ind,deltam_cr);
 	    build_props_time.stop();
 	    
 	    //build all verts
 	    build_verts_time.start();
-	    build_all_mr_gmeslep_jackknifed_verts(jverts,props1,props2,props_lep,im_r_im_r_igam_iprojlep_ind,im_r_ijack_ind,q1,q2);
+	    build_all_mr_gmeslep_jackkniffed_verts(jverts,props1,props2,props_lep,im_r_im_r_igam_iprojlep_ind,im_r_ijack_ind);
 	    build_verts_time.stop();
 	  }
       
       //clusterize
       clust_time.start();
-      clusterize_all_mr_jackknifed_qprops(jprops1,use_QED,clust_size);
-      clusterize_all_mr_jackknifed_qprops(jprops2,use_QED,clust_size);
+      clusterize_all_mr_jackkniffed_qprops(jprops1,use_QED,clust_size);
+      clusterize_all_mr_jackkniffed_qprops(jprops2,use_QED,clust_size);
       jverts.clusterize_all(clust_size);
       clust_time.stop();
       
       vector<jqprop_t> jprop_inv1(glb::im_r_ind.max()); //!< inverse propagator1
       vector<jqprop_t> jprop_inv2(glb::im_r_ind.max()); //!< inverse propagator2
-//       vector<jqprop_t> jprop_EM_inv1(glb::im_r_ind.max()); //!< inverse propagator1 with em insertion
-//       vector<jqprop_t> jprop_EM_inv2(glb::im_r_ind.max()); //!< inverse propagator2 with em insertion
-// #pragma omp parallel for reduction(+:invert_time)
-//       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
-// 	{
-// 	  //decript indices
-// 	  const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
-// 	  const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
-// 	  const size_t im_r=glb::im_r_ind({im,r});
+ #pragma omp parallel for reduction(+:invert_time)
+       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
+ 	{
+	  //decript indices
+	  const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
+	  const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
+	  const size_t im_r=glb::im_r_ind({im,r});
 	  
-// 	  //compute inverse
-// 	  invert_time.start();
-// 	  qprop_t prop_inv1=jprop_inv1[im_r][ijack]=jprops1[im_r].LO[ijack].inverse();
-// 	  qprop_t prop_inv2=jprop_inv2[im_r][ijack]=jprops2[im_r].LO[ijack].inverse();
-// 	  //if(im_r_ijack==0) cout<<jprops[im_r].LO[ijack](0,0)<<endl;
-// 	  invert_time.stop();
-	  
-// 	  //do the same with QED
-// 	  if(use_QED)
-// 	    {
-// 	      invert_time.start();
-// 	      jprop_EM_inv1[im_r][ijack]=prop_inv1*jprops1[im_r].EM[ijack]*prop_inv1;
-// 	      jprop_EM_inv2[im_r][ijack]=prop_inv2*jprops2[im_r].EM[ijack]*prop_inv2;
-// 	      invert_time.stop();
-// 	    }
-// 	}
+	  //compute inverse
+	  invert_time.start();
+	  jprop_inv1[im_r][ijack]=jprops1[im_r].LO[ijack].inverse();
+	  jprop_inv2[im_r][ijack]=jprops2[im_r].LO[ijack].inverse();
+	  invert_time.stop();
+ 	}
+       
+      proj_time.start();
+      const djvec_t pr_meslep1_temp=compute_proj_measlep(jprop_inv1,jverts.ML1,jprop_inv2,im_r_ind);
+      const djvec_t pr_meslep2_temp=compute_proj_measlep(jprop_inv1,jverts.ML2,jprop_inv2,im_r_ind);
+      const djvec_t pr_meslep_temp=q1*pr_meslep1_temp+q2*pr_meslep2_temp;
       
-//       //! an index running on all packed combo, and momenta
-//       const index_t all_ibilmom_ind({{"All",im_r_im_r_iZbil_ind.max()},{"bilmom",bilmoms.size()}});
-      
-//       proj_time.start();
-//       djvec_t pr_bil_temp=compute_proj_bil(jprop_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
-      
-//       //QED
+      // to be included
+      //       //QED
 //       djvec_t pr_bil_QED_temp;
 //       if(use_QED)
 // 	{
@@ -443,6 +434,9 @@ void ingredients_t::mom_compute_meslep(double q1,double q2)
 // 	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_EM_inv2,glb::im_r_ind);
 // 	  pr_bil_QED_temp=pr_bil_a+pr_bil_b-pr_bil_EM;
 // 	}
+      
+      //! an index running on all packed combo, and momenta
+      //const index_t all_imeslepmom_ind({{"All",im_r_im_r_iop_iprojlep_ind.max()},{"bilmom",bilmoms.size()}});
       
 //       //store
 //       vector<pair<djvec_t*,djvec_t*>> store_task={{&pr_bil,&pr_bil_temp}};

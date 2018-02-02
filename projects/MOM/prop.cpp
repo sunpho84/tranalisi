@@ -74,7 +74,7 @@ vjqprop_t get_all_mr_qprops_inv(const vjqprop_t &jprop)
   return jprop_inv;
 }
 
-void build_all_mr_jackknifed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props,bool set_QED,const index_t &im_r_ind,const djvec_t &deltam_cr)
+void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props,bool set_QED,const index_t &im_r_ind,const djvec_t &deltam_cr)
 {
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   
@@ -96,7 +96,7 @@ void build_all_mr_jackknifed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vect
     }
 }
 
-void clusterize_all_mr_jackknifed_qprops(vector<jm_r_mom_qprops_t> &jprops,bool use_QED,size_t clust_size)
+void clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,bool use_QED,size_t clust_size)
 {
 #pragma omp parallel for
   for(size_t iprop=0;iprop<jprops.size();iprop++)

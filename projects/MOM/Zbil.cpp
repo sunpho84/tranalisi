@@ -14,12 +14,12 @@
 
 #include <prop.hpp>
 
-void build_jackknifed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,size_t iG,const qprop_t &prop2,double w,size_t ijack)
+void build_jackkniffed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,size_t iG,const qprop_t &prop2,double w,size_t ijack)
 {
   jvert[ijack]+=w*prop1*quaGamma[iG]*quaGamma[5]*prop2.adjoint()*quaGamma[5];
 }
 
-void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
+void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
 					const index_t &im_r_im_r_igam_ind,const index_t &im_r_iclust_ind,bool use_QED,const djvec_t &deltam_cr)
 {
   //! help finding the bilinear/clust combo
@@ -59,7 +59,7 @@ void build_all_mr_gbil_jackknifed_verts(jbil_vert_t &jbil,const vector<m_r_mom_c
       
       //create the vertex
       for(auto &o : list)
-	build_jackknifed_vert_Gamma(*get<0>(o),*get<1>(o),iG,*get<2>(o),get<3>(o),iclust);
+	build_jackkniffed_vert_Gamma(*get<0>(o),*get<1>(o),iG,*get<2>(o),get<3>(o),iclust);
     }
 }
 

@@ -40,8 +40,10 @@ public:
   }
 };
 
-void build_all_mr_gmeslep_jackknifed_verts(jmeslep_vert_t &j,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
+void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
 					   const vector<mom_conf_lprops_t> &props_lep,
-					   const index_t &im_r_im_r_igam_iprojlep_ind,const index_t &im_r_iclust_ind,const double q1,const double q2);
+					   const index_t &im_r_im_r_igam_iprojlep_ind,const index_t &im_r_iclust_ind);
+
+djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv2,const index_t &im_r_ind);
 
 #endif
