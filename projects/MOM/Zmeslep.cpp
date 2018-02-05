@@ -80,7 +80,7 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
   const index_t ind({{"rest",im_r_im_r_iop_iproj_ind.max()},{"ijack",njacks+1}});
   
   //Each operator on the quark side has the structure G(1+-g5)
-  //We decompose it in the 1 and g5 parts, putting explicitly the sign
+  //We decompose it in the 1 and g5 parts, putting the sign explicitly
   const vector<vector<size_t>> iGq_of_iop ={{ 1, 2, 3, 4}, { 1, 2, 3, 4}, { 0}, { 0}, {10,11,12,13,14,15}};
   const vector<int>            sign_of_iop={-1,             +1,            -1,   +1 ,  +1};
   const vector<vector<size_t>> &iPl_of_iproj=iGq_of_iop; // here instead 1-g5 was already included at lepton projection
@@ -117,7 +117,7 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
 	      
 	      const qprop_t &vert=jverts[im_r_im_r_iGq_iPl][ijack];
 	      
-	      qprop_t amp_vert=prop_inv1*vert*quaGamma[5]*prop_inv2.adjoint()*quaGamma[5];
+	      qprop_t amp_vert=prop_inv1*vert*quaGamma[5]*prop_inv2.adjoint()*quaGamma[5]; //here the normalization is imposed (hopefully)
 	      out[ijack]+=(amp_vert*quaGamma[iGq]*(quaGamma[0]+sign_of_iop[iop]*quaGamma[5]).adjoint()).trace().real()/(12.0*sqr(iGq_of_iop[iop].size()));
 	    }
 	}
