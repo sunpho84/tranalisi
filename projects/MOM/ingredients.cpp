@@ -238,8 +238,6 @@ void ingredients_t::mom_compute_bil()
 {
   vector<raw_file_t> files=setup_read_all_qprops_mom(conf_list);
   
-  //! propagators to be read
-  
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     {
       const size_t imom1=bilmoms[ibilmom][1];
@@ -248,7 +246,7 @@ void ingredients_t::mom_compute_bil()
       
       vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max()); //!< jackknived props
       vector<jm_r_mom_qprops_t> jprops2(glb::im_r_ind.max()); //!< jackknived props
-      jbil_vert_t jverts(im_r_im_r_igam_ind.max(),use_QED);  //!< jackknived vertex
+      jbil_vert_t jverts(im_r_im_r_igam_ind.max(),use_QED);   //!< jackknived vertex
       
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
@@ -309,7 +307,7 @@ void ingredients_t::mom_compute_bil()
 	  //do the same with QED
 	  if(use_QED)
 	    {
-	      invert_time.start();
+	      invert_time.start(); //This misses a sign -1 coming from the original inverse
 	      jprop_EM_inv1[im_r][ijack]=prop_inv1*jprops1[im_r].EM[ijack]*prop_inv1;
 	      jprop_EM_inv2[im_r][ijack]=prop_inv2*jprops2[im_r].EM[ijack]*prop_inv2;
 	      invert_time.stop();
@@ -326,7 +324,7 @@ void ingredients_t::mom_compute_bil()
 	  const djvec_t pr_bil_EM=compute_proj_bil(jprop_inv1,jverts.EM,jprop_inv2,glb::im_r_ind);
 	  const djvec_t pr_bil_a=compute_proj_bil(jprop_EM_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
 	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_EM_inv2,glb::im_r_ind);
-	  pr_bil_QED_temp=pr_bil_a+pr_bil_b-pr_bil_EM;
+	  pr_bil_QED_temp=-pr_bil_a-pr_bil_b+pr_bil_EM;
 	}
       
       //! an index running on all packed combo, and momenta
@@ -345,8 +343,10 @@ void ingredients_t::mom_compute_bil()
 
 void ingredients_t::mom_compute_meslep()
 {
-  const double q1=+2.0/3.0;
-  const double q2=-1.0/3.0;
+  //these are the charges in the lagrangian
+  const double ql=-1.0;     //!< the program simulates muon *particle*
+  const double q1=-1.0/3.0; //!< charge of the quark1
+  const double q2=+2.0/3.0; //!< charge of the quark2
   
   vector<raw_file_t> qfiles=setup_read_all_qprops_mom(conf_list);
   vector<raw_file_t> lfiles=setup_read_all_lprops_mom(conf_list);
@@ -608,12 +608,10 @@ void ingredients_t::compute_Zbil()
 	  sqrt(Zq_sig1[im_r1_ilinmom1]*Zq_sig1[im_r2_ilinmom2])/pr_bil[im_r_im_r_iZbil_ibilmom];
 	
 	if(use_QED)
-	  {
 	    Zbil_QED[im_r_im_r_iZbil_ibilmom]=
-	      pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]+
+	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]+
 	      (Zq_sig1_EM[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+Zq_sig1_EM[im_r2_ilinmom2]/
 	       Zq_sig1[im_r2_ilinmom2])/2.0;
-	  }
       }
 }
 
