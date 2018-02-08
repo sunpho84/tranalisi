@@ -185,17 +185,17 @@ void ingredients_t::mom_compute_qprop()
 	    
 	    //build all props
 	    build_props_time.start();
-	    build_all_mr_jackkniffed_qprops(jprops,props,use_QED,glb::im_r_ind,deltam_cr);
+	    build_all_mr_jackkniffed_qprops(jprops,props,use_QED,im_r_ind);
 	    build_props_time.stop();
 	  }
       
       //clusterize
       clust_time.start();
-      clusterize_all_mr_jackkniffed_qprops(jprops,use_QED,clust_size);
+      clusterize_all_mr_jackkniffed_qprops(jprops,use_QED,clust_size,im_r_ind,deltam_cr);
       clust_time.stop();
       
       vector<jqprop_t> jprop_inv(glb::im_r_ind.max()); //!< inverse propagator
-      vector<jqprop_t> jprop_EM_inv(glb::im_r_ind.max()); //!< inverse propagator with em insertion
+      vector<jqprop_t> jprop_QED_inv(glb::im_r_ind.max()); //!< inverse propagator with em insertion and counterterm
 #pragma omp parallel for reduction(+:invert_time,Zq_time)
       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
 	{
@@ -222,12 +222,12 @@ void ingredients_t::mom_compute_qprop()
 	  if(use_QED)
 	    {
 	      invert_time.start();
-	      qprop_t prop_EM_inv=prop_inv*jprops[im_r].EM[ijack]*prop_inv;
-	      jprop_EM_inv[im_r][ijack]=prop_EM_inv;
+	      qprop_t prop_QED_inv=prop_inv*jprops[im_r].QED[ijack]*prop_inv;
+	      jprop_QED_inv[im_r][ijack]=prop_QED_inv;
 	      invert_time.stop();
 	      
 	      Zq_time.start();
-	      Zq_sig1_EM[im_r_ilinmom][ijack]=-compute_Zq_sig1(prop_EM_inv,mom);
+	      Zq_sig1_QED[im_r_ilinmom][ijack]=-compute_Zq_sig1(prop_QED_inv,mom);
 	      Zq_time.stop();
 	    }
 	}
@@ -268,27 +268,27 @@ void ingredients_t::mom_compute_bil()
 	    
 	    //build all props
 	    build_props_time.start();
-	    build_all_mr_jackkniffed_qprops(jprops1,props1,use_QED,glb::im_r_ind,deltam_cr);
-	    build_all_mr_jackkniffed_qprops(jprops2,props2,use_QED,glb::im_r_ind,deltam_cr);
+	    build_all_mr_jackkniffed_qprops(jprops1,props1,use_QED,im_r_ind);
+	    build_all_mr_jackkniffed_qprops(jprops2,props2,use_QED,im_r_ind);
 	    build_props_time.stop();
 	    
 	    //build all bilinear verts
 	    build_verts_time.start();
-	    build_all_mr_gbil_jackkniffed_verts(jverts,props1,props2,im_r_im_r_igam_ind,im_r_ijack_ind,use_QED,deltam_cr);
+	    build_all_mr_gbil_jackkniffed_verts(jverts,props1,props2,im_r_im_r_igam_ind,im_r_ijack_ind,use_QED);
 	    build_verts_time.stop();
 	  }
       
       //clusterize
       clust_time.start();
-      clusterize_all_mr_jackkniffed_qprops(jprops1,use_QED,clust_size);
-      clusterize_all_mr_jackkniffed_qprops(jprops2,use_QED,clust_size);
-      jverts.clusterize_all(use_QED,clust_size);
+      clusterize_all_mr_jackkniffed_qprops(jprops1,use_QED,clust_size,im_r_ind,deltam_cr);
+      clusterize_all_mr_jackkniffed_qprops(jprops2,use_QED,clust_size,im_r_ind,deltam_cr);
+      jverts.clusterize_all(use_QED,clust_size,im_r_im_r_igam_ind,deltam_cr);
       clust_time.stop();
       
       vector<jqprop_t> jprop_inv1(glb::im_r_ind.max()); //!< inverse propagator1
       vector<jqprop_t> jprop_inv2(glb::im_r_ind.max()); //!< inverse propagator2
-      vector<jqprop_t> jprop_EM_inv1(glb::im_r_ind.max()); //!< inverse propagator1 with em insertion
-      vector<jqprop_t> jprop_EM_inv2(glb::im_r_ind.max()); //!< inverse propagator2 with em insertion
+      vector<jqprop_t> jprop_QED_inv1(glb::im_r_ind.max()); //!< inverse propagator1 with em insertion
+      vector<jqprop_t> jprop_QED_inv2(glb::im_r_ind.max()); //!< inverse propagator2 with em insertion
 #pragma omp parallel for reduction(+:invert_time)
       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
 	{
@@ -308,8 +308,8 @@ void ingredients_t::mom_compute_bil()
 	  if(use_QED)
 	    {
 	      invert_time.start(); //This misses a sign -1 coming from the original inverse
-	      jprop_EM_inv1[im_r][ijack]=prop_inv1*jprops1[im_r].EM[ijack]*prop_inv1;
-	      jprop_EM_inv2[im_r][ijack]=prop_inv2*jprops2[im_r].EM[ijack]*prop_inv2;
+	      jprop_QED_inv1[im_r][ijack]=prop_inv1*jprops1[im_r].QED[ijack]*prop_inv1;
+	      jprop_QED_inv2[im_r][ijack]=prop_inv2*jprops2[im_r].QED[ijack]*prop_inv2;
 	      invert_time.stop();
 	    }
 	}
@@ -321,10 +321,10 @@ void ingredients_t::mom_compute_bil()
       djvec_t pr_bil_QED_temp;
       if(use_QED)
 	{
-	  const djvec_t pr_bil_EM=compute_proj_bil(jprop_inv1,jverts.EM,jprop_inv2,glb::im_r_ind);
-	  const djvec_t pr_bil_a=compute_proj_bil(jprop_EM_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
-	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_EM_inv2,glb::im_r_ind);
-	  pr_bil_QED_temp=-pr_bil_a-pr_bil_b+pr_bil_EM;
+	  const djvec_t pr_bil_QED=compute_proj_bil(jprop_inv1,jverts.QED,jprop_inv2,glb::im_r_ind);
+	  const djvec_t pr_bil_a=compute_proj_bil(jprop_QED_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
+	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_QED_inv2,glb::im_r_ind);
+	  pr_bil_QED_temp=-pr_bil_a-pr_bil_b+pr_bil_QED;
 	}
       
       //! an index running on all packed combo, and momenta
@@ -357,9 +357,9 @@ void ingredients_t::mom_compute_meslep()
       const size_t imom2=bilmoms[ibilmom][2];
       const bool read2=(imom1!=imom2);
       
-      vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max()); //!< jackknived props
-      vector<jm_r_mom_qprops_t> jprops2(glb::im_r_ind.max()); //!< jackknived props
-      jmeslep_vert_t jverts(im_r_im_r_igam_iprojlep_ind.max());  //!< jackknived vertex
+      vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max());    //!< jackknived props
+      vector<jm_r_mom_qprops_t> jprops2(glb::im_r_ind.max());    //!< jackknived props
+      jmeslep_vert_t jverts(im_r_im_r_iop_ipGammaL_ind.max());   //!< jackknived vertex
       
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
@@ -385,20 +385,20 @@ void ingredients_t::mom_compute_meslep()
 	    
 	    //build all props
 	    build_props_time.start();
-	    build_all_mr_jackkniffed_qprops(jprops1,props1,use_QED,glb::im_r_ind,deltam_cr);
-	    build_all_mr_jackkniffed_qprops(jprops2,props2,use_QED,glb::im_r_ind,deltam_cr);
+	    build_all_mr_jackkniffed_qprops(jprops1,props1,use_QED,im_r_ind);
+	    build_all_mr_jackkniffed_qprops(jprops2,props2,use_QED,im_r_ind);
 	    build_props_time.stop();
 	    
 	    //build all verts
 	    build_verts_time.start();
-	    build_all_mr_gmeslep_jackkniffed_verts(jverts,props1,props2,props_lep,im_r_im_r_igam_iprojlep_ind,im_r_ijack_ind);
+	    build_all_mr_gmeslep_jackkniffed_verts(jverts,props1,props2,props_lep,im_r_ijack_ind);
 	    build_verts_time.stop();
 	  }
       
       //clusterize
       clust_time.start();
-      clusterize_all_mr_jackkniffed_qprops(jprops1,use_QED,clust_size);
-      clusterize_all_mr_jackkniffed_qprops(jprops2,use_QED,clust_size);
+      clusterize_all_mr_jackkniffed_qprops(jprops1,use_QED,clust_size,im_r_ind,deltam_cr);
+      clusterize_all_mr_jackkniffed_qprops(jprops2,use_QED,clust_size,im_r_ind,deltam_cr);
       jverts.clusterize_all(clust_size);
       clust_time.stop();
       
@@ -422,7 +422,7 @@ void ingredients_t::mom_compute_meslep()
       proj_time.start();
       const djvec_t pr_meslep1_temp=compute_proj_measlep(jprop_inv1,jverts.ML1,jprop_inv2,im_r_ind);
       const djvec_t pr_meslep2_temp=compute_proj_measlep(jprop_inv1,jverts.ML2,jprop_inv2,im_r_ind);
-      const djvec_t pr_meslep_temp=q1*pr_meslep1_temp+q2*pr_meslep2_temp;
+      const djvec_t pr_meslep_temp=ql*(q1*pr_meslep1_temp+q2*pr_meslep2_temp);
       
       // to be included
       //       //QED
@@ -462,12 +462,12 @@ void ingredients_t::smom()
 
 void ingredients_t::bin_read(raw_file_t &file)
 {
-  for(djvec_t *o: {&Zq,&Zq_sig1,&Zq_sig1_EM,&pr_bil,&pr_bil_QED}) o->bin_read(file);
+  for(djvec_t *o: {&Zq,&Zq_sig1,&Zq_sig1_QED,&pr_bil,&pr_bil_QED}) o->bin_read(file);
 }
 
 void ingredients_t::bin_write(raw_file_t &file) const
 {
-  for(const djvec_t *o: {&Zq,&Zq_sig1,&Zq_sig1_EM,&pr_bil,&pr_bil_QED}) o->bin_write(file);
+  for(const djvec_t *o: {&Zq,&Zq_sig1,&Zq_sig1_QED,&pr_bil,&pr_bil_QED}) o->bin_write(file);
 }
 
 void ingredients_t::set_indices()
@@ -484,7 +484,7 @@ void ingredients_t::allocate()
 {
   Zq.resize(im_r_ilinmom_ind.max());
   Zq_sig1.resize(im_r_ilinmom_ind.max());
-  if(use_QED) Zq_sig1_EM.resize(im_r_ilinmom_ind.max());
+  if(use_QED) Zq_sig1_QED.resize(im_r_ilinmom_ind.max());
   
   pr_bil.resize(im_r_im_r_iZbil_ibilmom_ind.max());
   if(use_QED) pr_bil_QED.resize(im_r_im_r_iZbil_ibilmom_ind.max());
@@ -610,7 +610,7 @@ void ingredients_t::compute_Zbil()
 	if(use_QED)
 	    Zbil_QED[im_r_im_r_iZbil_ibilmom]=
 	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]+
-	      (Zq_sig1_EM[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+Zq_sig1_EM[im_r2_ilinmom2]/
+	      (Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2]/
 	       Zq_sig1[im_r2_ilinmom2])/2.0;
       }
 }
@@ -736,8 +736,8 @@ ingredients_t ingredients_t::subtract_Oa2(const bool recompute_Zbil) const
       out.Zq_sig1[i]=Zq_sig1[ilinmom]-sub;
       if(use_QED)
 	{
-	  double sub_EM=-1.0*/*coupling gets -1 due to definition of expansion*/sig1_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L);
-	  out.Zq_sig1_EM[i]=Zq_sig1_EM[i]-sub_EM*Zq_sig1[i]; //factorization hypotesis
+	  double sub_QED=-1.0*/*coupling gets -1 due to definition of expansion*/sig1_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L);
+	  out.Zq_sig1_QED[i]=Zq_sig1_QED[i]-sub_QED*Zq_sig1[i]; //factorization hypotesis
 	}
     }
   
@@ -784,7 +784,7 @@ ingredients_t ingredients_t::evolve() const
       
       out.Zq[i]=Zq[i]/evolver_Zq;
       out.Zq_sig1[i]=Zq_sig1[ilinmom]/evolver_Zq;
-      if(use_QED) out.Zq_sig1_EM[i]=Zq_sig1_EM[i]/evolver_Zq; //neglecting QED evolution
+      if(use_QED) out.Zq_sig1_QED[i]=Zq_sig1_QED[i]/evolver_Zq; //neglecting QED evolution
     }
   
   //evolve bil

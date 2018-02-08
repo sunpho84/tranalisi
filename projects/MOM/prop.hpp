@@ -115,7 +115,7 @@ class jm_r_mom_qprops_t
   {
     vector<jqprop_t*> out={&LO};
     if(use_QED)
-      for(auto &p : {&EM,&P,&S})
+      for(auto &p : {&PH,&CT,&S,&QED})
 	out.push_back(p);
     return out;
   }
@@ -123,9 +123,10 @@ class jm_r_mom_qprops_t
 public:
   jqprop_t LO; //!< propagator with no photon, given momentum, all m and r
   
-  jqprop_t EM; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
-  jqprop_t P; //!< propagator with Pseudoscalar inserion
-  jqprop_t S; //!< propagator with Scalar insertion
+  jqprop_t PH;  //!< propagator with 2 photons, Tadpole
+  jqprop_t CT;  //!< propagator with Pseudoscalar inserion
+  jqprop_t S;   //!< propagator with Scalar insertion
+  jqprop_t QED; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
   
   //! clusterize the propagators
   void clusterize_all_mr_props(bool use_QED,size_t clust_size)
@@ -137,13 +138,13 @@ public:
 };
 
 //! add the prop of a given conf on the jackknife
-void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props,bool set_QED,const index_t &im_r_ind,const djvec_t &deltam_cr);
+void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props,bool set_QED,const index_t &im_r_ind);
 
 //! compute the inverse of all mr props
 vjqprop_t get_all_mr_qprops_inv(const vjqprop_t &jprop);
 
 //! clusterize all props
-void clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,bool use_QED,size_t clust_size);
+void clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,bool use_QED,size_t clust_size,const index_t &im_r_ind,const djvec_t &deltam_cr);
 
 //! return the propagator at maximal twist
 lprop_t free_prop(const imom_t &pi,double mu,double kappa,size_t r);

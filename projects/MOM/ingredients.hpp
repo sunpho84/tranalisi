@@ -16,7 +16,7 @@
 #endif
 
 EXTERN_INGREDIENTS index_t im_r_im_r_igam_ind;
-EXTERN_INGREDIENTS index_t im_r_im_r_igam_iprojlep_ind;
+EXTERN_INGREDIENTS index_t im_r_im_r_iop_ipGammaL_ind;
 EXTERN_INGREDIENTS index_t r_r_iZbil_ind;
 EXTERN_INGREDIENTS index_t im_r_ijack_ind;
 EXTERN_INGREDIENTS index_t im_r_ijackp1_ind;
@@ -58,10 +58,10 @@ struct ingredients_t
   vector<array<size_t,1>> linmoms; //!< list of momenta used for Z, relative to glb list
   vector<array<size_t,3>> bilmoms; //!< list of momenta used for bilinear, first relative to glb list, then to linmoms
   
-  //Zq, with and without EM
+  //Zq, with and without QED
   djvec_t Zq;
   djvec_t Zq_sig1;
-  djvec_t Zq_sig1_EM;
+  djvec_t Zq_sig1_QED;
   
   //! task to do someting
   struct task_t
@@ -80,11 +80,11 @@ struct ingredients_t
   vector<task_t> get_Zq_tasks(ingredients_t &out) const
   {
     vector<task_t> Zq_tasks={{&Zq,&out.Zq,"Zq"},{&Zq_sig1,&out.Zq_sig1,"Zq_sig1"}};
-    if(use_QED) Zq_tasks.push_back({&Zq_sig1_EM,&out.Zq_sig1_EM,"Zq_sig1_EM"});
+    if(use_QED) Zq_tasks.push_back({&Zq_sig1_QED,&out.Zq_sig1_QED,"Zq_sig1_QED"});
     return Zq_tasks;
   }
   
-  //projected bilinears with and without EM
+  //projected bilinears with and without QED
   djvec_t pr_bil;
   djvec_t pr_bil_QED;
   

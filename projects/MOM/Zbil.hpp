@@ -32,7 +32,7 @@ class jbil_vert_t
   {
     vector<vector<jqprop_t>*> out={&LO};
     if(use_QED)
-      for(auto &p : {&EM,&S})
+      for(auto &p : {&PH,&CT1,&CT2,&S,&QED})
 	out.push_back(p);
     return out;
   }
@@ -40,14 +40,17 @@ class jbil_vert_t
 public:
   vector<jqprop_t> LO; //!< jackkniffed vertex
   
-  vector<jqprop_t> EM; //!< jackkniffed vertex with all em corrs
-  vector<jqprop_t> S; //!< jackkniffed S vertex
+  vector<jqprop_t> PH;  //!< jackkniffed vertex with all photons
+  vector<jqprop_t> CT1; //!< jackkniffed vertex with counterterm on line 1
+  vector<jqprop_t> CT2; //!< jackkniffed vertex with counterterm on line 1
+  vector<jqprop_t> S;   //!< jackkniffed S vertex
+  vector<jqprop_t> QED; //!< full correction
   
   jbil_vert_t(size_t size,bool use_QED)
   {for(auto &p : get_all_ptrs(use_QED)) p->resize(size);}
   
   //! clusterize
-  void clusterize_all(bool use_QED,size_t clust_size)
+  void clusterize_all(bool use_QED,size_t clust_size,const index_t &im_r_im_r_igam_ind,const djvec_t &deltam_cr)
   {
     vector<vector<jqprop_t>*> ps=get_all_ptrs(use_QED);
     index_t ind({{"type",ps.size()},{"icombo",ps[0]->size()}});
@@ -62,6 +65,17 @@ public:
 	
 	(*ps[itype])[icombo].clusterize(clust_size);
       }
+    
+    if(use_QED)
+#pragma omp parallel for
+      for(size_t i=0;i<im_r_im_r_igam_ind.max();i++)
+	{
+	  const vector<size_t> comps=im_r_im_r_igam_ind(i);
+	  const size_t im1=comps[0],im2=comps[2];
+	  for(size_t ijack=0;ijack<=njacks;ijack++)
+	    QED[i][ijack]=
+	      PH[i][ijack]-deltam_cr[im1][ijack]*CT1[i][ijack]-deltam_cr[im2][ijack]*CT2[i][ijack];
+	}
   }
 };
 
@@ -70,7 +84,7 @@ djvec_t compute_proj_bil(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jve
 
 //! compute all vertices for a certain conf
 void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
-					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED,const djvec_t &deltam_cr);
+					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED);
 
 #undef EXTERN_ZBIL
 #undef INIT_TO

@@ -14,13 +14,13 @@
 
 #include <prop.hpp>
 
-void build_jackkniffed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,size_t iG,const qprop_t &prop2,double w,size_t ijack)
+void build_jackkniffed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,size_t iG,const qprop_t &prop2,size_t ijack)
 {
-  jvert[ijack]+=w*prop1*quaGamma[iG]*quaGamma[5]*prop2.adjoint()*quaGamma[5];
+  jvert[ijack]+=prop1*quaGamma[iG]*quaGamma[5]*prop2.adjoint()*quaGamma[5];
 }
 
 void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
-					const index_t &im_r_im_r_igam_ind,const index_t &im_r_iclust_ind,bool use_QED,const djvec_t &deltam_cr)
+					const index_t &im_r_im_r_igam_ind,const index_t &im_r_iclust_ind,bool use_QED)
 {
   //! help finding the bilinear/clust combo
   index_t ind({{"i",im_r_im_r_igam_ind.max()},{"iclust",njacks}});
@@ -43,23 +43,23 @@ void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_
       const m_r_mom_conf_qprops_t &p2=props2[im_r_iclust_ind({im_bw,r_bw,iclust})];
       
       //create list of operations
-      vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*,double>> list={{&jbil.LO[im_r_im_r_igam],&p1.LO,&p2.LO,1.0}};
+      vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>> list={{&jbil.LO[im_r_im_r_igam],&p1.LO,&p2.LO}};
       if(use_QED)
-	for(auto &o : vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*,double>>({
-	      {&jbil.EM[im_r_im_r_igam],&p1.F,&p2.F,1.0},
-	      {&jbil.EM[im_r_im_r_igam],&p1.FF,&p2.LO,1.0},
-	      {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.FF,1.0},
-	      {&jbil.EM[im_r_im_r_igam],&p1.T,&p2.LO,1.0},
-	      {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.T,1.0},
-	      {&jbil.EM[im_r_im_r_igam],&p1.P,&p2.LO,-deltam_cr[im_fw][iclust]},
-	      {&jbil.EM[im_r_im_r_igam],&p1.LO,&p2.P,-deltam_cr[im_bw][iclust]},
-	      {&jbil.S[im_r_im_r_igam],&p1.S,&p2.LO,1.0},
-	      {&jbil.S[im_r_im_r_igam],&p1.LO,&p2.S,1.0}}))
+	for(auto &o : vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>>({
+	      {&jbil.PH[im_r_im_r_igam],&p1.F,&p2.F},
+	      {&jbil.PH[im_r_im_r_igam],&p1.FF,&p2.LO},
+	      {&jbil.PH[im_r_im_r_igam],&p1.LO,&p2.FF},
+	      {&jbil.PH[im_r_im_r_igam],&p1.T,&p2.LO},
+	      {&jbil.PH[im_r_im_r_igam],&p1.LO,&p2.T},
+	      {&jbil.CT1[im_r_im_r_igam],&p1.P,&p2.LO},
+	      {&jbil.CT2[im_r_im_r_igam],&p1.LO,&p2.P},
+	      {&jbil.S[im_r_im_r_igam],&p1.S,&p2.LO},
+	      {&jbil.S[im_r_im_r_igam],&p1.LO,&p2.S}}))
 	  list.push_back(o);
       
       //create the vertex
       for(auto &o : list)
-	build_jackkniffed_vert_Gamma(*get<0>(o),*get<1>(o),iG,*get<2>(o),get<3>(o),iclust);
+	build_jackkniffed_vert_Gamma(*get<0>(o),*get<1>(o),iG,*get<2>(o),iclust);
     }
 }
 
