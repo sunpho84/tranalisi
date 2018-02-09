@@ -593,7 +593,7 @@ ingredients_t ingredients_t::average_r(const bool recompute_Zbil) const
   
   if(compute_meslep)
     CRASH("Not yet implemented");
-
+  
   return out;
 }
 
@@ -949,6 +949,26 @@ void ingredients_t::plot_Z(const string &suffix) const
 	}
     }
   
+  //meslep
   if(compute_meslep)
-    CRASH("Not yet implemented");
+    for(size_t iop=0;iop<nZbil;iop++)
+      for(size_t iproj=0;iproj<nZbil;iproj++)
+  	{
+	  grace_file_t out("plots/Zmeslep_"+to_string(iop)+"_"+to_string(iproj)+(suffix!=""?("_"+suffix):string(""))+".xmg");
+	  
+	  //write mass by mass, only half of the combos
+  	  for(size_t im1=0;im1<_nm;im1++)
+	    for(size_t im2=im1;im2<_nm;im2++)
+	      for(size_t r=0;r<_nr;r++)
+		{
+		  out.new_data_set();
+		  
+		  for(size_t imom=0;imom<linmoms.size();imom++)
+		    {
+		      const double p2hat=all_moms[meslepmoms[imom][0]].p(L).tilde().norm2();
+		      out.write_ave_err(p2hat,pr_meslep[im_r_im_r_iop_iproj_imeslepmom_ind({im1,r,im2,r,iop,iproj,imom})].ave_err());
+		    }
+		  out.new_data_set();
+		}
+	}
 }
