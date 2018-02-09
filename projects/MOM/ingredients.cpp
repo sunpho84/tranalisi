@@ -475,6 +475,7 @@ void ingredients_t::set_indices()
   im_r_ilinmom_ind.set_ranges({{"m",_nm},{"r",_nr},{"linmom",linmoms.size()}});
   iZbil_ibilmom_ind.set_ranges({{"iZbil",nZbil},{"bilmom",bilmoms.size()}});
   im_r_im_r_iZbil_ibilmom_ind=im_r_im_r_iZbil_ind*index_t({{"bilmom",bilmoms.size()}});
+  
   im_r_im_r_iop_ipGammaL_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"ipGammaL",nGamma}});
   im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"iproj",nZbil}});
   im_r_im_r_iop_iproj_imeslepmom_ind=im_r_im_r_iop_iproj_ind*index_t({{"imeslepmom",meslepmoms.size()}});
@@ -944,7 +945,6 @@ void ingredients_t::plot_Z(const string &suffix) const
 		      const double p2hat=all_moms[bilmoms[imom][0]].p(L).tilde().norm2();
 		      out.write_ave_err(p2hat,Z[im_r_im_r_iZbil_ibilmom_ind({im1,r,im2,r,iZbil,imom})].ave_err());
 		    }
-		  out.new_data_set();
 		}
 	}
     }
@@ -966,9 +966,10 @@ void ingredients_t::plot_Z(const string &suffix) const
 		  for(size_t imom=0;imom<linmoms.size();imom++)
 		    {
 		      const double p2hat=all_moms[meslepmoms[imom][0]].p(L).tilde().norm2();
-		      out.write_ave_err(p2hat,pr_meslep[im_r_im_r_iop_iproj_imeslepmom_ind({im1,r,im2,r,iop,iproj,imom})].ave_err());
+		      size_t i=im_r_im_r_iop_iproj_imeslepmom_ind({im1,r,im2,r,iop,iproj,imom});
+		      cout<<i<<endl;
+		      out.write_ave_err(p2hat,pr_meslep[i].ave_err());
 		    }
-		  out.new_data_set();
 		}
 	}
 }
