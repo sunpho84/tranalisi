@@ -219,7 +219,7 @@ vector<mom_conf_lprops_t> read_all_lprops_mom(vector<raw_file_t> &files,const si
   const size_t i_in_clust=i_in_clust_ihit_comp[0],ihit=i_in_clust_ihit_comp[1];
   
   //! index of all that must be read
-  const index_t ijack_ikind_ind=index_t({{"ijack",njacks},{"ikind",m_r_mom_conf_qprops_t::nprop_kind()}});
+  const index_t ijack_ikind_ind=index_t({{"ijack",njacks},{"ikind",mom_conf_lprops_t::nprop_kind()}});
 #pragma omp parallel for
   for(size_t ijack_ikind=0;ijack_ikind<ijack_ikind_ind.max();ijack_ikind++)
     {
