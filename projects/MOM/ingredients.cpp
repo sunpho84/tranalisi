@@ -174,7 +174,7 @@ void ingredients_t::mom_compute_qprop()
 	  {
 	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
 	    const size_t mom=linmoms[ilinmom][0];
-	    cout<<"Working on "
+	    cout<<"Working on qprop, "
 	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
 	      "hit "<<ihit+1<<"/"<<nhits<<", "
 	      "momentum "<<ilinmom+1<<"/"<<linmoms.size()<<", "
@@ -254,7 +254,7 @@ void ingredients_t::mom_compute_bil()
 	    const size_t mom1=linmoms[imom1][0];
 	    const size_t mom2=linmoms[imom2][0];
 	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
-	    cout<<"Working on "
+	    cout<<"Working on qbil, "
 	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
 	      "hit "<<ihit+1<<"/"<<nhits<<", "
 	      "momentum combo "<<ibilmom+1<<"/"<<bilmoms.size()<<", "
@@ -370,7 +370,7 @@ void ingredients_t::mom_compute_meslep()
 	    if(scheme==reno_scheme::SMOM) CRASH("this will not work for SMOM");
 	    
 	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
-	    cout<<"Working on "
+	    cout<<"Working on meslep, "
 	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
 	      "hit "<<ihit+1<<"/"<<nhits<<", "
 	      "momentum combo "<<ibilmom+1<<"/"<<bilmoms.size()<<", "
