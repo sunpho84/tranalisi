@@ -41,6 +41,10 @@ EXTERN_READ size_t tmax;
 EXTERN_READ double ainv;
 //! conf range
 EXTERN_READ range_t conf_range;
+//! hadron path
+EXTERN_READ string prop_hadr_path;
+//! lepton path
+EXTERN_READ string prop_lep_path;
 //! number of flavour
 EXTERN_READ ev::Nf_t Nf;
 //! order of alpha to use

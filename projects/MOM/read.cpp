@@ -45,6 +45,9 @@ void read_input(const string &input_path)
   conf_range.each=input.read<size_t>();
   conf_range.end=input.read<size_t>();
   
+  prop_hadr_path=input.read<string>("PropHadrPath");
+  prop_lep_path=input.read<string>("PropLepPath");
+  
   nhits=input.read<size_t>("NHits");
   nhits_to_use=input.read<size_t>("NHitsToUse");
   
@@ -133,7 +136,7 @@ vector<raw_file_t> setup_read_all_qprops_mom(const vector<size_t> &conf_list)
       const size_t iconf=comps[2];
       const size_t ihit=comps[3];
       const size_t ikind=comps[4];
-      const string path_base=combine("out/%04zu/fft_",conf_list[iconf]);
+      const string path_base=combine("%s/%04zu/fft_",prop_hadr_path.c_str(),conf_list[iconf]);
       const string path_suff=combine(suff_hit.c_str(),ihit);
       
       files[i].open(path_base+get_qprop_tag(im,r,ikind)+path_suff,"r");
@@ -156,7 +159,7 @@ vector<raw_file_t> setup_read_all_lprops_mom(const vector<size_t> &conf_list)
       const size_t iconf=comps[0];
       const size_t ihit=comps[1];
       const size_t ikind=comps[2];
-      const string path_base=combine("out/%04zu/fft_",conf_list[iconf]);
+      const string path_base=combine("%s/%04zu/fft_",prop_lep_path.c_str(),conf_list[iconf]);
       const string path_suff=combine(suff_hit.c_str(),ihit);
       
       files[i].open(path_base+get_lprop_tag(ikind)+path_suff,"r");
