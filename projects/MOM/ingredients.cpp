@@ -449,6 +449,7 @@ void ingredients_t::ri_mom()
 {
   mom_compute_qprop();
   mom_compute_bil();
+  if(compute_meslep) mom_compute_meslep();
 }
 
 void ingredients_t::smom()
@@ -589,6 +590,9 @@ ingredients_t ingredients_t::average_r(const bool recompute_Zbil) const
   if(recompute_Zbil)
     out.compute_Zbil();
   
+  if(compute_meslep)
+    CRASH("Not yet implemented");
+
   return out;
 }
 
@@ -721,6 +725,9 @@ ingredients_t ingredients_t::chir_extrap() const
   
   out.compute_Zbil();
   
+  if(compute_meslep)
+    CRASH("Not yet implemented");
+
   return out;
 }
 
@@ -767,6 +774,9 @@ ingredients_t ingredients_t::subtract_Oa2(const bool recompute_Zbil) const
   if(recompute_Zbil)
     out.compute_Zbil();
   
+  if(compute_meslep)
+    CRASH("Not yet implemented");
+
   return out;
 }
 
@@ -808,6 +818,9 @@ ingredients_t ingredients_t::evolve() const
       if(use_QED) out.Zbil[i]=Zbil[i]/evolver_Zbil;
     }
    
+  if(compute_meslep)
+    CRASH("Not yet implemented");
+
   return out;
 }
 
@@ -877,6 +890,9 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   if(recompute_Zbil)
     out.compute_Zbil();
   
+  if(compute_meslep)
+    CRASH("Not yet implemented");
+  
   return out;
 }
 
@@ -931,4 +947,7 @@ void ingredients_t::plot_Z(const string &suffix) const
 		}
 	}
     }
+  
+  if(compute_meslep)
+    CRASH("Not yet implemented");
 }
