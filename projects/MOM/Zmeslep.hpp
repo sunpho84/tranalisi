@@ -1,6 +1,12 @@
 #ifndef _ZMESLEP_HPP
 #define _ZMESLEP_HPP
 
+#ifndef EXTERN_MESLEP
+ #define EXTERN_MESLEP extern
+#endif
+
+EXTERN_MESLEP bool compute_meslep;
+
 #include <Dirac.hpp>
 
 #include <prop.hpp>
@@ -47,5 +53,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 					   const index_t &im_r_iclust_ind);
 
 djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv2,const index_t &im_r_ind);
+
+#undef EXTERN_MESLEP
 
 #endif

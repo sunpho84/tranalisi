@@ -17,6 +17,7 @@
 
 EXTERN_INGREDIENTS index_t im_r_im_r_igam_ind;
 EXTERN_INGREDIENTS index_t im_r_im_r_iop_ipGammaL_ind;
+EXTERN_INGREDIENTS index_t im_r_im_r_iop_iproj_ind;
 EXTERN_INGREDIENTS index_t r_r_iZbil_ind;
 EXTERN_INGREDIENTS index_t im_r_ijack_ind;
 EXTERN_INGREDIENTS index_t im_r_ijackp1_ind;
@@ -121,6 +122,12 @@ struct ingredients_t
   
   //! compute all mom-scheme vertices
   void mom_compute_bil();
+  
+  //! projected meslep
+  djvec_t pr_meslep;
+  
+  //! renormalization meslep
+  djvec_t Zmeslep;
   
   //! compute all mom-scheme mesoleptonic vertices
   void mom_compute_meslep();

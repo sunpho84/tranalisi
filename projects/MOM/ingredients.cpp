@@ -423,6 +423,7 @@ void ingredients_t::mom_compute_meslep()
       const djvec_t pr_meslep1_temp=compute_proj_measlep(jprop_inv1,jverts.ML1,jprop_inv2,im_r_ind);
       const djvec_t pr_meslep2_temp=compute_proj_measlep(jprop_inv1,jverts.ML2,jprop_inv2,im_r_ind);
       const djvec_t pr_meslep_temp=ql*(q1*pr_meslep1_temp+q2*pr_meslep2_temp);
+      proj_time.stop();
       
       // to be included
       //       //QED
@@ -436,16 +437,11 @@ void ingredients_t::mom_compute_meslep()
 // 	}
       
       //! an index running on all packed combo, and momenta
-      //const index_t all_imeslepmom_ind({{"All",im_r_im_r_iop_iprojlep_ind.max()},{"bilmom",bilmoms.size()}});
+      const index_t all_imeslepmom_ind({{"All",im_r_im_r_iop_iproj_ind.max()},{"bilmom",bilmoms.size()}});
       
-//       //store
-//       vector<pair<djvec_t*,djvec_t*>> store_task={{&pr_bil,&pr_bil_temp}};
-//       if(use_QED) store_task.push_back({&pr_bil_QED,&pr_bil_QED_temp});
-//       for(auto &t : store_task)
-// 	for(size_t iall=0;iall<im_r_im_r_iZbil_ind.max();iall++)
-// 	  (*t.first)[all_ibilmom_ind({iall,ibilmom})]=(*t.second)[iall];
-      
-//       proj_time.stop();
+      //store
+      for(size_t iall=0;iall<im_r_im_r_iop_iproj_ind.max();iall++)
+	pr_meslep[all_imeslepmom_ind({iall,ibilmom})]=pr_meslep_temp[iall];
     }
 }
 
@@ -462,12 +458,12 @@ void ingredients_t::smom()
 
 void ingredients_t::bin_read(raw_file_t &file)
 {
-  for(djvec_t *o: {&Zq,&Zq_sig1,&Zq_sig1_QED,&pr_bil,&pr_bil_QED}) o->bin_read(file);
+  for(djvec_t *o: {&Zq,&Zq_sig1,&Zq_sig1_QED,&pr_bil,&pr_bil_QED,&pr_meslep}) o->bin_read(file);
 }
 
 void ingredients_t::bin_write(raw_file_t &file) const
 {
-  for(const djvec_t *o: {&Zq,&Zq_sig1,&Zq_sig1_QED,&pr_bil,&pr_bil_QED}) o->bin_write(file);
+  for(const djvec_t *o: {&Zq,&Zq_sig1,&Zq_sig1_QED,&pr_bil,&pr_bil_QED,&pr_meslep}) o->bin_write(file);
 }
 
 void ingredients_t::set_indices()
@@ -478,6 +474,8 @@ void ingredients_t::set_indices()
   im_r_ilinmom_ind.set_ranges({{"m",_nm},{"r",_nr},{"linmom",linmoms.size()}});
   iZbil_ibilmom_ind.set_ranges({{"iZbil",nZbil},{"bilmom",bilmoms.size()}});
   im_r_im_r_iZbil_ibilmom_ind=im_r_im_r_iZbil_ind*index_t({{"bilmom",bilmoms.size()}});
+  im_r_im_r_iop_ipGammaL_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"ipGammaL",nGamma}});
+  im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"iproj",nZbil}});
 }
 
 void ingredients_t::allocate()
@@ -491,6 +489,12 @@ void ingredients_t::allocate()
   
   Zbil.resize(im_r_im_r_iZbil_ibilmom_ind.max());
   if(use_QED) Zbil_QED.resize(im_r_im_r_iZbil_ibilmom_ind.max());
+  
+  if(compute_meslep)
+    {
+      pr_meslep.resize(im_r_im_r_iop_iproj_ind.max());
+      Zmeslep.resize(im_r_im_r_iop_iproj_ind.max());
+    }
 }
 
 void ingredients_t::create_from_scratch(const string ingredients_path)

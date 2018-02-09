@@ -11,6 +11,7 @@
 #include <evolutions.hpp>
 #include <ingredients.hpp>
 #include <prop.hpp>
+#include <Zmeslep.hpp>
 
 void read_input(const string &input_path)
 {
@@ -51,6 +52,7 @@ void read_input(const string &input_path)
   tmax=input.read<size_t>("Tmax");
   
   use_QED=input.read<bool>("UseQED");
+  compute_meslep=input.read<bool>("ComputeMesLep");
   print_each_mom=input.read<int>("PrintEachMom");
   
   ainv=input.read<double>("aInv");
