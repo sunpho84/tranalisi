@@ -477,6 +477,7 @@ void ingredients_t::set_indices()
   im_r_im_r_iZbil_ibilmom_ind=im_r_im_r_iZbil_ind*index_t({{"bilmom",bilmoms.size()}});
   im_r_im_r_iop_ipGammaL_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"ipGammaL",nGamma}});
   im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"iproj",nZbil}});
+  im_r_im_r_iop_iproj_imeslepmom_ind=im_r_im_r_iop_iproj_ind*index_t({{"imeslepmom",meslepmoms.size()}});
 }
 
 void ingredients_t::allocate()
@@ -493,8 +494,8 @@ void ingredients_t::allocate()
   
   if(compute_meslep)
     {
-      pr_meslep.resize(im_r_im_r_iop_iproj_ind.max());
-      Zmeslep.resize(im_r_im_r_iop_iproj_ind.max());
+      pr_meslep.resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
+      Zmeslep.resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
     }
 }
 

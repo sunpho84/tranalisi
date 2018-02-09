@@ -16,8 +16,8 @@
 #endif
 
 EXTERN_INGREDIENTS index_t im_r_im_r_igam_ind;
-EXTERN_INGREDIENTS index_t im_r_im_r_iop_ipGammaL_ind;
-EXTERN_INGREDIENTS index_t im_r_im_r_iop_iproj_ind;
+EXTERN_INGREDIENTS index_t im_r_im_r_iop_ipGammaL_ind; //mesolep
+EXTERN_INGREDIENTS index_t im_r_im_r_iop_iproj_ind;    //mesolep
 EXTERN_INGREDIENTS index_t r_r_iZbil_ind;
 EXTERN_INGREDIENTS index_t im_r_ijack_ind;
 EXTERN_INGREDIENTS index_t im_r_ijackp1_ind;
@@ -58,6 +58,7 @@ struct ingredients_t
   
   vector<array<size_t,1>> linmoms; //!< list of momenta used for Z, relative to glb list
   vector<array<size_t,3>> bilmoms; //!< list of momenta used for bilinear, first relative to glb list, then to linmoms
+  vector<array<size_t,3>> &meslepmoms=bilmoms; //!< list of momenta used for meslep
   
   //Zq, with and without QED
   djvec_t Zq;
@@ -117,6 +118,8 @@ struct ingredients_t
   index_t im_r_im_r_iZbil_ind;
   index_t im_r_im_r_iZbil_ibilmom_ind;
   
+  index_t im_r_im_r_iop_iproj_imeslepmom_ind;
+
   //! compute all mom-scheme propagator
   void mom_compute_qprop();
   
