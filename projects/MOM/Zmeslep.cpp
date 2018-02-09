@@ -91,16 +91,13 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
 {
   using namespace meslep;
   
-  const size_t nm=im_r_ind.max(0),nr=im_r_ind.max(1);
-  const index_t im_r_im_r_iop_ipGammaL_ind({{"im",nm},{"r",nr},{"im",nm},{"r",nr},{"iop",nZbil},{"ipGammaL",nGamma}});
-  //const index_t im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"iproj",nZbil}});
-  const index_t ind({{"rest",im_r_im_r_iop_ipGammaL_ind.max()},{"ijack",njacks+1}});
+  const index_t ind({{"rest",im_r_im_r_iop_iproj_ind.max()},{"ijack",njacks+1}});
   
   //Each operator on the quark side needs to incorporate the structure G(1+-g5)
   // whereas jverts incorporates only G
   //We decompose it in the 1 and g5 parts, putting the sign explicitly
   const vector<vector<size_t>> &ipGammaL_of_iproj=iGq_of_iop; // here instead 1-g5 was already included at lepton projection
-  djvec_t pr(im_r_im_r_iop_ipGammaL_ind.max());
+  djvec_t pr(im_r_im_r_iop_iproj_ind.max());
   
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
@@ -108,7 +105,7 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
       //split im_r_im_r_iop_iproj and ijack
       vector<size_t> comps=ind(i);
       const size_t im_r_im_r_iop_iproj=comps[0],ijack=comps[1];
-      const vector<size_t> im_r_im_r_iop_iproj_comps=im_r_im_r_iop_ipGammaL_ind(im_r_im_r_iop_iproj);
+      const vector<size_t> im_r_im_r_iop_iproj_comps=im_r_im_r_iop_iproj_ind(im_r_im_r_iop_iproj);
       
       //get im and r for fw and back, and iop and iproj
       const size_t im_fw=im_r_im_r_iop_iproj_comps[0],r_fw=im_r_im_r_iop_iproj_comps[1];
