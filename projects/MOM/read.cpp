@@ -91,7 +91,7 @@ void prepare_list_of_confs()
   using namespace glb;
   
   //create the list of all confs available
-  string test_path="out/%04zu/fft_S_M0_R0_0";
+  string test_path=prop_hadr_path+"/%04zu/fft_S_M0_R0_0";
   if(nhits>1) test_path+="_hit_0";
   conf_list=get_existing_paths_in_range(test_path,conf_range);
   if(conf_list.size()==0) CRASH("list of configurations is empty! check %s ",test_path.c_str());
