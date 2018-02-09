@@ -8,6 +8,7 @@
 
 #include <contractions.hpp>
 #include <geometry.hpp>
+#include <read.hpp>
 
 const int ODD=-1,EVN=1;
 
@@ -18,7 +19,7 @@ djvec_t get_contraction(const string &combo,const string &ID,vector<size_t> &con
   const vector<string> cID={"V0P5","P5P5"};
   
   const size_t ncols=2;
-  const string templ="out/%04zu/mes_contr_"+combo;
+  const string templ=prop_hadr_path+"/%04zu/mes_contr_"+combo;
   const djvec_t data=read_conf_set_t(templ,conf_list,ncols,{0,1},T,SILENT);
   if(data.size()==0)
     {
