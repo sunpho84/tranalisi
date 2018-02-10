@@ -16,11 +16,12 @@
 #endif
 
 EXTERN_INGREDIENTS index_t im_r_im_r_igam_ind;
-EXTERN_INGREDIENTS index_t im_r_im_r_iop_ipGammaL_ind; //mesolep
-EXTERN_INGREDIENTS index_t im_r_im_r_iop_iproj_ind;    //mesolep
 EXTERN_INGREDIENTS index_t r_r_iZbil_ind;
 EXTERN_INGREDIENTS index_t im_r_ijack_ind;
 EXTERN_INGREDIENTS index_t im_r_ijackp1_ind;
+EXTERN_INGREDIENTS index_t iGl_ipGl_iclust_ind;    //meslep
+EXTERN_INGREDIENTS index_t iop_ipGl_iclust_ind;    //meslep
+EXTERN_INGREDIENTS index_t iop_iproj_iclust_ind;   //meslep
 
 //! kind of scheme supported
 namespace reno_scheme
@@ -119,7 +120,7 @@ struct ingredients_t
   index_t im_r_im_r_iZbil_ibilmom_ind;
   
   index_t im_r_im_r_iop_iproj_imeslepmom_ind;
-
+  
   //! compute all mom-scheme propagator
   void mom_compute_qprop();
   
@@ -131,6 +132,10 @@ struct ingredients_t
   
   //! renormalization meslep
   djvec_t Zmeslep;
+  
+  index_t im_r_im_r_iGl_ipGl_ind;
+  index_t im_r_im_r_iop_ipGl_ind;
+  index_t im_r_im_r_iop_iproj_ind;
   
   //! compute all mom-scheme mesoleptonic vertices
   void mom_compute_meslep();

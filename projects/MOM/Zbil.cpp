@@ -20,7 +20,7 @@ void build_jackkniffed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,size_t iG
 }
 
 void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
-					const index_t &im_r_im_r_igam_ind,const index_t &im_r_iclust_ind,bool use_QED)
+					 const index_t &im_r_im_r_igam_ind,const index_t &im_r_iclust_ind,bool use_QED)
 {
   //! help finding the bilinear/clust combo
   index_t ind({{"i",im_r_im_r_igam_ind.max()},{"iclust",njacks}});

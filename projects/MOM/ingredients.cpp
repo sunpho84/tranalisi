@@ -359,7 +359,7 @@ void ingredients_t::mom_compute_meslep()
       
       vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max());    //!< jackknived props
       vector<jm_r_mom_qprops_t> jprops2(glb::im_r_ind.max());    //!< jackknived props
-      jmeslep_vert_t jverts(im_r_im_r_iop_ipGammaL_ind.max());   //!< jackknived vertex
+      jmeslep_vert_t jverts(im_r_im_r_iop_ipGl_ind.max());   //!< jackknived vertex
       
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
@@ -391,7 +391,7 @@ void ingredients_t::mom_compute_meslep()
 	    
 	    //build all verts
 	    build_verts_time.start();
-	    build_all_mr_gmeslep_jackkniffed_verts(jverts,props1,props2,props_lep,im_r_ijack_ind);
+	    build_all_mr_gmeslep_jackkniffed_verts(jverts,props1,props2,props_lep,im_r_ind);
 	    build_verts_time.stop();
 	  }
       
@@ -476,9 +476,12 @@ void ingredients_t::set_indices()
   iZbil_ibilmom_ind.set_ranges({{"iZbil",nZbil},{"bilmom",bilmoms.size()}});
   im_r_im_r_iZbil_ibilmom_ind=im_r_im_r_iZbil_ind*index_t({{"bilmom",bilmoms.size()}});
   
-  im_r_im_r_iop_ipGammaL_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"ipGammaL",nGamma}});
+  im_r_im_r_iop_ipGl_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"ipGl",nGamma}});
   im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"iproj",nZbil}});
   im_r_im_r_iop_iproj_imeslepmom_ind=im_r_im_r_iop_iproj_ind*index_t({{"imeslepmom",meslepmoms.size()}});
+  iGl_ipGl_iclust_ind.set_ranges({{"iGamma",nGamma},{"ipGl",nGamma},{"iclust",njacks}});
+  iop_ipGl_iclust_ind.set_ranges({{"iop",nZbil},{"ipGl",nGamma},{"iclust",njacks}});
+  iop_iproj_iclust_ind.set_ranges({{"iop",nZbil},{"iproj",nZbil},{"iclust",njacks}});
 }
 
 void ingredients_t::allocate()
@@ -674,54 +677,54 @@ ingredients_t ingredients_t::chir_extrap() const
   //extrapolate to chiral limit bil
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     for(auto &t : get_pr_bil_tasks(out))
-	for(size_t iZbil=0;iZbil<nZbil;iZbil++)
-	  {
-	    const djvec_t &pr=*t.in;
-	    djvec_t &pr_chir=*t.out;
-	    const string &tag=t.tag;
-	    
-	    //check if we need to subtract the pole
-	    const bool sub_pole=(iZbil==iZS or iZbil==iZP);
-	    const size_t coeff_to_take=(sub_pole?1:0);
-	    
-	    //open the plot file if needed
-	    const string plot_path="plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_bilmom_"+to_string(ibilmom)+".xmg";
-	    grace_file_t *plot=nullptr;
-	    if(ibilmom%print_each_mom==0) plot=new grace_file_t(plot_path);
-	    
-	    for(size_t r1=0;r1<_nr;r1++)
-	      for(size_t r2=0;r2<_nr;r2++)
-		{
-		  //slice m and fit it
-		  djvec_t y(_nm*(_nm+1)/2),y_plot(_nm*(_nm+1)/2);
-		  vector<double> x(_nm*(_nm+1)/2);
-		  int i=0;
-		  for(size_t im1=0;im1<_nm;im1++)
-		    for(size_t im2=im1;im2<_nm;im2++)
-		      {
-			//compute mass sum
-			x[i]=_am[im1]+_am[im2];
-			//compute y and y_plot
-			y_plot[i]=pr[im_r_im_r_iZbil_ibilmom_ind({im1,r1,im2,r2,iZbil,ibilmom})];
-			//fit x*y if pole present
-			if(sub_pole) y[i]=x[i]*y_plot[i];
-			else         y[i]=y_plot[i];
-			//increment the number of mass combos
-			i++;
-		      }
-		  
-		  //fit, store and write the result
-		  const djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min,2.0*am_max);
-		  const size_t iout=out.im_r_im_r_iZbil_ibilmom_ind({0,r1,0,r2,iZbil,ibilmom});
-		  pr_chir[iout]=coeffs[coeff_to_take];
-		  if(plot!=nullptr)
+      for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+	{
+	  const djvec_t &pr=*t.in;
+	  djvec_t &pr_chir=*t.out;
+	  const string &tag=t.tag;
+	  
+	  //check if we need to subtract the pole
+	  const bool sub_pole=(iZbil==iZS or iZbil==iZP);
+	  const size_t coeff_to_take=(sub_pole?1:0);
+	  
+	  //open the plot file if needed
+	  const string plot_path="plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_bilmom_"+to_string(ibilmom)+".xmg";
+	  grace_file_t *plot=nullptr;
+	  if(ibilmom%print_each_mom==0) plot=new grace_file_t(plot_path);
+	  
+	  for(size_t r1=0;r1<_nr;r1++)
+	    for(size_t r2=0;r2<_nr;r2++)
+	      {
+		//slice m and fit it
+		djvec_t y(_nm*(_nm+1)/2),y_plot(_nm*(_nm+1)/2);
+		vector<double> x(_nm*(_nm+1)/2);
+		int i=0;
+		for(size_t im1=0;im1<_nm;im1++)
+		  for(size_t im2=im1;im2<_nm;im2++)
 		    {
-		      write_fit_plot(*plot,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
-		      plot->write_ave_err(0.0,pr_chir[iout].ave_err());
+		      //compute mass sum
+		      x[i]=_am[im1]+_am[im2];
+		      //compute y and y_plot
+		      y_plot[i]=pr[im_r_im_r_iZbil_ibilmom_ind({im1,r1,im2,r2,iZbil,ibilmom})];
+		      //fit x*y if pole present
+		      if(sub_pole) y[i]=x[i]*y_plot[i];
+		      else         y[i]=y_plot[i];
+		      //increment the number of mass combos
+		      i++;
 		    }
-		}
-	    if(plot) delete plot;
-	  }
+		
+		//fit, store and write the result
+		const djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min,2.0*am_max);
+		const size_t iout=out.im_r_im_r_iZbil_ibilmom_ind({0,r1,0,r2,iZbil,ibilmom});
+		pr_chir[iout]=coeffs[coeff_to_take];
+		if(plot!=nullptr)
+		  {
+		    write_fit_plot(*plot,2*am_min,2*am_max,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		    plot->write_ave_err(0.0,pr_chir[iout].ave_err());
+		  }
+	      }
+	  if(plot) delete plot;
+	}
   
   /////////////////////////////////////////////
   
