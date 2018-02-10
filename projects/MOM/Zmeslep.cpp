@@ -153,7 +153,7 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
 	  
 	  const qprop_t amp_vert=prop_inv1*vert*quaGamma[5]*prop_inv2.adjoint()*quaGamma[5]; //here the normalization is imposed (hopefully)
 	  //projecting on quark side
-	  out+=(amp_vert*quaGamma[iGq]*(quaGamma[0]+g5_sign_of_iop[iop]*quaGamma[5]).adjoint()).trace().real()/(12.0*sqr(iGq_of_iop[iop].size()));
+	  out+=(amp_vert*(quaGamma[iGq]*(quaGamma[0]+g5_sign_of_iop[iop]*quaGamma[5])).adjoint()).trace().real()/(12.0*sqr(iGq_of_iop[iop].size()));
 	}
     }
   
