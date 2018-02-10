@@ -101,8 +101,6 @@ void prepare_list_of_confs()
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
   im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
-  im_r_im_r_iGammaL_ipGammaL_ind.set_ranges({{"m",nm},{"r",nr},{"m",nm},{"r",nr},{"GammaL",nGamma},{"pGammaL",nGamma}});
-  im_r_im_r_iop_ipGammaL_ind.set_ranges({{"m",nm},{"r",nr},{"m",nm},{"r",nr},{"op",nZbil},{"pGammaL",nGamma}});
   r_r_iZbil_ind.set_ranges({{"r",nr},{"r",nr},{"Zbil",nZbil}});
   im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});

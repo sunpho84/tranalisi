@@ -94,7 +94,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	   using namespace meslep;
 	   
 	   jqprop_t &out=(*get<0>(o))[im_r_im_r_iop_ipGl];
-	   out=0.0;
+	   for(auto &o : out) o.Zero();
 	   
 	   for(auto &iGl : iGl_of_iop[iop])
 	     {
