@@ -138,10 +138,6 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
       const size_t im_bw=im_r_im_r_iop_iproj_comps[2],r_bw=im_r_im_r_iop_iproj_comps[3];
       const size_t iop=im_r_im_r_iop_iproj_comps[4],iproj=im_r_im_r_iop_iproj_comps[5];
       
-      //loop on all operators
-      double &out=pr[im_r_im_r_iop_iproj][ijack];
-      out=0.0;
-      
       vector<size_t> im_r_im_r_iop_ipGl_comps=im_r_im_r_iop_iproj_comps;
       
       const double norm=12.0*sqr(iGq_of_iop[iop].size())*2.0; //2 comes form 1-g5 normalziation
@@ -150,6 +146,10 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
       const size_t ip2=im_r_ind({im_bw,r_bw});
       const qprop_t &prop_inv1=jprop_inv1[ip1][ijack];
       const qprop_t &prop_inv2=jprop_inv2[ip2][ijack];
+      
+      //loop on all operators
+      double &out=pr[im_r_im_r_iop_iproj][ijack];
+      out=0.0;
       
       for(auto &ipGl : ipGl_of_iproj[iproj])
 	{
@@ -161,7 +161,8 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
 	  const qprop_t amp_vert=prop_inv1*vert*quaGamma[5]*prop_inv2.adjoint()*quaGamma[5];
 	  
 	  //projecting on quark side
-	  out+=(amp_vert*(quaGamma[ipGq]*(quaGamma[0]+g5_sign_of_iproj[iproj]*quaGamma[5])).adjoint()).trace().real()/norm;
+	  auto projector=(quaGamma[ipGq]*(quaGamma[0]+g5_sign_of_iproj[iproj]*quaGamma[5])).adjoint();
+	  out+=(amp_vert*projector).trace().real()/norm;
 	}
     }
   
