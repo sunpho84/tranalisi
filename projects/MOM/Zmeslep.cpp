@@ -33,14 +33,28 @@ vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
   return mesloop;
 }
 
-void build_jackknifed_meslep_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,const size_t iop,const qprop_t &prop2,const dcompl_t &lloop,size_t iclust)
+void build_jackknifed_meslep_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,const size_t iop,const qprop_t &prop2,const vector<dcompl_t> &lloop,size_t ipGl,size_t iclust)
 {
   using namespace meslep;
   const vector<size_t> &iGlist=iGq_of_iop[iop];
   const int g5_sign=g5_sign_of_iop[iop];
   
-  for(size_t iG : iGlist)
-    jvert[iclust]+=prop1*quaGamma[iG]*(quaGamma[0]+g5_sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*lloop;
+  for(size_t iGq : iGlist)
+    {
+      const size_t iGl=iGq;
+      const size_t imesloop=iGl_ipGl_iclust_ind({iGl,ipGl,iclust});
+      
+      jvert[iclust]+=prop1*quaGamma[iGq]*(quaGamma[0]+g5_sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*lloop[imesloop];
+      
+      cout<<"iGl: "<<iGl<<
+	", ipGl: "<<ipGl<<
+	", iclust: "<<iclust<<
+	", mesloop: "<<lloop[imesloop]<<
+	", prop1: "<<prop1(0,0)<<
+	", prop2: "<<prop2(0,0)<<
+	", res: "<<jvert[iclust](0,0)<<
+	endl;
+    }
 }
 
 void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
@@ -82,24 +96,13 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
        
        //create the vertex
        for(auto &o : list)
-	 for(auto &iGl : meslep::iGl_of_iop[iop])
-	   {
-	     const size_t imesloop=iGl_ipGl_iclust_ind({iGl,ipGl,iclust});
-	     build_jackknifed_meslep_vert_Gamma((*get<0>(o))[im_r_im_r_iop_ipGl],
-						*get<1>(o),
-						iop,
-						*get<2>(o),
-						mesloop[imesloop],
-						iclust);
-	     cout<<"iGl: "<<iGl<<
-	       ", ipGl: "<<ipGl<<
-	       ", iclust: "<<iclust<<
-	       ", mesloop: "<<mesloop[imesloop]<<
-	       ", prop1: "<<(*get<1>(o))(0,0)<<
-	       ", prop2: "<<(*get<2>(o))(0,0)<<
-	       ", res: "<<(*get<0>(o))[im_r_im_r_iop_ipGl][iclust](0,0)<<
-	       endl;
-	   }
+	 build_jackknifed_meslep_vert_Gamma((*get<0>(o))[im_r_im_r_iop_ipGl],
+					    *get<1>(o),
+					    iop,
+					    *get<2>(o),
+					    mesloop,
+					    ipGl,
+					    iclust);
      }
 }
 
