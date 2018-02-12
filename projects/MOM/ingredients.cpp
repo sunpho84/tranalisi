@@ -435,7 +435,7 @@ void ingredients_t::mom_compute_meslep()
 		vector<size_t> im_r_im_r_iop_ipGl_comps=im_r_im_r_iop_iproj_comps;
 		im_r_im_r_iop_ipGl_comps[5]=ipGl;
 		size_t im_r_im_r_iop_ipGl=im_r_im_r_iop_ipGl_ind(im_r_im_r_iop_ipGl_comps);
-		cout<<" ipGl: "<<ipGl<<", ML1: "<<jmeslep_verts.ML1[im_r_im_r_iop_ipGl]<<", ML2: "<<jmeslep_verts.ML2[im_r_im_r_iop_ipGl]<<endl;
+		cout<<" ipGl: "<<ipGl<<", ML1: "<<jmeslep_verts.ML1[im_r_im_r_iop_ipGl][0](0,0)<<", ML2: "<<jmeslep_verts.ML2[im_r_im_r_iop_ipGl][0](0,0)<<endl;
 	      }
 	  }
       proj_time.stop();
