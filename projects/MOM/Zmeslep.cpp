@@ -103,7 +103,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	       ", iclust: "<<iclust<<
 	       ", mesloop: "<<mesloop[imesloop]<<
 	       ", prop1: "<<(*get<1>(o))(0,0)<<
-	       ", prop2: "<<(*get<1>(o))(0,0)<<
+	       ", prop2: "<<(*get<2>(o))(0,0)<<
 	       ", res: "<<(*get<0>(o))[im_r_im_r_iop_ipGl][iclust](0,0)<<
 	       endl;
 	   }
