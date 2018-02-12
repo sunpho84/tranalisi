@@ -21,16 +21,6 @@ namespace meslep
   const vector<vector<size_t>> &iGl_of_iop   =iGq_of_iop;
 }
 
-void build_jackknifed_meslep_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,const size_t iop,const qprop_t &prop2,const dcompl_t &lloop,size_t iclust)
-{
-  using namespace meslep;
-  const vector<size_t> &iGlist=iGq_of_iop[iop];
-  const int g5_sign=g5_sign_of_iop[iop];
-  
-  for(size_t iG : iGlist)
-    jvert[iclust]+=prop1*quaGamma[iG]*(quaGamma[0]+g5_sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*lloop;
-}
-
 vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
 {
   //! projected lepton propagator with insertion
@@ -48,6 +38,16 @@ vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
     }
   
   return mesloop;
+}
+
+void build_jackknifed_meslep_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,const size_t iop,const qprop_t &prop2,const dcompl_t &lloop,size_t iclust)
+{
+  using namespace meslep;
+  const vector<size_t> &iGlist=iGq_of_iop[iop];
+  const int g5_sign=g5_sign_of_iop[iop];
+  
+  for(size_t iG : iGlist)
+    jvert[iclust]+=prop1*quaGamma[iG]*(quaGamma[0]+g5_sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*lloop;
 }
 
 void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,

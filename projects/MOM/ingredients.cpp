@@ -408,8 +408,8 @@ void ingredients_t::mom_compute_meslep()
        for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
  	{
 	  //decript indices
-	  const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
-	  const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
+	  const vector<size_t> comps=im_r_ijackp1_ind(im_r_ijack);
+	  const size_t im=comps[0],r=comps[1],ijack=comps[2];
 	  const size_t im_r=glb::im_r_ind({im,r});
 	  
 	  //compute inverse
