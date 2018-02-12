@@ -36,7 +36,7 @@ vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
       
       mesloop[i]=(pl.F*lepGamma[iGl]*(lepGamma[0]-lepGamma[5])*lepGamma[ipGl].adjoint()).trace()/4.0; //normalization for the single gamma
       
-      cout<<"iGl: "<<iGl<<", ipGl: "<<ipGl<<", iclust: "<<iclust<<", mesloop: "<<mesloop[i]<<endl;
+      cout<<"iGl: "<<iGl<<", ipGl: "<<ipGl<<", iclust: "<<iclust<<", mesloop: "<<mesloop[i]<<" "<<pl.F(0,0)<<endl;
     }
   
   return mesloop;
