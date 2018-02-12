@@ -429,8 +429,8 @@ void ingredients_t::mom_compute_meslep()
 	    cout<<im_r_im_r_iop_iproj_ind.descr(im_r_im_r_iop_iproj)<<", ijack: "<<ijack<<" 1: "<<pr_meslep1_temp[im_r_im_r_iop_iproj][ijack]<<", 2: "<<pr_meslep2_temp[im_r_im_r_iop_iproj][ijack]<<endl;
 	    
 	    const vector<size_t> im_r_im_r_iop_iproj_comps=im_r_im_r_iop_iproj_ind(im_r_im_r_iop_iproj);
-	    size_t iop=im_r_im_r_iop_iproj_ind(im_r_im_r_iop_iproj)[4];
-	    for(size_t ipGl : meslep::iGl_of_iop[iop])
+	    size_t iproj=im_r_im_r_iop_iproj_ind(im_r_im_r_iop_iproj)[5];
+	    for(size_t ipGl : meslep::ipGl_of_iproj[iproj])
 	      {
 		vector<size_t> im_r_im_r_iop_ipGl_comps=im_r_im_r_iop_iproj_comps;
 		im_r_im_r_iop_ipGl_comps[5]=ipGl;

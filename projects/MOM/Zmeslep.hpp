@@ -19,6 +19,7 @@ namespace meslep
   EXTERN_MESLEP const vector<vector<size_t>> iGq_of_iop        INIT_TO({{ 1, 2, 3, 4}, { 1, 2, 3, 4}, { 0}, { 0}, {10,11,12,13,14,15}});
   EXTERN_MESLEP const vector<int>            g5_sign_of_iop    INIT_TO({ -1,            +1,            -1,   +1 ,  +1});
   EXTERN_MESLEP const vector<vector<size_t>> &iGl_of_iop       INIT_TO(iGq_of_iop);
+  EXTERN_MESLEP const vector<vector<size_t>> &ipGl_of_iproj    INIT_TO(iGl_of_iop);
   EXTERN_MESLEP const vector<int>            &g5_sign_of_iproj INIT_TO(g5_sign_of_iop);
 }
 
