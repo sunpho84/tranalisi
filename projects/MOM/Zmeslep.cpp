@@ -23,9 +23,12 @@ vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
 #pragma omp parallel for
   for(size_t i=0;i<iGl_ipGl_iclust_ind.max();i++)
     {
-      vector<size_t> ind_comp=iGl_ipGl_iclust_ind(i);
-      const size_t iGl=ind_comp[0],ipGl=ind_comp[1],iclust=ind_comp[2];
+      vector<size_t> comps=iGl_ipGl_iclust_ind(i);
+      const size_t iGl=comps[0],ipGl=comps[1],iclust=comps[2];
       const mom_conf_lprops_t &pl=props_lep[iclust];
+      
+      auto a=lepGamma[iGl]*(lepGamma[0]-lepGamma[5])*lepGamma[ipGl].adjoint();
+      cout<<iGl<<" "<<ipGl<<" "<<a<<endl;
       
       mesloop[i]=(pl.F*lepGamma[iGl]*(lepGamma[0]-lepGamma[5])*lepGamma[ipGl].adjoint()).trace()/4.0; //normalization for the single gamma
     }
