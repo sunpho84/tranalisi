@@ -144,7 +144,7 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
       
       vector<size_t> im_r_im_r_iop_ipGl_comps=im_r_im_r_iop_iproj_comps;
       
-      const double norm=12.0*sqr(iGq_of_iop[iop].size());
+      const double norm=12.0*sqr(iGq_of_iop[iop].size())*2.0; //2 comes form 1-g5 normalziation
       
       const size_t ip1=im_r_ind({im_fw,r_fw});
       const size_t ip2=im_r_ind({im_bw,r_bw});
@@ -159,7 +159,7 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
 	  const qprop_t &vert=jverts[im_r_im_r_iop_ipGl][ijack];
 	  
 	  const qprop_t amp_vert=prop_inv1*vert*quaGamma[5]*prop_inv2.adjoint()*quaGamma[5];
-
+	  
 	  //projecting on quark side
 	  out+=(amp_vert*(quaGamma[ipGq]*(quaGamma[0]+g5_sign_of_iproj[iproj]*quaGamma[5])).adjoint()).trace().real()/norm;
 	}
