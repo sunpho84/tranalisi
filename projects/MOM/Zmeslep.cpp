@@ -50,13 +50,11 @@ void build_jackknifed_meslep_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,con
       cout<<"iGl: "<<iGl<<
 	", ipGl: "<<ipGl<<
 	", iclust: "<<iclust<<
-	", g5_sign: "<<g5_sign<<
 	", mesloop: "<<lloop[imesloop]<<
 	", prop1: "<<prop1(0,0)<<
 	", prop2: "<<prop2(0,0)<<
 	", res: "<<contr(0,0)<<
 	endl;
-      cout<<a<<endl;
     }
 }
 
