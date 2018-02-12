@@ -423,10 +423,12 @@ void ingredients_t::mom_compute_meslep()
       const djvec_t pr_meslep1_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML1,jprop_inv2,im_r_ind);
       const djvec_t pr_meslep2_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML2,jprop_inv2,im_r_ind);
       const djvec_t pr_meslep_temp=ql*(q1*pr_meslep1_temp+q2*pr_meslep2_temp);
+      //DEBUG
       for(size_t im_r_im_r_iop_iproj=0;im_r_im_r_iop_iproj<im_r_im_r_iop_iproj_ind.max();im_r_im_r_iop_iproj++)
 	for(size_t ijack=0;ijack<njacks;ijack++)
 	  {
-	    cout<<im_r_im_r_iop_iproj_ind.descr(im_r_im_r_iop_iproj)<<", ijack: "<<ijack<<" 1: "<<pr_meslep1_temp[im_r_im_r_iop_iproj][ijack]<<", 2: "<<pr_meslep2_temp[im_r_im_r_iop_iproj][ijack]<<endl;
+	    cout<<im_r_im_r_iop_iproj_ind.descr(im_r_im_r_iop_iproj)<<", ijack: "<<ijack<<" ampproj, 1: "
+		<<ql*q1*pr_meslep1_temp[im_r_im_r_iop_iproj][ijack]<<", 2: "<<ql*q2*pr_meslep2_temp[im_r_im_r_iop_iproj][ijack]<<endl;
 	    
 	    const vector<size_t> im_r_im_r_iop_iproj_comps=im_r_im_r_iop_iproj_ind(im_r_im_r_iop_iproj);
 	    size_t iproj=im_r_im_r_iop_iproj_ind(im_r_im_r_iop_iproj)[5];
@@ -435,7 +437,7 @@ void ingredients_t::mom_compute_meslep()
 		vector<size_t> im_r_im_r_iop_ipGl_comps=im_r_im_r_iop_iproj_comps;
 		im_r_im_r_iop_ipGl_comps[5]=ipGl;
 		size_t im_r_im_r_iop_ipGl=im_r_im_r_iop_ipGl_ind(im_r_im_r_iop_ipGl_comps);
-		cout<<" ipGl: "<<ipGl<<", ML1: "<<jmeslep_verts.ML1[im_r_im_r_iop_ipGl][0](0,0)<<", ML2: "<<jmeslep_verts.ML2[im_r_im_r_iop_ipGl][0](0,0)<<endl;
+		cout<<" ipGl: "<<ipGl<<", non ampproj, ML1: "<<jmeslep_verts.ML1[im_r_im_r_iop_ipGl][ijack](0,0)<<", ML2: "<<jmeslep_verts.ML2[im_r_im_r_iop_ipGl][ijack](0,0)<<endl;
 	      }
 	  }
       proj_time.stop();
