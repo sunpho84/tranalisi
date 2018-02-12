@@ -35,8 +35,6 @@ vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
       const mom_conf_lprops_t &pl=props_lep[iclust];
       
       mesloop[i]=(pl.F*lepGamma[iGl]*(lepGamma[0]-lepGamma[5])*lepGamma[ipGl].adjoint()).trace()/4.0; //normalization for the single gamma
-      
-      cout<<"iGl: "<<iGl<<", ipGl: "<<ipGl<<", iclust: "<<iclust<<", mesloop: "<<mesloop[i]<<" "<<pl.F(0,0)<<endl;
     }
   
   return mesloop;
@@ -92,12 +90,23 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
        //create the vertex
        for(auto &o : list)
 	 for(auto &iGl : meslep::iGl_of_iop[iop])
-	   build_jackknifed_meslep_vert_Gamma((*get<0>(o))[im_r_im_r_iop_ipGl],
-					      *get<1>(o),
-					      iop,
-					      *get<2>(o),
-					      mesloop[iGl_ipGl_iclust_ind({iGl,ipGl,iclust})],
-					      iclust);
+	   {
+	     const size_t imesloop=iGl_ipGl_iclust_ind({iGl,ipGl,iclust});
+	     build_jackknifed_meslep_vert_Gamma((*get<0>(o))[im_r_im_r_iop_ipGl],
+						*get<1>(o),
+						iop,
+						*get<2>(o),
+						mesloop[imesloop],
+						iclust);
+	     cout<<"iGl: "<<iGl<<
+	       ", ipGl: "<<ipGl<<
+	       ", iclust: "<<iclust<<
+	       ", mesloop: "<<mesloop[imesloop]<<
+	       ", prop1: "<<(*get<1>(o))(0,0)<<
+	       ", prop2: "<<(*get<1>(o))(0,0)<<
+	       ", res: "<<(*get<0>(o))[im_r_im_r_iop_ipGl][iclust](0,0)<<
+	       endl;
+	   }
      }
 }
 
