@@ -425,7 +425,7 @@ void ingredients_t::mom_compute_meslep()
       const djvec_t pr_meslep_temp=ql*(q1*pr_meslep1_temp+q2*pr_meslep2_temp);
       for(size_t im_r_im_r_iop_iproj=0;im_r_im_r_iop_iproj<im_r_im_r_iop_iproj_ind.max();im_r_im_r_iop_iproj++)
 	for(size_t ijack=0;ijack<njacks;ijack++)
-	  cout<<im_r_im_r_iop_iproj_ind.descr(im_r_im_r_iop_iproj)<<", ijack: "<<ijack<<" 1: "<<pr_meslep1_temp[0][ijack]<<", 2: "<<pr_meslep2_temp[0][ijack]<<endl;
+	  cout<<im_r_im_r_iop_iproj_ind.descr(im_r_im_r_iop_iproj)<<", ijack: "<<ijack<<" 1: "<<pr_meslep1_temp[im_r_im_r_iop_iproj][ijack]<<", 2: "<<pr_meslep2_temp[im_r_im_r_iop_iproj][ijack]<<endl;
       proj_time.stop();
       
       // to be included
