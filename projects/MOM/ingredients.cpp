@@ -357,9 +357,9 @@ void ingredients_t::mom_compute_meslep()
       const size_t imom2=bilmoms[ibilmom][2];
       const bool read2=(imom1!=imom2);
       
-      vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max());    //!< jackknived props
-      vector<jm_r_mom_qprops_t> jprops2(glb::im_r_ind.max());    //!< jackknived props
-      jmeslep_vert_t jverts(im_r_im_r_iop_ipGl_ind.max());   //!< jackknived vertex
+      vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max());       //!< jackknived props
+      vector<jm_r_mom_qprops_t> jprops2(glb::im_r_ind.max());       //!< jackknived props
+      jmeslep_vert_t jmeslep_verts(im_r_im_r_iop_ipGl_ind.max());   //!< jackknived vertex
       
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
@@ -389,17 +389,17 @@ void ingredients_t::mom_compute_meslep()
 	    build_all_mr_jackkniffed_qprops(jprops2,props2,use_QED,im_r_ind);
 	    build_props_time.stop();
 	    
-	    //build all verts
-	    build_verts_time.start();
-	    build_all_mr_gmeslep_jackkniffed_verts(jverts,props1,props2,props_lep,im_r_ind);
-	    build_verts_time.stop();
+	    //build all meslep_verts
+	    build_meslep_verts_time.start();
+	    build_all_mr_gmeslep_jackkniffed_verts(jmeslep_verts,props1,props2,props_lep,im_r_ind);
+	    build_meslep_verts_time.stop();
 	  }
       
       //clusterize
       clust_time.start();
       clusterize_all_mr_jackkniffed_qprops(jprops1,use_QED,clust_size,im_r_ind,deltam_cr);
       clusterize_all_mr_jackkniffed_qprops(jprops2,use_QED,clust_size,im_r_ind,deltam_cr);
-      jverts.clusterize_all(clust_size);
+      jmeslep_verts.clusterize_all(clust_size);
       clust_time.stop();
       
       vector<jqprop_t> jprop_inv1(glb::im_r_ind.max()); //!< inverse propagator1
@@ -420,8 +420,8 @@ void ingredients_t::mom_compute_meslep()
  	}
        
       proj_time.start();
-      const djvec_t pr_meslep1_temp=compute_proj_measlep(jprop_inv1,jverts.ML1,jprop_inv2,im_r_ind);
-      const djvec_t pr_meslep2_temp=compute_proj_measlep(jprop_inv1,jverts.ML2,jprop_inv2,im_r_ind);
+      const djvec_t pr_meslep1_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML1,jprop_inv2,im_r_ind);
+      const djvec_t pr_meslep2_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML2,jprop_inv2,im_r_ind);
       const djvec_t pr_meslep_temp=ql*(q1*pr_meslep1_temp+q2*pr_meslep2_temp);
       proj_time.stop();
       
@@ -430,14 +430,14 @@ void ingredients_t::mom_compute_meslep()
 //       djvec_t pr_bil_QED_temp;
 //       if(use_QED)
 // 	{
-// 	  const djvec_t pr_bil_EM=compute_proj_bil(jprop_inv1,jverts.EM,jprop_inv2,glb::im_r_ind);
-// 	  const djvec_t pr_bil_a=compute_proj_bil(jprop_EM_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
-// 	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_EM_inv2,glb::im_r_ind);
+// 	  const djvec_t pr_bil_EM=compute_proj_bil(jprop_inv1,jmeslep_verts.EM,jprop_inv2,glb::im_r_ind);
+// 	  const djvec_t pr_bil_a=compute_proj_bil(jprop_EM_inv1,jmeslep_verts.LO,jprop_inv2,glb::im_r_ind);
+// 	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jmeslep_verts.LO,jprop_EM_inv2,glb::im_r_ind);
 // 	  pr_bil_QED_temp=pr_bil_a+pr_bil_b-pr_bil_EM;
 // 	}
       
       //! an index running on all packed combo, and momenta
-      const index_t all_imeslepmom_ind({{"All",im_r_im_r_iop_iproj_ind.max()},{"bilmom",bilmoms.size()}});
+      const index_t all_imeslepmom_ind({{"All",im_r_im_r_iop_iproj_ind.max()},{"meslepmom",meslepmoms.size()}});
       
       //store
       for(size_t iall=0;iall<im_r_im_r_iop_iproj_ind.max();iall++)

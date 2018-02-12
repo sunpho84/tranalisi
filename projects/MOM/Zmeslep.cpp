@@ -21,15 +21,14 @@ namespace meslep
   const vector<vector<size_t>> &iGl_of_iop   =iGq_of_iop;
 }
 
-void build_jackknifed_meslep_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,const size_t iop,const qprop_t &prop2,const dcompl_t &lloop,size_t ijack)
+void build_jackknifed_meslep_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,const size_t iop,const qprop_t &prop2,const dcompl_t &lloop,size_t iclust)
 {
   using namespace meslep;
   const vector<size_t> &iGlist=iGq_of_iop[iop];
   const int g5_sign=g5_sign_of_iop[iop];
   
-  jvert[ijack].Zero();
   for(size_t iG : iGlist)
-    jvert[ijack]+=prop1*quaGamma[iG]*(quaGamma[0]+g5_sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*lloop;
+    jvert[iclust]+=prop1*quaGamma[iG]*(quaGamma[0]+g5_sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*lloop;
 }
 
 vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
@@ -45,7 +44,7 @@ vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
       const size_t iGl=ind_comp[0],ipGl=ind_comp[1],iclust=ind_comp[2];
       const mom_conf_lprops_t &pl=props_lep[iclust];
       
-      mesloop[i]+=(pl.F*lepGamma[iGl]*(lepGamma[0]-lepGamma[5])*lepGamma[ipGl].adjoint()).trace()/4.0; //normalization for the single gamma
+      mesloop[i]=(pl.F*lepGamma[iGl]*(lepGamma[0]-lepGamma[5])*lepGamma[ipGl].adjoint()).trace()/4.0; //normalization for the single gamma
     }
   
   return mesloop;
@@ -90,18 +89,13 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
        
        //create the vertex
        for(auto &o : list)
-	 {
-	   using namespace meslep;
-	   
-	   jqprop_t &out=(*get<0>(o))[im_r_im_r_iop_ipGl];
-	   for(auto &o : out) o.Zero();
-	   
-	   for(auto &iGl : iGl_of_iop[iop])
-	     {
-	       const size_t imesloop=iGl_ipGl_iclust_ind({iGl,ipGl,iclust});
-	       build_jackknifed_meslep_vert_Gamma(out,*get<1>(o),iop,*get<2>(o),mesloop[imesloop],iclust);
-	     }
-	 }
+	 for(auto &iGl : meslep::iGl_of_iop[iop])
+	   build_jackknifed_meslep_vert_Gamma((*get<0>(o))[im_r_im_r_iop_ipGl],
+					      *get<1>(o),
+					      iop,
+					      *get<2>(o),
+					      mesloop[iGl_ipGl_iclust_ind({iGl,ipGl,iclust})],
+					      iclust);
      }
 }
 
