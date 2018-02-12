@@ -1,22 +1,25 @@
 #ifndef _ZMESLEP_HPP
 #define _ZMESLEP_HPP
 
-#ifndef EXTERN_MESLEP
- #define EXTERN_MESLEP extern
-#endif
-
-EXTERN_MESLEP bool compute_meslep;
-
 #include <Dirac.hpp>
 
 #include <prop.hpp>
 
+#ifndef EXTERN_MESLEP
+ #define EXTERN_MESLEP extern
+ #define INIT_TO(...)
+#else
+ #define INIT_TO(...) =__VA_ARGS__
+#endif
+
+EXTERN_MESLEP bool compute_meslep;
+
 namespace meslep
 {
-  EXTERN_MESLEP const vector<vector<size_t>> iGq_of_iop   ={{ 1, 2, 3, 4}, { 1, 2, 3, 4}, { 0}, { 0}, {10,11,12,13,14,15}};
-  EXTERN_MESLEP const vector<int>            g5_sign_of_iop={-1,             +1,            -1,   +1 ,  +1};
-  EXTERN_MESLEP const vector<vector<size_t>> &iGl_of_iop   =iGq_of_iop;
-  EXTERN_MESLEP const vector<int>            &g5_sign_of_iproj=g5_sign_of_iop;
+  EXTERN_MESLEP const vector<vector<size_t>> iGq_of_iop        INIT_TO({{ 1, 2, 3, 4}, { 1, 2, 3, 4}, { 0}, { 0}, {10,11,12,13,14,15}});
+  EXTERN_MESLEP const vector<int>            g5_sign_of_iop    INIT_TO({ -1,            +1,            -1,   +1 ,  +1});
+  EXTERN_MESLEP const vector<vector<size_t>> &iGl_of_iop       INIT_TO(iGq_of_iop);
+  EXTERN_MESLEP const vector<int>            &g5_sign_of_iproj INIT_TO(g5_sign_of_iop);
 }
 
 //! holds jackkniffed vertex for an mr combo and for a given mom
@@ -63,5 +66,6 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv2,const index_t &im_r_ind);
 
 #undef EXTERN_MESLEP
+#undef INIT_TO
 
 #endif
