@@ -43,8 +43,8 @@ void build_jackknifed_meslep_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,con
     {
       const size_t iGl=iGq;
       const size_t imesloop=iGl_ipGl_iclust_ind({iGl,ipGl,iclust});
-      
-      jvert[iclust]+=prop1*quaGamma[iGq]*(quaGamma[0]+g5_sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*lloop[imesloop];
+      const qprop_t contr=prop1*quaGamma[iGq]*(quaGamma[0]+g5_sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*lloop[imesloop];
+      jvert[iclust]+=contr;
       
       cout<<"iGl: "<<iGl<<
 	", ipGl: "<<ipGl<<
@@ -52,7 +52,7 @@ void build_jackknifed_meslep_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,con
 	", mesloop: "<<lloop[imesloop]<<
 	", prop1: "<<prop1(0,0)<<
 	", prop2: "<<prop2(0,0)<<
-	", res: "<<jvert[iclust](0,0)<<
+	", res: "<<contr(0,0)<<
 	endl;
     }
 }
