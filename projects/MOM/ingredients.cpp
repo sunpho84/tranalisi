@@ -351,10 +351,10 @@ void ingredients_t::mom_compute_meslep()
   vector<raw_file_t> qfiles=setup_read_all_qprops_mom(conf_list);
   vector<raw_file_t> lfiles=setup_read_all_lprops_mom(conf_list);
   
-  for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
+  for(size_t imeslepmom=0;imeslepmom<meslepmoms.size();imeslepmom++)
     {
-      const size_t imom1=bilmoms[ibilmom][1];
-      const size_t imom2=bilmoms[ibilmom][2];
+      const size_t imom1=meslepmoms[imeslepmom][1];
+      const size_t imom2=meslepmoms[imeslepmom][2];
       const bool read2=(imom1!=imom2);
       
       vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max());       //!< jackknived props
@@ -373,7 +373,7 @@ void ingredients_t::mom_compute_meslep()
 	    cout<<"Working on meslep, "
 	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
 	      "hit "<<ihit+1<<"/"<<nhits<<", "
-	      "momentum combo "<<ibilmom+1<<"/"<<bilmoms.size()<<", "
+	      "momentum combo "<<imeslepmom+1<<"/"<<meslepmoms.size()<<", "
 	      "moms: "<<mom1<<" "<<mom2<<endl;
 	    
 	    //read
@@ -423,6 +423,8 @@ void ingredients_t::mom_compute_meslep()
       const djvec_t pr_meslep1_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML1,jprop_inv2,im_r_ind);
       const djvec_t pr_meslep2_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML2,jprop_inv2,im_r_ind);
       const djvec_t pr_meslep_temp=ql*(q1*pr_meslep1_temp+q2*pr_meslep2_temp);
+      for(int im_r_im_r_iop_iproj=0;im_r_im_r_iop_iproj<im_r_im_r_iop_iproj_ind.max();im_r_im_r_iop_iproj++)
+	cout<<im_r_im_r_iop_iproj_ind.descr(im_r_im_r_iop_iproj)<<" 1: "<<pr_meslep1_temp[0]<<", 2: "<<pr_meslep2_temp[0]<<endl;
       proj_time.stop();
       
       // to be included
@@ -441,7 +443,7 @@ void ingredients_t::mom_compute_meslep()
       
       //store
       for(size_t iall=0;iall<im_r_im_r_iop_iproj_ind.max();iall++)
-	pr_meslep[all_imeslepmom_ind({iall,ibilmom})]=pr_meslep_temp[iall];
+	pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=pr_meslep_temp[iall];
     }
 }
 
