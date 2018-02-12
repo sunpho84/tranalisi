@@ -13,10 +13,10 @@ EXTERN_MESLEP bool compute_meslep;
 
 namespace meslep
 {
-  const vector<vector<size_t>> iGq_of_iop   ={{ 1, 2, 3, 4}, { 1, 2, 3, 4}, { 0}, { 0}, {10,11,12,13,14,15}};
-  const vector<int>            g5_sign_of_iop={-1,             +1,            -1,   +1 ,  +1};
-  const vector<vector<size_t>> &iGl_of_iop   =iGq_of_iop;
-  const vector<int>            &g5_sign_of_iproj=g5_sign_of_iop;
+  EXTERN_MESLEP const vector<vector<size_t>> iGq_of_iop   ={{ 1, 2, 3, 4}, { 1, 2, 3, 4}, { 0}, { 0}, {10,11,12,13,14,15}};
+  EXTERN_MESLEP const vector<int>            g5_sign_of_iop={-1,             +1,            -1,   +1 ,  +1};
+  EXTERN_MESLEP const vector<vector<size_t>> &iGl_of_iop   =iGq_of_iop;
+  EXTERN_MESLEP const vector<int>            &g5_sign_of_iproj=g5_sign_of_iop;
 }
 
 //! holds jackkniffed vertex for an mr combo and for a given mom
