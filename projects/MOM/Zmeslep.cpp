@@ -14,14 +14,6 @@
 
 #include <prop.hpp>
 
-namespace meslep
-{
-  const vector<vector<size_t>> iGq_of_iop   ={{ 1, 2, 3, 4}, { 1, 2, 3, 4}, { 0}, { 0}, {10,11,12,13,14,15}};
-  const vector<int>            g5_sign_of_iop={-1,             +1,            -1,   +1 ,  +1};
-  const vector<vector<size_t>> &iGl_of_iop   =iGq_of_iop;
-  const vector<int>            &g5_sign_of_iproj=g5_sign_of_iop;
-}
-
 vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
 {
   //! projected lepton propagator with insertion
