@@ -19,6 +19,7 @@ namespace meslep
   const vector<vector<size_t>> iGq_of_iop   ={{ 1, 2, 3, 4}, { 1, 2, 3, 4}, { 0}, { 0}, {10,11,12,13,14,15}};
   const vector<int>            g5_sign_of_iop={-1,             +1,            -1,   +1 ,  +1};
   const vector<vector<size_t>> &iGl_of_iop   =iGq_of_iop;
+  const vector<int>            &g5_sign_of_iproj=g5_sign_of_iop;
 }
 
 vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
@@ -142,23 +143,25 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
       out=0.0;
       
       vector<size_t> im_r_im_r_iop_ipGl_comps=im_r_im_r_iop_iproj_comps;
+      
+      const double norm=12.0*sqr(iGq_of_iop[iop].size());
+      
+      const size_t ip1=im_r_ind({im_fw,r_fw});
+      const size_t ip2=im_r_ind({im_bw,r_bw});
+      const qprop_t &prop_inv1=jprop_inv1[ip1][ijack];
+      const qprop_t &prop_inv2=jprop_inv2[ip2][ijack];
+      
       for(auto &ipGl : ipGl_of_iproj[iproj])
 	{
-	  const size_t iGq=ipGl; //Projecting on quark side with the same gamma (will insert the 1+-g5)
-	  
+	  const size_t ipGq=ipGl; //Projecting on quark side with the same gamma (will insert the 1+-g5)
 	  im_r_im_r_iop_ipGl_comps[5]=ipGl;
 	  const size_t im_r_im_r_iop_ipGl=im_r_im_r_iop_ipGl_ind(im_r_im_r_iop_ipGl_comps);
-	  
-	  const size_t ip1=im_r_ind({im_fw,r_fw});
-	  const size_t ip2=im_r_ind({im_bw,r_bw});
-	  const qprop_t &prop_inv1=jprop_inv1[ip1][ijack];
-	  const qprop_t &prop_inv2=jprop_inv2[ip2][ijack];
-	  
 	  const qprop_t &vert=jverts[im_r_im_r_iop_ipGl][ijack];
 	  
-	  const qprop_t amp_vert=prop_inv1*vert*quaGamma[5]*prop_inv2.adjoint()*quaGamma[5]; //here the normalization is imposed (hopefully)
+	  const qprop_t amp_vert=prop_inv1*vert*quaGamma[5]*prop_inv2.adjoint()*quaGamma[5];
+
 	  //projecting on quark side
-	  out+=(amp_vert*(quaGamma[iGq]*(quaGamma[0]+g5_sign_of_iop[iop]*quaGamma[5])).adjoint()).trace().real()/(12.0*sqr(iGq_of_iop[iop].size()));
+	  out+=(amp_vert*(quaGamma[ipGq]*(quaGamma[0]+g5_sign_of_iproj[iproj]*quaGamma[5])).adjoint()).trace().real()/norm;
 	}
     }
   
