@@ -107,17 +107,6 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
      }
 }
 
-template <typename T>
-vector<dcompl_t> Clifford_decompose(const vector<Dirac_t> &base,const T &g)
-{
-  vector<dcompl_t> out(16);
-
-  for(size_t i=0;i<16;i++)
-    out[i]=(g*base[i].adjoint()).toDense().trace()/base[i].squaredNorm();
-  
-  return out;
-}
-
 djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv2,const index_t &im_r_ind)
 {
   using namespace meslep;
@@ -132,9 +121,28 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
   const vector<vector<size_t>> &ipGl_of_iproj=iGq_of_iop; // here instead 1-g5 was already included at lepton projection
   djvec_t pr(im_r_im_r_iop_iproj_ind.max());
   
-  vector<dcompl_t> d=Clifford_decompose(quaGamma,quaGamma[0]);
-  for(size_t i=0;i<16;i++)
-    cout<<d[i]<<endl;
+  using namespace meslep;
+
+  vector<vector<vector<pair<size_t,dcompl_t>>>> reco_pQ(nZbil);
+  for(size_t iop=0;iop<nZbil;iop++)
+    {
+      cout<<"iop: "<<iop<<endl;
+      cout<<endl;
+      reco_pQ[iop].resize(iGq_of_iop[iop].size());
+      const int g5_sign=g5_sign_of_iop[iop];
+      for(const size_t iGq : iGq_of_iop[iop])
+	{
+	  cout<<"iGq: "<<iGq<<endl;
+	  vector<dcompl_t> d=Clifford_decompose(quaGamma,quaGamma[iGq]*(quaGamma[0]+g5_sign*quaGamma[5]));
+	  for(size_t i=0;i<16;i++)
+	    if(d[i]!=0.0)
+	      {
+		reco_pQ[iop][iGq].push_back(make_pair(i,d[i]));
+		cout<<i<<" "<<d[i]<<endl;
+	      }
+	  cout<<"/////////////////////////////////////////////////////////////////"<<endl;
+	}
+    }
   CRASH("");
   
   

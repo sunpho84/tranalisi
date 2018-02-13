@@ -80,6 +80,18 @@ inline size_t isc(size_t is,size_t ic)
 //! invert the jprop
 jqprop_t invert(const jqprop_t &in);
 
+//! decompose a matrix on the Clifford algebra
+template <typename T>
+vector<dcompl_t> Clifford_decompose(const vector<Dirac_t> &base,const T &g)
+{
+  vector<dcompl_t> out(16);
+  
+  for(size_t i=0;i<16;i++)
+    out[i]=(g*base[i].adjoint()).toDense().trace()/base[i].squaredNorm();
+  
+  return out;
+}
+
 #undef EXTERN_DIRAC
 #undef INIT_TO
 
