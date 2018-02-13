@@ -108,12 +108,12 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 }
 
 template <typename T>
-vector<dcompl_t> Clifford_decompose(const vector<Dirac_t> &base,T &g)
+vector<dcompl_t> Clifford_decompose(const vector<Dirac_t> &base,const T &g)
 {
   vector<dcompl_t> out(16);
-  
+
   for(size_t i=0;i<16;i++)
-    out[i]=(g*base[i].adjoint()).trace()/base[i].norm();
+    out[i]=(g*base[i].adjoint()).toDense().trace()/base[i].norm();
   
   return out;
 }
