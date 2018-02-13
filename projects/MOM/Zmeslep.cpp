@@ -175,7 +175,7 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
 		auto projector=(quaGamma[ipGq]*(quaGamma[0]+g5_sign_of_iproj[iproj]*quaGamma[5])).adjoint();
 		out+=(coeff*(amp_vert*projector).trace()).real()/norm;
 		
-		cout<<" i: "<<i<<", iGq: "<<iGq<<", ipGl: "<<ipGl<<", iproj: "<<iproj<<endl;
+		cout<<" i: "<<i<<", iGq: "<<iGq<<", ipGl: "<<ipGl<<", iproj: "<<iproj<<", im_r_im_r_iGl_ipGl(jverts): "<<im_r_im_r_iGl_ipGl<<", im_r_im_r_iop_iproj(out): "<<im_r_im_r_iop_iproj<<endl;
 	      }
 	  }
       
