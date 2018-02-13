@@ -488,6 +488,7 @@ void ingredients_t::set_indices()
   iZbil_ibilmom_ind.set_ranges({{"iZbil",nZbil},{"bilmom",bilmoms.size()}});
   im_r_im_r_iZbil_ibilmom_ind=im_r_im_r_iZbil_ind*index_t({{"bilmom",bilmoms.size()}});
   
+  im_r_im_r_iGl_ipGl_ind=im_r_ind*im_r_ind*index_t({{"iGl",nGamma},{"ipGl",nGamma}});
   im_r_im_r_iop_ipGl_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"ipGl",nGamma}});
   im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"iproj",nZbil}});
   im_r_im_r_iop_iproj_imeslepmom_ind=im_r_im_r_iop_iproj_ind*index_t({{"imeslepmom",meslepmoms.size()}});
