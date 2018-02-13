@@ -62,6 +62,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
   //! help finding the meslep/clust combo
   index_t im_r_iclust_ind=im_r_ind*index_t({{"clust",njacks}});
   index_t im_r_im_r_iGl_ipGl_iclust_ind=im_r_ind*im_r_ind*iGl_ipGl_iclust_ind;
+  index_t im_r_im_r_iGl_ipGl_ind=im_r_ind*im_r_ind*index_t({{"Gl",nGamma},{"pGl",nGamma}});
   index_t im_r_im_r_iop_ipGl_ind({{"m_fw",nm},{"r_fw",nr},{"m_bw",nm},{"r_bw",nr},{"zBil",nZbil},{"pGl",nGamma}});
   
 #pragma omp parallel for
@@ -86,7 +87,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	  {&j.ML2,&p1.LO,&p2.F}};
        
        //create the vertex
-       const size_t im_r_im_r_iGl_ipGl=i/njacks;
+       const size_t im_r_im_r_iGl_ipGl=im_r_im_r_iGl_ipGl_ind({im_fw,r_fw,im_bw,r_bw,iGl,ipGl});
        for(auto &o : list)
 	 build_jackknifed_meslep_vert_Gamma((*get<0>(o))[im_r_im_r_iGl_ipGl],
 					    *get<1>(o),
