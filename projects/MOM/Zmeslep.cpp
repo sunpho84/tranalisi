@@ -130,21 +130,22 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
       cout<<endl;
       reco_pQ[iop].resize(iGq_of_iop[iop].size());
       const int g5_sign=g5_sign_of_iop[iop];
-      for(const size_t iGq : iGq_of_iop[iop])
+      
+      for(size_t i=0;i<iGq_of_iop[iop].size();i++)
 	{
+	  const size_t iGq=iGl_of_iop[iop][i];
 	  cout<<"iGq: "<<iGq<<endl;
 	  vector<dcompl_t> d=Clifford_decompose(quaGamma,quaGamma[iGq]*(quaGamma[0]+g5_sign*quaGamma[5]));
-	  for(size_t i=0;i<16;i++)
-	    if(d[i]!=0.0)
+	  for(size_t b=0;b<16;b++)
+	    if(d[b]!=0.0)
 	      {
-		reco_pQ[iop][iGq].push_back(make_pair(i,d[i]));
-		cout<<i<<" "<<d[i]<<endl;
+		reco_pQ[iop][b].push_back(make_pair(b,d[b]));
+		cout<<b<<" "<<d[b]<<endl;
 	      }
 	  cout<<"/////////////////////////////////////////////////////////////////"<<endl;
 	}
     }
   CRASH("");
-  
   
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
