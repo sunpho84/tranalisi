@@ -174,6 +174,8 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
 		//projecting on quark side
 		auto projector=(quaGamma[ipGq]*(quaGamma[0]+g5_sign_of_iproj[iproj]*quaGamma[5])).adjoint();
 		out+=(coeff*(amp_vert*projector).trace()).real()/norm;
+		
+		cout<<" i: "<<i<<", iGq: "<<iGq<<", ipGl: "<<ipGl<<", iproj: "<<iproj<<endl;
 	      }
 	  }
       

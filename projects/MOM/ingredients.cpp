@@ -418,18 +418,18 @@ void ingredients_t::mom_compute_meslep()
 	  invert_time.stop();
  	}
        
-      //DEBUG
-      for(size_t im_r_im_r_iGl_ipGl=0;im_r_im_r_iGl_ipGl<im_r_im_r_iGl_ipGl_ind.max();im_r_im_r_iGl_ipGl++)
-	for(size_t ijack=0;ijack<njacks;ijack++)
-	  {
-	    // cout<<im_r_im_r_iGl_ipGl_ind.descr(im_r_im_r_iGl_ipGl)<<", ijack: "<<ijack<<" ampproj, 1: "
-	    // 	<<ql*q1*pr_meslep1_temp[im_r_im_r_iGl_ipGl][ijack]<<", 2: "<<ql*q2*pr_meslep2_temp[im_r_im_r_iGl_ipGl][ijack]<<endl;
+      // //DEBUG
+      // for(size_t im_r_im_r_iGl_ipGl=0;im_r_im_r_iGl_ipGl<im_r_im_r_iGl_ipGl_ind.max();im_r_im_r_iGl_ipGl++)
+      // 	for(size_t ijack=0;ijack<njacks;ijack++)
+      // 	  {
+      // 	    // cout<<im_r_im_r_iGl_ipGl_ind.descr(im_r_im_r_iGl_ipGl)<<", ijack: "<<ijack<<" ampproj, 1: "
+      // 	    // 	<<ql*q1*pr_meslep1_temp[im_r_im_r_iGl_ipGl][ijack]<<", 2: "<<ql*q2*pr_meslep2_temp[im_r_im_r_iGl_ipGl][ijack]<<endl;
 	    
-	    const vector<size_t> im_r_im_r_iGl_ipGl_comps=im_r_im_r_iGl_ipGl_ind(im_r_im_r_iGl_ipGl);
-	    size_t ipGl=im_r_im_r_iGl_ipGl_ind(im_r_im_r_iGl_ipGl)[5];
+      // 	    const vector<size_t> im_r_im_r_iGl_ipGl_comps=im_r_im_r_iGl_ipGl_ind(im_r_im_r_iGl_ipGl);
+      // 	    size_t ipGl=im_r_im_r_iGl_ipGl_ind(im_r_im_r_iGl_ipGl)[5];
 	    
-	    cout<<" ipGl: "<<ipGl<<", non ampproj, ML1: "<<jmeslep_verts.ML1[im_r_im_r_iGl_ipGl][ijack](0,0)<<", ML2: "<<jmeslep_verts.ML2[im_r_im_r_iGl_ipGl][ijack](0,0)<<endl;
-	  }
+      // 	    cout<<" ipGl: "<<ipGl<<", non ampproj, ML1: "<<jmeslep_verts.ML1[im_r_im_r_iGl_ipGl][ijack](0,0)<<", ML2: "<<jmeslep_verts.ML2[im_r_im_r_iGl_ipGl][ijack](0,0)<<endl;
+      // 	  }
       
       proj_time.start();
       const djvec_t pr_meslep1_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML1,jprop_inv2,im_r_ind);
