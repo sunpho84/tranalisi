@@ -107,6 +107,17 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
      }
 }
 
+template <typename T>
+vector<dcompl_t> Clifford_decompose(const vector<Dirac_t> &base,T &g)
+{
+  vector<dcompl_t> out(16);
+  
+  for(size_t i=0;i<16;i++)
+    out[i]=(g*base[i].adjoint()).trace()/base[i].norm();
+  
+  return out;
+}
+
 djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv2,const index_t &im_r_ind)
 {
   using namespace meslep;
@@ -120,6 +131,12 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
   //We decompose it in the 1 and g5 parts, putting the sign explicitly
   const vector<vector<size_t>> &ipGl_of_iproj=iGq_of_iop; // here instead 1-g5 was already included at lepton projection
   djvec_t pr(im_r_im_r_iop_iproj_ind.max());
+  
+  vector<dcompl_t> d=Clifford_decompose(quaGamma,quaGamma[0]);
+  for(size_t i=0;i<16;i++)
+    cout<<d[i]<<endl;
+  CRASH("");
+  
   
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
