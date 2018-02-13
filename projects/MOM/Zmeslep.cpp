@@ -33,29 +33,22 @@ vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
   return mesloop;
 }
 
-void build_jackknifed_meslep_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,const size_t iop,const qprop_t &prop2,const vector<dcompl_t> &lloop,size_t ipGl,size_t iclust)
+void build_jackknifed_meslep_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,const size_t iGl,const qprop_t &prop2,const vector<dcompl_t> &lloop,size_t ipGl,size_t iclust)
 {
-  using namespace meslep;
-  const vector<size_t> &iGlist=iGq_of_iop[iop];
-  const int g5_sign=g5_sign_of_iop[iop];
+  const size_t iGq=iGl;
   
-  for(size_t iGq : iGlist)
-    {
-      const size_t iGl=iGq;
-      const size_t imesloop=iGl_ipGl_iclust_ind({iGl,ipGl,iclust});
-      auto a=quaGamma[iGq]*(quaGamma[0]+g5_sign*quaGamma[5]);
-      const qprop_t contr=prop1*quaGamma[iGq]*(quaGamma[0]+g5_sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*lloop[imesloop];
-      jvert[iclust]+=contr;
-      
-      cout<<"iGl: "<<iGl<<
-	", ipGl: "<<ipGl<<
-	", iclust: "<<iclust<<
-	", mesloop: "<<lloop[imesloop]<<
-	", prop1: "<<prop1(0,0)<<
-	", prop2: "<<prop2(0,0)<<
-	", res: "<<contr(0,0)<<
-	endl;
-    }
+  const size_t imesloop=iGl_ipGl_iclust_ind({iGl,ipGl,iclust});
+  const qprop_t contr=prop1*quaGamma[iGq]*quaGamma[5]*prop2.adjoint()*quaGamma[5]*lloop[imesloop];
+  jvert[iclust]+=contr;
+  
+  cout<<"iGl: "<<iGl<<
+    ", ipGl: "<<ipGl<<
+    ", iclust: "<<iclust<<
+    ", mesloop: "<<lloop[imesloop]<<
+    ", prop1: "<<prop1(0,0)<<
+    ", prop2: "<<prop2(0,0)<<
+    ", res: "<<contr(0,0)<<
+    endl;
 }
 
 void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
@@ -68,23 +61,20 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
   
   //! help finding the meslep/clust combo
   index_t im_r_iclust_ind=im_r_ind*index_t({{"clust",njacks}});
-  index_t im_r_im_r_iop_ipGl_iclust_ind=im_r_ind*im_r_ind*iop_ipGl_iclust_ind;
   index_t im_r_im_r_iGl_ipGl_iclust_ind=im_r_ind*im_r_ind*iGl_ipGl_iclust_ind;
   index_t im_r_im_r_iop_ipGl_ind({{"m_fw",nm},{"r_fw",nr},{"m_bw",nm},{"r_bw",nr},{"zBil",nZbil},{"pGl",nGamma}});
   
 #pragma omp parallel for
-   for(size_t i=0;i<im_r_im_r_iop_ipGl_iclust_ind.max();i++)
+   for(size_t i=0;i<im_r_im_r_iGl_ipGl_iclust_ind.max();i++)
      {
        //decript bilinar/jack
-       vector<size_t> comps=im_r_im_r_iop_ipGl_iclust_ind(i);
+       vector<size_t> comps=im_r_im_r_iGl_ipGl_iclust_ind(i);
        
        //decript props to combine and which Gamma to create
        const size_t im_fw=comps[0],r_fw=comps[1];
        const size_t im_bw=comps[2],r_bw=comps[3];
-       const size_t iop=comps[4],ipGl=comps[5];
+       const size_t iGl=comps[4],ipGl=comps[5];
        const size_t iclust=comps[6];
-       
-       const size_t im_r_im_r_iop_ipGl=im_r_im_r_iop_ipGl_ind({im_fw,r_fw,im_bw,r_bw,iop,ipGl});
        
        //proxy for vector and props
        const m_r_mom_conf_qprops_t &p1=props1[im_r_iclust_ind({im_fw,r_fw,iclust})];
@@ -96,10 +86,11 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	  {&j.ML2,&p1.LO,&p2.F}};
        
        //create the vertex
+       const size_t im_r_im_r_iGl_ipGl=i/njacks;
        for(auto &o : list)
-	 build_jackknifed_meslep_vert_Gamma((*get<0>(o))[im_r_im_r_iop_ipGl],
+	 build_jackknifed_meslep_vert_Gamma((*get<0>(o))[im_r_im_r_iGl_ipGl],
 					    *get<1>(o),
-					    iop,
+					    iGl,
 					    *get<2>(o),
 					    mesloop,
 					    ipGl,
@@ -113,40 +104,34 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
   
   const index_t im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"iproj",nZbil}});
   const index_t im_r_im_r_iop_ipGl_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"pGammaL",nGamma}});
+  const index_t im_r_im_r_iGl_ipGl_ind=im_r_ind*im_r_ind*index_t({{"iGamma",nGamma},{"pGammaL",nGamma}});
   const index_t ind({{"rest",im_r_im_r_iop_iproj_ind.max()},{"ijack",njacks+1}});
   
   //Each operator on the quark side needs to incorporate the structure G(1+-g5)
   // whereas jverts incorporates only G
   //We decompose it in the 1 and g5 parts, putting the sign explicitly
-  const vector<vector<size_t>> &ipGl_of_iproj=iGq_of_iop; // here instead 1-g5 was already included at lepton projection
+  //const vector<vector<size_t>> &ipGl_of_iproj=iGq_of_iop; // here instead 1-g5 was already included at lepton projection
   djvec_t pr(im_r_im_r_iop_iproj_ind.max());
   
   using namespace meslep;
 
+  //Decompose the 1+-g5 on the Clifford basis
   vector<vector<vector<pair<size_t,dcompl_t>>>> reco_pQ(nZbil);
   for(size_t iop=0;iop<nZbil;iop++)
     {
-      cout<<"iop: "<<iop<<endl;
-      cout<<endl;
       reco_pQ[iop].resize(iGq_of_iop[iop].size());
       const int g5_sign=g5_sign_of_iop[iop];
       
       for(size_t i=0;i<iGq_of_iop[iop].size();i++)
 	{
 	  const size_t iGq=iGq_of_iop[iop][i];
-	  cout<<"iGq: "<<iGq<<endl;
 	  vector<dcompl_t> d=Clifford_decompose(quaGamma,quaGamma[iGq]*(quaGamma[0]+g5_sign*quaGamma[5]));
 	  for(size_t b=0;b<16;b++)
 	    if(d[b]!=0.0)
-	      {
-		reco_pQ[iop][i].push_back(make_pair(b,d[b]));
-		cout<<b<<" "<<d[b]<<endl;
-	      }
-	  cout<<"/////////////////////////////////////////////////////////////////"<<endl;
+	      reco_pQ[iop][i].push_back(make_pair(b,d[b]));
 	}
     }
-  CRASH("");
-  
+    
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
     {
@@ -173,19 +158,25 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
       double &out=pr[im_r_im_r_iop_iproj][ijack];
       out=0.0;
       
-      for(auto &ipGl : ipGl_of_iproj[iproj])
-	{
-	  const size_t ipGq=ipGl; //Projecting on quark side with the same gamma (will insert the 1+-g5)
-	  im_r_im_r_iop_ipGl_comps[5]=ipGl;
-	  const size_t im_r_im_r_iop_ipGl=im_r_im_r_iop_ipGl_ind(im_r_im_r_iop_ipGl_comps);
-	  const qprop_t &vert=jverts[im_r_im_r_iop_ipGl][ijack];
-	  
-	  const qprop_t amp_vert=prop_inv1*vert*quaGamma[5]*prop_inv2.adjoint()*quaGamma[5];
-	  
-	  //projecting on quark side
-	  auto projector=(quaGamma[ipGq]*(quaGamma[0]+g5_sign_of_iproj[iproj]*quaGamma[5])).adjoint();
-	  out+=(amp_vert*projector).trace().real()/norm;
-	}
+      for(size_t i=0;i<iGq_of_iop[iop].size();i++)
+	for(auto &contr : reco_pQ[iop][i])
+	  {
+	    const size_t iGq=contr.first;
+	    const dcompl_t coeff=contr.second;
+	    
+	    for(auto &ipGl : ipGl_of_iproj[iproj])
+	      {
+		const size_t ipGq=ipGl; //Projecting on quark side with the same gamma (will insert the 1+-g5)
+		const size_t im_r_im_r_iGl_ipGl=im_r_im_r_iGl_ipGl_ind({im_fw,r_fw,im_bw,r_bw,iGq,ipGl});
+		const qprop_t &vert=jverts[im_r_im_r_iGl_ipGl][ijack];
+		
+		const qprop_t amp_vert=prop_inv1*vert*quaGamma[5]*prop_inv2.adjoint()*quaGamma[5];
+		
+		//projecting on quark side
+		auto projector=(quaGamma[ipGq]*(quaGamma[0]+g5_sign_of_iproj[iproj]*quaGamma[5])).adjoint();
+		out+=(coeff*(amp_vert*projector).trace()).real()/norm;
+	      }
+	  }
     }
   
   return pr;

@@ -359,8 +359,7 @@ void ingredients_t::mom_compute_meslep()
       
       vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max());       //!< jackknived props
       vector<jm_r_mom_qprops_t> jprops2(glb::im_r_ind.max());       //!< jackknived props
-      jmeslep_vert_t jmeslep_verts(im_r_im_r_iop_ipGl_ind.max());   //!< jackknived vertex
-      
+      jmeslep_vert_t jmeslep_verts(im_r_im_r_iGl_ipGl_ind.max());   //!< jackknived vertex
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
@@ -419,27 +418,23 @@ void ingredients_t::mom_compute_meslep()
 	  invert_time.stop();
  	}
        
+      //DEBUG
+      for(size_t im_r_im_r_iGl_ipGl=0;im_r_im_r_iGl_ipGl<im_r_im_r_iGl_ipGl_ind.max();im_r_im_r_iGl_ipGl++)
+	for(size_t ijack=0;ijack<njacks;ijack++)
+	  {
+	    // cout<<im_r_im_r_iGl_ipGl_ind.descr(im_r_im_r_iGl_ipGl)<<", ijack: "<<ijack<<" ampproj, 1: "
+	    // 	<<ql*q1*pr_meslep1_temp[im_r_im_r_iGl_ipGl][ijack]<<", 2: "<<ql*q2*pr_meslep2_temp[im_r_im_r_iGl_ipGl][ijack]<<endl;
+	    
+	    const vector<size_t> im_r_im_r_iGl_ipGl_comps=im_r_im_r_iGl_ipGl_ind(im_r_im_r_iGl_ipGl);
+	    size_t ipGl=im_r_im_r_iGl_ipGl_ind(im_r_im_r_iGl_ipGl)[5];
+	    
+	    cout<<" ipGl: "<<ipGl<<", non ampproj, ML1: "<<jmeslep_verts.ML1[im_r_im_r_iGl_ipGl][ijack](0,0)<<", ML2: "<<jmeslep_verts.ML2[im_r_im_r_iGl_ipGl][ijack](0,0)<<endl;
+	  }
+      
       proj_time.start();
       const djvec_t pr_meslep1_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML1,jprop_inv2,im_r_ind);
       const djvec_t pr_meslep2_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML2,jprop_inv2,im_r_ind);
       const djvec_t pr_meslep_temp=ql*(q1*pr_meslep1_temp+q2*pr_meslep2_temp);
-      //DEBUG
-      for(size_t im_r_im_r_iop_iproj=0;im_r_im_r_iop_iproj<im_r_im_r_iop_iproj_ind.max();im_r_im_r_iop_iproj++)
-	for(size_t ijack=0;ijack<njacks;ijack++)
-	  {
-	    cout<<im_r_im_r_iop_iproj_ind.descr(im_r_im_r_iop_iproj)<<", ijack: "<<ijack<<" ampproj, 1: "
-		<<ql*q1*pr_meslep1_temp[im_r_im_r_iop_iproj][ijack]<<", 2: "<<ql*q2*pr_meslep2_temp[im_r_im_r_iop_iproj][ijack]<<endl;
-	    
-	    const vector<size_t> im_r_im_r_iop_iproj_comps=im_r_im_r_iop_iproj_ind(im_r_im_r_iop_iproj);
-	    size_t iproj=im_r_im_r_iop_iproj_ind(im_r_im_r_iop_iproj)[5];
-	    for(size_t ipGl : meslep::ipGl_of_iproj[iproj])
-	      {
-		vector<size_t> im_r_im_r_iop_ipGl_comps=im_r_im_r_iop_iproj_comps;
-		im_r_im_r_iop_ipGl_comps[5]=ipGl;
-		size_t im_r_im_r_iop_ipGl=im_r_im_r_iop_ipGl_ind(im_r_im_r_iop_ipGl_comps);
-		cout<<" ipGl: "<<ipGl<<", non ampproj, ML1: "<<jmeslep_verts.ML1[im_r_im_r_iop_ipGl][ijack](0,0)<<", ML2: "<<jmeslep_verts.ML2[im_r_im_r_iop_ipGl][ijack](0,0)<<endl;
-	      }
-	  }
       proj_time.stop();
       
       // to be included
