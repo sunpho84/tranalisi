@@ -113,7 +113,7 @@ vector<dcompl_t> Clifford_decompose(const vector<Dirac_t> &base,const T &g)
   vector<dcompl_t> out(16);
 
   for(size_t i=0;i<16;i++)
-    out[i]=(g*base[i].adjoint()).toDense().trace()/base[i].norm();
+    out[i]=(g*base[i].adjoint()).toDense().trace()/base[i].squaredNorm();
   
   return out;
 }
