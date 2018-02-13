@@ -126,10 +126,15 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
       for(size_t i=0;i<iGq_of_iop[iop].size();i++)
 	{
 	  const size_t iGq=iGq_of_iop[iop][i];
+	  cout<<"iGq: "<<iGq<<endl;
 	  vector<dcompl_t> d=Clifford_decompose(quaGamma,quaGamma[iGq]*(quaGamma[0]+g5_sign*quaGamma[5]));
 	  for(size_t b=0;b<16;b++)
 	    if(d[b]!=0.0)
-	      reco_pQ[iop][i].push_back(make_pair(b,d[b]));
+	      {
+		reco_pQ[iop][i].push_back(make_pair(b,d[b]));
+		cout<<b<<" "<<d[b]<<endl;
+	      }
+	  cout<<"/////////////////////////////////////////////////////////////////"<<endl;
 	}
     }
     
