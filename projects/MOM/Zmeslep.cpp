@@ -146,8 +146,6 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
       const size_t im_bw=im_r_im_r_iop_iproj_comps[2],r_bw=im_r_im_r_iop_iproj_comps[3];
       const size_t iop=im_r_im_r_iop_iproj_comps[4],iproj=im_r_im_r_iop_iproj_comps[5];
       
-      vector<size_t> im_r_im_r_iop_ipGl_comps=im_r_im_r_iop_iproj_comps;
-      
       const double norm=12.0*sqr(iGq_of_iop[iop].size())*2.0; //2 comes form 1-g5 normalziation
       
       const size_t ip1=im_r_ind({im_fw,r_fw});
@@ -178,6 +176,8 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
 		out+=(coeff*(amp_vert*projector).trace()).real()/norm;
 	      }
 	  }
+      
+      cout<<"amputated, im_fw: "<<im_fw<<", r_fw: "<<r_fw<<", im_bw: "<<im_bw<<", r_bw: "<<r_bw<<", iop: "<<iop<<", iproj: "<<iproj<<", ijack: "<<ijack<<", out: "<<out<<endl;
     }
   
   return pr;
