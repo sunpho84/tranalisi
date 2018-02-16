@@ -30,13 +30,25 @@ public:
   }
   
   //! get the full description
-  string descr(size_t i)
+  string descr(size_t i) const
   {
     vector<size_t> comp=(*this)(i);
     string out="";
     for(size_t i=0;i<rank();i++)
       {
 	out+=name(i)+"="+to_string(comp[i]);
+	if(i!=rank()-1) out+=", ";
+      }
+    return out;
+  }
+  
+  //! get the full description
+  string descr() const
+  {
+    string out="";
+    for(size_t i=0;i<rank();i++)
+      {
+	out+=name(i)+"("+to_string(max(i))+")";
 	if(i!=rank()-1) out+=", ";
       }
     return out;
