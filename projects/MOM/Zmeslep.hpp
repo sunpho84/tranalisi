@@ -9,18 +9,37 @@
  #define EXTERN_MESLEP extern
  #define INIT_TO(...)
 #else
- #define INIT_TO(...) =__VA_ARGS__
+ #define INIT_TO(...) __VA_ARGS__
 #endif
 
 EXTERN_MESLEP bool compute_meslep;
 
 namespace meslep
 {
-  EXTERN_MESLEP const vector<vector<size_t>> iGq_of_iop        INIT_TO({{ 1, 2, 3, 4}, { 1, 2, 3, 4}, { 0}, { 0}, {10,11,12,13,14,15}});
-  EXTERN_MESLEP const vector<int>            g5_sign_of_iop    INIT_TO({ -1,            +1,            -1,   +1 ,  +1});
-  EXTERN_MESLEP const vector<vector<size_t>> &iGl_of_iop       INIT_TO(iGq_of_iop);
-  EXTERN_MESLEP const vector<vector<size_t>> &ipGl_of_iproj    INIT_TO(iGl_of_iop);
-  EXTERN_MESLEP const vector<int>            &g5_sign_of_iproj INIT_TO(g5_sign_of_iop);
+  //! holds info on constructing operators
+  struct Zop_t
+  {
+    struct listGl_Gq_t
+    {
+      const size_t ilistGl; //!< insertions to be taken from the list
+      const size_t Gq;      //!< basic gamma on the quark side of the operator...
+    };
+    
+    const vector<listGl_Gq_t> contr;
+    const int Qg5_sign;               //!< 1+sign*g5 on the quark side
+  };
+  
+  EXTERN_MESLEP vector<Zop_t> zops INIT_TO({
+      {{{1,1},{2,2},{3,3},{4,4}},-1},
+      {{{1,1},{2,2},{3,3},{4,4}},+1},
+      {{{ 0,0}},-1},
+      {{{ 0,0}},+1},
+      {{{{5,10},{6,11},{7,12},{8,13},{9,14},{10,15}}},+1}});
+  
+  EXTERN_MESLEP size_t nZop INIT_TO({5});
+  
+  EXTERN_MESLEP       vector<size_t>         listGl            INIT_TO(={{0,1,2,3,4,10,11,12,13,14,15}}); //!< list of Gamma to be inserted on lepton side of the operator
+  EXTERN_MESLEP       vector<size_t>         &listpGl INIT_TO(=listGl);
 }
 
 //! holds jackkniffed vertex for an mr combo and for a given mom

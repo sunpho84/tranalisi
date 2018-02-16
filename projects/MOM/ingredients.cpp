@@ -180,7 +180,7 @@ void ingredients_t::mom_compute_qprop()
 	      "momentum "<<ilinmom+1<<"/"<<linmoms.size()<<", "
 	      "mom: "<<mom<<endl;
 	    read_time.start();
-	    const vector<m_r_mom_conf_qprops_t> props=read_all_qprops_mom(files,i_in_clust_ihit,mom);
+	    const vector<m_r_mom_conf_qprops_t> props=read_all_qprops_mom(files,im_r_ijack_ind,i_in_clust_ihit,mom);
 	    read_time.stop();
 	    
 	    //build all props
@@ -262,8 +262,8 @@ void ingredients_t::mom_compute_bil()
 	    
 	    //read
 	    read_time.start();
-	    const vector<m_r_mom_conf_qprops_t> props1=read_all_qprops_mom(files,i_in_clust_ihit,mom1);
-	    const vector<m_r_mom_conf_qprops_t> props2=(read2?read_all_qprops_mom(files,i_in_clust_ihit,mom2):props1);
+	    const vector<m_r_mom_conf_qprops_t> props1=read_all_qprops_mom(files,im_r_ijack_ind,i_in_clust_ihit,mom1);
+	    const vector<m_r_mom_conf_qprops_t> props2=(read2?read_all_qprops_mom(files,im_r_ijack_ind,i_in_clust_ihit,mom2):props1);
 	    read_time.stop();
 	    
 	    //build all props
@@ -359,7 +359,7 @@ void ingredients_t::mom_compute_meslep()
       
       vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max());       //!< jackknived props
       vector<jm_r_mom_qprops_t> jprops2(glb::im_r_ind.max());       //!< jackknived props
-      jmeslep_vert_t jmeslep_verts(im_r_im_r_iGl_ipGl_ind.max());   //!< jackknived vertex
+      jmeslep_vert_t jmeslep_verts(im_r_im_r_ilistGl_ipGl_ind.max());   //!< jackknived vertex
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
@@ -377,8 +377,8 @@ void ingredients_t::mom_compute_meslep()
 	    
 	    //read
 	    read_time.start();
-	    const vector<m_r_mom_conf_qprops_t> props1=read_all_qprops_mom(qfiles,i_in_clust_ihit,mom1);
-	    const vector<m_r_mom_conf_qprops_t> props2=(read2?read_all_qprops_mom(qfiles,i_in_clust_ihit,mom2):props1);
+	    const vector<m_r_mom_conf_qprops_t> props1=read_all_qprops_mom(qfiles,im_r_ijack_ind,i_in_clust_ihit,mom1);
+	    const vector<m_r_mom_conf_qprops_t> props2=(read2?read_all_qprops_mom(qfiles,im_r_ijack_ind,i_in_clust_ihit,mom2):props1);
 	    const vector<mom_conf_lprops_t> props_lep=read_all_lprops_mom(lfiles,i_in_clust_ihit,momlep);
 	    read_time.stop();
 	    
@@ -482,14 +482,18 @@ void ingredients_t::bin_write(raw_file_t &file) const
 void ingredients_t::set_indices()
 {
   im_r_ind.set_ranges({{"m",_nm},{"r",_nr}});
+  im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
+  r_r_iZbil_ind.set_ranges({{"r",_nr},{"r",_nr},{"Zbil",nZbil}});
+  im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
+  im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});
+  
   im_r_im_r_iZbil_ind=im_r_ind*im_r_ind*index_t({{"iZbil",nZbil}});;
   r_ilinmom_ind.set_ranges({{"r",_nr},{"linmom",linmoms.size()}});
   im_r_ilinmom_ind.set_ranges({{"m",_nm},{"r",_nr},{"linmom",linmoms.size()}});
   iZbil_ibilmom_ind.set_ranges({{"iZbil",nZbil},{"bilmom",bilmoms.size()}});
   im_r_im_r_iZbil_ibilmom_ind=im_r_im_r_iZbil_ind*index_t({{"bilmom",bilmoms.size()}});
   
-  im_r_im_r_iGl_ipGl_ind=im_r_ind*im_r_ind*index_t({{"iGl",nGamma},{"ipGl",nGamma}});
-  im_r_im_r_iop_ipGl_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"ipGl",nGamma}});
+  im_r_im_r_ilistGl_ipGl_ind=im_r_ind*im_r_ind*index_t({{"listGl",meslep::listGl.size()},{"ipGl",nGamma}});
   im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"iproj",nZbil}});
   im_r_im_r_iop_iproj_imeslepmom_ind=im_r_im_r_iop_iproj_ind*index_t({{"imeslepmom",meslepmoms.size()}});
   iGl_ipGl_iclust_ind.set_ranges({{"iGamma",nGamma},{"ipGl",nGamma},{"iclust",njacks}});

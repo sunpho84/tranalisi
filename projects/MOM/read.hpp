@@ -71,7 +71,7 @@ vector<raw_file_t> setup_read_all_qprops_mom(const vector<size_t> &conf_list);
 vector<raw_file_t> setup_read_all_lprops_mom(const vector<size_t> &conf_list);
 
 //! real all propagators for a given i_in_clust_ihit and imom, for quarks
-vector<m_r_mom_conf_qprops_t> read_all_qprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
+vector<m_r_mom_conf_qprops_t> read_all_qprops_mom(vector<raw_file_t> &files,const index_t &im_r_ijack_ind,const size_t i_in_clust_ihit,const size_t imom);
 
 //! real all propagators for a given i_in_clust_ihit and imom, for leptons
 vector<mom_conf_lprops_t> read_all_lprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);

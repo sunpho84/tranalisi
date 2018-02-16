@@ -100,10 +100,6 @@ void prepare_list_of_confs()
   conf_ind.set_ranges({{"ijack",njacks},{"i_in_clust",clust_size}});
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
-  im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
-  r_r_iZbil_ind.set_ranges({{"r",nr},{"r",nr},{"Zbil",nZbil}});
-  im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
-  im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});
 }
 
 namespace
@@ -167,7 +163,7 @@ vector<raw_file_t> setup_read_all_lprops_mom(const vector<size_t> &conf_list)
   return files;
 }
 
-vector<m_r_mom_conf_qprops_t> read_all_qprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom)
+vector<m_r_mom_conf_qprops_t> read_all_qprops_mom(vector<raw_file_t> &files,const index_t &im_r_ijack_ind,const size_t i_in_clust_ihit,const size_t imom)
 {
   //! output
   vector<m_r_mom_conf_qprops_t> props(im_r_ijack_ind.max());
@@ -194,6 +190,7 @@ vector<m_r_mom_conf_qprops_t> read_all_qprops_mom(vector<raw_file_t> &files,cons
       const size_t iconf=i_in_clust+clust_size*ijack;
       
       //! index of the file to use
+      cout<<im<<" "<<r<<" "<<iconf<<" "<<ihit<<" "<<ikind<<endl;
       const size_t im_r_iconf_ihit_ikind=im_r_iconf_ihit_ikind_ind({im,r,iconf,ihit,ikind});
       
       //! index of the output propagator

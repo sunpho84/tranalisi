@@ -15,10 +15,6 @@
  #define INIT_TO(...) = __VA_ARGS__
 #endif
 
-EXTERN_INGREDIENTS index_t im_r_im_r_igam_ind;
-EXTERN_INGREDIENTS index_t r_r_iZbil_ind;
-EXTERN_INGREDIENTS index_t im_r_ijack_ind;
-EXTERN_INGREDIENTS index_t im_r_ijackp1_ind;
 EXTERN_INGREDIENTS index_t iGl_ipGl_iclust_ind;    //meslep
 EXTERN_INGREDIENTS index_t iop_ipGl_iclust_ind;    //meslep
 EXTERN_INGREDIENTS index_t iop_iproj_iclust_ind;   //meslep
@@ -112,6 +108,10 @@ struct ingredients_t
     return Zbil_tasks;
   }
   
+  index_t im_r_im_r_igam_ind;
+  index_t r_r_iZbil_ind;
+  index_t im_r_ijack_ind;
+  index_t im_r_ijackp1_ind;
   index_t r_ilinmom_ind;
   index_t im_r_ilinmom_ind;
   index_t iZbil_ibilmom_ind;
@@ -132,9 +132,7 @@ struct ingredients_t
   
   //! renormalization meslep
   djvec_t Zmeslep;
-  
-  index_t im_r_im_r_iGl_ipGl_ind;
-  index_t im_r_im_r_iop_ipGl_ind;
+  index_t im_r_im_r_ilistGl_ipGl_ind;
   index_t im_r_im_r_iop_iproj_ind;
   
   //! compute all mom-scheme mesoleptonic vertices
