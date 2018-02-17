@@ -140,7 +140,7 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
       const size_t im_bw=im_r_im_r_iop_iproj_comps[2],r_bw=im_r_im_r_iop_iproj_comps[3];
       const size_t iop=im_r_im_r_iop_iproj_comps[4],iproj=im_r_im_r_iop_iproj_comps[5];
       
-      const double norm=12.0*sqr(zops[iop].contr.size())*2.0; //2 comes form 1-g5 normalization
+      const double norm=12.0*zops[iproj].contr.size()*2.0; //2 comes form 1-g5 normalization
       const int pQg5_sign=zops[iproj].Qg5_sign; //same sign
       const size_t ip1=im_r_ind({im_fw,r_fw});
       const size_t ip2=im_r_ind({im_bw,r_bw});
