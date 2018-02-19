@@ -81,7 +81,8 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
        
        //create list of operations
        vector<tuple<vector<jqprop_t>*,const qprop_t*,const qprop_t*>> list=
-	 {{&j.ML1,&p1.F,&p2.LO},
+	 {{&j.QCD,&p1.LO,&p2.LO},
+	  {&j.ML1,&p1.F,&p2.LO},
 	  {&j.ML2,&p1.LO,&p2.F}};
        
        const Zop_t &zop=zops[iop];

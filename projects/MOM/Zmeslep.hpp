@@ -48,11 +48,12 @@ class jmeslep_vert_t
   //! return a list of pointers to all internal data
   vector<vector<jqprop_t>*> get_all_ptrs()
   {
-    vector<vector<jqprop_t>*> out={&ML1,&ML2};
+    vector<vector<jqprop_t>*> out={&QCD,&ML1,&ML2};
     return out;
   }
   
 public:
+  vector<jqprop_t> QCD; //!< jackkniffed mesolep vertex, no photon
   vector<jqprop_t> ML1; //!< jackkniffed mesolep vertex, photon going out from line 1
   vector<jqprop_t> ML2; //!< jackkniffed mesolep vertex, photon going out from line 2
   

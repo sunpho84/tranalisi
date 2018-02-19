@@ -432,8 +432,13 @@ void ingredients_t::mom_compute_meslep()
       // 	  }
       
       proj_time.start();
+      cout<<"/////////////////////////////////////////////////////////////////"<<endl;
+      const djvec_t pr_meslep0_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.QCD,jprop_inv2,im_r_ind);
+      cout<<"/////////////////////////////////////////////////////////////////"<<endl;
       const djvec_t pr_meslep1_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML1,jprop_inv2,im_r_ind);
+      cout<<"/////////////////////////////////////////////////////////////////"<<endl;
       const djvec_t pr_meslep2_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML2,jprop_inv2,im_r_ind);
+      cout<<"/////////////////////////////////////////////////////////////////"<<endl;
       const djvec_t pr_meslep_temp=ql*(q1*pr_meslep1_temp+q2*pr_meslep2_temp);
       proj_time.stop();
       
