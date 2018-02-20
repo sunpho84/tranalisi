@@ -16,6 +16,16 @@ EXTERN_MESLEP bool compute_meslep;
 
 namespace meslep
 {
+  struct mesloop_t
+  {
+    vector<dcompl_t> QCD;
+    vector<dcompl_t> QED;
+    
+    mesloop_t(size_t size) : QCD(size),QED(size)
+    {
+    }
+  };
+  
   //! holds info on constructing operators
   struct Zop_t
   {
@@ -27,19 +37,21 @@ namespace meslep
     
     const vector<listGl_Gq_t> contr;
     const int Qg5_sign;               //!< 1+sign*g5 on the quark side
+    const size_t norm;
   };
   
   EXTERN_MESLEP vector<Zop_t> zops INIT_TO({
-      {{{1,1},{2,2},{3,3},{4,4}},-1},
-      {{{1,1},{2,2},{3,3},{4,4}},+1},
-      {{{ 0,0}},-1},
-      {{{ 0,0}},+1},
-      {{{{5,10},{6,11},{7,12},{8,13},{9,14},{10,15}}},+1}});
+      {{{1,1},{2,2},{3,3},{4,4}},-1,4},
+      {{{1,1},{2,2},{3,3},{4,4}},+1,4},
+      {{{ 0,0}},-1,1},
+      {{{ 0,0}},+1,1},
+      {{{{5,10},{6,11},{7,12},{8,13},{9,14},{10,15}}},+1,12}});
   
   EXTERN_MESLEP size_t nZop INIT_TO({5});
   
-  EXTERN_MESLEP       vector<size_t>         listGl            INIT_TO(={{0,1,2,3,4,10,11,12,13,14,15}}); //!< list of Gamma to be inserted on lepton side of the operator
+  EXTERN_MESLEP       vector<size_t>         listGl   INIT_TO(={{ 0, 1, 2, 3, 4,10,11,12,13,14,15}}); //!< list of Gamma to be inserted on lepton side of the operator
   EXTERN_MESLEP       vector<size_t>         &listpGl INIT_TO(=listGl);
+  EXTERN_MESLEP       vector<int>            Lg5_sign INIT_TO(={{+1,-1,-1,-1,-1,+1,+1,+1,+1,+1,+1}}); //!< 1+sign*g5 on the quark side
 }
 
 //! holds jackkniffed vertex for an mr combo and for a given mom

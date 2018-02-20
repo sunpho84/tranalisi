@@ -22,14 +22,14 @@ namespace meslep
   }
 }
 
-vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
+meslep::mesloop_t build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
 {
   using namespace meslep;
   
   const index_t ilistGl_ilistpGl_iclust_ind=get_ilistGl_ilistpGl_iclust_ind();
   
   //! projected lepton propagator with insertion
-  vector<dcompl_t> mesloop(ilistGl_ilistpGl_iclust_ind.max());
+  meslep::mesloop_t mesloop(ilistGl_ilistpGl_iclust_ind.max());
   
   // NB: the lepton loop is fully amputated
 #pragma omp parallel for
@@ -39,8 +39,16 @@ vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
       const size_t ilistGl=comps[0],ilistpGl=comps[1],iclust=comps[2];
       const mom_conf_lprops_t &pl=props_lep[iclust];
       const size_t iGl=listGl[ilistGl];
+      const size_t ipGl=listpGl[ilistpGl];
+      const int sign=Lg5_sign[ilistGl];
+      const int psign=Lg5_sign[ilistpGl];
       
-      mesloop[i]=(pl.F*lepGamma[iGl]*(lepGamma[0]-lepGamma[5])*lepGamma[ilistpGl].adjoint()).trace()/4.0; //normalization for the single gamma
+      auto op=lepGamma[iGl]*(lepGamma[0]+sign*lepGamma[5]);
+      auto pF=lepGamma[5]*pl.F.adjoint()*lepGamma[5];
+      auto pr=(lepGamma[ipGl]*(lepGamma[0]+psign*lepGamma[5])).adjoint()/2.0;
+      
+      mesloop.QCD[i]=(op*pr).toDense().trace()/4.0; //for test: this must be 1 if iGl==ipGl
+      mesloop.QED[i]=(op*pF*pr).trace()/4.0; //normalization for the single gamma
     }
   
   return mesloop;
@@ -49,12 +57,13 @@ vector<dcompl_t> build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
 void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
 					    const vector<mom_conf_lprops_t> &props_lep,const index_t &im_r_ind)
 {
+  using namespace meslep;
+  
   const size_t nm=im_r_ind.max(0);
   const size_t nr=im_r_ind.max(1);
   
-  const vector<dcompl_t> mesloop=build_mesloop(props_lep);
-  
-  using namespace meslep;
+  // const
+    mesloop_t mesloop=build_mesloop(props_lep);
   
   const index_t ilistGl_ilistpGl_iclust_ind=get_ilistGl_ilistpGl_iclust_ind();
   
@@ -80,10 +89,10 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
        const m_r_mom_conf_qprops_t &p2=props2[im_r_iclust_ind({im_bw,r_bw,iclust})];
        
        //create list of operations
-       vector<tuple<vector<jqprop_t>*,const qprop_t*,const qprop_t*>> list=
-	 {{&j.QCD,&p1.LO,&p2.LO},
-	  {&j.ML1,&p1.F,&p2.LO},
-	  {&j.ML2,&p1.LO,&p2.F}};
+       vector<tuple<vector<jqprop_t>*,const vector<dcompl_t>*,const qprop_t*,const qprop_t*>> list=
+	 {{&j.QCD,&mesloop.QCD,&p1.LO,&p2.LO},
+	  {&j.ML1,&mesloop.QED,&p1.F,&p2.LO},
+	  {&j.ML2,&mesloop.QED,&p1.LO,&p2.F}};
        
        const Zop_t &zop=zops[iop];
        
@@ -93,22 +102,25 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	 {
 	   const int    sign=zop.Qg5_sign;
 	   jqprop_t &jvert=(*get<0>(o))[im_r_im_r_iop_ilistpGl];
+	   cout<<" "<<endl;
 	   for(auto &contr : zop.contr)
 	     {
 	       const size_t ilistGl=contr.ilistGl;
 	       const size_t Gq=contr.Gq;
 	       const size_t imesloop=ilistGl_ilistpGl_iclust_ind({ilistGl,ilistpGl,iclust});
-	       const qprop_t &prop1=*get<1>(o);
-	       const qprop_t &prop2=*get<2>(o);
+	       const dcompl_t &mesloop=(*get<1>(o))[imesloop];
+	       const qprop_t &prop1=*get<2>(o);
+	       const qprop_t &prop2=*get<3>(o);
 	       
-	       const qprop_t c=prop1*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*mesloop[imesloop];
+	       const qprop_t c=prop1*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*mesloop;
 	       jvert[iclust]+=c;
 	       
-	       cout<<"ilistGl: "<<ilistGl<<
+	       cout
+		 <<"ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<
 		 ", Gq: "<<Gq<<
-		 ", ilistpGl: "<<ilistpGl<<
+		 ", ilistpGl: "<<ilistpGl<<"("<<listpGl[ilistpGl]<<")"<<
 		 ", iclust: "<<iclust<<
-		 ", mesloop: "<<mesloop[imesloop]<<
+		 ", mesloop: "<<mesloop<<
 		 ", prop1: "<<prop1(0,0)<<
 		 ", prop2: "<<prop2(0,0)<<
 		 ", res: "<<c(0,0)<<
@@ -141,7 +153,7 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
       const size_t im_bw=im_r_im_r_iop_iproj_comps[2],r_bw=im_r_im_r_iop_iproj_comps[3];
       const size_t iop=im_r_im_r_iop_iproj_comps[4],iproj=im_r_im_r_iop_iproj_comps[5];
       
-      const double norm=12.0*zops[iproj].contr.size()*2.0; //2 comes form 1-g5 normalization
+      const double norm=12.0*zops[iproj].norm*2.0; //2 comes form 1-g5 normalization
       const int pQg5_sign=zops[iproj].Qg5_sign; //same sign
       const size_t ip1=im_r_ind({im_fw,r_fw});
       const size_t ip2=im_r_ind({im_bw,r_bw});
@@ -163,10 +175,12 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
 	  //projecting on quark side
 	  const size_t Gq=pcontr.Gq;
 	  auto projector=(quaGamma[Gq]*(quaGamma[0]+pQg5_sign*quaGamma[5])).adjoint();
-	  out+=(amp_vert*projector).trace().real()/norm;
+	  auto contr=(amp_vert*projector).trace().real()/norm;
+	  out+=contr;
 	  
 	  cout<<" i: "<<i<<", iop: "<<iop<<", ilistpGl: "<<ilistpGl<<", iproj: "<<iproj<<
-	      ", im_r_im_r_iop_ilistpGl(jverts): "<<im_r_im_r_iop_ilistpGl<<", im_r_im_r_iop_iproj(out): "<<im_r_im_r_iop_iproj<<endl;
+	    ", im_r_im_r_iop_ilistpGl(jverts): "<<im_r_im_r_iop_ilistpGl<<", im_r_im_r_iop_iproj(out): "<<im_r_im_r_iop_iproj<<" "<<
+	    ", contr: "<<contr<<endl;
 	  }
       
       cout<<"amputated, im_fw: "<<im_fw<<", r_fw: "<<r_fw<<", im_bw: "<<im_bw<<", r_bw: "<<r_bw<<", iop: "<<iop<<", iproj: "<<iproj<<", ijack: "<<ijack<<", out: "<<out<<endl;
