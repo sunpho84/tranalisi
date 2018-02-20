@@ -55,7 +55,10 @@ void read_input(const string &input_path)
   tmax=input.read<size_t>("Tmax");
   
   use_QED=input.read<bool>("UseQED");
-  compute_meslep=input.read<bool>("ComputeMesLep");
+  if(use_QED)
+    compute_meslep=input.read<bool>("ComputeMesLep");
+  else
+    compute_meslep=false;
   print_each_mom=input.read<int>("PrintEachMom");
   
   ainv=input.read<double>("aInv");
@@ -190,7 +193,7 @@ vector<m_r_mom_conf_qprops_t> read_all_qprops_mom(vector<raw_file_t> &files,cons
       const size_t iconf=i_in_clust+clust_size*ijack;
       
       //! index of the file to use
-      cout<<im<<" "<<r<<" "<<iconf<<" "<<ihit<<" "<<ikind<<endl;
+      //cout<<im<<" "<<r<<" "<<iconf<<" "<<ihit<<" "<<ikind<<endl;
       const size_t im_r_iconf_ihit_ikind=im_r_iconf_ihit_ikind_ind({im,r,iconf,ihit,ikind});
       
       //! index of the output propagator
