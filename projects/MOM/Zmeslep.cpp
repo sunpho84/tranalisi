@@ -102,7 +102,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	 {
 	   const int    sign=zop.Qg5_sign;
 	   jqprop_t &jvert=(*get<0>(o))[im_r_im_r_iop_ilistpGl];
-	   cout<<" "<<endl;
+	   // cout<<" "<<endl;
 	   for(auto &contr : zop.contr)
 	     {
 	       const size_t ilistGl=contr.ilistGl;
@@ -115,16 +115,16 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	       const qprop_t c=prop1*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*mesloop;
 	       jvert[iclust]+=c;
 	       
-	       cout
-		 <<"ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<
-		 ", Gq: "<<Gq<<
-		 ", ilistpGl: "<<ilistpGl<<"("<<listpGl[ilistpGl]<<")"<<
-		 ", iclust: "<<iclust<<
-		 ", mesloop: "<<mesloop<<
-		 ", prop1: "<<prop1(0,0)<<
-		 ", prop2: "<<prop2(0,0)<<
-		 ", res: "<<c(0,0)<<
-		 endl;
+	       // cout
+	       // 	 <<"ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<
+	       // 	 ", Gq: "<<Gq<<
+	       // 	 ", ilistpGl: "<<ilistpGl<<"("<<listpGl[ilistpGl]<<")"<<
+	       // 	 ", iclust: "<<iclust<<
+	       // 	 ", mesloop: "<<mesloop<<
+	       // 	 ", prop1: "<<prop1(0,0)<<
+	       // 	 ", prop2: "<<prop2(0,0)<<
+	       // 	 ", res: "<<c(0,0)<<
+	       // 	 endl;
 	     }
 	 }
      }
@@ -178,12 +178,12 @@ djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> 
 	  auto contr=(amp_vert*projector).trace().real()/norm;
 	  out+=contr;
 	  
-	  cout<<" i: "<<i<<", iop: "<<iop<<", ilistpGl: "<<ilistpGl<<", iproj: "<<iproj<<
-	    ", im_r_im_r_iop_ilistpGl(jverts): "<<im_r_im_r_iop_ilistpGl<<", im_r_im_r_iop_iproj(out): "<<im_r_im_r_iop_iproj<<" "<<
-	    ", contr: "<<contr<<endl;
+	  // cout<<" i: "<<i<<", iop: "<<iop<<", ilistpGl: "<<ilistpGl<<", iproj: "<<iproj<<
+	  //   ", im_r_im_r_iop_ilistpGl(jverts): "<<im_r_im_r_iop_ilistpGl<<", im_r_im_r_iop_iproj(out): "<<im_r_im_r_iop_iproj<<" "<<
+	  //   ", contr: "<<contr<<endl;
 	  }
       
-      cout<<"amputated, im_fw: "<<im_fw<<", r_fw: "<<r_fw<<", im_bw: "<<im_bw<<", r_bw: "<<r_bw<<", iop: "<<iop<<", iproj: "<<iproj<<", ijack: "<<ijack<<", out: "<<out<<endl;
+      // cout<<"amputated, im_fw: "<<im_fw<<", r_fw: "<<r_fw<<", im_bw: "<<im_bw<<", r_bw: "<<r_bw<<", iop: "<<iop<<", iproj: "<<iproj<<", ijack: "<<ijack<<", out: "<<out<<endl;
     }
   
   return pr;

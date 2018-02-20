@@ -369,11 +369,13 @@ void ingredients_t::mom_compute_meslep()
 	    if(scheme==reno_scheme::SMOM) CRASH("this will not work for SMOM");
 	    
 	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
-	    cout<<"Working on meslep, "
-	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
-	      "hit "<<ihit+1<<"/"<<nhits<<", "
-	      "momentum combo "<<imeslepmom+1<<"/"<<meslepmoms.size()<<", "
-	      "moms: "<<mom1<<" "<<mom2<<endl;
+	    const bool debug=false;
+	    if(debug)
+	      cout<<"Working on meslep, "
+		"clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
+		"hit "<<ihit+1<<"/"<<nhits<<", "
+		"momentum combo "<<imeslepmom+1<<"/"<<meslepmoms.size()<<", "
+		"moms: "<<mom1<<" "<<mom2<<endl;
 	    
 	    //read
 	    read_time.start();
