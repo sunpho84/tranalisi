@@ -47,8 +47,8 @@ meslep::mesloop_t build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
       auto pF=lepGamma[5]*pl.F.adjoint()*lepGamma[5];
       auto pr=(lepGamma[ipGl]*(lepGamma[0]+psign*lepGamma[5])).adjoint()/2.0;
       
-      mesloop.QCD[i]=(op*pr).toDense().trace()/4.0; //for test: this must be 1 if iGl==ipGl
-      mesloop.QED[i]=(op*pF*pr).trace()/4.0; //normalization for the single gamma
+      mesloop.LO[i]=(op*pr).toDense().trace()/4.0; //for test: this must be 1 if iGl==ipGl
+      mesloop.F[i]=(op*pF*pr).trace()/4.0; //normalization for the single gamma
     }
   
   return mesloop;
@@ -62,8 +62,12 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
   const size_t nm=im_r_ind.max(0);
   const size_t nr=im_r_ind.max(1);
   
-  // const
-    mesloop_t mesloop=build_mesloop(props_lep);
+  //these are the charges in the lagrangian
+  const double ql=-1.0;     //!< the program simulates muon *particle*
+  const double q1=-1.0/3.0; //!< charge of the quark1
+  const double q2=+2.0/3.0; //!< charge of the quark2
+  
+  const mesloop_t mesloop=build_mesloop(props_lep);
   
   const index_t ilistGl_ilistpGl_iclust_ind=get_ilistGl_ilistpGl_iclust_ind();
   
@@ -89,10 +93,29 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
        const m_r_mom_conf_qprops_t &p2=props2[im_r_iclust_ind({im_bw,r_bw,iclust})];
        
        //create list of operations
-       vector<tuple<vector<jqprop_t>*,const vector<dcompl_t>*,const qprop_t*,const qprop_t*>> list=
-	 {{&j.QCD,&mesloop.QCD,&p1.LO,&p2.LO},
-	  {&j.ML1,&mesloop.QED,&p1.F,&p2.LO},
-	  {&j.ML2,&mesloop.QED,&p1.LO,&p2.F}};
+       vector<tuple<vector<jqprop_t>*,const vector<dcompl_t>*,const qprop_t*,const qprop_t*,double>> list=
+	 {{&j.LO,&mesloop.LO,&p1.LO,&p2.LO,1.0}, //LO
+	  //
+	  //
+	  {&j.PH,&mesloop.F,&p1.F,&p2.LO,q1*ql}, //nasty1
+	  {&j.PH,&mesloop.F,&p1.LO,&p2.F,q2*ql}, //nasty2
+	  //
+	  {&j.PH,&mesloop.LO,&p1.FF,&p2.LO,q1*q1}, //self1
+	  {&j.PH,&mesloop.LO,&p1.LO,&p2.FF,q2*q2}, //self2
+	  //
+	  {&j.PH,&mesloop.LO,&p1.T,&p2.LO,q1*q1}, //tad1
+	  {&j.PH,&mesloop.LO,&p1.LO,&p2.T,q2*q2}, //tad2
+	  //
+	  {&j.PH,&mesloop.LO,&p1.F,&p2.F,q1*q2}, //exchange
+	  //
+	  //
+	  {&j.CT1,&mesloop.LO,&p1.P,&p2.LO,1.0}, //counterterm1
+	  {&j.CT2,&mesloop.LO,&p1.LO,&p2.P,1.0}, //counterterm2
+	  //
+	  //
+	  {&j.S,&mesloop.LO,&p1.S,&p2.LO,1.0}, //mass1
+	  {&j.S,&mesloop.LO,&p1.LO,&p2.S,1.0}  //mass2
+	 };
        
        const Zop_t &zop=zops[iop];
        

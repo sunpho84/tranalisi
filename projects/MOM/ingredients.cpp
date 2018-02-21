@@ -1,3 +1,4 @@
+
 #ifdef HAVE_CONFIG_H
  #include <config.hpp>
 #endif
@@ -194,8 +195,11 @@ void ingredients_t::mom_compute_qprop()
       clusterize_all_mr_jackkniffed_qprops(jprops,use_QED,clust_size,im_r_ind,deltam_cr);
       clust_time.stop();
       
-      vector<jqprop_t> jprop_inv(glb::im_r_ind.max()); //!< inverse propagator
-      vector<jqprop_t> jprop_QED_inv(glb::im_r_ind.max()); //!< inverse propagator with em insertion and counterterm
+      vector<jqprop_t> jprop_inv; //!< inverse propagator
+      vector<jqprop_t> jprop_QED_inv; //!< inverse propagator with em insertion
+      
+      get_inverse_propagators(jprop_inv,jprop_QED_inv,jprops,im_r_ijackp1_ind);
+      
 #pragma omp parallel for reduction(+:invert_time,Zq_time)
       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
 	{
@@ -205,29 +209,17 @@ void ingredients_t::mom_compute_qprop()
 	  const size_t im_r=glb::im_r_ind({im,r});
 	  const size_t im_r_ilinmom=im_r_ilinmom_ind({im,r,ilinmom});
 	  
-	  //compute inverse
-	  invert_time.start();
-	  const qprop_t prop_inv=jprops[im_r].LO[ijack].inverse();
-	  //if(im_r_ijack==0) cout<<jprops[im_r].LO[ijack](0,0)<<endl;
-	  jprop_inv[im_r][ijack]=prop_inv;
-	  invert_time.stop();
-	  
 	  //compute Zq
 	  Zq_time.start();
-	  Zq[im_r_ilinmom][ijack]=compute_Zq(prop_inv,mom);
-	  Zq_sig1[im_r_ilinmom][ijack]=compute_Zq_sig1(prop_inv,mom);
+	  Zq[im_r_ilinmom][ijack]=compute_Zq(jprop_inv[im_r][ijack],mom);
+	  Zq_sig1[im_r_ilinmom][ijack]=compute_Zq_sig1(jprop_inv[im_r][ijack],mom);
 	  Zq_time.stop();
 	  
 	  //do the same with QED
 	  if(use_QED)
 	    {
-	      invert_time.start();
-	      qprop_t prop_QED_inv=prop_inv*jprops[im_r].QED[ijack]*prop_inv;
-	      jprop_QED_inv[im_r][ijack]=prop_QED_inv;
-	      invert_time.stop();
-	      
 	      Zq_time.start();
-	      Zq_sig1_QED[im_r_ilinmom][ijack]=-compute_Zq_sig1(prop_QED_inv,mom);
+	      Zq_sig1_QED[im_r_ilinmom][ijack]=-compute_Zq_sig1(jprop_QED_inv[im_r][ijack],mom);
 	      Zq_time.stop();
 	    }
 	}
@@ -285,34 +277,13 @@ void ingredients_t::mom_compute_bil()
       jverts.clusterize_all(use_QED,clust_size,im_r_im_r_igam_ind,deltam_cr);
       clust_time.stop();
       
-      vector<jqprop_t> jprop_inv1(glb::im_r_ind.max()); //!< inverse propagator1
-      vector<jqprop_t> jprop_inv2(glb::im_r_ind.max()); //!< inverse propagator2
-      vector<jqprop_t> jprop_QED_inv1(glb::im_r_ind.max()); //!< inverse propagator1 with em insertion
-      vector<jqprop_t> jprop_QED_inv2(glb::im_r_ind.max()); //!< inverse propagator2 with em insertion
-#pragma omp parallel for reduction(+:invert_time)
-      for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
-	{
-	  //decript indices
-	  const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
-	  const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
-	  const size_t im_r=glb::im_r_ind({im,r});
-	  
-	  //compute inverse
-	  invert_time.start();
-	  qprop_t prop_inv1=jprop_inv1[im_r][ijack]=jprops1[im_r].LO[ijack].inverse();
-	  qprop_t prop_inv2=jprop_inv2[im_r][ijack]=jprops2[im_r].LO[ijack].inverse();
-	  //if(im_r_ijack==0) cout<<jprops[im_r].LO[ijack](0,0)<<endl;
-	  invert_time.stop();
-	  
-	  //do the same with QED
-	  if(use_QED)
-	    {
-	      invert_time.start(); //This misses a sign -1 coming from the original inverse
-	      jprop_QED_inv1[im_r][ijack]=prop_inv1*jprops1[im_r].QED[ijack]*prop_inv1;
-	      jprop_QED_inv2[im_r][ijack]=prop_inv2*jprops2[im_r].QED[ijack]*prop_inv2;
-	      invert_time.stop();
-	    }
-	}
+      vector<jqprop_t> jprop_inv1; //!< inverse propagator1
+      vector<jqprop_t> jprop_inv2; //!< inverse propagator2
+      vector<jqprop_t> jprop_QED_inv1; //!< inverse propagator1 with em insertion
+      vector<jqprop_t> jprop_QED_inv2; //!< inverse propagator2 with em insertion
+      
+      get_inverse_propagators(jprop_inv1,jprop_QED_inv1,jprops1,im_r_ijackp1_ind);
+      get_inverse_propagators(jprop_inv2,jprop_QED_inv2,jprops2,im_r_ijackp1_ind);
       
       proj_time.start();
       djvec_t pr_bil_temp=compute_proj_bil(jprop_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
@@ -343,11 +314,6 @@ void ingredients_t::mom_compute_bil()
 
 void ingredients_t::mom_compute_meslep()
 {
-  //these are the charges in the lagrangian
-  const double ql=-1.0;     //!< the program simulates muon *particle*
-  const double q1=-1.0/3.0; //!< charge of the quark1
-  const double q2=+2.0/3.0; //!< charge of the quark2
-  
   vector<raw_file_t> qfiles=setup_read_all_qprops_mom(conf_list);
   vector<raw_file_t> lfiles=setup_read_all_lprops_mom(conf_list);
   
@@ -400,67 +366,41 @@ void ingredients_t::mom_compute_meslep()
       clust_time.start();
       clusterize_all_mr_jackkniffed_qprops(jprops1,use_QED,clust_size,im_r_ind,deltam_cr);
       clusterize_all_mr_jackkniffed_qprops(jprops2,use_QED,clust_size,im_r_ind,deltam_cr);
-      jmeslep_verts.clusterize_all(clust_size);
+      jmeslep_verts.clusterize_all(clust_size,im_r_im_r_iop_ilistpGl_ind,deltam_cr);
       clust_time.stop();
       
-      vector<jqprop_t> jprop_inv1(glb::im_r_ind.max()); //!< inverse propagator1
-      vector<jqprop_t> jprop_inv2(glb::im_r_ind.max()); //!< inverse propagator2
- #pragma omp parallel for reduction(+:invert_time)
-       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
- 	{
-	  //decript indices
-	  const vector<size_t> comps=im_r_ijackp1_ind(im_r_ijack);
-	  const size_t im=comps[0],r=comps[1],ijack=comps[2];
-	  const size_t im_r=glb::im_r_ind({im,r});
-	  
-	  //compute inverse
-	  invert_time.start();
-	  jprop_inv1[im_r][ijack]=jprops1[im_r].LO[ijack].inverse();
-	  jprop_inv2[im_r][ijack]=jprops2[im_r].LO[ijack].inverse();
-	  invert_time.stop();
- 	}
-       
-      // //DEBUG
-      // for(size_t im_r_im_r_iGl_ipGl=0;im_r_im_r_iGl_ipGl<im_r_im_r_iGl_ipGl_ind.max();im_r_im_r_iGl_ipGl++)
-      // 	for(size_t ijack=0;ijack<njacks;ijack++)
-      // 	  {
-      // 	    // cout<<im_r_im_r_iGl_ipGl_ind.descr(im_r_im_r_iGl_ipGl)<<", ijack: "<<ijack<<" ampproj, 1: "
-      // 	    // 	<<ql*q1*pr_meslep1_temp[im_r_im_r_iGl_ipGl][ijack]<<", 2: "<<ql*q2*pr_meslep2_temp[im_r_im_r_iGl_ipGl][ijack]<<endl;
-	    
-      // 	    const vector<size_t> im_r_im_r_iGl_ipGl_comps=im_r_im_r_iGl_ipGl_ind(im_r_im_r_iGl_ipGl);
-      // 	    size_t ipGl=im_r_im_r_iGl_ipGl_ind(im_r_im_r_iGl_ipGl)[5];
-	    
-      // 	    cout<<" ipGl: "<<ipGl<<", non ampproj, ML1: "<<jmeslep_verts.ML1[im_r_im_r_iGl_ipGl][ijack](0,0)<<", ML2: "<<jmeslep_verts.ML2[im_r_im_r_iGl_ipGl][ijack](0,0)<<endl;
-      // 	  }
+      vector<jqprop_t> jprop_inv1; //!< inverse propagator1
+      vector<jqprop_t> jprop_inv2; //!< inverse propagator2
+      vector<jqprop_t> jprop_QED_inv1; //!< inverse propagator1 with em insertion
+      vector<jqprop_t> jprop_QED_inv2; //!< inverse propagator2 with em insertion
+      
+      get_inverse_propagators(jprop_inv1,jprop_QED_inv1,jprops1,im_r_ijackp1_ind);
+      get_inverse_propagators(jprop_inv2,jprop_QED_inv2,jprops2,im_r_ijackp1_ind);
       
       proj_time.start();
-      cout<<"/////////////////////////////////////////////////////////////////"<<endl;
-      const djvec_t pr_meslep0_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.QCD,jprop_inv2,im_r_ind);
-      cout<<"/////////////////////////////////////////////////////////////////"<<endl;
-      const djvec_t pr_meslep1_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML1,jprop_inv2,im_r_ind);
-      cout<<"/////////////////////////////////////////////////////////////////"<<endl;
-      const djvec_t pr_meslep2_temp=compute_proj_measlep(jprop_inv1,jmeslep_verts.ML2,jprop_inv2,im_r_ind);
-      cout<<"/////////////////////////////////////////////////////////////////"<<endl;
-      const djvec_t pr_meslep_temp=ql*(q1*pr_meslep1_temp+q2*pr_meslep2_temp);
-      proj_time.stop();
       
-      // to be included
-      //       //QED
-//       djvec_t pr_bil_QED_temp;
-//       if(use_QED)
-// 	{
-// 	  const djvec_t pr_bil_EM=compute_proj_bil(jprop_inv1,jmeslep_verts.EM,jprop_inv2,glb::im_r_ind);
-// 	  const djvec_t pr_bil_a=compute_proj_bil(jprop_EM_inv1,jmeslep_verts.LO,jprop_inv2,glb::im_r_ind);
-// 	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jmeslep_verts.LO,jprop_EM_inv2,glb::im_r_ind);
-// 	  pr_bil_QED_temp=pr_bil_a+pr_bil_b-pr_bil_EM;
-// 	}
+      const auto &j=jmeslep_verts;
+      
+      djvec_t pr_LO,pr_QED_amp_QCD,pr_QCD_amp_QED;
+      for(auto &p : vector<tuple<djvec_t*,const vector<jqprop_t>*,const vector<jqprop_t>*,const vector<jqprop_t>*>>{
+	  {&pr_LO,          &jprop_inv1,     &j.LO,  &jprop_inv2},
+	  {&pr_QED_amp_QCD, &jprop_inv1,     &j.QED, &jprop_inv2},
+	  {&pr_QCD_amp_QED, &jprop_QED_inv1, &j.LO,  &jprop_QED_inv2}})
+	{
+	  auto &out=*get<0>(p);
+	  auto &p1=*get<1>(p);
+	  auto &v=*get<2>(p);
+	  auto &p2=*get<3>(p);
+	  out=compute_proj_measlep(p1,v,p2,im_r_ind);
+	}
+      proj_time.stop();
       
       //! an index running on all packed combo, and momenta
       const index_t all_imeslepmom_ind({{"All",im_r_im_r_iop_iproj_ind.max()},{"meslepmom",meslepmoms.size()}});
       
       //store
       for(size_t iall=0;iall<im_r_im_r_iop_iproj_ind.max();iall++)
-	pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=pr_meslep_temp[iall];
+	pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=pr_QED_amp_QCD[iall];
     }
 }
 
@@ -503,6 +443,7 @@ void ingredients_t::set_indices()
   im_r_im_r_ilistGl_ipGl_ind=im_r_ind*im_r_ind*index_t({{"listGl",meslep::listGl.size()},{"ipGl",nGamma}});
   im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"iproj",nZbil}});
   im_r_im_r_iop_iproj_imeslepmom_ind=im_r_im_r_iop_iproj_ind*index_t({{"imeslepmom",meslepmoms.size()}});
+  im_r_im_r_iop_ilistpGl_ind.set_ranges({{"m_fw",_nm},{"r_fw",_nr},{"m_bw",_nm},{"r_bw",_nr},{"iop",meslep::nZop},{"listpGl",meslep::listpGl.size()}});
   iGl_ipGl_iclust_ind.set_ranges({{"iGamma",nGamma},{"ipGl",nGamma},{"iclust",njacks}});
   iop_ipGl_iclust_ind.set_ranges({{"iop",nZbil},{"ipGl",nGamma},{"iclust",njacks}});
   iop_iproj_iclust_ind.set_ranges({{"iop",nZbil},{"iproj",nZbil},{"iclust",njacks}});

@@ -10,6 +10,7 @@
  #include <prop.hpp>
 
 #include <oper.hpp>
+#include <timings.hpp>
 
 #include <corrections.hpp>
 #include <geometry.hpp>
@@ -60,21 +61,7 @@ string get_lprop_tag(const size_t ikind)
   return combine("L_%s",mom_conf_lprops_t::tag[ikind]);
 }
 
-vjqprop_t get_all_mr_qprops_inv(const vjqprop_t &jprop)
-{
-  cout<<"Inverting all props"<<endl;
-  
-  vjqprop_t jprop_inv(jprop.size());
-  
-#pragma omp parallel for
-  for(size_t imr=0;imr<glb::nmr;imr++)
-    for(size_t ijack=0;ijack<=njacks;ijack++)
-      jprop_inv[imr][ijack]=jprop[imr][ijack].inverse();
-  
-  return jprop_inv;
-}
-
-void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props,bool set_QED,const index_t &im_r_ind)
+void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props,bool use_QED,const index_t &im_r_ind)
 {
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   
@@ -90,7 +77,7 @@ void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vec
       const m_r_mom_conf_qprops_t &p=props[i_im_r_ijack];
       
       j.LO[ijack]+=p.LO;
-      if(set_QED)
+      if(use_QED)
 	for(auto &jp_p : vector<tuple<jqprop_t*,const qprop_t*>>({{&j.PH,&p.FF},{&j.PH,&p.T},{&j.CT,&p.P},{&j.S,&p.S}}))
 	  (*get<0>(jp_p))[ijack]+=*get<1>(jp_p);
     }
@@ -104,10 +91,41 @@ void clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,bool
   
   if(use_QED)
 #pragma omp parallel for
-  for(size_t i=0;i<im_r_ind.max();i++)
-    for(size_t ijack=0;ijack<=njacks;ijack++)
-      jprops[i].QED[ijack]=
-	jprops[i].PH[ijack]-deltam_cr[im_r_ind(i)[0]][ijack]*jprops[i].CT[ijack];
+    for(size_t i=0;i<im_r_ind.max();i++)
+      for(size_t ijack=0;ijack<=njacks;ijack++)
+	jprops[i].QED[ijack]=
+	  jprops[i].PH[ijack]-deltam_cr[im_r_ind(i)[0]][ijack]*jprops[i].CT[ijack];
+}
+
+void get_inverse_propagators(vector<jqprop_t> &jprop_inv,vector<jqprop_t> &jprop_QED_inv,
+			     const vector<jm_r_mom_qprops_t> &jprops,
+			     const index_t &im_r_ijackp1_ind)
+{
+  jprop_inv.resize(glb::im_r_ind.max());
+  jprop_QED_inv.resize(glb::im_r_ind.max());
+  
+#pragma omp parallel for reduction(+:invert_time)
+  for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
+    {
+      //decript indices
+      const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
+      const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
+      const size_t im_r=glb::im_r_ind({im,r});
+      
+      //compute inverse
+      invert_time.start();
+      qprop_t prop_inv=jprop_inv[im_r][ijack]=jprops[im_r].LO[ijack].inverse();
+      //if(im_r_ijack==0) cout<<jprops[im_r].LO[ijack](0,0)<<endl;
+      invert_time.stop();
+      
+      //do the same with QED
+      if(use_QED)
+	{
+	  invert_time.start(); //This misses a sign -1 coming from the original inverse
+	  jprop_QED_inv[im_r][ijack]=prop_inv*jprops[im_r].QED[ijack]*prop_inv;
+	  invert_time.stop();
+	}
+    }
 }
 
 double m0_of_kappa(double kappa)

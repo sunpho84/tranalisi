@@ -18,10 +18,10 @@ namespace meslep
 {
   struct mesloop_t
   {
-    vector<dcompl_t> QCD;
-    vector<dcompl_t> QED;
+    vector<dcompl_t> LO;
+    vector<dcompl_t> F;
     
-    mesloop_t(size_t size) : QCD(size),QED(size)
+    mesloop_t(size_t size) : LO(size),F(size)
     {
     }
   };
@@ -60,14 +60,18 @@ class jmeslep_vert_t
   //! return a list of pointers to all internal data
   vector<vector<jqprop_t>*> get_all_ptrs()
   {
-    vector<vector<jqprop_t>*> out={&QCD,&ML1,&ML2};
-    return out;
+    return {&LO,&PH,&CT1,&CT2,&S,&QED};
   }
   
 public:
-  vector<jqprop_t> QCD; //!< jackkniffed mesolep vertex, no photon
-  vector<jqprop_t> ML1; //!< jackkniffed mesolep vertex, photon going out from line 1
-  vector<jqprop_t> ML2; //!< jackkniffed mesolep vertex, photon going out from line 2
+  vector<jqprop_t> LO; //!< jackkniffed mesolep vertex, no photon
+  
+  vector<jqprop_t> PH; //!< jackkniffed meson-like vertex
+  vector<jqprop_t> CT2; //!< jackkniffed meson-like vertex, counterterm on line 2
+  vector<jqprop_t> CT1; //!< jackkniffed meson-like vertex, counterterm on line 2
+  vector<jqprop_t> S;   //!< jackkniffed meson-like vertex, S insertion
+  
+  vector<jqprop_t> QED; //!< full correction
   
   jmeslep_vert_t(size_t size)
   {
@@ -75,7 +79,7 @@ public:
   }
   
   //! clusterize
-  void clusterize_all(size_t clust_size)
+  void clusterize_all(const size_t clust_size,const index_t &im_r_im_r_iop_ilistpGl_ind,const djvec_t &deltam_cr)
   {
     vector<vector<jqprop_t>*> ps=get_all_ptrs();
     index_t ind({{"type",ps.size()},{"icombo",ps[0]->size()}});
@@ -89,6 +93,16 @@ public:
 	
 	(*ps[itype])[icombo].clusterize(clust_size);
       }
+    
+#pragma omp parallel for
+    for(size_t i=0;i<im_r_im_r_iop_ilistpGl_ind.max();i++)
+	{
+	  const vector<size_t> comps=im_r_im_r_iop_ilistpGl_ind(i);
+	  const size_t im1=comps[0],im2=comps[2];
+	  for(size_t ijack=0;ijack<=njacks;ijack++)
+	    QED[i][ijack]=
+	      PH[i][ijack]-deltam_cr[im1][ijack]*CT1[i][ijack]-deltam_cr[im2][ijack]*CT2[i][ijack];
+	}
   }
 };
 

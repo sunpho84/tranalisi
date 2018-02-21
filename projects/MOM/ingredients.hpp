@@ -119,6 +119,7 @@ struct ingredients_t
   index_t im_r_im_r_iZbil_ind;
   index_t im_r_im_r_iZbil_ibilmom_ind;
   
+  index_t im_r_im_r_iop_ilistpGl_ind;
   index_t im_r_im_r_iop_iproj_imeslepmom_ind;
   
   //! compute all mom-scheme propagator

@@ -42,7 +42,7 @@ public:
   
   vector<jqprop_t> PH;  //!< jackkniffed vertex with all photons
   vector<jqprop_t> CT1; //!< jackkniffed vertex with counterterm on line 1
-  vector<jqprop_t> CT2; //!< jackkniffed vertex with counterterm on line 1
+  vector<jqprop_t> CT2; //!< jackkniffed vertex with counterterm on line 2
   vector<jqprop_t> S;   //!< jackkniffed S vertex
   vector<jqprop_t> QED; //!< full correction
   
