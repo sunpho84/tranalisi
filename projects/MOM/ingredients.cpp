@@ -391,7 +391,7 @@ void ingredients_t::mom_compute_meslep()
 	  auto &p1=*get<1>(p);
 	  auto &v=*get<2>(p);
 	  auto &p2=*get<3>(p);
-	  out=compute_proj_measlep(p1,v,p2,im_r_ind);
+	  out=compute_proj_meslep(p1,v,p2,im_r_ind);
 	}
       proj_time.stop();
       
@@ -587,8 +587,6 @@ ingredients_t ingredients_t::average_r(const bool recompute_Zbil) const
       if(compute_meslep) out.compute_Zmeslep();
     }
   
-    CRASH("Not yet implemented");
-  
   return out;
 }
 
@@ -619,7 +617,7 @@ void ingredients_t::compute_Zbil()
       }
 }
 
-void ingredients_t::compute_Zbil()
+void ingredients_t::compute_Zmeslep()
 {
 }
 
@@ -839,6 +837,10 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(bilmoms,"equiv_bilmoms.txt");
   fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
   
+  //build out bil combo
+  vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms,"equiv_meslepmoms.txt");
+  fill_output_equivalent_momenta(out.meslepmoms,equiv_linmom_combos,equiv_meslepmom_combos,meslepmoms);
+  
   // cout<<"Equiv bil:"<<endl;
   // for(auto &p : out.bilmoms)
   // for(auto &p : equiv_bilmom_combo)
@@ -892,20 +894,20 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
     for(size_t i=0;i<out.im_r_im_r_iop_iproj_imeslepmom_ind.max();i++)
       {
 	const vector<size_t> out_im_r_im_r_iop_iproj_imeslepmom_comp=out.im_r_im_r_iop_iproj_imeslepmom_ind(i);
-	const size_t out_imom_combo=out_im_r_im_r_iop_iproj_imeslepmom_comp[5];
+	const size_t out_imom_combo=out_im_r_im_r_iop_iproj_imeslepmom_comp[6];
 	
-	for(const auto &t : concat(get_pr_bil_tasks(out),get_Zmeslep_tasks(out)))
+	for(const auto &t : concat(get_pr_meslep_tasks(out),get_Zmeslep_tasks(out)))
 	  {
 	    djack_t &ave=(*t.out)[i];
 	    ave=0.0;
-	    for(const size_t ieq_mom : equiv_bilmom_combos[out_imom_combo])
+	    for(const size_t ieq_mom : equiv_meslepmom_combos[out_imom_combo])
 	      {
 		vector<size_t> im_r_im_r_iop_iproj_imeslepmom_comp=out_im_r_im_r_iop_iproj_imeslepmom_comp;
-		im_r_im_r_iop_iproj_imeslepmom_comp[5]=ieq_mom;
+		im_r_im_r_iop_iproj_imeslepmom_comp[6]=ieq_mom;
 		const size_t ieq=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom_comp);
 		ave+=(*t.in)[ieq];
 	      }
-	    ave/=equiv_bilmom_combos[out_imom_combo].size();
+	    ave/=equiv_meslepmom_combos[out_imom_combo].size();
 	  }
       }
   
@@ -914,9 +916,6 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
       out.compute_Zbil();
       if(compute_meslep) out.compute_Zmeslep();
     }
-  
-  if(compute_meslep)
-    CRASH("Not yet implemented");
   
   return out;
 }
@@ -990,7 +989,6 @@ void ingredients_t::plot_Z(const string &suffix) const
 		    {
 		      const double p2hat=all_moms[meslepmoms[imom][0]].p(L).tilde().norm2();
 		      size_t i=im_r_im_r_iop_iproj_imeslepmom_ind({im1,r,im2,r,iop,iproj,imom});
-		      cout<<i<<endl;
 		      out.write_ave_err(p2hat,pr_meslep[i].ave_err());
 		    }
 		}

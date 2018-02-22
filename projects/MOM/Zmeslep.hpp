@@ -94,15 +94,15 @@ public:
 	(*ps[itype])[icombo].clusterize(clust_size);
       }
     
-#pragma omp parallel for
-    for(size_t i=0;i<im_r_im_r_iop_ilistpGl_ind.max();i++)
-	{
-	  const vector<size_t> comps=im_r_im_r_iop_ilistpGl_ind(i);
-	  const size_t im1=comps[0],im2=comps[2];
-	  for(size_t ijack=0;ijack<=njacks;ijack++)
-	    QED[i][ijack]=
-	      PH[i][ijack]-deltam_cr[im1][ijack]*CT1[i][ijack]-deltam_cr[im2][ijack]*CT2[i][ijack];
-	}
+// #pragma omp parallel for
+//     for(size_t i=0;i<im_r_im_r_iop_ilistpGl_ind.max();i++)
+// 	{
+// 	  const vector<size_t> comps=im_r_im_r_iop_ilistpGl_ind(i);
+// 	  const size_t im1=comps[0],im2=comps[2];
+// 	  for(size_t ijack=0;ijack<=njacks;ijack++)
+// 	    QED[i][ijack]=
+// 	      PH[i][ijack]-deltam_cr[im1][ijack]*CT1[i][ijack]-deltam_cr[im2][ijack]*CT2[i][ijack];
+// 	}
   }
 };
 
@@ -110,7 +110,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 					   const vector<mom_conf_lprops_t> &props_lep,
 					   const index_t &im_r_ind);
 
-djvec_t compute_proj_measlep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv2,const index_t &im_r_ind);
+djvec_t compute_proj_meslep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv2,const index_t &im_r_ind);
 
 #undef EXTERN_MESLEP
 #undef INIT_TO
