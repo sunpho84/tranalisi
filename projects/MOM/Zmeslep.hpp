@@ -66,9 +66,9 @@ class jmeslep_vert_t
 public:
   vector<jqprop_t> LO; //!< jackkniffed mesolep vertex, no photon
   
-  vector<jqprop_t> PH; //!< jackkniffed meson-like vertex
+  vector<jqprop_t> PH; //!< jackkniffed vertex, nasty + self + tad
+  vector<jqprop_t> CT1; //!< jackkniffed meson-like vertex, counterterm on line 1
   vector<jqprop_t> CT2; //!< jackkniffed meson-like vertex, counterterm on line 2
-  vector<jqprop_t> CT1; //!< jackkniffed meson-like vertex, counterterm on line 2
   vector<jqprop_t> S;   //!< jackkniffed meson-like vertex, S insertion
   
   vector<jqprop_t> QED; //!< full correction
