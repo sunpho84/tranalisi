@@ -343,10 +343,19 @@ void ingredients_t::mom_compute_meslep()
 	    
 	    //read
 	    read_time.start();
-	    const vector<m_r_mom_conf_qprops_t> props1=read_all_qprops_mom(qfiles,im_r_ijack_ind,i_in_clust_ihit,mom1);
-	    const vector<m_r_mom_conf_qprops_t> props2=(read2?read_all_qprops_mom(qfiles,im_r_ijack_ind,i_in_clust_ihit,mom2):props1);
-	    const vector<mom_conf_lprops_t> props_lep=read_all_lprops_mom(lfiles,i_in_clust_ihit,momlep);
+	    vector<m_r_mom_conf_qprops_t> props1=read_all_qprops_mom(qfiles,im_r_ijack_ind,i_in_clust_ihit,mom1);
+	    vector<m_r_mom_conf_qprops_t> props2=(read2?read_all_qprops_mom(qfiles,im_r_ijack_ind,i_in_clust_ihit,mom2):props1);
+	    vector<mom_conf_lprops_t> props_lep=read_all_lprops_mom(lfiles,i_in_clust_ihit,momlep);
 	    read_time.stop();
+	    
+	    //these are the charges in the lagrangian
+	    const double ql=-1.0;     //!< the program simulates muon *antiparticle*
+	    const double q1=+2.0/3.0; //!< charge of the quark1
+	    const double q2=-1.0/3.0; //!< charge of the quark2
+	    
+	    incorporate_charge(props1,q1);
+	    incorporate_charge(props2,q2);
+	    incorporate_charge(props_lep,ql);
 	    
 	    //build all props
 	    build_props_time.start();

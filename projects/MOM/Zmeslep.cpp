@@ -62,11 +62,6 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
   const size_t nm=im_r_ind.max(0);
   const size_t nr=im_r_ind.max(1);
   
-  //these are the charges in the lagrangian
-  const double ql=-1.0;     //!< the program simulates muon *antiparticle*
-  const double q1=+2.0/3.0; //!< charge of the quark1
-  const double q2=-1.0/3.0; //!< charge of the quark2
-  
   const mesloop_t mesloop=build_mesloop(props_lep);
   
   const index_t ilistGl_ilistpGl_iclust_ind=get_ilistGl_ilistpGl_iclust_ind();
@@ -93,28 +88,28 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
        const m_r_mom_conf_qprops_t &p2=props2[im_r_iclust_ind({im_bw,r_bw,iclust})];
        
        //create list of operations
-       vector<tuple<vector<jqprop_t>*,const vector<dcompl_t>*,const qprop_t*,const qprop_t*,double>> list=
-	 {{&j.LO,&mesloop.LO,&p1.LO,&p2.LO,1.0}, //LO
+       vector<tuple<vector<jqprop_t>*,const vector<dcompl_t>*,const qprop_t*,const qprop_t*>> list=
+	 {{&j.LO,&mesloop.LO,&p1.LO,&p2.LO}, //LO
 	  //
 	  //
 	  // {&j.PH,&mesloop.F,&p1.F,&p2.LO,q1*ql}, //nasty1
 	  // {&j.PH,&mesloop.F,&p1.LO,&p2.F,q2*ql}, //nasty2
 	  //
-	  {&j.PH,&mesloop.LO,&p1.FF,&p2.LO,q1*q1}, //self1
+	  {&j.PH,&mesloop.LO,&p1.FF,&p2.LO}, //self1
 	  // {&j.PH,&mesloop.LO,&p1.LO,&p2.FF,q2*q2}, //self2
 	  //
-	  {&j.PH,&mesloop.LO,&p1.T,&p2.LO,q1*q1}, //tad1
+	  {&j.PH,&mesloop.LO,&p1.T,&p2.LO}, //tad1
 	  // {&j.PH,&mesloop.LO,&p1.LO,&p2.T,q2*q2}, //tad2
 	  //
 	  // {&j.PH,&mesloop.LO,&p1.F,&p2.F,q1*q2}, //exchange
 	  //
 	  //
-	  {&j.CT1,&mesloop.LO,&p1.P,&p2.LO,1.0}, //counterterm1
+	  {&j.CT1,&mesloop.LO,&p1.P,&p2.LO}, //counterterm1
 	  // {&j.CT2,&mesloop.LO,&p1.LO,&p2.P,1.0}, //counterterm2
 	  //
 	  //
-	  {&j.S,&mesloop.LO,&p1.S,&p2.LO,1.0}, //mass1
-	  {&j.S,&mesloop.LO,&p1.LO,&p2.S,1.0}  //mass2
+	  {&j.S,&mesloop.LO,&p1.S,&p2.LO}, //mass1
+	  {&j.S,&mesloop.LO,&p1.LO,&p2.S}  //mass2
 	 };
        
        const Zop_t &zop=zops[iop];
@@ -134,10 +129,9 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	       const dcompl_t &mesloop=(*get<1>(o))[imesloop];
 	       const qprop_t &prop1=*get<2>(o);
 	       const qprop_t &prop2=*get<3>(o);
-	       const double &weight=get<4>(o);
 	       
 	       const qprop_t c=prop1*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5];
-	       jvert[iclust]+=weight*c*mesloop;
+	       jvert[iclust]+=c*mesloop;
 	       
 	       // cout
 	       // 	 <<"ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<

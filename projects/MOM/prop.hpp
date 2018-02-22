@@ -137,6 +137,12 @@ public:
   }
 };
 
+//! add the charge to the propagators of quarks
+void incorporate_charge(vector<m_r_mom_conf_qprops_t> &props,const double ch);
+
+//! add the charge to the propagators of leptons
+void incorporate_charge(vector<mom_conf_lprops_t> &props,const double ch);
+
 //! add the prop of a given conf on the jackknife
 void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props,bool set_QED,const index_t &im_r_ind);
 

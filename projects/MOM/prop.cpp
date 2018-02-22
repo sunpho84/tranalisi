@@ -61,6 +61,26 @@ string get_lprop_tag(const size_t ikind)
   return combine("L_%s",mom_conf_lprops_t::tag[ikind]);
 }
 
+void incorporate_charge(vector<m_r_mom_conf_qprops_t> &props,const double ch)
+{
+  const double ch2=ch*ch;
+  
+  for(auto &p : props)
+    {
+      p.F*=ch;
+      p.FF*=ch2;
+      p.T*=ch2;
+      p.P*=ch2;
+      p.S*=ch2;
+    }
+}
+
+void incorporate_charge(vector<mom_conf_lprops_t> &props,const double ch)
+{
+  for(auto &p : props)
+    p.F*=ch;
+}
+
 void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props,bool use_QED,const index_t &im_r_ind)
 {
   const index_t im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
