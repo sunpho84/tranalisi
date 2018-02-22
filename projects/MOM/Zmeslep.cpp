@@ -134,9 +134,10 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	       const dcompl_t &mesloop=(*get<1>(o))[imesloop];
 	       const qprop_t &prop1=*get<2>(o);
 	       const qprop_t &prop2=*get<3>(o);
+	       const double &weight=get<4>(o);
 	       
-	       const qprop_t c=prop1*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*mesloop;
-	       jvert[iclust]+=c;
+	       const qprop_t c=prop1*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5];
+	       jvert[iclust]+=weight*c*mesloop;
 	       
 	       // cout
 	       // 	 <<"ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<
