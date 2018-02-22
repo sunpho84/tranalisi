@@ -557,10 +557,36 @@ ingredients_t ingredients_t::average_r(const bool recompute_Zbil) const
 	}
     }
   
-  if(recompute_Zbil)
-    out.compute_Zbil();
-  
+  //average pr_bil
   if(compute_meslep)
+    for(auto &t : get_pr_meslep_tasks(out))
+      {
+	const djvec_t &pr=*t.in;
+	djvec_t &pr_rave=*t.out;
+	
+	for(size_t out_i=0;out_i<out.im_r_im_r_iop_iproj_imeslepmom_ind.max();out_i++)
+	  {
+	    const vector<size_t> out_im_r_im_r_iop_iproj_imeslepmom_comp=out.im_r_im_r_iop_iproj_imeslepmom_ind(out_i);
+	    vector<size_t> im_r_im_r_iop_iproj_imeslepmom_comp=out_im_r_im_r_iop_iproj_imeslepmom_comp;
+	    
+	    pr_rave[out_i]=0.0;
+	    for(size_t r=0;r<_nr;r++)
+	      {
+		im_r_im_r_iop_iproj_imeslepmom_comp[1]=
+		  im_r_im_r_iop_iproj_imeslepmom_comp[3]=r;
+		const size_t i=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom_comp);
+		pr_rave[out_i]+=pr[i];
+	      }
+	    pr_rave[out_i]/=_nr;
+	  }
+      }
+  
+  if(recompute_Zbil)
+    {
+      out.compute_Zbil();
+      if(compute_meslep) out.compute_Zmeslep();
+    }
+  
     CRASH("Not yet implemented");
   
   return out;
@@ -591,6 +617,10 @@ void ingredients_t::compute_Zbil()
 	      (Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2]/
 	       Zq_sig1[im_r2_ilinmom2])/2.0;
       }
+}
+
+void ingredients_t::compute_Zbil()
+{
 }
 
 ingredients_t ingredients_t::chir_extrap() const
@@ -857,8 +887,33 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   	}
     }
   
+  //average pr_meslep and Z
+  if(compute_meslep)
+    for(size_t i=0;i<out.im_r_im_r_iop_iproj_imeslepmom_ind.max();i++)
+      {
+	const vector<size_t> out_im_r_im_r_iop_iproj_imeslepmom_comp=out.im_r_im_r_iop_iproj_imeslepmom_ind(i);
+	const size_t out_imom_combo=out_im_r_im_r_iop_iproj_imeslepmom_comp[5];
+	
+	for(const auto &t : concat(get_pr_bil_tasks(out),get_Zmeslep_tasks(out)))
+	  {
+	    djack_t &ave=(*t.out)[i];
+	    ave=0.0;
+	    for(const size_t ieq_mom : equiv_bilmom_combos[out_imom_combo])
+	      {
+		vector<size_t> im_r_im_r_iop_iproj_imeslepmom_comp=out_im_r_im_r_iop_iproj_imeslepmom_comp;
+		im_r_im_r_iop_iproj_imeslepmom_comp[5]=ieq_mom;
+		const size_t ieq=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom_comp);
+		ave+=(*t.in)[ieq];
+	      }
+	    ave/=equiv_bilmom_combos[out_imom_combo].size();
+	  }
+      }
+  
   if(recompute_Zbil)
-    out.compute_Zbil();
+    {
+      out.compute_Zbil();
+      if(compute_meslep) out.compute_Zmeslep();
+    }
   
   if(compute_meslep)
     CRASH("Not yet implemented");

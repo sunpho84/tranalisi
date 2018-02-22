@@ -139,6 +139,20 @@ struct ingredients_t
   //! compute all mom-scheme mesoleptonic vertices
   void mom_compute_meslep();
   
+  //! return a list of tasks for meslep projected vertex
+  vector<task_t> get_pr_meslep_tasks(ingredients_t &out) const
+  {
+    vector<task_t> pr_meslep_tasks={{&pr_meslep,&out.pr_meslep,"pr_meslep"}};
+    return pr_meslep_tasks;
+  }
+  
+  //! return a list of tasks for meslep projected vertex
+  vector<task_t> get_Zmeslep_tasks(ingredients_t &out) const
+  {
+    vector<task_t> Zmeslep_tasks={{&Zmeslep,&out.Zmeslep,"Zmeslep"}};
+    return Zmeslep_tasks;
+  }
+  
   //! compute according to ri-mom scheme
   void ri_mom();
   
@@ -182,6 +196,9 @@ struct ingredients_t
   
   //! computes all bilinear Z
   void compute_Zbil();
+  
+  //! computes all meslep Z
+  void compute_Zmeslep();
   
   //! average r
   ingredients_t average_r(const bool recompute_Zbil) const;
