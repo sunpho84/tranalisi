@@ -63,9 +63,9 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
   const size_t nr=im_r_ind.max(1);
   
   //these are the charges in the lagrangian
-  const double ql=-1.0;     //!< the program simulates muon *particle*
-  const double q1=-1.0/3.0; //!< charge of the quark1
-  const double q2=+2.0/3.0; //!< charge of the quark2
+  const double ql=-1.0;     //!< the program simulates muon *antiparticle*
+  const double q1=+2.0/3.0; //!< charge of the quark1
+  const double q2=-1.0/3.0; //!< charge of the quark2
   
   const mesloop_t mesloop=build_mesloop(props_lep);
   
