@@ -379,17 +379,18 @@ void ingredients_t::mom_compute_meslep()
       
       const auto &j=jmeslep_verts;
       
-      djvec_t pr_LO,pr_QED_amp_QCD,pr_QCD_amp_QED;
+      djvec_t pr_LO(im_r_im_r_iop_iproj_ind.max()),pr_QED_amp_QCD(im_r_im_r_iop_iproj_ind.max()),pr_QCD_amp_QED(im_r_im_r_iop_iproj_ind.max());
       for(auto &p : vector<tuple<djvec_t*,const vector<jqprop_t>*,const vector<jqprop_t>*,const vector<jqprop_t>*>>{
 	  {&pr_LO,          &jprop_inv1,     &j.LO,  &jprop_inv2},
 	  {&pr_QED_amp_QCD, &jprop_inv1,     &j.QED, &jprop_inv2},
-	  {&pr_QCD_amp_QED, &jprop_QED_inv1, &j.LO,  &jprop_QED_inv2}})
+	  {&pr_QCD_amp_QED, &jprop_QED_inv1, &j.LO,  &jprop_inv2},
+	  {&pr_QCD_amp_QED, &jprop_inv1,     &j.LO,  &jprop_QED_inv2}})
 	{
 	  auto &out=*get<0>(p);
 	  auto &p1=*get<1>(p);
 	  auto &v=*get<2>(p);
 	  auto &p2=*get<3>(p);
-	  out=compute_proj_meslep(p1,v,p2,im_r_ind);
+	  out+=compute_proj_meslep(p1,v,p2,im_r_ind);
 	}
       proj_time.stop();
       
