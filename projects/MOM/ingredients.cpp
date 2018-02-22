@@ -379,18 +379,18 @@ void ingredients_t::mom_compute_meslep()
       
       const auto &j=jmeslep_verts;
       
-      djvec_t pr_LO(im_r_im_r_iop_iproj_ind.max()),pr_QED_amp_QCD(im_r_im_r_iop_iproj_ind.max()),pr_QCD_amp_QED(im_r_im_r_iop_iproj_ind.max());
+      djvec_t pr_LO,pr_QED_amp_QCD,pr_QCD_amp_QED1,pr_QCD_amp_QED2;
       for(auto &p : vector<tuple<djvec_t*,const vector<jqprop_t>*,const vector<jqprop_t>*,const vector<jqprop_t>*>>{
-	  {&pr_LO,          &jprop_inv1,     &j.LO,  &jprop_inv2},
-	  {&pr_QED_amp_QCD, &jprop_inv1,     &j.QED, &jprop_inv2},
-	  {&pr_QCD_amp_QED, &jprop_QED_inv1, &j.LO,  &jprop_inv2},
-	  {&pr_QCD_amp_QED, &jprop_inv1,     &j.LO,  &jprop_QED_inv2}})
+	  {&pr_LO,           &jprop_inv1,     &j.LO,  &jprop_inv2},
+	  {&pr_QED_amp_QCD,  &jprop_inv1,     &j.QED, &jprop_inv2},
+	  {&pr_QCD_amp_QED1, &jprop_QED_inv1, &j.LO,  &jprop_inv2},
+	  {&pr_QCD_amp_QED2, &jprop_inv1,     &j.LO,  &jprop_QED_inv2}})
 	{
 	  auto &out=*get<0>(p);
 	  auto &p1=*get<1>(p);
 	  auto &v=*get<2>(p);
 	  auto &p2=*get<3>(p);
-	  out+=compute_proj_meslep(p1,v,p2,im_r_ind);
+	  out=compute_proj_meslep(p1,v,p2,im_r_ind);
 	}
       proj_time.stop();
       
@@ -399,7 +399,10 @@ void ingredients_t::mom_compute_meslep()
       
       //store
       for(size_t iall=0;iall<im_r_im_r_iop_iproj_ind.max();iall++)
-	pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=pr_QED_amp_QCD[iall]-pr_QCD_amp_QED[iall];
+	pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=
+	  +pr_QED_amp_QCD[iall]
+	  -pr_QCD_amp_QED1[iall]
+	  -pr_QCD_amp_QED2[iall];
     }
 }
 
