@@ -7,7 +7,10 @@ rem_newl ()
 
 requote ()
 {
-    printf "%q" $1
+    for i in $*
+    do
+	printf "%q " $i
+    done
 }
 
 echo '#ifndef GIT_HASH'
