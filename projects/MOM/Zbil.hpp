@@ -23,6 +23,7 @@ const size_t nZbil=5;
 
 //! holds all iZbil_t
 const iZbil_t iZbil_t_list[nZbil]={iZS,iZA,iZP,iZV,iZT};
+const vector<vector<size_t>> iG_of_Zbil={{0},{1,2,3,4},{5},{6,7,8,9},{10,11,12,13,14,15}};
 
 //! holds jackkniffed vertex for an mr combo and for a given mom
 class jbil_vert_t

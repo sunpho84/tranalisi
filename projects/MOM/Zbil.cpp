@@ -71,7 +71,6 @@ djvec_t compute_proj_bil(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jve
   const index_t ind({{"rest",im_r_im_r_iZbil_ind.max()},{"ijack",njacks+1}});
   
   //combine the 16 bilinears to form the 5 vertex
-  const vector<vector<size_t>> iG_of_Zbil={{0},{1,2,3,4},{5},{6,7,8,9},{10,11,12,13,14,15}};
   djvec_t pr(im_r_im_r_iZbil_ind.max());
   
 #pragma omp parallel for
