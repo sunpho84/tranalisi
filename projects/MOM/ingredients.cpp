@@ -295,7 +295,8 @@ void ingredients_t::mom_compute_bil()
 	  const djvec_t pr_bil_QED=compute_proj_bil(jprop_inv1,jverts.QED,jprop_inv2,glb::im_r_ind);
 	  const djvec_t pr_bil_a=compute_proj_bil(jprop_QED_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
 	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_QED_inv2,glb::im_r_ind);
-	  pr_bil_QED_temp=-pr_bil_a-pr_bil_b+pr_bil_QED;
+	  pr_bil_QED_temp=// -pr_bil_a-pr_bil_b+
+	    pr_bil_QED;
 	}
       
       //! an index running on all packed combo, and momenta
