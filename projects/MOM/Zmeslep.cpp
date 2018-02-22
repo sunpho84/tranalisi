@@ -134,8 +134,10 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	       jvert[iclust]+=c;
 	       
 	       cout
-	       	 <<"ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<
+	       	 <<"iop: "<<iop<<
+	       	 ", ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<
 	       	 ", Gq: "<<Gq<<
+	       	 ", sign: "<<sign<<
 	       	 ", ilistpGl: "<<ilistpGl<<"("<<listpGl[ilistpGl]<<")"<<
 	       	 ", iclust: "<<iclust<<
 	       	 ", mesloop: "<<mesloop<<
