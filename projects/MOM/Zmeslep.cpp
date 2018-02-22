@@ -101,7 +101,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	  {&j.PH,&mesloop.LO,&p1.T,&p2.LO}, //tad1
 	  {&j.PH,&mesloop.LO,&p1.LO,&p2.T}, //tad2
 	  //
-	  // {&j.PH,&mesloop.LO,&p1.F,&p2.F,q1*q2}, //exchange
+	  {&j.PH,&mesloop.LO,&p1.F,&p2.F}, //exchange
 	  //
 	  //
 	  {&j.CT1,&mesloop.LO,&p1.P,&p2.LO}, //counterterm1
