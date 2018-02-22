@@ -411,7 +411,7 @@ void ingredients_t::mom_compute_meslep()
 	pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=
 	  +pr_QED_amp_QCD[iall]
 	  -pr_QCD_amp_QED1[iall]
-	  // -pr_QCD_amp_QED2[iall]
+	  -pr_QCD_amp_QED2[iall]
 	  ;
     }
 }

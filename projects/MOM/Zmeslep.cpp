@@ -96,16 +96,16 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	  // {&j.PH,&mesloop.F,&p1.LO,&p2.F,q2*ql}, //nasty2
 	  //
 	  {&j.PH,&mesloop.LO,&p1.FF,&p2.LO}, //self1
-	  // {&j.PH,&mesloop.LO,&p1.LO,&p2.FF,q2*q2}, //self2
+	  {&j.PH,&mesloop.LO,&p1.LO,&p2.FF}, //self2
 	  //
 	  {&j.PH,&mesloop.LO,&p1.T,&p2.LO}, //tad1
-	  // {&j.PH,&mesloop.LO,&p1.LO,&p2.T,q2*q2}, //tad2
+	  {&j.PH,&mesloop.LO,&p1.LO,&p2.T}, //tad2
 	  //
 	  // {&j.PH,&mesloop.LO,&p1.F,&p2.F,q1*q2}, //exchange
 	  //
 	  //
 	  {&j.CT1,&mesloop.LO,&p1.P,&p2.LO}, //counterterm1
-	  // {&j.CT2,&mesloop.LO,&p1.LO,&p2.P,1.0}, //counterterm2
+	  {&j.CT2,&mesloop.LO,&p1.LO,&p2.P}, //counterterm2
 	  //
 	  //
 	  {&j.S,&mesloop.LO,&p1.S,&p2.LO}, //mass1
