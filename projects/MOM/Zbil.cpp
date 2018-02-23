@@ -53,7 +53,13 @@ void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_
       const m_r_mom_conf_qprops_t &p2=props2[im_r_iclust_ind({im_bw,r_bw,iclust})];
       
       //create list of operations
-      vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>> list={{&jbil.LO[im_r_im_r_igam],&p1.LO,&p2.LO}};
+      vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>> list
+
+
+	// ={{&jbil.LO[im_r_im_r_igam],&p1.LO,&p2.LO}}
+
+
+	;
       if(use_QED)
 	for(auto &o : vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>>({
 	      {&jbil.PH[im_r_im_r_igam],&p1.F,&p2.F},
@@ -63,8 +69,9 @@ void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_
 	      // {&jbil.PH[im_r_im_r_igam],&p1.LO,&p2.T},
 	      // {&jbil.CT1[im_r_im_r_igam],&p1.P,&p2.LO},
 	      // {&jbil.CT2[im_r_im_r_igam],&p1.LO,&p2.P},
-	      {&jbil.S[im_r_im_r_igam],&p1.S,&p2.LO},
-	      {&jbil.S[im_r_im_r_igam],&p1.LO,&p2.S}}))
+	      // {&jbil.S[im_r_im_r_igam],&p1.S,&p2.LO},
+	      // {&jbil.S[im_r_im_r_igam],&p1.LO,&p2.S}
+		}))
 	  list.push_back(o);
       
       //create the vertex
