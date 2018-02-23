@@ -295,7 +295,7 @@ void ingredients_t::mom_compute_bil()
 	  const djvec_t pr_bil_QED=compute_proj_bil(jprop_inv1,jverts.QED,jprop_inv2,glb::im_r_ind);
 	  const djvec_t pr_bil_a=compute_proj_bil(jprop_QED_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
 	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_QED_inv2,glb::im_r_ind);
-	  pr_bil_QED_temp=-pr_bil_a-pr_bil_b+pr_bil_QED;
+	  pr_bil_QED_temp=-pr_bil_a;//-pr_bil_b+pr_bil_QED;
 	}
       
       //! an index running on all packed combo, and momenta
@@ -353,9 +353,9 @@ void ingredients_t::mom_compute_meslep()
 	    const double q1=+2.0/3.0; //!< charge of the quark1
 	    const double q2=-1.0/3.0; //!< charge of the quark2
 	    
-	    incorporate_charge(props1,q1);
-	    incorporate_charge(props2,q2);
-	    incorporate_charge(props_lep,ql);
+	    // incorporate_charge(props1,q1);
+	    // incorporate_charge(props2,q2);
+	    // incorporate_charge(props_lep,ql);
 	    
 	    //build all props
 	    build_props_time.start();
@@ -390,10 +390,11 @@ void ingredients_t::mom_compute_meslep()
       
       djvec_t pr_LO,pr_QED_amp_QCD,pr_QCD_amp_QED1,pr_QCD_amp_QED2;
       for(auto &p : vector<tuple<djvec_t*,const vector<jqprop_t>*,const vector<jqprop_t>*,const vector<jqprop_t>*>>{
-	  {&pr_LO,           &jprop_inv1,     &j.LO,  &jprop_inv2},
+	  // {&pr_LO,           &jprop_inv1,     &j.LO,  &jprop_inv2},
 	  {&pr_QED_amp_QCD,  &jprop_inv1,     &j.QED, &jprop_inv2},
-	  {&pr_QCD_amp_QED1, &jprop_QED_inv1, &j.LO,  &jprop_inv2},
-	  {&pr_QCD_amp_QED2, &jprop_inv1,     &j.LO,  &jprop_QED_inv2}})
+	  // {&pr_QCD_amp_QED1, &jprop_QED_inv1, &j.LO,  &jprop_inv2},
+	  // {&pr_QCD_amp_QED2, &jprop_inv1,     &j.LO,  &jprop_QED_inv2}
+	    })
 	{
 	  auto &out=*get<0>(p);
 	  auto &p1=*get<1>(p);
@@ -410,8 +411,8 @@ void ingredients_t::mom_compute_meslep()
       for(size_t iall=0;iall<im_r_im_r_iop_iproj_ind.max();iall++)
 	pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=
 	  +pr_QED_amp_QCD[iall]
-	  -pr_QCD_amp_QED1[iall]
-	  -pr_QCD_amp_QED2[iall]
+	  // -pr_QCD_amp_QED1[iall]
+	  // -pr_QCD_amp_QED2[iall]
 	  ;
     }
 }
