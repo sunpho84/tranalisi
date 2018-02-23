@@ -59,7 +59,7 @@ meslep::mesloop_t build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
 			       // psign*
 			       psign*lepGamma[5])).adjoint()
 // #warning suppressing fact 1/2 in mesloop
-	// /2.0
+	/2.0
 	;
       
       mesloop.LO[i]=(op*pr).toDense().trace()/4.0; //for test: this must be 1 if iGl==ipGl
