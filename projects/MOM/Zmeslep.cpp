@@ -150,7 +150,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
  						   // *0.0
 // #warning avoiding inserting gamma5 op on quark side
 						   +
-						   0.0*
+						   // 0.0*
 						   // sign*
 						   sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*mesloop;
 	       jvert[iclust]+=c;
@@ -221,11 +221,11 @@ djvec_t compute_proj_meslep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &
 	  //projecting on quark side
 	  const size_t Gq=pcontr.Gq;
 	  auto projector=(quaGamma[Gq]*(quaGamma[0]
- 					*0.0
+ 					// *0.0
 // #warning avoiding gamma5 projecting on quark side
 					+
 					//0.0*
-					pQg5_sign*
+					// pQg5_sign*
 					pQg5_sign*quaGamma[5])).adjoint();
 	  auto contr=(amp_vert*projector).trace().real()/norm;
 	  out+=contr;
