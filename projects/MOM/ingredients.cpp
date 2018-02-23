@@ -572,7 +572,7 @@ ingredients_t ingredients_t::average_r(const bool recompute_Zbil) const
 	}
     }
   
-  //average pr_bil
+  //average meslep
   if(compute_meslep)
     for(auto &t : get_pr_meslep_tasks(out))
       {
@@ -626,9 +626,11 @@ void ingredients_t::compute_Zbil()
 	
 	if(use_QED)
 	    Zbil_QED[im_r_im_r_iZbil_ibilmom]=
-	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]+
-	      (Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2]/
-	       Zq_sig1[im_r2_ilinmom2])/2.0;
+	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]
+	      // +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2]/
+	      //  Zq_sig1[im_r2_ilinmom2])/2.0
+
+	      ;
       }
 }
 
