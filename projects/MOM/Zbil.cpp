@@ -14,9 +14,19 @@
 
 #include <prop.hpp>
 
-void build_jackkniffed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,size_t iG,const qprop_t &prop2,size_t ijack)
+void build_jackkniffed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,size_t iG,const qprop_t &prop2,size_t iclust)
 {
-  jvert[ijack]+=prop1*quaGamma[iG]*quaGamma[5]*prop2.adjoint()*quaGamma[5];
+  auto c=prop1*quaGamma[iG]*quaGamma[5]*prop2.adjoint()*quaGamma[5];
+  jvert[iclust]+=c;
+  
+  cout
+    <<"iG: "<<iG<<
+    ", iclust: "<<iclust<<
+    ", prop1: "<<prop1(0,0)<<
+    ", prop2: "<<prop2(0,0)<<
+    ", res: "<<c(0,0)<<
+    endl;
+
 }
 
 void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
@@ -47,12 +57,12 @@ void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_
       if(use_QED)
 	for(auto &o : vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>>({
 	      {&jbil.PH[im_r_im_r_igam],&p1.F,&p2.F},
-	      {&jbil.PH[im_r_im_r_igam],&p1.FF,&p2.LO},
-	      {&jbil.PH[im_r_im_r_igam],&p1.LO,&p2.FF},
-	      {&jbil.PH[im_r_im_r_igam],&p1.T,&p2.LO},
-	      {&jbil.PH[im_r_im_r_igam],&p1.LO,&p2.T},
-	      {&jbil.CT1[im_r_im_r_igam],&p1.P,&p2.LO},
-	      {&jbil.CT2[im_r_im_r_igam],&p1.LO,&p2.P},
+	      // {&jbil.PH[im_r_im_r_igam],&p1.FF,&p2.LO},
+	      // {&jbil.PH[im_r_im_r_igam],&p1.LO,&p2.FF},
+	      // {&jbil.PH[im_r_im_r_igam],&p1.T,&p2.LO},
+	      // {&jbil.PH[im_r_im_r_igam],&p1.LO,&p2.T},
+	      // {&jbil.CT1[im_r_im_r_igam],&p1.P,&p2.LO},
+	      // {&jbil.CT2[im_r_im_r_igam],&p1.LO,&p2.P},
 	      {&jbil.S[im_r_im_r_igam],&p1.S,&p2.LO},
 	      {&jbil.S[im_r_im_r_igam],&p1.LO,&p2.S}}))
 	  list.push_back(o);
