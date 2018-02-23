@@ -198,8 +198,8 @@ djvec_t compute_proj_meslep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &
 	  auto contr=(amp_vert*projector).trace().real()/norm;
 	  out+=contr;
 	  
-	  cout<<" amputating, i: "<<i<<", iop: "<<iop<<", ilistpGl: "<<ilistpGl<<", iproj: "<<iproj<<
-	    ", im_r_im_r_iop_ilistpGl(jverts): "<<im_r_im_r_iop_ilistpGl<<", im_r_im_r_iop_iproj(out): "<<im_r_im_r_iop_iproj<<" "<<
+	  cout<<" amputating, i: "<<i<<", iop: "<<iop<<", ilistpGl: "<<ilistpGl<<", iproj: "<<iproj<<", ijack: "<<
+	    ", im_r_im_r_iop_ilistpGl(jverts): "<<im_r_im_r_iop_ilistpGl<<", im_r_im_r_iop_iproj(out): "<<im_r_im_r_iop_iproj<<
 	    ", contr: "<<contr<<endl;
 	  }
       
