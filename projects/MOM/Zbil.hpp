@@ -56,7 +56,6 @@ public:
     vector<vector<jqprop_t>*> ps=get_all_ptrs(use_QED);
     index_t ind({{"type",ps.size()},{"icombo",ps[0]->size()}});
     
-    //cout<<"Clusterizing all verts, clust_size="<<clust_size<<endl;
 #pragma omp parallel for
     for(size_t i=0;i<ind.max();i++)
       {
@@ -76,8 +75,10 @@ public:
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    QED[i][ijack]=
 	      PH[i][ijack]
+// #warning ignoring counterterm
 	      -deltam_cr[im1][ijack]*CT1[i][ijack]
-	      -deltam_cr[im2][ijack]*CT2[i][ijack];
+	      -deltam_cr[im2][ijack]*CT2[i][ijack]
+	      ;
 	}
   }
 };

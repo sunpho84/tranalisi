@@ -293,10 +293,14 @@ void ingredients_t::mom_compute_bil()
       if(use_QED)
 	{
 	  const djvec_t pr_bil_QED=compute_proj_bil(jprop_inv1,jverts.QED,jprop_inv2,glb::im_r_ind);
-	  // const djvec_t pr_bil_a=compute_proj_bil(jprop_QED_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
-	  // const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_QED_inv2,glb::im_r_ind);
-	  pr_bil_QED_temp=// -pr_bil_a-pr_bil_b
-	    +pr_bil_QED;
+	  const djvec_t pr_bil_a=compute_proj_bil(jprop_QED_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
+	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_QED_inv2,glb::im_r_ind);
+	  pr_bil_QED_temp=
+// #warning amputating only QED
+// 	    0*
+	    (-pr_bil_a-pr_bil_b)
+	    +
+	    pr_bil_QED;
 	}
       
       //! an index running on all packed combo, and momenta
@@ -354,6 +358,7 @@ void ingredients_t::mom_compute_meslep()
 	    const double q1=+2.0/3.0; //!< charge of the quark1
 	    const double q2=-1.0/3.0; //!< charge of the quark2
 	    
+#warning avoiding inserting charges
 	    // incorporate_charge(props1,q1);
 	    // incorporate_charge(props2,q2);
 	    // incorporate_charge(props_lep,ql);
@@ -550,7 +555,7 @@ ingredients_t ingredients_t::average_r(const bool recompute_Zbil) const
     }
   
   //average pr_bil
-  for(auto &t : get_pr_bil_tasks(out))
+  for(auto &t : concat(get_pr_bil_tasks(out),get_Zbil_tasks(out)))
     {
       const djvec_t &pr=*t.in;
       djvec_t &pr_rave=*t.out;
@@ -627,9 +632,9 @@ void ingredients_t::compute_Zbil()
 	if(use_QED)
 	    Zbil_QED[im_r_im_r_iZbil_ibilmom]=
 	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]
+#warning not including Zq
 	      // +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2]/
 	      //  Zq_sig1[im_r2_ilinmom2])/2.0
-
 	      ;
       }
 }
@@ -686,7 +691,7 @@ ingredients_t ingredients_t::chir_extrap() const
   
   //extrapolate to chiral limit bil
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
-    for(auto &t : get_pr_bil_tasks(out))
+    for(auto &t : concat(get_pr_bil_tasks(out),get_Zbil_tasks(out)))
       for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	{
 	  const djvec_t &pr=*t.in;

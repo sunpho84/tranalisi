@@ -118,7 +118,10 @@ void clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,bool
     for(size_t i=0;i<im_r_ind.max();i++)
       for(size_t ijack=0;ijack<=njacks;ijack++)
 	jprops[i].QED[ijack]=
-	  jprops[i].PH[ijack];//-deltam_cr[im_r_ind(i)[0]][ijack]*jprops[i].CT[ijack];
+	  jprops[i].PH[ijack]-
+ // #warning excluding counterterm on prop
+ // 	  0.0*
+	  deltam_cr[im_r_ind(i)[0]][ijack]*jprops[i].CT[ijack];
 }
 
 void get_inverse_propagators(vector<jqprop_t> &jprop_inv,vector<jqprop_t> &jprop_QED_inv,
@@ -139,7 +142,6 @@ void get_inverse_propagators(vector<jqprop_t> &jprop_inv,vector<jqprop_t> &jprop
       //compute inverse
       invert_time.start();
       qprop_t prop_inv=jprop_inv[im_r][ijack]=jprops[im_r].LO[ijack].inverse();
-      //if(im_r_ijack==0) cout<<jprops[im_r].LO[ijack](0,0)<<endl;
       invert_time.stop();
       
       //do the same with QED

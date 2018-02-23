@@ -64,7 +64,7 @@ int main(int narg,char **arg)
   ingredients_t rave=ing.average_r(RECOMPUTE_ZBIL);
   rave.plot_Z("rave");
   
-  ingredients_t rave_ave=rave.average_equiv_momenta(RECOMPUTE_ZBIL);
+  ingredients_t rave_ave=rave.average_equiv_momenta(DONT_RECOMPUTE_ZBIL);
   rave_ave.plot_Z("rave_ave");
   
   ingredients_t rave_chir=rave.chir_extrap();
