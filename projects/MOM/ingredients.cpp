@@ -511,6 +511,7 @@ void ingredients_t::create_from_scratch(const string ingredients_path)
     }
   
   compute_Zbil();
+  if(compute_meslep) compute_Zmeslep();
 }
 
 ingredients_t ingredients_t::average_r(const bool recompute_Zbil) const
