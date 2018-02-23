@@ -194,7 +194,8 @@ djvec_t compute_proj_meslep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &
 	  
 	  //projecting on quark side
 	  const size_t Gq=pcontr.Gq;
-	  auto projector=(quaGamma[Gq]*(quaGamma[0]+pQg5_sign*quaGamma[5])).adjoint();
+	  auto projector=(quaGamma[Gq]*(quaGamma[0]+
+					0.0*pQg5_sign*quaGamma[5])).adjoint();
 	  auto contr=(amp_vert*projector).trace().real()/norm;
 	  out+=contr;
 	  
