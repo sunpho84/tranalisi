@@ -1,4 +1,3 @@
-
 #ifdef HAVE_CONFIG_H
  #include <config.hpp>
 #endif
@@ -328,8 +327,8 @@ void ingredients_t::mom_compute_meslep()
       const size_t imom2=meslepmoms[imeslepmom][2];
       const bool read2=(imom1!=imom2);
       
-      vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max());       //!< jackknived props
-      vector<jm_r_mom_qprops_t> jprops2(glb::im_r_ind.max());       //!< jackknived props
+      vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max());           //!< jackknived props
+      vector<jm_r_mom_qprops_t> jprops2(glb::im_r_ind.max());           //!< jackknived props
       jmeslep_vert_t jmeslep_verts(im_r_im_r_ilistGl_ipGl_ind.max());   //!< jackknived vertex
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
@@ -382,8 +381,8 @@ void ingredients_t::mom_compute_meslep()
       jmeslep_verts.clusterize_all(clust_size,im_r_im_r_iop_ilistpGl_ind,deltam_cr);
       clust_time.stop();
       
-      vector<jqprop_t> jprop_inv1; //!< inverse propagator1
-      vector<jqprop_t> jprop_inv2; //!< inverse propagator2
+      vector<jqprop_t> jprop_inv1;     //!< inverse propagator1
+      vector<jqprop_t> jprop_inv2;     //!< inverse propagator2
       vector<jqprop_t> jprop_QED_inv1; //!< inverse propagator1 with em insertion
       vector<jqprop_t> jprop_QED_inv2; //!< inverse propagator2 with em insertion
       
@@ -398,8 +397,8 @@ void ingredients_t::mom_compute_meslep()
       for(auto &p : vector<tuple<djvec_t*,const vector<jqprop_t>*,const vector<jqprop_t>*,const vector<jqprop_t>*>>{
 	  // {&pr_LO,           &jprop_inv1,     &j.LO,  &jprop_inv2},
 	  {&pr_QED_amp_QCD,  &jprop_inv1,     &j.QED, &jprop_inv2},
-	  // {&pr_QCD_amp_QED1, &jprop_QED_inv1, &j.LO,  &jprop_inv2},
-	  // {&pr_QCD_amp_QED2, &jprop_inv1,     &j.LO,  &jprop_QED_inv2}
+	  {&pr_QCD_amp_QED1, &jprop_QED_inv1, &j.LO,  &jprop_inv2},
+	  {&pr_QCD_amp_QED2, &jprop_inv1,     &j.LO,  &jprop_QED_inv2}
 	    })
 	{
 	  auto &out=*get<0>(p);
@@ -641,6 +640,21 @@ void ingredients_t::compute_Zbil()
 
 void ingredients_t::compute_Zmeslep()
 {
+  for(size_t im_r_im_r_iop_iproj_imeslepmom=0;im_r_im_r_iop_iproj_imeslepmom<im_r_im_r_iop_iproj_imeslepmom_ind.max();im_r_im_r_iop_iproj_imeslepmom++)
+    {
+      const vector<size_t> comps=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom);
+	const vector<size_t> im_r1_comp=subset(comps,0,2);
+	const vector<size_t> im_r2_comp=subset(comps,2,4);
+	const size_t imeslepmom=comps[6];
+	const size_t ilinmom1=meslepmoms[imeslepmom][1];
+	const size_t ilinmom2=meslepmoms[imeslepmom][2];
+	const size_t im_r1_ilinmom1=im_r_ilinmom_ind(concat(im_r1_comp,ilinmom1));
+	const size_t im_r2_ilinmom2=im_r_ilinmom_ind(concat(im_r2_comp,ilinmom2));
+	
+	Zmeslep[im_r_im_r_iop_iproj_imeslepmom]=
+	  -pr_meslep[im_r_im_r_iop_iproj_imeslepmom]
+	  +(Zq_sig1_QED[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2])/2.0;
+    }
 }
 
 ingredients_t ingredients_t::chir_extrap() const
@@ -1011,7 +1025,7 @@ void ingredients_t::plot_Z(const string &suffix) const
 		    {
 		      const double p2hat=all_moms[meslepmoms[imom][0]].p(L).tilde().norm2();
 		      size_t i=im_r_im_r_iop_iproj_imeslepmom_ind({im1,r,im2,r,iop,iproj,imom});
-		      out.write_ave_err(p2hat,pr_meslep[i].ave_err());
+		      out.write_ave_err(p2hat,Zmeslep[i].ave_err());
 		    }
 		}
 	}
