@@ -645,15 +645,20 @@ void ingredients_t::compute_Zmeslep()
       const vector<size_t> comps=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom);
 	const vector<size_t> im_r1_comp=subset(comps,0,2);
 	const vector<size_t> im_r2_comp=subset(comps,2,4);
+	const size_t iop=comps[4];
+	const size_t iproj=comps[5];
 	const size_t imeslepmom=comps[6];
 	const size_t ilinmom1=meslepmoms[imeslepmom][1];
 	const size_t ilinmom2=meslepmoms[imeslepmom][2];
 	const size_t im_r1_ilinmom1=im_r_ilinmom_ind(concat(im_r1_comp,ilinmom1));
 	const size_t im_r2_ilinmom2=im_r_ilinmom_ind(concat(im_r2_comp,ilinmom2));
 	
-	Zmeslep[im_r_im_r_iop_iproj_imeslepmom]=
-	  -pr_meslep[im_r_im_r_iop_iproj_imeslepmom]
-	  +(Zq_sig1_QED[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2])/2.0;
+	auto &out=Zmeslep[im_r_im_r_iop_iproj_imeslepmom];
+	
+	out=-pr_meslep[im_r_im_r_iop_iproj_imeslepmom];
+	
+	if(iop==iproj)
+	  out+=(Zq_sig1_QED[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2])/2.0;
     }
 }
 
