@@ -631,9 +631,9 @@ void ingredients_t::compute_Zbil()
 	if(use_QED)
 	    Zbil_QED[im_r_im_r_iZbil_ibilmom]=
 	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]
-#warning not including Zq
-	      // +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2]/
-	      //  Zq_sig1[im_r2_ilinmom2])/2.0
+// #warning not including Zq
+	      +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2]/
+	       Zq_sig1[im_r2_ilinmom2])/2.0
 	      ;
       }
 }
