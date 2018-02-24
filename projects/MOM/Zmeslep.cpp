@@ -104,28 +104,27 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
        
        //create list of operations
        vector<tuple<vector<jqprop_t>*,const vector<dcompl_t>*,const qprop_t*,const qprop_t*>> list={
-#warning avoiding everything but exchange in meslep
-	 // {&j.LO,&mesloop.LO,&p1.LO,&p2.LO}, //LO
+	 {&j.LO,&mesloop.LO,&p1.LO,&p2.LO}, //LO
+	 
+	 
+	 {&j.PH,&mesloop.F,&p1.F,&p2.LO}, //nasty1
+	 {&j.PH,&mesloop.F,&p1.LO,&p2.F}, //nasty2
+	 
+	 {&j.PH,&mesloop.LO,&p1.FF,&p2.LO}, //self1
+	 {&j.PH,&mesloop.LO,&p1.LO,&p2.FF}, //self2
 	 //
-	 //
-	 // {&j.PH,&mesloop.F,&p1.F,&p2.LO,q1*ql}, //nasty1
-	 // {&j.PH,&mesloop.F,&p1.LO,&p2.F,q2*ql}, //nasty2
-	 //
-	 // {&j.PH,&mesloop.LO,&p1.FF,&p2.LO}, //self1
-	 // {&j.PH,&mesloop.LO,&p1.LO,&p2.FF}, //self2
-	 // //
-	 // {&j.PH,&mesloop.LO,&p1.T,&p2.LO}, //tad1
-	 // {&j.PH,&mesloop.LO,&p1.LO,&p2.T}, //tad2
+	 {&j.PH,&mesloop.LO,&p1.T,&p2.LO}, //tad1
+	 {&j.PH,&mesloop.LO,&p1.LO,&p2.T}, //tad2
 	 //
 	 {&j.PH,&mesloop.LO,&p1.F,&p2.F}, //exchange
 	 //
 	 //
-	 // {&j.CT1,&mesloop.LO,&p1.P,&p2.LO}, //counterterm1
-	 // {&j.CT2,&mesloop.LO,&p1.LO,&p2.P}, //counterterm2
-	 //
-	 //
-	 // {&j.S,&mesloop.LO,&p1.S,&p2.LO}, //mass1
-	 // {&j.S,&mesloop.LO,&p1.LO,&p2.S}  //mass2
+	 {&j.CT1,&mesloop.LO,&p1.P,&p2.LO}, //counterterm1
+	 {&j.CT2,&mesloop.LO,&p1.LO,&p2.P}, //counterterm2
+	 
+	 
+	 {&j.S,&mesloop.LO,&p1.S,&p2.LO}, //mass1
+	 {&j.S,&mesloop.LO,&p1.LO,&p2.S}  //mass2
 	 };
        
        const Zop_t &zop=zops[iop];
