@@ -19,6 +19,7 @@ void build_jackkniffed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop1,size_t iG
   auto c=prop1*quaGamma[iG]*quaGamma[5]*prop2.adjoint()*quaGamma[5];
   jvert[iclust]+=c;
   
+  if(0)
   cout
     <<"iG: "<<iG<<
     ", iclust: "<<iclust<<
