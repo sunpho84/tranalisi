@@ -657,8 +657,10 @@ void ingredients_t::compute_Zmeslep()
 	
 	out=-pr_meslep[im_r_im_r_iop_iproj_imeslepmom];
 	
-	if(iop==iproj)
-	  out+=(Zq_sig1_QED[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2])/2.0;
+#warning removing Zq
+	if(0)
+	  if(iop==iproj)
+	    out+=(Zq_sig1_QED[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2])/2.0;
     }
 }
 
