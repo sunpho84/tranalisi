@@ -119,8 +119,8 @@ void clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,bool
       for(size_t ijack=0;ijack<=njacks;ijack++)
 	jprops[i].QED[ijack]=
 	  jprops[i].PH[ijack]-
- // #warning excluding counterterm on prop
- // 	  0.0*
+ #warning excluding counterterm on prop
+ 	  0.0*
 	  deltam_cr[im_r_ind(i)[0]][ijack]*jprops[i].CT[ijack];
 }
 
