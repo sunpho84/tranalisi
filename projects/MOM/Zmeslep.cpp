@@ -107,8 +107,8 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	 {&j.LO,&mesloop.LO,&p1.LO,&p2.LO}, //LO
 	 
 	 
-	  {&j.PH,&mesloop.F,&p1.F,&p2.LO}, //nasty1
-	 // {&j.PH,&mesloop.F,&p1.LO,&p2.F}, //nasty2
+	 //{&j.PH,&mesloop.F,&p1.F,&p2.LO}, //nasty1
+	  {&j.PH,&mesloop.F,&p1.LO,&p2.F}, //nasty2
 	 
 	 // {&j.PH,&mesloop.LO,&p1.FF,&p2.LO}, //self1
 	 // {&j.PH,&mesloop.LO,&p1.LO,&p2.FF}, //self2
