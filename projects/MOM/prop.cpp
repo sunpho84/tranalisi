@@ -100,8 +100,8 @@ void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vec
       if(use_QED)
 	for(auto &jp_p : vector<tuple<jqprop_t*,const qprop_t*>>({
 	      {&j.PH,&p.FF},
-	      // {&j.PH,&p.T},
-	      {&j.CT,&p.P},
+	      {&j.PH,&p.T},
+	      // {&j.CT,&p.P},
 	      {&j.S,&p.S}}))
 	  (*get<0>(jp_p))[ijack]+=*get<1>(jp_p);
     }
