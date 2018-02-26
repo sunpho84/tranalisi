@@ -101,7 +101,7 @@ void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vec
 	for(auto &jp_p : vector<tuple<jqprop_t*,const qprop_t*>>({
 	      {&j.PH,&p.FF},
 	      {&j.PH,&p.T},
-	      // {&j.CT,&p.P},
+	      {&j.CT,&p.P},
 	      {&j.S,&p.S}}))
 	  (*get<0>(jp_p))[ijack]+=*get<1>(jp_p);
     }
@@ -119,8 +119,8 @@ void clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,bool
       for(size_t ijack=0;ijack<=njacks;ijack++)
 	jprops[i].QED[ijack]=
 	  jprops[i].PH[ijack]-
- #warning excluding counterterm on prop
- 	  0.0*
+ // #warning excluding counterterm on prop
+ // 	  0.0*
 	  deltam_cr[im_r_ind(i)[0]][ijack]*jprops[i].CT[ijack];
 }
 
