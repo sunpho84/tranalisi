@@ -416,8 +416,9 @@ void ingredients_t::mom_compute_meslep()
       for(size_t iall=0;iall<im_r_im_r_iop_iproj_ind.max();iall++)
 	pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=
 	  +pr_QED_amp_QCD[iall]
-	  -pr_QCD_amp_QED1[iall]
-	  -pr_QCD_amp_QED2[iall]
+#warning not included QCD amputated in QED
+	  // -pr_QCD_amp_QED1[iall]
+	  // -pr_QCD_amp_QED2[iall]
 	  ;
     }
 }
