@@ -9,6 +9,7 @@
 #define EXTERN_MESLEP
  #include <Zmeslep.hpp>
 
+#include <geometry.hpp>
 #include <ingredients.hpp>
 #include <oper.hpp>
 
@@ -61,9 +62,8 @@ meslep::mesloop_t build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
 // #warning suppressing fact 1/2 in mesloop
 	/2.0
 	;
-      
       mesloop.LO[i]=(op*pr).toDense().trace()/4.0; //for test: this must be 1 if iGl==ipGl
-      mesloop.F[i]=(op*pF*pr).trace()/4.0; //normalization for the single gamma
+      mesloop.F[i]=(op*pF*pr).trace()*(double)V/4.0; //normalization for the single gamma
     }
   
   return mesloop;
