@@ -99,7 +99,7 @@ dboot_t cont_chir_fit_LO(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,con
 		     pars.adep.ave(),pars.adep_ml.ave(),inf_vol,pars.L3dep.ave(),isyst);},
 		bind(cont_chir_ansatz_LO<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,a_cont,
 		     pars.adep,pars.adep_ml,inf_vol,pars.L3dep,isyst),
-		[&ext_data,&pars,&B0,&f0,isyst]
+		[&ext_data,&pars,isyst]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{
 		  dboot_t aml=ext_data[idata].aml/pars.fit_a[ib]/pars.fit_z[ib];
@@ -184,7 +184,7 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   if(case_of<c_chir>(isyst)==1) boot_fit.fix_par_to(pars.iKPi,0.0);
   boot_fit.fix_par_to(pars.iadep_ml,0.0);
   
-  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[isyst](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double dum,double ac,double L)
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[](const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double dum,double ac,double L)
 			 {return cont_chir_ansatz_QED(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],ml,ac,p[pars.iadep],p[pars.iadep_ml],L,p[pars.iL3dep],p[pars.iL4dep]);},cov_flag);
   
   double a_cont=0;
@@ -199,7 +199,7 @@ dboot_t cont_chir_fit_QED(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 		     inf_vol,pars.L3dep.ave(),pars.L4dep.ave());},
 		bind(cont_chir_ansatz_QED<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,a_cont,pars.adep,pars.adep_ml,
 		     inf_vol,pars.L3dep,pars.L4dep),
-		[&ext_data,&pars,&B0,&f0]
+		[&ext_data,&pars]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_QED(pars.C,pars.L3dep,ext_data[idata].L,pars.L4dep));},
 		ml_phys,phys_res,yaxis_title,beta_list,ind_syst.descr(isyst));
@@ -292,7 +292,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
   if(case_of<c_chir>(isyst)==1) boot_fit.fix_par_to(pars.iKPi,0.0);
   boot_fit.fix_par_to(pars.iadep_ml,0.0);
   
-  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[isyst]
+  cont_chir_fit_minimize(ext_data,pars,boot_fit,0.0,0.0,[]
 			 (const vector<double> &p,const cont_chir_fit_pars_t &pars,double ml,double ms,double dum,double ac,double L)
 			 {return cont_chir_ansatz_RAT(p[pars.if0],p[pars.iB0],p[pars.iC],p[pars.iKPi],p[pars.iK2Pi],ml,ac,p[pars.iadep],p[pars.iadep_ml],L,
 						      p[pars.iL3dep],p[pars.iL4dep]);},cov_flag);
@@ -309,7 +309,7 @@ dboot_t cont_chir_fit_RAT(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,co
 		     inf_vol,pars.L3dep.ave(),pars.L4dep.ave());},
 		bind(cont_chir_ansatz_RAT<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.K2Pi,_1,a_cont,pars.adep,pars.adep_ml,
 		     inf_vol,pars.L3dep,pars.L4dep),
-		[&ext_data,&pars,&B0,&f0]
+		[&ext_data,&pars]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t(ext_data[idata].wfse-without_with_fse*FSE_RAT(pars.C,pars.L3dep,ext_data[idata].L,pars.L4dep));},
 		ml_phys,phys_res,yaxis_title,beta_list,ind_syst.descr(isyst));

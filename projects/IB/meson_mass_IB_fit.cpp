@@ -19,7 +19,7 @@ namespace
   const double pion_charge_radius=0.672/hslashc;
   const double kaon_charge_radius=0.56/hslashc;
   const double pion_pol_savage=7.1e-05/pow(hslashc,3.0);
-  const double kaon_pol_savage=0.0;
+  //const double kaon_pol_savage=0.0;
   const double pol_savage_pi0=-1.1e-4/pow(hslashc,3.0);
   const double pol_savage_k0=-1.0e-4/pow(hslashc,3.0);
   const double l6=14.6;
@@ -813,7 +813,7 @@ dboot_t cont_chir_fit_epsilon(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
 		     pars.fit_a[ib].ave(),pars.adep.ave(),pars.adep_ml.ave(),an_flag);},
 		bind(cont_chir_ansatz_epsilon<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KPi,pars.KK,pars.K2Pi,_1,
 		     a_cont,pars.adep,pars.adep_ml,an_flag),
-		[&ext_data,&pars]
+		[&ext_data]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t(without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse);},
 		ml_phys,phys_res,"\\xe\\f{}\\s\\xg\\f{}\\N",beta_list);
@@ -1044,7 +1044,7 @@ dboot_t cont_chir_fit_epsilon_K0(const dbvec_t &a,const dbvec_t &z,const dboot_t
 		     pars.fit_a[ib].ave(),pars.adep.ave(),an_flag);},
 		bind(cont_chir_ansatz_epsilon_K0<dboot_t,double,double>,pars.fit_f0,pars.fit_B0,pars.C,pars.KK,pars.KPi,pars.K2Pi,pars.K2K,_1,
 		     a_cont,pars.adep,an_flag),
-		[&ext_data,&pars]
+		[&ext_data]
 		(size_t idata,bool without_with_fse,size_t ib)
 		{return dboot_t(without_with_fse?ext_data[idata].wfse:ext_data[idata].wofse);},
 		ml_phys,phys_res,"\\xe\\f{}\\sK\\S0\\N",beta_list);
@@ -1220,7 +1220,7 @@ dboot_t cont_chir_linear_fit_dM(const dbvec_t &a,const dbvec_t &z,const vector<c
 
   for(int univ_full_sub=0;univ_full_sub<2;univ_full_sub++)
     plot_chir_fit(combine(path.c_str(),(univ_full_sub==0)?"_univ":"_full"),ext_data,pars,
-		  [&pars,&ext_data,an_flag,with_without_FSE]
+		  [&pars,an_flag,with_without_FSE]
 		  (double x,size_t ib)
 		  {return cont_chir_linear_ansatz_dM<double,double,double>
 		      (pars.C.ave(),pars.KPi.ave(),x,pars.fit_a[ib].ave(),pars.adep.ave(),inf_vol,pars.L3dep.ave(),an_flag,with_without_FSE);},		  
