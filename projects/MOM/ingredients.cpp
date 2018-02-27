@@ -295,11 +295,9 @@ void ingredients_t::mom_compute_bil()
 	  const djvec_t pr_bil_a=compute_proj_bil(jprop_QED_inv1,jverts.LO,jprop_inv2,glb::im_r_ind);
 	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_QED_inv2,glb::im_r_ind);
 	  pr_bil_QED_temp=
-// #warning amputating only QED
-// 	    0*
-	    (-pr_bil_a-pr_bil_b)
-	    +
-	    pr_bil_QED;
+	    -pr_bil_a
+	    -pr_bil_b
+	    +pr_bil_QED;
 	}
       
       //! an index running on all packed combo, and momenta
@@ -416,10 +414,8 @@ void ingredients_t::mom_compute_meslep()
       for(size_t iall=0;iall<im_r_im_r_iop_iproj_ind.max();iall++)
 	pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=
 	  +pr_QED_amp_QCD[iall]
-#warning not included QCD amputated in QED
-	  // -pr_QCD_amp_QED1[iall]
-	  // -pr_QCD_amp_QED2[iall]
-	  ;
+	  -pr_QCD_amp_QED1[iall]
+	  -pr_QCD_amp_QED2[iall];
     }
 }
 
@@ -632,10 +628,8 @@ void ingredients_t::compute_Zbil()
 	if(use_QED)
 	    Zbil_QED[im_r_im_r_iZbil_ibilmom]=
 	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]
-// #warning not including Zq
 	      +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2]/
-	       Zq_sig1[im_r2_ilinmom2])/2.0
-	      ;
+	       Zq_sig1[im_r2_ilinmom2])/2.0;
       }
 }
 
@@ -658,10 +652,8 @@ void ingredients_t::compute_Zmeslep()
 	
 	out=-pr_meslep[im_r_im_r_iop_iproj_imeslepmom];
 	
-#warning removing Zq
-	if(0)
-	  if(iop==iproj)
-	    out+=(Zq_sig1_QED[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2])/2.0;
+	if(iop==iproj)
+	  out+=(Zq_sig1_QED[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2])/2.0;
     }
 }
 

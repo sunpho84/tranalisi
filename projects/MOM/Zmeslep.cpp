@@ -44,24 +44,9 @@ meslep::mesloop_t build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
       const int sign=Lg5_sign[ilistGl];
       const int psign=Lg5_sign[ilistpGl];
       
-      auto op=lepGamma[iGl]*(lepGamma[0]
- 			     // *0.0
-// #warning avoiding identity in mesloop
-			     +
-			     // 0.0*
-			     // sign*
-			     sign*lepGamma[5]);
+      auto op=lepGamma[iGl]*(lepGamma[0]+sign*lepGamma[5]);
       auto pF=lepGamma[5]*pl.F.adjoint()*lepGamma[5];
-      auto pr=(lepGamma[ipGl]*(lepGamma[0]
-			       // *0.0
-// #warning avoiding identity in mesloop
-			       +
-			       // 0.0*
-			       // psign*
-			       psign*lepGamma[5])).adjoint()
-// #warning suppressing fact 1/2 in mesloop
-	/2.0
-	;
+      auto pr=(lepGamma[ipGl]*(lepGamma[0]+psign*lepGamma[5])).adjoint()/2.0;
       mesloop.LO[i]=(op*pr).toDense().trace()/4.0; //for test: this must be 1 if iGl==ipGl
       mesloop.F[i]=(op*pF*pr).trace()*(double)V/4.0; //normalization for the single gamma
     }
@@ -105,24 +90,24 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
        //create list of operations
        vector<tuple<vector<jqprop_t>*,const vector<dcompl_t>*,const qprop_t*,const qprop_t*>> list={
 	 {&j.LO,&mesloop.LO,&p1.LO,&p2.LO}, //LO
-	 
-	 
+	 //
+	 //
 	 {&j.PH,&mesloop.F,&p1.F,&p2.LO}, //nasty1
-	 //{&j.PH,&mesloop.F,&p1.LO,&p2.F}, //nasty2
-	 
-	 // {&j.PH,&mesloop.LO,&p1.FF,&p2.LO}, //self1
-	 // {&j.PH,&mesloop.LO,&p1.LO,&p2.FF}, //self2
-	 // //
-	 // {&j.PH,&mesloop.LO,&p1.T,&p2.LO}, //tad1
-	 // {&j.PH,&mesloop.LO,&p1.LO,&p2.T}, //tad2
+	 {&j.PH,&mesloop.F,&p1.LO,&p2.F}, //nasty2
 	 //
-	 //{&j.PH,&mesloop.LO,&p1.F,&p2.F}, //exchange
+	 {&j.PH,&mesloop.LO,&p1.FF,&p2.LO}, //self1
+	 {&j.PH,&mesloop.LO,&p1.LO,&p2.FF}, //self2
+	 //
+	 {&j.PH,&mesloop.LO,&p1.T,&p2.LO}, //tad1
+	 {&j.PH,&mesloop.LO,&p1.LO,&p2.T}, //tad2
+	 //
+	 {&j.PH,&mesloop.LO,&p1.F,&p2.F}, //exchange
 	 //
 	 //
-	 // {&j.CT1,&mesloop.LO,&p1.P,&p2.LO}, //counterterm1
-	 // {&j.CT2,&mesloop.LO,&p1.LO,&p2.P}, //counterterm2
-	 
-	 
+	 {&j.CT1,&mesloop.LO,&p1.P,&p2.LO}, //counterterm1
+	 {&j.CT2,&mesloop.LO,&p1.LO,&p2.P}, //counterterm2
+	 //
+	 //
 	 {&j.S,&mesloop.LO,&p1.S,&p2.LO}, //mass1
 	 {&j.S,&mesloop.LO,&p1.LO,&p2.S}  //mass2
 	 };
@@ -145,13 +130,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	       const qprop_t &prop1=*get<2>(o);
 	       const qprop_t &prop2=*get<3>(o);
 	       
-	       const qprop_t c=prop1*quaGamma[Gq]*(quaGamma[0]
- 						   // *0.0
-// #warning avoiding inserting gamma5 op on quark side
-						   +
-						   // 0.0*
-						   // sign*
-						   sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*mesloop;
+	       const qprop_t c=prop1*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop2.adjoint()*quaGamma[5]*mesloop;
 	       jvert[iclust]+=c;
 	       
 	       if(0)
@@ -195,10 +174,7 @@ djvec_t compute_proj_meslep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &
       const size_t im_bw=im_r_im_r_iop_iproj_comps[2],r_bw=im_r_im_r_iop_iproj_comps[3];
       const size_t iop=im_r_im_r_iop_iproj_comps[4],iproj=im_r_im_r_iop_iproj_comps[5];
       
-      const double norm=12.0*zops[iproj].norm
-	//#warning suppressing factor 1/2 in projection normalization
-	*2.0 //2 comes form 1-g5 normalization
-	;
+      const double norm=12.0*zops[iproj].norm*2.0;
       const int pQg5_sign=zops[iproj].Qg5_sign; //same sign
       const size_t ip1=im_r_ind({im_fw,r_fw});
       const size_t ip2=im_r_ind({im_bw,r_bw});
@@ -219,13 +195,7 @@ djvec_t compute_proj_meslep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &
 	  
 	  //projecting on quark side
 	  const size_t Gq=pcontr.Gq;
-	  auto projector=(quaGamma[Gq]*(quaGamma[0]
- 					// *0.0
-// #warning avoiding gamma5 projecting on quark side
-					+
-					//0.0*
-					// pQg5_sign*
-					pQg5_sign*quaGamma[5])).adjoint();
+	  auto projector=(quaGamma[Gq]*(quaGamma[0]+pQg5_sign*quaGamma[5])).adjoint();
 	  auto contr=(amp_vert*projector).trace().real()/norm;
 	  out+=contr;
 	  
