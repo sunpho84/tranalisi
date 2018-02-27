@@ -60,6 +60,7 @@ struct ingredients_t
   //Zq, with and without QED
   djvec_t Zq;
   djvec_t Zq_sig1;
+  djvec_t Zq_QED;
   djvec_t Zq_sig1_QED;
   
   //! task to do someting
@@ -79,7 +80,11 @@ struct ingredients_t
   vector<task_t> get_Zq_tasks(ingredients_t &out) const
   {
     vector<task_t> Zq_tasks={{&Zq,&out.Zq,"Zq"},{&Zq_sig1,&out.Zq_sig1,"Zq_sig1"}};
-    if(use_QED) Zq_tasks.push_back({&Zq_sig1_QED,&out.Zq_sig1_QED,"Zq_sig1_QED"});
+    if(use_QED)
+      {
+	Zq_tasks.push_back({&Zq_QED,&out.Zq_QED,"Zq_QED"});
+	Zq_tasks.push_back({&Zq_sig1_QED,&out.Zq_sig1_QED,"Zq_sig1_QED"});
+      }
     return Zq_tasks;
   }
   

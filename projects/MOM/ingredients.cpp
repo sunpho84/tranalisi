@@ -218,6 +218,7 @@ void ingredients_t::mom_compute_qprop()
 	  if(use_QED)
 	    {
 	      Zq_time.start();
+	      Zq_QED[im_r_ilinmom][ijack]=-compute_Zq(jprop_QED_inv[im_r][ijack],mom);
 	      Zq_sig1_QED[im_r_ilinmom][ijack]=-compute_Zq_sig1(jprop_QED_inv[im_r][ijack],mom);
 	      Zq_time.stop();
 	    }
@@ -432,12 +433,12 @@ void ingredients_t::smom()
 
 void ingredients_t::bin_read(raw_file_t &file)
 {
-  for(djvec_t *o: {&Zq,&Zq_sig1,&Zq_sig1_QED,&pr_bil,&pr_bil_QED,&pr_meslep}) o->bin_read(file);
+  for(djvec_t *o: {&Zq,&Zq_sig1,&Zq_QED,&Zq_sig1_QED,&pr_bil,&pr_bil_QED,&pr_meslep}) o->bin_read(file);
 }
 
 void ingredients_t::bin_write(raw_file_t &file) const
 {
-  for(const djvec_t *o: {&Zq,&Zq_sig1,&Zq_sig1_QED,&pr_bil,&pr_bil_QED,&pr_meslep}) o->bin_write(file);
+  for(const djvec_t *o: {&Zq,&Zq_sig1,&Zq_QED,&Zq_sig1_QED,&pr_bil,&pr_bil_QED,&pr_meslep}) o->bin_write(file);
 }
 
 void ingredients_t::set_indices()
@@ -467,7 +468,11 @@ void ingredients_t::allocate()
 {
   Zq.resize(im_r_ilinmom_ind.max());
   Zq_sig1.resize(im_r_ilinmom_ind.max());
-  if(use_QED) Zq_sig1_QED.resize(im_r_ilinmom_ind.max());
+  if(use_QED)
+    {
+      Zq_QED.resize(im_r_ilinmom_ind.max());
+      Zq_sig1_QED.resize(im_r_ilinmom_ind.max());
+    }
   
   pr_bil.resize(im_r_im_r_iZbil_ibilmom_ind.max());
   if(use_QED) pr_bil_QED.resize(im_r_im_r_iZbil_ibilmom_ind.max());
@@ -781,6 +786,7 @@ ingredients_t ingredients_t::subtract_Oa2(const bool recompute_Zbil) const
       if(use_QED)
 	{
 	  double sub_QED=-1.0*/*coupling gets -1 due to definition of expansion*/sig1_a2(gaz::PLAQ,gf::FEYNMAN,group::U1,mom,L);
+	  out.Zq_QED[i]=Zq_QED[i]-sub_QED*Zq[i]; //factorization hypotesis
 	  out.Zq_sig1_QED[i]=Zq_sig1_QED[i]-sub_QED*Zq_sig1[i]; //factorization hypotesis
 	}
     }
@@ -831,7 +837,11 @@ ingredients_t ingredients_t::evolve() const
       
       out.Zq[i]=Zq[i]/evolver_Zq;
       out.Zq_sig1[i]=Zq_sig1[ilinmom]/evolver_Zq;
-      if(use_QED) out.Zq_sig1_QED[i]=Zq_sig1_QED[i]/evolver_Zq; //neglecting QED evolution
+      if(use_QED)
+	{ //neglecting QED evolution
+	  out.Zq_QED[i]=Zq_QED[i]/evolver_Zq;
+	  out.Zq_sig1_QED[i]=Zq_sig1_QED[i]/evolver_Zq;
+	}
     }
   
   //evolve bil
