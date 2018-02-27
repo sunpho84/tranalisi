@@ -355,10 +355,9 @@ void ingredients_t::mom_compute_meslep()
 	    const double q1=+2.0/3.0; //!< charge of the quark1
 	    const double q2=-1.0/3.0; //!< charge of the quark2
 	    
-#warning avoiding inserting charges
-	    // incorporate_charge(props1,q1);
-	    // incorporate_charge(props2,q2);
-	    // incorporate_charge(props_lep,ql);
+	    incorporate_charge(props1,q1);
+	    incorporate_charge(props2,q2);
+	    incorporate_charge(props_lep,ql);
 	    
 	    //build all props
 	    build_props_time.start();
