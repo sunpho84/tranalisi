@@ -1,7 +1,7 @@
 #ifndef _KL2_IB_FSE_HPP
 #define _KL2_IB_FSE_HPP
 
-#include <common.hpp>
+#include <IB/common.hpp>
 
 #include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_sf_dawson.h>

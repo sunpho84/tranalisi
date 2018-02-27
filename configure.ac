@@ -215,11 +215,5 @@ AC_CONFIG_FILES(Makefile
 	include/Makefile
 	lib/Makefile
 	projects/Makefile
-	projects/FPIEM/Makefile
-	projects/IB/Makefile
-	projects/MOM/Makefile
-	projects/SMETEST/Makefile
-	projects/SPIPOLLO/Makefile
-	projects/STEP_SCALING/Makefile
 	tools/Makefile)
 AC_OUTPUT

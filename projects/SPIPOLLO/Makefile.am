@@ -1,10 +1,7 @@
-ACLOCAL_AMFLAGS=-I m4
-AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
+AM_CPPFLAGS+=-I$(top_srcdir)/projects/%D%
 
-LDADD=$(top_builddir)/lib/libtran.a
-
-bin_PROGRAMS= \
+bin_PROGRAMS+= \
         $(top_builddir)/bin/spi
 
 __top_builddir__bin_spi_SOURCES= \
-	spi.cpp
+	%D%/spi.cpp

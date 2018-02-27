@@ -10,8 +10,8 @@ const bool EXCLUDE_HIGH_MASSES=false;
 #include <set>
 
 #include <tranalisi.hpp>
-#include <Kl2_IB_FSE.hpp>
-#include <common.hpp>
+#include <IB/Kl2_IB_FSE.hpp>
+#include <IB/common.hpp>
 
 const size_t nfit_range_variations=2;
 const int frange_var[2]={0,-1};
