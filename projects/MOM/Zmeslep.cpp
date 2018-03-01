@@ -92,9 +92,8 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	 {&j.LO,&mesloop.LO,&p_in.LO,&p_ou.LO}, //LO
 	 //
 	 //
-	 #warning cicio
 	 {&j.PH,&mesloop.F,&p_in.F,&p_ou.LO}, //nasty_in
-	 //{&j.PH,&mesloop.F,&p_in.LO,&p_ou.F}, //nasty_ou
+	 {&j.PH,&mesloop.F,&p_in.LO,&p_ou.F}, //nasty_ou
 	 //
 	 {&j.PH,&mesloop.LO,&p_in.FF,&p_ou.LO}, //self_in
 	 {&j.PH,&mesloop.LO,&p_in.LO,&p_ou.FF}, //self_ou
@@ -102,6 +101,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	 {&j.PH,&mesloop.LO,&p_in.T,&p_ou.LO}, //tad_in
 	 {&j.PH,&mesloop.LO,&p_in.LO,&p_ou.T}, //tad_ou
 	 //
+	 #warning cicio
 	 //{&j.PH,&mesloop.LO,&p_in.F,&p_ou.F}, //exchange
 	 //
 	 //

@@ -377,9 +377,9 @@ void ingredients_t::mom_compute_meslep()
       clust_time.stop();
       
       vector<jqprop_t> jprop_inv_in;      //!< inverse propagator_in
-      vector<jqprop_t> jprop_inv_ou;     //!< inverse propagator_ou
+      vector<jqprop_t> jprop_inv_ou;      //!< inverse propagator_ou
       vector<jqprop_t> jprop_QED_inv_in;  //!< inverse propagator_in with em insertion
-      vector<jqprop_t> jprop_QED_inv_ou; //!< inverse propagator_ou with em insertion
+      vector<jqprop_t> jprop_QED_inv_ou;  //!< inverse propagator_ou with em insertion
       
       get_inverse_propagators(jprop_inv_in,jprop_QED_inv_in,jprops_in,im_r_ijackp1_ind);
       get_inverse_propagators(jprop_inv_ou,jprop_QED_inv_ou,jprops_ou,im_r_ijackp1_ind);
