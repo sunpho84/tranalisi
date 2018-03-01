@@ -481,6 +481,7 @@ void ingredients_t::allocate()
     {
       pr_meslep.resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
       Zmeslep.resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
+      Zmeslep_QED.resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
     }
 }
 

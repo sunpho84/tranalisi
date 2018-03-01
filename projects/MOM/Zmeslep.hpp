@@ -73,7 +73,7 @@ public:
   
   vector<jqprop_t> PH;     //!< jackkniffed vertex, nasty + self + tad
   vector<jqprop_t> CT_IN;  //!< jackkniffed meson-like vertex, counterterm on line IN
-  vector<jqprop_t> CT_OU; //!< jackkniffed meson-like vertex, counterterm on line OUT
+  vector<jqprop_t> CT_OU;  //!< jackkniffed meson-like vertex, counterterm on line OUT
   vector<jqprop_t> S;      //!< jackkniffed meson-like vertex, S insertion
   
   vector<jqprop_t> QED; //!< full correction
