@@ -191,7 +191,7 @@ djvec_t compute_proj_meslep(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &
 	  const size_t im_r_im_r_iop_ilistpGl=im_r_im_r_iop_ilistpGl_ind({im_fw,r_fw,im_bw,r_bw,iop,ilistpGl});
 	  const qprop_t &vert=jverts[im_r_im_r_iop_ilistpGl][ijack];
 	  
-	  const qprop_t amp_vert=prop_inv1*vert*quaGamma[5]*prop_inv2.adjoint()*quaGamma[5];
+	  const qprop_t amp_vert=prop_inv2.adjoint()*quaGamma[5]*vert*quaGamma[5]*prop_inv1;
 	  
 	  //projecting on quark side
 	  const size_t Gq=pcontr.Gq;
