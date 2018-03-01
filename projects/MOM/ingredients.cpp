@@ -322,19 +322,19 @@ void ingredients_t::mom_compute_meslep()
   
   for(size_t imeslepmom=0;imeslepmom<meslepmoms.size();imeslepmom++)
     {
-      const size_t imom1=meslepmoms[imeslepmom][1];
-      const size_t imom2=meslepmoms[imeslepmom][2];
-      const bool read2=(imom1!=imom2);
+      const size_t imom_in=meslepmoms[imeslepmom][1];
+      const size_t imom_ou=meslepmoms[imeslepmom][2];
+      const bool read_ou=(imom_in!=imom_ou);
       
-      vector<jm_r_mom_qprops_t> jprops1(glb::im_r_ind.max());           //!< jackknived props
-      vector<jm_r_mom_qprops_t> jprops2(glb::im_r_ind.max());           //!< jackknived props
+      vector<jm_r_mom_qprops_t> jprops_in(glb::im_r_ind.max());           //!< jackknived props
+      vector<jm_r_mom_qprops_t> jprops_ou(glb::im_r_ind.max());           //!< jackknived props
       jmeslep_vert_t jmeslep_verts(im_r_im_r_ilistGl_ipGl_ind.max());   //!< jackknived vertex
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
-	    const size_t mom1=linmoms[imom1][0];
-	    const size_t mom2=linmoms[imom2][0];
-	    const size_t momlep=mom1;
+	    const size_t mom_in=linmoms[imom_in][0];
+	    const size_t mom_ou=linmoms[imom_ou][0];
+	    const size_t momlep=mom_in;
 	    if(scheme==reno_scheme::SMOM) CRASH("this will not work for SMOM");
 	    
 	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
@@ -342,68 +342,65 @@ void ingredients_t::mom_compute_meslep()
 	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
 	      "hit "<<ihit+1<<"/"<<nhits<<", "
 	      "momentum combo "<<imeslepmom+1<<"/"<<meslepmoms.size()<<", "
-	      "moms: "<<mom1<<" "<<mom2<<endl;
+	      "moms: "<<mom_in<<" "<<mom_ou<<endl;
 	    
 	    //read
 	    read_time.start();
-	    vector<m_r_mom_conf_qprops_t> props1=read_all_qprops_mom(qfiles,im_r_ijack_ind,i_in_clust_ihit,mom1);
-	    vector<m_r_mom_conf_qprops_t> props2=(read2?read_all_qprops_mom(qfiles,im_r_ijack_ind,i_in_clust_ihit,mom2):props1);
+	    vector<m_r_mom_conf_qprops_t> props_in=read_all_qprops_mom(qfiles,im_r_ijack_ind,i_in_clust_ihit,mom_in);
+	    vector<m_r_mom_conf_qprops_t> props_ou=(read_ou?read_all_qprops_mom(qfiles,im_r_ijack_ind,i_in_clust_ihit,mom_ou):props_in);
 	    vector<mom_conf_lprops_t> props_lep=read_all_lprops_mom(lfiles,i_in_clust_ihit,momlep);
 	    read_time.stop();
 	    
-	    //these are the charges in the lagrangian
-	    const double ql=-1.0;     //!< the program simulates muon *antiparticle*
-	    const double q1=+2.0/3.0; //!< charge of the quark1
-	    const double q2=-1.0/3.0; //!< charge of the quark2
-	    
-	    incorporate_charge(props1,q1);
-	    incorporate_charge(props2,q2);
+	    //put the charges in place
+	    using namespace meslep;
+	    incorporate_charge(props_in,q_in);
+	    incorporate_charge(props_ou,q_ou);
 	    incorporate_charge(props_lep,ql);
 	    
 	    //build all props
 	    build_props_time.start();
-	    build_all_mr_jackkniffed_qprops(jprops1,props1,use_QED,im_r_ind);
-	    build_all_mr_jackkniffed_qprops(jprops2,props2,use_QED,im_r_ind);
+	    build_all_mr_jackkniffed_qprops(jprops_in,props_in,use_QED,im_r_ind);
+	    build_all_mr_jackkniffed_qprops(jprops_ou,props_ou,use_QED,im_r_ind);
 	    build_props_time.stop();
 	    
 	    //build all meslep_verts
 	    build_meslep_verts_time.start();
-	    build_all_mr_gmeslep_jackkniffed_verts(jmeslep_verts,props1,props2,props_lep,im_r_ind);
+	    build_all_mr_gmeslep_jackkniffed_verts(jmeslep_verts,props_in,props_ou,props_lep,im_r_ind);
 	    build_meslep_verts_time.stop();
 	  }
       
       //clusterize
       clust_time.start();
-      clusterize_all_mr_jackkniffed_qprops(jprops1,use_QED,clust_size,im_r_ind,deltam_cr);
-      clusterize_all_mr_jackkniffed_qprops(jprops2,use_QED,clust_size,im_r_ind,deltam_cr);
+      clusterize_all_mr_jackkniffed_qprops(jprops_in,use_QED,clust_size,im_r_ind,deltam_cr);
+      clusterize_all_mr_jackkniffed_qprops(jprops_ou,use_QED,clust_size,im_r_ind,deltam_cr);
       jmeslep_verts.clusterize_all(clust_size,im_r_im_r_iop_ilistpGl_ind,deltam_cr);
       clust_time.stop();
       
-      vector<jqprop_t> jprop_inv1;     //!< inverse propagator1
-      vector<jqprop_t> jprop_inv2;     //!< inverse propagator2
-      vector<jqprop_t> jprop_QED_inv1; //!< inverse propagator1 with em insertion
-      vector<jqprop_t> jprop_QED_inv2; //!< inverse propagator2 with em insertion
+      vector<jqprop_t> jprop_inv_in;      //!< inverse propagator_in
+      vector<jqprop_t> jprop_inv_ou;     //!< inverse propagator_ou
+      vector<jqprop_t> jprop_QED_inv_in;  //!< inverse propagator_in with em insertion
+      vector<jqprop_t> jprop_QED_inv_ou; //!< inverse propagator_ou with em insertion
       
-      get_inverse_propagators(jprop_inv1,jprop_QED_inv1,jprops1,im_r_ijackp1_ind);
-      get_inverse_propagators(jprop_inv2,jprop_QED_inv2,jprops2,im_r_ijackp1_ind);
+      get_inverse_propagators(jprop_inv_in,jprop_QED_inv_in,jprops_in,im_r_ijackp1_ind);
+      get_inverse_propagators(jprop_inv_ou,jprop_QED_inv_ou,jprops_ou,im_r_ijackp1_ind);
       
       proj_time.start();
       
       const auto &j=jmeslep_verts;
       
-      djvec_t pr_LO,pr_QED_amp_QCD,pr_QCD_amp_QED1,pr_QCD_amp_QED2;
+      djvec_t pr_LO,pr_QED_amp_QCD,pr_QCD_amp_QED_in,pr_QCD_amp_QED_ou;
       for(auto &p : vector<tuple<djvec_t*,const vector<jqprop_t>*,const vector<jqprop_t>*,const vector<jqprop_t>*>>{
-	  // {&pr_LO,           &jprop_inv1,     &j.LO,  &jprop_inv2},
-	  {&pr_QED_amp_QCD,  &jprop_inv1,     &j.QED, &jprop_inv2},
-	  {&pr_QCD_amp_QED1, &jprop_QED_inv1, &j.LO,  &jprop_inv2},
-	  {&pr_QCD_amp_QED2, &jprop_inv1,     &j.LO,  &jprop_QED_inv2}
+	  {&pr_LO,              &jprop_inv_in,     &j.LO,  &jprop_inv_ou},
+	  {&pr_QED_amp_QCD,     &jprop_inv_in,     &j.QED, &jprop_inv_ou},
+	  {&pr_QCD_amp_QED_in,  &jprop_QED_inv_in, &j.LO,  &jprop_inv_ou},
+	  {&pr_QCD_amp_QED_ou, &jprop_inv_in,     &j.LO,  &jprop_QED_inv_ou}
 	    })
 	{
 	  auto &out=*get<0>(p);
-	  auto &p1=*get<1>(p);
+	  auto &p_in=*get<1>(p);
 	  auto &v=*get<2>(p);
-	  auto &p2=*get<3>(p);
-	  out=compute_proj_meslep(p1,v,p2,im_r_ind);
+	  auto &p_ou=*get<3>(p);
+	  out=compute_proj_meslep(p_in,v,p_ou,im_r_ind);
 	}
       proj_time.stop();
       
@@ -414,8 +411,8 @@ void ingredients_t::mom_compute_meslep()
       for(size_t iall=0;iall<im_r_im_r_iop_iproj_ind.max();iall++)
 	pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=
 	  +pr_QED_amp_QCD[iall]
-	  -pr_QCD_amp_QED1[iall]
-	  -pr_QCD_amp_QED2[iall];
+	  -pr_QCD_amp_QED_in[iall]
+	  -pr_QCD_amp_QED_ou[iall];
     }
 }
 
@@ -639,25 +636,50 @@ void ingredients_t::compute_Zbil()
 
 void ingredients_t::compute_Zmeslep()
 {
+  //rotate to the TM basis?
+// #warning to be done
+//   for(size_t im_fw=0;im_fw<_nm;im_fw++)
+//     for(size_t r_fw=0;r_fw<_nr;r_fw++)
+//       for(size_t im_bw=0;im_bw<_nm;im_bw++)
+// 	for(size_t r_bw=0;r_bw<_nr;r_bw++)
+// 	  for(size_t imeslepmom=0;imeslepmom<meslepmoms.size();imeslepmom++)
+// 	    {
+// 	      using namespace meslep;
+	      
+// 	      const size_t ilinmom1=meslepmoms[imeslepmom][1];
+// 	      const size_t ilinmom2=meslepmoms[imeslepmom][2];
+// 	      const size_t im_r1_ilinmom1=im_r_ilinmom_ind({im_fw,r_fw,ilinmom1});
+// 	      const size_t im_r2_ilinmom2=im_r_ilinmom_ind({im_fw,r_fw,ilinmom2});
+	      
+// 	      using Zmeslep_t=Matrix<double,nZop,nZop>;
+// 	      Zmeslep_t Zmeslep_combo;
+	      
+// 	      for(size_t iop=0;iop<nZop;iop++)
+// 		for(size_t iproj=0;iproj<nZop;iproj++)
+// 		  {
+// 		    const size_t im_r_im_r_iop_iproj_imeslepmom=im_r_im_r_iop_iproj_imeslepmom_ind({im_fw,r_fw,im_bw,r_bw,iop,iproj,imeslepmom});
+		    
+// 		    for(size_t ijack=0;ijack<=njacks;ijack++)
+// 		      Zmeslep_combo
+// 		  }
+  
+  
   for(size_t im_r_im_r_iop_iproj_imeslepmom=0;im_r_im_r_iop_iproj_imeslepmom<im_r_im_r_iop_iproj_imeslepmom_ind.max();im_r_im_r_iop_iproj_imeslepmom++)
     {
       const vector<size_t> comps=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom);
-	const vector<size_t> im_r1_comp=subset(comps,0,2);
-	const vector<size_t> im_r2_comp=subset(comps,2,4);
-	const size_t iop=comps[4];
-	const size_t iproj=comps[5];
-	const size_t imeslepmom=comps[6];
-	const size_t ilinmom1=meslepmoms[imeslepmom][1];
-	const size_t ilinmom2=meslepmoms[imeslepmom][2];
-	const size_t im_r1_ilinmom1=im_r_ilinmom_ind(concat(im_r1_comp,ilinmom1));
-	const size_t im_r2_ilinmom2=im_r_ilinmom_ind(concat(im_r2_comp,ilinmom2));
-	
-	auto &out=Zmeslep[im_r_im_r_iop_iproj_imeslepmom];
-	
-	out=-pr_meslep[im_r_im_r_iop_iproj_imeslepmom];
-	
-	if(iop==iproj)
-	  out+=(Zq_sig1_QED[im_r1_ilinmom1]+Zq_sig1_QED[im_r2_ilinmom2])/2.0;
+      const vector<size_t> im_r_in_comp=subset(comps,0,2);
+      const vector<size_t> im_r_ou_comp=subset(comps,2,4);
+      const size_t iop=comps[4];
+      const size_t iproj=comps[5];
+      const size_t imeslepmom=comps[6];
+      
+      auto &out=Zmeslep[im_r_im_r_iop_iproj_imeslepmom];
+      
+      out=-pr_meslep[im_r_im_r_iop_iproj_imeslepmom];
+      
+#warning
+      // if(iop==iproj)
+      // 	out+=(Zq_sig1_QED[im_r_in_ilinmom_in]+Zq_sig1_QED[im_r_ou_ilinmom_ou])/2.0;
     }
 }
 
@@ -1018,24 +1040,31 @@ void ingredients_t::plot_Z(const string &suffix) const
   
   //meslep
   if(compute_meslep)
-    for(size_t iop=0;iop<nZbil;iop++)
-      for(size_t iproj=0;iproj<nZbil;iproj++)
-  	{
-	  grace_file_t out("plots/Zmeslep_"+to_string(iop)+"_"+to_string(iproj)+(suffix!=""?("_"+suffix):string(""))+".xmg");
-	  
-	  //write mass by mass, only half of the combos
-  	  for(size_t im1=0;im1<_nm;im1++)
-	    for(size_t im2=im1;im2<_nm;im2++)
-	      for(size_t r=0;r<_nr;r++)
-		{
-		  out.new_data_set();
-		  
-		  for(size_t imom=0;imom<linmoms.size();imom++)
+    for(const auto &t : get_Zbil_tasks(dum))
+      {
+	//decript tuple
+	const djvec_t &Z=*t.in;
+	const string &tag=t.tag;
+	
+	for(size_t iop=0;iop<nZbil;iop++)
+	  for(size_t iproj=0;iproj<nZbil;iproj++)
+	    {
+	      grace_file_t out("plots/"+tag+"_"+to_string(iop)+"_"+to_string(iproj)+(suffix!=""?("_"+suffix):string(""))+".xmg");
+	      
+	      //write mass by mass, only half of the combos
+	      for(size_t im_in=0;im_in<_nm;im_in++)
+		for(size_t im_ou=im_in;im_ou<_nm;im_ou++)
+		  for(size_t r=0;r<_nr;r++)
 		    {
-		      const double p2hat=all_moms[meslepmoms[imom][0]].p(L).tilde().norm2();
-		      size_t i=im_r_im_r_iop_iproj_imeslepmom_ind({im1,r,im2,r,iop,iproj,imom});
-		      out.write_ave_err(p2hat,Zmeslep[i].ave_err());
+		      out.new_data_set();
+		      
+		      for(size_t imom=0;imom<linmoms.size();imom++)
+			{
+			  const double p2hat=all_moms[meslepmoms[imom][0]].p(L).tilde().norm2();
+			  size_t i=im_r_im_r_iop_iproj_imeslepmom_ind({im_in,r,im_ou,r,iop,iproj,imom});
+			  out.write_ave_err(p2hat,Z[i].ave_err());
+			}
 		    }
-		}
-	}
+	    }
+      }
 }

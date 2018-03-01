@@ -16,6 +16,11 @@ EXTERN_MESLEP bool compute_meslep;
 
 namespace meslep
 {
+  //these are the charges in the lagrangian
+  const double ql=-1.0;     //!< the program simulates muon *antiparticle*
+  const double q_in=+2.0/3.0;  //!< charge of the quark which comes into the vertex
+  const double q_ou=-1.0/3.0; //!< charge of the quark which comes out the vertex
+  
   struct mesloop_t
   {
     vector<dcompl_t> LO;
@@ -47,7 +52,7 @@ namespace meslep
       {{{ 0,0}},+1,1},
       {{{{5,10},{6,11},{7,12},{8,13},{9,14},{10,15}}},+1,12}});
   
-  EXTERN_MESLEP size_t nZop INIT_TO({5});
+  EXTERN_MESLEP const size_t nZop=5;
   
   EXTERN_MESLEP       vector<size_t>         listGl   INIT_TO(={{ 0, 1, 2, 3, 4,10,11,12,13,14,15}}); //!< list of Gamma to be inserted on lepton side of the operator
   EXTERN_MESLEP       vector<size_t>         &listpGl INIT_TO(=listGl);
@@ -60,16 +65,16 @@ class jmeslep_vert_t
   //! return a list of pointers to all internal data
   vector<vector<jqprop_t>*> get_all_ptrs()
   {
-    return {&LO,&PH,&CT1,&CT2,&S,&QED};
+    return {&LO,&PH,&CT_IN,&CT_OU,&S,&QED};
   }
   
 public:
   vector<jqprop_t> LO; //!< jackkniffed mesolep vertex, no photon
   
-  vector<jqprop_t> PH; //!< jackkniffed vertex, nasty + self + tad
-  vector<jqprop_t> CT1; //!< jackkniffed meson-like vertex, counterterm on line 1
-  vector<jqprop_t> CT2; //!< jackkniffed meson-like vertex, counterterm on line 2
-  vector<jqprop_t> S;   //!< jackkniffed meson-like vertex, S insertion
+  vector<jqprop_t> PH;     //!< jackkniffed vertex, nasty + self + tad
+  vector<jqprop_t> CT_IN;  //!< jackkniffed meson-like vertex, counterterm on line IN
+  vector<jqprop_t> CT_OU; //!< jackkniffed meson-like vertex, counterterm on line OUT
+  vector<jqprop_t> S;      //!< jackkniffed meson-like vertex, S insertion
   
   vector<jqprop_t> QED; //!< full correction
   
@@ -98,12 +103,12 @@ public:
     for(size_t i=0;i<im_r_im_r_iop_ilistpGl_ind.max();i++)
 	{
 	  const vector<size_t> comps=im_r_im_r_iop_ilistpGl_ind(i);
-	  const size_t im1=comps[0],im2=comps[2];
+	  const size_t im_in=comps[0],im_ou=comps[2];
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    QED[i][ijack]=
 	      PH[i][ijack]
-	      -deltam_cr[im1][ijack]*CT1[i][ijack]
-	      -deltam_cr[im2][ijack]*CT2[i][ijack];
+	      -deltam_cr[im_in ][ijack]*CT_IN [i][ijack]
+	      -deltam_cr[im_ou][ijack]*CT_OU[i][ijack];
 	}
   }
 };

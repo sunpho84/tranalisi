@@ -137,7 +137,7 @@ struct ingredients_t
   djvec_t pr_meslep;
   
   //! renormalization meslep
-  djvec_t Zmeslep;
+  djvec_t Zmeslep,Zmeslep_QED;
   index_t im_r_im_r_ilistGl_ipGl_ind;
   index_t im_r_im_r_iop_iproj_ind;
   
@@ -154,7 +154,8 @@ struct ingredients_t
   //! return a list of tasks for meslep projected vertex
   vector<task_t> get_Zmeslep_tasks(ingredients_t &out) const
   {
-    vector<task_t> Zmeslep_tasks={{&Zmeslep,&out.Zmeslep,"Zmeslep"}};
+    vector<task_t> Zmeslep_tasks={{&Zmeslep,&out.Zmeslep,"Zmeslep"},
+				  {&Zmeslep_QED,&out.Zmeslep_QED,"Zmeslep_QED"}};
     return Zmeslep_tasks;
   }
   
