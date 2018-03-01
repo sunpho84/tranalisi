@@ -19,27 +19,18 @@
 const char m_r_mom_conf_qprops_t::tag[NPROP_WITH_QED][3]={"0","FF","F","T","S","P"};
 const char mom_conf_lprops_t::tag[NPROP_WITH_QED][3]={"0","F"};
 
-void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom)
+template <typename T>
+auto get_antirotator(const vector<T> &gamma,const size_t r)
 {
-  //cout<<"Seeking file "<<file.get_path()<<" to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
-  file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
-  
-  for(size_t is_so=0;is_so<NSPIN;is_so++)
-    for(size_t ic_so=0;ic_so<NCOL;ic_so++)
-      for(size_t is_si=0;is_si<NSPIN;is_si++)
-	for(size_t ic_si=0;ic_si<NCOL;ic_si++)
-	  {
-	    dcompl_t c;
-	    file.bin_read(c);
-	    (*prop)(isc(is_si,ic_si),isc(is_so,ic_so))=c*fact;
-	  }
+  return gamma[0]-dcompl_t(0,1)*tau3[r]*gamma[5];
 }
 
-void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom)
+void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const size_t r)
 {
   //cout<<"Seeking file "<<file.get_path()<<" to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
   file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
   
+  qprop_t temp;
   for(size_t is_so=0;is_so<NSPIN;is_so++)
     for(size_t ic_so=0;ic_so<NCOL;ic_so++)
       for(size_t is_si=0;is_si<NSPIN;is_si++)
@@ -47,8 +38,31 @@ void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
 	  {
 	    dcompl_t c;
 	    file.bin_read(c);
-	    (*prop)(is_si,is_so)=c*fact;
+	    temp(isc(is_si,ic_si),isc(is_so,ic_so))=c*fact;
 	  }
+  
+  auto rot=get_antirotator(quaGamma,r);
+  *prop=rot*temp*rot/2.0;
+}
+
+void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const size_t r)
+{
+  //cout<<"Seeking file "<<file.get_path()<<" to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
+  file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
+  
+  lprop_t temp;
+  for(size_t is_so=0;is_so<NSPIN;is_so++)
+    for(size_t ic_so=0;ic_so<NCOL;ic_so++)
+      for(size_t is_si=0;is_si<NSPIN;is_si++)
+	for(size_t ic_si=0;ic_si<NCOL;ic_si++)
+	  {
+	    dcompl_t c;
+	    file.bin_read(c);
+	    temp(is_si,is_so)=c*fact;
+	  }
+  
+  auto rot=get_antirotator(lepGamma,r);
+  *prop=rot*temp*rot/2.0;
 }
 
 string get_qprop_tag(const size_t im,const size_t ir,const size_t ikind)

@@ -199,7 +199,7 @@ vector<m_r_mom_conf_qprops_t> read_all_qprops_mom(vector<raw_file_t> &files,cons
       //! index of the output propagator
       const size_t im_r_ijack=im_r_ijack_ind({im,r,ijack});
       
-      read_qprop(props[im_r_ijack].kind[ikind],files[im_r_iconf_ihit_ikind],m_r_mom_conf_qprops_t::coeff_to_read(ikind,r),imom);
+      read_qprop(props[im_r_ijack].kind[ikind],files[im_r_iconf_ihit_ikind],m_r_mom_conf_qprops_t::coeff_to_read(ikind,r),imom,r);
     }
   
   return props;
@@ -232,7 +232,7 @@ vector<mom_conf_lprops_t> read_all_lprops_mom(vector<raw_file_t> &files,const si
       //! index of the file to use
       const size_t iconf_ihit_ikind=iconf_ihit_ikind_ind({iconf,ihit,ikind});
       
-      read_lprop(props[ijack].kind[ikind],files[iconf_ihit_ikind],1.0,imom);
+      read_lprop(props[ijack].kind[ikind],files[iconf_ihit_ikind],1.0,imom,0); //r of lprop is always 0
     }
   
   return props;
