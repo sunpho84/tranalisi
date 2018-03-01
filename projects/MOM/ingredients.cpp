@@ -393,7 +393,7 @@ void ingredients_t::mom_compute_meslep()
 	  {&pr_LO,              &jprop_inv_in,     &j.LO,  &jprop_inv_ou},
 	  {&pr_QED_amp_QCD,     &jprop_inv_in,     &j.QED, &jprop_inv_ou},
 	  {&pr_QCD_amp_QED_in,  &jprop_QED_inv_in, &j.LO,  &jprop_inv_ou},
-	  {&pr_QCD_amp_QED_ou, &jprop_inv_in,     &j.LO,  &jprop_QED_inv_ou}
+	  {&pr_QCD_amp_QED_ou,  &jprop_inv_in,     &j.LO,  &jprop_QED_inv_ou}
 	    })
 	{
 	  auto &out=*get<0>(p);
@@ -1048,7 +1048,7 @@ void ingredients_t::plot_Z(const string &suffix) const
   
   //meslep
   if(compute_meslep)
-    for(const auto &t : get_Zbil_tasks(dum))
+    for(const auto &t : get_Zmeslep_tasks(dum))
       {
 	//decript tuple
 	const djvec_t &Z=*t.in;
