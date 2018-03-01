@@ -42,7 +42,7 @@ void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
 	  }
   
   auto rot=get_antirotator(quaGamma,r);
-  *prop=rot*temp*rot/2.0;
+  *prop=rot.adjoint()*temp*rot/2.0;
 }
 
 void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const size_t r)
@@ -62,7 +62,7 @@ void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
 	  }
   
   auto rot=get_antirotator(lepGamma,r);
-  *prop=rot*temp*rot/2.0;
+  *prop=rot.adjoint()*temp*rot/2.0;
 }
 
 string get_qprop_tag(const size_t im,const size_t ir,const size_t ikind)
