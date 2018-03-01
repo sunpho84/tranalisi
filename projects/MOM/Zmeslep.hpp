@@ -52,7 +52,7 @@ namespace meslep
       {{{ 0,0}},+1,1},
       {{{{5,10},{6,11},{7,12},{8,13},{9,14},{10,15}}},+1,12}});
   
-  EXTERN_MESLEP const size_t nZop=5;
+  const size_t nZop=5;
   
   EXTERN_MESLEP       vector<size_t>         listGl   INIT_TO(={{ 0, 1, 2, 3, 4,10,11,12,13,14,15}}); //!< list of Gamma to be inserted on lepton side of the operator
   EXTERN_MESLEP       vector<size_t>         &listpGl INIT_TO(=listGl);
