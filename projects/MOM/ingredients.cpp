@@ -409,10 +409,14 @@ void ingredients_t::mom_compute_meslep()
       
       //store
       for(size_t iall=0;iall<im_r_im_r_iop_iproj_ind.max();iall++)
-	pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=
-	  +pr_QED_amp_QCD[iall]
-	  -pr_QCD_amp_QED_in[iall]
-	  -pr_QCD_amp_QED_ou[iall];
+	{
+	  pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=
+	    +pr_LO[iall];
+	  pr_meslep_QED[all_imeslepmom_ind({iall,imeslepmom})]=
+	    +pr_QED_amp_QCD[iall]
+	    -pr_QCD_amp_QED_in[iall]
+	    -pr_QCD_amp_QED_ou[iall];
+	}
     }
 }
 
@@ -430,12 +434,12 @@ void ingredients_t::smom()
 
 void ingredients_t::bin_read(raw_file_t &file)
 {
-  for(djvec_t *o: {&Zq,&Zq_sig1,&Zq_QED,&Zq_sig1_QED,&pr_bil,&pr_bil_QED,&pr_meslep}) o->bin_read(file);
+  for(djvec_t *o: {&Zq,&Zq_sig1,&Zq_QED,&Zq_sig1_QED,&pr_bil,&pr_bil_QED,&pr_meslep,&pr_meslep_QED}) o->bin_read(file);
 }
 
 void ingredients_t::bin_write(raw_file_t &file) const
 {
-  for(const djvec_t *o: {&Zq,&Zq_sig1,&Zq_QED,&Zq_sig1_QED,&pr_bil,&pr_bil_QED,&pr_meslep}) o->bin_write(file);
+  for(const djvec_t *o: {&Zq,&Zq_sig1,&Zq_QED,&Zq_sig1_QED,&pr_bil,&pr_bil_QED,&pr_meslep,&pr_meslep_QED}) o->bin_write(file);
 }
 
 void ingredients_t::set_indices()
@@ -481,6 +485,7 @@ void ingredients_t::allocate()
     {
       pr_meslep.resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
       Zmeslep.resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
+      pr_meslep_QED.resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
       Zmeslep_QED.resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
     }
 }
@@ -674,9 +679,11 @@ void ingredients_t::compute_Zmeslep()
       const size_t iproj=comps[5];
       const size_t imeslepmom=comps[6];
       
-      auto &out=Zmeslep[im_r_im_r_iop_iproj_imeslepmom];
+      auto &LO=Zmeslep[im_r_im_r_iop_iproj_imeslepmom];
+      auto &QED=Zmeslep_QED[im_r_im_r_iop_iproj_imeslepmom];
       
-      out=-pr_meslep[im_r_im_r_iop_iproj_imeslepmom];
+      LO=-pr_meslep[im_r_im_r_iop_iproj_imeslepmom];
+      QED=-pr_meslep_QED[im_r_im_r_iop_iproj_imeslepmom];
       
 #warning
       // if(iop==iproj)

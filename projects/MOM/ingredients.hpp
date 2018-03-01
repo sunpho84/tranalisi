@@ -135,6 +135,7 @@ struct ingredients_t
   
   //! projected meslep
   djvec_t pr_meslep;
+  djvec_t pr_meslep_QED;
   
   //! renormalization meslep
   djvec_t Zmeslep,Zmeslep_QED;
@@ -147,7 +148,8 @@ struct ingredients_t
   //! return a list of tasks for meslep projected vertex
   vector<task_t> get_pr_meslep_tasks(ingredients_t &out) const
   {
-    vector<task_t> pr_meslep_tasks={{&pr_meslep,&out.pr_meslep,"pr_meslep"}};
+    vector<task_t> pr_meslep_tasks={{&pr_meslep,&out.pr_meslep,"pr_meslep"},
+				    {&pr_meslep_QED,&out.pr_meslep_QED,"pr_meslep_QED"}};
     return pr_meslep_tasks;
   }
   
