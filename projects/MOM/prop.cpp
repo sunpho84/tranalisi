@@ -70,8 +70,8 @@ void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
 	    temp(is_si,is_so)=c*fact;
 	  }
   
-  auto rot_si=get_rotator(quaGamma,r_si);
-  auto rot_so=get_rotator(quaGamma,r_so);
+  auto rot_si=get_rotator(lepGamma,r_si);
+  auto rot_so=get_rotator(lepGamma,r_so);
   *prop=rot_si*temp*rot_so;
 }
 
