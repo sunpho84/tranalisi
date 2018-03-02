@@ -116,7 +116,8 @@ djvec_t compute_proj_bil(const vjqprop_t &jprop_inv_in,const vector<jqprop_t> &j
 	  qprop_t amp_vert=prop_inv_ou*vert*quaGamma[5]*prop_inv_in.adjoint()*quaGamma[5];
 	  auto c=(amp_vert*quaGamma[iG].adjoint()).trace().real()/(12.0*iG_of_Zbil[iZbil].size());
 	  
-	  cout<<"Amputating bil "<<iZbil<<", ip_in: "<<ip_in<<", ip_ou: "<<ip_ou<<", ijack: "<<ijack<<", prop_inv_in: "<<prop_inv_in(0,0)<<", vert: "<<vert(0,0)<<", prop_inv_ou: "<<prop_inv_ou(0,0)<<", c: "<<c<<endl;
+	  if(0)
+	    cout<<"Amputating bil "<<iZbil<<", ip_in: "<<ip_in<<", ip_ou: "<<ip_ou<<", ijack: "<<ijack<<", prop_inv_in: "<<prop_inv_in(0,0)<<", vert: "<<vert(0,0)<<", prop_inv_ou: "<<prop_inv_ou(0,0)<<", c: "<<c<<endl;
 	  out[ijack]+=c;
 	}
     }
