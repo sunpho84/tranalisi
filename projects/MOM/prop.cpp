@@ -20,12 +20,20 @@ const char m_r_mom_conf_qprops_t::tag[NPROP_WITH_QED][3]={"0","FF","F","T","S","
 const char mom_conf_lprops_t::tag[NPROP_WITH_QED][3]={"0","F"};
 
 template <typename T>
-auto get_antirotator(const vector<T> &gamma,const size_t r)
+T get_rotator(const vector<T> &gamma,const int r)
 {
-  return gamma[0]-dcompl_t(0,1)*tau3[r]*gamma[5];
+  switch(r)
+    {
+    case 0:
+    case 1:
+      return (gamma[0]+dcompl_t(0,1)*tau3[r]*gamma[5])/sqrt(2);
+      break;
+    default:
+      return gamma[0];
+    }
 }
 
-void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const size_t r)
+void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const int r_si,const int r_so)
 {
   //cout<<"Seeking file "<<file.get_path()<<" to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
   file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
@@ -41,11 +49,12 @@ void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
 	    temp(isc(is_si,ic_si),isc(is_so,ic_so))=c*fact;
 	  }
   
-  auto rot=get_antirotator(quaGamma,r);
-  *prop=rot.adjoint()*temp*rot/2.0;
+  auto rot_si=get_rotator(quaGamma,r_si);
+  auto rot_so=get_rotator(quaGamma,r_so);
+  *prop=rot_si*temp*rot_so;
 }
 
-void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const size_t r)
+void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const int r_si,const int r_so)
 {
   //cout<<"Seeking file "<<file.get_path()<<" to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
   file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
@@ -61,8 +70,9 @@ void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
 	    temp(is_si,is_so)=c*fact;
 	  }
   
-  auto rot=get_antirotator(lepGamma,r);
-  *prop=rot.adjoint()*temp*rot/2.0;
+  auto rot_si=get_rotator(quaGamma,r_si);
+  auto rot_so=get_rotator(quaGamma,r_so);
+  *prop=rot_si*temp*rot_so;
 }
 
 string get_qprop_tag(const size_t im,const size_t ir,const size_t ikind)

@@ -33,10 +33,10 @@ EXTERN_PROP bool use_QED; //!< perform or not the QED analysis
 const double tau3[2]={-1.0,+1.0}; //!< tau entering the propagator
 
 //! read a quark propagator
-void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const size_t r);
+void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const int r_si,const int r_so);
 
 // read a lepton propagator
-void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const size_t r);
+void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const int r_si,const int r_so);
 
 //! holds a given m, r and momentum, for a fixed conf, for quarks
 class m_r_mom_conf_qprops_t

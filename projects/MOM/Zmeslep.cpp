@@ -45,10 +45,12 @@ meslep::mesloop_t build_mesloop(const vector<mom_conf_lprops_t> &props_lep)
       const int psign=Lg5_sign[ilistpGl];
       
       auto op=lepGamma[iGl]*(lepGamma[0]+sign*lepGamma[5]);
+      auto p0=lepGamma[5]*pl.LO.adjoint()*lepGamma[5];
       auto pF=lepGamma[5]*pl.F.adjoint()*lepGamma[5];
+      auto pFamp=pF*p0.inverse();
       auto pr=(lepGamma[ipGl]*(lepGamma[0]+psign*lepGamma[5])).adjoint()/2.0;
       mesloop.LO[i]=(op*pr).toDense().trace()/4.0;   //for test: this must be 1 if iGl==ipGl
-      mesloop.F[i]=(op*pF*pr).trace()*(double)V/4.0; //normalization for the single gamma
+      mesloop.F[i]=(op*pFamp*pr).trace()*(double)V/4.0; //normalization for the single gamma
     }
   
   return mesloop;
