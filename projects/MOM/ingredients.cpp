@@ -667,6 +667,7 @@ void ingredients_t::compute_Zmeslep()
 		      {
 			const size_t im_r_im_r_iop_iproj_imeslepmom=im_r_im_r_iop_iproj_imeslepmom_ind({im_in,r_in,im_ou,r_ou,iop,iproj,imeslepmom});
 			
+			//Gamma LO and correction
 			Gamma_meslep_combo(iop,iproj)=pr_meslep[im_r_im_r_iop_iproj_imeslepmom][ijack];
 			Gamma_QED_meslep_combo(iop,iproj)=pr_meslep_QED[im_r_im_r_iop_iproj_imeslepmom][ijack];
 		      }
@@ -680,8 +681,7 @@ void ingredients_t::compute_Zmeslep()
 		     Zq_sig1_QED[im_r_ou_ilinmom_ou][ijack]/Zq_sig1[im_r_ou_ilinmom_ou][ijack]*sqr(meslep::q_ou));
 		  
 		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
-		  auto Z_QED=// Z_LO*
-		    (Zq_QED_contr*Zmeslep_t::Identity()-Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
+		  auto Z_QED=Z_LO*(Zq_QED_contr*Zmeslep_t::Identity()-Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
 		  
 		  for(size_t iop=0;iop<nZop;iop++)
 		    for(size_t iproj=0;iproj<nZop;iproj++)
