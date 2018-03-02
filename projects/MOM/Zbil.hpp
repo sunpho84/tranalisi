@@ -23,7 +23,7 @@ const size_t nZbil=5;
 
 //! holds all iZbil_t
 const iZbil_t iZbil_t_list[nZbil]={iZS,iZA,iZP,iZV,iZT};
-const vector<vector<size_t>> iG_of_Zbil={{0},{1,2,3,4},{5},{6,7,8,9},{10,11,12,13,14,15}};
+const vector<vector<size_t>> iG_of_Zbil={{0},{6,7,8,9},{5},{1,2,3,4},{10,11,12,13,14,15}};
 
 //! holds jackkniffed vertex for an mr combo and for a given mom
 class jbil_vert_t
@@ -33,7 +33,7 @@ class jbil_vert_t
   {
     vector<vector<jqprop_t>*> out={&LO};
     if(use_QED)
-      for(auto &p : {&PH,&CT1,&CT2,&S,&QED})
+      for(auto &p : {&PH,&CT_in,&CT_ou,&S,&QED})
 	out.push_back(p);
     return out;
   }
@@ -41,11 +41,11 @@ class jbil_vert_t
 public:
   vector<jqprop_t> LO; //!< jackkniffed vertex
   
-  vector<jqprop_t> PH;  //!< jackkniffed vertex with all photons
-  vector<jqprop_t> CT1; //!< jackkniffed vertex with counterterm on line 1
-  vector<jqprop_t> CT2; //!< jackkniffed vertex with counterterm on line 2
-  vector<jqprop_t> S;   //!< jackkniffed S vertex
-  vector<jqprop_t> QED; //!< full correction
+  vector<jqprop_t> PH;    //!< jackkniffed vertex with all photons
+  vector<jqprop_t> CT_in; //!< jackkniffed vertex with counterterm on line in
+  vector<jqprop_t> CT_ou; //!< jackkniffed vertex with counterterm on line out
+  vector<jqprop_t> S;     //!< jackkniffed S vertex
+  vector<jqprop_t> QED;   //!< full correction
   
   jbil_vert_t(size_t size,bool use_QED)
   {for(auto &p : get_all_ptrs(use_QED)) p->resize(size);}
@@ -71,23 +71,23 @@ public:
       for(size_t i=0;i<im_r_im_r_igam_ind.max();i++)
 	{
 	  const vector<size_t> comps=im_r_im_r_igam_ind(i);
-	  const size_t im1=comps[0],im2=comps[2];
+	  const size_t im_in=comps[0],im_ou=comps[2];
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    QED[i][ijack]=
 	      PH[i][ijack]
 // #warning ignoring counterterm
-	      -deltam_cr[im1][ijack]*CT1[i][ijack]
-	      -deltam_cr[im2][ijack]*CT2[i][ijack]
+	      -deltam_cr[im_in][ijack]*CT_in[i][ijack]
+	      -deltam_cr[im_ou][ijack]*CT_ou[i][ijack]
 	      ;
 	}
   }
 };
 
 //! compute the projected bilinears
-djvec_t compute_proj_bil(const vjqprop_t &jprop_inv1,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv2,const index_t &im_r_ind);
+djvec_t compute_proj_bil(const vjqprop_t &jprop_inv_in,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv_ou,const index_t &im_r_ind);
 
 //! compute all vertices for a certain conf
-void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props1,const vector<m_r_mom_conf_qprops_t> &props2,
+void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props_in,const vector<m_r_mom_conf_qprops_t> &props_ou,
 					const index_t &im_r_im_r_igam_ind,const index_t &im_r_ijack_ind,bool use_QED);
 
 #undef EXTERN_ZBIL
