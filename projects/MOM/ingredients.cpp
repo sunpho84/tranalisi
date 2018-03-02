@@ -328,7 +328,7 @@ void ingredients_t::mom_compute_meslep()
       
       vector<jm_r_mom_qprops_t> jprops_in(glb::im_r_ind.max());           //!< jackknived props
       vector<jm_r_mom_qprops_t> jprops_ou(glb::im_r_ind.max());           //!< jackknived props
-      jmeslep_vert_t jmeslep_verts(im_r_im_r_ilistGl_ipGl_ind.max());   //!< jackknived vertex
+      jmeslep_vert_t jmeslep_verts(im_r_im_r_ilistGl_ipGl_ind.max());     //!< jackknived vertex
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
@@ -642,53 +642,56 @@ void ingredients_t::compute_Zbil()
 
 void ingredients_t::compute_Zmeslep()
 {
-  //rotate to the TM basis?
-// #warning to be done
-//   for(size_t im_fw=0;im_fw<_nm;im_fw++)
-//     for(size_t r_fw=0;r_fw<_nr;r_fw++)
-//       for(size_t im_bw=0;im_bw<_nm;im_bw++)
-// 	for(size_t r_bw=0;r_bw<_nr;r_bw++)
-// 	  for(size_t imeslepmom=0;imeslepmom<meslepmoms.size();imeslepmom++)
-// 	    {
-// 	      using namespace meslep;
+  for(size_t im_in=0;im_in<_nm;im_in++)
+    for(size_t r_in=0;r_in<_nr;r_in++)
+      for(size_t im_ou=0;im_ou<_nm;im_ou++)
+	for(size_t r_ou=0;r_ou<_nr;r_ou++)
+#pragma omp parallel for
+	  for(size_t imeslepmom=0;imeslepmom<meslepmoms.size();imeslepmom++)
+	    {
+	      using namespace meslep;
 	      
-// 	      const size_t ilinmom1=meslepmoms[imeslepmom][1];
-// 	      const size_t ilinmom2=meslepmoms[imeslepmom][2];
-// 	      const size_t im_r1_ilinmom1=im_r_ilinmom_ind({im_fw,r_fw,ilinmom1});
-// 	      const size_t im_r2_ilinmom2=im_r_ilinmom_ind({im_fw,r_fw,ilinmom2});
+	      const size_t ilinmom_in=meslepmoms[imeslepmom][1];
+	      const size_t ilinmom_ou=meslepmoms[imeslepmom][2];
+	      const size_t im_r_in_ilinmom_in=im_r_ilinmom_ind({im_in,r_in,ilinmom_in});
+	      const size_t im_r_ou_ilinmom_ou=im_r_ilinmom_ind({im_in,r_in,ilinmom_ou});
 	      
-// 	      using Zmeslep_t=Matrix<double,nZop,nZop>;
-// 	      Zmeslep_t Zmeslep_combo;
-	      
-// 	      for(size_t iop=0;iop<nZop;iop++)
-// 		for(size_t iproj=0;iproj<nZop;iproj++)
-// 		  {
-// 		    const size_t im_r_im_r_iop_iproj_imeslepmom=im_r_im_r_iop_iproj_imeslepmom_ind({im_fw,r_fw,im_bw,r_bw,iop,iproj,imeslepmom});
-		    
-// 		    for(size_t ijack=0;ijack<=njacks;ijack++)
-// 		      Zmeslep_combo
-// 		  }
-  
-  
-  for(size_t im_r_im_r_iop_iproj_imeslepmom=0;im_r_im_r_iop_iproj_imeslepmom<im_r_im_r_iop_iproj_imeslepmom_ind.max();im_r_im_r_iop_iproj_imeslepmom++)
-    {
-      const vector<size_t> comps=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom);
-      const vector<size_t> im_r_in_comp=subset(comps,0,2);
-      const vector<size_t> im_r_ou_comp=subset(comps,2,4);
-      const size_t iop=comps[4];
-      const size_t iproj=comps[5];
-      const size_t imeslepmom=comps[6];
-      
-      auto &LO=Zmeslep[im_r_im_r_iop_iproj_imeslepmom];
-      auto &QED=Zmeslep_QED[im_r_im_r_iop_iproj_imeslepmom];
-      
-      LO=-pr_meslep[im_r_im_r_iop_iproj_imeslepmom];
-      QED=-pr_meslep_QED[im_r_im_r_iop_iproj_imeslepmom];
-      
-#warning
-      // if(iop==iproj)
-      // 	out+=(Zq_sig1_QED[im_r_in_ilinmom_in]+Zq_sig1_QED[im_r_ou_ilinmom_ou])/2.0;
-    }
+	      for(size_t ijack=0;ijack<=njacks;ijack++)
+		{
+		  using Zmeslep_t=Matrix<double,nZop,nZop>;
+		  Zmeslep_t Gamma_meslep_combo;
+		  Zmeslep_t Gamma_QED_meslep_combo;
+		  
+		  for(size_t iop=0;iop<nZop;iop++)
+		    for(size_t iproj=0;iproj<nZop;iproj++)
+		      {
+			const size_t im_r_im_r_iop_iproj_imeslepmom=im_r_im_r_iop_iproj_imeslepmom_ind({im_in,r_in,im_ou,r_ou,iop,iproj,imeslepmom});
+			
+			Gamma_meslep_combo(iop,iproj)=pr_meslep[im_r_im_r_iop_iproj_imeslepmom][ijack];
+			Gamma_QED_meslep_combo(iop,iproj)=pr_meslep_QED[im_r_im_r_iop_iproj_imeslepmom][ijack];
+		      }
+		  
+		  const Zmeslep_t Gamma_meslep_combo_inv=Gamma_meslep_combo.inverse();
+		  
+		  auto Zq_contr=sqrt(Zq_sig1[im_r_in_ilinmom_in][ijack]*Zq_sig1[im_r_ou_ilinmom_ou][ijack]);
+		  auto Zq_QED_contr=
+		    0.5*
+		    (Zq_sig1_QED[im_r_in_ilinmom_in][ijack]/Zq_sig1[im_r_in_ilinmom_in][ijack]*sqr(meslep::q_in)+
+		     Zq_sig1_QED[im_r_ou_ilinmom_ou][ijack]/Zq_sig1[im_r_ou_ilinmom_ou][ijack]*sqr(meslep::q_ou));
+		  
+		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
+		  auto Z_QED=Z_LO*(Zq_QED_contr*Zmeslep_t::Identity()-Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
+		  
+		  for(size_t iop=0;iop<nZop;iop++)
+		    for(size_t iproj=0;iproj<nZop;iproj++)
+		      {
+			const size_t im_r_im_r_iop_iproj_imeslepmom=im_r_im_r_iop_iproj_imeslepmom_ind({im_in,r_in,im_ou,r_ou,iop,iproj,imeslepmom});
+			
+			Zmeslep[im_r_im_r_iop_iproj_imeslepmom][ijack]=Z_LO(iop,iproj);
+			Zmeslep_QED[im_r_im_r_iop_iproj_imeslepmom][ijack]=Z_QED(iop,iproj);
+		      }
+		}
+	    }
 }
 
 ingredients_t ingredients_t::chir_extrap() const
