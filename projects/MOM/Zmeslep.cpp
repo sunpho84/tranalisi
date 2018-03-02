@@ -121,6 +121,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
        for(auto &o : list)
 	 {
 	   const int    sign=zop.Qg5_sign;
+	   const int    norm=zop.norm;
 	   jqprop_t &jvert=(*get<0>(o))[im_r_im_r_iop_ilistpGl];
 	   // cout<<" "<<endl;
 	   for(auto &contr : zop.contr)
@@ -133,7 +134,7 @@ void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_m
 	       const qprop_t &prop_ou=*get<3>(o);
 	       
 	       const qprop_t c=prop_ou*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop_in.adjoint()*quaGamma[5]*mesloop;
-	       jvert[iclust]+=c;
+	       jvert[iclust]+=c*norm;
 	       
 	       if(0)
 	       cout
@@ -176,7 +177,7 @@ djvec_t compute_proj_meslep(const vjqprop_t &jprop_inv_in,const vector<jqprop_t>
       const size_t im_ou=im_r_im_r_iop_iproj_comps[2],r_ou=im_r_im_r_iop_iproj_comps[3];
       const size_t iop=im_r_im_r_iop_iproj_comps[4],iproj=im_r_im_r_iop_iproj_comps[5];
       
-      const double norm=12.0*zops[iproj].norm*2.0;
+      const double pnorm=12.0*zops[iproj].pnorm*2.0;
       const int pQg5_sign=zops[iproj].Qg5_sign; //same sign
       const size_t ip_in=im_r_ind({im_in,r_in});
       const size_t ip_ou=im_r_ind({im_ou,r_ou});
@@ -198,7 +199,7 @@ djvec_t compute_proj_meslep(const vjqprop_t &jprop_inv_in,const vector<jqprop_t>
 	  //projecting on quark side
 	  const size_t Gq=pcontr.Gq;
 	  auto projector=(quaGamma[Gq]*(quaGamma[0]+pQg5_sign*quaGamma[5])).adjoint();
-	  auto contr=(amp_vert*projector).trace().real()/norm;
+	  auto contr=(amp_vert*projector).trace().real()/pnorm;
 	  out+=contr;
 	  
 	  if(0)
