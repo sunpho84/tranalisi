@@ -10,6 +10,7 @@
 
 #include <contractions.hpp>
 #include <deltam_cr.hpp>
+#include <driver.hpp>
 #include <corrections.hpp>
 #include <evolutions.hpp>
 #include <geometry.hpp>
@@ -47,6 +48,9 @@ void write_Z(const string &name,const djvec_t &Z,const vector<double> &pt2)
 
 int main(int narg,char **arg)
 {
+  driver_t driver("test.txt");
+  driver.parse();
+  
   //read input file
   string input_path="input.txt";
   if(narg>=2) input_path=arg[1];

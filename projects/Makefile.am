@@ -1,6 +1,11 @@
 AUTOMAKE_OPTIONS=subdir-objects
 
 bin_PROGRAMS=
+BUILT_SOURCES=
+CLEANFILES=
+
+AM_LFLAGS = -s -P`basename $* | sed 's,l$$,,'`_ -olex.yy.c
+AM_YFLAGS = -d -p `basename $* | sed 's,y$$,,'`_
 
 AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
 LDADD=$(top_builddir)/lib/libtran.a
