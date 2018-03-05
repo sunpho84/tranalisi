@@ -320,10 +320,10 @@ void ingredients_t::mom_compute_meslep()
   vector<raw_file_t> qfiles=setup_read_all_qprops_mom(conf_list);
   vector<raw_file_t> lfiles=setup_read_all_lprops_mom(conf_list);
   
-  for(size_t imeslepmom=0;imeslepmom<meslepmoms.size();imeslepmom++)
+  for(size_t imeslepmom=0;imeslepmom<meslepmoms().size();imeslepmom++)
     {
-      const size_t imom_in=meslepmoms[imeslepmom][1];
-      const size_t imom_ou=meslepmoms[imeslepmom][2];
+      const size_t imom_in=meslepmoms()[imeslepmom][1];
+      const size_t imom_ou=meslepmoms()[imeslepmom][2];
       const bool read_ou=(imom_in!=imom_ou);
       
       vector<jm_r_mom_qprops_t> jprops_in(glb::im_r_ind.max());           //!< jackknived props
@@ -341,7 +341,7 @@ void ingredients_t::mom_compute_meslep()
 	    cout<<"Working on meslep, "
 	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
 	      "hit "<<ihit+1<<"/"<<nhits<<", "
-	      "momentum combo "<<imeslepmom+1<<"/"<<meslepmoms.size()<<", "
+	      "momentum combo "<<imeslepmom+1<<"/"<<meslepmoms().size()<<", "
 	      "moms: "<<mom_in<<" "<<mom_ou<<endl;
 	    
 	    //read
@@ -405,7 +405,7 @@ void ingredients_t::mom_compute_meslep()
       proj_time.stop();
       
       //! an index running on all packed combo, and momenta
-      const index_t all_imeslepmom_ind({{"All",im_r_im_r_iop_iproj_ind.max()},{"meslepmom",meslepmoms.size()}});
+      const index_t all_imeslepmom_ind({{"All",im_r_im_r_iop_iproj_ind.max()},{"meslepmom",meslepmoms().size()}});
       
       //store
       for(size_t iall=0;iall<im_r_im_r_iop_iproj_ind.max();iall++)
@@ -458,7 +458,7 @@ void ingredients_t::set_indices()
   
   im_r_im_r_ilistGl_ipGl_ind=im_r_ind*im_r_ind*index_t({{"listGl",meslep::listGl.size()},{"ipGl",nGamma}});
   im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"iproj",nZbil}});
-  im_r_im_r_iop_iproj_imeslepmom_ind=im_r_im_r_iop_iproj_ind*index_t({{"imeslepmom",meslepmoms.size()}});
+  im_r_im_r_iop_iproj_imeslepmom_ind=im_r_im_r_iop_iproj_ind*index_t({{"imeslepmom",meslepmoms().size()}});
   im_r_im_r_iop_ilistpGl_ind.set_ranges({{"m_fw",_nm},{"r_fw",_nr},{"m_bw",_nm},{"r_bw",_nr},{"iop",meslep::nZop},{"listpGl",meslep::listpGl.size()}});
   iGl_ipGl_iclust_ind.set_ranges({{"iGamma",nGamma},{"ipGl",nGamma},{"iclust",njacks}});
   iop_ipGl_iclust_ind.set_ranges({{"iop",nZbil},{"ipGl",nGamma},{"iclust",njacks}});
@@ -647,12 +647,12 @@ void ingredients_t::compute_Zmeslep()
       for(size_t im_ou=0;im_ou<_nm;im_ou++)
 	for(size_t r_ou=0;r_ou<_nr;r_ou++)
 #pragma omp parallel for
-	  for(size_t imeslepmom=0;imeslepmom<meslepmoms.size();imeslepmom++)
+	  for(size_t imeslepmom=0;imeslepmom<meslepmoms().size();imeslepmom++)
 	    {
 	      using namespace meslep;
 	      
-	      const size_t ilinmom_in=meslepmoms[imeslepmom][1];
-	      const size_t ilinmom_ou=meslepmoms[imeslepmom][2];
+	      const size_t ilinmom_in=meslepmoms()[imeslepmom][1];
+	      const size_t ilinmom_ou=meslepmoms()[imeslepmom][2];
 	      const size_t im_r_in_ilinmom_in=im_r_ilinmom_ind({im_in,r_in,ilinmom_in});
 	      const size_t im_r_ou_ilinmom_ou=im_r_ilinmom_ind({im_in,r_in,ilinmom_ou});
 	      
@@ -917,8 +917,8 @@ ingredients_t ingredients_t::average_equiv_momenta(const bool recompute_Zbil) co
   fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
   
   //build out bil combo
-  vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms,"equiv_meslepmoms.txt");
-  fill_output_equivalent_momenta(out.meslepmoms,equiv_linmom_combos,equiv_meslepmom_combos,meslepmoms);
+  vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms(),"equiv_meslepmoms().txt");
+  //fill_output_equivalent_momenta(out.meslepmoms(),equiv_linmom_combos,equiv_meslepmom_combos,meslepmoms());
   
   // cout<<"Equiv bil:"<<endl;
   // for(auto &p : out.bilmoms)
@@ -1072,7 +1072,7 @@ void ingredients_t::plot_Z(const string &suffix) const
 		      
 		      for(size_t imom=0;imom<linmoms.size();imom++)
 			{
-			  const double p2hat=all_moms[meslepmoms[imom][0]].p(L).tilde().norm2();
+			  const double p2hat=all_moms[meslepmoms()[imom][0]].p(L).tilde().norm2();
 			  size_t i=im_r_im_r_iop_iproj_imeslepmom_ind({im_in,r,im_ou,r,iop,iproj,imom});
 			  out.write_ave_err(p2hat,Z[i].ave_err());
 			}

@@ -48,9 +48,6 @@ void write_Z(const string &name,const djvec_t &Z,const vector<double> &pt2)
 
 int main(int narg,char **arg)
 {
-  driver_t driver("test.txt");
-  driver.parse();
-  
   //read input file
   string input_path="input.txt";
   if(narg>=2) input_path=arg[1];
@@ -61,30 +58,8 @@ int main(int narg,char **arg)
   if(chir_extr_method==chir_extr::MMES)
     compute_meson_masses();
   
-  ingredients_t ing;
-  ing.create_from_scratch();
-  ing.plot_Z("");
-  
-  ingredients_t rave=ing.average_r(RECOMPUTE_ZBIL);
-  rave.plot_Z("rave");
-  
-  ingredients_t rave_ave=rave.average_equiv_momenta(DONT_RECOMPUTE_ZBIL);
-  rave_ave.plot_Z("rave_ave");
-  
-  ingredients_t rave_chir=rave.chir_extrap();
-  rave_chir.plot_Z("rave_chir");
-  
-  ingredients_t rave_chir_sub=rave_chir.subtract_Oa2(RECOMPUTE_ZBIL);
-  rave_chir_sub.plot_Z("rave_chir_sub");
-  
-  ingredients_t rave_chir_sub_ave=rave_chir_sub.average_equiv_momenta(RECOMPUTE_ZBIL);
-  rave_chir_sub_ave.plot_Z("rave_chir_sub_ave");
-  
-  ingredients_t rave_chir_sub_evo=rave_chir_sub.evolve();
-  rave_chir_sub_evo.plot_Z("rave_chir_sub_evo");
-  
-  ingredients_t rave_chir_sub_evo_ave=rave_chir_sub_evo.average_equiv_momenta(DONT_RECOMPUTE_ZBIL);
-  rave_chir_sub_evo_ave.plot_Z("rave_chir_sub_evo_ave");
+  driver_t drv("commands.txt");
+  drv.parse();
   
   //print time statistics
   cout<<ts<<endl;

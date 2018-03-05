@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 
+#include <ingredients.hpp>
 #include <macros.hpp>
 #include <tools.hpp>
 
@@ -27,15 +28,12 @@ public:
     destroy_scanner();
   }
   
-  //geometry
-  int T;
-  int L;
-  int def_L() const {return 4;}
-  int def_T() const {return 4;}
+  map<string,ingredients_t> ing;
+  string suff;
   
-  protected:
-    void init_scanner();
-    void destroy_scanner();
+protected:
+  void init_scanner();
+  void destroy_scanner();
 };
 
 int parser_parse(driver_t *driver);

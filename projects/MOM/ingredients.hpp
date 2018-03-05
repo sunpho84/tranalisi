@@ -55,7 +55,12 @@ struct ingredients_t
   
   vector<array<size_t,1>> linmoms; //!< list of momenta used for Z, relative to glb list
   vector<array<size_t,3>> bilmoms; //!< list of momenta used for bilinear, first relative to glb list, then to linmoms
-  vector<array<size_t,3>> &meslepmoms=bilmoms; //!< list of momenta used for meslep
+  
+  //! list of momenta used for meslep
+  const vector<array<size_t,3>> &meslepmoms() const
+  {
+    return bilmoms;
+  }
   
   //Zq, with and without QED
   djvec_t Zq;
