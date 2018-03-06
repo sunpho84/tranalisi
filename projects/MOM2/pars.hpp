@@ -29,14 +29,41 @@ namespace gf
   const double lambda[2]={1.0,0.0};
 }
 
+//! chiral extrapolation
+namespace chir_extr
+{
+  enum type_t{MQUARK,MMES};
+  const map<string,type_t> decr={{"MQuark",MQUARK},{"MMes",MMES}};
+  const size_t n=2;
+  PROVIDE_DECRYPTER;
+}
+
+//! kind of scheme supported
+namespace reno_scheme
+{
+  enum type_t{RI_MOM,SMOM};
+  const map<string,type_t> decr={{"RI_MOM",RI_MOM},{"SMOM",SMOM}};
+  const size_t n=2;
+  PROVIDE_DECRYPTER;
+}
+
 namespace pars
 {
-  //! number of momenta between each print
-  EXTERN_PARS size_t print_each_mom INIT_PARS_TO({100});
   //! gauge action
   EXTERN_PARS gaz::type_t act INIT_PARS_TO({gaz::PLAQ});
+  //! extrapolation method
+  EXTERN_PARS chir_extr::type_t chir_extr_method INIT_PARS_TO({chir_extr::MQUARK});
+  //! compute mesoleptonic vertex
+  EXTERN_PARS bool compute_meslep INIT_PARS_TO({false});
+  //! Filter for democracy
+  EXTERN_PARS double filter_thresh INIT_PARS_TO({1});
+  //! number of momenta between each print
+  EXTERN_PARS size_t print_each_mom INIT_PARS_TO({100});
+  //! reno scheme used
+  EXTERN_PARS reno_scheme::type_t scheme INIT_PARS_TO({reno_scheme::RI_MOM});
   //! use QED
   EXTERN_PARS bool use_QED INIT_PARS_TO({false});
+  
   //! list of ensembles
   EXTERN_PARS vector<string> ens;
 }

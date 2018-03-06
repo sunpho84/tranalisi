@@ -84,13 +84,20 @@ using namespace std;
 {SPACE}+                            DEBUG_PRINTF("Ignoring spaces: \"%s\"\n",yytext);
 
 Action                              DEBUG_PRINTF("Found Action\n");return TK_ACTION;
+BC                                  DEBUG_PRINTF("Found BC\n");return TK_BC;
+ChirExtrMethod                      DEBUG_PRINTF("Found ChirExtrMethod\n");return TK_CHIR_EXTR_METHOD;
+ComputeMeslep                       DEBUG_PRINTF("Found ComputeMeslep\n");return TK_COMPUTE_MESLEP;
 Ensembles                           DEBUG_PRINTF("Found Ensembles\n");return TK_ENSEMBLES;
+FilterThresh                        DEBUG_PRINTF("Found FilterThresh\n");return TK_FILTER_THRESH;
+NJacks                              DEBUG_PRINTF("Found NJacks\n");return TK_NJACKS;
+NF                                  DEBUG_PRINTF("Found NF\n");return TK_NF;
 PrintEachMom                        DEBUG_PRINTF("Found PrintEachMom\n");return TK_PRINT_EACH_MOM;
+Scheme                              DEBUG_PRINTF("Found Scheme\n");return TK_SCHEME;
 UseQED                              DEBUG_PRINTF("Found UseQED\n");return TK_USE_QED;
 
 AverageR                            DEBUG_PRINTF("Found AverageR\n");return TK_AVERAGE_R;
 AverageEquivMomenta                 DEBUG_PRINTF("Found AverageEquivMomenta\n");return TK_AVERAGE_EQUIV_MOMENTA;
-CreateFromScratch                   DEBUG_PRINTF("Found CreateFromScratch\n");return TK_CREATE_FROM_SCRATCH;
+ComputeOrLoad                       DEBUG_PRINTF("Found ComputeOrLoad\n");return TK_COMPUTE_OR_LOAD;
 Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVOLVE;
 PlotZ                               DEBUG_PRINTF("Found PlotZ\n");return TK_PLOT_Z;
 SubtractOa2                         DEBUG_PRINTF("Found SubtractOa2\n");return TK_SUBTRACT_OA2;
@@ -101,6 +108,14 @@ ValChirExtrap                       DEBUG_PRINTF("Found ValChirExtrap\n");return
 \)                                  return ')';
 \{                                  return '{';
 \}                                  return '}';
+
+ /* true/false */
+True DEBUG_PRINTF("Found True\n");yylval->inte=1;return TK_INTE;
+False DEBUG_PRINTF("Found False\n");yylval->inte=0;return TK_INTE;
+
+ /* yes/no */
+Yes DEBUG_PRINTF("Found Yes\n");yylval->inte=1;return TK_INTE;
+No DEBUG_PRINTF("Found No\n");yylval->inte=0;return TK_INTE;
 
  /* recognizing number */
 {SCI_DOUBLE}|{DOUBLE} DEBUG_PRINTF("Found Double: %s\n",yytext);sscanf(yytext,"%lg",&yylval->real);return TK_REAL;

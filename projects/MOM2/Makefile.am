@@ -20,6 +20,7 @@ CLEANFILES+=$(%C%_parser_built_sources)
 
 __top_builddir__bin_mom_SOURCES= \
 	$(%C%_parser_sources) \
+	%D%/analysis.cpp \
 	%D%/corrections.cpp \
 	%D%/contractions.cpp \
 	%D%/deltam_cr.cpp \

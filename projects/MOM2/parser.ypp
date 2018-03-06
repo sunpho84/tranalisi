@@ -16,6 +16,8 @@
 
 #include <tranalisi.hpp>
 
+#include <MOM2/analysis.hpp>
+#include <MOM2/evolutions.hpp>
 #include <MOM2/pars.hpp>
 #include <MOM2/parser.hpp>
 #include <MOM2/scan.hpp>
@@ -50,13 +52,20 @@ using namespace scan;
 %token <inte> TK_INTE
 
 %token TK_ACTION
+%token TK_BC
+%token TK_CHIR_EXTR_METHOD
+%token TK_COMPUTE_MESLEP
 %token TK_ENSEMBLES
+%token TK_FILTER_THRESH
+%token TK_NF
+%token TK_NJACKS
 %token TK_PRINT_EACH_MOM
+%token TK_SCHEME
 %token TK_USE_QED
 
 %token TK_AVERAGE_R
 %token TK_AVERAGE_EQUIV_MOMENTA
-%token TK_CREATE_FROM_SCRATCH
+%token TK_COMPUTE_OR_LOAD
 %token TK_EVOLVE
 %token TK_PLOT_Z
 %token TK_SUBTRACT_OA2
@@ -66,21 +75,72 @@ using namespace scan;
 
 commands:
         | commands read_ensembles '}'
-        | commands TK_ACTION '=' TK_QUOTED_TEXT {pars::act=gaz::decrypt(*$4);}
-        | commands TK_PRINT_EACH_MOM '=' TK_INTE {pars::print_each_mom=$4;}
-        | commands TK_USE_QED '=' TK_INTE {pars::use_QED=$4;}
+        | commands set_action
+        | commands set_boundary_conditions
+        | commands set_chir_extr_method
+        | commands set_compute_meslep
+        | commands set_filter_thresh
+        | commands set_nf
+        | commands set_njacks
+        | commands set_print_each_mom
+        | commands set_scheme
+        | commands set_use_QED
         /* | commands TK_QUOTED_TEXT '=' TK_AVERAGE_R '(' TK_QUOTED_TEXT ')' {drv->ing[*$2]=drv->ing[*$6].average_r(true);drv->suff+="_rave";} */
         /* | commands TK_QUOTED_TEXT '=' TK_AVERAGE_EQUIV_MOMENTA '(' TK_QUOTED_TEXT ')' {drv->ing[*$2]=drv->ing[*$6].average_equiv_momenta(true);drv->suff+="_ave";} */
         /* | commands TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {drv->ing[*$4].plot_Z(drv->suff);} */
         /* | commands TK_QUOTED_TEXT '=' TK_VAL_CHIR_EXTRAP '(' TK_QUOTED_TEXT ')' {drv->ing[*$2]=drv->ing[*$6].chir_extrap();drv->suff+="_chir";} */
-           | commands TK_QUOTED_TEXT '=' TK_CREATE_FROM_SCRATCH '(' ')' {create_all(*$2);delete $2;}
+        | commands compute_or_load
         /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
-        /* | commands TK_QUOTED_TEXT '=' TK_EVOLVE '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].evolve();drv->suff+="_evo";} */
+        /* | commands TK_QUOTED_TEXT '=' TK_EVOLVE '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].evolve();drv->suff+="_evo";} aggiungi ordine qui*/
 ;
 
 read_ensembles: TK_ENSEMBLES '=' '{'
+              | TK_ENSEMBLES '=' '{' ensemble
               | read_ensembles ',' ensemble
 ;
 
-ensemble: TK_QUOTED_TEXT {pars::ens.push_back(*$1);}
+ensemble: TK_QUOTED_TEXT {pars::ens.push_back(*$1);delete $1;}
+;
+
+/////////////////////////////////////////////////////////////////
+
+set_action: TK_ACTION '=' TK_QUOTED_TEXT {pars::act=gaz::decrypt(*$3);delete $3;}
+;
+
+set_boundary_conditions: TK_BC '=' TK_QUOTED_TEXT
+                         {
+			     auto bc_key=temporal_bc::decrypt(*$3);
+			     temporal_bc::bc=get<0>(bc_key);
+			     ph_mom[0]=get<1>(bc_key);
+			     delete $3;
+			 }
+;
+
+set_chir_extr_method: TK_CHIR_EXTR_METHOD '=' TK_QUOTED_TEXT {chir_extr::decrypt(*$3);delete $3;}
+;
+
+set_compute_meslep: TK_COMPUTE_MESLEP '=' TK_INTE {pars::compute_meslep=$3;}
+;
+
+set_filter_thresh: TK_FILTER_THRESH '=' TK_REAL {pars::filter_thresh=$3;}
+;
+
+set_nf: TK_NF '=' TK_INTE {evol::Nf_t_of_Nf($3);}
+;
+
+set_njacks: TK_NJACKS '=' TK_INTE {set_njacks($3);}
+;
+
+set_print_each_mom: TK_PRINT_EACH_MOM '=' TK_INTE {pars::print_each_mom=$3;}
+;
+
+set_scheme: TK_SCHEME '=' TK_QUOTED_TEXT {pars::scheme=reno_scheme::decrypt(*$3);delete $3;}
+;
+
+set_use_QED: TK_USE_QED '=' TK_INTE {pars::use_QED=$3;}
+;
+
+/////////////////////////////////////////////////////////////////
+
+compute_or_load: TK_QUOTED_TEXT '=' TK_COMPUTE_OR_LOAD '(' ')' {compute_or_load_all(*$1);delete $1;}
 ;

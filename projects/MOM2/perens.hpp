@@ -3,12 +3,14 @@
 
 #include <tranalisi.hpp>
 
-#include <pars.hpp>
-
-using namespace pars;
+#include <MOM2/geometry.hpp>
+#include <MOM2/pars.hpp>
 
 struct perens_t
 {
+  //! path where to find all data
+  string dir_path;
+  
   //! beta
   double beta;
   //! plaquette
@@ -31,6 +33,15 @@ struct perens_t
   vector<size_t> conf_list;
   //! cluster size
   size_t clust_size;
+  //! number of hits
+  size_t nhits;
+  //! number of hits to use
+  size_t nhits_to_use;
+  
+  //! lattice sizes
+  coords_t L;
+  //! lattice volume
+  size_t V;
   
   //! number of masses
   size_t nm;
@@ -40,6 +51,25 @@ struct perens_t
   vector<double> am;
   
   /////////////////////////////////////////////////////////////////
+  
+  double g2() const
+  {
+    return 6.0/beta;
+  }
+  
+  double g2tilde() const
+  {
+    return g2()/plaq;
+  }
+  
+  /////////////////////////////////////////////////////////////////
+  
+  //! list of momenta registered in the system
+  vector<imom_t> all_moms; 
+  //! number of momenta for which the propagator has been computed (first in list)
+  size_t ncomp_moms;
+  //! store if a momentum passed the filter
+  vector<bool> filt_moms;
   
   //! list of momenta used for Z, relative to glb list
   vector<array<size_t,1>> linmoms;
@@ -77,7 +107,7 @@ struct perens_t
   vector<task_t> get_Zq_tasks(perens_t &out) const
   {
     vector<task_t> Zq_tasks={{&Zq,&out.Zq,"Zq"},{&Zq_sig1,&out.Zq_sig1,"Zq_sig1"}};
-    if(use_QED)
+    if(pars::use_QED)
       {
 	Zq_tasks.push_back({&Zq_QED,&out.Zq_QED,"Zq_QED"});
 	Zq_tasks.push_back({&Zq_sig1_QED,&out.Zq_sig1_QED,"Zq_sig1_QED"});
@@ -93,7 +123,7 @@ struct perens_t
   vector<task_t> get_pr_bil_tasks(perens_t &out) const
   {
     vector<task_t> pr_bil_tasks={{&pr_bil,&out.pr_bil,"pr_bil"}};
-    if(use_QED) pr_bil_tasks.push_back({&pr_bil_QED,&out.pr_bil_QED,"pr_bil_QED"});
+    if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,&out.pr_bil_QED,"pr_bil_QED"});
     return pr_bil_tasks;
   }
   
@@ -105,7 +135,7 @@ struct perens_t
   vector<task_t> get_Zbil_tasks(perens_t &out) const
   {
     vector<task_t> Zbil_tasks={{&Zbil,&out.Zbil,"Zbil"}};
-    if(use_QED) Zbil_tasks.push_back({&Zbil_QED,&out.Zbil_QED,"Zbil_QED"});
+    if(pars::use_QED) Zbil_tasks.push_back({&Zbil_QED,&out.Zbil_QED,"Zbil_QED"});
     
     return Zbil_tasks;
   }
@@ -118,7 +148,7 @@ struct perens_t
   vector<task_t> get_pr_meslep_tasks(perens_t &out) const
   {
     vector<task_t> pr_meslep_tasks={{&pr_meslep,&out.pr_meslep,"pr_meslep"}};
-    if(use_QED) pr_meslep_tasks.push_back({&pr_meslep_QED,&out.pr_meslep_QED,"pr_meslep_QED"});
+    if(pars::use_QED) pr_meslep_tasks.push_back({&pr_meslep_QED,&out.pr_meslep_QED,"pr_meslep_QED"});
     return pr_meslep_tasks;
   }
   
@@ -130,7 +160,7 @@ struct perens_t
   vector<task_t> get_Zmeslep_tasks(perens_t &out) const
   {
     vector<task_t> Zmeslep_tasks={{&Zmeslep,&out.Zmeslep,"Zmeslep"}};
-    if(use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED,&out.Zmeslep_QED,"Zmeslep_QED"});
+    if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED,&out.Zmeslep_QED,"Zmeslep_QED"});
     return Zmeslep_tasks;
   }
   
@@ -177,7 +207,13 @@ struct perens_t
   /////////////////////////////////////////////////////////////////
   
   //! load parameters and create structures
-  void create_from_scratch(const string &path);
+  void read_pars(const string &path);
+  
+  //! set all momenta
+  void set_comp_list_of_moms(const string &mom_list_path,double filter_thresh);
+  
+  //! gets the mirrored site
+  size_t get_mir_mom(size_t imom,size_t imir);
 };
 
 #endif
