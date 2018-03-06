@@ -15,49 +15,6 @@ using namespace std;
  #define INIT_TO(...) = __VA_ARGS__
 #endif
 
-//! number of momenta between each print
-EXTERN_READ size_t print_each_mom;
-//! gauge action
-EXTERN_READ gaz::type_t act;
-//! beta
-EXTERN_READ double beta;
-//! plaquette
-EXTERN_READ double plaq;
-//! maximal quark mass
-EXTERN_READ double am_max;
-//! minimal quark mass
-EXTERN_READ double am_min;
-//! index of sea mass
-EXTERN_READ size_t im_sea;
-//! number of hits
-EXTERN_READ size_t nhits;
-//! number of hits to be used
-EXTERN_READ size_t nhits_to_use;
-//! minimal time for fit
-EXTERN_READ size_t tmin;
-//! maximal time for fit
-EXTERN_READ size_t tmax;
-//! inverse lattice spacing
-EXTERN_READ double ainv;
-//! conf range
-EXTERN_READ range_t conf_range;
-//! hadron path
-EXTERN_READ string prop_hadr_path;
-//! lepton path
-EXTERN_READ string prop_lep_path;
-//! number of flavour
-EXTERN_READ ev::Nf_t Nf;
-//! order of alpha to use
-EXTERN_READ size_t evo_ord;
-//! coupling
-EXTERN_READ double g2;
-//! boosted coupling
-EXTERN_READ double g2tilde;
-//! list of existing confs
-EXTERN_READ vector<size_t> conf_list;
-//! cluster size
-EXTERN_READ size_t clust_size;
-
 //! read input file and setup basic things
 void read_input(const string &input_path);
 

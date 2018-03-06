@@ -34,4 +34,3 @@ void get_deltam_cr()
   for(size_t im=0;im<nm;im++)
     cout<<"Deltam cr["<<im<<"]: "<<deltam_cr[im]<<endl;
 }
-

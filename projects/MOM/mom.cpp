@@ -48,18 +48,18 @@ void write_Z(const string &name,const djvec_t &Z,const vector<double> &pt2)
 
 int main(int narg,char **arg)
 {
+  driver_t drv("analysis.txt");
+  drv.parse();
+  
   //read input file
-  string input_path="input.txt";
-  if(narg>=2) input_path=arg[1];
-  read_input(input_path);
+  //string input_path="input.txt";
+  //if(narg>=2) input_path=arg[1];
+  //read_input(input_path);
   
   get_deltam_cr();
   
   if(chir_extr_method==chir_extr::MMES)
     compute_meson_masses();
-  
-  driver_t drv("commands.txt");
-  drv.parse();
   
   //print time statistics
   cout<<ts<<endl;

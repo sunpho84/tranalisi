@@ -74,6 +74,20 @@ void check_match_size(const T1 &first,const T2 &second)
 class range_t : private array<size_t,3>
 {
 public:
+  
+  //! copy construct
+  range_t(const range_t& oth)
+  {
+    static_cast<array<size_t,3>>(*this)=static_cast<array<size_t,3>>(oth);
+  }
+  
+  const range_t& operator=(const range_t &oth)
+  {
+    static_cast<array<size_t,3>>(*this)=static_cast<array<size_t,3>>(oth);
+    
+    return oth;
+  }
+  
   //bind
   size_t &start=(*this)[0];
   size_t &each=(*this)[1];

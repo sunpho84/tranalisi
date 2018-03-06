@@ -22,7 +22,7 @@ void read_input(const string &input_path)
   const size_t Ls=input.read<size_t>("L"); //!< lattice spatial size
   L[0]=input.read<size_t>("T");
   
-  act=gaz::decrypt(input.read<string>("Action")); //!< action name
+   //!< action name
   
   beta=input.read<double>("Beta");
   plaq=input.read<double>("Plaq");

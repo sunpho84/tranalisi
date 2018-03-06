@@ -41,19 +41,20 @@ CPP_COMM {CPP_COMM_BEG}(({ANY}-a)|{NEWLINE})*{CPP_COMM_END}
 #include <cstdio>
 #include <cstring>
 #include <fstream>
-#include "driver.hpp"
+
+#include <tranalisi.hpp>
+
+#include <scan.hpp>
 
 using namespace std;
-
-#define YY_EXTRA_TYPE driver_t*
 
 #define DEBUG_PRINTF(...) if(debug_lexer) printf(__VA_ARGS__)
 
 #define YY_INPUT(buf,result,max_size)					\
    {									\
-       ifstream &fin=yyextra->fin;					\
+       ifstream &fin=scan::fin;						\
        fin.get(*buf);							\
-       if(not fin.good() or yyextra->fin.eof())				\
+       if(not fin.good() or fin.eof())					\
 	   result=YY_NULL;				                \
        else								\
 	   result=1;							\
@@ -83,7 +84,9 @@ using namespace std;
 {SPACE}+                            DEBUG_PRINTF("Ignoring spaces: \"%s\"\n",yytext);
 
 Action                              DEBUG_PRINTF("Found Action\n");return TK_ACTION;
-Beta                                DEBUG_PRINTF("Found Beta\n");return TK_BETA;
+Ensembles                           DEBUG_PRINTF("Found Ensembles\n");return TK_ENSEMBLES;
+PrintEachMom                        DEBUG_PRINTF("Found PrintEachMom\n");return TK_PRINT_EACH_MOM;
+UseQED                              DEBUG_PRINTF("Found UseQED\n");return TK_USE_QED;
 
 AverageR                            DEBUG_PRINTF("Found AverageR\n");return TK_AVERAGE_R;
 AverageEquivMomenta                 DEBUG_PRINTF("Found AverageEquivMomenta\n");return TK_AVERAGE_EQUIV_MOMENTA;
@@ -96,9 +99,12 @@ ValChirExtrap                       DEBUG_PRINTF("Found ValChirExtrap\n");return
 =                                   return '=';
 \(                                  return '(';
 \)                                  return ')';
+\{                                  return '{';
+\}                                  return '}';
 
  /* recognizing number */
 {SCI_DOUBLE}|{DOUBLE} DEBUG_PRINTF("Found Double: %s\n",yytext);sscanf(yytext,"%lg",&yylval->real);return TK_REAL;
+{INT} DEBUG_PRINTF("Found Integer: %s\n",yytext);sscanf(yytext,"%d",&yylval->inte);return TK_INTE;
 
 {QUOTE}[^\"\']*{QUOTE} yylval->text=new std::string(yytext,1,strlen(yytext)-2);DEBUG_PRINTF("found string \"%s\", length=%d, copied: \"%s\"\n",yytext,(int)strlen(yytext),yylval->text->c_str()); return TK_QUOTED_TEXT;
 
@@ -109,28 +115,28 @@ ValChirExtrap                       DEBUG_PRINTF("Found ValChirExtrap\n");return
 %%
 
 //initializator
-driver_t::driver_t(const string &path) :
-                       fin(path)
-{
-    if(not fin.good()) CRASH("Opening %s",path.c_str());
-    init_scanner();
-}
+/* driver_t::driver_t(const string &path) : */
+/*                        fin(path) */
+/* { */
+/*     using namespace glb; */
+/*     if(not fin.good()) CRASH("Opening %s",path.c_str()); */
+/*     init_scanner(); */
+/* } */
 
 //initialize the scanner
-void driver_t::init_scanner()
+void scan::init_scanner()
 {
-    yylex_init(&scanner);
-    yyset_extra(this,scanner);
+    yylex_init(&scan::scanner);
 }
 
 //destroy the scanner
-void driver_t::destroy_scanner()
+void scan::destroy_scanner()
 {
-    yylex_destroy(scanner);
+    yylex_destroy(scan::scanner);
 }
 
 //parse everything
-void driver_t::parse()
+void parse()
 {
-    parser_parse(this);
+    parser_parse(nullptr);
 }

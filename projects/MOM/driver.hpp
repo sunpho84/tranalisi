@@ -28,6 +28,13 @@ public:
     destroy_scanner();
   }
   
+  //! number of momenta between each print
+  size_t print_each_mom;
+  //! gauge action
+  gaz::type_t act;
+  //! beta
+  double beta;
+  
   map<string,ingredients_t> ing;
   string suff;
   

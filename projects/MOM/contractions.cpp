@@ -12,7 +12,7 @@
 
 const int ODD=-1,EVN=1;
 
-djvec_t get_contraction(const string &combo,const string &ID,vector<size_t> &conf_list,const size_t reim,const int tpar)
+djvec_t get_contraction(const string &combo,const string &ID,vector<size_t> &conf_list,const size_t reim,const int tpar,const string &prop_hadr_path)
 {
   const size_t T=L[0];
   
@@ -39,9 +39,9 @@ djvec_t get_contraction(const string &combo,const string &ID,vector<size_t> &con
   return vec_filter(data,gslice(base_nel*offset,{hw,T},{each*base_nel,1})).symmetrized(tpar);
 }
 
-djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size_t tmax,const size_t im,const size_t nr,const bool use_QED)
+djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size_t tmax,const size_t im,const size_t nr,const bool use_QED,const string &prop_hadr_path)
 {
-  auto get=[&conf_list,im,nr]
+  auto get=[&conf_list,im,nr,prop_hadr_path]
     (string tag_bw,string tag_fw,const string &ID,const size_t reim,const int tpar,const int rpar)
     {
       djvec_t res(L[0]/2+1);
@@ -49,7 +49,7 @@ djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size
       for(size_t r=0;r<nr;r++)
 	{
 	  string name="M"+to_string(im)+"_R"+to_string(r)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string(r)+"_"+tag_fw;
-	  djvec_t contr=get_contraction(name,ID,conf_list,reim,tpar)*((r==0)?1:rpar)/(1+abs(rpar));
+	  djvec_t contr=get_contraction(name,ID,conf_list,reim,tpar,prop_hadr_path)*((r==0)?1:rpar)/(1+abs(rpar));
 	  contr.ave_err().write("plots/"+ID+"_"+name+".xmg");
 	  res+=contr;
 	}
@@ -90,14 +90,14 @@ djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size
   else return djack_t{};
 }
 
-djack_t compute_meson_mass(vector<size_t> &conf_list,const size_t tmin,const size_t tmax,const size_t im1,const size_t im2,const size_t nr)
+djack_t compute_meson_mass(vector<size_t> &conf_list,const size_t tmin,const size_t tmax,const size_t im1,const size_t im2,const size_t nr,const string &prop_hadr_path)
 {
   djvec_t P5P5_corr(L[0]/2+1);
   P5P5_corr=0.0;
   for(size_t r=0;r<nr;r++)
     {
       string name="M"+to_string(im1)+"_R"+to_string(r)+"_0_M"+to_string(im2)+"_R"+to_string(r)+"_0";
-      djvec_t contr=get_contraction(name,"P5P5",conf_list,RE,EVN);
+      djvec_t contr=get_contraction(name,"P5P5",conf_list,RE,EVN,prop_hadr_path);
       P5P5_corr+=contr;
     }
   P5P5_corr/=nr;

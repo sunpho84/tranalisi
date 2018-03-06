@@ -16,6 +16,7 @@
 
 #include <MOM/driver.hpp>
 #include <MOM/parser.hpp>
+#include <MOM/read.hpp>
 
   const int debug_parser=0;
   
@@ -34,12 +35,17 @@
 %union
 {
     std::string *text;
+    double      real;
 }
 
 %token TK_INVALID_STRING
 %token TK_INVALID_CHAR
 
 %token <text> TK_QUOTED_TEXT
+%token <real> TK_REAL
+
+%token TK_ACTION
+%token TK_BETA
 
 %token TK_AVERAGE_R
 %token TK_AVERAGE_EQUIV_MOMENTA
@@ -52,6 +58,8 @@
 %%
 
 commands:
+        | commands TK_ACTION '=' TK_QUOTED_TEXT {drv->act=gaz::decrypt(*$4);}
+        | commands TK_BETA '=' TK_REAL {drv->beta=$4;}
         | commands TK_QUOTED_TEXT '=' TK_AVERAGE_R '(' TK_QUOTED_TEXT ')' {drv->ing[*$2]=drv->ing[*$6].average_r(true);drv->suff+="_rave";}
         | commands TK_QUOTED_TEXT '=' TK_AVERAGE_EQUIV_MOMENTA '(' TK_QUOTED_TEXT ')' {drv->ing[*$2]=drv->ing[*$6].average_equiv_momenta(true);drv->suff+="_ave";}
         | commands TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {drv->ing[*$4].plot_Z(drv->suff);}

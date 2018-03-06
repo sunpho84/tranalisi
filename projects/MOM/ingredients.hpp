@@ -49,6 +49,45 @@ static const bool DONT_RECOMPUTE_ZBIL=false;
 
 struct ingredients_t
 {
+  //! beta
+  double beta;
+  //! plaquette
+  double plaq;
+  //! maximal quark mass
+  double am_max;
+  //! minimal quark mass
+  double am_min;
+  //! index of sea mass
+  size_t im_sea;
+  //! number of hits
+  size_t nhits;
+  //! number of hits to be used
+  size_t nhits_to_use;
+  //! minimal time for fit
+  size_t tmin;
+  //! maximal time for fit
+  size_t tmax;
+  //! inverse lattice spacing
+  double ainv;
+  //! conf range
+  range_t conf_range;
+  //! hadron path
+  string prop_hadr_path;
+  //! lepton path
+  string prop_lep_path;
+  //! number of flavour
+  ev::Nf_t Nf;
+  //! order of alpha to use
+  size_t evo_ord;
+  //! coupling
+  double g2;
+  //! boosted coupling
+  double g2tilde;
+  //! list of existing confs
+  vector<size_t> conf_list;
+  //! cluster size
+  size_t clust_size;
+  
   size_t _nm;
   size_t _nr;
   vector<double> _am;
