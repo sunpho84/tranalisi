@@ -5,6 +5,8 @@
 
 #include <MOM2/geometry.hpp>
 #include <MOM2/pars.hpp>
+#include <MOM2/Zmeslep.hpp>
+#include <MOM2/Zbil.hpp>
 
 struct perens_t
 {
@@ -147,8 +149,12 @@ struct perens_t
   //! return a list of tasks for meslep projected vertex
   vector<task_t> get_pr_meslep_tasks(perens_t &out) const
   {
-    vector<task_t> pr_meslep_tasks={{&pr_meslep,&out.pr_meslep,"pr_meslep"}};
-    if(pars::use_QED) pr_meslep_tasks.push_back({&pr_meslep_QED,&out.pr_meslep_QED,"pr_meslep_QED"});
+    vector<task_t> pr_meslep_tasks;
+    if(pars::compute_meslep)
+      {
+	pr_meslep_tasks.push_back({&pr_meslep,&out.pr_meslep,"pr_meslep"});
+	if(pars::use_QED) pr_meslep_tasks.push_back({&pr_meslep_QED,&out.pr_meslep_QED,"pr_meslep_QED"});
+      }
     return pr_meslep_tasks;
   }
   
@@ -159,10 +165,17 @@ struct perens_t
   //! return a list of tasks for meslep projected vertex
   vector<task_t> get_Zmeslep_tasks(perens_t &out) const
   {
-    vector<task_t> Zmeslep_tasks={{&Zmeslep,&out.Zmeslep,"Zmeslep"}};
-    if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED,&out.Zmeslep_QED,"Zmeslep_QED"});
+    vector<task_t> Zmeslep_tasks;
+    if(pars::compute_meslep)
+      {
+	Zmeslep_tasks.push_back({&Zmeslep,&out.Zmeslep,"Zmeslep"});
+	if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED,&out.Zmeslep_QED,"Zmeslep_QED"});
+      }
     return Zmeslep_tasks;
   }
+  
+  //! allocate all data
+  perens_t& allocate();
   
   /////////////////////////////////////////////////////////////////
   
@@ -181,6 +194,12 @@ struct perens_t
   index_t im_r_im_r_iop_iproj_imeslepmom_ind;
   index_t im_r_im_r_ilistGl_ipGl_ind;
   index_t im_r_im_r_iop_iproj_ind;
+  
+  index_t iGl_ipGl_iclust_ind;
+  index_t iop_ipGl_iclust_ind;
+  index_t iop_iproj_iclust_ind;
+  
+  perens_t& set_indices();
   
   /////////////////////////////////////////////////////////////////
   
@@ -207,7 +226,7 @@ struct perens_t
   /////////////////////////////////////////////////////////////////
   
   //! load parameters and create structures
-  void read_pars(const string &path);
+  perens_t& read_pars(const string &path);
   
   //! set all momenta
   void set_comp_list_of_moms(const string &mom_list_path,double filter_thresh);

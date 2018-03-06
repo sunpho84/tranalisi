@@ -12,11 +12,15 @@
 
 EXTERN_ANALYSIS map<string,perens_t> data;
 
-inline void compute_or_load_all(const string &prefix)
+inline void compute_or_load_all(const string &grp_name)
 {
-  for(auto &name : pars::ens)
+  for(auto &path : pars::ens)
     {
-      data[prefix+name].read_pars(name);
+      string name=path+"_"+grp_name;
+      data[name]
+	.read_pars(path)
+	.set_indices();
+      
     }
 }
 
