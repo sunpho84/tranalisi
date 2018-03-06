@@ -2,4 +2,4 @@
  #include <config.hpp>
 #endif
 
-#include <contractions.hpp>
+#include <MOM2/contractions.hpp>

@@ -84,3 +84,52 @@ perens_t& perens_t::set_indices()
   
   return *this;
 }
+
+void perens_t::prepare_list_of_confs()
+{
+  //create the list of all confs available
+  string test_path=prop_hadr_path+"/%04zu/fft_S_M0_R0_0";
+  if(nhits>1) test_path+="_hit_0";
+  conf_list=get_existing_paths_in_range(test_path,conf_range);
+  if(conf_list.size()==0) CRASH("list of configurations is empty! check %s ",test_path.c_str());
+  clust_size=trim_to_njacks_multiple(conf_list,true);
+  
+  conf_ind.set_ranges({{"ijack",njacks},{"i_in_clust",clust_size}});
+  im_r_ind.set_ranges({{"m",nm},{"r",nr}});
+  i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
+}
+
+
+perens_t& perens_t::compute_basic(const string& ingredients_path)
+{
+  prepare_list_of_confs();
+  
+  using namespace reno_scheme;
+  
+  switch(pars::scheme)
+    {
+    case RI_MOM:
+      //ri_mom();
+      break;
+    case SMOM:
+      //smom();
+      break;
+    }
+  bin_write(ingredients_path);
+  
+  return *this;
+}
+
+perens_t& perens_t::read_or_compute()
+{
+  const string ingredients_path=dir_path+"/ingredients.dat";
+  
+  //if ingredients exists read it, otherwise compute it
+  if(file_exists(ingredients_path)) bin_read(ingredients_path);
+  else compute_basic(ingredients_path);
+  
+  //compute_Zbil();
+  //if(compute_meslep) compute_Zmeslep();
+  
+  return *this;
+}

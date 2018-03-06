@@ -67,7 +67,7 @@ struct perens_t
   /////////////////////////////////////////////////////////////////
   
   //! list of momenta registered in the system
-  vector<imom_t> all_moms; 
+  vector<imom_t> all_moms;
   //! number of momenta for which the propagator has been computed (first in list)
   size_t ncomp_moms;
   //! store if a momentum passed the filter
@@ -199,6 +199,9 @@ struct perens_t
   index_t iop_ipGl_iclust_ind;
   index_t iop_iproj_iclust_ind;
   
+  index_t i_in_clust_ihit_ind;
+  index_t conf_ind;
+  
   perens_t& set_indices();
   
   /////////////////////////////////////////////////////////////////
@@ -233,6 +236,17 @@ struct perens_t
   
   //! gets the mirrored site
   size_t get_mir_mom(size_t imom,size_t imir);
+  
+  /////////////////////////////////////////////////////////////////
+  
+  //! prepares the list of configurations to use
+  void prepare_list_of_confs();
+  
+  //! try to read, otherwise compute
+  perens_t& read_or_compute();
+  
+  //! computes the basic Z
+  perens_t& compute_basic(const string& ingredients_path);
 };
 
 #endif

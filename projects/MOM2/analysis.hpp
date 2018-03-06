@@ -19,8 +19,9 @@ inline void compute_or_load_all(const string &grp_name)
       string name=path+"_"+grp_name;
       data[name]
 	.read_pars(path)
-	.set_indices();
-      
+	.set_indices()
+	.allocate()
+	.read_or_compute();
     }
 }
 
