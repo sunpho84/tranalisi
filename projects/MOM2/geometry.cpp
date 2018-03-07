@@ -14,7 +14,6 @@
 
 #include <MOM2/perens.hpp>
 
-
 using namespace std;
 
 double ph_mom[NDIM];
@@ -75,4 +74,109 @@ size_t perens_t::get_mir_mom(size_t imom,size_t imir)
   if(ret==all_moms.end()) CRASH("searching imir=%zu of %zu",imom,imom);
   
   return distance(all_moms.begin(),ret);
+}
+
+void perens_t::set_ri_mom_moms()
+{
+  for(size_t imom=0;imom<ncomp_moms;imom++)
+    if(filt_moms[imom])
+      {
+	const size_t linmom=linmoms.size();
+	linmoms.push_back({imom});
+	bilmoms.push_back({imom,linmom,linmom});
+    }
+}
+
+void perens_t::set_smom_moms()
+{
+  //http://xxx.lanl.gov/pdf/0901.2599v2
+  linmoms.clear();
+  bilmoms.clear();
+  
+  const double tol=1e-10;
+  for(size_t i=0;i<ncomp_moms;i++)
+    if(filt_moms[i])
+      {
+	//get norm of p[i]
+	p_t pi=all_moms[i].p(L);
+	double pi2=pi.norm2();
+	
+	for(size_t j=0;j<ncomp_moms;j++)
+	  if(filt_moms[j])
+	    {
+	      //get norm of p[j]
+	      p_t pj=all_moms[j].p(L);
+	      double pj2=pj.norm2();
+	      
+	      //check that norm of the two incoming vector is the same
+	      if(2.0*fabs(pi2-pj2)<(pi2+pj2)*tol)
+		{
+		  //sum and get norm
+		  imom_t momk;
+		  for(size_t mu=0;mu<NDIM;mu++)
+		    momk[mu]=all_moms[i][mu]-all_moms[j][mu];
+		  double pk2=momk.p(L).norm2();
+		  
+		  //debug info
+		  //cerr<<"pi2: "<<pi2<<" pk2: "<<pk2<<" "<<2.0*fabs(pi2-pk2)/(pi2+pk2)<<" "<<pi2<<" "<<pj2<<" "<<pk2<<endl;
+		  
+		  if(2.0*fabs(pi2-pk2)<(pi2+pk2)*tol)
+		    {
+		      //search in list
+		      auto posk=find(all_moms.begin(),all_moms.end(),momk);
+		      
+		      //if not found, push into the list of glb_moms
+		      if(posk==all_moms.end())
+		      	{
+		      	  posk=all_moms.end();
+		      	  all_moms.push_back(momk);
+		      	}
+		      
+		      constexpr bool debug=false;
+		      
+		       const size_t k=distance(all_moms.begin(),posk);
+		      //inform
+		      if(debug)
+			cout<<"Found smom pair: "<<i<<all_moms[i]<<pi2<<" + "<<j<<all_moms[j]<<pj2<<" = "<<momk<<pk2<<endl;
+		      vector<size_t> pos;
+		      
+		      //search in the linmoms: if found take the distance, otherwise add
+		      for(const size_t ic : {i,j})
+			{
+			  if(debug)
+			    cout<<"searching for "<<ic<<endl;
+			  auto pos_ic=find(linmoms.begin(),linmoms.end(),array<size_t,1>{ic});
+			  size_t d;
+			  if(pos_ic==linmoms.end())
+			    {
+			      //the position will be the end
+			      d=linmoms.size();
+			      //include it
+			      linmoms.push_back({ic});
+			      if(debug)
+				cout<<" not found"<<endl;
+			    }
+			  else
+			    {
+			      d=distance(linmoms.begin(),pos_ic);
+			      if(debug)
+				cout<<" found"<<endl;
+			    }
+			  
+			  //add to the list
+			  if(debug)
+			    cout<<"Position: "<<d<<endl;
+			  pos.push_back(d);
+			}
+		      
+		      //store
+		      bilmoms.push_back({k,pos[0],pos[1]});
+		    }
+		  // else
+		  //    cout<<"Unable to find it"<<momk<<"="<<glb_moms[i]<<"+"<<glb_moms[j]<<endl;
+		}
+	    }
+      }
+  
+  cout<<"Number of smom pairs: "<<bilmoms.size()<<endl;
 }

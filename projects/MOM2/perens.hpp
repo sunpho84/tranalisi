@@ -199,6 +199,9 @@ struct perens_t
   index_t iop_ipGl_iclust_ind;
   index_t iop_iproj_iclust_ind;
   
+  index_t im_r_iconf_ihit_iqkind_ind;
+  index_t iconf_ihit_ilkind_ind;
+  
   index_t i_in_clust_ihit_ind;
   index_t conf_ind;
   
@@ -237,7 +240,22 @@ struct perens_t
   //! gets the mirrored site
   size_t get_mir_mom(size_t imom,size_t imir);
   
+  //! set momenta for ri-mom
+  void set_ri_mom_moms();
+  
+  //! set momenta for s-mom
+  void set_smom_moms();
+  
   /////////////////////////////////////////////////////////////////
+  
+  //! set parameters for the scratch
+  void set_pars_for_scratch();
+  
+  //! open to read all files
+  vector<raw_file_t> setup_read_all_qprops_mom(const vector<size_t> &conf_list) const;
+  
+  //! opem to read all lepton files
+  vector<raw_file_t> setup_read_all_lprops_mom(const vector<size_t> &conf_list) const;
   
   //! prepares the list of configurations to use
   void prepare_list_of_confs();
@@ -247,6 +265,33 @@ struct perens_t
   
   //! computes the basic Z
   perens_t& compute_basic(const string& ingredients_path);
+  
+  //! compute according to mom scheme
+  void mom()
+  {
+    mom_compute_qprop();
+    mom_compute_bil();
+    if(pars::compute_meslep) mom_compute_meslep();
+  }
+  
+  double compute_Zq(const qprop_t &prop_inv,const size_t glb_mom);
+  
+  djack_t compute_Zq(const jqprop_t &jprop_inv,const size_t glb_mom);
+  
+  double compute_Zq_sig1(const qprop_t &prop_inv,const size_t glb_mom);
+  
+  djack_t compute_Zq_sig1(const jqprop_t &jprop_inv,const size_t glb_mom);
+  
+  //! compute all props
+  void mom_compute_qprop();
+  
+  //! compute all mom-scheme vertices
+  void mom_compute_bil();
+  
+  //! compute all mom-scheme mesoleptonic vertices
+  void mom_compute_meslep();
+  
+  vector<mom_conf_lprops_t> read_all_lprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
 };
 
 #endif

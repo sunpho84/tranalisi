@@ -56,7 +56,7 @@ perens_t& perens_t::allocate()
   
   for(auto &task : concat(get_Zmeslep_tasks(*this),get_pr_meslep_tasks(*this)))
     task.out->resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
-
+  
   return *this;
 }
 
@@ -81,8 +81,52 @@ perens_t& perens_t::set_indices()
   iGl_ipGl_iclust_ind.set_ranges({{"iGamma",nGamma},{"ipGl",nGamma},{"iclust",njacks}});
   iop_ipGl_iclust_ind.set_ranges({{"iop",nZbil},{"ipGl",nGamma},{"iclust",njacks}});
   iop_iproj_iclust_ind.set_ranges({{"iop",nZbil},{"iproj",nZbil},{"iclust",njacks}});
+
+  im_r_iconf_ihit_iqkind_ind=im_r_ind*index_t({{"conf",conf_list.size()},{"hit",nhits},{"kind",m_r_mom_conf_qprops_t::nprop_kind(pars::use_QED)}});
+
+  iconf_ihit_ilkind_ind=index_t({{"conf",conf_list.size()},{"hit",nhits},{"kind",mom_conf_lprops_t::nprop_kind(pars::use_QED)}});
   
   return *this;
+}
+
+void perens_t::set_pars_for_scratch()
+{
+  using namespace reno_scheme;
+  
+  switch(pars::scheme)
+    {
+    case RI_MOM:
+      set_ri_mom_moms();
+      break;
+    case SMOM:
+      set_smom_moms();
+      break;
+    }
+  
+  //write all linear momenta
+  const string linpath="linmoms.txt";
+  ofstream linmom_file(linpath);
+  if(not linmom_file.good())
+    CRASH("Failed to open %s",linpath.c_str());
+  for(const auto &m : linmoms)
+    linmom_file<<m[0]<<"\t=\t"<<all_moms[m[0]]<<endl;
+  
+  //write all bilinear combo
+  const string bilpath="bilmoms.txt";
+  ofstream bilmom_file(bilpath);
+  if(not bilmom_file.good())
+    CRASH("Failed to open %s",bilpath.c_str());
+  for(const auto &m : bilmoms)
+    {
+      const size_t mom=m[0];
+      const size_t ilinmom1=m[1];
+      const size_t ilinmom2=m[2];
+      const size_t mom1=linmoms[ilinmom1][0];
+      const size_t mom2=linmoms[ilinmom2][0];
+      bilmom_file<<mom<<all_moms[mom]<<"\t"
+		 <<mom1<<all_moms[mom1]<<"\t"
+		 <<mom2<<all_moms[mom2]<<endl;
+    }
 }
 
 void perens_t::prepare_list_of_confs()
@@ -99,7 +143,6 @@ void perens_t::prepare_list_of_confs()
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
 }
 
-
 perens_t& perens_t::compute_basic(const string& ingredients_path)
 {
   prepare_list_of_confs();
@@ -109,9 +152,10 @@ perens_t& perens_t::compute_basic(const string& ingredients_path)
   switch(pars::scheme)
     {
     case RI_MOM:
-      //ri_mom();
+      mom();
       break;
     case SMOM:
+      CRASH("Here or deeper branching?");
       //smom();
       break;
     }
@@ -132,4 +176,17 @@ perens_t& perens_t::read_or_compute()
   //if(compute_meslep) compute_Zmeslep();
   
   return *this;
+}
+
+void perens_t::bin_read(raw_file_t &file)
+{
+  for(auto &t : concat(get_Zq_tasks(*this),get_pr_bil_tasks(*this),get_pr_meslep_tasks(*this)))
+     t.out->bin_read(file);
+}
+
+void perens_t::bin_write(raw_file_t &file) const
+{
+  perens_t dummy;
+  for(auto &t : concat(get_Zq_tasks(dummy),get_pr_bil_tasks(dummy),get_pr_meslep_tasks(dummy)))
+     t.in->bin_write(file);
 }
