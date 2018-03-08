@@ -264,3 +264,105 @@ void perens_t::plot_Zbil(const string &suffix)
 	}
     }
 }
+
+void perens_t::average_r_Zbil(perens_t &out) const
+{
+  for(auto &t : concat(get_pr_bil_tasks(out),get_Zbil_tasks(out)))
+    {
+      const djvec_t &pr=*t.in;
+      djvec_t &pr_rave=*t.out;
+      
+      for(size_t out_i=0;out_i<out.im_r_im_r_iZbil_ibilmom_ind.max();out_i++)
+	{
+	  const vector<size_t> out_im_r_im_r_iZbil_ibilmom_comp=out.im_r_im_r_iZbil_ibilmom_ind(out_i);
+	  vector<size_t> im_r_im_r_iZbil_ibilmom_comp=out_im_r_im_r_iZbil_ibilmom_comp;
+	  
+	  pr_rave[out_i]=0.0;
+	  for(size_t r=0;r<nr;r++)
+	    {
+	      im_r_im_r_iZbil_ibilmom_comp[1]=
+		im_r_im_r_iZbil_ibilmom_comp[3]=r;
+	      const size_t i=im_r_im_r_iZbil_ibilmom_ind(im_r_im_r_iZbil_ibilmom_comp);
+	      pr_rave[out_i]+=pr[i];
+	    }
+	  pr_rave[out_i]/=nr;
+	}
+    }
+}
+
+void perens_t::average_equiv_momenta_Zbil(perens_t &out,const vector<vector<size_t>> &equiv_bilmom_combos) const
+{
+  for(size_t i=0;i<out.im_r_im_r_iZbil_ibilmom_ind.max();i++)
+    {
+      const vector<size_t> out_im_r_im_r_iZbil_ibilmom_comp=out.im_r_im_r_iZbil_ibilmom_ind(i);
+      const size_t out_imom_combo=out_im_r_im_r_iZbil_ibilmom_comp[5];
+      
+      for(const auto &t : concat(get_pr_bil_tasks(out),get_Zbil_tasks(out)))
+  	{
+  	  djack_t &ave=(*t.out)[i];
+  	  ave=0.0;
+  	  for(const size_t ieq_mom : equiv_bilmom_combos[out_imom_combo])
+	    {
+	      vector<size_t> im_r_im_r_iZbil_ibilmom_comp=out_im_r_im_r_iZbil_ibilmom_comp;
+	      im_r_im_r_iZbil_ibilmom_comp[5]=ieq_mom;
+	      const size_t ieq=im_r_im_r_iZbil_ibilmom_ind(im_r_im_r_iZbil_ibilmom_comp);
+	      ave+=(*t.in)[ieq];
+	    }
+  	  ave/=equiv_bilmom_combos[out_imom_combo].size();
+  	}
+    }
+}
+
+void perens_t::val_chir_extrap_Zbil(perens_t &out) const
+{
+  for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
+    for(auto &t : concat(get_pr_bil_tasks(out),get_Zbil_tasks(out)))
+      for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+	{
+	  const djvec_t &pr=*t.in;
+	  djvec_t &pr_chir=*t.out;
+	  const string &tag=t.tag;
+	  
+	  //check if we need to subtract the pole
+	  const bool sub_pole=(iZbil==iZS or iZbil==iZP);
+	  const size_t coeff_to_take=(sub_pole?1:0);
+	  
+	  //open the plot file if needed
+	  const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_bilmom_"+to_string(ibilmom)+".xmg";
+	  grace_file_t *plot=nullptr;
+	  if(ibilmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
+	  
+	  for(size_t r1=0;r1<nr;r1++)
+	    for(size_t r2=0;r2<nr;r2++)
+	      {
+		//slice m and fit it
+		djvec_t y(nm*(nm+1)/2),y_plot(nm*(nm+1)/2);
+		vector<double> x(nm*(nm+1)/2);
+		int i=0;
+		for(size_t im1=0;im1<nm;im1++)
+		  for(size_t im2=im1;im2<nm;im2++)
+		    {
+		      //compute mass sum
+		      x[i]=am[im1]+am[im2];
+		      //compute y and y_plot
+		      y_plot[i]=pr[im_r_im_r_iZbil_ibilmom_ind({im1,r1,im2,r2,iZbil,ibilmom})];
+		      //fit x*y if pole present
+		      if(sub_pole) y[i]=x[i]*y_plot[i];
+		      else         y[i]=y_plot[i];
+		      //increment the number of mass combos
+		      i++;
+		    }
+		
+		//fit, store and write the result
+		const djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min(),2.0*am_max());
+		const size_t iout=out.im_r_im_r_iZbil_ibilmom_ind({0,r1,0,r2,iZbil,ibilmom});
+		pr_chir[iout]=coeffs[coeff_to_take];
+		if(plot!=nullptr)
+		  {
+		    write_fit_plot(*plot,2*am_min(),2*am_max(),[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		    plot->write_ave_err(0.0,pr_chir[iout].ave_err());
+		  }
+	      }
+	  if(plot) delete plot;
+	}
+}

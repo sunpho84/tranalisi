@@ -194,3 +194,72 @@ void perens_t::bin_write(raw_file_t &file) const
   for(auto &t : concat(get_Zq_tasks(dummy),get_pr_bil_tasks(dummy),get_pr_meslep_tasks(dummy)))
      t.in->bin_write(file);
 }
+
+perens_t perens_t::average_r() const
+{
+  perens_t out=*this;
+  
+  out.nr=1;
+  out.linmoms=linmoms;
+  out.bilmoms=bilmoms;
+  
+  out.set_indices();
+  out.allocate();
+  
+  average_r_Zq(out);
+  average_r_Zbil(out);
+  average_r_Zmeslep(out);
+  
+  out.compute_Zbil();
+  if(pars::compute_meslep) out.compute_Zmeslep();
+  
+  return out;
+}
+
+perens_t perens_t::val_chir_extrap() const
+{
+  perens_t out=*this;
+  out.nm=1;
+  out.am={0.0};
+  
+  out.set_indices();
+  out.allocate();
+  
+  val_chir_extrap_Zq(out);
+  val_chir_extrap_Zbil(out);
+  val_chir_extrap_Zmeslep(out);
+  
+  out.compute_Zbil();
+  if(pars::compute_meslep) out.compute_Zmeslep();
+  
+  return out;
+}
+
+perens_t perens_t::average_equiv_momenta() const
+{
+  perens_t out=*this;
+  
+  //build out lin list
+  const vector<vector<size_t>> equiv_linmom_combos=get_equiv_list(linmoms,"equiv_linmoms.txt");
+  fill_output_equivalent_momenta(out.linmoms,equiv_linmom_combos,equiv_linmom_combos,linmoms);
+  
+  //build out bil combo
+  const vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(bilmoms,"equiv_bilmoms.txt");
+  fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
+  
+  //build out bil combo
+  const vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms(),"equiv_meslepmoms().txt");
+  //fill_output_equivalent_momenta(out.meslepmoms(),equiv_linmom_combos,equiv_meslepmom_combos,meslepmoms());
+  
+  out.set_indices();
+  out.allocate();
+  
+  average_equiv_momenta_Zq(out,equiv_linmom_combos);
+  average_equiv_momenta_Zbil(out,equiv_bilmom_combos);
+  average_equiv_momenta_Zmeslep(out,equiv_meslepmom_combos);
+  
+  out.compute_Zbil();
+  if(pars::compute_meslep) out.compute_Zmeslep();
+  
+  return out;
+}

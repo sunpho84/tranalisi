@@ -85,10 +85,10 @@ commands:
         | commands set_print_each_mom
         | commands set_scheme
         | commands set_use_QED
-        /* | commands TK_QUOTED_TEXT '=' TK_AVERAGE_R '(' TK_QUOTED_TEXT ')' {drv->ing[*$2]=drv->ing[*$6].average_r(true);drv->suff+="_rave";} */
-        /* | commands TK_QUOTED_TEXT '=' TK_AVERAGE_EQUIV_MOMENTA '(' TK_QUOTED_TEXT ')' {drv->ing[*$2]=drv->ing[*$6].average_equiv_momenta(true);drv->suff+="_ave";} */
+        | commands average_r
+        | commands average_equiv_momenta
+        | commands val_chir_extrap
         | commands plot_Z
-        /* | commands TK_QUOTED_TEXT '=' TK_VAL_CHIR_EXTRAP '(' TK_QUOTED_TEXT ')' {drv->ing[*$2]=drv->ing[*$6].chir_extrap();drv->suff+="_chir";} */
         | commands compute_or_load
         /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
         /* | commands TK_QUOTED_TEXT '=' TK_EVOLVE '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].evolve();drv->suff+="_evo";} aggiungi ordine qui*/
@@ -145,5 +145,14 @@ set_use_QED: TK_USE_QED '=' TK_INTE {pars::use_QED=$3;}
 compute_or_load: TK_QUOTED_TEXT '=' TK_COMPUTE_OR_LOAD '(' ')' {compute_or_load_all(*$1);delete $1;}
 ;
 
-plot_Z: TK_PLOT_Z '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {plot_all_Z(*$3,*$5);delete $3;delete $5;}
+plot_Z: TK_QUOTED_TEXT '.' TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$1,*$5);delete $1;delete $5;}
+;
+
+average_r: TK_QUOTED_TEXT '=' TK_AVERAGE_R '(' TK_QUOTED_TEXT ')' {average_all_r(*$1,*$5);}
+;
+
+average_equiv_momenta: TK_QUOTED_TEXT '=' TK_AVERAGE_EQUIV_MOMENTA '(' TK_QUOTED_TEXT ')' {average_all_equiv_momenta(*$1,*$5);}
+;
+
+val_chir_extrap: TK_QUOTED_TEXT '=' TK_VAL_CHIR_EXTRAP '(' TK_QUOTED_TEXT ')' {val_chir_extrap_all(*$1,*$5);}
 ;

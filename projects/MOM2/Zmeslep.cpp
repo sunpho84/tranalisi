@@ -381,3 +381,56 @@ void perens_t::plot_Zmeslep(const string &suffix)
 	    }
       }
 }
+
+void perens_t::average_r_Zmeslep(perens_t &out) const
+{
+  for(auto &t : concat(get_pr_meslep_tasks(out),get_Zmeslep_tasks(out)))
+      {
+	const djvec_t &pr=*t.in;
+	djvec_t &pr_rave=*t.out;
+	
+	for(size_t out_i=0;out_i<out.im_r_im_r_iop_iproj_imeslepmom_ind.max();out_i++)
+	  {
+	    const vector<size_t> out_im_r_im_r_iop_iproj_imeslepmom_comp=out.im_r_im_r_iop_iproj_imeslepmom_ind(out_i);
+	    vector<size_t> im_r_im_r_iop_iproj_imeslepmom_comp=out_im_r_im_r_iop_iproj_imeslepmom_comp;
+	    
+	    pr_rave[out_i]=0.0;
+	    for(size_t r=0;r<nr;r++)
+	      {
+		im_r_im_r_iop_iproj_imeslepmom_comp[1]=
+		  im_r_im_r_iop_iproj_imeslepmom_comp[3]=r;
+		const size_t i=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom_comp);
+		pr_rave[out_i]+=pr[i];
+	      }
+	    pr_rave[out_i]/=nr;
+	  }
+      }
+}
+
+void perens_t::average_equiv_momenta_Zmeslep(perens_t &out,const vector<vector<size_t>> &equiv_meslepmom_combos) const
+{
+  for(size_t i=0;i<out.im_r_im_r_iop_iproj_imeslepmom_ind.max();i++)
+    {
+      const vector<size_t> out_im_r_im_r_iop_iproj_imeslepmom_comp=out.im_r_im_r_iop_iproj_imeslepmom_ind(i);
+      const size_t out_imom_combo=out_im_r_im_r_iop_iproj_imeslepmom_comp[6];
+      
+      for(const auto &t : concat(get_pr_meslep_tasks(out),get_Zmeslep_tasks(out)))
+	{
+	  djack_t &ave=(*t.out)[i];
+	  ave=0.0;
+	  for(const size_t ieq_mom : equiv_meslepmom_combos[out_imom_combo])
+	    {
+	      vector<size_t> im_r_im_r_iop_iproj_imeslepmom_comp=out_im_r_im_r_iop_iproj_imeslepmom_comp;
+	      im_r_im_r_iop_iproj_imeslepmom_comp[6]=ieq_mom;
+	      const size_t ieq=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom_comp);
+	      ave+=(*t.in)[ieq];
+	    }
+	  ave/=equiv_meslepmom_combos[out_imom_combo].size();
+	}
+    }
+}
+
+void perens_t::val_chir_extrap_Zmeslep(perens_t &out) const
+{
+  CRASH("Not yet implemented");
+}

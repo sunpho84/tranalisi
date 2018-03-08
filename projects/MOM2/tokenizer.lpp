@@ -109,6 +109,7 @@ ValChirExtrap                       DEBUG_PRINTF("Found ValChirExtrap\n");return
 \{                                  return '{';
 \}                                  return '}';
 \,                                  return ',';
+{DOT}                               return '.';
 
  /* true/false */
 True DEBUG_PRINTF("Found True\n");yylval->inte=1;return TK_INTE;

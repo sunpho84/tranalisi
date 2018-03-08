@@ -52,6 +52,18 @@ struct perens_t
   //! list of masses
   vector<double> am;
   
+  //! minimal mass
+  const double& am_min() const
+  {
+    return *min_element(am.begin(),am.end());
+  }
+  
+  //! maximal mass
+  const double& am_max() const
+  {
+    return *max_element(am.begin(),am.end());
+  }
+  
   /////////////////////////////////////////////////////////////////
   
   double g2() const
@@ -352,6 +364,169 @@ struct perens_t
   void plot_Zq(const string &suffix);
   void plot_Zbil(const string &suffix);
   void plot_Zmeslep(const string &suffix);
+  
+  /////////////////////////////////////////////////////////////////
+  
+  perens_t average_r() const;
+  
+  //! average Zq
+  void average_r_Zq(perens_t &out) const;
+  //! average bil
+  void average_r_Zbil(perens_t &out) const;
+  //! average Zmeslep
+  void average_r_Zmeslep(perens_t &out) const;
+  
+  /////////////////////////////////////////////////////////////////
+  
+  perens_t val_chir_extrap() const;
+  
+  //extrapolate to chiral limit Zq
+  void val_chir_extrap_Zq(perens_t &out) const;
+  
+  //extrapolate to chiral limit Zbil
+  void val_chir_extrap_Zbil(perens_t &out) const;
+  
+  //extrapolate to chiral limit Zmeslep
+  void val_chir_extrap_Zmeslep(perens_t &out) const;
+  
+  /////////////////////////////////////////////////////////////////
+  
+  perens_t average_equiv_momenta() const;
+  
+  //! average Zq
+  void average_equiv_momenta_Zq(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const;
+  //! average bil
+  void average_equiv_momenta_Zbil(perens_t &out,const vector<vector<size_t>> &equiv_bilmom_combos) const;
+  //! average Zmeslep
+  void average_equiv_momenta_Zmeslep(perens_t &out,const vector<vector<size_t>> &equiv_meslepmom_combos) const;
+  
+  template <size_t N>
+  void fill_output_equivalent_momenta(vector<array<size_t,N>> &out_equiv,const vector<vector<size_t>> &equiv_linmom_combos,
+				      const vector<vector<size_t>> &equiv_combos,const vector<array<size_t,N>> &mom_combos) const;
+  
+  template <size_t N>
+  vector<vector<size_t>> get_equiv_list(const vector<array<size_t,N>> &combo,const string &listpath) const;
 };
+
+//! return the list of momenta equivalent, in the combo passed
+template <size_t N>
+vector<vector<size_t>> perens_t::get_equiv_list(const vector<array<size_t,N>> &combo,const string &listpath) const
+{
+  //prepare the index of the output
+  map<array<imom_t,N>,vector<size_t>> equiv_combo_map;
+  for(size_t icombo=0;icombo<combo.size();icombo++)
+    {
+      //get representative
+      array<imom_t,N> cr;
+      for(size_t ip=0;ip<N;ip++)
+	{
+	  size_t imom=combo[icombo][ip];
+	  
+	  //dereference components larger than 0
+	  if(ip>0) imom=linmoms[imom][0];
+	  
+	  //decide time component
+	  cr[ip][0]=all_moms[imom][0];
+	  if(cr[ip][0]<0)
+	    {
+	      using namespace temporal_bc;
+	      
+	      switch(bc)
+		{
+		case PERIODIC:     cr[ip][0]=-cr[ip][0];break;
+		case ANTIPERIODIC: cr[ip][0]=-cr[ip][0]-1;break;
+		}
+	    }
+	  
+	  //decide space components
+	  for(size_t mu=1;mu<NDIM;mu++) cr[ip][mu]=abs(all_moms[imom][mu]);
+	  
+	  //sort the components, treating differently the time component if it has different L[0] or phase
+	  size_t ifirst=0;
+	  if(temporal_bc::bc!=temporal_bc::PERIODIC or L[0]!=L[1]) ifirst=1;
+	  sort(&cr[ip][ifirst],cr[ip].end());
+	}
+      
+      //sort starting from the defining momenta
+      sort(&cr[1],cr.end());
+      
+      //store the index to equvalents
+      equiv_combo_map[cr].push_back(icombo);
+    }
+  
+  //store the output vector to which the input contributes
+  const size_t nequiv=equiv_combo_map.size();
+  vector<vector<size_t>> equiv_of_combo;
+  equiv_of_combo.reserve(nequiv);
+  
+  //fill the output index and write it to file
+  ofstream mom_out(listpath);
+  mom_out<<"Found "<<nequiv<<" independent momenta combo"<<endl;
+  for(auto &combo_class : equiv_combo_map)
+    {
+      //trasform map into vector
+      equiv_of_combo.push_back(combo_class.second);
+      const size_t combo_repr=combo_class.second[0]; //take the first real combo as the key could not exist
+      const size_t imom=combo[combo_repr][0];
+      
+      //print details
+      mom_out<<imom<<" , p2hat: "<<all_moms[imom].p(L).tilde().norm2()<<endl;
+      mom_out<<" Equivalent to: "<<combo_class.second.size()<<" mom combos: "<<endl;
+      for(auto &eq_combo : combo_class.second)
+	{
+	  for(size_t ip=0;ip<N;ip++)
+	    {
+	      size_t imom=combo[eq_combo][ip];
+	      
+	      //dereference
+	      if(ip>0) imom=linmoms[imom][0];
+	      
+	      mom_out<<"  "<<imom<<all_moms[imom];
+	    }
+	  mom_out<<endl;
+	}
+    }
+  
+  return equiv_of_combo;
+}
+
+//! helper to fill the momenta index of output
+template <size_t N>
+void perens_t::fill_output_equivalent_momenta(vector<array<size_t,N>> &out_equiv,const vector<vector<size_t>> &equiv_linmom_combos,
+					      const vector<vector<size_t>> &equiv_combos,const vector<array<size_t,N>> &mom_combos) const
+{
+  out_equiv.clear();
+  out_equiv.reserve(equiv_combos.size());
+  
+  for(const auto &p : equiv_combos)
+    {
+      const size_t &ref=p[0];
+      const size_t &imom=mom_combos[ref][0];
+      
+      array<size_t,N> temp;
+      temp[0]=imom;
+      
+      for(size_t i=1;i<N;i++)
+	{
+	  //search in which output lin to search for lin
+	  const size_t ilin_search=mom_combos[ref][i];
+	  size_t &iout_lin=temp[i];
+	  size_t nfound=0;
+	  for(size_t ilin_combo=0;ilin_combo<equiv_linmom_combos.size();ilin_combo++)
+	    {
+	      const vector<size_t> &equiv_list=equiv_linmom_combos[ilin_combo];
+	      auto ei=find(equiv_list.begin(),equiv_list.end(),ilin_search);
+	      if(ei!=equiv_list.end())
+		{
+		  nfound++;
+		  iout_lin=ilin_combo;
+		}
+	    }
+	  if(nfound!=1) CRASH("found %zu times %zu",nfound,ilin_search);
+	}
+	
+      out_equiv.push_back(temp);
+    }
+}
 
 #endif
