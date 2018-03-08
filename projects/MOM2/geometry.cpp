@@ -28,7 +28,7 @@ void perens_t::set_comp_list_of_moms(const string &mom_list_path,double filter_t
   if(not mom_file.good()) CRASH("Unable to open %s",mom_list_path.c_str());
   
   //open the file to write filtered momentumm
-  const string filt_path="filt_mom.txt";
+  const string filt_path=dir_path+"/filt_mom.txt";
   ofstream filt_file(filt_path);
   if(not filt_file.good()) CRASH("Unable to open %s",filt_path.c_str());
   

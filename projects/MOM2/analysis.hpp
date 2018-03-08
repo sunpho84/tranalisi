@@ -19,9 +19,21 @@ inline void compute_or_load_all(const string &grp_name)
       string name=path+"_"+grp_name;
       data[name]
 	.read_pars(path)
+	.set_pars_for_scratch()
+	.get_deltam_cr()
 	.set_indices()
 	.allocate()
 	.read_or_compute();
+    }
+}
+
+inline void plot_all_Z(const string &grp_name,const string &suffix)
+{
+  for(auto &path : pars::ens)
+    {
+      string name=path+"_"+grp_name;
+      data[name]
+	.plot_Z(suffix);
     }
 }
 

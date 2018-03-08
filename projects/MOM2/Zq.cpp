@@ -34,3 +34,26 @@ djack_t perens_t::compute_Zq(const jqprop_t &jprop_inv,const size_t glb_mom)
   
   return Zq;
 }
+
+void perens_t::plot_Zq(const string &suffix)
+{
+  for(auto &t : get_Zq_tasks(*this))
+    {
+      const djvec_t &Z=*t.in;
+      const string &tag=t.tag;
+      
+      grace_file_t out(dir_path+"/plots/"+tag+(suffix!=""?("_"+suffix):string(""))+".xmg");
+      
+      for(size_t im=0;im<nm;im++)
+  	for(size_t r=0;r<nr;r++)
+	  {
+	    out.new_data_set();
+	    for(size_t imom=0;imom<linmoms.size();imom++)
+	      {
+		const double p2hat=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
+		out.write_ave_err(p2hat,Z[im_r_ilinmom_ind({im,r,imom})].ave_err());
+	      }
+	  }
+    }
+}
+

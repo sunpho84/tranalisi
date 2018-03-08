@@ -177,6 +177,13 @@ struct perens_t
   //! allocate all data
   perens_t& allocate();
   
+  //! read or compute and write deltam_cr
+  perens_t& get_deltam_cr();
+  
+  /////////////////////////////////////////////////////////////////
+  
+  djvec_t deltam_cr;
+  
   /////////////////////////////////////////////////////////////////
   
   index_t im_r_im_r_igam_ind;
@@ -204,6 +211,8 @@ struct perens_t
   
   index_t i_in_clust_ihit_ind;
   index_t conf_ind;
+  
+  index_t ilistGl_ilistpGl_iclust_ind;
   
   perens_t& set_indices();
   
@@ -249,7 +258,7 @@ struct perens_t
   /////////////////////////////////////////////////////////////////
   
   //! set parameters for the scratch
-  void set_pars_for_scratch();
+  perens_t& set_pars_for_scratch();
   
   //! open to read all files
   vector<raw_file_t> setup_read_all_qprops_mom(const vector<size_t> &conf_list) const;
@@ -282,16 +291,67 @@ struct perens_t
   
   djack_t compute_Zq_sig1(const jqprop_t &jprop_inv,const size_t glb_mom);
   
+  vector<m_r_mom_conf_qprops_t> read_all_qprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
+  
+  void get_inverse_propagators(vector<jqprop_t> &jprop_inv,vector<jqprop_t> &jprop_QED_inv,
+			       const vector<jm_r_mom_qprops_t> &jprops) const;
+  
   //! compute all props
   void mom_compute_qprop();
+  
+  vector<mom_conf_lprops_t> read_all_lprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
+  
+  void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props) const;
+  
+  void clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops) const;
+  
+  /////////////////////////////////////////////////////////////////
+  
+  djack_t compute_meson_mass(const size_t im1,const size_t im2);
+  
+  djvec_t get_contraction(const string &combo,const string &ID,const size_t reim,const int tpar);
+  
+  djack_t compute_deltam_cr(const size_t im);
+  
+  /////////////////////////////////////////////////////////////////
+  
+  //! computes all bilinear Z
+  void compute_Zbil();
   
   //! compute all mom-scheme vertices
   void mom_compute_bil();
   
+  void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props_in,const vector<m_r_mom_conf_qprops_t> &props_ou) const;
+  
+  djvec_t compute_proj_bil(const vjqprop_t &jprop_inv_in,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv_ou) const;
+  
+  /////////////////////////////////////////////////////////////////
+  
+  //! computes all meslep Z
+  void compute_Zmeslep();
+  
   //! compute all mom-scheme mesoleptonic vertices
   void mom_compute_meslep();
   
-  vector<mom_conf_lprops_t> read_all_lprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
+  meslep::mesloop_t build_mesloop(const vector<mom_conf_lprops_t> &props_lep) const;
+  
+  void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_mom_conf_qprops_t> &props_in,const vector<m_r_mom_conf_qprops_t> &props_ou,
+					      const vector<mom_conf_lprops_t> &props_lep) const;
+  
+  djvec_t compute_proj_meslep(const vjqprop_t &jprop_inv_in,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv_ou) const;
+  
+  /////////////////////////////////////////////////////////////////
+  
+  void plot_Z(const string &suffix)
+  {
+    plot_Zq(suffix);
+    plot_Zbil(suffix);
+    plot_Zmeslep(suffix);
+  }
+  
+  void plot_Zq(const string &suffix);
+  void plot_Zbil(const string &suffix);
+  void plot_Zmeslep(const string &suffix);
 };
 
 #endif

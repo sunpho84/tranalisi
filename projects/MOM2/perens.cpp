@@ -19,7 +19,6 @@ perens_t& perens_t::read_pars(const string &name)
   nr=input.read<double>("Nr");
   
   const string mom_list_path=input.read<string>("MomList"); //!< list of momenta
-  set_comp_list_of_moms(dir_path+"/"+mom_list_path,pars::filter_thresh);
   
   input.expect("ConfRange");
   conf_range.start=input.read<size_t>();
@@ -42,6 +41,8 @@ perens_t& perens_t::read_pars(const string &name)
   //set spatial sizes
   V=L[0]*pow(Ls,NDIM-1);
   for(size_t mu=1;mu<NDIM;mu++) L[mu]=Ls;
+  
+  set_comp_list_of_moms(dir_path+"/"+mom_list_path,pars::filter_thresh);
   
   return *this;
 }
@@ -81,15 +82,13 @@ perens_t& perens_t::set_indices()
   iGl_ipGl_iclust_ind.set_ranges({{"iGamma",nGamma},{"ipGl",nGamma},{"iclust",njacks}});
   iop_ipGl_iclust_ind.set_ranges({{"iop",nZbil},{"ipGl",nGamma},{"iclust",njacks}});
   iop_iproj_iclust_ind.set_ranges({{"iop",nZbil},{"iproj",nZbil},{"iclust",njacks}});
-
-  im_r_iconf_ihit_iqkind_ind=im_r_ind*index_t({{"conf",conf_list.size()},{"hit",nhits},{"kind",m_r_mom_conf_qprops_t::nprop_kind(pars::use_QED)}});
-
-  iconf_ihit_ilkind_ind=index_t({{"conf",conf_list.size()},{"hit",nhits},{"kind",mom_conf_lprops_t::nprop_kind(pars::use_QED)}});
+  
+  ilistGl_ilistpGl_iclust_ind=index_t({{"listGl",meslep::listGl.size()},{"pGl",meslep::listpGl.size()},{"iclust",njacks}});
   
   return *this;
 }
 
-void perens_t::set_pars_for_scratch()
+perens_t& perens_t::set_pars_for_scratch()
 {
   using namespace reno_scheme;
   
@@ -127,13 +126,16 @@ void perens_t::set_pars_for_scratch()
 		 <<mom1<<all_moms[mom1]<<"\t"
 		 <<mom2<<all_moms[mom2]<<endl;
     }
+  
+  return *this;
 }
 
 void perens_t::prepare_list_of_confs()
 {
   //create the list of all confs available
-  string test_path=prop_hadr_path+"/%04zu/fft_S_M0_R0_0";
+  string test_path=dir_path+"/"+prop_hadr_path+"/%04zu/fft_S_M0_R0_0";
   if(nhits>1) test_path+="_hit_0";
+  
   conf_list=get_existing_paths_in_range(test_path,conf_range);
   if(conf_list.size()==0) CRASH("list of configurations is empty! check %s ",test_path.c_str());
   clust_size=trim_to_njacks_multiple(conf_list,true);
@@ -141,6 +143,9 @@ void perens_t::prepare_list_of_confs()
   conf_ind.set_ranges({{"ijack",njacks},{"i_in_clust",clust_size}});
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
+  im_r_iconf_ihit_iqkind_ind=im_r_ind*index_t({{"conf",conf_list.size()},{"hit",nhits},{"kind",m_r_mom_conf_qprops_t::nprop_kind()}});
+  
+  iconf_ihit_ilkind_ind=index_t({{"conf",conf_list.size()},{"hit",nhits},{"kind",mom_conf_lprops_t::nprop_kind()}});
 }
 
 perens_t& perens_t::compute_basic(const string& ingredients_path)
@@ -171,9 +176,8 @@ perens_t& perens_t::read_or_compute()
   //if ingredients exists read it, otherwise compute it
   if(file_exists(ingredients_path)) bin_read(ingredients_path);
   else compute_basic(ingredients_path);
-  
-  //compute_Zbil();
-  //if(compute_meslep) compute_Zmeslep();
+  compute_Zbil();
+  if(pars::compute_meslep) compute_Zmeslep();
   
   return *this;
 }
