@@ -37,14 +37,14 @@ djvec_t perens_t::get_contraction(const string &combo,const string &ID,const siz
 djack_t perens_t::compute_deltam_cr(const size_t im)
 {
   auto get=[im,this]
-    (string tag_bw,string tag_fw,const string &ID,const size_t reim,const int tpar,const int rpar)
+    (string tag_bw,string tag_fw,const string &ID,const size_t reim,const int tpar,const int rpar,const int rdiff)
     {
       djvec_t res(L[0]/2+1);
       res=0.0;
       for(size_t r=0;r<nr;r++)
 	{
-	  string name="M"+to_string(im)+"_R"+to_string(r)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string(r)+"_"+tag_fw;
-	  djvec_t contr=get_contraction(name,ID,reim,tpar)*((r==0)?1:rpar)/(1+abs(rpar));
+	  const string name="M"+to_string(im)+"_R"+to_string(r)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string((r+rpar)%nr)+"_"+tag_fw;
+	  const djvec_t contr=get_contraction(name,ID,reim,tpar)*((r==0)?1:rpar)/(1+abs(rpar));
 	  contr.ave_err().write(dir_path+"/plots/"+ID+"_"+name+".xmg");
 	  res+=contr;
 	}
@@ -52,26 +52,26 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
       return res;
     };
   
-  const djvec_t P5P5_00=get("0","0","P5P5",RE,EVN,EVN);
+  const djvec_t P5P5_00=get("0","0","P5P5",RE,EVN,EVN,1);
   const djack_t m_P=constant_fit(effective_mass(P5P5_00),tmin,tmax,dir_path+"/plots/m_P_"+to_string(im)+".xmg");
   cout<<"M["<<im<<"]: "<<m_P<<endl;
   
   //measure mcrit according to eq.3 of hep-lat/0701012
-  const djvec_t V0P5_00=get("0","0","V0P5",IM,ODD,ODD);
+  const djvec_t V0P5_00=get("0","0","V0P5",IM,ODD,ODD,1);
   const djvec_t m_cr_corr=forward_derivative(V0P5_00)/(2.0*P5P5_00);
   const djack_t m_cr=constant_fit(m_cr_corr,tmin,tmax,dir_path+"/plots/m_cr_"+to_string(im)+".xmg");
   
   if(pars::use_QED)
     {
       //load corrections
-      const djvec_t V0P5_LL=get("F","F","V0P5",IM,ODD,ODD);
-      const djvec_t V0P5_0M=get("0","FF","V0P5",IM,ODD,ODD);
-      const djvec_t V0P5_M0=get("FF","0","V0P5",IM,ODD,ODD);
-      const djvec_t V0P5_0T=get("0","T","V0P5",IM,ODD,ODD);
-      const djvec_t V0P5_T0=get("T","0","V0P5",IM,ODD,ODD);
+      const djvec_t V0P5_LL=get("F","F","V0P5",IM,ODD,ODD,1);
+      const djvec_t V0P5_0M=get("0","FF","V0P5",IM,ODD,ODD,1);
+      const djvec_t V0P5_M0=get("FF","0","V0P5",IM,ODD,ODD,1);
+      const djvec_t V0P5_0T=get("0","T","V0P5",IM,ODD,ODD,1);
+      const djvec_t V0P5_T0=get("T","0","V0P5",IM,ODD,ODD,1);
       //load the derivative wrt counterterm
-      const djvec_t V0P5_0P=get("0","P","V0P5",RE,ODD,EVN);
-      const djvec_t V0P5_P0=get("P","0","V0P5",RE,ODD,EVN);
+      const djvec_t V0P5_0P=get("0","P","V0P5",RE,ODD,EVN,1);
+      const djvec_t V0P5_P0=get("P","0","V0P5",RE,ODD,EVN,1);
       
       //build numerator
       const djvec_t num_deltam_cr_corr=V0P5_LL+V0P5_0M+V0P5_M0+V0P5_0T+V0P5_T0;
