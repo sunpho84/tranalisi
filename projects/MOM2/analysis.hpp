@@ -12,7 +12,11 @@
 
 EXTERN_ANALYSIS map<string,perens_t> _data;
 
+//! returns access to the data
 perens_t& data(const string &key);
+
+//! remove an entry
+void data_erase(const string &key);
 
 inline void compute_or_load_all(const string &grp_name)
 {

@@ -36,9 +36,23 @@ void average(const string out,const string in1,const string in2)
   //remove from the list
   for(auto in : {in1,in2})
     {
-      _data.erase(in);
+      data_erase(in);
       pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
     }
+}
+
+void data_erase(const string &key)
+{
+  auto f=_data.find(key);
+  
+  if(f==_data.end())
+    {
+      cout<<"Available keys: "<<endl;
+      for(auto d : _data) cout<<" "<<d.first<<endl;
+      CRASH("Unable to find the key %s",key.c_str());
+    }
+  
+  _data.erase(f);
 }
 
 perens_t& data(const string &key)
