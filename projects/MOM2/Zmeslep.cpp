@@ -432,5 +432,55 @@ void perens_t::average_equiv_momenta_Zmeslep(perens_t &out,const vector<vector<s
 
 void perens_t::val_chir_extrap_Zmeslep(perens_t &out) const
 {
-  CRASH("Not yet implemented");
+  for(size_t imeslepmom=0;imeslepmom<meslepmoms().size();imeslepmom++)
+    for(auto &t : concat(get_pr_meslep_tasks(out),get_Zmeslep_tasks(out)))
+      for(size_t iop=0;iop<meslep::nZop;iop++)
+	for(size_t iproj=0;iproj<meslep::nZop;iproj++)
+	  {
+	    const djvec_t &pr=*t.in;
+	    djvec_t &pr_chir=*t.out;
+	    const string &tag=t.tag;
+	    
+	    //check if we need to subtract the pole
+	    const bool sub_pole=false;//(iZmeslep==iZS or iZmeslep==iZP);
+	    const size_t coeff_to_take=(sub_pole?1:0);
+	    
+	    //open the plot file if needed
+	    const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+to_string(iop)+"_"+to_string(iproj)+"_meslepmom_"+to_string(imeslepmom)+".xmg";
+	    grace_file_t *plot=nullptr;
+	    if(imeslepmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
+	    
+	    for(size_t r1=0;r1<nr;r1++)
+	      for(size_t r2=0;r2<nr;r2++)
+		{
+		  //slice m and fit it
+		  djvec_t y(nm*(nm+1)/2),y_plot(nm*(nm+1)/2);
+		  vector<double> x(nm*(nm+1)/2);
+		  int i=0;
+		  for(size_t im1=0;im1<nm;im1++)
+		    for(size_t im2=im1;im2<nm;im2++)
+		      {
+			//compute mass sum
+			x[i]=am[im1]+am[im2];
+			//compute y and y_plot
+			y_plot[i]=pr[im_r_im_r_iop_iproj_imeslepmom_ind({im1,r1,im2,r2,iop,iproj,imeslepmom})];
+			//fit x*y if pole present
+			if(sub_pole) y[i]=x[i]*y_plot[i];
+			else         y[i]=y_plot[i];
+			//increment the number of mass combos
+			i++;
+		      }
+		  
+		  //fit, store and write the result
+		  const djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min(),2.0*am_max());
+		  const size_t iout=out.im_r_im_r_iop_iproj_imeslepmom_ind({0,r1,0,r2,iop,iproj,imeslepmom});
+		  pr_chir[iout]=coeffs[coeff_to_take];
+		  if(plot!=nullptr)
+		    {
+		      write_fit_plot(*plot,2*am_min(),2*am_max(),[&coeffs](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		      plot->write_ave_err(0.0,pr_chir[iout].ave_err());
+		    }
+		}
+	    if(plot) delete plot;
+	  }
 }
