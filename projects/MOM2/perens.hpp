@@ -170,7 +170,7 @@ struct perens_t
     return pr_meslep_tasks;
   }
   
-   //! renormalization meslep
+  //! renormalization meslep
   djvec_t Zmeslep;
   djvec_t Zmeslep_QED;
   
@@ -191,6 +191,16 @@ struct perens_t
   
   //! read or compute and write deltam_cr
   perens_t& get_deltam_cr();
+  
+  //! return a list of all tasks
+  vector<task_t> get_all_tasks(perens_t &out) const
+  {
+    return concat(get_Zq_tasks(out),
+		  get_pr_bil_tasks(out),
+		  get_Zbil_tasks(out),
+		  get_pr_meslep_tasks(out),
+		  get_Zmeslep_tasks(out));
+  }
   
   /////////////////////////////////////////////////////////////////
   

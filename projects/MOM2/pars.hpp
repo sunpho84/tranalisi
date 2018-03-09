@@ -10,7 +10,7 @@
 
 #include <tranalisi.hpp>
 
-#include <types.hpp>
+#include <MOM2/types.hpp>
 
 namespace gaz
 {

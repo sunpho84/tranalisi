@@ -95,6 +95,7 @@ PrintEachMom                        DEBUG_PRINTF("Found PrintEachMom\n");return 
 Scheme                              DEBUG_PRINTF("Found Scheme\n");return TK_SCHEME;
 UseQED                              DEBUG_PRINTF("Found UseQED\n");return TK_USE_QED;
 
+Average                             DEBUG_PRINTF("Found Average\n");return TK_AVERAGE;
 AverageR                            DEBUG_PRINTF("Found AverageR\n");return TK_AVERAGE_R;
 AverageEquivMomenta                 DEBUG_PRINTF("Found AverageEquivMomenta\n");return TK_AVERAGE_EQUIV_MOMENTA;
 ComputeOrLoad                       DEBUG_PRINTF("Found ComputeOrLoad\n");return TK_COMPUTE_OR_LOAD;

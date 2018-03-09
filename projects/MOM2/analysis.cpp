@@ -4,3 +4,44 @@
 
 #define EXTERN_ANALYSIS
  #include <MOM2/analysis.hpp>
+
+#define ASSERT_COMPATIBLE_MEMBER(MEMBER)\
+  if(data(in1).MEMBER!=data(in1).MEMBER)			\
+    CRASH("Impossible to average, different member " #MEMBER)
+
+void assert_compatible(const string in1,const string in2)
+{
+  for(size_t mu=0;mu<NDIM;mu++) ASSERT_COMPATIBLE_MEMBER(L[mu]);
+  ASSERT_COMPATIBLE_MEMBER(nm);
+  ASSERT_COMPATIBLE_MEMBER(nr);
+  ASSERT_COMPATIBLE_MEMBER(linmoms);
+  ASSERT_COMPATIBLE_MEMBER(bilmoms);
+}
+
+void average(const string out,const string in1,const string in2)
+{
+  assert_compatible(in1,in2);
+  
+  data(out)=data(in1);
+  
+  for(auto &p : data(in2).get_all_tasks(data(out)))
+    {
+      djvec_t &out=*p.out;
+      const djvec_t &in=*p.in;
+      
+      out+=in;
+      out/=2.0;
+    }
+  
+  //remove from the list
+  for(auto in : {in1,in2})
+    {
+      _data.erase(in);
+      pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
+    }
+}
+
+perens_t& data(const string &key)
+{
+  return _data[key];
+}
