@@ -165,5 +165,5 @@ val_chir_extrap: TK_QUOTED_TEXT '=' TK_VAL_CHIR_EXTRAP '(' TK_QUOTED_TEXT ')' {v
 
 average: TK_QUOTED_TEXT '=' TK_AVERAGE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
 
-list_ensembles: TK_LIST_ensembles {list_ensembles();}
+list_ensembles: TK_LIST_ENSEMBLES {list_ensembles();}
 ;
