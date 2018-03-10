@@ -11,11 +11,15 @@ perens_t& perens_t::get_deltam_cr()
   deltam_cr.resize(nm);
   
   //if file exists open it, otherwise compute it
-  const string deltam_cr_path="deltam_cr.dat";
+  const string deltam_cr_path=dir_path+"/deltam_cr.dat";
   if(file_exists(deltam_cr_path))
-    deltam_cr.bin_read(deltam_cr_path);
+    {
+      cout<<"File "<<deltam_cr_path<<" found, opening"<<endl;
+      deltam_cr.bin_read(deltam_cr_path);
+    }
   else
     {
+      cout<<"File "<<deltam_cr_path<<" not found, computing"<<endl;
       prepare_list_of_confs();
       
       deltam_cr_time.start();

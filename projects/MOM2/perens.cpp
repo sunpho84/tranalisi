@@ -174,8 +174,17 @@ perens_t& perens_t::read_or_compute()
   const string ingredients_path=dir_path+"/ingredients.dat";
   
   //if ingredients exists read it, otherwise compute it
-  if(file_exists(ingredients_path)) bin_read(ingredients_path);
-  else compute_basic(ingredients_path);
+  if(file_exists(ingredients_path))
+    {
+      cout<<"File "<<ingredients_path<<" found, opening"<<endl;
+      bin_read(ingredients_path);
+    }
+  else
+    {
+      cout<<"File "<<ingredients_path<<" not found, computing"<<endl;
+      compute_basic(ingredients_path);
+    }
+  
   compute_Zbil();
   if(pars::compute_meslep) compute_Zmeslep();
   
