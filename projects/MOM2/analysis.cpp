@@ -5,8 +5,9 @@
 #define EXTERN_ANALYSIS
  #include <MOM2/analysis.hpp>
 
-#define ASSERT_COMPATIBLE_MEMBER(MEMBER)\
-  if(data(in1).MEMBER!=data(in1).MEMBER)			\
+#define ASSERT_COMPATIBLE_MEMBER(MEMBER)			\
+  if(data(in1,ASSERT_PRESENT).MEMBER!=				\
+     data(in1,ASSERT_PRESENT).MEMBER)						\
     CRASH("Impossible to average, different member " #MEMBER)
 
 void assert_compatible(const string in1,const string in2)
@@ -23,10 +24,10 @@ void average(const string out,const string in1,const string in2)
   assert_compatible(in1,in2);
   
   pars::ens.push_back(out);
-  data(out)=data(in1,ASSERT_PRESENT);
-  data(out).dir_path=out;
+  data(out,PRESENCE_NOT_NEEDED)=data(in1,ASSERT_PRESENT);
+  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
   
-  for(auto &p : data(in2,ASSERT_PRESENT).get_all_tasks(data(out)))
+  for(auto &p : data(in2,ASSERT_PRESENT).get_all_tasks(data(out,PRESENCE_NOT_NEEDED)))
     {
       djvec_t &out=*p.out;
       const djvec_t &in=*p.in;
@@ -64,8 +65,10 @@ void data_erase(const string &key)
 
 perens_t& data(const string &key,const bool assert_present_flag)
 {
-  if(assert_present_flag) assert_ens_present(key);
-  return _data[key];
+  if(assert_present_flag)
+    return assert_ens_present(key)->second;
+  else
+    return _data[key];
 }
 
 void list_ensembles()

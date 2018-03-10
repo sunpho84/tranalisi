@@ -12,9 +12,10 @@
 
 EXTERN_ANALYSIS map<string,perens_t> _data;
 #define ASSERT_PRESENT true
+#define PRESENCE_NOT_NEEDED false
 
 //! returns access to the data
-perens_t& data(const string &key,const bool assert_present_flag=false);
+perens_t& data(const string &key,const bool assert_present_flag);
 
 //! remove an entry
 void data_erase(const string &key);
@@ -24,7 +25,7 @@ inline void compute_or_load_all(const string &grp_name)
   for(auto &path : pars::ens)
     {
       const string name=path+"_"+grp_name;
-      data(name)
+      data(name,PRESENCE_NOT_NEEDED)
 	.read_pars(path)
 	.set_pars_for_scratch()
 	.get_deltam_cr()
@@ -51,7 +52,8 @@ inline void plot_all_Z(const string &grp_name,const string &suffix)
       {									\
 	const string name_out=path+"_"+grp_name_out;			\
 	string name_in=path+"_"+grp_name_in;				\
-	data(name_out)=data(name_in).SINGLE_COMMAND();			\
+	data(name_out,PRESENCE_NOT_NEEDED)=				\
+	  data(name_in,ASSERT_PRESENT).SINGLE_COMMAND();				\
       }									\
   }
 
