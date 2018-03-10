@@ -11,9 +11,10 @@
 #include <MOM2/perens.hpp>
 
 EXTERN_ANALYSIS map<string,perens_t> _data;
+#define ASSERT_PRESENT true
 
 //! returns access to the data
-perens_t& data(const string &key);
+perens_t& data(const string &key,const bool assert_present_flag=false);
 
 //! remove an entry
 void data_erase(const string &key);
@@ -38,7 +39,7 @@ inline void plot_all_Z(const string &grp_name,const string &suffix)
   for(auto &path : pars::ens)
     {
       const string name=path+"_"+grp_name;
-      data(name)
+      data(name,ASSERT_PRESENT)
 	.plot_Z(suffix);
     }
 }

@@ -23,9 +23,10 @@ void average(const string out,const string in1,const string in2)
   assert_compatible(in1,in2);
   
   pars::ens.push_back(out);
-  data(out)=data(in1);
+  data(out)=data(in1,ASSERT_PRESENT);
+  data(out).dir_path=out;
   
-  for(auto &p : data(in2).get_all_tasks(data(out)))
+  for(auto &p : data(in2,ASSERT_PRESENT).get_all_tasks(data(out)))
     {
       djvec_t &out=*p.out;
       const djvec_t &in=*p.in;
@@ -42,7 +43,7 @@ void average(const string out,const string in1,const string in2)
     }
 }
 
-void data_erase(const string &key)
+auto assert_ens_present(const string &key)
 {
   auto f=_data.find(key);
   
@@ -53,11 +54,17 @@ void data_erase(const string &key)
       CRASH("Unable to find the key %s",key.c_str());
     }
   
-  _data.erase(f);
+  return f;
 }
 
-perens_t& data(const string &key)
+void data_erase(const string &key)
 {
+  _data.erase(assert_ens_present(key));
+}
+
+perens_t& data(const string &key,const bool assert_present_flag)
+{
+  if(assert_present_flag) assert_ens_present(key);
   return _data[key];
 }
 
