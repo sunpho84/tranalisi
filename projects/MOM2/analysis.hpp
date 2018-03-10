@@ -62,4 +62,11 @@ DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap)
 
 void average(const string out,const string in1,const string in2);
 
+inline void list_ensembles()
+{
+  cout<<"Ensembles:"<<endl;
+   for(auto &path : pars::ens)
+     cout<<" "<<path<<endl;
+}
+
 #endif

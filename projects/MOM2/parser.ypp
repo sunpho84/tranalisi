@@ -68,6 +68,7 @@ using namespace scan;
 %token TK_AVERAGE_EQUIV_MOMENTA
 %token TK_COMPUTE_OR_LOAD
 %token TK_EVOLVE
+%token TK_LIST_ENSEMBLES
 %token TK_PLOT_Z
 %token TK_SUBTRACT_OA2
 %token TK_VAL_CHIR_EXTRAP
@@ -92,6 +93,7 @@ commands:
         | commands val_chir_extrap
         | commands plot_Z
         | commands compute_or_load
+        | commands list_ensembles
         /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
         /* | commands TK_QUOTED_TEXT '=' TK_EVOLVE '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].evolve();drv->suff+="_evo";} aggiungi ordine qui*/
 ;
@@ -162,3 +164,6 @@ val_chir_extrap: TK_QUOTED_TEXT '=' TK_VAL_CHIR_EXTRAP '(' TK_QUOTED_TEXT ')' {v
 /////////////////////////////////////////////////////////////////
 
 average: TK_QUOTED_TEXT '=' TK_AVERAGE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
+
+list_ensembles: {list_ensembles();}
+;
