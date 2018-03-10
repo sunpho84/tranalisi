@@ -22,6 +22,7 @@ void average(const string out,const string in1,const string in2)
 {
   assert_compatible(in1,in2);
   
+  pars::ens.push_back(out);
   data(out)=data(in1);
   
   for(auto &p : data(in2).get_all_tasks(data(out)))
@@ -58,4 +59,11 @@ void data_erase(const string &key)
 perens_t& data(const string &key)
 {
   return _data[key];
+}
+
+void list_ensembles()
+{
+  cout<<"Ensembles:"<<endl;
+   for(auto &path : pars::ens)
+     cout<<" "<<path<<endl;
 }
