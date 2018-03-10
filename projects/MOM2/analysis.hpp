@@ -20,11 +20,11 @@ perens_t& data(const string &key,const bool assert_present_flag);
 //! remove an entry
 void data_erase(const string &key);
 
-inline void compute_or_load_all(const string &grp_name)
+inline void compute_or_load_all()
 {
   for(auto &path : pars::ens)
     {
-      const string name=path+"_"+grp_name;
+      const string name=path;
       data(name,PRESENCE_NOT_NEEDED)
 	.read_pars(path)
 	.set_pars_for_scratch()
@@ -35,25 +35,25 @@ inline void compute_or_load_all(const string &grp_name)
     }
 }
 
-inline void plot_all_Z(const string &grp_name,const string &suffix)
+inline void plot_all_Z(const string &suffix)
 {
   for(auto &path : pars::ens)
     {
-      const string name=path+"_"+grp_name;
+      const string name=path;
       data(name,ASSERT_PRESENT)
 	.plot_Z(suffix);
     }
 }
 
 #define DEFINE_SINGLE_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND)		\
-  inline void ALL_COMMAND(const string &grp_name_out,const string &grp_name_in)	\
+  inline void ALL_COMMAND()						\
   {									\
     for(auto &path : pars::ens)						\
       {									\
-	const string name_out=path+"_"+grp_name_out;			\
-	string name_in=path+"_"+grp_name_in;				\
+	const string name_out=path;					\
+	string name_in=path;						\
 	data(name_out,PRESENCE_NOT_NEEDED)=				\
-	  data(name_in,ASSERT_PRESENT).SINGLE_COMMAND();				\
+	  data(name_in,ASSERT_PRESENT).SINGLE_COMMAND();		\
       }									\
   }
 

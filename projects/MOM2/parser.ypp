@@ -146,24 +146,24 @@ set_use_QED: TK_USE_QED '=' TK_INTE {pars::use_QED=$3;}
 
 /////////////////////////////////////////////////////////////////
 
-compute_or_load: TK_QUOTED_TEXT '=' TK_COMPUTE_OR_LOAD '(' ')' {compute_or_load_all(*$1);delete $1;}
+compute_or_load: TK_COMPUTE_OR_LOAD '(' ')' {compute_or_load_all();}
 ;
 
-plot_Z: TK_QUOTED_TEXT '.' TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$1,*$5);delete $1;delete $5;}
+plot_Z: TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$3);delete $3;}
 ;
 
-average_r: TK_QUOTED_TEXT '=' TK_AVERAGE_R '(' TK_QUOTED_TEXT ')' {average_all_r(*$1,*$5);}
+average_r: TK_AVERAGE_R '(' ')' {average_all_r();}
 ;
 
-average_equiv_momenta: TK_QUOTED_TEXT '=' TK_AVERAGE_EQUIV_MOMENTA '(' TK_QUOTED_TEXT ')' {average_all_equiv_momenta(*$1,*$5);}
+average_equiv_momenta: TK_AVERAGE_EQUIV_MOMENTA '(' ')' {average_all_equiv_momenta();}
 ;
 
-val_chir_extrap: TK_QUOTED_TEXT '=' TK_VAL_CHIR_EXTRAP '(' TK_QUOTED_TEXT ')' {val_chir_extrap_all(*$1,*$5);}
+val_chir_extrap: TK_VAL_CHIR_EXTRAP '(' ')' {val_chir_extrap_all();}
 ;
 
 /////////////////////////////////////////////////////////////////
 
 average: TK_QUOTED_TEXT '=' TK_AVERAGE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
 
-list_ensembles: TK_LIST_ENSEMBLES {list_ensembles();}
+list_ensembles: TK_LIST_ENSEMBLES '(' ')' {list_ensembles();}
 ;
