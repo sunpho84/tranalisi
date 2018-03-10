@@ -92,7 +92,14 @@ void perens_t::average_equiv_momenta_Zq(perens_t &out,const vector<vector<size_t
 	{
   	  djack_t &ave=(*t.out)[i];
   	  ave=0.0;
-  	  for(const size_t ieq : equiv_linmom_combos[out_ilinmom_combo]) ave+=(*t.in)[ieq];
+  	  for(const size_t ieq : equiv_linmom_combos[out_ilinmom_combo])
+	    {
+	      vector<size_t> in_im_r_ilinmom_comp=out_im_r_ilinmom_comp;
+	      in_im_r_ilinmom_comp[2]=ieq;
+	      const size_t i=im_r_ilinmom_ind(in_im_r_ilinmom_comp);
+	      
+	      ave+=(*t.in)[i];
+	    }
   	  ave/=equiv_linmom_combos[out_ilinmom_combo].size();
   	}
     }
