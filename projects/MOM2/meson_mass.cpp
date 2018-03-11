@@ -30,9 +30,11 @@ perens_t& perens_t::get_meson_mass()
       meson_mass.bin_write(meson_mass_path);
     }
   
+  grace_file_t meson_mass2_plot(dir_path+"/plots/M2.xmg");
+  meson_mass2_plot.new_data_set();
   for(size_t im1=0;im1<nm;im1++)
-    for(size_t im2=0;im2<nm;im2++)
-      cout<<"Meson mass["<<im1<<","<<im2<<"]: "<<meson_mass[im_im_ind({im1,im2})]<<endl;
+    for(size_t im2=im1;im2<nm;im2++)
+      meson_mass2_plot.write_ave_err(am[im1]+am[im2],sqr(meson_mass[im_im_ind({im1,im2})]).ave_err());
   
   return *this;
 }
