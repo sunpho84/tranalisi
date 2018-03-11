@@ -63,6 +63,8 @@ perens_t& perens_t::allocate()
 
 perens_t& perens_t::set_indices()
 {
+  im_im_ind.set_ranges({{"m",nm},{"m",nm}});
+  
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
   r_r_iZbil_ind.set_ranges({{"r",nr},{"r",nr},{"Zbil",nZbil}});

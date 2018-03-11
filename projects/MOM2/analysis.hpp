@@ -22,17 +22,15 @@ void data_erase(const string &key);
 
 inline void compute_or_load_all()
 {
-  for(auto &path : pars::ens)
-    {
-      const string name=path;
-      data(name,PRESENCE_NOT_NEEDED)
-	.read_pars(path)
-	.set_pars_for_scratch()
-	.get_deltam_cr()
-	.set_indices()
-	.allocate()
-	.read_or_compute();
-    }
+  for(auto &name : pars::ens)
+    data(name,PRESENCE_NOT_NEEDED)
+      .read_pars(name)
+      .set_pars_for_scratch()
+      .get_deltam_cr()
+      .get_meson_mass()
+      .set_indices()
+      .allocate()
+      .read_or_compute();
 }
 
 inline void plot_all_Z(const string &suffix)

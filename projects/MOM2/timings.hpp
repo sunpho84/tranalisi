@@ -10,7 +10,7 @@
  #define INIT_TIMINGS_TO(...) = __VA_ARGS__
 #endif
 
-const size_t ntimers=10;
+const size_t ntimers=11;
 
 EXTERN_TIMINGS time_stats_t ts INIT_TIMINGS_TO(ntimers);
 
@@ -24,6 +24,7 @@ EXTERN_TIMINGS stopwatch_t &invert_time INIT_TIMINGS_TO(ts.add("invert the props
 EXTERN_TIMINGS stopwatch_t &proj_time INIT_TIMINGS_TO(ts.add("project bilinears"));
 EXTERN_TIMINGS stopwatch_t &Zq_time INIT_TIMINGS_TO(ts.add("compute Zq"));
 EXTERN_TIMINGS stopwatch_t &deltam_cr_time INIT_TIMINGS_TO(ts.add("compute deltam_cr"));
+EXTERN_TIMINGS stopwatch_t &meson_mass_time INIT_TIMINGS_TO(ts.add("compute meson mass"));
 
 #undef EXTERN_TIMINGS
 #undef INIT_TIMINGS_TO

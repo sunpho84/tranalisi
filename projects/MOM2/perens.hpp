@@ -189,9 +189,6 @@ struct perens_t
   //! allocate all data
   perens_t& allocate();
   
-  //! read or compute and write deltam_cr
-  perens_t& get_deltam_cr();
-  
   //! return a list of all tasks
   vector<task_t> get_all_tasks(perens_t &out) const
   {
@@ -206,7 +203,17 @@ struct perens_t
   
   djvec_t deltam_cr;
   
+  djvec_t meson_mass;
+  
+  //! read or compute and write deltam_cr
+  perens_t& get_deltam_cr();
+  
+  //! read or compute and write meson mass
+  perens_t& get_meson_mass();
+  
   /////////////////////////////////////////////////////////////////
+  
+  index_t im_im_ind;
   
   index_t im_r_im_r_igam_ind;
   index_t r_r_iZbil_ind;
