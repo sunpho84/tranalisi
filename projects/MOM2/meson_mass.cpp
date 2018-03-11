@@ -34,7 +34,7 @@ perens_t& perens_t::get_meson_mass()
   meson_mass2_plot.new_data_set();
   for(size_t im1=0;im1<nm;im1++)
     for(size_t im2=im1;im2<nm;im2++)
-      meson_mass2_plot.write_ave_err(am[im1]+am[im2],sqr(meson_mass[im_im_ind({im1,im2})]).ave_err())
+      meson_mass2_plot.write_ave_err(am[im1]+am[im2],sqr(meson_mass[im_im_ind({im1,im2})]).ave_err());
   
   return *this;
 }
