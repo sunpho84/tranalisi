@@ -26,9 +26,9 @@ inline void compute_or_load_all()
     data(name,PRESENCE_NOT_NEEDED)
       .read_pars(name)
       .set_pars_for_scratch()
+      .set_indices()
       .get_deltam_cr()
       .get_meson_mass()
-      .set_indices()
       .allocate()
       .read_or_compute();
 }
