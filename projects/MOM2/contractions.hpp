@@ -3,6 +3,8 @@
 
 #include <tranalisi.hpp>
 
+const int ODD=-1,EVN=1;
+
 //! compute the dshift to m cr
 djack_t compute_deltam_cr(vector<size_t> &conf_list,const size_t tmin,const size_t tmax,const size_t im,const size_t nr,const string &prop_hadr_path);
 
