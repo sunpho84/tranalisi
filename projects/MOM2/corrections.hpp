@@ -8,11 +8,11 @@
  #define INIT_CORRECTIONS_TO(...) = __VA_ARGS__
 #endif
 
-#include <geometry.hpp>
+#include <MOM2/geometry.hpp>
 #include <oper.hpp>
 
-#include <pars.hpp>
-#include <Zbil.hpp>
+#include <MOM2/pars.hpp>
+#include <MOM2/Zbil.hpp>
 
 const valarray<double> c1={0,-1.0/12,-0.331};
 const valarray<double> c0=1.0-8.0*c1;

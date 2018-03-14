@@ -3,7 +3,7 @@
 #endif
 
 #define EXTERN_CORRECTIONS
- #include <corrections.hpp>
+ #include <MOM2/corrections.hpp>
 
 void set_pr_bil_a2(gaz::type_t iaz,gf::type_t gf_g)
 {
