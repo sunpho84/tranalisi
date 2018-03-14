@@ -343,7 +343,8 @@ void perens_t::val_chir_extrap_Zbil(perens_t &out) const
 		  for(size_t im2=im1;im2<nm;im2++)
 		    {
 		      //compute mass sum
-		      x[i]=am[im1]+am[im2];
+		      if(pars::chir_extr_method==chir_extr::MQUARK) x[i]=am[im1]+am[im2];
+		      else                                          x[i]=sqr(meson_mass[im_im_ind({im1,im2})].ave());
 		      //compute y and y_plot
 		      y_plot[i]=pr[im_r_im_r_iZbil_ibilmom_ind({im1,r1,im2,r2,iZbil,ibilmom})];
 		      //fit x*y if pole present

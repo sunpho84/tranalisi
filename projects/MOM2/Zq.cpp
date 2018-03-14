@@ -123,11 +123,18 @@ void perens_t::val_chir_extrap_Zq(perens_t &out) const
 	  for(size_t r=0;r<nr;r++)
 	    {
 	      //slice m
+	      vector<double> x(nm);
 	      djvec_t y(nm);
-	      for(size_t im=0;im<nm;im++) y[im]=Zq[im_r_ilinmom_ind({im,r,ilinmom})];
+	      for(size_t im=0;im<nm;im++)
+		{
+		  if(pars::chir_extr_method==chir_extr::MQUARK) x[im]=am[im];
+		  else                                          x[im]=sqr(meson_mass[im_im_ind({im,im})].ave());
+		  
+		  y[im]=Zq[im_r_ilinmom_ind({im,r,ilinmom})];
+		}
 	      
 	      //fit, store and write the result
-	      djvec_t coeffs=poly_fit(am,y,1,am_min(),am_max());
+	      djvec_t coeffs=poly_fit(x,y,1,am_min(),am_max());
 	      Zq_chir[out.im_r_ilinmom_ind({0,r,ilinmom})]=coeffs[0];
 	      if(plot!=nullptr)
 		{
