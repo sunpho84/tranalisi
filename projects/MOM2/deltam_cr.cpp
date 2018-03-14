@@ -45,7 +45,9 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
       res=0.0;
       for(size_t r=0;r<((rdiff==0)?nr:1);r++)
 	{
-	  const string name="M"+to_string(im)+"_R"+to_string(r)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string((r+rdiff)%nr)+"_"+tag_fw;
+	  const size_t r1=r;
+	  const size_t r2=(r+rdiff)%nr;
+	  const string name="M"+to_string(im)+"_R"+to_string(r1)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string(r2)+"_"+tag_fw;
 	  const djvec_t contr=get_contraction(name,ID,reim,tpar)*((r==0)?1:rpar)/(1+abs(rpar));
 	  contr.ave_err().write(dir_path+"/plots/"+ID+"_"+name+".xmg");
 	  res+=contr;
@@ -59,7 +61,10 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
     const djvec_t P5P5_00=get("0","0","P5P5",RE,EVN,EVN,0);
     const djvec_t V0P5_00=get("0","0","V0P5",IM,ODD,ODD,0);
     const djvec_t m_cr_corr=forward_derivative(V0P5_00)/(2.0*P5P5_00);
+    const djvec_t m_cr_corr_symm=(forward_derivative(V0P5_00)+backward_derivative(V0P5_00))/(4.0*P5P5_00);
     const djack_t m_cr=constant_fit(m_cr_corr,tmin,tmax,dir_path+"/plots/m_cr_"+to_string(im)+".xmg");
+    const djack_t m_cr_symm=constant_fit(m_cr_corr_symm,tmin,tmax,dir_path+"/plots/m_cr_symm_"+to_string(im)+".xmg");
+    cout<<"m_cr["<<im<<"]: "<<m_cr.ave_err()<<", symm: "<<m_cr_symm.ave_err()<<endl;
   }
   
   if(pars::use_QED)
