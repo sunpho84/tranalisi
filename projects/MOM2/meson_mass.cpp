@@ -25,7 +25,7 @@ perens_t& perens_t::get_meson_mass()
       meson_mass_time.start();
       for(size_t im1=0;im1<nm;im1++)
 	for(size_t im2=0;im2<nm;im2++)
-	  meson_mass[im_im_ind({im1,im2})]=compute_meson_mass(im1,im2);
+	  meson_mass[im_im_ind({im1,im2})]=compute_meson_mass(to_string(im1),to_string(im2));
       meson_mass_time.stop();
       meson_mass.bin_write(meson_mass_path);
     }
@@ -35,6 +35,9 @@ perens_t& perens_t::get_meson_mass()
   for(size_t im1=0;im1<nm;im1++)
     for(size_t im2=im1;im2<nm;im2++)
       meson_mass2_plot.write_ave_err(am[im1]+am[im2],sqr(meson_mass[im_im_ind({im1,im2})]).ave_err());
+  
+  if(im_sea>=0 and im_sea<(int)nm) meson_mass_sea=meson_mass[im_im_ind({(size_t)im_sea,(size_t)im_sea})];
+  else                             meson_mass_sea=compute_meson_mass("msea","msea");
   
   return *this;
 }

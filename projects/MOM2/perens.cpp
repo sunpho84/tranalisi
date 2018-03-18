@@ -18,6 +18,8 @@ perens_t& perens_t::read_pars(const string &name)
   for(size_t im=0;im<nm;im++) am[im]=input.read<double>();
   nr=input.read<double>("Nr");
   
+  im_sea=input.read<int>("ImSea");
+  
   const string mom_list_path=input.read<string>("MomList"); //!< list of momenta
   
   input.expect("ConfRange");

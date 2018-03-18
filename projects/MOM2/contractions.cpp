@@ -32,20 +32,20 @@ djvec_t perens_t::get_contraction(const string &combo,const string &ID,const siz
   return vec_filter(data,gslice(base_nel*offset,{hw,T},{each*base_nel,1})).symmetrized(tpar);
 }
 
-djack_t perens_t::compute_meson_mass(const size_t im1,const size_t im2)
+djack_t perens_t::compute_meson_mass(const string& m1_tag,const string& m2_tag)
 {
   djvec_t P5P5_corr(L[0]/2+1);
   P5P5_corr=0.0;
   for(size_t r=0;r<nr;r++)
     {
-      string name="M"+to_string(im1)+"_R"+to_string(r)+"_0_M"+to_string(im2)+"_R"+to_string(r)+"_0";
+      string name="M"+m1_tag+"_R"+to_string(r)+"_0_M"+m2_tag+"_R"+to_string(r)+"_0";
       djvec_t contr=get_contraction(name,"P5P5",RE,EVN);
       P5P5_corr+=contr;
     }
   P5P5_corr/=nr;
   
-  const djack_t m_P=constant_fit(effective_mass(P5P5_corr),tmin,tmax,dir_path+"/plots/m_P_"+to_string(im1)+"_"+to_string(im1)+".xmg");
-  cout<<"M["<<im1<<","<<im2<<"]: "<<m_P<<endl;
+  const djack_t m_P=constant_fit(effective_mass(P5P5_corr),tmin,tmax,dir_path+"/plots/m_P_"+m1_tag+"_"+m1_tag+".xmg");
+  cout<<"M["<<m1_tag<<","<<m2_tag<<"]: "<<m_P<<endl;
   
   return m_P;
 }

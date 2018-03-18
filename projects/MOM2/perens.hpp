@@ -52,6 +52,9 @@ struct perens_t
   //! list of masses
   vector<double> am;
   
+  //! index of sea mass
+  int im_sea;
+  
   //! minimal mass
   const double& am_min() const
   {
@@ -205,6 +208,8 @@ struct perens_t
   
   djvec_t meson_mass;
   
+  djack_t meson_mass_sea;
+  
   //! read or compute and write deltam_cr
   perens_t& get_deltam_cr();
   
@@ -336,7 +341,7 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
-  djack_t compute_meson_mass(const size_t im1,const size_t im2);
+  djack_t compute_meson_mass(const string& m1_tag,const string& m2_tag);
   
   djvec_t get_contraction(const string &combo,const string &ID,const size_t reim,const int tpar);
   
