@@ -4,8 +4,8 @@
 #include <Dirac.hpp>
 #include <meas_vec.hpp>
 
-#include <geometry.hpp>
-#include <prop.hpp>
+#include <MOM2/geometry.hpp>
+#include <MOM2/prop.hpp>
 
 #ifndef EXTERN_ZBIL
  #define EXTERN_ZBIL extern

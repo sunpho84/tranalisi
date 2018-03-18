@@ -7,7 +7,8 @@
 
 #include <Dirac.hpp>
 #include <meas_vec.hpp>
-#include <types.hpp>
+
+#include <MOM2/types.hpp>
 
 #ifndef EXTERN_GEOMETRY
  #define EXTERN_GEOMETRY extern

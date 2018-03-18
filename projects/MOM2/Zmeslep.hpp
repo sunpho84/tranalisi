@@ -3,7 +3,7 @@
 
 #include <Dirac.hpp>
 
-#include <prop.hpp>
+#include <MOM2/prop.hpp>
 
 #ifndef EXTERN_MESLEP
  #define EXTERN_MESLEP extern
