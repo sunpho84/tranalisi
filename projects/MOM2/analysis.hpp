@@ -67,4 +67,7 @@ void average(const string out,const string in1,const string in2);
 //! print all ensembles available
 void list_ensembles();
 
+//! extrapolate w.r.t sea mass
+void sea_chir_extrap(const string out,const vector<string> &ens_list);
+
 #endif

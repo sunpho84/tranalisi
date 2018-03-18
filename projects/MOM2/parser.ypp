@@ -42,6 +42,7 @@ using namespace scan;
     std::string *text;
     double      real;
     int         inte;
+    std::vector<std::string> *str_list;
 }
 
 %token TK_INVALID_STRING
@@ -70,8 +71,11 @@ using namespace scan;
 %token TK_EVOLVE
 %token TK_LIST_ENSEMBLES
 %token TK_PLOT_Z
+%token TK_SEA_CHIR_EXTRAP
 %token TK_SUBTRACT_OA2
 %token TK_VAL_CHIR_EXTRAP
+
+%type <str_list> string_list
 
 %%
 
@@ -90,6 +94,7 @@ commands:
         | commands average
         | commands average_r
         | commands average_equiv_momenta
+        | commands sea_chir_extrap
         | commands val_chir_extrap
         | commands plot_Z
         | commands compute_or_load
@@ -165,5 +170,14 @@ val_chir_extrap: TK_VAL_CHIR_EXTRAP '(' ')' {val_chir_extrap_all();}
 
 average: TK_QUOTED_TEXT '=' TK_AVERAGE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
 
+sea_chir_extrap: TK_QUOTED_TEXT '=' TK_SEA_CHIR_EXTRAP '(' string_list ')' {sea_chir_extrap(*$1,*$5);delete $1;delete $5;}
+;
+
 list_ensembles: TK_LIST_ENSEMBLES '(' ')' {list_ensembles();}
+;
+
+/////////////////////////////////////////////////////////////////
+
+string_list: TK_QUOTED_TEXT ',' TK_QUOTED_TEXT {$$=new std::vector<std::string>;$$->push_back(*$1);$$->push_back(*$3);delete $1;delete $3;}
+           | string_list ',' TK_QUOTED_TEXT {$$=$1;$$->push_back(*$3);delete $3;}
 ;

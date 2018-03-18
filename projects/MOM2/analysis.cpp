@@ -44,6 +44,10 @@ void average(const string out,const string in1,const string in2)
     }
 }
 
+void sea_chir_extrap(const string out,const vector<string> &ens_list)
+{
+}
+
 auto assert_ens_present(const string &key)
 {
   auto f=_data.find(key);
