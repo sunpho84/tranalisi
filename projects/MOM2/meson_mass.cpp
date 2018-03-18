@@ -37,7 +37,7 @@ perens_t& perens_t::get_meson_mass()
       meson_mass2_plot.write_ave_err(am[im1]+am[im2],sqr(meson_mass[im_im_ind({im1,im2})]).ave_err());
   
   if(im_sea>=0 and im_sea<(int)nm) meson_mass_sea=meson_mass[im_im_ind({(size_t)im_sea,(size_t)im_sea})];
-  else                             meson_mass_sea=compute_meson_mass("msea","msea");
+  else                             meson_mass_sea=compute_meson_mass("sea","sea");
   
   return *this;
 }
