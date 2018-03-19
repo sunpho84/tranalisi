@@ -73,11 +73,13 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
   
   auto xminmax=minmax_element(x.begin(),x.end());
   double xmin=*xminmax.first;
+  xmin=0.0;
   double xmax=*xminmax.second;
   
   //prepare output
-  perens_t &out=data(out_name,PRESENCE_NOT_NEEDED)=*in.front();
-  out.meson_mass=0.0;
+  perens_t &out=data(out_name,PRESENCE_NOT_NEEDED);
+  out=*in.front();
+  out.meson_mass_sea=0.0;
   out.dir_path=out_name;
   pars::ens.push_back(out_name);
   
@@ -88,7 +90,7 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
 	for(size_t iens=0;iens<v.in.size();iens++) y[iens]=(*(v.in[iens]))[icombo];
 	
 	string plot_path=out_name+"/plots/chirextr_"+v.tag+"_combo_"+to_string(icombo)+".xmg";
-	v.out[icombo]=poly_fit(x,y,1,0.0,xmax,plot_path)[0];
+	v.out[icombo]=poly_fit(x,y,1,xmin,xmax,plot_path)[0];
       }
   
   //remove from the list
