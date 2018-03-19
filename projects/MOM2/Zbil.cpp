@@ -209,6 +209,34 @@ void perens_t::mom_compute_bil()
     }
 }
 
+vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*> &ens)
+{
+  vector<const djvec_t*> in_pr_bil,in_pr_bil_QED;
+  for(auto &e : ens)
+    {
+      in_pr_bil.push_back(&e->pr_bil);
+      if(pars::use_QED) in_pr_bil.push_back(&e->pr_bil_QED);
+    }
+  vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,"pr_bil"}};
+  if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,in_pr_bil_QED,"pr_bil_QED"});
+  
+  return pr_bil_tasks;
+}
+
+vector<perens_t::task_t> perens_t::get_Zbil_tasks(const vector<const perens_t*> &ens)
+{
+  vector<const djvec_t*> in_Zbil,in_Zbil_QED;
+  for(auto &e : ens)
+    {
+      in_Zbil.push_back(&e->Zbil);
+      if(pars::use_QED) in_Zbil.push_back(&e->Zbil_QED);
+    }
+  vector<task_t> Zbil_tasks={{&Zbil,in_Zbil,"Zbil"}};
+  if(pars::use_QED) Zbil_tasks.push_back({&Zbil_QED,in_Zbil_QED,"Zbil_QED"});
+  
+  return Zbil_tasks;
+}
+
 void perens_t::compute_Zbil()
 {
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
@@ -238,10 +266,10 @@ void perens_t::compute_Zbil()
 
 void perens_t::plot_Zbil(const string &suffix)
 {
-  for(const auto &t : get_Zbil_tasks(*this))
+  for(const auto &t : this->get_Zbil_tasks())
     {
       //decript tuple
-      const djvec_t &Z=*t.in;
+      const djvec_t &Z=*t.out;
       const string &tag=t.tag;
       
       for(size_t iZbil=0;iZbil<nZbil;iZbil++)
@@ -267,9 +295,9 @@ void perens_t::plot_Zbil(const string &suffix)
 
 void perens_t::average_r_Zbil(perens_t &out) const
 {
-  for(auto &t : concat(get_pr_bil_tasks(out),get_Zbil_tasks(out)))
+  for(auto &t : out.get_bil_tasks({this}))
     {
-      const djvec_t &pr=*t.in;
+      const djvec_t &pr=*t.in.front();
       djvec_t &pr_rave=*t.out;
       
       for(size_t out_i=0;out_i<out.im_r_im_r_iZbil_ibilmom_ind.max();out_i++)
@@ -297,7 +325,7 @@ void perens_t::average_equiv_momenta_Zbil(perens_t &out,const vector<vector<size
       const vector<size_t> out_im_r_im_r_iZbil_ibilmom_comp=out.im_r_im_r_iZbil_ibilmom_ind(i);
       const size_t out_imom_combo=out_im_r_im_r_iZbil_ibilmom_comp[5];
       
-      for(const auto &t : concat(get_pr_bil_tasks(out),get_Zbil_tasks(out)))
+      for(const auto &t : out.get_bil_tasks())
   	{
   	  djack_t &ave=(*t.out)[i];
   	  ave=0.0;
@@ -306,7 +334,7 @@ void perens_t::average_equiv_momenta_Zbil(perens_t &out,const vector<vector<size
 	      vector<size_t> im_r_im_r_iZbil_ibilmom_comp=out_im_r_im_r_iZbil_ibilmom_comp;
 	      im_r_im_r_iZbil_ibilmom_comp[5]=ieq_mom;
 	      const size_t ieq=im_r_im_r_iZbil_ibilmom_ind(im_r_im_r_iZbil_ibilmom_comp);
-	      ave+=(*t.in)[ieq];
+	      ave+=(*t.in.front())[ieq];
 	    }
   	  ave/=equiv_bilmom_combos[out_imom_combo].size();
   	}
@@ -316,10 +344,10 @@ void perens_t::average_equiv_momenta_Zbil(perens_t &out,const vector<vector<size
 void perens_t::val_chir_extrap_Zbil(perens_t &out) const
 {
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
-    for(auto &t : concat(get_pr_bil_tasks(out),get_Zbil_tasks(out)))
+    for(auto &t : out.get_bil_tasks({this}))
       for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	{
-	  const djvec_t &pr=*t.in;
+	  const djvec_t &pr=*t.in.front();
 	  djvec_t &pr_chir=*t.out;
 	  const string &tag=t.tag;
 	  

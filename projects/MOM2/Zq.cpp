@@ -35,11 +35,35 @@ djack_t perens_t::compute_Zq(const jqprop_t &jprop_inv,const size_t glb_mom)
   return Zq;
 }
 
+vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& ens)
+{
+  vector<const djvec_t*> in_Zq,in_Zq_sig1,in_Zq_QED,in_Zq_sig1_QED;
+  for(auto &e : ens)
+    {
+      in_Zq.push_back(&e->Zq);
+      in_Zq_sig1.push_back(&e->Zq_sig1);
+      if(pars::use_QED)
+	{
+	  in_Zq_QED.push_back(&e->Zq_QED);
+	  in_Zq_sig1_QED.push_back(&e->Zq_sig1_QED);
+	}
+    }
+  
+  vector<task_t> Zq_tasks={{&Zq,in_Zq,"Zq"},{&Zq_sig1,in_Zq_sig1,"Zq_sig1"}};
+  if(pars::use_QED)
+    {
+      Zq_tasks.push_back({&Zq_QED,in_Zq_QED,"Zq_QED"});
+      Zq_tasks.push_back({&Zq_sig1_QED,in_Zq_sig1_QED,"Zq_sig1_QED"});
+    }
+  
+  return Zq_tasks;
+}
+
 void perens_t::plot_Zq(const string &suffix)
 {
-  for(auto &t : get_Zq_tasks(*this))
+  for(auto &t : this->get_Zq_tasks())
     {
-      const djvec_t &Z=*t.in;
+      const djvec_t &Z=*t.out;
       const string &tag=t.tag;
       
       grace_file_t out(dir_path+"/plots/"+tag+(suffix!=""?("_"+suffix):string(""))+".xmg");
@@ -59,9 +83,9 @@ void perens_t::plot_Zq(const string &suffix)
 
 void perens_t::average_r_Zq(perens_t &out) const
 {
-  for(auto &t : get_Zq_tasks(out))
+  for(auto &t : out.get_Zq_tasks({this}))
     {
-      const djvec_t &Zq=*t.in;
+      const djvec_t &Zq=*t.in.front();
       djvec_t &Zq_rave=*t.out;
       
       for(size_t out_i=0;out_i<out.im_r_ilinmom_ind.max();out_i++)
@@ -88,7 +112,7 @@ void perens_t::average_equiv_momenta_Zq(perens_t &out,const vector<vector<size_t
       const vector<size_t> out_im_r_ilinmom_comp=out.im_r_ilinmom_ind(i);
       const size_t out_ilinmom_combo=out_im_r_ilinmom_comp[2];
       
-      for(const auto &t : get_Zq_tasks(out))
+      for(const auto &t : out.get_Zq_tasks({this}))
 	{
   	  djack_t &ave=(*t.out)[i];
   	  ave=0.0;
@@ -98,7 +122,7 @@ void perens_t::average_equiv_momenta_Zq(perens_t &out,const vector<vector<size_t
 	      in_im_r_ilinmom_comp[2]=ieq;
 	      const size_t i=im_r_ilinmom_ind(in_im_r_ilinmom_comp);
 	      
-	      ave+=(*t.in)[i];
+	      ave+=(*t.in.front())[i];
 	    }
   	  ave/=equiv_linmom_combos[out_ilinmom_combo].size();
   	}
@@ -107,9 +131,16 @@ void perens_t::average_equiv_momenta_Zq(perens_t &out,const vector<vector<size_t
 
 void perens_t::val_chir_extrap_Zq(perens_t &out) const
 {
-  for(auto &t : get_Zq_tasks(out))
+  //slice m
+  vector<double> x(nm);
+  djvec_t y(nm);
+  for(size_t im=0;im<nm;im++)
+    if(pars::chir_extr_method==chir_extr::MQUARK) x[im]=am[im];
+    else                                          x[im]=sqr(meson_mass[im_im_ind({im,im})].ave());
+  
+  for(auto &t : out.get_Zq_tasks({this}))
     {
-      const djvec_t &Zq=*t.in;
+      const djvec_t &Zq=*t.in.front();
       djvec_t &Zq_chir=*t.out;
       const string &tag=t.tag;
       
@@ -123,15 +154,9 @@ void perens_t::val_chir_extrap_Zq(perens_t &out) const
 	  for(size_t r=0;r<nr;r++)
 	    {
 	      //slice m
-	      vector<double> x(nm);
 	      djvec_t y(nm);
 	      for(size_t im=0;im<nm;im++)
-		{
-		  if(pars::chir_extr_method==chir_extr::MQUARK) x[im]=am[im];
-		  else                                          x[im]=sqr(meson_mass[im_im_ind({im,im})].ave());
-		  
-		  y[im]=Zq[im_r_ilinmom_ind({im,r,ilinmom})];
-		}
+		y[im]=Zq[im_r_ilinmom_ind({im,r,ilinmom})];
 	      
 	      //fit, store and write the result
 	      djvec_t coeffs=poly_fit(x,y,1,am_min(),am_max());

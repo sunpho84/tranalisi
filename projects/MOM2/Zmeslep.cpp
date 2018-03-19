@@ -296,6 +296,34 @@ void perens_t::mom_compute_meslep()
     }
 }
 
+vector<perens_t::task_t> perens_t::get_pr_meslep_tasks(const vector<const perens_t*> &ens)
+{
+  vector<const djvec_t*> in_pr_meslep,in_pr_meslep_QED;
+  for(auto &e : ens)
+    {
+      in_pr_meslep.push_back(&e->pr_meslep);
+      if(pars::use_QED) in_pr_meslep.push_back(&e->pr_meslep_QED);
+    }
+  vector<task_t> pr_meslep_tasks={{&pr_meslep,in_pr_meslep,"pr_meslep"}};
+  if(pars::use_QED) pr_meslep_tasks.push_back({&pr_meslep_QED,in_pr_meslep_QED,"pr_meslep_QED"});
+  
+  return pr_meslep_tasks;
+}
+
+vector<perens_t::task_t> perens_t::get_Zmeslep_tasks(const vector<const perens_t*> &ens)
+{
+  vector<const djvec_t*> in_Zmeslep,in_Zmeslep_QED;
+  for(auto &e : ens)
+    {
+      in_Zmeslep.push_back(&e->Zmeslep);
+      if(pars::use_QED) in_Zmeslep.push_back(&e->Zmeslep_QED);
+    }
+  vector<task_t> Zmeslep_tasks={{&Zmeslep,in_Zmeslep,"Zmeslep"}};
+  if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED,in_Zmeslep_QED,"Zmeslep_QED"});
+  
+  return Zmeslep_tasks;
+}
+
 void perens_t::compute_Zmeslep()
 {
   for(size_t im_in=0;im_in<nm;im_in++)
@@ -353,10 +381,10 @@ void perens_t::compute_Zmeslep()
 
 void perens_t::plot_Zmeslep(const string &suffix)
 {
-  for(const auto &t : get_Zmeslep_tasks(*this))
+  for(const auto &t : this->get_Zmeslep_tasks())
       {
 	//decript tuple
-	const djvec_t &Z=*t.in;
+	const djvec_t &Z=*t.in.front();
 	const string &tag=t.tag;
 	
 	for(size_t iop=0;iop<nZbil;iop++)
@@ -384,9 +412,9 @@ void perens_t::plot_Zmeslep(const string &suffix)
 
 void perens_t::average_r_Zmeslep(perens_t &out) const
 {
-  for(auto &t : concat(get_pr_meslep_tasks(out),get_Zmeslep_tasks(out)))
+  for(auto &t : out.get_meslep_tasks())
       {
-	const djvec_t &pr=*t.in;
+	const djvec_t &pr=*t.in.front();
 	djvec_t &pr_rave=*t.out;
 	
 	for(size_t out_i=0;out_i<out.im_r_im_r_iop_iproj_imeslepmom_ind.max();out_i++)
@@ -414,7 +442,7 @@ void perens_t::average_equiv_momenta_Zmeslep(perens_t &out,const vector<vector<s
       const vector<size_t> out_im_r_im_r_iop_iproj_imeslepmom_comp=out.im_r_im_r_iop_iproj_imeslepmom_ind(i);
       const size_t out_imom_combo=out_im_r_im_r_iop_iproj_imeslepmom_comp[6];
       
-      for(const auto &t : concat(get_pr_meslep_tasks(out),get_Zmeslep_tasks(out)))
+      for(const auto &t : out.get_pr_meslep_tasks())
 	{
 	  djack_t &ave=(*t.out)[i];
 	  ave=0.0;
@@ -423,7 +451,7 @@ void perens_t::average_equiv_momenta_Zmeslep(perens_t &out,const vector<vector<s
 	      vector<size_t> im_r_im_r_iop_iproj_imeslepmom_comp=out_im_r_im_r_iop_iproj_imeslepmom_comp;
 	      im_r_im_r_iop_iproj_imeslepmom_comp[6]=ieq_mom;
 	      const size_t ieq=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom_comp);
-	      ave+=(*t.in)[ieq];
+	      ave+=(*t.in.front())[ieq];
 	    }
 	  ave/=equiv_meslepmom_combos[out_imom_combo].size();
 	}
@@ -433,11 +461,11 @@ void perens_t::average_equiv_momenta_Zmeslep(perens_t &out,const vector<vector<s
 void perens_t::val_chir_extrap_Zmeslep(perens_t &out) const
 {
   for(size_t imeslepmom=0;imeslepmom<meslepmoms().size();imeslepmom++)
-    for(auto &t : concat(get_pr_meslep_tasks(out),get_Zmeslep_tasks(out)))
+    for(auto &t : out.get_pr_meslep_tasks())
       for(size_t iop=0;iop<meslep::nZop;iop++)
 	for(size_t iproj=0;iproj<meslep::nZop;iproj++)
 	  {
-	    const djvec_t &pr=*t.in;
+	    const djvec_t &pr=*t.in.front();
 	    djvec_t &pr_chir=*t.out;
 	    const string &tag=t.tag;
 	    

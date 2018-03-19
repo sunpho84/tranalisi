@@ -51,13 +51,13 @@ perens_t& perens_t::read_pars(const string &name)
 
 perens_t& perens_t::allocate()
 {
-  for(auto &task : get_Zq_tasks(*this))
+  for(auto &task : get_Zq_tasks())
     task.out->resize(im_r_ilinmom_ind.max());
   
-  for(auto &task : concat(get_Zbil_tasks(*this),get_pr_bil_tasks(*this)))
+  for(auto &task : get_bil_tasks())
     task.out->resize(im_r_im_r_iZbil_ibilmom_ind.max());
   
-  for(auto &task : concat(get_Zmeslep_tasks(*this),get_pr_meslep_tasks(*this)))
+  for(auto &task : get_meslep_tasks())
     task.out->resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
   
   return *this;
@@ -197,15 +197,14 @@ perens_t& perens_t::read_or_compute()
 
 void perens_t::bin_read(raw_file_t &file)
 {
-  for(auto &t : concat(get_Zq_tasks(*this),get_pr_bil_tasks(*this),get_pr_meslep_tasks(*this)))
+  for(auto &t : concat(get_Zq_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
      t.out->bin_read(file);
 }
 
-void perens_t::bin_write(raw_file_t &file) const
+void perens_t::bin_write(raw_file_t &file)
 {
-  perens_t dummy;
-  for(auto &t : concat(get_Zq_tasks(dummy),get_pr_bil_tasks(dummy),get_pr_meslep_tasks(dummy)))
-     t.in->bin_write(file);
+  for(auto &t : concat(get_Zq_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
+    t.out->bin_write(file);
 }
 
 perens_t perens_t::average_r() const

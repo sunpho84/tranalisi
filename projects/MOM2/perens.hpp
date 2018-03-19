@@ -105,13 +105,13 @@ struct perens_t
   struct task_t
   {
     //! input vector
-    const djvec_t *in;
+    const vector<const djvec_t*> in;
     //! output vector
     djvec_t *out;
     //! name of the task
     const string tag;
     //! contructor
-    task_t(const djvec_t *in,djvec_t *out,const string tag) : in(in),out(out),tag(tag) {}
+    task_t(djvec_t *out,const vector<const djvec_t*> &in,const string tag) : in(in),out(out),tag(tag) {}
   };
   
   //Zq, with and without QED
@@ -121,40 +121,26 @@ struct perens_t
   djvec_t Zq_sig1_QED;
   
   //! return a list of tasks for Zq
-  vector<task_t> get_Zq_tasks(perens_t &out) const
-  {
-    vector<task_t> Zq_tasks={{&Zq,&out.Zq,"Zq"},{&Zq_sig1,&out.Zq_sig1,"Zq_sig1"}};
-    if(pars::use_QED)
-      {
-	Zq_tasks.push_back({&Zq_QED,&out.Zq_QED,"Zq_QED"});
-	Zq_tasks.push_back({&Zq_sig1_QED,&out.Zq_sig1_QED,"Zq_sig1_QED"});
-      }
-    return Zq_tasks;
-  }
+  vector<task_t> get_Zq_tasks(const vector<const perens_t*>& ens={});
   
   //projected bilinears with and without QED
   djvec_t pr_bil;
   djvec_t pr_bil_QED;
   
   //! return a list of tasks for bilinears projected vertex
-  vector<task_t> get_pr_bil_tasks(perens_t &out) const
-  {
-    vector<task_t> pr_bil_tasks={{&pr_bil,&out.pr_bil,"pr_bil"}};
-    if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,&out.pr_bil_QED,"pr_bil_QED"});
-    return pr_bil_tasks;
-  }
+  vector<task_t> get_pr_bil_tasks(const vector<const perens_t*> &ens={});
   
   //bilinear Z
   djvec_t Zbil;
   djvec_t Zbil_QED;
   
   //! return a list of tasks for bilinears Z
-  vector<task_t> get_Zbil_tasks(perens_t &out) const
+  vector<task_t> get_Zbil_tasks(const vector<const perens_t*> &ens={});
+
+  //! return a list of tasks for bilinears Z and proj
+  vector<task_t> get_bil_tasks(const vector<const perens_t*> &ens={})
   {
-    vector<task_t> Zbil_tasks={{&Zbil,&out.Zbil,"Zbil"}};
-    if(pars::use_QED) Zbil_tasks.push_back({&Zbil_QED,&out.Zbil_QED,"Zbil_QED"});
-    
-    return Zbil_tasks;
+    return concat(get_Zbil_tasks(ens),get_pr_bil_tasks(ens));
   }
   
   //! projected meslep
@@ -162,44 +148,32 @@ struct perens_t
   djvec_t pr_meslep_QED;
   
   //! return a list of tasks for meslep projected vertex
-  vector<task_t> get_pr_meslep_tasks(perens_t &out) const
-  {
-    vector<task_t> pr_meslep_tasks;
-    if(pars::compute_meslep)
-      {
-	pr_meslep_tasks.push_back({&pr_meslep,&out.pr_meslep,"pr_meslep"});
-	if(pars::use_QED) pr_meslep_tasks.push_back({&pr_meslep_QED,&out.pr_meslep_QED,"pr_meslep_QED"});
-      }
-    return pr_meslep_tasks;
-  }
+  vector<task_t> get_pr_meslep_tasks(const vector<const perens_t*> &ens={});
   
   //! renormalization meslep
   djvec_t Zmeslep;
   djvec_t Zmeslep_QED;
   
   //! return a list of tasks for meslep projected vertex
-  vector<task_t> get_Zmeslep_tasks(perens_t &out) const
+  vector<task_t> get_Zmeslep_tasks(const vector<const perens_t*> &ens={});
+  
+  //! return a list of tasks for meslep Z and proj
+  vector<task_t> get_meslep_tasks(const vector<const perens_t*> &ens={})
   {
-    vector<task_t> Zmeslep_tasks;
-    if(pars::compute_meslep)
-      {
-	Zmeslep_tasks.push_back({&Zmeslep,&out.Zmeslep,"Zmeslep"});
-	if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED,&out.Zmeslep_QED,"Zmeslep_QED"});
-      }
-    return Zmeslep_tasks;
+    return concat(get_Zmeslep_tasks(ens),get_pr_meslep_tasks(ens));
   }
   
   //! allocate all data
   perens_t& allocate();
   
   //! return a list of all tasks
-  vector<task_t> get_all_tasks(perens_t &out) const
+  vector<task_t> get_all_tasks(const vector<const perens_t*> &ens={})
   {
-    return concat(get_Zq_tasks(out),
-		  get_pr_bil_tasks(out),
-		  get_Zbil_tasks(out),
-		  get_pr_meslep_tasks(out),
-		  get_Zmeslep_tasks(out));
+    return concat(get_Zq_tasks(ens),
+		  get_pr_bil_tasks(ens),
+		  get_Zbil_tasks(ens),
+		  get_pr_meslep_tasks(ens),
+		  get_Zmeslep_tasks(ens));
   }
   
   /////////////////////////////////////////////////////////////////
@@ -256,7 +230,7 @@ struct perens_t
   void bin_read(raw_file_t &file);
   
   //! write to binary
-  void bin_write(raw_file_t &file) const;
+  void bin_write(raw_file_t &file);
   
   //! read from a path
   inline void bin_read(const string &path)
@@ -266,7 +240,7 @@ struct perens_t
   }
   
   //! write to a path
-  inline void bin_write(const string &path) const
+  inline void bin_write(const string &path)
   {
     raw_file_t fout(path,"w");
     this->bin_write(fout);
