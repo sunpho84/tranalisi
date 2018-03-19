@@ -88,7 +88,7 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
 	for(size_t iens=0;iens<v.in.size();iens++) y[iens]=(*(v.in[iens]))[icombo];
 	
 	string plot_path=out_name+"/plots/chirextr_"+v.tag+"_combo_"+to_string(icombo)+".xmg";
-	v.out[icombo]=poly_fit(x,y,1,xmin,xmax,plot_path)[0];
+	v.out[icombo]=poly_fit(x,y,1,0.0,xmax,plot_path)[0];
       }
   
   //remove from the list
