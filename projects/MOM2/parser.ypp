@@ -125,7 +125,7 @@ set_boundary_conditions: TK_BC '=' TK_QUOTED_TEXT
 			 }
 ;
 
-set_chir_extr_method: TK_CHIR_EXTR_METHOD '=' TK_QUOTED_TEXT {chir_extr::decrypt(*$3);delete $3;}
+set_chir_extr_method: TK_CHIR_EXTR_METHOD '=' TK_QUOTED_TEXT {pars::chir_extr_method=chir_extr::decrypt(*$3);delete $3;}
 ;
 
 set_compute_meslep: TK_COMPUTE_MESLEP '=' TK_INTE {pars::compute_meslep=$3;}
