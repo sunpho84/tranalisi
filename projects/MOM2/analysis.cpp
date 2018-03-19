@@ -70,7 +70,7 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
       //print the name
       cout<<" "<<en_name<<endl;
     }
-
+  
   auto xminmax=minmax_element(x.begin(),x.end());
   double xmin=*xminmax.first;
   double xmax=*xminmax.second;

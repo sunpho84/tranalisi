@@ -136,7 +136,7 @@ struct perens_t
   
   //! return a list of tasks for bilinears Z
   vector<task_t> get_Zbil_tasks(const vector<const perens_t*> &ens={});
-
+  
   //! return a list of tasks for bilinears Z and proj
   vector<task_t> get_bil_tasks(const vector<const perens_t*> &ens={})
   {
