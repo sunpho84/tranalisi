@@ -42,18 +42,18 @@ perens_t& perens_t::get_meson_mass()
     if(file_exists(meson_mass_sea_path))
       {
 	cout<<"File "<<meson_mass_sea_path<<" found, opening"<<endl;
-      meson_mass.bin_read(meson_mass_sea_path);
-    }
-  else
-    {
-      cout<<"File "<<meson_mass_sea_path<<" not found, computing"<<endl;
-      
-      prepare_list_of_confs();
-      meson_mass_time.start();
-      meson_mass_sea=compute_meson_mass("sea","sea");
-      meson_mass_time.stop();
-      meson_mass.bin_write(meson_mass_sea_path);
-    }
+	meson_mass_sea.bin_read(meson_mass_sea_path);
+      }
+    else
+      {
+	cout<<"File "<<meson_mass_sea_path<<" not found, computing"<<endl;
+	
+	prepare_list_of_confs();
+	meson_mass_time.start();
+	meson_mass_sea=compute_meson_mass("sea","sea");
+	meson_mass_time.stop();
+	meson_mass.bin_write(meson_mass_sea_path);
+      }
   cout<<"Sea meson mass: "<<smart_print(meson_mass_sea.ave_err())<<endl;
   
   return *this;
