@@ -83,6 +83,8 @@ void perens_t::plot_Zq(const string &suffix)
 
 void perens_t::average_r_Zq(perens_t &out) const
 {
+  cout<<"Averaging r for Zq"<<endl;
+  
   for(auto &t : out.get_Zq_tasks({this}))
     {
       const djvec_t &Zq=*t.in.front();

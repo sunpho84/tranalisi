@@ -295,6 +295,8 @@ void perens_t::plot_Zbil(const string &suffix)
 
 void perens_t::average_r_Zbil(perens_t &out) const
 {
+  cout<<"Averaging r for bil"<<endl;
+  
   for(auto &t : out.get_bil_tasks({this}))
     {
       const djvec_t &pr=*t.in.front();

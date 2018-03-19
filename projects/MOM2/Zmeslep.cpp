@@ -412,6 +412,8 @@ void perens_t::plot_Zmeslep(const string &suffix)
 
 void perens_t::average_r_Zmeslep(perens_t &out) const
 {
+  cout<<"Averaging r for meslep"<<endl;
+  
   for(auto &t : out.get_meslep_tasks())
       {
 	const djvec_t &pr=*t.in.front();
