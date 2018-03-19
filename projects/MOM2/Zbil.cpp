@@ -215,7 +215,7 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
   for(auto &e : ens)
     {
       in_pr_bil.push_back(&e->pr_bil);
-      if(pars::use_QED) in_pr_bil.push_back(&e->pr_bil_QED);
+      if(pars::use_QED) in_pr_bil_QED.push_back(&e->pr_bil_QED);
     }
   vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,"pr_bil"}};
   if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,in_pr_bil_QED,"pr_bil_QED"});
@@ -225,11 +225,13 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
 
 vector<perens_t::task_t> perens_t::get_Zbil_tasks(const vector<const perens_t*> &ens)
 {
+  cout<<"Getting list of Zbil tasks"<<endl;
+  
   vector<const djvec_t*> in_Zbil,in_Zbil_QED;
   for(auto &e : ens)
     {
       in_Zbil.push_back(&e->Zbil);
-      if(pars::use_QED) in_Zbil.push_back(&e->Zbil_QED);
+      if(pars::use_QED) in_Zbil_QED.push_back(&e->Zbil_QED);
     }
   vector<task_t> Zbil_tasks={{&Zbil,in_Zbil,"Zbil"}};
   if(pars::use_QED) Zbil_tasks.push_back({&Zbil_QED,in_Zbil_QED,"Zbil_QED"});

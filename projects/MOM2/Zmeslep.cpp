@@ -302,7 +302,7 @@ vector<perens_t::task_t> perens_t::get_pr_meslep_tasks(const vector<const perens
   for(auto &e : ens)
     {
       in_pr_meslep.push_back(&e->pr_meslep);
-      if(pars::use_QED) in_pr_meslep.push_back(&e->pr_meslep_QED);
+      if(pars::use_QED) in_pr_meslep_QED.push_back(&e->pr_meslep_QED);
     }
   vector<task_t> pr_meslep_tasks={{&pr_meslep,in_pr_meslep,"pr_meslep"}};
   if(pars::use_QED) pr_meslep_tasks.push_back({&pr_meslep_QED,in_pr_meslep_QED,"pr_meslep_QED"});
@@ -316,7 +316,7 @@ vector<perens_t::task_t> perens_t::get_Zmeslep_tasks(const vector<const perens_t
   for(auto &e : ens)
     {
       in_Zmeslep.push_back(&e->Zmeslep);
-      if(pars::use_QED) in_Zmeslep.push_back(&e->Zmeslep_QED);
+      if(pars::use_QED) in_Zmeslep_QED.push_back(&e->Zmeslep_QED);
     }
   vector<task_t> Zmeslep_tasks={{&Zmeslep,in_Zmeslep,"Zmeslep"}};
   if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED,in_Zmeslep_QED,"Zmeslep_QED"});
