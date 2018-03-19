@@ -54,6 +54,7 @@ perens_t& perens_t::get_meson_mass()
       meson_mass_time.stop();
       meson_mass.bin_write(meson_mass_sea_path);
     }
+  cout<<"Sea meson mass: "<<smart_print(meson_mass_sea.ave_err())<<endl;
   
   return *this;
 }
