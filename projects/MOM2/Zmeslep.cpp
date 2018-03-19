@@ -384,7 +384,7 @@ void perens_t::plot_Zmeslep(const string &suffix)
   for(const auto &t : this->get_Zmeslep_tasks())
       {
 	//decript tuple
-	const djvec_t &Z=*t.in.front();
+	const djvec_t &Z=*t.out;
 	const string &tag=t.tag;
 	
 	for(size_t iop=0;iop<nZbil;iop++)
@@ -446,7 +446,7 @@ void perens_t::average_equiv_momenta_Zmeslep(perens_t &out,const vector<vector<s
       const vector<size_t> out_im_r_im_r_iop_iproj_imeslepmom_comp=out.im_r_im_r_iop_iproj_imeslepmom_ind(i);
       const size_t out_imom_combo=out_im_r_im_r_iop_iproj_imeslepmom_comp[6];
       
-      for(const auto &t : out.get_pr_meslep_tasks())
+      for(const auto &t : out.get_meslep_tasks({this}))
 	{
 	  djack_t &ave=(*t.out)[i];
 	  ave=0.0;
@@ -465,7 +465,7 @@ void perens_t::average_equiv_momenta_Zmeslep(perens_t &out,const vector<vector<s
 void perens_t::val_chir_extrap_Zmeslep(perens_t &out) const
 {
   for(size_t imeslepmom=0;imeslepmom<meslepmoms().size();imeslepmom++)
-    for(auto &t : out.get_pr_meslep_tasks())
+    for(auto &t : out.get_meslep_tasks({this}))
       for(size_t iop=0;iop<meslep::nZop;iop++)
 	for(size_t iproj=0;iproj<meslep::nZop;iproj++)
 	  {

@@ -329,7 +329,7 @@ void perens_t::average_equiv_momenta_Zbil(perens_t &out,const vector<vector<size
       const vector<size_t> out_im_r_im_r_iZbil_ibilmom_comp=out.im_r_im_r_iZbil_ibilmom_ind(i);
       const size_t out_imom_combo=out_im_r_im_r_iZbil_ibilmom_comp[5];
       
-      for(const auto &t : out.get_bil_tasks())
+      for(const auto &t : out.get_bil_tasks({this}))
   	{
   	  djack_t &ave=(*t.out)[i];
   	  ave=0.0;
