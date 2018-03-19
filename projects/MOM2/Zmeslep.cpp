@@ -415,26 +415,27 @@ void perens_t::average_r_Zmeslep(perens_t &out) const
   cout<<"Averaging r for meslep"<<endl;
   
   for(auto &t : out.get_meslep_tasks())
-      {
-	const djvec_t &pr=*t.in.front();
-	djvec_t &pr_rave=*t.out;
-	
-	for(size_t out_i=0;out_i<out.im_r_im_r_iop_iproj_imeslepmom_ind.max();out_i++)
-	  {
-	    const vector<size_t> out_im_r_im_r_iop_iproj_imeslepmom_comp=out.im_r_im_r_iop_iproj_imeslepmom_ind(out_i);
-	    vector<size_t> im_r_im_r_iop_iproj_imeslepmom_comp=out_im_r_im_r_iop_iproj_imeslepmom_comp;
-	    
-	    pr_rave[out_i]=0.0;
-	    for(size_t r=0;r<nr;r++)
-	      {
-		im_r_im_r_iop_iproj_imeslepmom_comp[1]=
-		  im_r_im_r_iop_iproj_imeslepmom_comp[3]=r;
-		const size_t i=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom_comp);
-		pr_rave[out_i]+=pr[i];
-	      }
-	    pr_rave[out_i]/=nr;
-	  }
-      }
+    {
+      cout<<" "<<t.tag<<endl;
+      const djvec_t &pr=*t.in.front();
+      djvec_t &pr_rave=*t.out;
+      
+      for(size_t out_i=0;out_i<out.im_r_im_r_iop_iproj_imeslepmom_ind.max();out_i++)
+	{
+	  const vector<size_t> out_im_r_im_r_iop_iproj_imeslepmom_comp=out.im_r_im_r_iop_iproj_imeslepmom_ind(out_i);
+	  vector<size_t> im_r_im_r_iop_iproj_imeslepmom_comp=out_im_r_im_r_iop_iproj_imeslepmom_comp;
+	  
+	  pr_rave[out_i]=0.0;
+	  for(size_t r=0;r<nr;r++)
+	    {
+	      im_r_im_r_iop_iproj_imeslepmom_comp[1]=
+		im_r_im_r_iop_iproj_imeslepmom_comp[3]=r;
+	      const size_t i=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom_comp);
+	      pr_rave[out_i]+=pr[i];
+	    }
+	  pr_rave[out_i]/=nr;
+	}
+    }
 }
 
 void perens_t::average_equiv_momenta_Zmeslep(perens_t &out,const vector<vector<size_t>> &equiv_meslepmom_combos) const

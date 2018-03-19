@@ -225,8 +225,6 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
 
 vector<perens_t::task_t> perens_t::get_Zbil_tasks(const vector<const perens_t*> &ens)
 {
-  cout<<"Getting list of Zbil tasks"<<endl;
-  
   vector<const djvec_t*> in_Zbil,in_Zbil_QED;
   for(auto &e : ens)
     {
@@ -301,6 +299,8 @@ void perens_t::average_r_Zbil(perens_t &out) const
   
   for(auto &t : out.get_bil_tasks({this}))
     {
+      cout<<" "<<t.tag<<endl;
+      
       const djvec_t &pr=*t.in.front();
       djvec_t &pr_rave=*t.out;
       

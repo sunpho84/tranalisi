@@ -87,6 +87,8 @@ void perens_t::average_r_Zq(perens_t &out) const
   
   for(auto &t : out.get_Zq_tasks({this}))
     {
+      cout<<" "<<t.tag<<endl;
+      
       const djvec_t &Zq=*t.in.front();
       djvec_t &Zq_rave=*t.out;
       
