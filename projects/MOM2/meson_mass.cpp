@@ -21,6 +21,7 @@ perens_t& perens_t::get_meson_mass()
     {
       cout<<"File "<<meson_mass_path<<" not found, computing"<<endl;
       
+      prepare_list_of_confs();
       meson_mass_time.start();
       for(size_t im1=0;im1<nm;im1++)
 	for(size_t im2=0;im2<nm;im2++)
