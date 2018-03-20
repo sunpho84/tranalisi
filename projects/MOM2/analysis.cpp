@@ -74,7 +74,7 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
   auto xminmax=minmax_element(x.begin(),x.end());
   double xmin=*xminmax.first;
   xmin=0.0;
-  double xmax=*xminmax.second;
+  double xmax=*xminmax.second*1.1;
   
   //prepare output
   perens_t &out=data(out_name,PRESENCE_NOT_NEEDED);
@@ -91,7 +91,16 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
 	
 	string plot_path="";
 	if(icombo==100) plot_path=out_name+"/plots/sea_chirextr_"+v.tag+"_combo_"+to_string(icombo)+".xmg";
-	(*v.out)[icombo]=poly_fit(x,y,1,xmin,xmax,plot_path)[0];
+	djvec_t coeffs=poly_fit(x,y,1);
+	(*v.out)[icombo]=coeffs[0];
+	
+	if(plot_path!="")
+	  {
+	    grace_file_t plot(plot_path);
+	    write_fit_plot(plot,xmin,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
+	    plot.set_title(v.tag+", "+v.ind.descr(icombo));
+	    plot.write_ave_err(0,coeffs[0].ave_err());
+	  }
       }
   
   //remove from the list
