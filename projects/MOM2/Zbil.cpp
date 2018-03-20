@@ -396,9 +396,9 @@ void perens_t::val_chir_extrap_Zbil(perens_t &out) const
 		if(plot!=nullptr)
 		  {
 		    auto xminmax=minmax_element(x.begin(),x.end());
-		    double xmin=*xminmax.first;
-		    double xmax=*xminmax.second;
-		    write_fit_plot(*plot,0.5*xmin,2*xmax,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		    double xmin=*xminmax.first*0.9;
+		    double xmax=*xminmax.second*1.1;
+		    write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
 		    plot->write_ave_err(0.0,pr_chir[iout].ave_err());
 		  }
 	      }
