@@ -49,11 +49,11 @@ vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& e
 	}
     }
   
-  vector<task_t> Zq_tasks={{&Zq,in_Zq,"Zq"},{&Zq_sig1,in_Zq_sig1,"Zq_sig1"}};
+  vector<task_t> Zq_tasks={{&Zq,in_Zq,im_r_ilinmom_ind,"Zq"},{&Zq_sig1,in_Zq_sig1,im_r_ilinmom_ind,"Zq_sig1"}};
   if(pars::use_QED)
     {
-      Zq_tasks.push_back({&Zq_QED,in_Zq_QED,"Zq_QED"});
-      Zq_tasks.push_back({&Zq_sig1_QED,in_Zq_sig1_QED,"Zq_sig1_QED"});
+      Zq_tasks.push_back({&Zq_QED,in_Zq_QED,im_r_ilinmom_ind,"Zq_QED"});
+      Zq_tasks.push_back({&Zq_sig1_QED,in_Zq_sig1_QED,im_r_ilinmom_ind,"Zq_sig1_QED"});
     }
   
   return Zq_tasks;

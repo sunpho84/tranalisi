@@ -90,7 +90,7 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
 	for(size_t iens=0;iens<v.in.size();iens++) y[iens]=(*(v.in[iens]))[icombo];
 	
 	string plot_path="";
-	if(icombo==100) plot_path=out_name+"/plots/chirextr_"+v.tag+"_combo_"+to_string(icombo)+".xmg";
+	if(icombo==100) plot_path=out_name+"/plots/sea_chirextr_"+v.tag+"_combo_"+to_string(icombo)+".xmg";
 	(*v.out)[icombo]=poly_fit(x,y,1,xmin,xmax,plot_path)[0];
       }
   
@@ -100,6 +100,9 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
       data_erase(in);
       pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
     }
+  
+  out.compute_Zbil();
+  if(pars::compute_meslep) out.compute_Zmeslep();
 }
 
 auto assert_ens_present(const string &key)

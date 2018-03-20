@@ -96,10 +96,12 @@ struct perens_t
     const vector<const djvec_t*> in;
     //! output vector
     djvec_t *out;
+    //! index
+    const index_t ind;
     //! name of the task
     const string tag;
     //! contructor
-    task_t(djvec_t *out,const vector<const djvec_t*> &in,const string tag) : in(in),out(out),tag(tag) {}
+    task_t(djvec_t *out,const vector<const djvec_t*>& in,const index_t& ind,const string tag) : in(in),out(out),ind(ind),tag(tag) {}
   };
   
   //Zq, with and without QED

@@ -53,14 +53,8 @@ perens_t& perens_t::read_pars(const string &name)
 
 perens_t& perens_t::allocate()
 {
-  for(auto &task : get_Zq_tasks())
-    task.out->resize(im_r_ilinmom_ind.max());
-  
-  for(auto &task : get_bil_tasks())
-    task.out->resize(im_r_im_r_iZbil_ibilmom_ind.max());
-  
-  for(auto &task : get_meslep_tasks())
-    task.out->resize(im_r_im_r_iop_iproj_imeslepmom_ind.max());
+  for(auto &task : get_all_tasks())
+    task.out->resize(task.ind.max());
   
   return *this;
 }

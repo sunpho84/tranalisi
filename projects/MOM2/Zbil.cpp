@@ -217,8 +217,8 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
       in_pr_bil.push_back(&e->pr_bil);
       if(pars::use_QED) in_pr_bil_QED.push_back(&e->pr_bil_QED);
     }
-  vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,"pr_bil"}};
-  if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,in_pr_bil_QED,"pr_bil_QED"});
+  vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,im_r_ilinmom_ind,"pr_bil"}};
+  if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,in_pr_bil_QED,im_r_ilinmom_ind,"pr_bil_QED"});
   
   return pr_bil_tasks;
 }
@@ -231,8 +231,8 @@ vector<perens_t::task_t> perens_t::get_Zbil_tasks(const vector<const perens_t*> 
       in_Zbil.push_back(&e->Zbil);
       if(pars::use_QED) in_Zbil_QED.push_back(&e->Zbil_QED);
     }
-  vector<task_t> Zbil_tasks={{&Zbil,in_Zbil,"Zbil"}};
-  if(pars::use_QED) Zbil_tasks.push_back({&Zbil_QED,in_Zbil_QED,"Zbil_QED"});
+  vector<task_t> Zbil_tasks={{&Zbil,in_Zbil,im_r_im_r_iZbil_ibilmom_ind,"Zbil"}};
+  if(pars::use_QED) Zbil_tasks.push_back({&Zbil_QED,in_Zbil_QED,im_r_im_r_iZbil_ibilmom_ind,"Zbil_QED"});
   
   return Zbil_tasks;
 }
