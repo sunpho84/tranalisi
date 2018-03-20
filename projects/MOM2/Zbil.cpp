@@ -377,6 +377,9 @@ void perens_t::val_chir_extrap_Zbil(perens_t &out) const
 		      //compute mass sum
 		      if(pars::chir_extr_method==chir_extr::MQUARK) x[i]=am[im1]+am[im2];
 		      else                                          x[i]=sqr(meson_mass[im_im_ind({im1,im2})].ave());
+		      
+		      if(std::isnan(x[i])) CRASH("Nanning %d",i);
+		      
 		      //compute y and y_plot
 		      y_plot[i]=pr[im_r_im_r_iZbil_ibilmom_ind({im1,r1,im2,r2,iZbil,ibilmom})];
 		      //fit x*y if pole present
@@ -387,12 +390,15 @@ void perens_t::val_chir_extrap_Zbil(perens_t &out) const
 		    }
 		
 		//fit, store and write the result
-		const djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1),2.0*am_min(),2.0*am_max());
+		const djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1));
 		const size_t iout=out.im_r_im_r_iZbil_ibilmom_ind({0,r1,0,r2,iZbil,ibilmom});
 		pr_chir[iout]=coeffs[coeff_to_take];
 		if(plot!=nullptr)
 		  {
-		    write_fit_plot(*plot,2*am_min(),2*am_max(),[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		    auto xminmax=minmax_element(x.begin(),x.end());
+		    double xmin=*xminmax.first;
+		    double xmax=*xminmax.second;
+		    write_fit_plot(*plot,0.5*xmin,2*xmax,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
 		    plot->write_ave_err(0.0,pr_chir[iout].ave_err());
 		  }
 	      }

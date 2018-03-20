@@ -55,18 +55,6 @@ struct perens_t
   //! index of sea mass
   int im_sea;
   
-  //! minimal mass
-  const double& am_min() const
-  {
-    return *min_element(am.begin(),am.end());
-  }
-  
-  //! maximal mass
-  const double& am_max() const
-  {
-    return *max_element(am.begin(),am.end());
-  }
-  
   /////////////////////////////////////////////////////////////////
   
   double g2() const

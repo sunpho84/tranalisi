@@ -19,7 +19,7 @@ perens_t& perens_t::read_pars(const string &name)
   nr=input.read<double>("Nr");
   
   im_sea=input.read<int>("ImSea");
-  if(pars::chir_extr_method==chir_extr::MQUARK and (im_sea<0 or im_sea>=nm))
+  if(pars::chir_extr_method==chir_extr::MQUARK and (im_sea<0 or im_sea>=(int)nm))
     CRASH("When chiral extrapolation is done in terms of quark mass, im_sea must be in the range  [0,%zu), value %d is invalid",nm,im_sea);
      
   const string mom_list_path=input.read<string>("MomList"); //!< list of momenta
