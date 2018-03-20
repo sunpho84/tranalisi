@@ -253,9 +253,11 @@ void perens_t::compute_Zbil()
 	
 	const size_t im_r_im_r_iZbil_ibilmom=im_r_im_r_iZbil_ibilmom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,ibilmom})));
 	
+	cout<<"Zbil.size() "<<Zbil.size()<<endl;
 	Zbil[im_r_im_r_iZbil_ibilmom]=
 	  sqrt(Zq_sig1[im_r1_ilinmom1]*Zq_sig1[im_r2_ilinmom2])/pr_bil[im_r_im_r_iZbil_ibilmom];
-	
+
+	cout<<"Zbil_QED.size() "<<Zbil_QED.size()<<endl;
 	if(pars::use_QED)
 	    Zbil_QED[im_r_im_r_iZbil_ibilmom]=
 	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]
