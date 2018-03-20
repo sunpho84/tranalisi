@@ -217,8 +217,8 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
       in_pr_bil.push_back(&e->pr_bil);
       if(pars::use_QED) in_pr_bil_QED.push_back(&e->pr_bil_QED);
     }
-  vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,im_r_ilinmom_ind,"pr_bil"}};
-  if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,in_pr_bil_QED,im_r_ilinmom_ind,"pr_bil_QED"});
+  vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,im_r_im_r_iZbil_ibilmom_ind,"pr_bil"}};
+  if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,in_pr_bil_QED,im_r_im_r_iZbil_ibilmom_ind,"pr_bil_QED"});
   
   return pr_bil_tasks;
 }
@@ -253,13 +253,9 @@ void perens_t::compute_Zbil()
 	
 	const size_t im_r_im_r_iZbil_ibilmom=im_r_im_r_iZbil_ibilmom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,ibilmom})));
 	
-	cout<<"Zq_sig1.size() "<<Zq_sig1.size()<<" "<<im_r1_ilinmom1<<" "<<im_r2_ilinmom2<<endl;
-	cout<<"Zbil.size() "<<Zbil.size()<<" "<<im_r_im_r_iZbil_ibilmom<<endl;
-	cout<<"pr_bil.size() "<<pr_bil.size()<<" "<<im_r_im_r_iZbil_ibilmom<<endl;
 	Zbil[im_r_im_r_iZbil_ibilmom]=
 	  sqrt(Zq_sig1[im_r1_ilinmom1]*Zq_sig1[im_r2_ilinmom2])/pr_bil[im_r_im_r_iZbil_ibilmom];
 	
-	cout<<"Zbil_QED.size() "<<Zbil_QED.size()<<endl;
 	if(pars::use_QED)
 	    Zbil_QED[im_r_im_r_iZbil_ibilmom]=
 	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]
