@@ -9,7 +9,7 @@
 
 #define ASSERT_COMPATIBLE_MEMBER(MEMBER)			\
   if(data(in1,ASSERT_PRESENT).MEMBER!=				\
-     data(in1,ASSERT_PRESENT).MEMBER)				\
+     data(in2,ASSERT_PRESENT).MEMBER)				\
     CRASH("Impossible to combine, different member " #MEMBER)
 
 void assert_compatible(const string in1,const string in2)
