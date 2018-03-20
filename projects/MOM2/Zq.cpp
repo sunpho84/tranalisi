@@ -163,11 +163,13 @@ void perens_t::val_chir_extrap_Zq(perens_t &out) const
 		y[im]=Zq[im_r_ilinmom_ind({im,r,ilinmom})];
 	      
 	      //fit, store and write the result
-	      djvec_t coeffs=poly_fit(x,y,1,am_min(),am_max());
+	      djvec_t coeffs=poly_fit(x,y,1);
 	      Zq_chir[out.im_r_ilinmom_ind({0,r,ilinmom})]=coeffs[0];
 	      if(plot!=nullptr)
 		{
-		  write_fit_plot(*plot,0,am_max(),bind(poly_eval<djvec_t>,coeffs,_1),am,y);
+		  auto xminmax=minmax_element(x.begin(),x.end());
+		  double xmax=*xminmax.second;
+		  write_fit_plot(*plot,0,xmax,bind(poly_eval<djvec_t>,coeffs,_1),am,y);
 		  plot->write_ave_err(0,coeffs[0].ave_err());
 		}
 	    }
