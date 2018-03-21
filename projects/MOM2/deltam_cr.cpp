@@ -85,7 +85,7 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
       const djvec_t P5P5_0M=get("0","FF","P5P5",RE,EVN,EVN,rdiff);
       const djvec_t P5P5_0T=get("0","T","P5P5",RE,EVN,EVN,rdiff);
       const djvec_t P5P5_0S=get("0","S","P5P5",RE,EVN,EVN,rdiff);
-      const djvec_t P5P5_0P=get("0","P","P5P5",RE,EVN,ODD,rdiff);
+      const djvec_t P5P5_0P=get("0","P","P5P5",IM,EVN,ODD,rdiff);
       //load corrections
       //const djvec_t V0P5_LL=get("F","F","V0P5",IM,ODD,ODD,rdiff);
     const djvec_t V0P5_00=get("0","0","V0P5",IM,ODD,ODD,rdiff);
