@@ -82,7 +82,7 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
       if(pars::use_deltam_cr_ropp and nr!=2) CRASH("Cannot use opposite r when computing deltam_cr if nr is not 2");
       
       const djvec_t P5P5_00=get("0","0","P5P5",RE,EVN,EVN,rdiff);
-      const djvec_t P5P5_0M=get("0","M","P5P5",RE,EVN,EVN,rdiff);
+      const djvec_t P5P5_0M=get("0","FF","P5P5",RE,EVN,EVN,rdiff);
       const djvec_t P5P5_0T=get("0","T","P5P5",RE,EVN,EVN,rdiff);
       const djvec_t P5P5_0S=get("0","S","P5P5",RE,EVN,EVN,rdiff);
       const djvec_t P5P5_0P=get("0","P","P5P5",RE,EVN,ODD,rdiff);
