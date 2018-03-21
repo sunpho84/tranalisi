@@ -52,14 +52,14 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
     {
       djvec_t res(L[0]/2+1);
       res=0.0;
-      for(size_t r=0;r<nr;r++) //looping on rfw
+      for(size_t r=0;r<((rdiff==0)?nr:1);r++) //looping on rfw
 	{
 	  const size_t rfw=r;
 	  const size_t rbw=(r+rdiff)%nr;
 	  const string name="M"+to_string(im)+"_R"+to_string(rbw)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string(rfw)+"_"+tag_fw;
 	  const djvec_t contr=get_contraction(name,ID,reim,tpar)*((r==0)?1:rpar)/(1+abs(rpar));
 	  contr.ave_err().write(dir_path+"/plots/"+ID+"_"+name+".xmg");
-	  res+=contr;
+	  res+=contr; //Warning, might be ill normalized if nr==1
 	}
       
       return res;
