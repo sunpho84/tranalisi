@@ -31,7 +31,15 @@ perens_t& perens_t::get_deltam_cr()
     }
   
   for(size_t im=0;im<nm;im++)
-    cout<<"Deltam cr["<<im<<"]: "<<deltam_cr[im]<<endl;
+    {
+      cout<<"Deltam cr["<<im<<"]: "<<deltam_cr[im];
+      if(not pars::deltam_cr_ct)
+	{
+	  deltam_cr[im]=0.0;
+	  cout<<" -> "<<0.0;
+	}
+      cout<<endl;
+    }
   
   return *this;
 }
