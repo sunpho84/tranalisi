@@ -55,6 +55,8 @@ namespace pars
   EXTERN_PARS chir_extr::type_t chir_extr_method INIT_PARS_TO({chir_extr::MQUARK});
   //! compute mesoleptonic vertex
   EXTERN_PARS bool compute_meslep INIT_PARS_TO({false});
+  //! compute deltam_cr counterterm and subtract
+  EXTERN_PARS bool deltam_cr_ct INIT_PARS_TO({true});
   //! Filter for democracy
   EXTERN_PARS double filter_thresh INIT_PARS_TO({1});
   //! number of momenta between each print
