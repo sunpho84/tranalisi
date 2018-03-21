@@ -78,16 +78,19 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
   
   if(pars::use_QED)
     {
-      const djvec_t P5P5_00=get("0","0","P5P5",RE,EVN,EVN,1);
+      int rdiff=pars::use_deltam_cr_ropp;
+      if(pars::use_deltam_cr_ropp and nr!=2) CRASH("Cannot use opposite r when computing deltam_cr if nr is not 2");
+      
+      const djvec_t P5P5_00=get("0","0","P5P5",RE,EVN,EVN,rdiff);
       //load corrections
-      //const djvec_t V0P5_LL=get("F","F","V0P5",IM,ODD,ODD,1);
-      const djvec_t V0P5_0M=get("0","FF","V0P5",IM,ODD,ODD,1);
-      //const djvec_t V0P5_M0=get("FF","0","V0P5",IM,ODD,ODD,1);
-      const djvec_t V0P5_0T=get("0","T","V0P5",IM,ODD,ODD,1);
-      //const djvec_t V0P5_T0=get("T","0","V0P5",IM,ODD,ODD,1);
+      //const djvec_t V0P5_LL=get("F","F","V0P5",IM,ODD,ODD,rdiff);
+      const djvec_t V0P5_0M=get("0","FF","V0P5",IM,ODD,ODD,rdiff);
+      //const djvec_t V0P5_M0=get("FF","0","V0P5",IM,ODD,ODD,rdiff);
+      const djvec_t V0P5_0T=get("0","T","V0P5",IM,ODD,ODD,rdiff);
+      //const djvec_t V0P5_T0=get("T","0","V0P5",IM,ODD,ODD,rdiff);
       //load the derivative wrt counterterm
-      const djvec_t V0P5_0P=get("0","P","V0P5",RE,ODD,EVN,1);
-      //const djvec_t V0P5_P0=get("P","0","V0P5",RE,ODD,EVN,1);
+      const djvec_t V0P5_0P=get("0","P","V0P5",RE,ODD,EVN,rdiff);
+      //const djvec_t V0P5_P0=get("P","0","V0P5",RE,ODD,EVN,rdiff);
       
       //build numerator
       const djvec_t num_deltam_cr_corr=

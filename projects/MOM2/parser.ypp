@@ -63,6 +63,7 @@ using namespace scan;
 %token TK_PRINT_EACH_MOM
 %token TK_SCHEME
 %token TK_USE_DELTAM_CR_CT
+%token TK_USE_DELTAM_CR_ROPP
 %token TK_USE_QED
 
 %token TK_AVERAGE
@@ -92,6 +93,7 @@ commands:
         | commands set_print_each_mom
         | commands set_scheme
         | commands set_use_QED
+        | commands set_use_deltam_cr_ropp
         | commands set_use_deltam_cr_ct
         | commands average
         | commands average_r
@@ -149,6 +151,9 @@ set_scheme: TK_SCHEME '=' TK_QUOTED_TEXT {pars::scheme=reno_scheme::decrypt(*$3)
 ;
 
 set_use_deltam_cr_ct: TK_USE_DELTAM_CR_CT '=' TK_INTE {pars::use_deltam_cr_ct=$3;}
+;
+
+set_use_deltam_cr_ropp: TK_USE_DELTAM_CR_ROPP '=' TK_INTE {pars::use_deltam_cr_ropp=$3;}
 ;
 
 set_use_QED: TK_USE_QED '=' TK_INTE {pars::use_QED=$3;}
