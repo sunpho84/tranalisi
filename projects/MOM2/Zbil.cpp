@@ -284,8 +284,8 @@ void perens_t::plot_Zbil(const string &suffix)
 		  
 		  for(size_t imom=0;imom<linmoms.size();imom++)
 		    {
-		      const double p2hat=all_moms[bilmoms[imom][0]].p(L).tilde().norm2();
-		      out.write_ave_err(p2hat,Z[im_r_im_r_iZbil_ibilmom_ind({im1,r,im2,r,iZbil,imom})].ave_err());
+		      const double p2tilde=all_moms[bilmoms[imom][0]].p(L).tilde().norm2();
+		      out.write_ave_err(p2tilde,Z[im_r_im_r_iZbil_ibilmom_ind({im1,r,im2,r,iZbil,imom})].ave_err());
 		    }
 		}
 	}

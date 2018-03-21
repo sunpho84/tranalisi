@@ -401,9 +401,9 @@ void perens_t::plot_Zmeslep(const string &suffix)
 		      
 		      for(size_t imom=0;imom<linmoms.size();imom++)
 			{
-			  const double p2hat=all_moms[meslepmoms()[imom][0]].p(L).tilde().norm2();
+			  const double p2tilde=all_moms[meslepmoms()[imom][0]].p(L).tilde().norm2();
 			  size_t i=im_r_im_r_iop_iproj_imeslepmom_ind({im_in,r,im_ou,r,iop,iproj,imom});
-			  out.write_ave_err(p2hat,Z[i].ave_err());
+			  out.write_ave_err(p2tilde,Z[i].ave_err());
 			}
 		    }
 	    }

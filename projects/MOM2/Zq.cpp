@@ -74,8 +74,8 @@ void perens_t::plot_Zq(const string &suffix)
 	    out.new_data_set();
 	    for(size_t imom=0;imom<linmoms.size();imom++)
 	      {
-		const double p2hat=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
-		out.write_ave_err(p2hat,Z[im_r_ilinmom_ind({im,r,imom})].ave_err());
+		const double p2tilde=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
+		out.write_ave_err(p2tilde,Z[im_r_ilinmom_ind({im,r,imom})].ave_err());
 	      }
 	  }
     }

@@ -456,7 +456,7 @@ vector<vector<size_t>> perens_t::get_equiv_list(const vector<array<size_t,N>> &c
       const size_t imom=combo[combo_repr][0];
       
       //print details
-      mom_out<<imom<<" , p2hat: "<<all_moms[imom].p(L).tilde().norm2()<<endl;
+      mom_out<<imom<<" , p2tilde: "<<all_moms[imom].p(L).tilde().norm2()<<endl;
       mom_out<<" Equivalent to: "<<combo_class.second.size()<<" mom combos: "<<endl;
       for(auto &eq_combo : combo_class.second)
 	{
