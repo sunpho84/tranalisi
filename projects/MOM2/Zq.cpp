@@ -61,6 +61,8 @@ vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& e
 
 void perens_t::plot_Zq(const string &suffix)
 {
+  cout<<"Plotting all Zq for "<<suffix<<endl;
+  
   for(auto &t : this->get_Zq_tasks())
     {
       const djvec_t &Z=*t.out;
