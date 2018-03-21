@@ -52,11 +52,11 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
     {
       djvec_t res(L[0]/2+1);
       res=0.0;
-      for(size_t r=0;r<((rdiff==0)?nr:1);r++)
+      for(size_t r=0;r<((rdiff==0)?nr:1);r++) //looping on rfw
 	{
-	  const size_t r1=r;
-	  const size_t r2=(r+rdiff)%nr;
-	  const string name="M"+to_string(im)+"_R"+to_string(r1)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string(r2)+"_"+tag_fw;
+	  const size_t rfw=r;
+	  const size_t rbw=(r+rdiff)%nr;
+	  const string name="M"+to_string(im)+"_R"+to_string(rbw)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string(rfw)+"_"+tag_fw;
 	  const djvec_t contr=get_contraction(name,ID,reim,tpar)*((r==0)?1:rpar)/(1+abs(rpar));
 	  contr.ave_err().write(dir_path+"/plots/"+ID+"_"+name+".xmg");
 	  res+=contr;
@@ -89,8 +89,8 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
       const djvec_t V0P5_0T=get("0","T","V0P5",IM,ODD,ODD,rdiff);
       //const djvec_t V0P5_T0=get("T","0","V0P5",IM,ODD,ODD,rdiff);
       //load the derivative wrt counterterm
-      const djvec_t V0P5_0P=-get("0","P","V0P5",RE,ODD,EVN,rdiff);
-      //const djvec_t V0P5_P0=-get("P","0","V0P5",RE,ODD,EVN,rdiff);
+      const djvec_t V0P5_0P=get("0","P","V0P5",RE,ODD,EVN,rdiff);
+      //const djvec_t V0P5_P0=get("P","0","V0P5",RE,ODD,EVN,rdiff);
       
       //build numerator
       const djvec_t num_deltam_cr_corr=
