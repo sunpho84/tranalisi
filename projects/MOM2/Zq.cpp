@@ -61,7 +61,7 @@ vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& e
 
 void perens_t::plot_Zq(const string &suffix)
 {
-  cout<<"Plotting all Zq of "<<dir_path<<"for suffix: \""<<suffix<<"\""<<endl;
+  cout<<"Plotting all Zq of "<<dir_path<<" for suffix: \""<<suffix<<"\""<<endl;
   
   for(auto &t : this->get_Zq_tasks())
     {

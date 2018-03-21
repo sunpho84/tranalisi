@@ -25,9 +25,11 @@ void average(const string out,const string in1,const string in2)
 {
   assert_compatible(in1,in2);
   
+  cout<<"Averaging "<<in1<<" and "<<in2<<" into "<<out<<endl;
+  
   pars::ens.push_back(out);
-  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
   data(out,PRESENCE_NOT_NEEDED)=data(in1,ASSERT_PRESENT);
+  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
   
   for(auto &p : data(out,PRESENCE_NOT_NEEDED).get_all_tasks({&data(in2,ASSERT_PRESENT)}))
     {
