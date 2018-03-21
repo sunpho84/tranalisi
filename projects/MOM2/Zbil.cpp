@@ -102,7 +102,6 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vecto
       if(pars::use_QED)
 	for(auto &o : vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>>({
 	      {&jbil.PH[im_r_im_r_igam],&p_in.F,&p_ou.F},
-// #warning including only exchange
 	      {&jbil.PH[im_r_im_r_igam],&p_in.FF,&p_ou.LO},
 	      {&jbil.PH[im_r_im_r_igam],&p_in.LO,&p_ou.FF},
 	      {&jbil.PH[im_r_im_r_igam],&p_in.T,&p_ou.LO},

@@ -75,7 +75,6 @@ public:
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    QED[i][ijack]=
 	      PH[i][ijack]
-// #warning ignoring counterterm
 	      -deltam_cr[im_in][ijack]*CT_in[i][ijack]
 	      -deltam_cr[im_ou][ijack]*CT_ou[i][ijack]
 	      ;
