@@ -78,24 +78,32 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
   
   if(pars::use_QED)
     {
-      const djvec_t P5P5_00=get("0","0","P5P5",RE,EVN,EVN,1);
+      const int rdiff=1;
+      
+      const djvec_t P5P5_00=get("0","0","P5P5",RE,EVN,EVN,rdiff);
       //load corrections
-      //const djvec_t V0P5_LL=get("F","F","V0P5",IM,ODD,ODD,1);
-      //const djvec_t V0P5_0M=get("0","FF","V0P5",IM,ODD,ODD,1);
-      const djvec_t V0P5_M0=get("FF","0","V0P5",IM,ODD,ODD,1);
-      //const djvec_t V0P5_0T=get("0","T","V0P5",IM,ODD,ODD,1);
-      const djvec_t V0P5_T0=get("T","0","V0P5",IM,ODD,ODD,1);
+      //const djvec_t V0P5_LL=get("F","F","V0P5",IM,ODD,ODD,rdiff);
+      const djvec_t V0P5_0M=get("0","FF","V0P5",IM,ODD,ODD,rdiff);
+      //const djvec_t V0P5_M0=get("FF","0","V0P5",IM,ODD,ODD,rdiff);
+      const djvec_t V0P5_0T=get("0","T","V0P5",IM,ODD,ODD,rdiff);
+      //const djvec_t V0P5_T0=get("T","0","V0P5",IM,ODD,ODD,rdiff);
       //load the derivative wrt counterterm
-      //const djvec_t V0P5_0P=get("0","P","V0P5",RE,ODD,EVN,1);
-      const djvec_t V0P5_P0=get("P","0","V0P5",RE,ODD,EVN,1);
+      const djvec_t V0P5_0P=-get("0","P","V0P5",RE,ODD,EVN,rdiff);
+      //const djvec_t V0P5_P0=get("P","0","V0P5",RE,ODD,EVN,rdiff);
       
       //build numerator
-      const djvec_t num_deltam_cr_corr=//V0P5_LL+V0P5_0M+
-	V0P5_M0
-	//+V0P5_0T
-	+V0P5_T0;
+      const djvec_t num_deltam_cr_corr=
+	//+V0P5_LL
+	+V0P5_0M
+	+V0P5_0T
+	//+V0P5_M0
+	//+V0P5_T0
+	;
       //build denominator
-      const djvec_t den_deltam_cr_corr=V0P5_P0;//-V0P5_0P;
+      const djvec_t den_deltam_cr_corr=
+	V0P5_0P
+	//-V0P5_P0
+	;
       const djvec_t deltam_cr_corr=num_deltam_cr_corr/den_deltam_cr_corr;
       const djack_t deltam_cr=constant_fit(deltam_cr_corr,tmin,tmax,dir_path+"/plots/deltam_cr.xmg");
       
