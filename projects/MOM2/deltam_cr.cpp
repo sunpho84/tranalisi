@@ -52,7 +52,7 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
     {
       djvec_t res(L[0]/2+1);
       res=0.0;
-      for(size_t r=0;r<((rdiff==0)?nr:1);r++) //looping on rfw
+      for(size_t r=0;r<nr;r++) //looping on rfw
 	{
 	  const size_t rfw=r;
 	  const size_t rbw=(r+rdiff)%nr;
