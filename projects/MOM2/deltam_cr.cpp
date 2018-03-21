@@ -89,8 +89,8 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
       const djvec_t V0P5_0T=get("0","T","V0P5",IM,ODD,ODD,rdiff);
       //const djvec_t V0P5_T0=get("T","0","V0P5",IM,ODD,ODD,rdiff);
       //load the derivative wrt counterterm
-      const djvec_t V0P5_0P=get("0","P","V0P5",RE,ODD,EVN,rdiff);
-      //const djvec_t V0P5_P0=get("P","0","V0P5",RE,ODD,EVN,rdiff);
+      const djvec_t V0P5_0P=-get("0","P","V0P5",RE,ODD,EVN,rdiff);
+      //const djvec_t V0P5_P0=-get("P","0","V0P5",RE,ODD,EVN,rdiff);
       
       //build numerator
       const djvec_t num_deltam_cr_corr=
