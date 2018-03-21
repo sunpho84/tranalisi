@@ -55,14 +55,14 @@ namespace pars
   EXTERN_PARS chir_extr::type_t chir_extr_method INIT_PARS_TO({chir_extr::MQUARK});
   //! compute mesoleptonic vertex
   EXTERN_PARS bool compute_meslep INIT_PARS_TO({false});
-  //! compute deltam_cr counterterm and subtract
-  EXTERN_PARS bool deltam_cr_ct INIT_PARS_TO({true});
   //! Filter for democracy
   EXTERN_PARS double filter_thresh INIT_PARS_TO({1});
   //! number of momenta between each print
   EXTERN_PARS size_t print_each_mom INIT_PARS_TO({100});
   //! reno scheme used
   EXTERN_PARS reno_scheme::type_t scheme INIT_PARS_TO({reno_scheme::RI_MOM});
+  //! compute deltam_cr counterterm and subtract
+  EXTERN_PARS bool use_deltam_cr_ct INIT_PARS_TO({true});
   //! use QED
   EXTERN_PARS bool use_QED INIT_PARS_TO({false});
   

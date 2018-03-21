@@ -56,13 +56,13 @@ using namespace scan;
 %token TK_BC
 %token TK_CHIR_EXTR_METHOD
 %token TK_COMPUTE_MESLEP
-%token TK_DELTAM_CR_CT
 %token TK_ENSEMBLES
 %token TK_FILTER_THRESH
 %token TK_NF
 %token TK_NJACKS
 %token TK_PRINT_EACH_MOM
 %token TK_SCHEME
+%token TK_USE_DELTAM_CR_CT
 %token TK_USE_QED
 
 %token TK_AVERAGE
@@ -86,13 +86,13 @@ commands:
         | commands set_boundary_conditions
         | commands set_chir_extr_method
         | commands set_compute_meslep
-        | commands set_deltam_cr_ct
         | commands set_filter_thresh
         | commands set_nf
         | commands set_njacks
         | commands set_print_each_mom
         | commands set_scheme
         | commands set_use_QED
+        | commands set_use_deltam_cr_ct
         | commands average
         | commands average_r
         | commands average_equiv_momenta
@@ -133,9 +133,6 @@ set_chir_extr_method: TK_CHIR_EXTR_METHOD '=' TK_QUOTED_TEXT {pars::chir_extr_me
 set_compute_meslep: TK_COMPUTE_MESLEP '=' TK_INTE {pars::compute_meslep=$3;}
 ;
 
-set_deltam_cr_ct: TK_DELTAM_CR_CT '=' TK_INTE {pars::deltam_cr_ct=$3;}
-;
-
 set_filter_thresh: TK_FILTER_THRESH '=' TK_REAL {pars::filter_thresh=$3;}
 ;
 
@@ -149,6 +146,9 @@ set_print_each_mom: TK_PRINT_EACH_MOM '=' TK_INTE {pars::print_each_mom=$3;}
 ;
 
 set_scheme: TK_SCHEME '=' TK_QUOTED_TEXT {pars::scheme=reno_scheme::decrypt(*$3);delete $3;}
+;
+
+set_use_deltam_cr_ct: TK_USE_DELTAM_CR_CT '=' TK_INTE {pars::use_deltam_cr_ct=$3;}
 ;
 
 set_use_QED: TK_USE_QED '=' TK_INTE {pars::use_QED=$3;}

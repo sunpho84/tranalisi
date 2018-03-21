@@ -30,10 +30,11 @@ perens_t& perens_t::get_deltam_cr()
       deltam_cr.bin_write(deltam_cr_path);
     }
   
+  //Print, putting it to zero if not asked to use
   for(size_t im=0;im<nm;im++)
     {
       cout<<"Deltam cr["<<im<<"]: "<<deltam_cr[im];
-      if(not pars::deltam_cr_ct)
+      if(not pars::use_deltam_cr_ct)
 	{
 	  deltam_cr[im]=0.0;
 	  cout<<" -> "<<0.0;

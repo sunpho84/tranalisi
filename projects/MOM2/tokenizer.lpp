@@ -87,13 +87,13 @@ Action                              DEBUG_PRINTF("Found Action\n");return TK_ACT
 BC                                  DEBUG_PRINTF("Found BC\n");return TK_BC;
 ChirExtrMethod                      DEBUG_PRINTF("Found ChirExtrMethod\n");return TK_CHIR_EXTR_METHOD;
 ComputeMeslep                       DEBUG_PRINTF("Found ComputeMeslep\n");return TK_COMPUTE_MESLEP;
-DeltamCrCt                          DEBUG_PRINTF("Found DeltamCrCt\n");return TK_DELTAM_CR_CT;
 Ensembles                           DEBUG_PRINTF("Found Ensembles\n");return TK_ENSEMBLES;
 FilterThresh                        DEBUG_PRINTF("Found FilterThresh\n");return TK_FILTER_THRESH;
 NJacks                              DEBUG_PRINTF("Found NJacks\n");return TK_NJACKS;
 NF                                  DEBUG_PRINTF("Found NF\n");return TK_NF;
 PrintEachMom                        DEBUG_PRINTF("Found PrintEachMom\n");return TK_PRINT_EACH_MOM;
 Scheme                              DEBUG_PRINTF("Found Scheme\n");return TK_SCHEME;
+UseDeltamCrCt                       DEBUG_PRINTF("Found UseDeltamCrCt\n");return TK_USE_DELTAM_CR_CT;
 UseQED                              DEBUG_PRINTF("Found UseQED\n");return TK_USE_QED;
 
 Average                             DEBUG_PRINTF("Found Average\n");return TK_AVERAGE;
