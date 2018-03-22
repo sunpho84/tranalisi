@@ -83,7 +83,7 @@ djack_t perens_t::compute_deltam_cr(const size_t im,const size_t rfw)
     const djvec_t m_cr_corr_symm=(forward_derivative(V0P5_00)+backward_derivative(V0P5_00))/(4.0*P5P5_00);
     const djack_t m_cr=constant_fit(m_cr_corr,tmin,tmax,dir_path+"/plots/m_cr_"+to_string(im)+".xmg");
     const djack_t m_cr_symm=constant_fit(m_cr_corr_symm,tmin,tmax,dir_path+"/plots/m_cr_symm_"+to_string(im)+".xmg");
-    cout<<"m_cr[r="<<rfw<<",m="<<im<<"]: "<<m_cr.ave_err()<<", symm: "<<m_cr_symm.ave_err()<<endl;
+    cout<<"m_cr[m="<<im<<",rfw="<<rfw<<"]: "<<m_cr.ave_err()<<", symm: "<<m_cr_symm.ave_err()<<endl;
   }
   
   djack_t deltam_cr;
