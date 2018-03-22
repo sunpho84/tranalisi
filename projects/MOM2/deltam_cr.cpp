@@ -70,28 +70,11 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
 	  //Include -i if asking the imaginary part
 	  if(ext_reim==1) c_coeff*=dcompl_t(0.0,-1.0);
 	  
-	  if(real(c_coeff)!=0 and imag(c_coeff)!=0) CRASH("Don't know what to do");
-	  
-	  //Find whether to take real or imaginary, and the coefficient
-	  size_t reim;
-	  double coeff;
-	  if(real(c_coeff)!=0)
-	    {
-	      reim=0;
-	      coeff=real(c_coeff);
-	    }
-	  else
-	    {
-	      reim=1;
-	      coeff=-imag(c_coeff);
-	    }
-	  
 	  const string name="M"+to_string(im)+"_R"+to_string(rbw)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string(rfw)+"_"+tag_fw;
 	  const int sign=((r==0)?1:rpar);
  	  cout<<" c_coeff: "<<c_coeff<<endl;
  	  cout<<" sign: "<<sign<<endl;
- 	  cout<<" coeff: "<<coeff<<endl;
-	  const djvec_t contr=get_contraction(name,ID,reim,tpar)*coeff*sign/(1+abs(rpar));
+	  const djvec_t contr=get_contraction(name,ID,c_coeff,tpar)*sign/(1+abs(rpar));
 	  contr.ave_err().write(dir_path+"/plots/"+ID+"_"+name+".xmg");
 	  res+=contr; //Warning, might be ill normalized if nr==1
 	}

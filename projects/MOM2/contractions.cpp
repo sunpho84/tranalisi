@@ -5,7 +5,7 @@
 #include <MOM2/contractions.hpp>
 #include <MOM2/perens.hpp>
 
-djvec_t perens_t::get_contraction(const string &combo,const string &ID,const size_t reim,const int tpar)
+djvec_t perens_t::get_contraction(const string &combo,const string &ID,const dcompl_t &c_coeff,const int tpar)
 {
   const size_t T=L[0];
   
@@ -23,13 +23,29 @@ djvec_t perens_t::get_contraction(const string &combo,const string &ID,const siz
   const auto pos=find(cID.begin(),cID.end(),ID);
   if(pos==cID.end()) CRASH("Unknown %s",ID.c_str());
   
+  if(real(c_coeff)!=0 and imag(c_coeff)!=0) CRASH("Don't know what to do");
+  
+  //Find whether to take real or imaginary, and the coefficient
+  size_t reim;
+  double coeff;
+  if(real(c_coeff)!=0)
+    {
+      reim=0;
+      coeff=real(c_coeff);
+    }
+  else
+    {
+      reim=1;
+      coeff=-imag(c_coeff);
+    }
+  
   //filter
   const size_t offset=ncols*distance(cID.begin(),pos)+reim;
   const size_t each=ncols*cID.size();
   const size_t base_nel=T;
   const size_t hw=data.size()/(base_nel*each);
   
-  return vec_filter(data,gslice(base_nel*offset,{hw,T},{each*base_nel,1})).symmetrized(tpar);
+  return coeff*vec_filter(data,gslice(base_nel*offset,{hw,T},{each*base_nel,1})).symmetrized(tpar);
 }
 
 djack_t perens_t::compute_meson_mass(const string& m1_tag,const string& m2_tag)
@@ -39,7 +55,7 @@ djack_t perens_t::compute_meson_mass(const string& m1_tag,const string& m2_tag)
   for(size_t r=0;r<nr;r++)
     {
       string name="M"+m1_tag+"_R"+to_string(r)+"_0_M"+m2_tag+"_R"+to_string(r)+"_0";
-      djvec_t contr=get_contraction(name,"P5P5",RE,EVN);
+      djvec_t contr=get_contraction(name,"P5P5",1.0,EVN);
       P5P5_corr+=contr;
     }
   P5P5_corr/=nr;

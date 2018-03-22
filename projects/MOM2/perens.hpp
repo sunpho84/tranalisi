@@ -307,7 +307,7 @@ struct perens_t
   
   djack_t compute_meson_mass(const string& m1_tag,const string& m2_tag);
   
-  djvec_t get_contraction(const string &combo,const string &ID,const size_t reim,const int tpar);
+  djvec_t get_contraction(const string &combo,const string &ID,const dcompl_t &coeff,const int tpar);
   
   djack_t compute_deltam_cr(const size_t im);
   
