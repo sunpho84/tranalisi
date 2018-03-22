@@ -16,8 +16,8 @@ const double tau3[2]={-1.0,+1.0}; //!< tau entering the propagator
 using vprop_t=vector<qprop_t>; //! vector of propagators
 using vjqprop_t=vector<jqprop_t>; //! vector of jackkniffed props
 
-enum                {_LO ,_FF ,_F ,_T ,_S ,_P };
-char kind_tag[6][4]={"LO","FF","F","T","S","P"};
+enum                      {_LO ,_FF ,_F ,_T ,_S ,_P };
+const char kind_tag[6][4]={"LO","FF","F","T","S","P"};
 
 //! holds a given m, r and momentum, for a fixed conf, for quarks
 class m_r_mom_conf_qprops_t
