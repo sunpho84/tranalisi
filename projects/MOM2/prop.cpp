@@ -282,11 +282,11 @@ void perens_t::clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &j
 #pragma omp parallel for
     for(size_t i=0;i<im_r_ind.max();i++)
       {
-	const vector<size_t> comps=im_r_ind(i);
-	const size_t r=comps[1];
+	// const vector<size_t> comps=im_r_ind(i);
+	// const size_t r=comps[1];
 	for(size_t ijack=0;ijack<=njacks;ijack++)
 	  jprops[i].QED[ijack]=
-	    jprops[i].PH[ijack]+tau3[r]*
+	    jprops[i].PH[ijack]-// +tau3[r]*
 	    deltam_cr[im_r_ind(i)[0]][ijack]*jprops[i].CT[ijack];
       }
 }
