@@ -98,16 +98,21 @@ public:
 	(*ps[itype])[icombo].clusterize(clust_size);
       }
     
+    const size_t nm=im_r_im_r_iop_ilistpGl_ind.max(0);
+    const size_t nr=im_r_im_r_iop_ilistpGl_ind.max(1);
+    const index_t im_r_ind({{"nm",nm},{"nr",nr}});
+    
 #pragma omp parallel for
     for(size_t i=0;i<im_r_im_r_iop_ilistpGl_ind.max();i++)
 	{
 	  const vector<size_t> comps=im_r_im_r_iop_ilistpGl_ind(i);
-	  const size_t im_in=comps[0],im_ou=comps[2];
+	  const size_t im_r_in=im_r_ind({comps[0],comps[1]});
+	  const size_t im_r_ou=im_r_ind({comps[2],comps[3]});
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    QED[i][ijack]=
 	      PH[i][ijack]
-	      -deltam_cr[im_in ][ijack]*CT_IN [i][ijack]
-	      -deltam_cr[im_ou][ijack]*CT_OU[i][ijack];
+	      -deltam_cr[im_r_in][ijack]*CT_IN[i][ijack]
+	      -deltam_cr[im_r_ou][ijack]*CT_OU[i][ijack];
 	}
   }
 };
