@@ -111,8 +111,8 @@ public:
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    QED[i][ijack]=
 	      PH[i][ijack]
-	      -deltam_cr[im_r_in][ijack]*CT_IN[i][ijack]
-	      -deltam_cr[im_r_ou][ijack]*CT_OU[i][ijack];
+	      +deltam_cr[im_r_in][ijack]*CT_IN[i][ijack]
+	      +deltam_cr[im_r_ou][ijack]*CT_OU[i][ijack];
 	}
   }
 };
