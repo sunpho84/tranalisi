@@ -48,7 +48,7 @@ perens_t& perens_t::get_deltam_cr()
 
 djack_t perens_t::compute_deltam_cr(const size_t im)
 {
-  //rpar is relative to non-inserted
+  //ext_reim and rpar is relative to non-inserted
   auto get=[im,this]
     (size_t kbw,size_t kfw,const string &ID,const size_t ext_reim,const int tpar,const int rpar,const int rdiff)
     {
@@ -117,18 +117,18 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
       const djvec_t P5P5_0M=get(_LO,_FF,"P5P5",RE,EVN,EVN,rdiff);
       const djvec_t P5P5_0T=get(_LO,_T,"P5P5",RE,EVN,EVN,rdiff);
       const djvec_t P5P5_0S=get(_LO,_S,"P5P5",RE,EVN,EVN,rdiff);
-      const djvec_t P5P5_0P=get(_LO,_P,"P5P5",IM,EVN,ODD,rdiff);
+      const djvec_t P5P5_0P=get(_LO,_P,"P5P5",RE,EVN,EVN,rdiff);
       //load corrections
-      //const djvec_t V0P5_LL=get(_F,_F,"V0P5",IM,ODD,EVN,rdiff);
-    const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,ODD,EVN,rdiff);
-      const djvec_t V0P5_0M=get(_LO,_FF,"V0P5",IM,ODD,EVN,rdiff);
-      //const djvec_t V0P5_M0=get(_FF,_LO,"V0P5",IM,ODD,EVN,rdiff);
-      const djvec_t V0P5_0T=get(_LO,_T,"V0P5",IM,ODD,EVN,rdiff);
-      const djvec_t V0P5_0S=get(_LO,_S,"V0P5",IM,ODD,EVN,rdiff);
-      //const djvec_t V0P5_T0=get(_T,_LO,"V0P5",IM,ODD,EVN,rdiff);
+      //const djvec_t V0P5_LL=get(_F,_F,"V0P5",IM,ODD,ODD,rdiff);
+      const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,ODD,ODD,rdiff);
+      const djvec_t V0P5_0M=get(_LO,_FF,"V0P5",IM,ODD,ODD,rdiff);
+      //const djvec_t V0P5_M0=get(_FF,_LO,"V0P5",IM,ODD,ODD,rdiff);
+      const djvec_t V0P5_0T=get(_LO,_T,"V0P5",IM,ODD,ODD,rdiff);
+      const djvec_t V0P5_0S=get(_LO,_S,"V0P5",IM,ODD,ODD,rdiff);
+      //const djvec_t V0P5_T0=get(_T,_LO,"V0P5",IM,ODD,ODD,rdiff);
       //load the derivative wrt counterterm
-      const djvec_t V0P5_0P=get(_LO,_P,"V0P5",RE,ODD,EVN,rdiff);
-      //const djvec_t V0P5_P0=get(_P,_LO,"V0P5",RE,ODD,EVN,rdiff);
+      const djvec_t V0P5_0P=get(_LO,_P,"V0P5",IM,ODD,ODD,rdiff);
+      //const djvec_t V0P5_P0=get(_P,_LO,"V0P5",IM,ODD,ODD,rdiff);
       
       //build numerator
       const djvec_t num_deltam_cr_corr=
