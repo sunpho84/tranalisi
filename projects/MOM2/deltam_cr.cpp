@@ -88,7 +88,9 @@ djack_t perens_t::compute_deltam_cr(const size_t im)
 	  
 	  const string name="M"+to_string(im)+"_R"+to_string(rbw)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string(rfw)+"_"+tag_fw;
 	  const int sign=((r==0)?1:rpar);
- 	  cout<<" Sign: "<<sign<<endl;
+ 	  cout<<" c_coeff: "<<c_coeff<<endl;
+ 	  cout<<" sign: "<<sign<<endl;
+ 	  cout<<" coeff: "<<coeff<<endl;
 	  const djvec_t contr=get_contraction(name,ID,reim,tpar)*coeff*sign/(1+abs(rpar));
 	  contr.ave_err().write(dir_path+"/plots/"+ID+"_"+name+".xmg");
 	  res+=contr; //Warning, might be ill normalized if nr==1
