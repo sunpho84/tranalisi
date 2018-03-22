@@ -309,7 +309,7 @@ struct perens_t
   
   djvec_t get_contraction(const string &combo,const string &ID,const dcompl_t &coeff,const int tpar);
   
-  djack_t compute_deltam_cr(const size_t im);
+  djack_t compute_deltam_cr(const size_t im,const size_t r);
   
   /////////////////////////////////////////////////////////////////
   
