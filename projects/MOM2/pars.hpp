@@ -64,7 +64,7 @@ namespace pars
   //! compute deltam_cr counterterm and subtract
   EXTERN_PARS bool use_deltam_cr_ct INIT_PARS_TO({true});
   //! compute deltam_cr using ropp or not
-  EXTERN_PARS bool use_deltam_cr_ropp INIT_PARS_TO({true});
+  EXTERN_PARS bool use_deltam_cr_ropp INIT_PARS_TO({false});
   //! use QED
   EXTERN_PARS bool use_QED INIT_PARS_TO({false});
   
