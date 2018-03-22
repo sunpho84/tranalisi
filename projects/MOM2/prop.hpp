@@ -49,7 +49,8 @@ public:
     if(ikind>=nmax) CRASH("cannot ask for coeff of kind %zu, maximum is %zu",ikind,nmax);
     
     if(ikind==5) //P
-      return dcompl_t(0,-tau3[r]);
+      return dcompl_t(0,-1// tau3[r]
+		      );
     else
       if(ikind==4) //S
 	return -1.0;
