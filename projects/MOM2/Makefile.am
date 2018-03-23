@@ -23,7 +23,7 @@ __top_builddir__bin_mom_SOURCES= \
 	%D%/analysis.cpp \
 	%D%/corrections.cpp \
 	%D%/contractions.cpp \
-	%D%/deltam_cr.cpp \
+	%D%/deltam.cpp \
 	%D%/geometry.cpp \
 	%D%/meson_mass.cpp \
 	%D%/mom.cpp \

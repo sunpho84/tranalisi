@@ -2,7 +2,7 @@
  #include <config.hpp>
 #endif
 
-#include <MOM2/deltam_cr.hpp>
+#include <MOM2/deltam.hpp>
 #include <MOM2/perens.hpp>
 #include <MOM2/timings.hpp>
 
