@@ -15,7 +15,7 @@ perens_t& perens_t::get_deltam()
   
   vector<tuple<djvec_t*,string,bool>> delta_tasks{
     {&deltam_cr,"cr",pars::use_deltam_cr_ct},
-    {&deltam_tm,"tw",pars::use_deltam_tm_ct}};
+    {&deltam_tm,"tm",pars::use_deltam_tm_ct}};
   
   for(auto &dtu : delta_tasks)
     {
