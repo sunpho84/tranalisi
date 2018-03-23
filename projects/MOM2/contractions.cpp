@@ -45,7 +45,10 @@ djvec_t perens_t::get_contraction(const string &combo,const string &ID,const dco
   const size_t base_nel=T;
   const size_t hw=data.size()/(base_nel*each);
   
-  return coeff*vec_filter(data,gslice(base_nel*offset,{hw,T},{each*base_nel,1})).symmetrized(tpar);
+  const djvec_t out=coeff*vec_filter(data,gslice(base_nel*offset,{hw,T},{each*base_nel,1}));
+  
+  if(tpar) return out.symmetrized(tpar);
+  else     return out;
 }
 
 djack_t perens_t::compute_meson_mass(const string& m1_tag,const string& m2_tag)

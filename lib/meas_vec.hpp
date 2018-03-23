@@ -131,7 +131,7 @@ public:
   vmeas_t& operator=(const meas_t &oth) {for(auto &it : *this) it=oth;return *this;}
   
   //! return a subset including end
-  vmeas_t subset(size_t beg,size_t end)
+  vmeas_t subset(size_t beg,size_t end) const
   {
     return (*this)[slice(std::max(size_t(0),beg),std::min(end-beg+1,this->size()),1)];
   }
@@ -165,7 +165,7 @@ public:
   }
   
   //! return the symmetric
-  vmeas_t symmetric()
+  vmeas_t symmetric() const
   {
     size_t s=this->size();
     vmeas_t out(s);
@@ -175,7 +175,7 @@ public:
   }
   
   //! return the averaged
-  vmeas_t symmetrized(int par=1)
+  vmeas_t symmetrized(int par=1) const
   {
     size_t nel=this->size();
     size_t nelh=nel/2;
