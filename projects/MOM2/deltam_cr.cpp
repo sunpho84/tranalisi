@@ -124,9 +124,11 @@ djack_t perens_t::compute_deltam_cr(const size_t im,const size_t rfw)
       const djvec_t den=b*f-c*e;
       const djvec_t dmu=(-a*f+c*d)/den;
       const djvec_t dmc=(-b*d+a*e)/den;
+      const djvec_t dZm=dmu/am[im];
       
       dmu.ave_err().write(dir_path+"/plots/dmu_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       dmc.ave_err().write(dir_path+"/plots/dmc_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+      dZm.ave_err().write(dir_path+"/plots/dZm_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       
       //build numerator
       const djvec_t num_deltam_cr_corr=
