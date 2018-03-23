@@ -92,11 +92,11 @@ djack_t perens_t::compute_deltam_cr(const size_t im,const size_t rfw)
       int rdiff=pars::use_deltam_cr_ropp;
       if(pars::use_deltam_cr_ropp and nr!=2) CRASH("Cannot use opposite r when computing deltam_cr if nr is not 2");
       
-      const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,EVN,rfw,rdiff);
-      const djvec_t P5P5_0M=get(_LO,_FF,"P5P5",RE,EVN,rfw,rdiff);
-      const djvec_t P5P5_0T=get(_LO,_T,"P5P5",RE,EVN,rfw,rdiff);
-      const djvec_t P5P5_0S=get(_LO,_S,"P5P5",RE,EVN,rfw,rdiff);
-      const djvec_t P5P5_0P=get(_LO,_P,"P5P5",RE,EVN,rfw,rdiff);
+      const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,UNK,rfw,rdiff);
+      const djvec_t P5P5_0M=get(_LO,_FF,"P5P5",RE,UNK,rfw,rdiff);
+      const djvec_t P5P5_0T=get(_LO,_T,"P5P5",RE,UNK,rfw,rdiff);
+      const djvec_t P5P5_0S=get(_LO,_S,"P5P5",RE,UNK,rfw,rdiff);
+      const djvec_t P5P5_0P=get(_LO,_P,"P5P5",RE,UNK,rfw,rdiff);
       //load corrections
       //const djvec_t V0P5_LL=get(_F,_F,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,UNK,rfw,rdiff);
@@ -110,7 +110,7 @@ djack_t perens_t::compute_deltam_cr(const size_t im,const size_t rfw)
       cout<<" sum: "<<V0P5_0P.sum().ave_err()<<endl;
       
       djvec_t ratM=(V0P5_0M+V0P5_0T)/V0P5_00;
-      djvec_t ratP=V0P5_0P/V0P5_00; 
+      djvec_t ratP=V0P5_0P/V0P5_00;
       djvec_t ratS=V0P5_0S/V0P5_00;
       
       ratM.ave_err().write(dir_path+"/plots/ratM"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
