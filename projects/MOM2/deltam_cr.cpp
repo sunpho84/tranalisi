@@ -109,13 +109,13 @@ djack_t perens_t::compute_deltam_cr(const size_t im,const size_t rfw)
       const djvec_t V0P5_0P=get(_LO,_P,"V0P5",IM,UNK,rfw,rdiff);
       cout<<" sum: "<<V0P5_0P.sum().ave_err()<<endl;
       
-      djvec_t ratM=(V0P5_0M+V0P5_0T)/V0P5_00;
-      djvec_t ratP=V0P5_0P/V0P5_00;
-      djvec_t ratS=V0P5_0S/V0P5_00;
+      // djvec_t ratM=(V0P5_0M+V0P5_0T)/V0P5_00;
+      // djvec_t ratP=V0P5_0P/V0P5_00;
+      // djvec_t ratS=V0P5_0S/V0P5_00;
       
-      ratM.ave_err().write(dir_path+"/plots/ratM"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-      ratP.ave_err().write(dir_path+"/plots/ratP"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-      ratS.ave_err().write(dir_path+"/plots/ratS"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+      // ratM.ave_err().write(dir_path+"/plots/ratM"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+      // ratP.ave_err().write(dir_path+"/plots/ratP"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+      // ratS.ave_err().write(dir_path+"/plots/ratS"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       
       //const djvec_t V0P5_P0=get(_P,_LO,"V0P5",IM,UNK,rfw,rdiff);
       
