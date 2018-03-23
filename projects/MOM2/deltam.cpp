@@ -103,7 +103,6 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       if(ext_reim==1) c_coeff*=dcompl_t(0.0,-1.0);
       
       const string name="M"+to_string(im)+"_R"+to_string(rbw)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string(rfw)+"_"+tag_fw;
-      cout<<" c_coeff: "<<c_coeff<<endl;
       const djvec_t res=get_contraction(name,ID,c_coeff,tpar);
       res.ave_err().write(dir_path+"/plots/"+ID+"_"+name+".xmg");
       
