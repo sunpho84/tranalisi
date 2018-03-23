@@ -123,7 +123,7 @@ djack_t perens_t::compute_deltam_cr(const size_t im,const size_t rfw)
 	//+V0P5_P0
 	-V0P5_0P;
       const djvec_t deltam_cr_corr=num_deltam_cr_corr/den_deltam_cr_corr;
-      deltam_cr=constant_fit(deltam_cr_corr,tmin,tmax,dir_path+"/plots/deltam_cr.xmg");
+      deltam_cr=constant_fit(deltam_cr_corr,tmin,tmax,dir_path+"/plots/deltam_cr_rfw"+to_string(rfw)+".xmg");
     }
   
   return deltam_cr;
