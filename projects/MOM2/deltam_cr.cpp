@@ -129,6 +129,7 @@ djack_t perens_t::compute_deltam_cr(const size_t im,const size_t rfw)
       dmu.ave_err().write(dir_path+"/plots/dmu_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       dmc.ave_err().write(dir_path+"/plots/dmc_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       dZm.ave_err().write(dir_path+"/plots/dZm_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+      dZm.symmetrized().ave_err().write(dir_path+"/plots/dZm_m"+to_string(im)+"_rfw"+to_string(rfw)+"_symm.xmg");
       
       //build numerator
       const djvec_t num_deltam_cr_corr=
