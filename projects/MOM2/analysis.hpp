@@ -27,7 +27,7 @@ inline void compute_or_load_all()
       .read_pars(name)
       .set_pars_for_scratch()
       .set_indices()
-      .get_deltam_cr()
+      .get_deltam()
       .get_meson_mass()
       .allocate()
       .read_or_compute();

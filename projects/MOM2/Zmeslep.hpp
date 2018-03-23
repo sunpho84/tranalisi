@@ -15,9 +15,9 @@
 namespace meslep
 {
   //these are the charges in the lagrangian
-  const double ql=-1.0;     //!< the program simulates muon *antiparticle*
+  const double ql=-1.0;        //!< the program simulates muon *antiparticle*
   const double q_in=+2.0/3.0;  //!< charge of the quark which comes into the vertex
-  const double q_ou=-1.0/3.0; //!< charge of the quark which comes out the vertex
+  const double q_ou=-1.0/3.0;  //!< charge of the quark which comes out the vertex
   
   struct mesloop_t
   {
@@ -64,16 +64,17 @@ class jmeslep_vert_t
   //! return a list of pointers to all internal data
   vector<vector<jqprop_t>*> get_all_ptrs()
   {
-    return {&LO,&PH,&CT_IN,&CT_OU,&S,&QED};
+    return {&LO,&PH,&CR_CT_IN,&CR_CT_OU,&TM_CT_IN,&TM_CT_OU,&QED};
   }
   
 public:
   vector<jqprop_t> LO; //!< jackkniffed mesolep vertex, no photon
   
-  vector<jqprop_t> PH;     //!< jackkniffed vertex, nasty + self + tad
-  vector<jqprop_t> CT_IN;  //!< jackkniffed meson-like vertex, counterterm on line IN
-  vector<jqprop_t> CT_OU;  //!< jackkniffed meson-like vertex, counterterm on line OUT
-  vector<jqprop_t> S;      //!< jackkniffed meson-like vertex, S insertion
+  vector<jqprop_t> PH;        //!< jackkniffed vertex, nasty + self + tad
+  vector<jqprop_t> CR_CT_IN;  //!< jackkniffed meson-like vertex, critical counterterm on line IN
+  vector<jqprop_t> CR_CT_OU;  //!< jackkniffed meson-like vertex, critical counterterm on line OUT
+  vector<jqprop_t> TM_CT_IN;  //!< jackkniffed meson-like vertex, twisted counterterm on line IN
+  vector<jqprop_t> TM_CT_OU;  //!< jackkniffed meson-like vertex, twisted counterterm on line OUT
   
   vector<jqprop_t> QED; //!< full correction
   
@@ -83,7 +84,7 @@ public:
   }
   
   //! clusterize
-  void clusterize_all(const size_t clust_size,const index_t &im_r_im_r_iop_ilistpGl_ind,const djvec_t &deltam_cr)
+  void clusterize_all(const size_t clust_size,const index_t &im_r_im_r_iop_ilistpGl_ind,const djvec_t &deltam_cr,const djvec_t &deltam_tm)
   {
     vector<vector<jqprop_t>*> ps=get_all_ptrs();
     index_t ind({{"type",ps.size()},{"icombo",ps[0]->size()}});
@@ -111,8 +112,11 @@ public:
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    QED[i][ijack]=
 	      PH[i][ijack]
-	      +deltam_cr[im_r_in][ijack]*CT_IN[i][ijack]
-	      +deltam_cr[im_r_ou][ijack]*CT_OU[i][ijack];
+	      +deltam_cr[im_r_in][ijack]*CR_CT_IN[i][ijack]
+	      +deltam_cr[im_r_ou][ijack]*CR_CT_OU[i][ijack]
+	      +deltam_tm[im_r_in][ijack]*TM_CT_IN[i][ijack]
+	      +deltam_tm[im_r_ou][ijack]*TM_CT_OU[i][ijack]
+	      ;
 	}
   }
 };

@@ -106,10 +106,10 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vecto
 	      {&jbil.PH[im_r_im_r_igam],&p_in.LO,&p_ou.FF},
 	      {&jbil.PH[im_r_im_r_igam],&p_in.T,&p_ou.LO},
 	      {&jbil.PH[im_r_im_r_igam],&p_in.LO,&p_ou.T},
-	      {&jbil.CT_in[im_r_im_r_igam],&p_in.P,&p_ou.LO},
-	      {&jbil.CT_ou[im_r_im_r_igam],&p_in.LO,&p_ou.P},
-	      {&jbil.S[im_r_im_r_igam],&p_in.S,&p_ou.LO},
-	      {&jbil.S[im_r_im_r_igam],&p_in.LO,&p_ou.S}
+	      {&jbil.CR_CT_in[im_r_im_r_igam],&p_in.P,&p_ou.LO},
+	      {&jbil.CR_CT_ou[im_r_im_r_igam],&p_in.LO,&p_ou.P},
+	      {&jbil.TM_CT_in[im_r_im_r_igam],&p_in.S,&p_ou.LO},
+	      {&jbil.TM_CT_ou[im_r_im_r_igam],&p_in.LO,&p_ou.S}
 	    }))
 	  list.push_back(o);
       
@@ -167,7 +167,7 @@ void perens_t::mom_compute_bil()
       clust_time.start();
       clusterize_all_mr_jackkniffed_qprops(jprops1);
       clusterize_all_mr_jackkniffed_qprops(jprops2);
-      jverts.clusterize_all(pars::use_QED,clust_size,im_r_im_r_igam_ind,deltam_cr);
+      jverts.clusterize_all(pars::use_QED,clust_size,im_r_im_r_igam_ind,deltam_cr,deltam_tm);
       clust_time.stop();
       
       vector<jqprop_t> jprop_inv1; //!< inverse propagator1

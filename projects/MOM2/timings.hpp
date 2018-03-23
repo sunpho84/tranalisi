@@ -23,7 +23,7 @@ EXTERN_TIMINGS stopwatch_t &clust_time INIT_TIMINGS_TO(ts.add("clusterize"));
 EXTERN_TIMINGS stopwatch_t &invert_time INIT_TIMINGS_TO(ts.add("invert the props"));
 EXTERN_TIMINGS stopwatch_t &proj_time INIT_TIMINGS_TO(ts.add("project bilinears"));
 EXTERN_TIMINGS stopwatch_t &Zq_time INIT_TIMINGS_TO(ts.add("compute Zq"));
-EXTERN_TIMINGS stopwatch_t &deltam_cr_time INIT_TIMINGS_TO(ts.add("compute deltam_cr"));
+EXTERN_TIMINGS stopwatch_t &deltam_time INIT_TIMINGS_TO(ts.add("compute deltam"));
 EXTERN_TIMINGS stopwatch_t &meson_mass_time INIT_TIMINGS_TO(ts.add("compute meson mass"));
 
 #undef EXTERN_TIMINGS

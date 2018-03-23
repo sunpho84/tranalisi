@@ -94,7 +94,7 @@ NF                                  DEBUG_PRINTF("Found NF\n");return TK_NF;
 PrintEachMom                        DEBUG_PRINTF("Found PrintEachMom\n");return TK_PRINT_EACH_MOM;
 Scheme                              DEBUG_PRINTF("Found Scheme\n");return TK_SCHEME;
 UseDeltamCrCt                       DEBUG_PRINTF("Found UseDeltamCrCt\n");return TK_USE_DELTAM_CR_CT;
-UseDeltamCrRopp                     DEBUG_PRINTF("Found UseDeltamCrRopp\n");return TK_USE_DELTAM_CR_ROPP;
+UseDeltamTmCt                       DEBUG_PRINTF("Found UseDeltamTmCt\n");return TK_USE_DELTAM_CR_CT;
 UseQED                              DEBUG_PRINTF("Found UseQED\n");return TK_USE_QED;
 
 Average                             DEBUG_PRINTF("Found Average\n");return TK_AVERAGE;

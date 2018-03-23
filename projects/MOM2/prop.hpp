@@ -42,7 +42,7 @@ public:
   static size_t nprop_kind()
   {
     if(pars::use_QED) return NPROP_WITH_QED;
-    else        return 1;
+    else              return 1;
   }
   
   //! return the coefficient for reading the kind
@@ -69,7 +69,7 @@ class jm_r_mom_qprops_t
   {
     vector<jqprop_t*> out={&LO};
     if(use_QED)
-      for(auto &p : {&PH,&CT,&S,&QED})
+      for(auto &p : {&PH,&CR_CT,&TM_CT,&QED})
 	out.push_back(p);
     return out;
   }
@@ -77,10 +77,10 @@ class jm_r_mom_qprops_t
 public:
   jqprop_t LO; //!< propagator with no photon, given momentum, all m and r
   
-  jqprop_t PH;  //!< propagator with 2 photons, Tadpole
-  jqprop_t CT;  //!< propagator with Pseudoscalar inserion
-  jqprop_t S;   //!< propagator with Scalar insertion
-  jqprop_t QED; //!< propagator with 2 photons, Tadpole, Pseudoscalar and possibly Scalar insertions
+  jqprop_t PH;     //!< propagator with 2 photons, Tadpole
+  jqprop_t CR_CT;  //!< propagator with Pseudoscalar insertion
+  jqprop_t TM_CT;  //!< propagator with Scalar insertion
+  jqprop_t QED;    //!< propagator with 2 photons, Tadpole, Pseudoscalar and Scalar insertions
   
   void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props);
   

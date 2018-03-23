@@ -63,8 +63,8 @@ namespace pars
   EXTERN_PARS reno_scheme::type_t scheme INIT_PARS_TO({reno_scheme::RI_MOM});
   //! compute deltam_cr counterterm and subtract
   EXTERN_PARS bool use_deltam_cr_ct INIT_PARS_TO({true});
-  //! compute deltam_cr using ropp or not
-  EXTERN_PARS bool use_deltam_cr_ropp INIT_PARS_TO({false});
+  //! compute deltam_tm counterterm and subtract
+  EXTERN_PARS bool use_deltam_tm_ct INIT_PARS_TO({true});
   //! use QED
   EXTERN_PARS bool use_QED INIT_PARS_TO({false});
   

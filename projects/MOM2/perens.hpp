@@ -168,14 +168,20 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
+  //! correction to m_cr
   djvec_t deltam_cr;
   
+  //! correction to m_tm
+  djvec_t deltam_tm;
+  
+  //! mass of pseudoscalar meson
   djvec_t meson_mass;
   
+  //! mass of sea pseudoscalar meson
   djack_t meson_mass_sea;
   
-  //! read or compute and write deltam_cr
-  perens_t& get_deltam_cr();
+  //! read or compute and write deltam
+  perens_t& get_deltam();
   
   //! read or compute and write meson mass
   perens_t& get_meson_mass();
@@ -309,7 +315,7 @@ struct perens_t
   
   djvec_t get_contraction(const string &combo,const string &ID,const dcompl_t &coeff,const int tpar);
   
-  djack_t compute_deltam_cr(const size_t im,const size_t r);
+  void compute_deltam(const size_t im,const size_t r);
   
   /////////////////////////////////////////////////////////////////
   

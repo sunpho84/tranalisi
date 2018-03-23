@@ -87,12 +87,12 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const ve
 	 {&j.PH,&mesloop.LO,&p_in.F,&p_ou.F}, //exchange
 	 //
 	 //
-	 {&j.CT_IN,&mesloop.LO,&p_in.P,&p_ou.LO}, //counterterm_in
-	 {&j.CT_OU,&mesloop.LO,&p_in.LO,&p_ou.P}, //counterterm_ou
+	 {&j.CR_CT_IN,&mesloop.LO,&p_in.P,&p_ou.LO}, //critical counterterm_in
+	 {&j.CR_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.P}, //critical counterterm_ou
 	 //
 	 //
-	 {&j.S,&mesloop.LO,&p_in.S,&p_ou.LO}, //mass_in
-	 {&j.S,&mesloop.LO,&p_in.LO,&p_ou.S}  //mass_ou
+	 {&j.TM_CT_IN,&mesloop.LO,&p_in.S,&p_ou.LO}, //twisted counterterm_in
+	 {&j.TM_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.S}, //twisted counterterm_ou
 	 };
        
        const Zop_t &zop=zops[iop];
@@ -249,7 +249,7 @@ void perens_t::mom_compute_meslep()
       clust_time.start();
       clusterize_all_mr_jackkniffed_qprops(jprops_in);
       clusterize_all_mr_jackkniffed_qprops(jprops_ou);
-      jmeslep_verts.clusterize_all(clust_size,im_r_im_r_iop_ilistpGl_ind,deltam_cr);
+      jmeslep_verts.clusterize_all(clust_size,im_r_im_r_iop_ilistpGl_ind,deltam_cr,deltam_tm);
       clust_time.stop();
       
       vector<jqprop_t> jprop_inv_in;      //!< inverse propagator_in

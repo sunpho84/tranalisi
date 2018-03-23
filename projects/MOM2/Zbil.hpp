@@ -33,7 +33,7 @@ class jbil_vert_t
   {
     vector<vector<jqprop_t>*> out={&LO};
     if(use_QED)
-      for(auto &p : {&PH,&CT_in,&CT_ou,&S,&QED})
+      for(auto &p : {&PH,&CR_CT_in,&CR_CT_ou,&TM_CT_in,&TM_CT_ou,&QED})
 	out.push_back(p);
     return out;
   }
@@ -41,17 +41,18 @@ class jbil_vert_t
 public:
   vector<jqprop_t> LO; //!< jackkniffed vertex
   
-  vector<jqprop_t> PH;    //!< jackkniffed vertex with all photons
-  vector<jqprop_t> CT_in; //!< jackkniffed vertex with counterterm on line in
-  vector<jqprop_t> CT_ou; //!< jackkniffed vertex with counterterm on line out
-  vector<jqprop_t> S;     //!< jackkniffed S vertex
-  vector<jqprop_t> QED;   //!< full correction
+  vector<jqprop_t> PH;       //!< jackkniffed vertex with all photons
+  vector<jqprop_t> CR_CT_in; //!< jackkniffed vertex with critical counterterm on line in
+  vector<jqprop_t> CR_CT_ou; //!< jackkniffed vertex with critical counterterm on line out
+  vector<jqprop_t> TM_CT_in; //!< jackkniffed vertex with twisted counterterm on line in
+  vector<jqprop_t> TM_CT_ou; //!< jackkniffed vertex with twisted counterterm on line out
+  vector<jqprop_t> QED;      //!< full correction
   
   jbil_vert_t(size_t size,bool use_QED)
   {for(auto &p : get_all_ptrs(use_QED)) p->resize(size);}
   
   //! clusterize
-  void clusterize_all(bool use_QED,size_t clust_size,const index_t &im_r_im_r_igam_ind,const djvec_t &deltam_cr)
+  void clusterize_all(bool use_QED,size_t clust_size,const index_t &im_r_im_r_igam_ind,const djvec_t &deltam_cr,const djvec_t &deltam_tm)
   {
     vector<vector<jqprop_t>*> ps=get_all_ptrs(use_QED);
     index_t ind({{"type",ps.size()},{"icombo",ps[0]->size()}});
@@ -80,8 +81,10 @@ public:
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    QED[i][ijack]=
 	      PH[i][ijack]
-	      +deltam_cr[im_r_in][ijack]*CT_in[i][ijack]
-	      +deltam_cr[im_r_ou][ijack]*CT_ou[i][ijack]
+	      +deltam_cr[im_r_in][ijack]*CR_CT_in[i][ijack]
+	      +deltam_cr[im_r_ou][ijack]*CR_CT_ou[i][ijack]
+	      +deltam_tm[im_r_in][ijack]*TM_CT_in[i][ijack]
+	      +deltam_tm[im_r_ou][ijack]*TM_CT_ou[i][ijack]
 	      ;
 	}
   }
