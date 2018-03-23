@@ -227,18 +227,24 @@ perens_t perens_t::average_r() const
 perens_t perens_t::val_chir_extrap() const
 {
   perens_t out=*this;
-  out.nm=1;
-  out.am={0.0};
   
-  out.set_indices();
-  out.allocate();
-  
-  val_chir_extrap_Zq(out);
-  val_chir_extrap_Zbil(out);
-  val_chir_extrap_Zmeslep(out);
-  
-  out.compute_Zbil();
-  if(pars::compute_meslep) out.compute_Zmeslep();
+  if(nm>1)
+    {
+      out.nm=1;
+      out.am={0.0};
+      
+      out.set_indices();
+      out.allocate();
+      
+      val_chir_extrap_Zq(out);
+      val_chir_extrap_Zbil(out);
+      val_chir_extrap_Zmeslep(out);
+      
+      out.compute_Zbil();
+      if(pars::compute_meslep) out.compute_Zmeslep();
+    }
+  else
+    cout<<"Skipping Valence chiral extrapolation"<<endl;
   
   return out;
 }
