@@ -43,6 +43,21 @@ perens_t& perens_t::get_deltam()
 	}
     }
   
+  //Prepare plot
+  for(auto &dtu : delta_tasks)
+    {
+      djvec_t &deltam=*get<0>(dtu);
+      const string &tag=get<1>(dtu);
+      
+      grace_file_t plot(dir_path+"/plots/deltam_"+tag+"_vs_am.xmg");
+      
+      for(size_t r=0;r<nr;r++)
+	{
+	  plot.new_data_set();
+	  for(size_t im=0;im<nm;im++) plot.write_ave_err(am[im],deltam[im_r_ind({im,r})].ave_err());
+	}
+    }
+  
   //Print, putting it to zero if not asked to use
   for(size_t im=0;im<nm;im++)
     for(size_t r=0;r<nr;r++)
