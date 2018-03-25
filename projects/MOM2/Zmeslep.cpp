@@ -338,7 +338,7 @@ void perens_t::compute_Zmeslep()
 	      const size_t ilinmom_in=meslepmoms()[imeslepmom][1];
 	      const size_t ilinmom_ou=meslepmoms()[imeslepmom][2];
 	      const size_t im_r_in_ilinmom_in=im_r_ilinmom_ind({im_in,r_in,ilinmom_in});
-	      const size_t im_r_ou_ilinmom_ou=im_r_ilinmom_ind({im_in,r_in,ilinmom_ou});
+	      const size_t im_r_ou_ilinmom_ou=im_r_ilinmom_ind({im_ou,r_ou,ilinmom_ou});
 	      
 	      for(size_t ijack=0;ijack<=njacks;ijack++)
 		{
@@ -354,6 +354,8 @@ void perens_t::compute_Zmeslep()
 			//Gamma LO and correction
 			Gamma_meslep_combo(iop,iproj)=pr_meslep[im_r_im_r_iop_iproj_imeslepmom][ijack];
 			if(pars::use_QED) Gamma_QED_meslep_combo(iop,iproj)=pr_meslep_QED[im_r_im_r_iop_iproj_imeslepmom][ijack];
+
+			cout<<"Debug pr_meslep_QED["<<im_r_im_r_iop_iproj_imeslepmom<<"]["<<ijack<<"]: "<<pr_meslep_QED[im_r_im_r_iop_iproj_imeslepmom][ijack]<<endl;
 		      }
 		  
 		  const Zmeslep_t Gamma_meslep_combo_inv=Gamma_meslep_combo.inverse();
@@ -363,6 +365,8 @@ void perens_t::compute_Zmeslep()
 		    0.5*
 		    (Zq_sig1_QED[im_r_in_ilinmom_in][ijack]/Zq_sig1[im_r_in_ilinmom_in][ijack]*sqr(meslep::q_in)+
 		     Zq_sig1_QED[im_r_ou_ilinmom_ou][ijack]/Zq_sig1[im_r_ou_ilinmom_ou][ijack]*sqr(meslep::q_ou));
+		  
+		  cout<<"Debug Zq_QED_contr: "<<Zq_QED_contr<<endl;
 		  
 		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
 		  auto Z_QED=Z_LO*(Zq_QED_contr*Zmeslep_t::Identity()-Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
@@ -474,7 +478,7 @@ void perens_t::val_chir_extrap_Zmeslep(perens_t &out) const
 	    const string &tag=t.tag;
 	    
 	    //check if we need to subtract the pole
-	    const bool sub_pole=false;//(iZmeslep==iZS or iZmeslep==iZP);
+	    const bool sub_pole=(iop==2 or iop==3 or iproj==2 or iproj==3);
 	    const size_t coeff_to_take=(sub_pole?1:0);
 	    
 	    //open the plot file if needed
@@ -513,7 +517,7 @@ void perens_t::val_chir_extrap_Zmeslep(perens_t &out) const
 		      auto xminmax=minmax_element(x.begin(),x.end());
 		      double xmin=*xminmax.first*0.9;
 		      double xmax=*xminmax.second*1.1;
-		      write_fit_plot(*plot,xmin,xmax,[&coeffs](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		      write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
 		      plot->write_ave_err(0.0,pr_chir[iout].ave_err());
 		    }
 		}
