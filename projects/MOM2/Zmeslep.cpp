@@ -354,8 +354,6 @@ void perens_t::compute_Zmeslep()
 			//Gamma LO and correction
 			Gamma_meslep_combo(iop,iproj)=pr_meslep[im_r_im_r_iop_iproj_imeslepmom][ijack];
 			if(pars::use_QED) Gamma_QED_meslep_combo(iop,iproj)=pr_meslep_QED[im_r_im_r_iop_iproj_imeslepmom][ijack];
-
-			cout<<"Debug pr_meslep_QED["<<im_r_im_r_iop_iproj_imeslepmom<<"]["<<ijack<<"]: "<<pr_meslep_QED[im_r_im_r_iop_iproj_imeslepmom][ijack]<<endl;
 		      }
 		  
 		  const Zmeslep_t Gamma_meslep_combo_inv=Gamma_meslep_combo.inverse();
@@ -365,8 +363,6 @@ void perens_t::compute_Zmeslep()
 		    0.5*
 		    (Zq_sig1_QED[im_r_in_ilinmom_in][ijack]/Zq_sig1[im_r_in_ilinmom_in][ijack]*sqr(meslep::q_in)+
 		     Zq_sig1_QED[im_r_ou_ilinmom_ou][ijack]/Zq_sig1[im_r_ou_ilinmom_ou][ijack]*sqr(meslep::q_ou));
-		  
-		  cout<<"Debug Zq_QED_contr: "<<Zq_QED_contr<<endl;
 		  
 		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
 		  auto Z_QED=Z_LO*(Zq_QED_contr*Zmeslep_t::Identity()-Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
