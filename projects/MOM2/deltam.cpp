@@ -124,27 +124,60 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
     {
       int rdiff=0;
       
+      //load corrections
       const djvec_t P5P5_LL=get(_F,_F,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_0M=get(_LO,_FF,"P5P5",RE,UNK,rfw,rdiff);
+      const djvec_t P5P5_M0=get(_FF,_LO,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_0T=get(_LO,_T,"P5P5",RE,UNK,rfw,rdiff);
-      const djvec_t P5P5_0S=get(_LO,_S,"P5P5",RE,UNK,rfw,rdiff);
+      const djvec_t P5P5_T0=get(_T,_LO,"P5P5",RE,UNK,rfw,rdiff);
+      //load the derivative wrt counterterm
       const djvec_t P5P5_0P=get(_LO,_P,"P5P5",RE,UNK,rfw,rdiff);
+      const djvec_t P5P5_P0=get(_P,_LO,"P5P5",RE,UNK,rfw,rdiff);
+      //load the derivative wrt mass
+      const djvec_t P5P5_0S=get(_LO,_S,"P5P5",RE,UNK,rfw,rdiff);
+      const djvec_t P5P5_S0=get(_S,_LO,"P5P5",RE,UNK,rfw,rdiff);
+      
       //load corrections
       const djvec_t V0P5_LL=get(_F,_F,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_0M=get(_LO,_FF,"V0P5",IM,UNK,rfw,rdiff);
-      //const djvec_t V0P5_M0=get(_FF,_LO,"V0P5",IM,UNK,rfw,rdiff);
+      const djvec_t V0P5_M0=get(_FF,_LO,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_0T=get(_LO,_T,"V0P5",IM,UNK,rfw,rdiff);
-      const djvec_t V0P5_0S=get(_LO,_S,"V0P5",IM,UNK,rfw,rdiff);
-      //const djvec_t V0P5_T0=get(_T,_LO,"V0P5",IM,UNK,rfw,rdiff);
+      const djvec_t V0P5_T0=get(_T,_LO,"V0P5",IM,UNK,rfw,rdiff);
       //load the derivative wrt counterterm
       const djvec_t V0P5_0P=get(_LO,_P,"V0P5",IM,UNK,rfw,rdiff);
+      const djvec_t V0P5_P0=get(_P,_LO,"V0P5",IM,UNK,rfw,rdiff);
+      //load the derivative wrt mass
+      const djvec_t V0P5_0S=get(_LO,_S,"V0P5",IM,UNK,rfw,rdiff);
+      const djvec_t V0P5_S0=get(_S,_LO,"V0P5",IM,UNK,rfw,rdiff);
       
-      //const djvec_t V0P5_P0=get(_P,_LO,"V0P5",IM,UNK,rfw,rdiff);
-      
-      const djvec_t a=2*(V0P5_0T+V0P5_0M)+V0P5_LL,b=2*V0P5_0S,c=2*V0P5_0P;
-      const djvec_t d=2*(P5P5_0T+P5P5_0M)+P5P5_LL,e=2*P5P5_0S,f=2*P5P5_0P;
+      const djvec_t
+	a=
+	V0P5_0T+
+	V0P5_0M+
+	V0P5_T0+
+	V0P5_M0+
+	V0P5_LL,
+	b=
+	V0P5_0S+
+	V0P5_S0,
+	c=
+	V0P5_0P+
+	V0P5_P0;
+      const djvec_t
+	d=
+	P5P5_0T+
+	P5P5_0M+
+	P5P5_T0+
+	P5P5_M0+
+	P5P5_LL,
+	e=
+	P5P5_0S+
+	P5P5_S0,
+	f=
+	P5P5_0P+
+	P5P5_P0;
       const djvec_t den=b*f-c*e;
       const djvec_t deltam_tm_corr=djvec_t((-a*f+c*d)/den).symmetrized();
       const djvec_t deltam_cr_corr=djvec_t((-b*d+a*e)/den).symmetrized();
