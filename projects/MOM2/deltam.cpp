@@ -143,8 +143,8 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       
       //const djvec_t V0P5_P0=get(_P,_LO,"V0P5",IM,UNK,rfw,rdiff);
       
-      const djvec_t a=2*(V0P5_0T+V0P5_0M)+V0P5_LL,b=V0P5_0S,c=V0P5_0P;
-      const djvec_t d=2*(P5P5_0T+P5P5_0M)+P5P5_LL,e=P5P5_0S,f=P5P5_0P;
+      const djvec_t a=2*(V0P5_0T+V0P5_0M)-V0P5_LL,b=2*V0P5_0S,c=2*V0P5_0P;
+      const djvec_t d=2*(P5P5_0T+P5P5_0M)-P5P5_LL,e=2*P5P5_0S,f=2*P5P5_0P;
       const djvec_t den=b*f-c*e;
       const djvec_t deltam_tm_corr=djvec_t((-a*f+c*d)/den).symmetrized();
       const djvec_t deltam_cr_corr=djvec_t((-b*d+a*e)/den).symmetrized();
