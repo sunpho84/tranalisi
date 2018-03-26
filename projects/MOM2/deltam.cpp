@@ -124,6 +124,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
     {
       int rdiff=0;
       
+      const djvec_t P5P5_LL=get(_F,_F,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_0M=get(_LO,_FF,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_0T=get(_LO,_T,"P5P5",RE,UNK,rfw,rdiff);
@@ -142,8 +143,8 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       
       //const djvec_t V0P5_P0=get(_P,_LO,"V0P5",IM,UNK,rfw,rdiff);
       
-      const djvec_t a=V0P5_0T+V0P5_0M,b=V0P5_0S,c=V0P5_0P;
-      const djvec_t d=P5P5_0T+P5P5_0M,e=P5P5_0S,f=P5P5_0P;
+      const djvec_t a=2*(V0P5_0T+V0P5_0M)+V0P5_LL,b=V0P5_0S,c=V0P5_0P;
+      const djvec_t d=2*(P5P5_0T+P5P5_0M)+P5P5_LL,e=P5P5_0S,f=P5P5_0P;
       const djvec_t den=b*f-c*e;
       const djvec_t deltam_tm_corr=djvec_t((-a*f+c*d)/den).symmetrized();
       const djvec_t deltam_cr_corr=djvec_t((-b*d+a*e)/den).symmetrized();
