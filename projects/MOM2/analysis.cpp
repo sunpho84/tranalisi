@@ -53,13 +53,13 @@ void average(const string out,const string in1,const string in2)
     {
       size_t imr=dout.im_r_ind({im,r});
       cout<<"deltam_cr[m="<<im<<",r="<<r<<"]: "<<
-	smart_print(dout.deltam_cr[imr].ave_err())<<" = ("<<
+	smart_print(dout.deltam_cr[imr].ave_err())<<" = [ "<<
 	smart_print(din1.deltam_cr[imr].ave_err())<<" + "<<
-	smart_print(din2.deltam_cr[imr].ave_err())<<")/2.0"<<endl;
+	smart_print(din2.deltam_cr[imr].ave_err())<<" )/2.0"<<endl;
       cout<<"deltam_tm[m="<<im<<",r="<<r<<"]: "<<
-	smart_print(dout.deltam_tm[imr].ave_err())<<" = ("<<
+	smart_print(dout.deltam_tm[imr].ave_err())<<" = [ "<<
 	smart_print(din1.deltam_tm[imr].ave_err())<<" + "<<
-	smart_print(din2.deltam_tm[imr].ave_err())<<")/2.0"<<endl;
+	smart_print(din2.deltam_tm[imr].ave_err())<<" ]/2.0"<<endl;
     }
   
   for(size_t im1=0;im1<dout.nm;im1++)
@@ -67,11 +67,12 @@ void average(const string out,const string in1,const string in2)
       {
 	size_t i=dout.im_im_ind({im1,im2});
 	cout<<"meson_mass[m1="<<im1<<",m2="<<im2<<"]: "<<
-	  smart_print(dout.meson_mass[i].ave_err())<<" = ("<<
+	  smart_print(dout.meson_mass[i].ave_err())<<" = ["<<
 	  smart_print(din1.meson_mass[i].ave_err())<<" + "<<
-	  smart_print(din2.meson_mass[i].ave_err())<<")/2.0"<<endl;
+	  smart_print(din2.meson_mass[i].ave_err())<<"] /2.0"<<endl;
       }
-  cout<<"meson_mass_sea: "<<dout.meson_mass_sea.ave_err()<<" = "<<din1.meson_mass_sea.ave_err()<<" + "<<din2.meson_mass_sea.ave_err()<<endl;
+  cout<<"meson_mass_sea: "<<
+    dout.meson_mass_sea.ave_err()<<" = "<<din1.meson_mass_sea.ave_err()<<" + "<<din2.meson_mass_sea.ave_err()<<endl;
   
   //remove from the list
   for(auto in : {in1,in2})
