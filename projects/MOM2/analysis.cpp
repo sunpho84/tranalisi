@@ -128,6 +128,7 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
 	string plot_path="";
 	if(icombo==100) plot_path=out_name+"/plots/sea_chirextr_"+v.tag+"_combo_"+to_string(icombo)+".xmg";
 	djvec_t coeffs=poly_fit(x,y,1);
+	if(std::isnan(coeffs[0][0])) coeffs=0.0;
 	(*v.out)[icombo]=coeffs[0];
 	
 	if(plot_path!="")
