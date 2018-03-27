@@ -518,13 +518,4 @@ void perens_t::val_chir_extrap_Zmeslep(perens_t &out) const
 		}
 	    if(plot) delete plot;
 	  }
-  
-  cout<<"pr_meslep"<<endl;
-  cout<<out.pr_meslep.ave_err()<<endl;
-  cout<<"Zmeslep"<<endl;
-  cout<<out.Zmeslep.ave_err()<<endl;
-  cout<<"pr_meslep_QED"<<endl;
-  cout<<out.pr_meslep_QED.ave_err()<<endl;
-  cout<<"Zmeslep_QED"<<endl;
-  cout<<out.Zmeslep_QED.ave_err()<<endl;
 }

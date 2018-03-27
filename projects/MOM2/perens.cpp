@@ -241,7 +241,7 @@ perens_t perens_t::val_chir_extrap() const
       val_chir_extrap_Zmeslep(out);
       
       out.compute_Zbil();
-      if(pars::compute_meslep) out.compute_Zmeslep();
+      //if(pars::compute_meslep) out.compute_Zmeslep();
     }
   else
     cout<<"Skipping Valence chiral extrapolation"<<endl;
