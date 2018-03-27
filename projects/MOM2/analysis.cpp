@@ -48,6 +48,21 @@ void average(const string out,const string in1,const string in2)
   dout.deltam_tm=(din1.deltam_tm+din2.deltam_tm)/2.0;
   dout.meson_mass=(din1.meson_mass+din2.meson_mass)/2.0;
   dout.meson_mass_sea=(din1.meson_mass_sea+din2.meson_mass_sea)/2.0;
+  for(size_t im=0;im<dout.nm;im++)
+  for(size_t r=0;r<dout.nr;r++)
+    {
+      size_t imr=dout.im_r_ind({im,r});
+      cout<<"deltam_cr[M="<<im<<",r="<<r<<"]: "<<dout.deltam_cr[imr].ave_err()<<" = "<<din1.deltam_cr[imr].ave_err()<<" + "<<din2.deltam_cr[imr].ave_err()<<endl;
+      cout<<"deltam_tm[M="<<im<<",r="<<r<<"]: "<<dout.deltam_tm[imr].ave_err()<<" = "<<din1.deltam_tm[imr].ave_err()<<" + "<<din2.deltam_tm[imr].ave_err()<<endl;
+    }
+  
+  for(size_t im1=0;im1<dout.nm;im1++)
+    for(size_t im2=0;im2<dout.nm;im2++)
+      {
+	size_t i=dout.im_im_ind({im1,im2});
+	cout<<"meson_mass[M1="<<im1<<",M2="<<im2<<"]: "<<dout.meson_mass[i].ave_err()<<" = "<<din1.meson_mass[i].ave_err()<<" + "<<din2.meson_mass[i].ave_err()<<endl;
+      }
+  cout<<"meson_mass_sea: "<<dout.meson_mass_sea.ave_err()<<" = "<<din1.meson_mass_sea.ave_err()<<" + "<<din2.meson_mass_sea.ave_err()<<endl;
   
   //remove from the list
   for(auto in : {in1,in2})
