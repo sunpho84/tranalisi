@@ -20,7 +20,6 @@ mesloop_t perens_t::build_mesloop(const vector<mom_conf_lprops_t> &props_lep) co
   //! projected lepton propagator with insertion
   mesloop_t mesloop(ilistGl_ilistpGl_iclust_ind.max());
   
-  // NB: the lepton loop is fully amputated
 #pragma omp parallel for
   for(size_t i=0;i<ilistGl_ilistpGl_iclust_ind.max();i++)
     {
@@ -519,4 +518,13 @@ void perens_t::val_chir_extrap_Zmeslep(perens_t &out) const
 		}
 	    if(plot) delete plot;
 	  }
+  
+  cout<<"pr_meslep"<<endl;
+  cout<<out.pr_meslep.ave_err()<<endl;
+  cout<<"Zmeslep"<<endl;
+  cout<<out.Zmeslep.ave_err()<<endl;
+  cout<<"pr_meslep_QED"<<endl;
+  cout<<out.pr_meslep_QED.ave_err()<<endl;
+  cout<<"Zmeslep_QED"<<endl;
+  cout<<out.Zmeslep_QED.ave_err()<<endl;
 }
