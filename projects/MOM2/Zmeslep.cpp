@@ -352,7 +352,7 @@ void perens_t::compute_Zmeslep()
 			
 			//Gamma LO and correction
 			Gamma_meslep_combo(iop,iproj)=pr_meslep[im_r_im_r_iop_iproj_imeslepmom][ijack];
-			cout<<im_r_im_r_iop_iproj_imeslepmom<<" "\<<pr_meslep[im_r_im_r_iop_iproj_imeslepmom][ijack]<<endl;
+			cout<<im_r_im_r_iop_iproj_imeslepmom<<" "<<pr_meslep[im_r_im_r_iop_iproj_imeslepmom][ijack]<<endl;
 			if(pars::use_QED) Gamma_QED_meslep_combo(iop,iproj)=pr_meslep_QED[im_r_im_r_iop_iproj_imeslepmom][ijack];
 		      }
 		  
