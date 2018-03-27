@@ -125,8 +125,8 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       int rdiff=0;
       
       //load corrections
-      const djvec_t P5P5_LL=get(_F,_F,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,UNK,rfw,rdiff);
+      const djvec_t P5P5_LL=get(_F,_F,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_0M=get(_LO,_FF,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_M0=get(_FF,_LO,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_0T=get(_LO,_T,"P5P5",RE,UNK,rfw,rdiff);
@@ -139,8 +139,8 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       const djvec_t P5P5_S0=get(_S,_LO,"P5P5",RE,UNK,rfw,rdiff);
       
       //load corrections
-      const djvec_t V0P5_LL=get(_F,_F,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,UNK,rfw,rdiff);
+      const djvec_t V0P5_LL=get(_F,_F,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_0M=get(_LO,_FF,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_M0=get(_FF,_LO,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_0T=get(_LO,_T,"V0P5",IM,UNK,rfw,rdiff);
@@ -178,6 +178,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	f=
 	P5P5_0P+
 	P5P5_P0;
+      
       const djvec_t den=b*f-c*e;
       const djvec_t deltam_tm_corr=djvec_t((-a*f+c*d)/den).symmetrized();
       const djvec_t deltam_cr_corr=djvec_t((-b*d+a*e)/den).symmetrized();

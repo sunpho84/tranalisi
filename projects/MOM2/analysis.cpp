@@ -40,6 +40,15 @@ void average(const string out,const string in1,const string in2)
       out/=2.0;
     }
   
+  auto &dout=data(out,PRESENCE_NOT_NEEDED);
+  const auto &din1=data(in1,PRESENCE_NOT_NEEDED);
+  const auto &din2=data(in2,PRESENCE_NOT_NEEDED);
+  
+  dout.deltam_cr=(din1.deltam_cr+din2.deltam_cr)/2.0;
+  dout.deltam_tm=(din1.deltam_tm+din2.deltam_tm)/2.0;
+  dout.meson_mass=(din1.meson_mass+din2.meson_mass)/2.0;
+  dout.meson_mass_sea=(din1.meson_mass_sea+din2.meson_mass_sea)/2.0;
+  
   //remove from the list
   for(auto in : {in1,in2})
     {
