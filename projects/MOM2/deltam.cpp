@@ -185,9 +185,9 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       djvec_t a=symmetric_derivative(V0P5_QED)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_QED;
       djvec_t b=symmetric_derivative(V0P5_S)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_S;
       djvec_t c=symmetric_derivative(V0P5_P)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_P;
-      djvec_t d=P5P5_QED;
-      djvec_t e=P5P5_S;
-      djvec_t f=P5P5_P;
+      djvec_t d=P5P5_QED/P5P5_LO;
+      djvec_t e=P5P5_S/P5P5_LO;
+      djvec_t f=P5P5_P/P5P5_LO;
       
       a.ave_err().write(dir_path+"/plots/deltam_a_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       b.ave_err().write(dir_path+"/plots/deltam_b_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
