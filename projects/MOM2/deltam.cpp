@@ -114,7 +114,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
     const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,EVN,rfw,0);
     const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,ODD,rfw,0);
     const djvec_t m_cr_corr=forward_derivative(V0P5_00)/(2.0*P5P5_00);
-    const djvec_t m_cr_corr_symm=(forward_derivative(V0P5_00)+backward_derivative(V0P5_00))/(4.0*P5P5_00);
+    const djvec_t m_cr_corr_symm=symmetric_derivative(V0P5_00)/(2.0*P5P5_00);
     const djack_t m_cr=constant_fit(m_cr_corr,tmin,tmax,dir_path+"/plots/m_cr_"+to_string(im)+".xmg");
     const djack_t m_cr_symm=constant_fit(m_cr_corr_symm,tmin,tmax,dir_path+"/plots/m_cr_symm_"+to_string(im)+".xmg");
     cout<<"m_cr[m="<<im<<",rfw="<<rfw<<"]: "<<m_cr.ave_err()<<", symm: "<<m_cr_symm.ave_err()<<endl;
@@ -179,8 +179,8 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	P5P5_0P+
 	P5P5_P0;
       
-      djvec_t del_t=forward_derivative(a)/(2.0*P5P5_00)-forward_derivative(V0P5_00)/(2.0*P5P5_00*P5P5_00)*d;
-      djack_t del=constant_fit(del_t.symmetrized(1),tmin,tmax,dir_path+"/plots/test_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+      djvec_t del_t=symmetric_derivative(a)/(2.0*P5P5_00)-symmetric_derivative(V0P5_00)/(2.0*P5P5_00*P5P5_00)*d;
+      djack_t del=constant_fit(del_t,tmin,tmax,dir_path+"/plots/test_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       
       const djvec_t den=b*f-c*e;
       const djvec_t deltam_tm_corr=djvec_t((-a*f+c*d)/den).symmetrized();
