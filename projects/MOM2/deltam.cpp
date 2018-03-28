@@ -185,11 +185,9 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       const size_t T=P5P5_LO.size();
       const djvec_t eff_P5P5=effective_mass(P5P5_LO.symmetrized());
       
-      cout<<symmetric_derivative(V0P5_QED).size()<<endl;
-      djvec_t a=djvec_t(symmetric_derivative(V0P5_QED)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_QED).symmetrized();
-      cout<<a.size()<<endl;
-      djvec_t b=djvec_t(symmetric_derivative(V0P5_S)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_S).symmetrized();
-      djvec_t c=djvec_t(symmetric_derivative(V0P5_P)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_P).symmetrized();
+      djvec_t a=djvec_t(symmetric_derivative(V0P5_QED)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_QED).symmetrized().subset(0,T/2-1);
+      djvec_t b=djvec_t(symmetric_derivative(V0P5_S)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_S).symmetrized().subset(0,T/2-1);
+      djvec_t c=djvec_t(symmetric_derivative(V0P5_P)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_P).symmetrized().subset(0,T/2-1);
       djvec_t d=effective_slope(djvec_t(P5P5_QED/P5P5_LO).symmetrized(),eff_P5P5,T/2);
       djvec_t e=effective_slope(djvec_t(P5P5_S/P5P5_LO).symmetrized(),eff_P5P5,T/2);
       djvec_t f=effective_slope(djvec_t(P5P5_P/P5P5_LO).symmetrized(),eff_P5P5,T/2);
