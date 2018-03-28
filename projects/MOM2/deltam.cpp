@@ -196,7 +196,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	  for(size_t t=0;t<T;t++)
 	    for(size_t iel=0;iel<=njacks;iel++)
 	      LO_eff[t][iel]=(effective_mass(LO[t][iel],LO[(t+T+1)%T][iel],t,T/2,0,1,+1)+
-			      effective_mass(LO[t][iel],LO[(t+T-1)%T][iel],t,T/2,0,1,-1))/2.0;
+			      effective_mass(LO[(t+T-1)%T][iel],LO[t][iel],t,T/2,0,1,+1))/2.0;
 	  
 	  cout<<LO_eff.ave_err()<<endl;
 	  
