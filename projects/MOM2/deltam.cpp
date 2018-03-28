@@ -126,7 +126,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       
       //load corrections
       const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,UNK,rfw,rdiff);
-      const djvec_t P5P5_LL=get(_F,_F,"P5P5",RE,UNK,rfw,rdiff)*0.0;
+      const djvec_t P5P5_LL=get(_F,_F,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_0M=get(_LO,_FF,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_M0=get(_FF,_LO,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_0T=get(_LO,_T,"P5P5",RE,UNK,rfw,rdiff);
@@ -140,7 +140,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       
       //load corrections
       const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,UNK,rfw,rdiff);
-      const djvec_t V0P5_LL=get(_F,_F,"V0P5",IM,UNK,rfw,rdiff)*0.0;
+      const djvec_t V0P5_LL=get(_F,_F,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_0M=get(_LO,_FF,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_M0=get(_FF,_LO,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_0T=get(_LO,_T,"V0P5",IM,UNK,rfw,rdiff);
