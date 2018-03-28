@@ -18,7 +18,7 @@ perens_t& perens_t::get_deltam()
     get<0>(dtu)->resize(im_r_ind.max());
   
   //if file exists open it, otherwise compute it
-  const string deltam_path=dir_path+"/deltam_.dat";
+  const string deltam_path=dir_path+"/deltam.dat";
   if(file_exists(deltam_path))
     {
       cout<<"File "<<deltam_path<<" found, opening"<<endl;
