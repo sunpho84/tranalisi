@@ -126,7 +126,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       
       //load corrections
       const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,UNK,rfw,rdiff);
-      const djvec_t P5P5_LL=get(_F,_F,"P5P5",RE,UNK,rfw,rdiff);
+      const djvec_t P5P5_LL=get(_F,_F,"P5P5",RE,UNK,rfw,rdiff)*0.0;
       const djvec_t P5P5_0M=get(_LO,_FF,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_M0=get(_FF,_LO,"P5P5",RE,UNK,rfw,rdiff);
       const djvec_t P5P5_0T=get(_LO,_T,"P5P5",RE,UNK,rfw,rdiff);
@@ -140,7 +140,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       
       //load corrections
       const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,UNK,rfw,rdiff);
-      const djvec_t V0P5_LL=get(_F,_F,"V0P5",IM,UNK,rfw,rdiff);
+      const djvec_t V0P5_LL=get(_F,_F,"V0P5",IM,UNK,rfw,rdiff)*0.0;
       const djvec_t V0P5_0M=get(_LO,_FF,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_M0=get(_FF,_LO,"V0P5",IM,UNK,rfw,rdiff);
       const djvec_t V0P5_0T=get(_LO,_T,"V0P5",IM,UNK,rfw,rdiff);
@@ -180,7 +180,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	P5P5_P0;
       
       djvec_t del_t=symmetric_derivative(a)/(2.0*P5P5_00)-symmetric_derivative(V0P5_00)/(2.0*P5P5_00*P5P5_00)*d;
-      djack_t del=constant_fit(del_t,tmin,tmax,dir_path+"/plots/test_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+      djack_t del=constant_fit(del_t.symmetrized(),tmin,tmax,dir_path+"/plots/test_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       
       const djvec_t den=b*f-c*e;
       const djvec_t deltam_tm_corr=djvec_t((-a*f+c*d)/den).symmetrized();
