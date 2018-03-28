@@ -189,6 +189,31 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       djvec_t e=P5P5_S/P5P5_LO;
       djvec_t f=P5P5_P/P5P5_LO;
       
+      auto fun_slope_eff=[](const djvec_t &LO,const djvec_t &INS)
+	{
+	  const size_t T=LO.size();
+	  djvec_t LO_eff(T);
+	  for(size_t t=0;t<T;t++)
+	    for(size_t iel=0;iel<=njacks;iel++)
+	      LO_eff[t][iel]=(effective_mass(LO[t][iel],LO[(t+T+1)%T][iel],t,T/2,0,1,+1)+
+			      effective_mass(LO[t][iel],LO[(t+T-1)%T][iel],t,T/2,0,1,-1))/2.0;
+	  
+	  djvec_t SL_eff(T);
+	  for(size_t t=0;t<T;t++)
+	    {
+	      const size_t tm=(t+T-1)%T;
+	      const size_t tp=(t+T+1)%T;
+	      for(size_t iel=0;iel<=njacks;iel++)
+	      SL_eff[t][iel]=(INS[tp][iel]-INS[tm][iel])/
+		two_pts_corr_with_ins_ratio_diff_tdep(LO_eff[tp][iel],T/2,t-1,2,1);
+	    }
+	  
+	  return SL_eff;
+	};
+      
+      auto eee=fun_slope_eff(d,P5P5_LO);
+      eee.ave_err().write(dp+"/plots/test_slope"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+      
       a.ave_err().write(dir_path+"/plots/deltam_a_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       b.ave_err().write(dir_path+"/plots/deltam_b_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       c.ave_err().write(dir_path+"/plots/deltam_c_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
