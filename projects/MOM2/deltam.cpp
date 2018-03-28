@@ -179,8 +179,8 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	P5P5_0P+
 	P5P5_P0;
       
-      djvec_t del=forward_derivative(a)/(2.0*P5P5_00)-forward_derivative(V0P5_00)/(2.0*P5P5_00*P5P5_00)*d;
-      del.ave_err().write(dir_path+"/plots/test_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+      djvec_t del_t=forward_derivative(a)/(2.0*P5P5_00)-forward_derivative(V0P5_00)/(2.0*P5P5_00*P5P5_00)*d;
+      djack_t del=constant_fit(del_t.symmetrized(1),tmin,tmax,dir_path+"/plots/test_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       
       const djvec_t den=b*f-c*e;
       const djvec_t deltam_tm_corr=djvec_t((-a*f+c*d)/den).symmetrized();
