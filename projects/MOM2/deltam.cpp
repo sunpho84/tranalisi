@@ -213,7 +213,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	  return SL_eff;
 	};
       
-      auto eee=fun_slope_eff(d,P5P5_LO);
+      auto eee=fun_slope_eff(P5P5_LO,d);
       eee.ave_err().write(dir_path+"/plots/test_slope"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       
       a.ave_err().write(dir_path+"/plots/deltam_a_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
