@@ -200,8 +200,8 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       f.ave_err().write(dir_path+"/plots/deltam_f_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       
       const djvec_t den=b*f-c*e;
-      const djvec_t deltam_tm_corr=djvec_t((-a*f+c*d)/den).symmetrized();
-      const djvec_t deltam_cr_corr=djvec_t((-b*d+a*e)/den).symmetrized();
+      const djvec_t deltam_tm_corr=(-a*f+c*d)/den;
+      const djvec_t deltam_cr_corr=(-b*d+a*e)/den;
       
       const size_t imr=im_r_ind({im,rfw});
       
