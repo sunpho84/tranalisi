@@ -27,6 +27,7 @@ __top_builddir__bin_mom_SOURCES= \
 	%D%/geometry.cpp \
 	%D%/meson_mass.cpp \
 	%D%/mom.cpp \
+	%D%/p2eq0extrap.cpp \
 	%D%/pars.cpp \
 	%D%/perens.cpp \
 	%D%/prop.cpp \
