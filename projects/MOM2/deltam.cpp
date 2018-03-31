@@ -200,7 +200,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       // f.ave_err().write(dir_path+"/plots/deltam_f_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       
       const djvec_t old_corr=symmetric_derivative(V0P5_QED)/symmetric_derivative(V0P5_P);
-      const djvec_t old=constant_fit(old_corr,tmin,tmax,dir_path+"/plots/old_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+      const djack_t old=constant_fit(old_corr,tmin,tmax,dir_path+"/plots/old_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       
       const djvec_t den=b*f-c*e;
       const djvec_t deltam_tm_corr=(-a*f+c*d)/den;
