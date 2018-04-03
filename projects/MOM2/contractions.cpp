@@ -86,13 +86,10 @@ djack_t perens_t::compute_mPCAC(const string& m_tag)
   P5P5_corr/=nr;
   V0P5_corr/=nr;
   
-  const djvec_t m_cr_corr=2.0*forward_derivative(V0P5_corr)/(2.0*P5P5_corr);
-  const djvec_t m_cr_corr_symm=2.0*symmetric_derivative(V0P5_corr)/(2.0*P5P5_corr);
-  const djack_t m_cr=constant_fit(m_cr_corr,tmin,tmax,dir_path+"/plots/m_cr_"+m_tag+".xmg");
-  const djack_t m_cr_symm=constant_fit(m_cr_corr_symm,tmin,tmax,dir_path+"/plots/m_cr_symm_"+m_tag+".xmg");
+  const djvec_t mPCAC_corr=2.0*forward_derivative(V0P5_corr)/(2.0*P5P5_corr);
+  //const djvec_t mPCAC_corr_symm=2.0*symmetric_derivative(V0P5_corr)/(2.0*P5P5_corr);
+  const djack_t mPCAC=constant_fit(mPCAC_corr,tmin,tmax,dir_path+"/plots/mPCAC_"+m_tag+".xmg");
+  cout<<"MPCAC["<<m_tag<<"]: "<<mPCAC<<endl;
   
-  const djack_t m_PCAC=constant_fit(effective_mass(P5P5_corr),tmin,tmax,dir_path+"/plots/m_PCAC_"+m_tag+"_"+m_tag+".xmg");
-  cout<<"MPCAC["<<m_tag<<"]: "<<m_PCAC<<endl;
-  
-  return m_PCAC;
+  return mPCAC;
 }
