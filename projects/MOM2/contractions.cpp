@@ -92,5 +92,5 @@ djack_t perens_t::compute_mPCAC(const string& m_tag)
   cout<<"MPCAC["<<m_tag<<"]:      "<<smart_print(mPCAC)<<endl;
   cout<<"MPCAC["<<m_tag<<"] symm: "<<smart_print(mPCAC_symm)<<endl;
   
-  return mPCAC;
+  return mPCAC_symm;
 }
