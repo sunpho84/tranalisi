@@ -68,3 +68,31 @@ djack_t perens_t::compute_meson_mass(const string& m1_tag,const string& m2_tag)
   
   return m_P;
 }
+
+djack_t perens_t::compute_mPCAC(const string& m_tag)
+{
+  djvec_t P5P5_corr(L[0]/2+1);
+  djvec_t V0P5_corr(L[0]/2+1);
+  P5P5_corr=V0P5_corr=0.0;
+  for(size_t r=0;r<nr;r++)
+    {
+      string name="M"+m_tag+"_R"+to_string(r)+"_0_M"+m_tag+"_R"+to_string(r)+"_0";
+      djvec_t P5P5_contr=get_contraction(name,"P5P5",1.0,EVN);
+      djvec_t V0P5_contr=get_contraction(name,"V0P5",dcompl_t(0.0,-1.0),ODD);
+      P5P5_corr+=P5P5_contr;
+      V0P5_corr+=V0P5_contr;
+      
+    }
+  P5P5_corr/=nr;
+  V0P5_corr/=nr;
+  
+  const djvec_t m_cr_corr=2.0*forward_derivative(V0P5_corr)/(2.0*P5P5_corr);
+  const djvec_t m_cr_corr_symm=2.0*symmetric_derivative(V0P5_corr)/(2.0*P5P5_corr);
+  const djack_t m_cr=constant_fit(m_cr_corr,tmin,tmax,dir_path+"/plots/m_cr_"+m_tag+".xmg");
+  const djack_t m_cr_symm=constant_fit(m_cr_corr_symm,tmin,tmax,dir_path+"/plots/m_cr_symm_"+m_tag+".xmg");
+  
+  const djack_t m_PCAC=constant_fit(effective_mass(P5P5_corr),tmin,tmax,dir_path+"/plots/m_PCAC_"+m_tag+"_"+m_tag+".xmg");
+  cout<<"MPCAC["<<m_tag<<"]: "<<m_PCAC<<endl;
+  
+  return m_PCAC;
+}

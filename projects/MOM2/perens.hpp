@@ -186,6 +186,15 @@ struct perens_t
   //! read or compute and write meson mass
   perens_t& get_meson_mass();
   
+  //! mass PCAC
+  djvec_t mPCAC;
+  
+  //! mass PCAC for sea meson
+  djack_t mPCAC_sea;
+  
+  //! read or compute and write mPCAC
+  perens_t& get_mPCAC();
+  
   /////////////////////////////////////////////////////////////////
   
   index_t im_im_ind;
@@ -312,6 +321,8 @@ struct perens_t
   /////////////////////////////////////////////////////////////////
   
   djack_t compute_meson_mass(const string& m1_tag,const string& m2_tag);
+  
+  djack_t compute_mPCAC(const string& m_tag);
   
   djvec_t get_contraction(const string &combo,const string &ID,const dcompl_t &coeff,const int tpar);
   

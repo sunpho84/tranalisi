@@ -82,6 +82,54 @@ perens_t& perens_t::get_deltam()
   return *this;
 }
 
+perens_t& perens_t::get_mPCAC()
+{
+  mPCAC.resize(nm);
+  
+  //if file exists open it, otherwise compute it
+  const string mPCAC_path=dir_path+"/mPCAC.dat";
+  if(file_exists(mPCAC_path))
+    {
+      cout<<"File "<<mPCAC_path<<" found, opening"<<endl;
+      mPCAC.bin_read(mPCAC_path);
+    }
+  else
+    {
+      cout<<"File "<<mPCAC_path<<" not found, computing"<<endl;
+      
+      prepare_list_of_confs();
+      for(size_t im=0;im<nm;im++)
+	  mPCAC[im]=compute_mPCAC(to_string(im));
+      mPCAC.bin_write(mPCAC_path);
+    }
+  
+  grace_file_t mPCAC2_plot(dir_path+"/plots/mPCAC.xmg");
+  mPCAC2_plot.new_data_set();
+  for(size_t im=0;im<nm;im++)
+    mPCAC2_plot.write_ave_err(am[im]*2.0,mPCAC[im].ave_err());
+  
+  //sea
+  const string mPCAC_sea_path=dir_path+"/mPCAC_sea.dat";
+  if(im_sea>=0 and im_sea<(int)nm) mPCAC_sea=mPCAC[im_im_ind({(size_t)im_sea,(size_t)im_sea})];
+  else
+    if(file_exists(mPCAC_sea_path))
+      {
+	cout<<"File "<<mPCAC_sea_path<<" found, opening"<<endl;
+	mPCAC_sea.bin_read(mPCAC_sea_path);
+      }
+    else
+      {
+	cout<<"File "<<mPCAC_sea_path<<" not found, computing"<<endl;
+	
+	prepare_list_of_confs();
+	mPCAC_sea=compute_mPCAC("sea");
+	mPCAC_sea.bin_write(mPCAC_sea_path);
+      }
+  cout<<"Sea PCAC: "<<smart_print(mPCAC_sea.ave_err())<<endl;
+  
+  return *this;
+}
+
 void perens_t::compute_deltam(const size_t im,const size_t rfw)
 {
   //ext_reim and rpar is relative to non-inserted
@@ -110,8 +158,8 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
   
   //measure mcrit according to eq.3 of hep-lat/0701012
   {
-    const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,EVN,rfw,im_sea);
-    const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,ODD,rfw,im_sea);
+    const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,EVN,rfw,0);
+    const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,ODD,rfw,0);
     const djvec_t m_cr_corr=2.0*forward_derivative(V0P5_00)/(2.0*P5P5_00);
     const djvec_t m_cr_corr_symm=2.0*symmetric_derivative(V0P5_00)/(2.0*P5P5_00);
     const djack_t m_cr=constant_fit(m_cr_corr,tmin,tmax,dir_path+"/plots/m_cr_"+to_string(im)+".xmg");
