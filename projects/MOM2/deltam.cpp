@@ -106,7 +106,7 @@ perens_t& perens_t::get_mPCAC()
   grace_file_t mPCAC2_plot(dir_path+"/plots/mPCAC.xmg");
   mPCAC2_plot.new_data_set();
   for(size_t im=0;im<nm;im++)
-    mPCAC2_plot.write_ave_err(am[im]*2.0,mPCAC[im].ave_err());
+    mPCAC2_plot.write_ave_err(am[im],mPCAC[im].ave_err());
   
   //sea
   const string mPCAC_sea_path=dir_path+"/mPCAC_sea.dat";
@@ -125,6 +125,7 @@ perens_t& perens_t::get_mPCAC()
 	mPCAC_sea=compute_mPCAC("sea");
 	mPCAC_sea.bin_write(mPCAC_sea_path);
       }
+  mPCAC2_plot.write_ave_err(0,mPCAC_sea.ave_err());
   cout<<"Sea PCAC: "<<smart_print(mPCAC_sea.ave_err())<<endl;
   
   return *this;
