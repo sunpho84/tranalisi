@@ -86,9 +86,11 @@ djack_t perens_t::compute_mPCAC(const string& m_tag)
   V0P5_corr/=nr;
   
   const djvec_t mPCAC_corr=forward_derivative(V0P5_corr)/(2.0*P5P5_corr);
-  //const djvec_t mPCAC_corr_symm=2.0*symmetric_derivative(V0P5_corr)/(2.0*P5P5_corr);
+  const djvec_t mPCAC_corr_symm=symmetric_derivative(V0P5_corr)/(2.0*P5P5_corr);
   const djack_t mPCAC=constant_fit(mPCAC_corr,tmin,tmax,dir_path+"/plots/mPCAC_"+m_tag+".xmg");
-  cout<<"MPCAC["<<m_tag<<"]: "<<smart_print(mPCAC)<<endl;
+  const djack_t mPCAC_symm=constant_fit(mPCAC_corr,tmin,tmax,dir_path+"/plots/mPCAC_symm"+m_tag+".xmg");
+  cout<<"MPCAC["<<m_tag<<"]:      "<<smart_print(mPCAC)<<endl;
+  cout<<"MPCAC["<<m_tag<<"] symm: "<<smart_print(mPCAC_symm)<<endl;
   
   return mPCAC;
 }
