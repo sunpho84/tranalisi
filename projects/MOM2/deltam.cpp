@@ -110,8 +110,8 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
   
   //measure mcrit according to eq.3 of hep-lat/0701012
   {
-    const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,EVN,rfw,0);
-    const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,ODD,rfw,0);
+    const djvec_t P5P5_00=get(_LO,_LO,"P5P5",RE,EVN,rfw,im_sea);
+    const djvec_t V0P5_00=get(_LO,_LO,"V0P5",IM,ODD,rfw,im_sea);
     const djvec_t m_cr_corr=2.0*forward_derivative(V0P5_00)/(2.0*P5P5_00);
     const djvec_t m_cr_corr_symm=2.0*symmetric_derivative(V0P5_00)/(2.0*P5P5_00);
     const djack_t m_cr=constant_fit(m_cr_corr,tmin,tmax,dir_path+"/plots/m_cr_"+to_string(im)+".xmg");
