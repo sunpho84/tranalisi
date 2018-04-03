@@ -80,8 +80,7 @@ djack_t perens_t::compute_mPCAC(const string& m_tag)
       djvec_t P5P5_contr=get_contraction(name,"P5P5",1.0,EVN);
       djvec_t V0P5_contr=get_contraction(name,"V0P5",dcompl_t(0.0,-1.0),ODD);
       P5P5_corr+=P5P5_contr;
-      V0P5_corr+=V0P5_contr;
-      
+      V0P5_corr+=-tau3[r]*V0P5_contr;
     }
   P5P5_corr/=nr;
   V0P5_corr/=nr;
