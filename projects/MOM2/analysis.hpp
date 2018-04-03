@@ -28,6 +28,7 @@ inline void compute_or_load_all()
       .set_pars_for_scratch()
       .set_indices()
       .get_deltam()
+      .get_mPCAC()
       .get_meson_mass()
       .allocate()
       .read_or_compute();
