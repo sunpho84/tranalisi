@@ -20,6 +20,7 @@ djvec_t retrive_data(const string &binfile,const string &template_path,const ind
   const range_t range{900,100,40800};
   const size_t ntot_col=2;
   const vector<size_t> cols={0,1};
+  const size_t data_size=ind.max()*T;
   
   cout<<"npts: "<<ind.max()<<endl;
   
@@ -28,7 +29,7 @@ djvec_t retrive_data(const string &binfile,const string &template_path,const ind
     {
       cout<<"Binary file \""<<binfile<<"\" exists, loading"<<endl;
       
-      data.resize(ind.max());
+      data.resize(data_size);
       data.bin_read(binfile);
     }
   else
@@ -36,7 +37,7 @@ djvec_t retrive_data(const string &binfile,const string &template_path,const ind
       cout<<"Binary file \""<<binfile<<"\" does not exist, reading from txt confs, \""<<template_path<<"\""<<endl;
       
       data=read_conf_set_t(template_path,range,ntot_col,cols);
-      if(data.size()!=ind.max()) CRASH("loaded binary file \"%c\" data has size %zu, expected %zu",binfile.c_str(),data.size(),ind.max());
+      if(data.size()!=data_size) CRASH("loaded binary file \"%c\" data has size %zu, expected %zu",binfile.c_str(),data.size(),data_size);
       data.bin_write(binfile);
     }
   
@@ -45,7 +46,7 @@ djvec_t retrive_data(const string &binfile,const string &template_path,const ind
 
 djvec_t get_2pts(const size_t imbw,const size_t imfw,const size_t ithbw,const size_t ithfw,const mel_t imel)
 {
-  static const index_t i2pts_ind({{"mbw",nm},{"rbw",nr},{"mfw",nm},{"rfw",nr},{"thbw",nth},{"thfw",nth},{"mel",nmel},{"ri",2},{"T",T}});
+  static const index_t i2pts_ind({{"mbw",nm},{"rbw",nr},{"mfw",nm},{"rfw",nr},{"thbw",nth},{"thfw",nth},{"mel",nmel},{"ri",2}});
   static djvec_t data_2pts=retrive_data("2pts.dat",base_run+"out/%05d/mes_contr_2pts",i2pts_ind);
   
   int par;
