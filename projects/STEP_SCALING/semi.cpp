@@ -6,7 +6,9 @@
 
 int main()
 {
-  const range_t range;
+  set_njacks(15);
+  
+  const range_t range{900,100,40800};
   const size_t ntot_col=2;
   const vector<size_t> cols={0,1};
   const string template_path_3pts="out/%05d/mes_contr_3pts";
