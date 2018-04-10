@@ -144,9 +144,9 @@ int main()
   
   cout<<get_2pts_P5P5(0,0,0,0).ave_err()<<endl;
   cout<<get_3pts_V0P5(0,0,0,0,0).ave_err()<<endl;
-  cout<<get_3pts_VKP5(0,0,0,1,2).ave_err()<<endl;
-  cout<<get_3pts_VKP5(0,0,0,2,1).ave_err()<<endl;
-  cout<<get_3pts_VKP5_impr(0,0,0,2,1).ave_err()<<endl;
+  cout<<get_3pts_VKP5(0,0,0,1,1).ave_err()<<endl;
+  cout<<get_3pts_VKP5(0,0,0,1,1).ave_err()<<endl;
+  cout<<get_3pts_VKP5_impr(0,0,0,1,1).ave_err()<<endl;
   
   return 0;
 }
