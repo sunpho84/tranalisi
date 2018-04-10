@@ -124,9 +124,9 @@ djvec_t get_3pts_V0P5(const size_t imspec,const size_t imbw,const size_t imfw,co
 
 djvec_t get_3pts_VKP5(const size_t imspec,const size_t imbw,const size_t imfw,const size_t ithbw,const size_t ithfw)
 {
-  return (get_3pts(imspec,imbw,imfw,ithbw,ithfw,V0P5)+
-	  get_3pts(imspec,imbw,imfw,ithbw,ithfw,V0P5)+
-	  get_3pts(imspec,imbw,imfw,ithbw,ithfw,V0P5))
+  return (get_3pts(imspec,imbw,imfw,ithbw,ithfw,V1P5)+
+	  get_3pts(imspec,imbw,imfw,ithbw,ithfw,V2P5)+
+	  get_3pts(imspec,imbw,imfw,ithbw,ithfw,V3P5))
     /3.0;
 }
 
