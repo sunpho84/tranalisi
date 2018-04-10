@@ -134,7 +134,7 @@ djvec_t get_3pts_VKP5_impr(const size_t imspec,const size_t imbw,const size_t im
 {
   int th_opp[]={0,2,1,4,3};
   
-  return (get_3pts_VKP5(imspec,imbw,imfw,ithbw,ithfw)+
+  return (get_3pts_VKP5(imspec,imbw,imfw,ithbw,ithfw)-
 	  get_3pts_VKP5(imspec,imbw,imfw,th_opp[ithbw],th_opp[ithfw]))/2.0;
 }
 
