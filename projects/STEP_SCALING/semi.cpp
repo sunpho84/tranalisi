@@ -12,7 +12,6 @@ const size_t nm=3;
 double m_list[]={0.10,0.20,0.30};
 const size_t nth=5;
 double th_list[]={0.00,-0.10,0.10,-0.20,0.20};
-const index_t i3pts_ind({{"ms",nm},{"rs",nr},{"m1",nm},{"r1",nr},{"m0",nm},{"r0",nr},{"th1",nth},{"th0",nth},{"el",nmel},{"T",T},{"ri",2}});
 const string base_run="/marconi_work/INF17_lqcd123_0/sanfo/STEP_SCALING/L16_T32_beta6.61/Semileptonic/";
 
 djvec_t retrive_data(const string &binfile,const string &template_path,const index_t &ind)
@@ -75,13 +74,68 @@ djvec_t get_2pts(const size_t imbw,const size_t imfw,const size_t ithbw,const si
   return out.symmetrized(par)/nr;
 }
 
+djvec_t get_2pts_P5P5(const size_t imbw,const size_t imfw,const size_t ithbw,const size_t ithfw)
+{
+  return get_2pts(imbw,imfw,ithbw,ithfw,P5P5);
+}
+
+djvec_t get_3pts(const size_t imspec,const size_t imbw,const size_t imfw,const size_t ithbw,const size_t ithfw,const mel_t imel)
+{
+  static const index_t i3pts_ind({{"ms",nm},{"rs",nr},{"m1",nm},{"r1",nr},{"m0",nm},{"r0",nr},{"th1",nth},{"th0",nth},{"el",nmel},{"T",T},{"ri",2}});
+  static djvec_t data_3pts=retrive_data("3pts.dat",base_run+"out/%05d/mes_contr_3pts",i3pts_ind);
+  
+  int par;
+  size_t ri;
+  
+  switch(imel)
+    {
+    case V0P5:
+      par=+0;
+      ri=0;
+      break;
+    case V1P5:
+    case V2P5:
+    case V3P5:
+      par=+0;
+      ri=0;
+      break;
+    default:
+      par=0;
+      ri=0;
+      CRASH("Why!");
+    }
+  
+  djvec_t out(T);
+  
+  for(size_t t=0;t<T;t++)
+    for(size_t r=0;r<nr;r++)
+      {
+	size_t i=i3pts_ind({imspec,r,imbw,!r,imfw,r,ithbw,ithfw,imel,t,ri});
+	out[t]+=data_3pts[i];
+      }
+  
+  return out.symmetrized(par)/nr;
+}
+
+djvec_t get_3pts_V0P5(const size_t imspec,const size_t imbw,const size_t imfw,const size_t ithbw,const size_t ithfw)
+{
+  return get_3pts(imspec,imbw,imfw,ithbw,ithfw,V0P5);
+}
+
+djvec_t get_3pts_VKP5(const size_t imspec,const size_t imbw,const size_t imfw,const size_t ithbw,const size_t ithfw)
+{
+  return (get_3pts(imspec,imbw,imfw,ithbw,ithfw,V0P5)+
+	  get_3pts(imspec,imbw,imfw,ithbw,ithfw,V0P5)+
+	  get_3pts(imspec,imbw,imfw,ithbw,ithfw,V0P5))
+    /3.0;
+}
+
 int main()
 {
   set_njacks(15);
   
   cout<<get_2pts(0,0,0,0,P5P5).ave_err()<<endl;
-  
-  //djvec_t data_3pts=retrive_data("3pts.dat",base_run+"out/%05d/mes_contr_3pts",i3pts_ind);
+  cout<<get_3pts(0,0,0,0,0,V0P5).ave_err()<<endl;
   
   
   return 0;
