@@ -16,7 +16,7 @@ const index_t i2pts_ind({{"m1",nm},{"r1",nr},{"m0",nm},{"r0",nr},{"th1",nth},{"t
 const index_t i3pts_ind({{"ms",nm},{"rs",nr},{"m1",nm},{"r1",nr},{"m0",nm},{"r0",nr},{"th1",nth},{"th0",nth},{"el",nel},{"ri",2},{"T",T}});
 const string base_run="/marconi_work/INF17_lqcd123_0/sanfo/STEP_SCALING/L16_T32_beta6.61/Semileptonic/";
 
-djvec_t retrive_data(const string &outfile,const string &template_path,const index_t &ind)
+djvec_t retrive_data(const string &binfile,const string &template_path,const index_t &ind)
 {
   const range_t range{900,100,40800};
   const size_t ntot_col=2;
@@ -25,20 +25,20 @@ djvec_t retrive_data(const string &outfile,const string &template_path,const ind
   cout<<"npts: "<<ind.max()<<endl;
   
   djvec_t data;
-  if(file_exists(outfile))
+  if(file_exists(binfile))
     {
-      cout<<"File exists, loading"<<endl;
+      cout<<"Binary file \""<<binfile<<"\" exists, loading"<<endl;
       
       data.resize(ind.max());
-      data.bin_read(outfile);
+      data.bin_read(binfile);
     }
   else
     {
-      cout<<"File does not exist, reading confs"<<endl;
+      cout<<"Binary file \""<<binfile<<"\" does not exist, reading from txt confs, \""<<template_path<<"\""<<endl;
       
       data=read_conf_set_t(template_path,range,ntot_col,cols);
-      if(data.size()!=ind.max()) CRASH("loaded txt data has size %zu, expected %zu",data.size(),ind.max());
-      data.bin_write(outfile);
+      if(data.size()!=ind.max()) CRASH("loaded binary file \"%c\" data has size %zu, expected %zu",binfile.c_str(),data.size(),ind.max());
+      data.bin_write(binfile);
     }
   
   return data;
@@ -49,7 +49,6 @@ int main()
   set_njacks(15);
   
   cout<<"n3pts: "<<i3pts_ind.max()<<endl;
-  
   
   djvec_t data_2pts=retrive_data("2pts.dat",base_run+"out/%05d/mes_contr_2pts",i2pts_ind);
   djvec_t data_3pts=retrive_data("3pts.dat",base_run+"out/%05d/mes_contr_3pts",i3pts_ind);
