@@ -142,6 +142,10 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
   
   //compute M
   djvec_t P5P5_00=read("00_P5P5",ens,+1,iq,1,RE);
+  djvec_t P5P5_LL=read("LL_P5P5",ens,+1,iq,1,RE);
+  djvec_t P5P5_0M=read("0M_P5P5",ens,+1,iq,1,RE);
+  djvec_t P5P5_0T=read("0T_P5P5",ens,+1,iq,1,RE);
+  djvec_t P5P5_0P=read("0P_P5P5",ens,+1,iq,-1,IM);
   djack_t M=constant_fit(effective_mass(P5P5_00),ens.tmin[iq],ens.tmax[iq],ens_qpath+"/P5P5_00_eff.xmg");
   cout<<qname[iq]<<" mass ens "<<ens.path<<": "<<M.ave_err()<<endl;
   
@@ -200,6 +204,38 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
   // djvec_t deltam_cr_alt_corr_with_S=deltam_cr_alt_corr-deltam_cr_scal_coef*deltam_cr_scal_corr;
   // djack_t deltam_cr_alt_with_S=constant_fit(deltam_cr_alt_corr_with_S,ens.tmin[iq],ens.tmin[iq],ens_qpath+"/deltam_cr_alt_with_S_t.xmg");
   
+  {
+    const djvec_t
+      V0P5_LO=
+	V0P5_00,
+      V0P5_QED=
+	2.0*V0P5_0T+
+	2.0*V0P5_0M+
+	V0P5_LL,
+      V0P5_P=
+	2.0*V0P5_0P;
+      const djvec_t
+      P5P5_LO=
+	P5P5_00,
+      P5P5_QED=
+	2.0*P5P5_0T+
+	2.0*P5P5_0M+
+	P5P5_LL,
+      P5P5_P=
+	-2.0*P5P5_0P;
+      
+      const djvec_t eff_P5P5=effective_mass(P5P5_LO);
+      
+      djvec_t a=djvec_t(symmetric_derivative(V0P5_QED)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_QED).subset(0,ens.T/2-1);
+      djvec_t c=djvec_t(symmetric_derivative(V0P5_P)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_P).subset(0,ens.T/2-1);
+      
+      a.ave_err().write(ens_qpath+"/deltam_ac_a.xmg");
+      c.ave_err().write(ens_qpath+"/deltam_ac_c.xmg");
+      
+      const djvec_t deltam_cr_corr_ac=-a/c;
+      deltam_cr_corr_ac.ave_err().write(ens_qpath+"/deltam_cr_corr_ac.xmg");
+  }
+  
   ///////////////////////// retuning of LO ///////////////////////////
   
   //how much should we retune kappa? (note that we should insert iP, so we put a minus, but this gets cancelled with the definition of dm_cr)
@@ -220,7 +256,6 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
   // effective_mass(djvec_t(num_deltam_cr_corr+0*arctan_alpha_bare*V0P5_0S),ens.T/2,-1).ave_err().write(ens_qpath+"/num_deltam_cr_with_S_eff.xmg");
   
   //how much is the pion mass after retuning?
-  djvec_t P5P5_0P=read("0P_P5P5",ens,+1,iq,-1,IM);
   djvec_t P5P5_00_retuned=P5P5_00+djack_t(2.0*dm_cr_LO)*P5P5_0P;
   djack_t M_retuned=constant_fit(effective_mass(P5P5_00_retuned),ens.tmin[iq],ens.tmax[iq],ens_qpath+"/P5P5_00_retuned_eff.xmg");
   cout<<"Variation of M due to k retuning: "<<smart_print(djack_t(M_retuned/M-1).ave_err())<<endl;
