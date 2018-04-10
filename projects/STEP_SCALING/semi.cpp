@@ -12,7 +12,7 @@ const size_t nm=3;
 double m_list[]={0.10,0.20,0.30};
 const size_t nth=5;
 double th_list[]={0.00,-0.10,0.10,-0.20,0.20};
-const index_t i3pts_ind({{"ms",nm},{"rs",nr},{"m1",nm},{"r1",nr},{"m0",nm},{"r0",nr},{"th1",nth},{"th0",nth},{"el",nel},{"ri",2},{"T",T}});
+const index_t i3pts_ind({{"ms",nm},{"rs",nr},{"m1",nm},{"r1",nr},{"m0",nm},{"r0",nr},{"th1",nth},{"th0",nth},{"el",nmel},{"ri",2},{"T",T}});
 const string base_run="/marconi_work/INF17_lqcd123_0/sanfo/STEP_SCALING/L16_T32_beta6.61/Semileptonic/";
 
 djvec_t retrive_data(const string &binfile,const string &template_path,const index_t &ind)
