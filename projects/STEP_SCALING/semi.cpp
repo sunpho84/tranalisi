@@ -130,14 +130,23 @@ djvec_t get_3pts_VKP5(const size_t imspec,const size_t imbw,const size_t imfw,co
     /3.0;
 }
 
+djvec_t get_3pts_VKP5_impr(const size_t imspec,const size_t imbw,const size_t imfw,const size_t ithbw,const size_t ithfw)
+{
+  int th_opp[]={0,2,1,4,3};
+  
+  return (get_3pts_VKP5_impr(imspec,imbw,imfw,ithbw,ithfw)+
+	  get_3pts_VKP5_impr(imspec,imbw,imfw,th_opp[ithbw],th_opp[ithfw]))/2.0;
+}
+
 int main()
 {
   set_njacks(15);
   
   cout<<get_2pts_P5P5(0,0,0,0).ave_err()<<endl;
   cout<<get_3pts_V0P5(0,0,0,0,0).ave_err()<<endl;
-  cout<<get_3pts_VKP5(0,0,0,1,1).ave_err()<<endl;
-  
+  cout<<get_3pts_VKP5(0,0,0,1,2).ave_err()<<endl;
+  cout<<get_3pts_VKP5(0,0,0,2,1).ave_err()<<endl;
+  cout<<get_3pts_VKP5_impr(0,0,0,2,1).ave_err()<<endl;
   
   return 0;
 }
