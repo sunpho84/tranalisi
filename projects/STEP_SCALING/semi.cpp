@@ -90,14 +90,14 @@ djvec_t get_3pts(const size_t imspec,const size_t imbw,const size_t imfw,const s
   switch(imel)
     {
     case V0P5:
-      par=+0;
+      par=-1;
       ri=0;
       break;
     case V1P5:
     case V2P5:
     case V3P5:
-      par=+0;
-      ri=0;
+      par=+1;
+      ri=1;
       break;
     default:
       par=0;
@@ -134,8 +134,9 @@ int main()
 {
   set_njacks(15);
   
-  cout<<get_2pts(0,0,0,0,P5P5).ave_err()<<endl;
-  cout<<get_3pts(0,0,0,0,0,V0P5).ave_err()<<endl;
+  cout<<get_2pts_P5P5(0,0,0,0).ave_err()<<endl;
+  cout<<get_3pts_V0P5(0,0,0,0,0).ave_err()<<endl;
+  cout<<get_3pts_VKP5(0,0,0,1,1).ave_err()<<endl;
   
   
   return 0;
