@@ -266,9 +266,9 @@ void perens_t::mom_compute_meslep()
       djvec_t pr_LO,pr_QED_amp_QCD,pr_QCD_amp_QED_in,pr_QCD_amp_QED_ou;
       for(auto &p : vector<tuple<djvec_t*,const vector<jqprop_t>*,const vector<jqprop_t>*,const vector<jqprop_t>*>>{
 	  {&pr_LO,              &jprop_inv_in,     &j.LO,  &jprop_inv_ou},
-	  {&pr_QED_amp_QCD,     &jprop_inv_in,     &j.QED, &jprop_inv_ou},
-	  // {&pr_QCD_amp_QED_in,  &jprop_QED_inv_in, &j.LO,  &jprop_inv_ou},
-	  // {&pr_QCD_amp_QED_ou,  &jprop_inv_in,     &j.LO,  &jprop_QED_inv_ou}
+	    //{&pr_QED_amp_QCD,     &jprop_inv_in,     &j.QED, &jprop_inv_ou},
+	   {&pr_QCD_amp_QED_in,  &jprop_QED_inv_in, &j.LO,  &jprop_inv_ou},
+	   {&pr_QCD_amp_QED_ou,  &jprop_inv_in,     &j.LO,  &jprop_QED_inv_ou}
 	    })
 	{
 	  auto &out=*get<0>(p);
