@@ -12,6 +12,7 @@ const size_t nm=3;
 double m_list[]={0.10,0.20,0.30};
 const size_t nth=5;
 double th_list[]={0.00,-0.10,0.10,-0.20,0.20};
+int th_opp[]={0,2,1,4,3};
 const string base_run="/marconi_work/INF17_lqcd123_0/sanfo/STEP_SCALING/L16_T32_beta6.61/Semileptonic/";
 
 djvec_t retrive_data(const string &binfile,const string &template_path,const index_t &ind)
@@ -117,10 +118,20 @@ djvec_t get_3pts(const size_t imspec,const size_t imbw,const size_t imfw,const s
   return out.symmetrized(par)/nr;
 }
 
+// V0P5
+
 djvec_t get_3pts_V0P5(const size_t imspec,const size_t imbw,const size_t imfw,const size_t ithbw,const size_t ithfw)
 {
   return get_3pts(imspec,imbw,imfw,ithbw,ithfw,V0P5);
 }
+
+djvec_t get_3pts_V0P5_impr(const size_t imspec,const size_t imbw,const size_t imfw,const size_t ithbw,const size_t ithfw)
+{
+  return (get_3pts_V0P5(imspec,imbw,imfw,ithbw,ithfw)+
+	  get_3pts_V0P5(imspec,imbw,imfw,th_opp[ithbw],th_opp[ithfw]))/2.0;
+}
+
+// VKP5
 
 djvec_t get_3pts_VKP5(const size_t imspec,const size_t imbw,const size_t imfw,const size_t ithbw,const size_t ithfw)
 {
@@ -132,8 +143,6 @@ djvec_t get_3pts_VKP5(const size_t imspec,const size_t imbw,const size_t imfw,co
 
 djvec_t get_3pts_VKP5_impr(const size_t imspec,const size_t imbw,const size_t imfw,const size_t ithbw,const size_t ithfw)
 {
-  int th_opp[]={0,2,1,4,3};
-  
   return (get_3pts_VKP5(imspec,imbw,imfw,ithbw,ithfw)-
 	  get_3pts_VKP5(imspec,imbw,imfw,th_opp[ithbw],th_opp[ithfw]))/2.0;
 }
@@ -143,7 +152,7 @@ int main()
   set_njacks(15);
   
   cout<<get_2pts_P5P5(0,0,0,0).ave_err()<<endl;
-  cout<<get_3pts_V0P5(0,0,0,0,0).ave_err()<<endl;
+  cout<<get_3pts_V0P5_impr(0,0,0,0,0).ave_err()<<endl;
   cout<<get_3pts_VKP5(0,0,0,1,1).ave_err()<<endl;
   cout<<get_3pts_VKP5(0,0,0,1,1).ave_err()<<endl;
   cout<<get_3pts_VKP5_impr(0,0,0,1,1).ave_err()<<endl;
