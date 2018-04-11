@@ -72,26 +72,26 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const ve
        //create list of operations
        vector<tuple<vector<jqprop_t>*,const vector<dcompl_t>*,const qprop_t*,const qprop_t*>> list={
 	 {&j.LO,&mesloop.LO,&p_in.LO,&p_ou.LO}, //LO
-	 //
-	 //
-	 {&j.PH,&mesloop.F,&p_in.F,&p_ou.LO}, //nasty_in
-	 {&j.PH,&mesloop.F,&p_in.LO,&p_ou.F}, //nasty_ou
-	 //
-	 {&j.PH,&mesloop.LO,&p_in.FF,&p_ou.LO}, //self_in
-	 {&j.PH,&mesloop.LO,&p_in.LO,&p_ou.FF}, //self_ou
-	 //
-	 {&j.PH,&mesloop.LO,&p_in.T,&p_ou.LO}, //tad_in
-	 {&j.PH,&mesloop.LO,&p_in.LO,&p_ou.T}, //tad_ou
-	 //
+	 // //
+	 // //
+	 // {&j.PH,&mesloop.F,&p_in.F,&p_ou.LO}, //nasty_in
+	 // {&j.PH,&mesloop.F,&p_in.LO,&p_ou.F}, //nasty_ou
+	 // //
+	 // {&j.PH,&mesloop.LO,&p_in.FF,&p_ou.LO}, //self_in
+	 // {&j.PH,&mesloop.LO,&p_in.LO,&p_ou.FF}, //self_ou
+	 // //
+	 // {&j.PH,&mesloop.LO,&p_in.T,&p_ou.LO}, //tad_in
+	 // {&j.PH,&mesloop.LO,&p_in.LO,&p_ou.T}, //tad_ou
+	 // //
 	 {&j.PH,&mesloop.LO,&p_in.F,&p_ou.F}, //exchange
-	 //
-	 //
-	 {&j.CR_CT_IN,&mesloop.LO,&p_in.P,&p_ou.LO}, //critical counterterm_in
-	 {&j.CR_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.P}, //critical counterterm_ou
-	 //
-	 //
-	 {&j.TM_CT_IN,&mesloop.LO,&p_in.S,&p_ou.LO}, //twisted counterterm_in
-	 {&j.TM_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.S}, //twisted counterterm_ou
+	 // //
+	 // //
+	 // {&j.CR_CT_IN,&mesloop.LO,&p_in.P,&p_ou.LO}, //critical counterterm_in
+	 // {&j.CR_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.P}, //critical counterterm_ou
+	 // //
+	 // //
+	 // {&j.TM_CT_IN,&mesloop.LO,&p_in.S,&p_ou.LO}, //twisted counterterm_in
+	 // {&j.TM_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.S}, //twisted counterterm_ou
 	 };
        
        const Zop_t &zop=zops[iop];
@@ -267,8 +267,8 @@ void perens_t::mom_compute_meslep()
       for(auto &p : vector<tuple<djvec_t*,const vector<jqprop_t>*,const vector<jqprop_t>*,const vector<jqprop_t>*>>{
 	  {&pr_LO,              &jprop_inv_in,     &j.LO,  &jprop_inv_ou},
 	  {&pr_QED_amp_QCD,     &jprop_inv_in,     &j.QED, &jprop_inv_ou},
-	  {&pr_QCD_amp_QED_in,  &jprop_QED_inv_in, &j.LO,  &jprop_inv_ou},
-	  {&pr_QCD_amp_QED_ou,  &jprop_inv_in,     &j.LO,  &jprop_QED_inv_ou}
+	  // {&pr_QCD_amp_QED_in,  &jprop_QED_inv_in, &j.LO,  &jprop_inv_ou},
+	  // {&pr_QCD_amp_QED_ou,  &jprop_inv_in,     &j.LO,  &jprop_QED_inv_ou}
 	    })
 	{
 	  auto &out=*get<0>(p);
