@@ -237,8 +237,9 @@ void perens_t::build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops
 	for(auto &jp_p : vector<tuple<jqprop_t*,const qprop_t*>>({
 	      {&j.PH,&p.FF},
 	      {&j.PH,&p.T},
-	      {&j.CR_CT,&p.P},
-	      {&j.TM_CT,&p.S}}))
+	      // {&j.CR_CT,&p.P},
+	      // {&j.TM_CT,&p.S}
+	    }))
 	  (*get<0>(jp_p))[ijack]+=*get<1>(jp_p);
     }
 }
