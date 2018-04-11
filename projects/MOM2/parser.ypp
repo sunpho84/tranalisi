@@ -56,6 +56,7 @@ using namespace scan;
 %token TK_BC
 %token TK_CHIR_EXTR_METHOD
 %token TK_COMPUTE_MESLEP
+%token TK_COMPUTE_MESLEP_WITH_CHARGES_ONE
 %token TK_ENSEMBLES
 %token TK_FILTER_THRESH
 %token TK_NF
@@ -87,6 +88,7 @@ commands:
         | commands set_boundary_conditions
         | commands set_chir_extr_method
         | commands set_compute_meslep
+        | commands set_compute_meslep_with_charges_one
         | commands set_filter_thresh
         | commands set_nf
         | commands set_njacks
@@ -133,6 +135,9 @@ set_chir_extr_method: TK_CHIR_EXTR_METHOD '=' TK_QUOTED_TEXT {pars::chir_extr_me
 ;
 
 set_compute_meslep: TK_COMPUTE_MESLEP '=' TK_INTE {pars::compute_meslep=$3;}
+;
+
+set_compute_meslep_with_charges_one: TK_COMPUTE_MESLEP_WITH_CHARGES_ONE {using namespace meslep;ql=q_in=q_ou=1.0;}
 ;
 
 set_filter_thresh: TK_FILTER_THRESH '=' TK_REAL {pars::filter_thresh=$3;}

@@ -15,9 +15,9 @@
 namespace meslep
 {
   //these are the charges in the lagrangian
-  const double ql=-1.0;        //!< the program simulates muon *antiparticle*
-  const double q_in=+2.0/3.0;  //!< charge of the quark which comes into the vertex
-  const double q_ou=-1.0/3.0;  //!< charge of the quark which comes out the vertex
+  EXTERN_MESLEP double ql   INIT_MESLEP_TO(=-1.0);      //!< the program simulates muon *antiparticle*
+  EXTERN_MESLEP double q_in INIT_MESLEP_TO(=+2.0/3.0);  //!< charge of the quark which comes into the vertex
+  EXTERN_MESLEP double q_ou INIT_MESLEP_TO(=-1.0/3.0);  //!< charge of the quark which comes out the vertex
   
   struct mesloop_t
   {
