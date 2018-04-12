@@ -174,7 +174,7 @@ compute_or_load: TK_COMPUTE_OR_LOAD '(' ')' {compute_or_load_all();}
 plot_Z: TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$3);delete $3;}
 ;
 
-print_discr: TK_PRINT_DISCR {print_discr();}
+print_discr: TK_PRINT_DISCR '(' ')' {print_discr();}
 ;
 
 average_r: TK_AVERAGE_R '(' ')' {average_all_r();}
