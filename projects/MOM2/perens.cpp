@@ -283,7 +283,7 @@ void perens_t::print_discr()
   ofstream out(dir_path+"/p2_p4.txt");
   for(size_t imom=0;imom<linmoms.size();imom++)
     {
-      const p_t p=all_moms[imom].p(L);
+      const p_t p=all_moms[linmoms[imom][0]].p(L);
       const double p2tilde=p.tilde().norm2();
       out<<p2tilde<<" "<<p.norm2()<<" "<<p.norm4()<<endl;
     }
