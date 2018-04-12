@@ -399,7 +399,7 @@ void perens_t::plot_Zmeslep(const string &suffix)
 		    {
 		      out.new_data_set();
 		      
-		      for(size_t imom=0;imom<linmoms.size();imom++)
+		      for(size_t imom=0;imom<meslepmoms().size();imom++)
 			{
 			  const double p2tilde=all_moms[meslepmoms()[imom][0]].p(L).tilde().norm2();
 			  size_t i=im_r_im_r_iop_iproj_imeslepmom_ind({im_in,r,im_ou,r,iop,iproj,imom});
