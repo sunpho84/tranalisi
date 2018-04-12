@@ -184,3 +184,8 @@ void list_ensembles()
    for(auto &path : pars::ens)
      cout<<" "<<path<<endl;
 }
+
+void print_discr()
+{
+  for(auto &path : pars::ens) data(path,ASSERT_PRESENT).print_discr();
+}

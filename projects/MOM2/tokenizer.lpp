@@ -105,6 +105,7 @@ ComputeOrLoad                       DEBUG_PRINTF("Found ComputeOrLoad\n");return
 Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVOLVE;
 ListEnsembles                       DEBUG_PRINTF("Found ListEnsembles\n");return TK_LIST_ENSEMBLES;
 PlotZ                               DEBUG_PRINTF("Found PlotZ\n");return TK_PLOT_Z;
+PrintDiscr                          DEBUG_PRINTF("Found PrintDiscr\n");return TK_PRINT_DISCR;
 SeaChirExtrap                       DEBUG_PRINTF("Found SeaChirExtrap\n");return TK_SEA_CHIR_EXTRAP;
 SubtractOa2                         DEBUG_PRINTF("Found SubtractOa2\n");return TK_SUBTRACT_OA2;
 ValChirExtrap                       DEBUG_PRINTF("Found ValChirExtrap\n");return TK_VAL_CHIR_EXTRAP;

@@ -71,4 +71,7 @@ void list_ensembles();
 //! extrapolate w.r.t sea mass
 void sea_chir_extrap(const string out,const vector<string> &ens_list);
 
+//! print momenta with discretization
+void print_discr();
+
 #endif

@@ -74,6 +74,7 @@ using namespace scan;
 %token TK_EVOLVE
 %token TK_LIST_ENSEMBLES
 %token TK_PLOT_Z
+%token TK_PRINT_DISCR
 %token TK_SEA_CHIR_EXTRAP
 %token TK_SUBTRACT_OA2
 %token TK_VAL_CHIR_EXTRAP
@@ -103,6 +104,7 @@ commands:
         | commands sea_chir_extrap
         | commands val_chir_extrap
         | commands plot_Z
+        | commands print_discr
         | commands compute_or_load
         | commands list_ensembles
         /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
@@ -170,6 +172,9 @@ compute_or_load: TK_COMPUTE_OR_LOAD '(' ')' {compute_or_load_all();}
 ;
 
 plot_Z: TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$3);delete $3;}
+;
+
+print_discr: TK_PRINT_DISCR {print_discr();}
 ;
 
 average_r: TK_AVERAGE_R '(' ')' {average_all_r();}

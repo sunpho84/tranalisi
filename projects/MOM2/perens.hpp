@@ -268,6 +268,9 @@ struct perens_t
   //! set momenta for s-mom
   void set_smom_moms();
   
+  //! print all momenta with discretizations
+  void print_discr();
+  
   /////////////////////////////////////////////////////////////////
   
   //! set parameters for the scratch
