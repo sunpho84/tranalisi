@@ -311,14 +311,14 @@ vector<perens_t::task_t> perens_t::get_pr_meslep_tasks(const vector<const perens
 
 vector<perens_t::task_t> perens_t::get_Zmeslep_tasks(const vector<const perens_t*> &ens)
 {
-  vector<const djvec_t*> in_Zmeslep,in_Zmeslep_QED;
+  vector<const djvec_t*> in_Zmeslep,in_Zmeslep_QED_rel;
   for(auto &e : ens)
     {
       in_Zmeslep.push_back(&e->Zmeslep);
-      if(pars::use_QED) in_Zmeslep_QED.push_back(&e->Zmeslep_QED);
+      if(pars::use_QED) in_Zmeslep_QED_rel.push_back(&e->Zmeslep_QED_rel);
     }
   vector<task_t> Zmeslep_tasks={{&Zmeslep,in_Zmeslep,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep"}};
-  if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED,in_Zmeslep_QED,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep_QED"});
+  if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED_rel,in_Zmeslep_QED_rel,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep_QED_rel"});
   
   return Zmeslep_tasks;
 }
@@ -358,14 +358,13 @@ void perens_t::compute_Zmeslep()
 		  const Zmeslep_t Gamma_meslep_combo_inv=Gamma_meslep_combo.inverse();
 		  
 		  auto Zq_contr=sqrt(Zq_sig1[im_r_in_ilinmom_in][ijack]*Zq_sig1[im_r_ou_ilinmom_ou][ijack]);
-		  auto Zq_QED_contr=
+		  auto Zq_QED_rel_contr=
 		    0.5*
 		    (Zq_sig1_QED_rel[im_r_in_ilinmom_in][ijack]*sqr(meslep::q_in)+
 		     Zq_sig1_QED_rel[im_r_ou_ilinmom_ou][ijack]*sqr(meslep::q_ou));
 		  
 		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
-		  auto Z_QED=// Z_LO*
-		    (Zq_QED_contr*Zmeslep_t::Identity()-Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
+		  auto Z_QED_rel=(Zq_QED_rel_contr*Zmeslep_t::Identity()-Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
 		  
 		  for(size_t iop=0;iop<nZop;iop++)
 		    for(size_t iproj=0;iproj<nZop;iproj++)
@@ -373,7 +372,7 @@ void perens_t::compute_Zmeslep()
 			const size_t im_r_im_r_iop_iproj_imeslepmom=im_r_im_r_iop_iproj_imeslepmom_ind({im_in,r_in,im_ou,r_ou,iop,iproj,imeslepmom});
 			
 			Zmeslep[im_r_im_r_iop_iproj_imeslepmom][ijack]=Z_LO(iop,iproj);
-			Zmeslep_QED[im_r_im_r_iop_iproj_imeslepmom][ijack]=Z_QED(iop,iproj);
+			Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom][ijack]=Z_QED_rel(iop,iproj);
 		      }
 		}
 	    }

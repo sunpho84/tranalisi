@@ -192,7 +192,7 @@ void perens_t::mom_compute_bil()
 	    (-pr_bil_a
 	     -pr_bil_b
 	     +pr_bil_QED)/
-	    pr_bil;
+	    pr_bil_temp;
 	}
       
       //! an index running on all packed combo, and momenta
