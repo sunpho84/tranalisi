@@ -346,8 +346,8 @@ void perens_t::mom_compute_qprop()
 	  if(pars::use_QED)
 	    {
 	      Zq_time.start();
-	      Zq_QED[im_r_ilinmom][ijack]=-compute_Zq(jprop_QED_inv[im_r][ijack],mom);
-	      Zq_sig1_QED[im_r_ilinmom][ijack]=-compute_Zq_sig1(jprop_QED_inv[im_r][ijack],mom);
+	      Zq_QED_rel[im_r_ilinmom][ijack]=compute_Zq(-jprop_QED_inv[im_r][ijack],mom)/Zq[im_r_ilinmom][ijack];
+	      Zq_sig1_QED_rel[im_r_ilinmom][ijack]=compute_Zq_sig1(-jprop_QED_inv[im_r][ijack],mom)/Zq_sig1[im_r_ilinmom][ijack];
 	      Zq_time.stop();
 	    }
 	}
