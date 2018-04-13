@@ -164,7 +164,7 @@ set_print_each_mom: TK_PRINT_EACH_MOM '=' TK_INTE {pars::print_each_mom=$3;}
 set_scheme: TK_SCHEME '=' TK_QUOTED_TEXT {pars::scheme=reno_scheme::decrypt(*$3);delete $3;}
 ;
 
-set_twisted_run: TK_TWISTED_RUN '=' TK_INTE {pars::twisted_run=$3;}
+set_twisted_run: TK_TWISTED_RUN '=' TK_INTE {pars::twisted_run=$3;pars::phys_basis=false;}
 ;
 
 set_use_deltam_cr_ct: TK_USE_DELTAM_CR_CT '=' TK_INTE {pars::use_deltam_cr_ct=$3;}
