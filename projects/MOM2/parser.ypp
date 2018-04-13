@@ -61,8 +61,10 @@ using namespace scan;
 %token TK_FILTER_THRESH
 %token TK_NF
 %token TK_NJACKS
+%token TK_PHYS_BASIS
 %token TK_PRINT_EACH_MOM
 %token TK_SCHEME
+%token TK_TWISTED_RUN
 %token TK_USE_DELTAM_CR_CT
 %token TK_USE_DELTAM_TM_CT
 %token TK_USE_QED
@@ -93,8 +95,10 @@ commands:
         | commands set_filter_thresh
         | commands set_nf
         | commands set_njacks
+        | commands set_phys_basis
         | commands set_print_each_mom
         | commands set_scheme
+        | commands set_twisted_run
         | commands set_use_QED
         | commands set_use_deltam_cr_ct
         | commands set_use_deltam_tm_ct
@@ -151,10 +155,16 @@ set_nf: TK_NF '=' TK_INTE {evol::Nf_t_of_Nf($3);}
 set_njacks: TK_NJACKS '=' TK_INTE {set_njacks($3);}
 ;
 
+set_phys_basis: TK_PHYS_BASIS '=' TK_INTE {pars::phys_basis=$3;}
+;
+
 set_print_each_mom: TK_PRINT_EACH_MOM '=' TK_INTE {pars::print_each_mom=$3;}
 ;
 
 set_scheme: TK_SCHEME '=' TK_QUOTED_TEXT {pars::scheme=reno_scheme::decrypt(*$3);delete $3;}
+;
+
+set_twisted_run: TK_TWISTED_RUN '=' TK_INTE {pars::twisted_run=$3;}
 ;
 
 set_use_deltam_cr_ct: TK_USE_DELTAM_CR_CT '=' TK_INTE {pars::use_deltam_cr_ct=$3;}

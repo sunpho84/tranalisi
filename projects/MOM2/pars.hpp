@@ -57,10 +57,14 @@ namespace pars
   EXTERN_PARS bool compute_meslep INIT_PARS_TO({false});
   //! Filter for democracy
   EXTERN_PARS double filter_thresh INIT_PARS_TO({1});
+  //! assume physical basis propagator
+  EXTERN_PARS bool phys_basis INIT_PARS_TO({true});
   //! number of momenta between each print
   EXTERN_PARS size_t print_each_mom INIT_PARS_TO({100});
   //! reno scheme used
   EXTERN_PARS reno_scheme::type_t scheme INIT_PARS_TO({reno_scheme::RI_MOM});
+  //! assume twisted run
+  EXTERN_PARS bool twisted_run INIT_PARS_TO({true});
   //! compute deltam_cr counterterm and subtract
   EXTERN_PARS bool use_deltam_cr_ct INIT_PARS_TO({true});
   //! compute deltam_tm counterterm and subtract

@@ -107,9 +107,14 @@ void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
 	    temp(isc(is_si,ic_si),isc(is_so,ic_so))=c*fact;
 	  }
   
-  auto rot_si=get_rotator(quaGamma,r_si);
-  auto rot_so=get_rotator(quaGamma,r_so);
-  *prop=rot_si*temp*rot_so;
+  if(pars::twisted_run and pars::phys_basis)
+    {
+      auto rot_si=get_rotator(quaGamma,r_si);
+      auto rot_so=get_rotator(quaGamma,r_so);
+      *prop=rot_si*temp*rot_so;
+    }
+  else
+    *prop=temp;
 }
 
 void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const int r_si,const int r_so)
@@ -128,9 +133,14 @@ void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
 	    temp(is_si,is_so)=c*fact;
 	  }
   
-  auto rot_si=get_rotator(lepGamma,r_si);
-  auto rot_so=get_rotator(lepGamma,r_so);
-  *prop=rot_si*temp*rot_so;
+  if(pars::twisted_run and pars::phys_basis)
+    {
+      auto rot_si=get_rotator(lepGamma,r_si);
+      auto rot_so=get_rotator(lepGamma,r_so);
+      *prop=rot_si*temp*rot_so;
+    }
+  else
+    *prop=temp;
 }
 
 void incorporate_charge(vector<m_r_mom_conf_qprops_t> &props,const double ch)

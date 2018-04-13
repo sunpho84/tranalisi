@@ -92,8 +92,10 @@ Ensembles                           DEBUG_PRINTF("Found Ensembles\n");return TK_
 FilterThresh                        DEBUG_PRINTF("Found FilterThresh\n");return TK_FILTER_THRESH;
 NJacks                              DEBUG_PRINTF("Found NJacks\n");return TK_NJACKS;
 NF                                  DEBUG_PRINTF("Found NF\n");return TK_NF;
+PhysBasis                           DEBUG_PRINTF("Found PhysBasis\n");return TK_PHYS_BASIS;
 PrintEachMom                        DEBUG_PRINTF("Found PrintEachMom\n");return TK_PRINT_EACH_MOM;
 Scheme                              DEBUG_PRINTF("Found Scheme\n");return TK_SCHEME;
+TwistedRun                          DEBUG_PRINTF("Found TwistedRun\n");return TK_TWISTED_RUN;
 UseDeltamCrCt                       DEBUG_PRINTF("Found UseDeltamCrCt\n");return TK_USE_DELTAM_CR_CT;
 UseDeltamTmCt                       DEBUG_PRINTF("Found UseDeltamTmCt\n");return TK_USE_DELTAM_TM_CT;
 UseQED                              DEBUG_PRINTF("Found UseQED\n");return TK_USE_QED;
