@@ -22,7 +22,7 @@ void data_erase(const string &key);
 
 inline void compute_or_load_all()
 {
-  cout<<"Going to rotate propagators: "<<pars::twisted_run and pars::phys_basis<<endl;
+  cout<<"Going to rotate propagators: "<<(pars::twisted_run and pars::phys_basis)<<endl;
   
   for(auto &name : pars::ens)
     data(name,PRESENCE_NOT_NEEDED)
