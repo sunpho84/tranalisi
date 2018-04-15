@@ -108,7 +108,7 @@ Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVO
 ListEnsembles                       DEBUG_PRINTF("Found ListEnsembles\n");return TK_LIST_ENSEMBLES;
 PlotZ                               DEBUG_PRINTF("Found PlotZ\n");return TK_PLOT_Z;
 PrintDiscr                          DEBUG_PRINTF("Found PrintDiscr\n");return TK_PRINT_DISCR;
-Ratio_Minus_One                     DEBUG_PRINTF("Found Ratio_Minus_One\n");return TK_RATIO_MINUS_ONE;
+RatioMinusOne                       DEBUG_PRINTF("Found RatioMinusOne\n");return TK_RATIO_MINUS_ONE;
 SeaChirExtrap                       DEBUG_PRINTF("Found SeaChirExtrap\n");return TK_SEA_CHIR_EXTRAP;
 SubtractOa2                         DEBUG_PRINTF("Found SubtractOa2\n");return TK_SUBTRACT_OA2;
 ValChirExtrap                       DEBUG_PRINTF("Found ValChirExtrap\n");return TK_VAL_CHIR_EXTRAP;
