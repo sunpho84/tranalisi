@@ -236,6 +236,8 @@ perens_t perens_t::val_chir_extrap() const
       out.set_indices();
       out.allocate();
       
+      CRASH("Needs to extrapolate delta and meson masses");
+      
       val_chir_extrap_Zq(out);
       val_chir_extrap_Zbil(out);
       val_chir_extrap_Zmeslep(out);
