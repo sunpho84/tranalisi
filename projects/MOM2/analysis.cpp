@@ -82,6 +82,67 @@ void average(const string out,const string in1,const string in2)
     }
 }
 
+void ratio_minus_one(const string out,const string in1,const string in2)
+{
+  assert_compatible(in1,in2);
+  
+  cout<<"Taking ratio minus one of "<<in1<<" and "<<in2<<" into "<<out<<endl;
+  
+  pars::ens.push_back(out);
+  data(out,PRESENCE_NOT_NEEDED)=data(in1,ASSERT_PRESENT);
+  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
+  
+  for(auto &p : data(out,PRESENCE_NOT_NEEDED).get_all_tasks({&data(in2,ASSERT_PRESENT)}))
+    {
+      djvec_t &out=*p.out;
+      const djvec_t &in=*p.in.front();
+      
+      out/=in;
+      out-=1.0;
+    }
+  
+  auto &dout=data(out,PRESENCE_NOT_NEEDED);
+  const auto &din1=data(in1,PRESENCE_NOT_NEEDED);
+  const auto &din2=data(in2,PRESENCE_NOT_NEEDED);
+  
+  dout.deltam_cr=din1.deltam_cr/din2.deltam_cr-1.0;
+  dout.deltam_tm=din1.deltam_tm/din2.deltam_tm-1.0;
+  dout.meson_mass=din1.meson_mass/din2.meson_mass-1.0;
+  dout.meson_mass_sea=din1.meson_mass_sea/din2.meson_mass_sea-1.0;
+  for(size_t im=0;im<dout.nm;im++)
+  for(size_t r=0;r<dout.nr;r++)
+    {
+      size_t imr=dout.im_r_ind({im,r});
+      cout<<"deltam_cr[m="<<im<<",r="<<r<<"]: "<<
+	smart_print(dout.deltam_cr[imr].ave_err())<<" = "<<
+	smart_print(din1.deltam_cr[imr].ave_err())<<" / "<<
+	smart_print(din2.deltam_cr[imr].ave_err())<<" - 1.0"<<endl;
+      cout<<"deltam_tm[m="<<im<<",r="<<r<<"]: "<<
+	smart_print(dout.deltam_tm[imr].ave_err())<<" = "<<
+	smart_print(din1.deltam_tm[imr].ave_err())<<" / "<<
+	smart_print(din2.deltam_tm[imr].ave_err())<<" - 1.0"<<endl;
+    }
+  
+  for(size_t im1=0;im1<dout.nm;im1++)
+    for(size_t im2=0;im2<dout.nm;im2++)
+      {
+	size_t i=dout.im_im_ind({im1,im2});
+	cout<<"meson_mass[m1="<<im1<<",m2="<<im2<<"]: "<<
+	  smart_print(dout.meson_mass[i].ave_err())<<" = "<<
+	  smart_print(din1.meson_mass[i].ave_err())<<" / "<<
+	  smart_print(din2.meson_mass[i].ave_err())<<" - 1.0"<<endl;
+      }
+  cout<<"meson_mass_sea: "<<
+    dout.meson_mass_sea.ave_err()<<" = "<<din1.meson_mass_sea.ave_err()<<" / "<<din2.meson_mass_sea.ave_err()<<" -1.0"<<endl;
+  
+  //remove from the list
+  for(auto in : {in1,in2})
+    {
+      data_erase(in);
+      pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
+    }
+}
+
 void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
 {
   if(ens_list.size()<2) CRASH("Need at least 2 ensembles, %zu passed",ens_list.size());

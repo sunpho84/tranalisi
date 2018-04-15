@@ -67,6 +67,9 @@ DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap)
 //! average in1 and in2 to form out, removing the in
 void average(const string out,const string in1,const string in2);
 
+//! in1/in2-1 to form out, removing the in
+void ratio_minus_one(const string out,const string in1,const string in2);
+
 //! print all ensembles available
 void list_ensembles();
 

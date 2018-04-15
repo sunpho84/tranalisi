@@ -77,6 +77,7 @@ using namespace scan;
 %token TK_LIST_ENSEMBLES
 %token TK_PLOT_Z
 %token TK_PRINT_DISCR
+%token TK_RATIO_MINUS_ONE
 %token TK_SEA_CHIR_EXTRAP
 %token TK_SUBTRACT_OA2
 %token TK_VAL_CHIR_EXTRAP
@@ -109,6 +110,7 @@ commands:
         | commands val_chir_extrap
         | commands plot_Z
         | commands print_discr
+        | commands ratio_minus_one
         | commands compute_or_load
         | commands list_ensembles
         /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
@@ -199,6 +201,8 @@ val_chir_extrap: TK_VAL_CHIR_EXTRAP '(' ')' {val_chir_extrap_all();}
 /////////////////////////////////////////////////////////////////
 
 average: TK_QUOTED_TEXT '=' TK_AVERAGE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
+
+ratio_minus_one: TK_QUOTED_TEXT '=' TK_RATIO_MINUS_ONE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {ratio_minus_one(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
 
 sea_chir_extrap: TK_QUOTED_TEXT '=' TK_SEA_CHIR_EXTRAP '(' string_list ')' {sea_chir_extrap(*$1,*$5);delete $1;delete $5;}
 ;
