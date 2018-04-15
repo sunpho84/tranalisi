@@ -267,3 +267,41 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	}
     }
 }
+
+void perens_t::val_chir_extrap_deltam(perens_t &out) const
+{
+  //slice m
+  vector<double> x(nm);
+  djvec_t y(nm);
+  for(size_t im=0;im<nm;im++)
+    if(pars::chir_extr_method==chir_extr::MQUARK) x[im]=am[im];
+    else                                          x[im]=sqr(meson_mass[im_im_ind({im,im})].ave());
+  
+  for(auto &t : vector<tuple<djvec_t*,const djvec_t*,const string>>{{&out.deltam_cr,&deltam_cr,"deltam_cr"},{&out.deltam_tm,&deltam_tm,"deltam_tm"}})
+    {
+      djvec_t &res=*get<0>(t);
+      const djvec_t &in=*get<1>(t);
+      const string &tag=get<2>(t);
+      
+      //open the plot file if needed
+      const string plot_path=dir_path+"/plots/chir_extr_"+tag+".xmg";
+      grace_file_t plot(plot_path);
+      
+      for(size_t r=0;r<nr;r++)
+	{
+	  //slice m
+	  djvec_t y(nm);
+	  for(size_t im=0;im<nm;im++)
+	    y[im]=in[im_r_ind({im,r})];
+	  
+	  //fit, store and write the result
+	  djvec_t coeffs=poly_fit(x,y,1);
+	  res[out.im_r_ind({0,r})]=coeffs[0];
+	  
+	  auto xminmax=minmax_element(x.begin(),x.end());
+	  double xmax=*xminmax.second*1.1;
+	  write_fit_plot(plot,0,xmax,bind(poly_eval<djvec_t>,coeffs,_1),am,y);
+	  plot.write_ave_err(0,coeffs[0].ave_err());
+	}
+    }
+}

@@ -386,16 +386,19 @@ struct perens_t
   
   perens_t val_chir_extrap() const;
   
-  //extrapolate to chiral limit Zq
+  //! extrapolate to chiral limit Zq
   void val_chir_extrap_Zq(perens_t &out) const;
   
-  //extrapolate to chiral limit Zbil
+  //! extrapolate to chiral limit Zbil
   void val_chir_extrap_Zbil(perens_t &out) const;
   
-  //extrapolate to chiral limit Zmeslep
+  //! extrapolate to chiral limit Zmeslep
   void val_chir_extrap_Zmeslep(perens_t &out) const;
   
-  /////////////////////////////////////////////////////////////////
+  //! extrapolate to chiral limit deltas
+  void val_chir_extrap_deltam(perens_t &out) const;
+  
+/////////////////////////////////////////////////////////////////
   
   perens_t p2eq0extrap() const;
   

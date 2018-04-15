@@ -218,6 +218,14 @@ perens_t perens_t::average_r() const
   average_r_Zbil(out);
   average_r_Zmeslep(out);
   
+  out.meson_mass_sea=meson_mass_sea;
+  out.meson_mass=meson_mass;
+  for(size_t im=0;im<nm;im++)
+    {
+      out.deltam_cr[im]=(deltam_cr[im_r_ind({im,0})]+deltam_cr[im_r_ind({im,1})])/2.0;
+      out.deltam_tm[im]=(deltam_tm[im_r_ind({im,0})]+deltam_tm[im_r_ind({im,1})])/2.0;
+    }
+  
   out.compute_Zbil();
   if(pars::compute_meslep) out.compute_Zmeslep();
   
@@ -232,15 +240,17 @@ perens_t perens_t::val_chir_extrap() const
     {
       out.nm=1;
       out.am={0.0};
+      out.meson_mass_sea=meson_mass_sea;
+      out.meson_mass=0.0;
       
       out.set_indices();
       out.allocate();
       
-      CRASH("Needs to extrapolate delta and meson masses");
-      
       val_chir_extrap_Zq(out);
       val_chir_extrap_Zbil(out);
       val_chir_extrap_Zmeslep(out);
+      
+      val_chir_extrap_deltam(out);
       
       out.compute_Zbil();
       if(pars::compute_meslep) out.compute_Zmeslep();
