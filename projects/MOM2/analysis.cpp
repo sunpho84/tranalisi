@@ -102,8 +102,8 @@ void ratio_minus_one(const string out,const string in1,const string in2)
     }
   
   auto &dout=data(out,PRESENCE_NOT_NEEDED);
-  const auto &din1=data(in1,PRESENCE_NOT_NEEDED);
-  const auto &din2=data(in2,PRESENCE_NOT_NEEDED);
+  const auto &din1=data(in1,ASSERT_PRESENT);
+  const auto &din2=data(in2,ASSERT_PRESENT);
   
   dout.deltam_cr=din1.deltam_cr/din2.deltam_cr-1.0;
   dout.deltam_tm=din1.deltam_tm/din2.deltam_tm-1.0;
