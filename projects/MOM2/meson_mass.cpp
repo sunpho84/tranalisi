@@ -8,8 +8,6 @@
 
 perens_t& perens_t::get_meson_mass()
 {
-  meson_mass.resize(im_im_ind.max());
-  
   //if file exists open it, otherwise compute it
   const string meson_mass_path=dir_path+"/meson_mass.dat";
   if(file_exists(meson_mass_path))
