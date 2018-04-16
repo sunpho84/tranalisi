@@ -29,10 +29,10 @@ inline void compute_or_load_all()
       .read_pars(name)
       .set_pars_for_scratch()
       .set_indices()
+      .allocate()
       .get_deltam()
       .get_mPCAC()
       .get_meson_mass()
-      .allocate()
       .read_or_compute();
 }
 

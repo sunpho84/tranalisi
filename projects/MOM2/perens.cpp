@@ -56,6 +56,11 @@ perens_t& perens_t::allocate()
   for(auto &task : get_all_tasks())
     task.out->resize(task.ind.max());
   
+  for(auto &t : {&deltam_cr,&deltam_tm})
+    t->resize(im_r_ind.max());
+  
+  meson_mass.resize(im_im_ind.max());
+  
   return *this;
 }
 
