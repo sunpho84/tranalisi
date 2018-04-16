@@ -12,6 +12,17 @@
 template <class meas_t> class vmeas_t : public valarray<meas_t>
 {
 public:
+  //! safe resize
+  void resize(size_t sz,meas_t C=meas_t())
+  {
+    if(sz!=this->size())
+      {
+	auto old=*this;
+	this->valarray<meas_t>::resize(sz);
+	for(size_t i=0;i<min(this->size(),old.size());i++) (*this)[i]=old[i];
+      }
+  }
+  
   //! bind the base type of meas_t
   using base_type=meas_t;
   
