@@ -211,7 +211,7 @@ void perens_t::bin_write(raw_file_t &file)
 perens_t perens_t::average_r() const
 {
   perens_t out=*this;
-  
+  cout<<meson_mass.ave_err()<<" "<<out.meson_mass.ave_err()<<endl;
   out.nr=1;
   out.linmoms=linmoms;
   out.bilmoms=bilmoms;
