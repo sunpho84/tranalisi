@@ -171,7 +171,7 @@ void perens_t::val_chir_extrap_Zq(perens_t &out) const
 		{
 		  auto xminmax=minmax_element(x.begin(),x.end());
 		  double xmax=*xminmax.second*1.1;
-		  write_fit_plot(*plot,0,xmax,bind(poly_eval<djvec_t>,coeffs,_1),am,y);
+		  write_fit_plot(*plot,0,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
 		  plot->write_ave_err(0,coeffs[0].ave_err());
 		}
 	    }
