@@ -216,11 +216,8 @@ perens_t perens_t::average_r() const
   out.linmoms=linmoms;
   out.bilmoms=bilmoms;
   
-  cout<<out.meson_mass.ave_err()<<endl;
   out.set_indices();
-  cout<<"set "<<out.meson_mass.ave_err()<<endl;
   out.allocate();
-  cout<<"all "<<out.meson_mass.ave_err()<<endl;
   
   average_r_Zq(out);
   average_r_Zbil(out);
@@ -235,7 +232,7 @@ perens_t perens_t::average_r() const
   
   out.compute_Zbil();
   if(pars::compute_meslep) out.compute_Zmeslep();
-
+  
   return out;
 }
 
