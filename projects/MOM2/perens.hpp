@@ -107,15 +107,15 @@ struct perens_t
   //Zq, with and without QED
   djvec_t Zq;
   djvec_t Zq_sig1;
-  djvec_t Zq_QED_rel;
-  djvec_t Zq_sig1_QED_rel;
+  djvec_t Zq_QED;  //not rel!
+  djvec_t Zq_sig1_QED;
   
   //! return a list of tasks for Zq
   vector<task_t> get_Zq_tasks(const vector<const perens_t*>& ens={});
   
   //projected bilinears with and without QED
   djvec_t pr_bil;
-  djvec_t pr_bil_QED_rel;
+  djvec_t pr_bil_QED;
   
   //! return a list of tasks for bilinears projected vertex
   vector<task_t> get_pr_bil_tasks(const vector<const perens_t*> &ens={});

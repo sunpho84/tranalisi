@@ -182,17 +182,16 @@ void perens_t::mom_compute_bil()
       djvec_t pr_bil_temp=compute_proj_bil(jprop_inv1,jverts.LO,jprop_inv2);
       
       //QED
-      djvec_t pr_bil_QED_rel_temp;
+      djvec_t pr_bil_QED_temp;
       if(pars::use_QED)
 	{
 	  const djvec_t pr_bil_QED=compute_proj_bil(jprop_inv1,jverts.QED,jprop_inv2);
 	  const djvec_t pr_bil_a=compute_proj_bil(jprop_QED_inv1,jverts.LO,jprop_inv2);
 	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_QED_inv2);
-	  pr_bil_QED_rel_temp=
+	  pr_bil_QED_temp=
 	    (-pr_bil_a
 	     -pr_bil_b
-	     +pr_bil_QED)/
-	    pr_bil_temp;
+	     +pr_bil_QED);
 	}
       
       //! an index running on all packed combo, and momenta
@@ -200,7 +199,7 @@ void perens_t::mom_compute_bil()
       
       //store
       vector<pair<djvec_t*,djvec_t*>> store_task={{&pr_bil,&pr_bil_temp}};
-      if(pars::use_QED) store_task.push_back({&pr_bil_QED_rel,&pr_bil_QED_rel_temp});
+      if(pars::use_QED) store_task.push_back({&pr_bil_QED,&pr_bil_QED_temp});
       for(auto &t : store_task)
 	for(size_t iall=0;iall<im_r_im_r_iZbil_ind.max();iall++)
 	  (*t.first)[all_ibilmom_ind({iall,ibilmom})]=(*t.second)[iall];
@@ -211,14 +210,14 @@ void perens_t::mom_compute_bil()
 
 vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*> &ens)
 {
-  vector<const djvec_t*> in_pr_bil,in_pr_bil_QED_rel;
+  vector<const djvec_t*> in_pr_bil,in_pr_bil_QED;
   for(auto &e : ens)
     {
       in_pr_bil.push_back(&e->pr_bil);
-      if(pars::use_QED) in_pr_bil_QED_rel.push_back(&e->pr_bil_QED_rel);
+      if(pars::use_QED) in_pr_bil_QED.push_back(&e->pr_bil_QED);
     }
   vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,im_r_im_r_iZbil_ibilmom_ind,"pr_bil"}};
-  if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED_rel,in_pr_bil_QED_rel,im_r_im_r_iZbil_ibilmom_ind,"pr_bil_QED_rel"});
+  if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,in_pr_bil_QED,im_r_im_r_iZbil_ibilmom_ind,"pr_bil_QED"});
   
   return pr_bil_tasks;
 }
@@ -258,8 +257,9 @@ void perens_t::compute_Zbil()
 	
 	if(pars::use_QED)
 	    Zbil_QED_rel[im_r_im_r_iZbil_ibilmom]=
-	      -pr_bil_QED_rel[im_r_im_r_iZbil_ibilmom]
-	      +(Zq_sig1_QED_rel[im_r1_ilinmom1]+Zq_sig1_QED_rel[im_r2_ilinmom2])/2.0;
+	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]
+	      +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+
+		Zq_sig1_QED[im_r2_ilinmom2]/Zq_sig1[im_r2_ilinmom2])/2.0;
       }
 }
 

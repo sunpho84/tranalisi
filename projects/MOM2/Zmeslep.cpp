@@ -360,8 +360,8 @@ void perens_t::compute_Zmeslep()
 		  auto Zq_contr=sqrt(Zq_sig1[im_r_in_ilinmom_in][ijack]*Zq_sig1[im_r_ou_ilinmom_ou][ijack]);
 		  auto Zq_QED_rel_contr=
 		    0.5*
-		    (Zq_sig1_QED_rel[im_r_in_ilinmom_in][ijack]*sqr(meslep::q_in)+
-		     Zq_sig1_QED_rel[im_r_ou_ilinmom_ou][ijack]*sqr(meslep::q_ou));
+		    (Zq_sig1_QED[im_r_in_ilinmom_in][ijack]/Zq_sig1[im_r_in_ilinmom_in][ijack]*sqr(meslep::q_in)+
+		     Zq_sig1_QED[im_r_ou_ilinmom_ou][ijack]/Zq_sig1[im_r_ou_ilinmom_ou][ijack]*sqr(meslep::q_ou));
 		  
 		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
 		  auto Z_QED_rel=(Zq_QED_rel_contr*Zmeslep_t::Identity()-Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);

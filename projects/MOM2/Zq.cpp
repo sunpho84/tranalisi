@@ -44,16 +44,16 @@ vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& e
       in_Zq_sig1.push_back(&e->Zq_sig1);
       if(pars::use_QED)
 	{
-	  in_Zq_QED.push_back(&e->Zq_QED_rel);
-	  in_Zq_sig1_QED.push_back(&e->Zq_sig1_QED_rel);
+	  in_Zq_QED.push_back(&e->Zq_QED);
+	  in_Zq_sig1_QED.push_back(&e->Zq_sig1_QED);
 	}
     }
   
   vector<task_t> Zq_tasks={{&Zq,in_Zq,im_r_ilinmom_ind,"Zq"},{&Zq_sig1,in_Zq_sig1,im_r_ilinmom_ind,"Zq_sig1"}};
   if(pars::use_QED)
     {
-      Zq_tasks.push_back({&Zq_QED_rel,in_Zq_QED,im_r_ilinmom_ind,"Zq_QED_rel"});
-      Zq_tasks.push_back({&Zq_sig1_QED_rel,in_Zq_sig1_QED,im_r_ilinmom_ind,"Zq_sig1_QED_rel"});
+      Zq_tasks.push_back({&Zq_QED,in_Zq_QED,im_r_ilinmom_ind,"Zq_QED"});
+      Zq_tasks.push_back({&Zq_sig1_QED,in_Zq_sig1_QED,im_r_ilinmom_ind,"Zq_sig1_QED"});
     }
   
   return Zq_tasks;
@@ -63,7 +63,21 @@ void perens_t::plot_Zq(const string &suffix)
 {
   cout<<"Plotting all Zq of "<<dir_path<<" for suffix: \""<<suffix<<"\""<<endl;
   
-  for(auto &t : this->get_Zq_tasks())
+  auto tasks=this->get_Zq_tasks();
+  
+  djvec_t Zq_QED_rel;
+  djvec_t Zq_sig1_QED_rel;
+  
+  if(pars::use_QED)
+    {
+      Zq_QED_rel=Zq_QED/Zq;
+      Zq_sig1_QED_rel=Zq_sig1_QED/Zq_sig1;
+      
+      tasks.push_back({&Zq_QED_rel,{},im_r_ilinmom_ind,"Zq_QED_rel"});
+      tasks.push_back({&Zq_sig1_QED_rel,{},im_r_ilinmom_ind,"Zq_sig1_QED_rel"});
+    }
+  
+  for(auto &t : tasks)
     {
       const djvec_t &Z=*t.out;
       const string &tag=t.tag;
