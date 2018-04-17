@@ -57,6 +57,10 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
+  enum QCD_QED_task_t{QCD_task,QED_task};
+  
+  /////////////////////////////////////////////////////////////////
+  
   double g2() const
   {
     return 6.0/beta;
@@ -100,8 +104,11 @@ struct perens_t
     const index_t ind;
     //! name of the task
     const string tag;
+    //! store if is QED
+    const QCD_QED_task_t QCD_QED_task;
     //! contructor
-    task_t(djvec_t *out,const vector<const djvec_t*>& in,const index_t& ind,const string tag) : in(in),out(out),ind(ind),tag(tag) {}
+    task_t(djvec_t *out,const vector<const djvec_t*>& in,const index_t& ind,const string tag,const QCD_QED_task_t QCD_QED_task) :
+      in(in),out(out),ind(ind),tag(tag),QCD_QED_task(QCD_QED_task) {}
   };
   
   //Zq, with and without QED

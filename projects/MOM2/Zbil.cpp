@@ -216,8 +216,8 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
       in_pr_bil.push_back(&e->pr_bil);
       if(pars::use_QED) in_pr_bil_QED.push_back(&e->pr_bil_QED);
     }
-  vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,im_r_im_r_iZbil_ibilmom_ind,"pr_bil"}};
-  if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,in_pr_bil_QED,im_r_im_r_iZbil_ibilmom_ind,"pr_bil_QED"});
+  vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,im_r_im_r_iZbil_ibilmom_ind,"pr_bil",QCD_task}};
+  if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,in_pr_bil_QED,im_r_im_r_iZbil_ibilmom_ind,"pr_bil_QED",QED_task});
   
   return pr_bil_tasks;
 }
@@ -230,8 +230,8 @@ vector<perens_t::task_t> perens_t::get_Zbil_tasks(const vector<const perens_t*> 
       in_Zbil.push_back(&e->Zbil);
       if(pars::use_QED) in_Zbil_QED_rel.push_back(&e->Zbil_QED_rel);
     }
-  vector<task_t> Zbil_tasks={{&Zbil,in_Zbil,im_r_im_r_iZbil_ibilmom_ind,"Zbil"}};
-  if(pars::use_QED) Zbil_tasks.push_back({&Zbil_QED_rel,in_Zbil_QED_rel,im_r_im_r_iZbil_ibilmom_ind,"Zbil_QED_rel"});
+  vector<task_t> Zbil_tasks={{&Zbil,in_Zbil,im_r_im_r_iZbil_ibilmom_ind,"Zbil",QCD_task}};
+  if(pars::use_QED) Zbil_tasks.push_back({&Zbil_QED_rel,in_Zbil_QED_rel,im_r_im_r_iZbil_ibilmom_ind,"Zbil_QED_rel",QED_task});
   
   return Zbil_tasks;
 }
@@ -356,7 +356,9 @@ void perens_t::val_chir_extrap_Zbil(perens_t &out) const
 	  
 	  //check if we need to subtract the pole
 	  const bool sub_pole=(iZbil==iZS or iZbil==iZP);
-	  const size_t coeff_to_take=(sub_pole?1:0);
+	  const size_t x_pow=(sub_pole?
+			      (t.QCD_QED_task==QED_task?2:1)
+			      :0);
 	  
 	  //open the plot file if needed
 	  const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+Zbil_tag[iZbil]+"_bilmom_"+to_string(ibilmom)+".xmg";
@@ -382,22 +384,21 @@ void perens_t::val_chir_extrap_Zbil(perens_t &out) const
 		      //compute y and y_plot
 		      y_plot[i]=pr[im_r_im_r_iZbil_ibilmom_ind({im1,r1,im2,r2,iZbil,ibilmom})];
 		      //fit x*y if pole present
-		      if(sub_pole) y[i]=x[i]*y_plot[i];
-		      else         y[i]=y_plot[i];
+		      y[i]=pow(x[i],x_pow)*y_plot[i];
 		      //increment the number of mass combos
 		      i++;
 		    }
 		
 		//fit, store and write the result
-		const djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1));
+		const djvec_t coeffs=poly_fit(x,y,1+x_pow);
 		const size_t iout=out.im_r_im_r_iZbil_ibilmom_ind({0,r1,0,r2,iZbil,ibilmom});
-		pr_chir[iout]=coeffs[coeff_to_take];
+		pr_chir[iout]=coeffs[x_pow];
 		if(plot!=nullptr)
 		  {
 		    auto xminmax=minmax_element(x.begin(),x.end());
-		    double xmin=*xminmax.first*0.9;
+		    double xmin=*xminmax.first*0.5;
 		    double xmax=*xminmax.second*1.1;
-		    write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+		    write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole,x_pow](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/pow(x,x_pow);},x,y_plot);
 		    plot->write_ave_err(0.0,pr_chir[iout].ave_err());
 		  }
 	      }

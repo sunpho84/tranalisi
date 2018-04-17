@@ -303,8 +303,8 @@ vector<perens_t::task_t> perens_t::get_pr_meslep_tasks(const vector<const perens
       in_pr_meslep.push_back(&e->pr_meslep);
       if(pars::use_QED) in_pr_meslep_QED.push_back(&e->pr_meslep_QED);
     }
-  vector<task_t> pr_meslep_tasks={{&pr_meslep,in_pr_meslep,im_r_im_r_iop_iproj_imeslepmom_ind,"pr_meslep"}};
-  if(pars::use_QED) pr_meslep_tasks.push_back({&pr_meslep_QED,in_pr_meslep_QED,im_r_im_r_iop_iproj_imeslepmom_ind,"pr_meslep_QED"});
+  vector<task_t> pr_meslep_tasks={{&pr_meslep,in_pr_meslep,im_r_im_r_iop_iproj_imeslepmom_ind,"pr_meslep",QCD_task}};
+  if(pars::use_QED) pr_meslep_tasks.push_back({&pr_meslep_QED,in_pr_meslep_QED,im_r_im_r_iop_iproj_imeslepmom_ind,"pr_meslep_QED",QED_task});
   
   return pr_meslep_tasks;
 }
@@ -317,8 +317,8 @@ vector<perens_t::task_t> perens_t::get_Zmeslep_tasks(const vector<const perens_t
       in_Zmeslep.push_back(&e->Zmeslep);
       if(pars::use_QED) in_Zmeslep_QED_rel.push_back(&e->Zmeslep_QED_rel);
     }
-  vector<task_t> Zmeslep_tasks={{&Zmeslep,in_Zmeslep,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep"}};
-  if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED_rel,in_Zmeslep_QED_rel,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep_QED_rel"});
+  vector<task_t> Zmeslep_tasks={{&Zmeslep,in_Zmeslep,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep",QCD_task}};
+  if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED_rel,in_Zmeslep_QED_rel,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep_QED_rel",QED_task});
   
   return Zmeslep_tasks;
 }
