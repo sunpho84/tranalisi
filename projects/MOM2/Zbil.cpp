@@ -357,7 +357,7 @@ void perens_t::val_chir_extrap_Zbil(perens_t &out) const
 	  //check if we need to subtract the pole
 	  const bool sub_pole=(iZbil==iZS or iZbil==iZP);
 	  const size_t x_pow=(sub_pole?
-			      (t.QCD_QED_task==QED_task?0:1)
+			      (t.QCD_QED_task==QED_task?1:1)
 			      :0);
 	  
 	  //open the plot file if needed
