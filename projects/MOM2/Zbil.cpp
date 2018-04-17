@@ -347,7 +347,7 @@ void perens_t::average_equiv_momenta_Zbil(perens_t &out,const vector<vector<size
 void perens_t::val_chir_extrap_Zbil(perens_t &out) const
 {
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
-    for(auto &t : out.get_bil_tasks({this}))
+    for(auto &t : out.get_pr_bil_tasks({this}))
       for(size_t iZbil=0;iZbil<nZbil;iZbil++)
 	{
 	  const djvec_t &pr=*t.in.front();
