@@ -390,7 +390,7 @@ void perens_t::val_chir_extrap_Zbil(perens_t &out) const
 		    }
 		
 		//fit, store and write the result
-		const djvec_t coeffs=poly_fit(x,y,1+x_pow);
+		const djvec_t coeffs=poly_fit(x,y,2);
 		const size_t iout=out.im_r_im_r_iZbil_ibilmom_ind({0,r1,0,r2,iZbil,ibilmom});
 		pr_chir[iout]=coeffs[x_pow];
 		if(plot!=nullptr)
