@@ -34,20 +34,38 @@ public:
   void open(const string &_path,const string &mode)
   {
     path=_path;
+    //cout<<"Opening "<<path<<endl;
     file=fopen(path.c_str(),mode.c_str());
-    if(file==NULL) CRASH("Unable to open %s with mode %s",path.c_str(),mode.c_str());
+    if(file==nullptr)
+      {
+	perror("for this reason:");
+	CRASH("Unable to open \"%s\" with mode %s",path.c_str(),mode.c_str());
+      }
   }
   
   //! return the path
   string get_path()
-  {return path;}
+  {
+    return path;
+  }
   
   //! close the file
   void close()
-  {if(file) fclose(file);file=NULL;}
+  {
+    //cout<<"Should close "<<path<<": "<<(file!=nullptr)<<endl;
+    if(file!=nullptr)
+      {
+	//cout<<"Closing "<<path<<endl;
+	fclose(file);
+      }
+    file=nullptr;
+  }
   
   //! default constructor
-  raw_file_t() {file=NULL;}
+  raw_file_t()
+  {
+    file=nullptr;
+  }
   
   //! move constructor
   raw_file_t(raw_file_t&& oth) : raw_file_t()
@@ -58,37 +76,63 @@ public:
   
   //! creator with name
   raw_file_t(const string &_path,string mode)
-  {open(_path,mode);}
+  {
+    open(_path,mode);
+  }
   
   //! destructor
   ~raw_file_t()
-  {close();}
+  {
+    close();
+  }
   
   //! default
   //template <class T,typename=void> void bin_write(const T &out);
   
   //! binary write, non-vector case
-  template <class T> auto bin_write(const T &out) const -> enable_if_t<is_pod<T>::value>
-  {if(fwrite(&out,sizeof(T),1,file)!=1) CRASH("Writing to file");}
+  template <class T>
+  auto bin_write(const T &out) const -> enable_if_t<is_pod<T>::value>
+  {
+    if(fwrite(&out,sizeof(T),1,file)!=1)
+      CRASH("Writing to file");
+  }
   
   //! specialization for vector
-  template <class T> auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value>
-  {for(auto &it : out) bin_write(it);}
+  template <class T>
+  auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value>
+  {
+    for(auto &it : out)
+      bin_write(it);
+  }
   
   //! binary read, non-vector case
-  template <class T> auto bin_read(T &out) const -> enable_if_t<is_pod<T>::value>
-  {int rc=fread(&out,sizeof(T),1,file); if(rc!=1) CRASH("Reading from file %s, rc: %d",path.c_str(),rc);}
+  template <class T>
+  auto bin_read(T &out) const -> enable_if_t<is_pod<T>::value>
+  {
+    int rc=fread(&out,sizeof(T),1,file);
+    if(rc!=1)
+      CRASH("Reading from file %s, rc: %d",path.c_str(),rc);
+  }
   
   //! binary read, complex case
-  template <class T> auto bin_read(complex<T> &out) const -> enable_if_t<is_pod<T>::value>
-  {for(size_t ri=0;ri<2;ri++) bin_read(((T*)&out)[ri]);}
+  template <class T>
+  auto bin_read(complex<T> &out) const -> enable_if_t<is_pod<T>::value>
+  {
+    for(size_t ri=0;ri<2;ri++)
+      bin_read(((T*)&out)[ri]);
+  }
   
   //! specialization for vector
-  template <class T> auto bin_read(T &out) const -> enable_if_t<is_vector<T>::value>
-  {for(auto &it : out) bin_read(it);}
+  template <class T>
+  auto bin_read(T &out) const -> enable_if_t<is_vector<T>::value>
+  {
+    for(auto &it : out)
+      bin_read(it);
+  }
   
   //! return what read
-  template <class T> T bin_read()
+  template <class T>
+  T bin_read()
   {
     T out;
     bin_read(out);
@@ -134,10 +178,11 @@ public:
   }
   
   //! named or unnamed read
-  template <class T> typename return_type<T>::type read(const char *name=NULL) const
+  template <class T>
+  typename return_type<T>::type read(const char *name=nullptr) const
   {
     //check tag
-    if(name) expect(name);
+    if(name!=nullptr) expect(name);
     
     //read a type
     typename working_type<T>::type out;
@@ -149,15 +194,27 @@ public:
   }
   
   //! read with check
-  template <class T,class=enable_if_t<is_pod<T>::value>> void read(T &out,const char *name=NULL) const
-  {out=read<T>(name);}
+  template <class T,class=enable_if_t<is_pod<T>::value>>
+  void read(T &out,const char *name=nullptr) const
+  {
+    out=read<T>(name);
+  }
+  
   //! read a string
-  void read(string &out,const char *name=NULL) const
-  {out=read<string>(name);}
+  void read(string &out,const char *name=nullptr) const
+  {
+    out=read<string>(name);
+  }
   
   //! read a vector
-  template <class TV,class TS=typename TV::base_type,class=enable_if_t<is_vector<TV>::value>> void read(TV &out,const char *name=NULL) const
-  {if(name) expect(name);for(auto &o : out) read(o);}
+  template <class TV,class TS=typename TV::base_type,class=enable_if_t<is_vector<TV>::value>>
+  void read(TV &out,const char *name=nullptr) const
+  {
+    if(name)
+      expect(name);
+    for(auto &o : out)
+      read(o);
+  }
   
   //! read a line and eliminate trailing new line
   char *get_line(line_t line)
@@ -180,7 +237,9 @@ public:
   
   //! return whether we are at the end of file
   bool feof()
-  {return std::feof(file);}
+  {
+    return std::feof(file);
+  }
   
   //! formatted print
   int printf(const char *format,...)
@@ -195,7 +254,10 @@ public:
 };
 
 //! return the size of the passed path
-inline long file_size(const string &path) {return raw_file_t(path,"r").size();}
+inline long file_size(const string &path)
+{
+  return raw_file_t(path,"r").size();
+}
 
 //! open a file for reading, skip commented lines, put columns one after the other
 class input_file_t : public raw_file_t

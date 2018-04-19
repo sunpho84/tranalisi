@@ -1,0 +1,217 @@
+%pure-parser
+%locations
+%defines
+%define parse.lac full
+%error-verbose
+%parse-param {void *v}
+%lex-param {void *scanner}
+
+%{
+
+#define YYDEBUG 1
+
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+#include <tranalisi.hpp>
+
+#include <MOM2/analysis.hpp>
+#include <MOM2/evolutions.hpp>
+#include <MOM2/pars.hpp>
+#include <MOM2/parser.hpp>
+#include <MOM2/scan.hpp>
+
+using namespace scan;
+
+  const int debug_parser=0;
+  
+  int tokenizer_lex(YYSTYPE *lvalp,YYLTYPE *llocp,void *scanner);
+#define parser_lex tokenizer_lex
+
+  void parser_error(YYLTYPE *locp,void *v,const char *err)
+  {
+      CRASH("exception at line %d columns [%d-%d] %s",locp->first_line,locp->first_column,locp->last_column,err);
+  }
+
+  %}
+
+ //union used to catch all symbols
+%union
+{
+    std::string *text;
+    double      real;
+    int         inte;
+    std::vector<std::string> *str_list;
+}
+
+%token TK_INVALID_STRING
+%token TK_INVALID_CHAR
+
+%token <text> TK_QUOTED_TEXT
+%token <real> TK_REAL
+%token <inte> TK_INTE
+
+%token TK_ACTION
+%token TK_BC
+%token TK_CHIR_EXTR_METHOD
+%token TK_COMPUTE_MESLEP
+%token TK_COMPUTE_MESLEP_WITH_CHARGES_ONE
+%token TK_ENSEMBLES
+%token TK_FILTER_THRESH
+%token TK_NF
+%token TK_NJACKS
+%token TK_PHYS_BASIS
+%token TK_PRINT_EACH_MOM
+%token TK_SCHEME
+%token TK_TWISTED_RUN
+%token TK_USE_DELTAM_CR_CT
+%token TK_USE_DELTAM_TM_CT
+%token TK_USE_QED
+
+%token TK_AVERAGE
+%token TK_AVERAGE_R
+%token TK_AVERAGE_EQUIV_MOMENTA
+%token TK_COMPUTE_OR_LOAD
+%token TK_EVOLVE
+%token TK_LIST_ENSEMBLES
+%token TK_PLOT_Z
+%token TK_PRINT_DISCR
+%token TK_RATIO_MINUS_ONE
+%token TK_SEA_CHIR_EXTRAP
+%token TK_SUBTRACT_OA2
+%token TK_VAL_CHIR_EXTRAP
+
+%type <str_list> string_list
+
+%%
+
+commands:
+        | commands read_ensembles '}'
+        | commands set_action
+        | commands set_boundary_conditions
+        | commands set_chir_extr_method
+        | commands set_compute_meslep
+        | commands set_compute_meslep_with_charges_one
+        | commands set_filter_thresh
+        | commands set_nf
+        | commands set_njacks
+        | commands set_phys_basis
+        | commands set_print_each_mom
+        | commands set_scheme
+        | commands set_twisted_run
+        | commands set_use_QED
+        | commands set_use_deltam_cr_ct
+        | commands set_use_deltam_tm_ct
+        | commands average
+        | commands average_r
+        | commands average_equiv_momenta
+        | commands sea_chir_extrap
+        | commands val_chir_extrap
+        | commands plot_Z
+        | commands print_discr
+        | commands ratio_minus_one
+        | commands compute_or_load
+        | commands list_ensembles
+        /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
+        /* | commands TK_QUOTED_TEXT '=' TK_EVOLVE '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].evolve();drv->suff+="_evo";} aggiungi ordine qui*/
+;
+
+read_ensembles: TK_ENSEMBLES '=' '{'
+              | TK_ENSEMBLES '=' '{' ensemble
+              | read_ensembles ',' ensemble
+;
+
+ensemble: TK_QUOTED_TEXT {pars::ens.push_back(*$1);delete $1;}
+;
+
+/////////////////////////////////////////////////////////////////
+
+set_action: TK_ACTION '=' TK_QUOTED_TEXT {pars::act=gaz::decrypt(*$3);delete $3;}
+;
+
+set_boundary_conditions: TK_BC '=' TK_QUOTED_TEXT
+                         {
+			     auto bc_key=temporal_bc::decrypt(*$3);
+			     temporal_bc::bc=get<0>(bc_key);
+			     ph_mom[0]=get<1>(bc_key);
+			     delete $3;
+			 }
+;
+
+set_chir_extr_method: TK_CHIR_EXTR_METHOD '=' TK_QUOTED_TEXT {pars::chir_extr_method=chir_extr::decrypt(*$3);delete $3;}
+;
+
+set_compute_meslep: TK_COMPUTE_MESLEP '=' TK_INTE {pars::compute_meslep=$3;}
+;
+
+set_compute_meslep_with_charges_one: TK_COMPUTE_MESLEP_WITH_CHARGES_ONE {using namespace meslep;ql=q_in=q_ou=1.0;}
+;
+
+set_filter_thresh: TK_FILTER_THRESH '=' TK_REAL {pars::filter_thresh=$3;}
+;
+
+set_nf: TK_NF '=' TK_INTE {evol::Nf_t_of_Nf($3);}
+;
+
+set_njacks: TK_NJACKS '=' TK_INTE {set_njacks($3);}
+;
+
+set_phys_basis: TK_PHYS_BASIS '=' TK_INTE {pars::phys_basis=$3;}
+;
+
+set_print_each_mom: TK_PRINT_EACH_MOM '=' TK_INTE {pars::print_each_mom=$3;}
+;
+
+set_scheme: TK_SCHEME '=' TK_QUOTED_TEXT {pars::scheme=reno_scheme::decrypt(*$3);delete $3;}
+;
+
+set_twisted_run: TK_TWISTED_RUN '=' TK_INTE {pars::twisted_run=$3;if($3==false) pars::phys_basis=false;}
+;
+
+set_use_deltam_cr_ct: TK_USE_DELTAM_CR_CT '=' TK_INTE {pars::use_deltam_cr_ct=$3;}
+;
+
+set_use_deltam_tm_ct: TK_USE_DELTAM_TM_CT '=' TK_INTE {pars::use_deltam_tm_ct=$3;}
+;
+
+set_use_QED: TK_USE_QED '=' TK_INTE {pars::use_QED=$3;}
+;
+
+/////////////////////////////////////////////////////////////////
+
+compute_or_load: TK_COMPUTE_OR_LOAD '(' ')' {compute_or_load_all();}
+;
+
+plot_Z: TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$3);delete $3;}
+;
+
+print_discr: TK_PRINT_DISCR '(' ')' {print_discr();}
+;
+
+average_r: TK_AVERAGE_R '(' ')' {average_all_r();}
+;
+
+average_equiv_momenta: TK_AVERAGE_EQUIV_MOMENTA '(' ')' {average_all_equiv_momenta();}
+;
+
+val_chir_extrap: TK_VAL_CHIR_EXTRAP '(' ')' {val_chir_extrap_all();}
+;
+
+/////////////////////////////////////////////////////////////////
+
+average: TK_QUOTED_TEXT '=' TK_AVERAGE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
+
+ratio_minus_one: TK_QUOTED_TEXT '=' TK_RATIO_MINUS_ONE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {ratio_minus_one(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
+
+sea_chir_extrap: TK_QUOTED_TEXT '=' TK_SEA_CHIR_EXTRAP '(' string_list ')' {sea_chir_extrap(*$1,*$5);delete $1;delete $5;}
+;
+
+list_ensembles: TK_LIST_ENSEMBLES '(' ')' {list_ensembles();}
+;
+
+/////////////////////////////////////////////////////////////////
+
+string_list: TK_QUOTED_TEXT ',' TK_QUOTED_TEXT {$$=new std::vector<std::string>;$$->push_back(*$1);$$->push_back(*$3);delete $1;delete $3;}
+           | string_list ',' TK_QUOTED_TEXT {$$=$1;$$->push_back(*$3);delete $3;}
+;

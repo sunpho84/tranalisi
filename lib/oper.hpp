@@ -201,17 +201,27 @@ template <class T> vector<vector<T>> transpose(const vector<vector<T>> &in)
 //! take the forward derivative
 template <class T> T forward_derivative(const T &v)
 {
-  T out(v.size()-1);
-  for(size_t it=0;it<out.size();it++) out[it]=v[it+1]-v[it];
+  const size_t n=v.size();
+  T out(n);
+  for(size_t it=0;it<n;it++) out[it]=v[(it+1)%n]-v[it];
   return out;
 }
 
 //! take the backward derivative
 template <class T> T backward_derivative(const T &v)
 {
-  T out(v.size());
-  out[0]=0.0;
-  for(size_t it=1;it<out.size();it++) out[it]=v[it]-v[it-1];
+  const size_t n=v.size();
+  T out(n);
+  for(size_t it=0;it<n;it++) out[it]=v[it]-v[(it-1+n)%n];
+  return out;
+}
+
+//! take the symmetric derivative
+template <class T> T symmetric_derivative(const T &v)
+{
+  const size_t n=v.size();
+  T out(n);
+  for(size_t it=0;it<n;it++) out[it]=(v[(it+1)%n]-v[(it-1+n)%n])/2.0;
   return out;
 }
 

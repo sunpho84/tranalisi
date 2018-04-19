@@ -1,0 +1,70 @@
+%pure-parser
+%locations
+%defines
+%define parse.lac full
+%error-verbose
+%parse-param {driver_t *drv}
+%lex-param {void *scanner}
+
+%{
+
+#define YYDEBUG 1
+
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+#include <MOM/driver.hpp>
+#include <MOM/parser.hpp>
+#include <MOM/read.hpp>
+
+  const int debug_parser=0;
+  
+  int tokenizer_lex(YYSTYPE *lvalp,YYLTYPE *llocp,void *scanner);
+#define parser_lex tokenizer_lex
+
+  void parser_error(YYLTYPE *locp,driver_t *drv,const char *err)
+  {
+      CRASH("exception at line %d columns [%d-%d] %s",locp->first_line,locp->first_column,locp->last_column,err);
+  }
+
+#define scanner drv->scanner
+  %}
+
+ //union used to catch all symbols
+%union
+{
+    std::string *text;
+    double      real;
+}
+
+%token TK_INVALID_STRING
+%token TK_INVALID_CHAR
+
+%token <text> TK_QUOTED_TEXT
+%token <real> TK_REAL
+
+%token TK_ACTION
+%token TK_BETA
+
+%token TK_AVERAGE_R
+%token TK_AVERAGE_EQUIV_MOMENTA
+%token TK_CREATE_FROM_SCRATCH
+%token TK_EVOLVE
+%token TK_PLOT_Z
+%token TK_SUBTRACT_OA2
+%token TK_VAL_CHIR_EXTRAP
+
+%%
+
+commands:
+        | commands TK_ACTION '=' TK_QUOTED_TEXT {drv->act=gaz::decrypt(*$4);}
+        | commands TK_BETA '=' TK_REAL {drv->beta=$4;}
+        | commands TK_QUOTED_TEXT '=' TK_AVERAGE_R '(' TK_QUOTED_TEXT ')' {drv->ing[*$2]=drv->ing[*$6].average_r(true);drv->suff+="_rave";}
+        | commands TK_QUOTED_TEXT '=' TK_AVERAGE_EQUIV_MOMENTA '(' TK_QUOTED_TEXT ')' {drv->ing[*$2]=drv->ing[*$6].average_equiv_momenta(true);drv->suff+="_ave";}
+        | commands TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {drv->ing[*$4].plot_Z(drv->suff);}
+        | commands TK_QUOTED_TEXT '=' TK_VAL_CHIR_EXTRAP '(' TK_QUOTED_TEXT ')' {drv->ing[*$2]=drv->ing[*$6].chir_extrap();drv->suff+="_chir";}
+        | commands TK_QUOTED_TEXT '=' TK_CREATE_FROM_SCRATCH '(' ')' {drv->ing[*$2].create_from_scratch();}
+        | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";}
+        | commands TK_QUOTED_TEXT '=' TK_EVOLVE '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].evolve();drv->suff+="_evo";}
+;

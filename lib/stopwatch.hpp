@@ -32,19 +32,37 @@ class stopwatch_t : duration_t
   bool started;
   
 public:
-  stopwatch_t(const string &name="") : name(name) {reset();}
+  
+  //! constructor
+  stopwatch_t(const string &name="") : name(name)
+  {
+    reset();
+  }
+  
+  //! return whether the stopwatch is started
+  bool is_started() const
+  {
+    return started;
+  }
+  
   
   //! descritpion
   string descr() const
-  {return name;}
+  {
+    return name;
+  }
   
   //! reference to base type
   duration_t& base()
-  {return (duration_t&)(*this);}
+  {
+    return (duration_t&)(*this);
+  }
   
   //! const reference to base type
   const duration_t& base() const
-  {return (const duration_t&)(*this);}
+  {
+    return (const duration_t&)(*this);
+  }
   
   //! start the stopwatch
   void start()
@@ -81,11 +99,15 @@ public:
   
   //! return the average
   duration_t ave() const
-  {return tot()/nmeas;}
+  {
+    return tot()/nmeas;
+  }
   
   //! return the number of measures
   size_t count() const
-  {return nmeas;}
+  {
+    return nmeas;
+  }
   
   //! return the sum of two stopwatch
   stopwatch_t operator+=(const stopwatch_t &oth)
@@ -138,11 +160,16 @@ public:
 
 //! print a stopwatch
 inline ostream& operator<<(ostream &out,const stopwatch_ratio_t &s)
-{return out<<s.num<<",\t relative to "<<s.den.descr()<<":\t "<<percentage(s.num.tot(),s.den.tot())<<"%";}
+{
+  return out<<s.num<<",\t relative to "<<s.den.descr()<<":\t "
+	    <<percentage(s.num.tot(),s.den.tot())<<"%";
+}
 
 //! return a stopwatch_ratio to write the used time in proportion of another one
 inline stopwatch_ratio_t operator/(const stopwatch_t &num,const stopwatch_t &den)
-{return stopwatch_ratio_t(num,den);}
+{
+  return stopwatch_ratio_t(num,den);
+}
 
 //! reduction for stopwatch
 #pragma omp declare reduction(+: stopwatch_t : omp_out+=omp_in) initializer(omp_priv=stopwatch_t(omp_orig.descr()))

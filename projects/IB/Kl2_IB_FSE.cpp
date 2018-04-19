@@ -8,7 +8,7 @@
 #include <cstdio>
 #include <functional>
 
-#include <Kl2_IB_FSE.hpp>
+#include <IB/Kl2_IB_FSE.hpp>
 
 using namespace std;
 

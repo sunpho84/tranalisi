@@ -37,7 +37,10 @@ AC_PROG_CXX
 AC_PROG_CXXCPP
 AC_LANG([C++])
 
-AX_CXX_COMPILE_STDCXX_11(noext,mandatory)
+AC_PROG_YACC
+AM_PROG_LEX
+
+AX_CXX_COMPILE_STDCXX(14,noext,mandatory)
 AX_CXXFLAGS_WARN_ALL
 
 #check openmp
@@ -215,11 +218,5 @@ AC_CONFIG_FILES(Makefile
 	include/Makefile
 	lib/Makefile
 	projects/Makefile
-	projects/FPIEM/Makefile
-	projects/IB/Makefile
-	projects/MOM/Makefile
-	projects/SMETEST/Makefile
-	projects/SPIPOLLO/Makefile
-	projects/STEP_SCALING/Makefile
 	tools/Makefile)
 AC_OUTPUT

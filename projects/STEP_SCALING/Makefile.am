@@ -1,9 +1,8 @@
-ACLOCAL_AMFLAGS=-I m4
-AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
+AM_CPPFLAGS+=-I$(top_srcdir)/projects/%D%
 
-LDADD=$(top_builddir)/lib/libtran.a
-
-bin_PROGRAMS= \
+bin_PROGRAMS+= \
+	$(top_builddir)/bin/semi \
 	$(top_builddir)/bin/step_scaling
 
-__top_builddir__bin_step_scaling_SOURCES=step_scaling.cpp
+__top_builddir__bin_semi_SOURCES=%D%/semi.cpp
+__top_builddir__bin_step_scaling_SOURCES=%D%/step_scaling.cpp

@@ -12,6 +12,17 @@
 template <class meas_t> class vmeas_t : public valarray<meas_t>
 {
 public:
+  //! safe resize
+  void resize(size_t sz,meas_t C=meas_t())
+  {
+    if(sz!=this->size())
+      {
+	auto old=*this;
+	this->valarray<meas_t>::resize(sz);
+	for(size_t i=0;i<min(this->size(),old.size());i++) (*this)[i]=old[i];
+      }
+  }
+  
   //! bind the base type of meas_t
   using base_type=meas_t;
   
@@ -91,15 +102,18 @@ public:
   }
   
   //! write to a stream
-  void bin_write(const raw_file_t &out)
+  void bin_write(raw_file_t &out) const
   {out.bin_write(*this);}
   
   //! wrapper with name
-  void bin_write(const char *path)
-  {bin_write(raw_file_t(path,"w"));}
+  void bin_write(const char *path) const
+  {
+    raw_file_t fout(path,"w");
+    bin_write(fout);
+  }
   
   //! wrapper with name
-  void bin_write(const string &path)
+  void bin_write(const string &path) const
   {bin_write(path.c_str());}
   
   //! read from a stream
@@ -108,7 +122,10 @@ public:
   
   //! wrapper with name
   void bin_read(const char *path)
-  {bin_read(raw_file_t(path,"r"));}
+  {
+    raw_file_t fin(path,"r");
+    bin_read(fin);
+  }
   
   //! wrapper with name
   void bin_read(const string &path)
@@ -125,7 +142,7 @@ public:
   vmeas_t& operator=(const meas_t &oth) {for(auto &it : *this) it=oth;return *this;}
   
   //! return a subset including end
-  vmeas_t subset(size_t beg,size_t end)
+  vmeas_t subset(size_t beg,size_t end) const
   {
     return (*this)[slice(std::max(size_t(0),beg),std::min(end-beg+1,this->size()),1)];
   }
@@ -159,7 +176,7 @@ public:
   }
   
   //! return the symmetric
-  vmeas_t symmetric()
+  vmeas_t symmetric() const
   {
     size_t s=this->size();
     vmeas_t out(s);
@@ -169,7 +186,7 @@ public:
   }
   
   //! return the averaged
-  vmeas_t symmetrized(int par=1)
+  vmeas_t symmetrized(int par=1) const
   {
     size_t nel=this->size();
     size_t nelh=nel/2;

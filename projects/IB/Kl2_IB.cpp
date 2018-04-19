@@ -10,8 +10,8 @@ const bool EXCLUDE_HIGH_MASSES=false;
 #include <set>
 
 #include <tranalisi.hpp>
-#include <Kl2_IB_FSE.hpp>
-#include <common.hpp>
+#include <IB/Kl2_IB_FSE.hpp>
+#include <IB/common.hpp>
 
 const size_t nfit_range_variations=2;
 const int frange_var[2]={0,-1};
@@ -229,20 +229,20 @@ djvec_t read_AP(const char *what,const ens_pars_t &ens,size_t iq1,size_t iq2,int
 //! compute the critical deltam
 djack_t compute_deltam_cr(const ens_pars_t &ens,size_t iq,size_t iQCD_mes)
 {
-  string ens_qpath=ens.path+"/plots_mcrit";
+  const string ens_qpath=ens.path+"/plots_mcrit";
   
-  djvec_t V0P5_LL=read_VP("LL",ens,iq,iq,-1,IM);
-  djvec_t V0P5_0M=read_VP("0M",ens,iq,iq,-1,IM);
-  djvec_t V0P5_0T=read_VP("0T",ens,iq,iq,-1,IM);
-  djvec_t num_deltam_cr=forward_derivative(djvec_t(V0P5_LL+2.0*djvec_t(V0P5_0M+V0P5_0T)));
+  const djvec_t V0P5_LL=read_VP("LL",ens,iq,iq,-1,IM);
+  const djvec_t V0P5_0M=read_VP("0M",ens,iq,iq,-1,IM);
+  const djvec_t V0P5_0T=read_VP("0T",ens,iq,iq,-1,IM);
+  const djvec_t num_deltam_cr=forward_derivative(djvec_t(V0P5_LL+2.0*djvec_t(V0P5_0M+V0P5_0T)));
   num_deltam_cr.ave_err().write(combine("%s/num_deltam_cr.xmg",ens_qpath.c_str()));
   
-  djvec_t V0P5_0P=read_VP("0P",ens,iq,iq,+1,RE);
-  djvec_t den_deltam_cr=forward_derivative(V0P5_0P);
+  const djvec_t V0P5_0P=read_VP("0P",ens,iq,iq,+1,RE);
+  const djvec_t den_deltam_cr=forward_derivative(V0P5_0P);
   den_deltam_cr.ave_err().write(combine("%s/den_deltam_cr.xmg",ens_qpath.c_str()));
   
   const size_t itint=QCD_mes_pars[iQCD_mes].itint;
-  djack_t deltam_cr=constant_fit(djvec_t(-num_deltam_cr/(2.0*den_deltam_cr)),ens.tmin[itint],ens.tmax[itint],combine("%s/deltam_cr_t.xmg",ens_qpath.c_str()));
+  const djack_t deltam_cr=constant_fit(djvec_t(-num_deltam_cr/(2.0*den_deltam_cr)),ens.tmin[itint],ens.tmax[itint],combine("%s/deltam_cr_t.xmg",ens_qpath.c_str()));
   
   return deltam_cr;
 }
@@ -704,7 +704,7 @@ djvec_t read_hl(size_t iproc,size_t iw,size_t iproj,const int *orie_par,size_t q
 {
   size_t T=ens.T;
   djvec_t out(T);
-  out=0.0;
+  out=0;
   
   size_t iQED_mes=iQED_mes_of_proc[iproc];
   size_t irev=QED_mes_pars[iQED_mes].irev;
@@ -1084,10 +1084,6 @@ Tpars chir_corr_hl(const Tpars &Kpi,const Tpars &K2pi,const Tpars &Z,const Tpars
 	    if(use_unquenched) chl=-Z*e2/(16*sqr(M_PI))*log(xi);
 	    else               chl=-8.0*Z/9*e2/(16*sqr(M_PI))*log(xi);
 	    break;
-	  // case 1:
-	  //   if(use_unquenched) chl=-(3.0-Z)*e2/(16*sqr(M_PI))*log(xi/xis);
-	  //   else               chl=-(3.0-8.0*Z/9)*e2/(16*sqr(M_PI))*log(xi/xis);
-	  //   break;
 	  default:
 	    chl=0;
 	    break;
@@ -1273,7 +1269,7 @@ void set_default_grace(const vector<T> &ext_data)
 // }
 
 //! perform the fit to the continuum limit of correction of process
-dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const double &MLep,const string &path,const procs_t &procs,const size_t isyst,const bool cov_flag,const vector<string> &beta_list,const size_t istudy,const vector<hl::FSE::FIT_STDEP::t> &FSE_fit_variations,const vector<hl::FSE::SUB_STDEP::t> &FSE_sub_variations)
+dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const double &MLep,const string &path,const procs_t &procs,const size_t isyst,const bool cov_flag,const vector<string> &beta_list,const size_t istudy,const vector<hl::FSE::FIT_STDEP::t> &FSE_fit_variations)
 {
   using namespace hl;
   
@@ -1613,7 +1609,7 @@ dbvec_t compute_corr(size_t iproc,const int &include_stong_IB)
 	  const dboot_t DeltaE=Mmes*(1-sqr((dboot_t)(MLep[ilep]/Mmes)))/2.0;
 	  cout<<"DeltaE: "<<DeltaE.ave_err()<<endl;
 	  
-	  //extract dA/A from nasty diagram ratio
+	  //! extract dA/A from nasty diagram ratio
 	  dbvec_t rat_ext=QED/LO;
 	  rat_ext[rat_ext.size()-1]=rat_ext[0]=0.0; //set to zero the contact term
 	  const size_t itint=QCD_mes_pars[iQCD_mes].itint;
@@ -1741,7 +1737,7 @@ void extrapolate_corr(const dbvec_t &tot_corr_all,const procs_t &procs,const siz
       const double MMes_phys((iproc==0)?MP0:MK0);
       res[isyst]=cont_chir_fit_corr_xi_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,xi_phys,xi_s_phys,MMes_phys,MLep[iproc],cc_path,iproc,isyst,use_cov,beta_list);
 #else
-      res[isyst]=cont_chir_fit_corr_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,lat_par[input_an_id].ml,lat_par[input_an_id].ms,MLep[ilep],cc_path,procs,isyst,use_cov,beta_list,istudy,FSE_fit_variations,FSE_sub_variations);
+      res[isyst]=cont_chir_fit_corr_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,lat_par[input_an_id].ml,lat_par[input_an_id].ms,MLep[ilep],cc_path,procs,isyst,use_cov,beta_list,istudy,FSE_fit_variations);
 #endif
     }
   
@@ -1882,7 +1878,7 @@ void test_factorization(size_t iproc)
 	  const dboot_t ZP_fr_ZA=reno_coeff*dboot_t(bi,jZP[ind_QCD])/dboot_t(bi,jZA[ind_QCD]);
 	  dboot_t rdep=Wreg_contr_Z3_Z4*ZP_fr_ZA*ratio_Wreg_leptonic_traces(pi_bare,aMLep);
 	  
-	  const double Zfact=1.0;
+	  const double Zfact=0.75;
 
 	  dboot_t rdep_Zfact=rdep*Zfact;
 	  

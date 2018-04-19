@@ -191,6 +191,25 @@ Tpars fpi_inf_inv_fun(double a2Q2,Tx aMPi,Tx afPi,Tx ff_FSE,Tpars p6,Tpars p1,Tp
   return ans*FSE_fact;
 }
 
+string get_descr(const size_t isyst)
+{
+  vector<size_t> syst_comp=syst_ind(isyst);
+  size_t iRAT=syst_comp[iRAT_comp];
+  size_t ifit_range=syst_comp[ifit_range_comp];
+  size_t iuse_pion_masses=syst_comp[iuse_pion_masses_comp];
+  size_t iuse_chirord=syst_comp[iuse_chirord_comp];
+  size_t iuse_FSE=syst_comp[iuse_FSE_comp];
+  int dtf=fit_range_variations[ifit_range];
+  
+  return
+    "Ratio: "+RAT_tag[iRAT]+", "
+    "FSE: "+FSE_tag[iuse_FSE]+", "
+    "pion masses: "+pion_masses_tag[iuse_pion_masses]+", "
+    "chpt ord: "+chirord_tag[iuse_chirord]+", "
+    "dt: "+to_string(dtf);;
+  
+}
+
 //! fitting
 void fit_fpiinv(djack_t &chrad,djack_t &LEC_6,const vector<double> &ff_extr_x,vector<djvec_t> &ff_extr_y,const djvec_t &aMPi,const djvec_t &afPi,const valarray<valarray<double>> &a2Q2,const vector<djvec_t> &ff,const vector<djvec_t> &ff_FSE,pion_masses_t use_pion_masses,chirord_t use_chirord,FSE_t use_FSE,double s_max,size_t isyst)
 {
@@ -283,23 +302,10 @@ void fit_fpiinv(djack_t &chrad,djack_t &LEC_6,const vector<double> &ff_extr_x,ve
   //write plots
   for(size_t iens=0;iens<ens_data.size();iens++)
     {
-      vector<size_t> syst_comp=syst_ind(isyst);
-      size_t iRAT=syst_comp[iRAT_comp];
-      size_t ifit_range=syst_comp[ifit_range_comp];
-      size_t iuse_pion_masses=syst_comp[iuse_pion_masses_comp];
-      size_t iuse_chirord=syst_comp[iuse_chirord_comp];
-      size_t iuse_FSE=syst_comp[iuse_FSE_comp];
-      int dtf=fit_range_variations[ifit_range];
-      
       grace_file_t plot_mfix("plots/fit"+to_string(isyst)+"_inv_fpi_fun_q2_ens"+to_string(iens)+".xmg");
       plot_mfix.set_title(ens_data[iens].path+", "+(used[iens]?"":"not ")+"used");
       plot_mfix.set_subtitle_size(1.0);
-      plot_mfix.set_subtitle("Ratio: "+RAT_tag[iRAT]+", "
-			     "FSE: "+FSE_tag[iuse_FSE]+", "
-			     "pion masses: "+pion_masses_tag[iuse_pion_masses]+", "
-			     "chpt ord: "+chirord_tag[iuse_chirord]+", "
-			     "dt: "+to_string(dtf)+", "
-			     "s max: "+to_string(s_max));
+      plot_mfix.set_subtitle(get_descr(isyst)+", s max: "+to_string(s_max));
       plot_mfix.set_xaxis_label("$$Q^2/M_\\pi ^2");
       plot_mfix.set_yaxis_label("$$1/F_\\pi");
       
@@ -399,7 +405,8 @@ void do_all_fits(djvec_t &ch_rad,djvec_t &LEC_6)
   
   for(size_t isyst=0;isyst<nsyst;isyst++)
     {
-      cout<<"################################################## "<<isyst<<" ##################################################"<<endl;
+      cout <<"################################################## "<<isyst<<" ##################################################"<<endl;
+      table<<"################################################## "<<isyst<<" ##################################################"<<endl;
       
       vector<size_t> syst_comp=syst_ind(isyst);
       size_t iRAT=syst_comp[iRAT_comp];
@@ -421,6 +428,8 @@ void do_all_fits(djvec_t &ch_rad,djvec_t &LEC_6)
       cout<<"Use chirord: "<<chirord_tag[iuse_chirord]<<endl;
       cout<<"dt for fit: "<<dtf<<endl;
       cout<<"s max: "<<s_max<<endl;
+      
+      table<<get_descr(isyst)<<endl;
       
       vector<djvec_t> ff(ens_data.size()),ff_FSE(ens_data.size());
       valarray<valarray<double>> a2Q2(ens_data.size());

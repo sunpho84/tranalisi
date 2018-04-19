@@ -1,0 +1,136 @@
+%option case-insensitive
+%option nounput
+%option noyywrap
+%option reentrant
+%option bison-bridge
+%option bison-locations
+
+ /* define status to avoid c++ comment */
+%x COMMENT
+
+ /* raw definitions */
+DIGIT [0-9]
+LETTER [a-z]
+ALNUM [a-z0-9_]
+SPACE [[:blank:]]
+SIGN \+|\-
+QUOTE \"|\'
+ANY .
+NEWLINE \n|\r
+DOT \.
+
+ /* more complicated */
+WORD {LETTER}*
+DOUBLE {SIGN}?({DIGIT}*{DOT}{DIGIT}+)|({DIGIT}+{DOT}{DIGIT}*)
+INT {DIGIT}*
+MANTISSA e({SIGN}?{INT})
+SCI_DOUBLE ({DOUBLE}|{INT}){MANTISSA}
+
+ /* comments */
+BASH_COMM_BEG \#
+BASH_COMM {BASH_COMM_BEG}{ANY}*
+C_COMM_BEG \/\/
+C_COMM {C_COMM_BEG}{ANY}*
+CPP_COMM_BEG \/\*
+CPP_COMM_END \*\/
+CPP_COMM {CPP_COMM_BEG}(({ANY}-a)|{NEWLINE})*{CPP_COMM_END}
+
+/* header of tokenizer */
+%{
+
+#include <cstdio>
+#include <cstring>
+#include <fstream>
+#include "driver.hpp"
+
+using namespace std;
+
+#define YY_EXTRA_TYPE driver_t*
+
+#define DEBUG_PRINTF(...) if(debug_lexer) printf(__VA_ARGS__)
+
+#define YY_INPUT(buf,result,max_size)					\
+   {									\
+       ifstream &fin=yyextra->fin;					\
+       fin.get(*buf);							\
+       if(not fin.good() or yyextra->fin.eof())				\
+	   result=YY_NULL;				                \
+       else								\
+	   result=1;							\
+   }
+
+ /* handle locations */
+#define YY_USER_ACTION yylloc->first_line=yylloc->last_line=yylineno; \
+    yylloc->first_column=yycolumn;yylloc->last_column=yycolumn+yyleng-1; \
+    yycolumn+=yyleng;
+
+#include "parser.hpp"
+   
+   const int debug_lexer=1;
+%}
+
+%%
+ /* ignoring rules */
+"/*"                                DEBUG_PRINTF("Entering c++-style comment\n");BEGIN(COMMENT);
+<COMMENT>"/*"                       printf("warning: multiple comments opened at line: %d\n", yylineno);
+<COMMENT>"*/"                       DEBUG_PRINTF("Exiting c++-style comment\n");BEGIN(INITIAL);
+<COMMENT>"EOF"                      CRASH("reached end of file while scanning comment");
+<COMMENT>"\n"                       yycolumn=1;yylineno++;
+<COMMENT>{ANY}
+{NEWLINE}                           DEBUG_PRINTF("Ignoring endline\n");yycolumn=1;yylineno++;
+{BASH_COMM}                         DEBUG_PRINTF("Ignoring single line (bash) comment: %s\n",yytext);
+{C_COMM}                            DEBUG_PRINTF("Ignoring single line (c) comment: %s\n",yytext);
+{SPACE}+                            DEBUG_PRINTF("Ignoring spaces: \"%s\"\n",yytext);
+
+Action                              DEBUG_PRINTF("Found Action\n");return TK_ACTION;
+Beta                                DEBUG_PRINTF("Found Beta\n");return TK_BETA;
+
+AverageR                            DEBUG_PRINTF("Found AverageR\n");return TK_AVERAGE_R;
+AverageEquivMomenta                 DEBUG_PRINTF("Found AverageEquivMomenta\n");return TK_AVERAGE_EQUIV_MOMENTA;
+CreateFromScratch                   DEBUG_PRINTF("Found CreateFromScratch\n");return TK_CREATE_FROM_SCRATCH;
+Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVOLVE;
+PlotZ                               DEBUG_PRINTF("Found PlotZ\n");return TK_PLOT_Z;
+SubtractOa2                         DEBUG_PRINTF("Found SubtractOa2\n");return TK_SUBTRACT_OA2;
+ValChirExtrap                       DEBUG_PRINTF("Found ValChirExtrap\n");return TK_VAL_CHIR_EXTRAP;
+
+=                                   return '=';
+\(                                  return '(';
+\)                                  return ')';
+
+ /* recognizing number */
+{SCI_DOUBLE}|{DOUBLE} DEBUG_PRINTF("Found Double: %s\n",yytext);sscanf(yytext,"%lg",&yylval->real);return TK_REAL;
+
+{QUOTE}[^\"\']*{QUOTE} yylval->text=new std::string(yytext,1,strlen(yytext)-2);DEBUG_PRINTF("found string \"%s\", length=%d, copied: \"%s\"\n",yytext,(int)strlen(yytext),yylval->text->c_str()); return TK_QUOTED_TEXT;
+
+ /* crash if finds unexpected word or unrecognized char */
+{LETTER}{ALNUM}* printf("Found invalid string \"%s\"\n",yytext);return TK_INVALID_STRING;
+{ANY} printf("Found invalid character \'%c\'\n",yytext[0]);return TK_INVALID_CHAR;
+
+%%
+
+//initializator
+driver_t::driver_t(const string &path) :
+                       fin(path)
+{
+    if(not fin.good()) CRASH("Opening %s",path.c_str());
+    init_scanner();
+}
+
+//initialize the scanner
+void driver_t::init_scanner()
+{
+    yylex_init(&scanner);
+    yyset_extra(this,scanner);
+}
+
+//destroy the scanner
+void driver_t::destroy_scanner()
+{
+    yylex_destroy(scanner);
+}
+
+//parse everything
+void driver_t::parse()
+{
+    parser_parse(this);
+}

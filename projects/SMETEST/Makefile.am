@@ -1,23 +1,20 @@
-ACLOCAL_AMFLAGS=-I m4
-AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
+AM_CPPFLAGS+=-I$(top_srcdir)/projects/%D%
 
-LDADD=$(top_builddir)/lib/libtran.a
-
-bin_PROGRAMS= \
+bin_PROGRAMS+= \
         $(top_builddir)/bin/B_to_Pi \
         $(top_builddir)/bin/combo_opt \
         $(top_builddir)/bin/exc_cont \
         $(top_builddir)/bin/smerad
 
 __top_builddir__bin_exc_cont_SOURCES= \
-	exc_cont.cpp
+	%D%/exc_cont.cpp
 
 __top_builddir__bin_B_to_Pi_SOURCES= \
-	B_to_Pi.cpp
+	%D%/B_to_Pi.cpp
 
 __top_builddir__bin_smerad_SOURCES= \
-	smerad.cpp
+	%D%/smerad.cpp
 
 __top_builddir__bin_combo_opt_SOURCES= \
-	combo_opt.cpp
+	%D%/combo_opt.cpp
 

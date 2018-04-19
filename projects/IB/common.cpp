@@ -3,7 +3,7 @@
 #endif
 
 #define EXTERN_COMMON
-#include <common.hpp>
+ #include <common.hpp>
 
 #include <set>
 
