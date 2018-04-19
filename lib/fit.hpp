@@ -609,6 +609,17 @@ public:
   }
   size_t add_fit_par(TS &out_par,const string &name,const ave_err_t &ae)
   {return add_fit_par(out_par,name,ae.ave(),ae.err());}
+
+  size_t add_fit_par_limits(TS &out_par,const string &name,double ans,double err,double min,double max)
+  {
+    size_t ipar=pars.size();
+    pars.add(name.c_str(),ans,err);
+    pars.setlimits(name.c_str(),min,max);
+    out_pars.push_back(&out_par);
+    return ipar;
+  }
+  size_t add_fit_par_limits(TS &out_par,const string &name,const ave_err_t &ae,double min,double max)
+  {return add_fit_par_limits(out_par,name,ae.ave(),ae.err(),min,max);}
   
   //! add a parameter that gets self-fitted (useful to propagate erorr on x)
   size_t add_self_fitted_point(TS &out_par,string name,const TS &point,int block_label)

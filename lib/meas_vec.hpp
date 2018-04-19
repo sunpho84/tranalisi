@@ -230,7 +230,7 @@ template <class TV> TV read_vec_meas(raw_file_t &file,size_t nel,size_t ind=0)
 {
   TV out(nel);
   if(nel==0) CRASH("Nel==0");
-  
+
   file.set_pos(ind*sizeof(base_type_t<base_type_t<TV>>)*out[0].size()*nel);
   out.bin_read(file);
   return out;
@@ -296,6 +296,36 @@ TS integrate_corr_up_to(const valarray<TS> &corr,size_t &upto,size_t ord=1)
   out=0.0;
   upto=size_t(upto/len)*len;
   for(size_t t=0;t<upto;t+=len)
+    for(size_t j=0;j<=len;j++)
+      out+=corr[t+j]*weight[j];
+  
+  out/=norm;
+  
+  return out;
+}
+
+template <class TS>
+TS integrate_corr(const valarray<TS> &corr,size_t &from,size_t &upto,size_t ord=1)
+{
+  if(upto>=corr.size()) CRASH("Upto=%zu >= corr.size()=%zu",upto,corr.size());
+  
+  valarray<double> weight;
+  switch(ord)
+    {
+    case 0: weight={1};       break;
+    case 1: weight={1,1};     break;
+    case 2: weight={1,4,1};   break;
+    case 3: weight={3,9,9,3}; break;
+    default: CRASH("Unknwown order %zu",ord);
+    }
+  
+  size_t len=weight.size()-1;
+  double norm=weight.sum()/len;
+
+  TS out;
+  out=0.0;
+  upto=size_t(upto/len)*len;
+  for(size_t t=from;t<upto;t+=len)
     for(size_t j=0;j<=len;j++)
       out+=corr[t+j]*weight[j];
   
