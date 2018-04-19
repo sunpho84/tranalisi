@@ -1269,7 +1269,7 @@ void set_default_grace(const vector<T> &ext_data)
 // }
 
 //! perform the fit to the continuum limit of correction of process
-dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const double &MLep,const string &path,const procs_t &procs,const size_t isyst,const bool cov_flag,const vector<string> &beta_list,const size_t istudy,const vector<hl::FSE::FIT_STDEP::t> &FSE_fit_variations)
+dboot_t cont_chir_fit_corr_hl(const dbvec_t &a,const dbvec_t &z,const dboot_t &f0,const dboot_t &B0,const vector<cont_chir_fit_data_t> &ext_data,const dboot_t &ml_phys,const dboot_t &ms_phys,const double &MLep,const string &path,const procs_t &procs,const size_t isyst,const bool cov_flag,const vector<string> &beta_list,const size_t istudy,const vector<hl::FSE::SUB_STDEP::t> FSE_sub_variations,const vector<hl::FSE::FIT_STDEP::t> &FSE_fit_variations)
 {
   using namespace hl;
   
@@ -1737,7 +1737,7 @@ void extrapolate_corr(const dbvec_t &tot_corr_all,const procs_t &procs,const siz
       const double MMes_phys((iproc==0)?MP0:MK0);
       res[isyst]=cont_chir_fit_corr_xi_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,xi_phys,xi_s_phys,MMes_phys,MLep[iproc],cc_path,iproc,isyst,use_cov,beta_list);
 #else
-      res[isyst]=cont_chir_fit_corr_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,lat_par[input_an_id].ml,lat_par[input_an_id].ms,MLep[ilep],cc_path,procs,isyst,use_cov,beta_list,istudy,FSE_fit_variations);
+      res[isyst]=cont_chir_fit_corr_hl(alist,zlist,lat_par[input_an_id].f0,lat_par[input_an_id].B0,fit_data,lat_par[input_an_id].ml,lat_par[input_an_id].ms,MLep[ilep],cc_path,procs,isyst,use_cov,beta_list,istudy,FSE_sub_variations,FSE_fit_variations);
 #endif
     }
   
