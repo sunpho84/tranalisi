@@ -6,6 +6,7 @@ LDADD=$(top_builddir)/lib/libtran.a
 bin_PROGRAMS= \
 	$(top_builddir)/bin/Kl2_IB \
 	$(top_builddir)/bin/gm2_IB_sc \
+	$(top_builddir)/bin/energy_2pi \
 	$(top_builddir)/bin/manette \
 	$(top_builddir)/bin/manette2 \
 	$(top_builddir)/bin/meson_mass_IB \
@@ -23,4 +24,5 @@ __top_builddir__bin_Kl2_IB_SOURCES=Kl2_IB.cpp Kl2_IB_FSE.cpp common.cpp
 __top_builddir__bin_manette2_SOURCES=manette2.cpp
 __top_builddir__bin_meson_mass_IB_SOURCES=meson_mass_IB.cpp
 __top_builddir__bin_meson_mass_IB_glb_SOURCES=common.cpp meson_mass_IB_glb.cpp meson_mass_IB_fit.cpp
+__top_builddir__bin_energy_2pi_SOURCES=common.cpp energy_2pi.cpp gm2_IB_integrators.cpp
 __top_builddir__bin_gm2_IB_sc_SOURCES=common.cpp gm2_IB_sc.cpp gm2_IB_integrators.cpp

@@ -39,6 +39,7 @@ public:
   string path;
   
   size_t tmin[3],tmax[3];
+  size_t tmin_VV,tmax_VV;
 };
 vector<ens_data_t> ens_data;
 size_t nens_used;
@@ -75,7 +76,8 @@ size_t get_add_fact(const string &path,size_t im)
 //! read a single vector, for a specific mass and r, real or imaginary
 inline djvec_t read(const char *what,const ens_data_t &ens,size_t im,size_t r,size_t reim)
 {
-  string path=combine("%s/data/corr%s",ens.path.c_str(),what);
+  //string path=combine("%s/data/corr%s",ens.path.c_str(),what);
+  string path=combine("%s/jacks/corr%s",ens.path.c_str(),what);
   string path_extra=path+"_"+qname[im][0]+qname[im][0];
   
   djvec_t out;
@@ -97,6 +99,17 @@ inline djvec_t read(const char *what,const ens_data_t &ens,size_t im,size_t r,si
   return out;
 }
 
+// inline djvec_t read_light(const char *what,const ens_data_t &ens,size_t r,size_t reim)
+// {
+//   string path=combine("%s/jacks/corr%s",ens.path.c_str(),what);
+  
+//   djvec_t out;
+
+//   out=read_djvec(path,ens.T,ind_base_light({r,reim}));
+    
+//   return out;
+// }
+
 //! read a combination of r and return appropriately symmetrized
 inline djvec_t read(const char *what,const ens_data_t &ens,int tpar,size_t im,int rpar,size_t reim)
 {
@@ -106,6 +119,20 @@ inline djvec_t read(const char *what,const ens_data_t &ens,int tpar,size_t im,in
   for(size_t r=0;r<nr;r++) o+=read(what,ens,im,r,reim)*((r==0)?1:rpar);
   return o.symmetrized(tpar)/(1+abs(rpar));
 }
+
+// inline djvec_t read_test(const char *what,const ens_data_t &ens,size_t reim)
+// {
+//   return read_light(what,ens,1,reim);
+// }
+
+// inline djvec_t read_test_VV(const char *what,const ens_data_t &ens,int tpar,int rpar,size_t reim)
+// {
+//   djvec_t o(ens.T);
+//   o=0.0;
+  
+//   for(size_t r=0;r<nr;r++) o+=read_light(what,ens,r,reim)*((r==0)?1:rpar);
+//   return o/(1+abs(rpar));
+// }
 
 //! read averaging the three channels
 inline djvec_t read(const char *what,const char *pat,const ens_data_t &ens,int tpar,size_t im,int rpar,size_t reim)
@@ -119,9 +146,23 @@ inline djvec_t read(const char *what,const char *pat,const ens_data_t &ens,int t
   else return read(combine("%s_%s",what,pat).c_str(),ens,tpar,im,rpar,reim);
 }
 
+// inline djvec_t read_light_VV(const char *what,const char *pat,const ens_data_t &ens,int tpar,int rpar,size_t reim)
+// {
+//   return djvec_t(read_test_VV(combine("%s_%c1%c1",what,pat[0],pat[1]).c_str(),ens,tpar,rpar,reim)+
+// 		 read_test_VV(combine("%s_%c2%c2",what,pat[0],pat[1]).c_str(),ens,tpar,rpar,reim)+
+// 		 read_test_VV(combine("%s_%c3%c3",what,pat[0],pat[1]).c_str(),ens,tpar,rpar,reim))
+//     /3.0;
+// }
+
 //! read PP
 inline djvec_t read_PP(const char *what,const ens_data_t &ens,size_t im,int rpar,size_t reim)
 {return read(combine("%s_%s",what,"P5P5").c_str(),ens,1,im,rpar,reim);}
+
+// inline djvec_t read_V1V1(const char *what,const ens_data_t &ens,size_t reim)
+// {return read_test(combine("%s_%s",what,"V1V1").c_str(),ens,reim);}
+
+// inline djvec_t read_VV_test(const char *what,const ens_data_t &ens,int rpar,size_t reim)
+// {return read_light_VV(what,"VV",ens,1,rpar,reim);}
 
 //! read VV
 inline djvec_t read_VV(const char *what,const ens_data_t &ens,size_t im,int rpar,size_t reim)
@@ -300,7 +341,7 @@ inline void gm2_initialize(int narg,char **arg)
   init_common_IB(ens_pars);
   nens_used=input.read<int>("NEnsemble");
   
-  input.expect({"Ens","beta","L","UseForL","T","kappa","aml","tint_cr","tint_ss","tint_cc","path"});
+  input.expect({"Ens","beta","L","UseForL","T","kappa","aml","tint_cr","tint_ss","tint_cc","tint_VV","path"});
   ens_data.resize(nens_used);
   for(size_t iens=0;iens<nens_used;iens++)
     {
@@ -318,6 +359,8 @@ inline void gm2_initialize(int narg,char **arg)
 	  input.read(ens.tmin[iq]);
 	  input.read(ens.tmax[iq]);
 	}
+      input.read(ens.tmin_VV);
+      input.read(ens.tmax_VV);
       input.read(ens.path);
     }
 }
