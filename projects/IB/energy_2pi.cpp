@@ -4,6 +4,8 @@
 
 #include <gm2_IB_common.hpp>
 
+#include <omp.h>
+
 int mul[10000];
 double Zn20[10000],E2pi0[10000],Zn2[10000],E2pi[10000];
 
@@ -267,7 +269,8 @@ double V_corr_ll(double t,int Nstati,int L,double M_PS,double M_V,double g_Vpipi
 
 int main(int narg,char **arg)
 {
-
+  //we have to limit the number of threads
+  omp_set_num_threads(1);
   int start=time(0);
   
   gm2_initialize(narg,arg);
