@@ -355,11 +355,16 @@ int main(int narg,char **arg)
 	cout<<"---------------------"<<"GLOBAL FIT"<<"------------------"<<endl<<endl;
 		
 	jack_fit_t fit_ll;
+	
 	fit_ll.add_fit_par_limits(jM_V_ll[iens],"aM_V",jM_V[iens].ave_err(),1.0e-08,10.0);
 	fit_ll.add_fit_par_limits(jg_Vpipi_ll[iens],"g_Vpipi",jg_Vpipi[iens].ave_err(),1.0,20.0);
 	// fit_ll.add_self_fitted_point(jg_Vpipi_ll[iens],"jg_Vpipi",jg_Vpipi[iens].ave_err());
-	for(size_t t=ens.tmin_VV;t<ens.tmax_VV+1;t++)
-	  fit_ll.add_point(jVV_LO[iens][t],[&t_x,t,ens,Nstati,L,iens,jM_P](const vector<double> &p,int iel){return V_corr_ll(t_x[t-ens.tmin_VV],Nstati,L,jM_P[iens][iel],p[0],p[1],1);});
+	for(size_t t=ens.tmin_VV;t<ens.tmax_VV+1;t++)	    
+	  fit_ll.add_point(jVV_LO[iens][t],[&t_x,t,ens,Nstati,L,iens,jM_P](const vector<double> &p,int iel){
+
+	     cout<<"p[0]: "<<p[0]<<endl;
+	      cout<<"p[1]: "<<p[1]<<endl;
+	      return V_corr_ll(t_x[t-ens.tmin_VV],Nstati,L,jM_P[iens][iel],p[0],p[1],1);});
 	
 	fit_ll.fit();
 
