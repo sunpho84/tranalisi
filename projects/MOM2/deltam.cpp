@@ -280,16 +280,19 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	{
 	  cout<<"Switching to determining only deltam_cr"<<endl;
 	  
-	  djvec_t a=V0P5_QED;
-	  djvec_t c=V0P5_P;
+	  djvec_t a=V0P5_QED.symmetrized();
+	  djvec_t c=V0P5_P.symmetrized();
 	  djvec_t d=P5P5_QED.symmetrized();
 	  djvec_t f=P5P5_P.symmetrized();
+
+	  a.ave_err().write(dir_path+"/plots/deltam_a_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	  c.ave_err().write(dir_path+"/plots/deltam_c_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
 	  
 	  const djvec_t ma_fr_c=-a/c;
 	  const djvec_t md_fr_f=-d/f;
 	  
-	  deltam_cr=constant_fit(md_fr_f,tmin,tmax,dir_path+"/plots/deltam_cr_m_"+to_string(im)+"_rfw"+to_string(rfw)+"_P5P5.xmg");
-	  deltam_cr=constant_fit(ma_fr_c,tmin,tmax,dir_path+"/plots/deltam_cr_m_"+to_string(im)+"_rfw"+to_string(rfw)+"_V0P5.xmg");
+	  deltam_cr=constant_fit(md_fr_f,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_P5P5.xmg");
+	  deltam_cr=constant_fit(ma_fr_c,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_V0P5.xmg");
 	  deltam_tm=0;
 	}
     }
