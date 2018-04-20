@@ -279,11 +279,11 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       else
 	{
 	  cout<<"Switching to determining only deltam_cr"<<endl;
-	  const djvec_t c_fr_a=c/a;
-	  const djvec_t f_fr_d=f/d;
+	  const djvec_t ma_fr_c=-a/c;
+	  const djvec_t md_fr_f=-d/f;
 	  
-	  deltam_cr=constant_fit(f_fr_d,tmin,tmax,dir_path+"/plots/deltam_cr_m_P5P5"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-	  deltam_cr=constant_fit(c_fr_a,tmin,tmax,dir_path+"/plots/deltam_cr_m_V0P5"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	  deltam_cr=constant_fit(md_fr_f,tmin,tmax,dir_path+"/plots/deltam_cr_m_"+to_string(im)+"_rfw"+to_string(rfw)+"_P5P5.xmg");
+	  deltam_cr=constant_fit(ma_fr_c,tmin,tmax,dir_path+"/plots/deltam_cr_m_"+to_string(im)+"_rfw"+to_string(rfw)+"_V0P5.xmg");
 	  deltam_tm=0;
 	}
     }
