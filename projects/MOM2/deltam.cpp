@@ -280,8 +280,8 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	{
 	  cout<<"Switching to determining only deltam_cr"<<endl;
 	  
-	  djvec_t a=V0P5_QED.symmetrized();
-	  djvec_t c=V0P5_P.symmetrized();
+	  djvec_t a=V0P5_QED.symmetrized(-1);
+	  djvec_t c=V0P5_P.symmetrized(-1);
 	  djvec_t d=P5P5_QED.symmetrized();
 	  djvec_t f=P5P5_P.symmetrized();
 
