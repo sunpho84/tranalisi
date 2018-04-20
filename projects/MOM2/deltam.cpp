@@ -250,7 +250,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       const double tol=1e-13;
       const strategy_t strategy=
 	(fabs(b[t_probe].ave())>tol or
-	 fabs(e[t_probe].ave())<tol)
+	 fabs(e[t_probe].ave())>tol)
 	?
 	both_cr_and_tm
 	:
