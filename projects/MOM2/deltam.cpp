@@ -245,22 +245,46 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
       e.ave_err().write(dir_path+"/plots/deltam_e_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       f.ave_err().write(dir_path+"/plots/deltam_f_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
       
-      const djvec_t old_corr=djvec_t(symmetric_derivative(V0P5_QED)/symmetric_derivative(V0P5_P)).symmetrized();
-      const djack_t old=constant_fit(old_corr,tmin,tmax,dir_path+"/plots/old_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+      enum strategy_t{only_cr,both_cr_and_tm};
+      const size_t t_probe=T/8;
+      const double tol=1e-13;
+      const strategy_t strategy=
+	(fabs(b[t_probe].ave())>tol or
+	 fabs(e[t_probe].ave())<tol)
+	?
+	both_cr_and_tm
+	:
+	only_cr;
       
-      const djvec_t den=b*f-c*e;
-      const djvec_t deltam_tm_corr=(-a*f+c*d)/den;
-      const djvec_t deltam_cr_corr=(-b*d+a*e)/den;
-      
-      const size_t imr=im_r_ind({im,rfw});
-      
-      for(auto &oit : vector<tuple<djvec_t*,const djvec_t*,string>>{{&deltam_cr,&deltam_cr_corr,"cr"},{&deltam_tm,&deltam_tm_corr,"tm"}})
+      if(strategy==both_cr_and_tm)
 	{
-	  djack_t &out=(*::get<0>(oit))[imr];
-	  const djvec_t &in=*::get<1>(oit);
-	  const string tag=::get<2>(oit);
+	  const djvec_t old_corr=djvec_t(symmetric_derivative(V0P5_QED)/symmetric_derivative(V0P5_P)).symmetrized();
+	  const djack_t old=constant_fit(old_corr,tmin,tmax,dir_path+"/plots/old_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
 	  
-	  out=constant_fit(in,tmin,tmax,dir_path+"/plots/deltam_"+tag+"_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	  const djvec_t den=b*f-c*e;
+	  const djvec_t deltam_tm_corr=(-a*f+c*d)/den;
+	  const djvec_t deltam_cr_corr=(-b*d+a*e)/den;
+	  
+	  const size_t imr=im_r_ind({im,rfw});
+	  
+	  for(auto &oit : vector<tuple<djvec_t*,const djvec_t*,string>>{{&deltam_cr,&deltam_cr_corr,"cr"},{&deltam_tm,&deltam_tm_corr,"tm"}})
+	    {
+	      djack_t &out=(*::get<0>(oit))[imr];
+	      const djvec_t &in=*::get<1>(oit);
+	      const string tag=::get<2>(oit);
+	      
+	      out=constant_fit(in,tmin,tmax,dir_path+"/plots/deltam_"+tag+"_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	    }
+	}
+      else
+	{
+	  cout<<"Switching to determining only deltam_cr"<<endl;
+	  const djvec_t c_fr_a=c/a;
+	  const djvec_t f_fr_d=f/d;
+	  
+	  deltam_cr=constant_fit(f_fr_d,tmin,tmax,dir_path+"/plots/deltam_cr_m_P5P5"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	  deltam_cr=constant_fit(c_fr_a,tmin,tmax,dir_path+"/plots/deltam_cr_m_V0P5"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	  deltam_tm=0;
 	}
     }
 }
