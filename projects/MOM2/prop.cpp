@@ -359,8 +359,8 @@ void perens_t::mom_compute_qprop()
 	  if(pars::use_QED)
 	    {
 	      auto ji=jprops[im_r].LO[ijack].inverse();
-	      test_PH[im_r_ilinmom][ijack]=(ji*jprops[im_r].PH[ijack]*ji*quaGamma[5]).trace().real();
-	      test_P[im_r_ilinmom][ijack]=(ji*jprops[im_r].CR_CT[ijack]*ji*quaGamma[5]).trace().real();
+	      test_PH[im_r_ilinmom][ijack]=(ji*jprops[im_r].PH[ijack]*ji*quaGamma[0]).trace().real();
+	      test_P[im_r_ilinmom][ijack]=(ji*jprops[im_r].CR_CT[ijack]*ji*quaGamma[0]).trace().real();
 	      
 	      Zq_time.start();
 	      Zq_QED[im_r_ilinmom][ijack]=compute_Zq(-jprop_QED_inv[im_r][ijack],mom);
