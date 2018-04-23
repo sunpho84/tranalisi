@@ -302,9 +302,6 @@ void perens_t::mom_compute_qprop()
 {
   vector<raw_file_t> files=setup_read_all_qprops_mom(conf_list);
   
-  auto test_PH=Zq;
-  auto test_P=Zq;
-      
   for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
     {
       const size_t mom=linmoms[ilinmom][0];
@@ -359,8 +356,8 @@ void perens_t::mom_compute_qprop()
 	  if(pars::use_QED)
 	    {
 	      auto ji=jprops[im_r].LO[ijack].inverse();
-	      test_PH[im_r_ilinmom][ijack]=(ji*jprops[im_r].PH[ijack]*ji*quaGamma[0]).trace().real();
-	      test_P[im_r_ilinmom][ijack]=(ji*jprops[im_r].CR_CT[ijack]*ji*quaGamma[0]).trace().real();
+	      Z5_PH[im_r_ilinmom][ijack]=(ji*jprops[im_r].PH[ijack]*ji*quaGamma[0]).trace().real();
+	      // test_P[im_r_ilinmom][ijack]=(ji*jprops[im_r].CR_CT[ijack]*ji*quaGamma[0]).trace().real();
 	      
 	      Zq_time.start();
 	      Zq_QED[im_r_ilinmom][ijack]=compute_Zq(-jprop_QED_inv[im_r][ijack],mom);
@@ -369,20 +366,4 @@ void perens_t::mom_compute_qprop()
 	    }
 	}
     }
-  
-  grace_file_t out_PH(dir_path+"/plots/test_PH.xmg");
-  grace_file_t out_P(dir_path+"/plots/test_P.xmg");
-  
-  for(size_t im=0;im<nm;im++)
-    for(size_t r=0;r<nr;r++)
-      {
-	out_PH.new_data_set();
-	out_P.new_data_set();
-	for(size_t imom=0;imom<linmoms.size();imom++)
-	  {
-	    const double p2tilde=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
-	    out_PH.write_ave_err(p2tilde,test_PH[im_r_ilinmom_ind({im,r,imom})].ave_err());
-	    out_P.write_ave_err(p2tilde,test_P[im_r_ilinmom_ind({im,r,imom})].ave_err());
-	  }
-      }
 }
