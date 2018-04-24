@@ -208,7 +208,7 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
       pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
     }
   
-  out.compute_Zbil();
+  if(pars::compute_bilinears) out.compute_Zbil();
   if(pars::compute_meslep) out.compute_Zmeslep();
 }
 

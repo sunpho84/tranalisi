@@ -303,7 +303,7 @@ struct perens_t
   void mom()
   {
     mom_compute_qprop();
-    mom_compute_bil();
+    if(pars::compute_bilinears) mom_compute_bil();
     if(pars::compute_meslep) mom_compute_meslep();
   }
   

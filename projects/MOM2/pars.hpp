@@ -53,6 +53,8 @@ namespace pars
   EXTERN_PARS gaz::type_t act INIT_PARS_TO({gaz::PLAQ});
   //! extrapolation method
   EXTERN_PARS chir_extr::type_t chir_extr_method INIT_PARS_TO({chir_extr::MQUARK});
+  //! compute bilinear vertex
+  EXTERN_PARS bool compute_bilinears INIT_PARS_TO({true});
   //! compute mesoleptonic vertex
   EXTERN_PARS bool compute_meslep INIT_PARS_TO({false});
   //! Filter for democracy

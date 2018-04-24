@@ -190,7 +190,7 @@ perens_t& perens_t::read_or_compute()
       compute_basic(ingredients_path);
     }
   
-  compute_Zbil();
+  if(pars::compute_bilinears) compute_Zbil();
   if(pars::compute_meslep) compute_Zmeslep();
   
   return *this;
@@ -230,7 +230,7 @@ perens_t perens_t::average_r() const
 	out.deltam_tm[im]=(deltam_tm[im_r_ind({im,0})]+deltam_tm[im_r_ind({im,1})])/2.0;
       }
   
-  out.compute_Zbil();
+  if(pars::compute_bilinears) out.compute_Zbil();
   if(pars::compute_meslep) out.compute_Zmeslep();
   
   return out;
@@ -256,7 +256,7 @@ perens_t perens_t::val_chir_extrap() const
       
       val_chir_extrap_deltam(out);
       
-      out.compute_Zbil();
+      if(pars::compute_bilinears) out.compute_Zbil();
       if(pars::compute_meslep) out.compute_Zmeslep();
     }
   else
@@ -288,7 +288,7 @@ perens_t perens_t::average_equiv_momenta() const
   average_equiv_momenta_Zbil(out,equiv_bilmom_combos);
   average_equiv_momenta_Zmeslep(out,equiv_meslepmom_combos);
   
-  out.compute_Zbil();
+  if(pars::compute_bilinears) out.compute_Zbil();
   if(pars::compute_meslep) out.compute_Zmeslep();
   
   return out;

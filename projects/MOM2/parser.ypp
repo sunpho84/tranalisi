@@ -55,6 +55,7 @@ using namespace scan;
 %token TK_ACTION
 %token TK_BC
 %token TK_CHIR_EXTR_METHOD
+%token TK_COMPUTE_BILINEARS
 %token TK_COMPUTE_MESLEP
 %token TK_COMPUTE_MESLEP_WITH_CHARGES_ONE
 %token TK_ENSEMBLES
@@ -91,6 +92,7 @@ commands:
         | commands set_action
         | commands set_boundary_conditions
         | commands set_chir_extr_method
+        | commands set_compute_bilinears
         | commands set_compute_meslep
         | commands set_compute_meslep_with_charges_one
         | commands set_filter_thresh
@@ -140,6 +142,9 @@ set_boundary_conditions: TK_BC '=' TK_QUOTED_TEXT
 ;
 
 set_chir_extr_method: TK_CHIR_EXTR_METHOD '=' TK_QUOTED_TEXT {pars::chir_extr_method=chir_extr::decrypt(*$3);delete $3;}
+;
+
+set_compute_bilinears: TK_COMPUTE_BILINEARS '=' TK_INTE {pars::compute_bilinears=$3;}
 ;
 
 set_compute_meslep: TK_COMPUTE_MESLEP '=' TK_INTE {pars::compute_meslep=$3;}
