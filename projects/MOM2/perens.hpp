@@ -116,6 +116,7 @@ struct perens_t
   djvec_t Zq_sig1;
   djvec_t Zq_QED;  //not rel!
   djvec_t Zq_sig1_QED;
+  djvec_t Z5_P;
   djvec_t Z5_PH;
   
   //! return a list of tasks for Zq

@@ -37,7 +37,7 @@ djack_t perens_t::compute_Zq(const jqprop_t &jprop_inv,const size_t glb_mom)
 
 vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& ens)
 {
-  vector<const djvec_t*> in_Zq,in_Zq_sig1,in_Zq_QED,in_Zq_sig1_QED,in_Z5_PH;
+  vector<const djvec_t*> in_Zq,in_Zq_sig1,in_Zq_QED,in_Zq_sig1_QED,in_Z5_P,in_Z5_PH;
   for(auto &e : ens)
     {
       in_Zq.push_back(&e->Zq);
@@ -46,6 +46,7 @@ vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& e
 	{
 	  in_Zq_QED.push_back(&e->Zq_QED);
 	  in_Zq_sig1_QED.push_back(&e->Zq_sig1_QED);
+	  in_Z5_P.push_back(&e->Z5_P);
 	  in_Z5_PH.push_back(&e->Z5_PH);
 	}
     }
@@ -55,6 +56,7 @@ vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& e
     {
       Zq_tasks.push_back({&Zq_QED,in_Zq_QED,im_r_ilinmom_ind,"Zq_QED",QED_task});
       Zq_tasks.push_back({&Zq_sig1_QED,in_Zq_sig1_QED,im_r_ilinmom_ind,"Zq_sig1_QED",QED_task});
+      Zq_tasks.push_back({&Z5_P,in_Z5_P,im_r_ilinmom_ind,"Z5_P",QED_task});
       Zq_tasks.push_back({&Z5_PH,in_Z5_PH,im_r_ilinmom_ind,"Z5_PH",QED_task});
     }
   
