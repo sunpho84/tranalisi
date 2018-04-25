@@ -6,6 +6,7 @@ LDADD=$(top_builddir)/lib/libtran.a
 bin_PROGRAMS= \
 	backstab \
 	combine_vdoubles \
+	gevp \
 	djvec_load \
 	effective_mass \
 	linfit \
@@ -20,6 +21,8 @@ backstab_SOURCES=backstab.cpp
 combine_vdoubles_SOURCES=combine_vdoubles.cpp
 
 djvec_load_SOURCES=djvec_load.cpp
+
+gevp_SOURCES=gevp.cpp
 
 linfit_SOURCES=linfit.cpp
 
