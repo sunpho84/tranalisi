@@ -69,7 +69,7 @@ class jm_r_mom_qprops_t
   {
     vector<jqprop_t*> out={&LO};
     if(use_QED)
-      for(auto &p : {&PH,&CR_CT,&TM_CT,&QED})
+      for(auto &p : {&PH,&CR_CT,&TM_CT})
 	out.push_back(p);
     return out;
   }
@@ -80,7 +80,6 @@ public:
   jqprop_t PH;     //!< propagator with 2 photons, Tadpole
   jqprop_t CR_CT;  //!< propagator with Pseudoscalar insertion
   jqprop_t TM_CT;  //!< propagator with Scalar insertion
-  jqprop_t QED;    //!< propagator with 2 photons, Tadpole, Pseudoscalar and Scalar insertions
   
   void build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props);
   

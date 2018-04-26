@@ -198,13 +198,13 @@ perens_t& perens_t::read_or_compute()
 
 void perens_t::bin_read(raw_file_t &file)
 {
-  for(auto &t : concat(get_Zq_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
+  for(auto &t : concat(get_sigma_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
      t.out->bin_read(file);
 }
 
 void perens_t::bin_write(raw_file_t &file)
 {
-  for(auto &t : concat(get_Zq_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
+  for(auto &t : concat(get_sigma_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
     t.out->bin_write(file);
 }
 

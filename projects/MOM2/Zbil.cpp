@@ -170,54 +170,64 @@ void perens_t::mom_compute_bil()
       jverts.clusterize_all(pars::use_QED,clust_size,im_r_im_r_igam_ind,deltam_cr,deltam_tm);
       clust_time.stop();
       
-      vector<jqprop_t> jprop_inv1; //!< inverse propagator1
-      vector<jqprop_t> jprop_inv2; //!< inverse propagator2
-      vector<jqprop_t> jprop_QED_inv1; //!< inverse propagator1 with em insertion
-      vector<jqprop_t> jprop_QED_inv2; //!< inverse propagator2 with em insertion
+      vector<jm_r_mom_qprops_t> jprops_inv1; //!< inverse propagator1
+      vector<jm_r_mom_qprops_t> jprops_inv2; //!< inverse propagator2
       
-      get_inverse_propagators(jprop_inv1,jprop_QED_inv1,jprops1);
-      get_inverse_propagators(jprop_inv2,jprop_QED_inv2,jprops2);
+      get_inverse_propagators(jprops_inv1,jprops1);
+      get_inverse_propagators(jprops_inv2,jprops2);
       
-      proj_time.start();
-      djvec_t pr_bil_temp=compute_proj_bil(jprop_inv1,jverts.LO,jprop_inv2);
+      CRASH("");
+      // proj_time.start();
+      // djvec_t pr_bil_temp=compute_proj_bil(jprops_inv1,jverts.LO,jprop_inv2);
       
-      //QED
-      djvec_t pr_bil_QED_temp;
-      if(pars::use_QED)
-	{
-	  const djvec_t pr_bil_QED=compute_proj_bil(jprop_inv1,jverts.QED,jprop_inv2);
-	  const djvec_t pr_bil_a=compute_proj_bil(jprop_QED_inv1,jverts.LO,jprop_inv2);
-	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_QED_inv2);
-	  pr_bil_QED_temp=
-	    (-pr_bil_a
-	     -pr_bil_b
-	     +pr_bil_QED);
-	}
+      // //QED
+      // djvec_t pr_bil_QED_temp;
+      // if(pars::use_QED)
+      // 	{
+      // 	  const djvec_t pr_bil_QED=compute_proj_bil(jprop_inv1,jverts.QED,jprop_inv2);
+      // 	  const djvec_t pr_bil_a=compute_proj_bil(jprop_QED_inv1,jverts.LO,jprop_inv2);
+      // 	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_QED_inv2);
+      // 	  pr_bil_QED_temp=
+      // 	    (-pr_bil_a
+      // 	     -pr_bil_b
+      // 	     +pr_bil_QED);
+      // 	}
       
-      //! an index running on all packed combo, and momenta
-      const index_t all_ibilmom_ind({{"All",im_r_im_r_iZbil_ind.max()},{"bilmom",bilmoms.size()}});
+      // //! an index running on all packed combo, and momenta
+      // const index_t all_ibilmom_ind({{"All",im_r_im_r_iZbil_ind.max()},{"bilmom",bilmoms.size()}});
       
-      //store
-      vector<pair<djvec_t*,djvec_t*>> store_task={{&pr_bil,&pr_bil_temp}};
-      if(pars::use_QED) store_task.push_back({&pr_bil_QED,&pr_bil_QED_temp});
-      for(auto &t : store_task)
-	for(size_t iall=0;iall<im_r_im_r_iZbil_ind.max();iall++)
-	  (*t.first)[all_ibilmom_ind({iall,ibilmom})]=(*t.second)[iall];
+      // //store
+      // vector<pair<djvec_t*,djvec_t*>> store_task={{&pr_bil,&pr_bil_temp}};
+      // if(pars::use_QED) store_task.push_back({&pr_bil_QED,&pr_bil_QED_temp});
+      // for(auto &t : store_task)
+      // 	for(size_t iall=0;iall<im_r_im_r_iZbil_ind.max();iall++)
+      // 	  (*t.first)[all_ibilmom_ind({iall,ibilmom})]=(*t.second)[iall];
       
-      proj_time.stop();
+      // proj_time.stop();
     }
 }
 
 vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*> &ens)
 {
-  vector<const djvec_t*> in_pr_bil,in_pr_bil_QED;
+  vector<const djvec_t*> in_pr_bil,in_pr_bil_CR_CT,in_pr_bil_TM_CT,in_pr_bil_PH;
   for(auto &e : ens)
     {
       in_pr_bil.push_back(&e->pr_bil);
-      if(pars::use_QED) in_pr_bil_QED.push_back(&e->pr_bil_QED);
+      if(pars::use_QED)
+	{
+	  in_pr_bil_CR_CT.push_back(&e->pr_bil_CR_CT);
+	  in_pr_bil_TM_CT.push_back(&e->pr_bil_TM_CT);
+	  in_pr_bil_PH.push_back(&e->pr_bil_PH);
+	}
     }
+  
   vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,im_r_im_r_iZbil_ibilmom_ind,"pr_bil",QCD_task}};
-  if(pars::use_QED) pr_bil_tasks.push_back({&pr_bil_QED,in_pr_bil_QED,im_r_im_r_iZbil_ibilmom_ind,"pr_bil_QED",QED_task});
+  if(pars::use_QED)
+    {
+      pr_bil_tasks.push_back({&pr_bil_CR_CT,in_pr_bil_CR_CT,im_r_im_r_iZbil_ibilmom_ind,"pr_bil_CR_CT",QED_task});
+      pr_bil_tasks.push_back({&pr_bil_TM_CT,in_pr_bil_TM_CT,im_r_im_r_iZbil_ibilmom_ind,"pr_bil_TM_CT",QED_task});
+      pr_bil_tasks.push_back({&pr_bil_PH,in_pr_bil_PH,im_r_im_r_iZbil_ibilmom_ind,"pr_bil_PH",QED_task});
+    }
   
   return pr_bil_tasks;
 }
@@ -241,25 +251,27 @@ void perens_t::compute_Zbil()
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
       {
-	const vector<size_t> im_r_im_r_iZbil_comp=im_r_im_r_iZbil_ind(im_r_im_r_iZbil);
-	const vector<size_t> im_r1_comp=subset(im_r_im_r_iZbil_comp,0,2);
-	const vector<size_t> im_r2_comp=subset(im_r_im_r_iZbil_comp,2,4);
-	const size_t iZbil=im_r_im_r_iZbil_comp[4];
-	const size_t ilinmom1=bilmoms[ibilmom][1];
-	const size_t ilinmom2=bilmoms[ibilmom][2];
-	const size_t im_r1_ilinmom1=im_r_ilinmom_ind(concat(im_r1_comp,ilinmom1));
-	const size_t im_r2_ilinmom2=im_r_ilinmom_ind(concat(im_r2_comp,ilinmom2));
+	CRASH("");
 	
-	const size_t im_r_im_r_iZbil_ibilmom=im_r_im_r_iZbil_ibilmom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,ibilmom})));
+	// const vector<size_t> im_r_im_r_iZbil_comp=im_r_im_r_iZbil_ind(im_r_im_r_iZbil);
+	// const vector<size_t> im_r1_comp=subset(im_r_im_r_iZbil_comp,0,2);
+	// const vector<size_t> im_r2_comp=subset(im_r_im_r_iZbil_comp,2,4);
+	// const size_t iZbil=im_r_im_r_iZbil_comp[4];
+	// const size_t ilinmom1=bilmoms[ibilmom][1];
+	// const size_t ilinmom2=bilmoms[ibilmom][2];
+	// const size_t im_r1_ilinmom1=im_r_ilinmom_ind(concat(im_r1_comp,ilinmom1));
+	// const size_t im_r2_ilinmom2=im_r_ilinmom_ind(concat(im_r2_comp,ilinmom2));
 	
-	Zbil[im_r_im_r_iZbil_ibilmom]=
-	  sqrt(Zq_sig1[im_r1_ilinmom1]*Zq_sig1[im_r2_ilinmom2])/pr_bil[im_r_im_r_iZbil_ibilmom];
+	// const size_t im_r_im_r_iZbil_ibilmom=im_r_im_r_iZbil_ibilmom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,ibilmom})));
 	
-	if(pars::use_QED)
-	    Zbil_QED_rel[im_r_im_r_iZbil_ibilmom]=
-	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]
-	      +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+
-		Zq_sig1_QED[im_r2_ilinmom2]/Zq_sig1[im_r2_ilinmom2])/2.0;
+	// Zbil[im_r_im_r_iZbil_ibilmom]=
+	//   sqrt(Zq_sig1[im_r1_ilinmom1]*Zq_sig1[im_r2_ilinmom2])/pr_bil[im_r_im_r_iZbil_ibilmom];
+	
+	// if(pars::use_QED)
+	//     Zbil_QED_rel[im_r_im_r_iZbil_ibilmom]=
+	//       -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]
+	//       +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+
+	// 	Zq_sig1_QED[im_r2_ilinmom2]/Zq_sig1[im_r2_ilinmom2])/2.0;
       }
 }
 

@@ -32,8 +32,8 @@ __top_builddir__bin_mom_SOURCES= \
 	%D%/perens.cpp \
 	%D%/prop.cpp \
 	%D%/scan.cpp \
+	%D%/sigma.cpp \
 	%D%/timings.cpp \
 	%D%/Zbil.cpp \
 	%D%/Zmeslep.cpp \
-	%D%/Zq.cpp \
-	%D%/Zq_sig1.cpp
+	%D%/Zq.cpp

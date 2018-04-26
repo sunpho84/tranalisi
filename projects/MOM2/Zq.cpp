@@ -10,6 +10,19 @@
 
 #include <MOM2/perens.hpp>
 
+	  // //do the same with QED
+	  // if(pars::use_QED)
+	  //   {
+	  //     auto ji=jprops[im_r].LO[ijack].inverse();
+	  //     Z5_P[im_r_ilinmom][ijack]=(ji*jprops[im_r].CR_CT[ijack]*ji*quaGamma[0]).trace().real();
+	  //     Z5_PH[im_r_ilinmom][ijack]=(ji*jprops[im_r].PH[ijack]*ji*quaGamma[0]).trace().real()/Z5_P[im_r_ilinmom][ijack];
+	      
+	  //     sigma_time.start();
+	  //     Zq_QED[im_r_ilinmom][ijack]=compute_Zq(-jprop_QED_inv[im_r][ijack],mom);
+	  //     Zq_sig1_QED[im_r_ilinmom][ijack]=compute_Zq_sig1(-jprop_QED_inv[im_r][ijack],mom);
+	  //     sigma_time.stop();
+	  //   }
+
 double perens_t::compute_Zq(const qprop_t &prop_inv,const size_t glb_mom)
 {
   const p_t ptilde=all_moms[glb_mom].p(L).tilde();
@@ -37,28 +50,19 @@ djack_t perens_t::compute_Zq(const jqprop_t &jprop_inv,const size_t glb_mom)
 
 vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& ens)
 {
-  vector<const djvec_t*> in_Zq,in_Zq_sig1,in_Zq_QED,in_Zq_sig1_QED,in_Z5_P,in_Z5_PH;
+  vector<const djvec_t*> in_Zq,in_Zq_QED;
   for(auto &e : ens)
     {
       in_Zq.push_back(&e->Zq);
-      in_Zq_sig1.push_back(&e->Zq_sig1);
       if(pars::use_QED)
 	{
 	  in_Zq_QED.push_back(&e->Zq_QED);
-	  in_Zq_sig1_QED.push_back(&e->Zq_sig1_QED);
-	  in_Z5_P.push_back(&e->Z5_P);
-	  in_Z5_PH.push_back(&e->Z5_PH);
 	}
     }
   
-  vector<task_t> Zq_tasks={{&Zq,in_Zq,im_r_ilinmom_ind,"Zq",QCD_task},{&Zq_sig1,in_Zq_sig1,im_r_ilinmom_ind,"Zq_sig1",QCD_task}};
+  vector<task_t> Zq_tasks={{&Zq,in_Zq,im_r_ilinmom_ind,"Zq",QCD_task}};
   if(pars::use_QED)
-    {
-      Zq_tasks.push_back({&Zq_QED,in_Zq_QED,im_r_ilinmom_ind,"Zq_QED",QED_task});
-      Zq_tasks.push_back({&Zq_sig1_QED,in_Zq_sig1_QED,im_r_ilinmom_ind,"Zq_sig1_QED",QED_task});
-      Zq_tasks.push_back({&Z5_P,in_Z5_P,im_r_ilinmom_ind,"Z5_P",QED_task});
-      Zq_tasks.push_back({&Z5_PH,in_Z5_PH,im_r_ilinmom_ind,"Z5_PH",QED_task});
-    }
+    Zq_tasks.push_back({&Zq_QED,in_Zq_QED,im_r_ilinmom_ind,"Zq_QED",QED_task});
   
   return Zq_tasks;
 }
@@ -70,15 +74,11 @@ void perens_t::plot_Zq(const string &suffix)
   auto tasks=this->get_Zq_tasks();
   
   djvec_t Zq_QED_rel;
-  djvec_t Zq_sig1_QED_rel;
-  
   if(pars::use_QED)
     {
       Zq_QED_rel=Zq_QED/Zq;
-      Zq_sig1_QED_rel=Zq_sig1_QED/Zq_sig1;
       
       tasks.push_back({&Zq_QED_rel,{},im_r_ilinmom_ind,"Zq_QED_rel",QED_task});
-      tasks.push_back({&Zq_sig1_QED_rel,{},im_r_ilinmom_ind,"Zq_sig1_QED_rel",QED_task});
     }
   
   for(auto &t : tasks)

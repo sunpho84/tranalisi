@@ -5,6 +5,7 @@
 
 #include <MOM2/geometry.hpp>
 #include <MOM2/pars.hpp>
+#include <MOM2/sigma.hpp>
 #include <MOM2/Zmeslep.hpp>
 #include <MOM2/Zbil.hpp>
 
@@ -111,20 +112,40 @@ struct perens_t
       in(in),out(out),ind(ind),tag(tag),QCD_QED_task(QCD_QED_task) {}
   };
   
+  //Trace of propagator
+  djvec_t sigma1_LO;
+  djvec_t sigma1_CR_CT;
+  djvec_t sigma1_TM_CT;
+  djvec_t sigma1_PH;
+  ///
+  djvec_t sigma2_LO;
+  djvec_t sigma2_CR_CT;
+  djvec_t sigma2_TM_CT;
+  djvec_t sigma2_PH;
+  ///
+  djvec_t sigma3_LO;
+  djvec_t sigma3_CR_CT;
+  djvec_t sigma3_TM_CT;
+  djvec_t sigma3_PH;
+  
+  //! compute all sigmas
+  perens_t& compute_sigmas();
+  
+  //! return a list of tasks for sigma
+  vector<task_t> get_sigma_tasks(const vector<const perens_t*> &ens={});
+
   //Zq, with and without QED
   djvec_t Zq;
-  djvec_t Zq_sig1;
   djvec_t Zq_QED;  //not rel!
-  djvec_t Zq_sig1_QED;
-  djvec_t Z5_P;
-  djvec_t Z5_PH;
   
   //! return a list of tasks for Zq
   vector<task_t> get_Zq_tasks(const vector<const perens_t*>& ens={});
   
   //projected bilinears with and without QED
   djvec_t pr_bil;
-  djvec_t pr_bil_QED;
+  djvec_t pr_bil_CR_CT;
+  djvec_t pr_bil_TM_CT;
+  djvec_t pr_bil_PH;
   
   //! return a list of tasks for bilinears projected vertex
   vector<task_t> get_pr_bil_tasks(const vector<const perens_t*> &ens={});
@@ -144,7 +165,9 @@ struct perens_t
   
   //! projected meslep
   djvec_t pr_meslep;
-  djvec_t pr_meslep_QED;
+  djvec_t pr_meslep_CR_CT;
+  djvec_t pr_meslep_TM_CT;
+  djvec_t pr_meslep_PH;
   
   //! return a list of tasks for meslep projected vertex
   vector<task_t> get_pr_meslep_tasks(const vector<const perens_t*> &ens={});
@@ -168,9 +191,12 @@ struct perens_t
   //! return a list of all tasks
   vector<task_t> get_all_tasks(const vector<const perens_t*> &ens={})
   {
-    return concat(get_Zq_tasks(ens),
+    return concat(get_sigma_tasks(ens),
+		  get_Zq_tasks(ens),
+		  ///
 		  get_pr_bil_tasks(ens),
 		  get_Zbil_tasks(ens),
+		  ///
 		  get_pr_meslep_tasks(ens),
 		  get_Zmeslep_tasks(ens));
   }
@@ -303,7 +329,7 @@ struct perens_t
   //! compute according to mom scheme
   void mom()
   {
-    mom_compute_qprop();
+    compute_sigmas();
     if(pars::compute_bilinears) mom_compute_bil();
     if(pars::compute_meslep) mom_compute_meslep();
   }
@@ -312,17 +338,10 @@ struct perens_t
   
   djack_t compute_Zq(const jqprop_t &jprop_inv,const size_t glb_mom);
   
-  double compute_Zq_sig1(const qprop_t &prop_inv,const size_t glb_mom);
-  
-  djack_t compute_Zq_sig1(const jqprop_t &jprop_inv,const size_t glb_mom);
-  
   vector<m_r_mom_conf_qprops_t> read_all_qprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
   
-  void get_inverse_propagators(vector<jqprop_t> &jprop_inv,vector<jqprop_t> &jprop_QED_inv,
+  void get_inverse_propagators(vector<jm_r_mom_qprops_t> &jprops_inv,
 			       const vector<jm_r_mom_qprops_t> &jprops) const;
-  
-  //! compute all props
-  void mom_compute_qprop();
   
   vector<mom_conf_lprops_t> read_all_lprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
   

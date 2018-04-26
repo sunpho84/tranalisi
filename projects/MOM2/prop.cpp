@@ -253,11 +253,10 @@ void perens_t::build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops
     }
 }
 
-void perens_t::get_inverse_propagators(vector<jqprop_t> &jprop_inv,vector<jqprop_t> &jprop_QED_inv,
+void perens_t::get_inverse_propagators(vector<jm_r_mom_qprops_t> &jprops_inv,
 				       const vector<jm_r_mom_qprops_t> &jprops) const
 {
-  jprop_inv.resize(im_r_ind.max());
-  jprop_QED_inv.resize(im_r_ind.max());
+  jprops_inv.resize(im_r_ind.max());
   
 #pragma omp parallel for reduction(+:invert_time)
   for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
@@ -269,14 +268,16 @@ void perens_t::get_inverse_propagators(vector<jqprop_t> &jprop_inv,vector<jqprop
       
       //compute inverse
       invert_time.start();
-      qprop_t prop_inv=jprop_inv[im_r][ijack]=jprops[im_r].LO[ijack].inverse();
+      qprop_t prop_inv=jprops_inv[im_r].LO[ijack]=jprops[im_r].LO[ijack].inverse();
       invert_time.stop();
       
       //do the same with QED
       if(pars::use_QED)
 	{
 	  invert_time.start(); //This misses a sign -1 coming from the original inverse
-	  jprop_QED_inv[im_r][ijack]=prop_inv*jprops[im_r].QED[ijack]*prop_inv;
+	  jprops_inv[im_r].CR_CT[ijack]=prop_inv*jprops[im_r].CR_CT[ijack]*prop_inv;
+	  jprops_inv[im_r].TM_CT[ijack]=prop_inv*jprops[im_r].TM_CT[ijack]*prop_inv;
+	  jprops_inv[im_r].PH[ijack]=prop_inv*jprops[im_r].PH[ijack]*prop_inv;
 	  invert_time.stop();
 	}
     }
@@ -287,83 +288,4 @@ void perens_t::clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &j
 #pragma omp parallel for
   for(size_t iprop=0;iprop<jprops.size();iprop++)
     jprops[iprop].clusterize_all_mr_props(pars::use_QED,clust_size);
-  
-  if(pars::use_QED)
-#pragma omp parallel for
-    for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
-      for(size_t ijack=0;ijack<=njacks;ijack++)
-	jprops[im_r].QED[ijack]=
-	  jprops[im_r].PH[ijack]+
-	  deltam_tm[im_r][ijack]*jprops[im_r].TM_CT[ijack]+
-	  deltam_cr[im_r][ijack]*jprops[im_r].CR_CT[ijack];
-}
-
-void perens_t::mom_compute_qprop()
-{
-  vector<raw_file_t> files=setup_read_all_qprops_mom(conf_list);
-  
-  for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
-    {
-      const size_t mom=linmoms[ilinmom][0];
-      vector<jm_r_mom_qprops_t> jprops(im_r_ind.max()); //!< jackknived props
-      
-      for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
-	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
-	  {
-	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
-	    const size_t mom=linmoms[ilinmom][0];
-	    cout<<"Working on qprop, "
-	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
-	      "hit "<<ihit+1<<"/"<<nhits<<", "
-	      "momentum "<<ilinmom+1<<"/"<<linmoms.size()<<", "
-	      "mom: "<<mom<<endl;
-	    read_time.start();
-	    const vector<m_r_mom_conf_qprops_t> props=read_all_qprops_mom(files,i_in_clust_ihit,mom);
-	    read_time.stop();
-	    
-	    //build all props
-	    build_props_time.start();
-	    build_all_mr_jackkniffed_qprops(jprops,props);
-	    build_props_time.stop();
-	  }
-      
-      //clusterize
-      clust_time.start();
-      clusterize_all_mr_jackkniffed_qprops(jprops);
-      clust_time.stop();
-      
-      vector<jqprop_t> jprop_inv; //!< inverse propagator
-      vector<jqprop_t> jprop_QED_inv; //!< inverse propagator with em insertion
-      
-      get_inverse_propagators(jprop_inv,jprop_QED_inv,jprops);
-      
-#pragma omp parallel for reduction(+:invert_time,Zq_time)
-      for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
-	{
-	  //decript indices
-	  const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
-	  const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
-	  const size_t im_r=im_r_ind({im,r});
-	  const size_t im_r_ilinmom=im_r_ilinmom_ind({im,r,ilinmom});
-	  
-	  //compute Zq
-	  Zq_time.start();
-	  Zq[im_r_ilinmom][ijack]=compute_Zq(jprop_inv[im_r][ijack],mom);
-	  Zq_sig1[im_r_ilinmom][ijack]=compute_Zq_sig1(jprop_inv[im_r][ijack],mom);
-	  Zq_time.stop();
-	  
-	  //do the same with QED
-	  if(pars::use_QED)
-	    {
-	      auto ji=jprops[im_r].LO[ijack].inverse();
-	      Z5_P[im_r_ilinmom][ijack]=(ji*jprops[im_r].CR_CT[ijack]*ji*quaGamma[0]).trace().real();
-	      Z5_PH[im_r_ilinmom][ijack]=(ji*jprops[im_r].PH[ijack]*ji*quaGamma[0]).trace().real()/Z5_P[im_r_ilinmom][ijack];
-	      
-	      Zq_time.start();
-	      Zq_QED[im_r_ilinmom][ijack]=compute_Zq(-jprop_QED_inv[im_r][ijack],mom);
-	      Zq_sig1_QED[im_r_ilinmom][ijack]=compute_Zq_sig1(-jprop_QED_inv[im_r][ijack],mom);
-	      Zq_time.stop();
-	    }
-	}
-    }
 }

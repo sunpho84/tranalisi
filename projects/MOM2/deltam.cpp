@@ -293,7 +293,7 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	  
 	  deltam_cr=constant_fit(md_fr_f,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_P5P5.xmg");
 	  deltam_cr=constant_fit(ma_fr_c,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_V0P5.xmg");
-	  deltam_cr=-0.32514;
+	  deltam_cr=-2*0.16285705871085078618;
 	  deltam_tm=0;
 	}
     }

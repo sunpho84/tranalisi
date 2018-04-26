@@ -30,10 +30,10 @@ inline void compute_or_load_all()
       .set_pars_for_scratch()
       .set_indices()
       .allocate()
+      .read_or_compute()
       .get_deltam()
       .get_mPCAC()
-      .get_meson_mass()
-      .read_or_compute();
+      .get_meson_mass();
 }
 
 inline void plot_all_Z(const string &suffix)
