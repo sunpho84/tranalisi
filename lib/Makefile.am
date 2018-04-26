@@ -10,6 +10,7 @@ libtran_a_SOURCES= \
 	file.cpp \
 	fit.cpp \
 	functions.cpp \
+	gevp.cpp \
 	grace.cpp \
 	jack.cpp \
 	meas_vec.cpp \

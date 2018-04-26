@@ -1,6 +1,6 @@
 #include <tranalisi.hpp>
 
-const size_t T=48,TH=T/2;
+const size_t T=48;
 
 const string base="/home/francesco/QCD/LAVORI/GM2/romiti/A40.24/raw_data/jacks";
 const size_t nm=3,nr=2;
@@ -34,46 +34,17 @@ int main(int narg,char **arg)
   TKTK.ave_err().write("/tmp/TKTK");
   
   /////////////////////////////////////////////////////////////////
-  
-  typedef Matrix2d Matr;
-  
-  GeneralizedEigenSolver<Matr> ges;
-  
-  djvec_t eig1(TH+1),eig2(TH+1);
-  
+
   const size_t t0=3;
-  for(size_t ijack=0;ijack<=njacks;ijack++)
-    {
-      Matr b;
-      
-      b(0,0)=VKVK[t0][ijack];
-      b(0,1)=VKTK[t0][ijack];
-      b(1,0)=b(0,1);
-      b(1,1)=TKTK[t0][ijack];
-      
-      for(size_t t=0;t<=TH;t++)
-	{
-	  Matr a;
-	  
-	  a(0,0)=VKVK[t][ijack];
-	  a(0,1)=VKTK[t][ijack];
-	  a(1,0)=a(0,1);
-	  a(1,1)=TKTK[t][ijack];
-	  
-	  ges.compute(a,b);
-	  
-	  eig1[t][ijack]=ges.eigenvalues()(0).real();
-	  eig2[t][ijack]=ges.eigenvalues()(1).real();
-	}
-    }
+  const vector<djvec_t> eig=gevp({VKVK,VKTK,VKTK,TKTK},t0);
   
-  eig1.ave_err().write("/tmp/eig1");
-  eig2.ave_err().write("/tmp/eig2");
+  eig[0].ave_err().write("/tmp/eig1");
+  eig[1].ave_err().write("/tmp/eig2");
   
-  effective_mass(eig1).ave_err().write("/tmp/eff_eig1");
-  effective_mass(eig2).ave_err().write("/tmp/eff_eig2");
+  effective_mass(eig[0]).ave_err().write("/tmp/eff_eig1");
+  effective_mass(eig[1]).ave_err().write("/tmp/eff_eig2");
   
-  djvec_t rat=effective_mass(eig2)/effective_mass(eig1);
+  djvec_t rat=effective_mass(eig[1])/effective_mass(eig[0]);
   rat.ave_err().write("/tmp/eff_rat");
   
   return 0;
