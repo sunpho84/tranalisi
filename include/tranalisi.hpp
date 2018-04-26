@@ -7,6 +7,7 @@
 #include <effective.hpp>
 #include <file.hpp>
 #include <fit.hpp>
+#include <gevp.hpp>
 #include <grace.hpp>
 #include <index.hpp>
 #include <jack.hpp>
