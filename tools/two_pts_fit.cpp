@@ -47,9 +47,22 @@ int main(int narg,char **arg)
   set_njacks(ext_njacks);
   djvec_t data=read_djvec(path_in,T,iel);
   
+  const size_t TH=T/2;
+  
   //write average and error
   cout.precision(16);
-  cout<<constant_fit(effective_mass(data.symmetrized(par),T/2,par),tmin,tmax,path_out)<<endl;
+  cout<<constant_fit(effective_mass(data.symmetrized(par),TH,par),tmin,tmax,path_out)<<endl;
+  
+  djack_t Z2,M;
+  data=data.symmetrized(par);
+  two_pts_fit(Z2,M,data,TH,tmin,tmax,"","",par);
+  cout<<"Z: "<<djack_t(sqrt(sqrt(Z2*Z2))).ave_err()<<endl;
+
+  djvec_t ecc(TH+1);
+  for(size_t t=0;t<=TH;t++)
+    ecc[t]=data[t]-two_pts_corr_fun(Z2,M,TH,t,par);
+  
+  effective_mass(ecc,TH,par).ave_err().write("/tmp/exc");
   
   return 0;
 }
