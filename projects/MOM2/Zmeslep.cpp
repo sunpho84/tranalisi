@@ -298,18 +298,25 @@ void perens_t::mom_compute_meslep()
 
 vector<perens_t::task_t> perens_t::get_pr_meslep_tasks(const vector<const perens_t*> &ens)
 {
-  CRASH("");
+  vector<const djvec_t*> in_pr_meslep_LO,in_pr_meslep_CR_CT,in_pr_meslep_TM_CT,in_pr_meslep_PH;
+  for(auto &e : ens)
+    {
+      in_pr_meslep_LO.push_back(&e->pr_meslep_LO);
+      if(pars::use_QED)
+	{
+	  in_pr_meslep_CR_CT.push_back(&e->pr_meslep_CR_CT);
+	  in_pr_meslep_TM_CT.push_back(&e->pr_meslep_TM_CT);
+	  in_pr_meslep_PH.push_back(&e->pr_meslep_PH);
+	}
+    }
   
-  // vector<const djvec_t*> in_pr_meslep,in_pr_meslep_QED;
-  // for(auto &e : ens)
-  //   {
-  //     in_pr_meslep.push_back(&e->pr_meslep);
-  //     if(pars::use_QED) in_pr_meslep_QED.push_back(&e->pr_meslep_QED);
-  //   }
-
-  vector<task_t> pr_meslep_tasks;
-  // ={{&pr_meslep,in_pr_meslep,im_r_im_r_iop_iproj_imeslepmom_ind,"pr_meslep",QCD_task}};
-  // if(pars::use_QED) pr_meslep_tasks.push_back({&pr_meslep_QED,in_pr_meslep_QED,im_r_im_r_iop_iproj_imeslepmom_ind,"pr_meslep_QED",QED_task});
+  vector<task_t> pr_meslep_tasks={{&pr_meslep_LO,in_pr_meslep_LO,im_r_im_r_iop_iproj_imeslepmom_ind,"pr_meslep_LO",QCD_task}};
+  if(pars::use_QED)
+    {
+      pr_meslep_tasks.push_back({&pr_meslep_PH,in_pr_meslep_PH,im_r_im_r_iop_iproj_imeslepmom_ind,"pr_meslep_PH",QED_task});
+      pr_meslep_tasks.push_back({&pr_meslep_CR_CT,in_pr_meslep_CR_CT,im_r_im_r_iop_iproj_imeslepmom_ind,"pr_meslep_CR_CT",QED_task});
+      pr_meslep_tasks.push_back({&pr_meslep_TM_CT,in_pr_meslep_TM_CT,im_r_im_r_iop_iproj_imeslepmom_ind,"pr_meslep_TM_CT",QED_task});
+    }
   
   return pr_meslep_tasks;
 }

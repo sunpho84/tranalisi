@@ -142,7 +142,7 @@ struct perens_t
   vector<task_t> get_Zq_tasks(const vector<const perens_t*>& ens={});
   
   //projected bilinears with and without QED
-  djvec_t pr_bil;
+  djvec_t pr_bil_LO;
   djvec_t pr_bil_CR_CT;
   djvec_t pr_bil_TM_CT;
   djvec_t pr_bil_PH;
@@ -164,7 +164,7 @@ struct perens_t
   }
   
   //! projected meslep
-  djvec_t pr_meslep;
+  djvec_t pr_meslep_LO;
   djvec_t pr_meslep_CR_CT;
   djvec_t pr_meslep_TM_CT;
   djvec_t pr_meslep_PH;
