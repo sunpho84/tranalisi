@@ -209,10 +209,10 @@ void perens_t::mom_compute_bil()
 
 vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*> &ens)
 {
-  vector<const djvec_t*> in_pr_bil,in_pr_bil_CR_CT,in_pr_bil_TM_CT,in_pr_bil_PH;
+  vector<const djvec_t*> in_pr_bil_LO,in_pr_bil_CR_CT,in_pr_bil_TM_CT,in_pr_bil_PH;
   for(auto &e : ens)
     {
-      in_pr_bil.push_back(&e->pr_bil);
+      in_pr_bil_LO.push_back(&e->pr_bil_LO);
       if(pars::use_QED)
 	{
 	  in_pr_bil_CR_CT.push_back(&e->pr_bil_CR_CT);
@@ -221,7 +221,7 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
 	}
     }
   
-  vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,im_r_im_r_iZbil_ibilmom_ind,"pr_bil",QCD_task}};
+  vector<task_t> pr_bil_tasks={{&pr_bil_LO,in_pr_bil_LO,im_r_im_r_iZbil_ibilmom_ind,"pr_bil_LO",QCD_task}};
   if(pars::use_QED)
     {
       pr_bil_tasks.push_back({&pr_bil_CR_CT,in_pr_bil_CR_CT,im_r_im_r_iZbil_ibilmom_ind,"pr_bil_CR_CT",QED_task});
