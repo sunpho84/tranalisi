@@ -390,11 +390,13 @@ struct perens_t
   
   void plot_Z(const string &suffix)
   {
+    plot_sigma(suffix);
     plot_Zq(suffix);
     plot_Zbil(suffix);
     plot_Zmeslep(suffix);
   }
   
+  void plot_sigma(const string &suffix);
   void plot_Zq(const string &suffix);
   void plot_Zbil(const string &suffix);
   void plot_Zmeslep(const string &suffix);
