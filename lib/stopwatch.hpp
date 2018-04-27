@@ -125,13 +125,13 @@ public:
 inline ostream& operator<<(ostream &out,const duration_t &diff)
 {
   double el_nano=chrono::duration<double,nano>(diff).count();
-  if(el_nano<1000) return out<<el_nano<<" ns";
+  if(fabs(el_nano)<1000) return out<<el_nano<<" ns";
   
   double el_micro=chrono::duration<double,micro>(diff).count();
-  if(el_micro<1000) return out<<el_micro<<" us";
+  if(fabs(el_micro)<1000) return out<<el_micro<<" us";
   
   double el_milli=chrono::duration<double,milli>(diff).count();
-  if(el_milli<1000) return out<<el_milli<<" ms";
+  if(fabs(el_milli)<1000) return out<<el_milli<<" ms";
   
   double el_sec=chrono::duration<double>(diff).count();
   return out<<el_sec<<" s";
