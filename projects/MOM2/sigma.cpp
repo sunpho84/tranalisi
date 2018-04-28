@@ -153,13 +153,13 @@ perens_t& perens_t::compute_sigmas()
 	  //! function to compute sigma2
 	  auto compute_sigma2=[&](const jqprop_t prop_inv)
 	    {
-	      return (prop_inv[ijack]*quaGamma[0]).trace().imag()/(12.0*V);
+	      return (prop_inv[ijack]*quaGamma[0]).trace().real()/(12.0*V);
 	    };
 	  
 	  //! function to compute sigma3
 	  auto compute_sigma3=[&](const jqprop_t prop_inv)
 	    {
-	      return (prop_inv[ijack]*quaGamma[5]).trace().imag()/(12.0*V);
+	      return (prop_inv[ijack]*quaGamma[5]).trace().real()/(12.0*V);
 	    };
 	  
 	  //! define the computation of the sigmas
