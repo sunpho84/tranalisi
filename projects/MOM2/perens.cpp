@@ -219,6 +219,7 @@ perens_t perens_t::average_r() const
   out.set_indices();
   out.allocate();
   
+  average_r_sigma(out);
   average_r_Zq(out);
   average_r_Zbil(out);
   average_r_Zmeslep(out);
@@ -250,6 +251,7 @@ perens_t perens_t::val_chir_extrap() const
       out.set_indices();
       out.allocate();
       
+      val_chir_extrap_sigma(out);
       val_chir_extrap_Zq(out);
       val_chir_extrap_Zbil(out);
       val_chir_extrap_Zmeslep(out);
@@ -284,6 +286,8 @@ perens_t perens_t::average_equiv_momenta() const
   out.set_indices();
   out.allocate();
   
+  average_equiv_momenta_sigma(out,equiv_linmom_combos);
+#warning da togliere
   average_equiv_momenta_Zq(out,equiv_linmom_combos);
   average_equiv_momenta_Zbil(out,equiv_bilmom_combos);
   average_equiv_momenta_Zmeslep(out,equiv_meslepmom_combos);

@@ -405,6 +405,8 @@ struct perens_t
   
   perens_t average_r() const;
   
+  //! average sigma
+  void average_r_sigma(perens_t &out) const;
   //! average Zq
   void average_r_Zq(perens_t &out) const;
   //! average bil
@@ -415,6 +417,9 @@ struct perens_t
   /////////////////////////////////////////////////////////////////
   
   perens_t val_chir_extrap() const;
+  
+  //! extrapolate to chiral limit sigma
+  void val_chir_extrap_sigma(perens_t &out) const;
   
   //! extrapolate to chiral limit Zq
   void val_chir_extrap_Zq(perens_t &out) const;
@@ -436,6 +441,8 @@ struct perens_t
   
   perens_t average_equiv_momenta() const;
   
+  //! average sigma
+  void average_equiv_momenta_sigma(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const;
   //! average Zq
   void average_equiv_momenta_Zq(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const;
   //! average bil
