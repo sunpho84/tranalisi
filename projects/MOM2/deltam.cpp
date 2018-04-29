@@ -9,6 +9,13 @@
 #include <MOM2/timings.hpp>
 
 template <class T>
+auto sigma2_PH_ansatz(const T &p,double p2)
+  -> remove_reference_t<decltype(p[0])>
+{
+  return p[0]+p[1]*p2;
+}
+
+template <class T>
 auto sigma2_CR_CT_ansatz(const T &p,double p2)
   -> remove_reference_t<decltype(p[0])>
 {
@@ -17,6 +24,13 @@ auto sigma2_CR_CT_ansatz(const T &p,double p2)
 
 template <class T>
 auto sigma2_TM_CT_ansatz(const T &p,double p2)
+  -> remove_reference_t<decltype(p[0])>
+{
+  return p[0]+p[1]*p2;
+}
+
+template <class T>
+auto sigma3_PH_ansatz(const T &p,double p2)
   -> remove_reference_t<decltype(p[0])>
 {
   return p[0]+p[1]*p2;
@@ -43,18 +57,20 @@ perens_t& perens_t::get_deltam()
       {
 	//! define parameters and open plot
 #define DEF_PARS(A)							\
-	grace_file_t plot_sigma ## A ## _CT(dir_path+"/plots/fit_sigma_" #A "_CT_m"+to_string(im)+"_r"+to_string(r)+".xmg"); \
-	plot_sigma ## A ##_CT.new_data_set();				\
+	grace_file_t plot_sigma ## A(dir_path+"/plots/fit_sigma_" #A "_m"+to_string(im)+"_r"+to_string(r)+".xmg"); \
+	plot_sigma ## A .new_data_set();				\
 									\
-	jack_fit_t jack_fit_sigma ## A ## _CT;				\
-	djvec_t sigma ## A ## _CT_pars(2);				\
-	jack_fit_sigma ## A ## _CT.add_fit_par(sigma ## A ## _CT_pars[0],"sigma " #A "_CT_pars[0]",0,0.01); \
-	jack_fit_sigma ## A ## _CT.add_fit_par(sigma ## A ## _CT_pars[1],"sigma " #A "_CT_pars[1]",0,0.01)
+	jack_fit_t jack_fit_sigma ## A;					\
+	djvec_t sigma ## A ## _pars(2);					\
+	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[0],"sigma " #A "_pars[0]",0,0.01); \
+	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[1],"sigma " #A "_pars[1]",0,0.01)
 	
-	DEF_PARS(2_CR);
-	DEF_PARS(2_TM);
-	DEF_PARS(3_CR);
-	DEF_PARS(3_TM);
+	DEF_PARS(2_PH);
+	DEF_PARS(2_CR_CT);
+	DEF_PARS(2_TM_CT);
+	DEF_PARS(3_PH);
+	DEF_PARS(3_CR_CT);
+	DEF_PARS(3_TM_CT);
 	
 #undef DEF_PARS
 	
@@ -65,26 +81,30 @@ perens_t& perens_t::get_deltam()
 	    
 	    //! add a point to the plot and the fit
 #define ADD_POINT(A)\
-	    plot_sigma ## A ##  _CT.write_ave_err(p2,sigma ## A ##_CT[i].ave_err()); \
-	    jack_fit_sigma ## A ##_CT.add_point(sigma ## A ##_CT[i],[p2](const vector<double> &p,int iel){return sigma ## A ## _CT_ansatz(p,p2);})
+	    plot_sigma ## A .write_ave_err(p2,sigma ## A [i].ave_err()); \
+	    jack_fit_sigma ## A .add_point(sigma ## A [i],[p2](const vector<double> &p,int iel){return sigma ## A ## _ansatz(p,p2);})
 	    
-	    ADD_POINT(2_CR);
-	    ADD_POINT(2_TM);
-	    ADD_POINT(3_CR);
-	    ADD_POINT(3_TM);
+	    ADD_POINT(2_PH);
+	    ADD_POINT(2_CR_CT);
+	    ADD_POINT(2_TM_CT);
+	    ADD_POINT(3_PH);
+	    ADD_POINT(3_CR_CT);
+	    ADD_POINT(3_TM_CT);
 	    
 #undef ADD_POINT
 	  }
 	
 #define FIT(A)								\
-	jack_fit_sigma ## A ##_CT.fit();				\
-	cout<<sigma ## A ##_CT_pars.ave_err()<<endl;			\
-	plot_sigma ## A ##_CT.write_polygon([sigma ## A ##_CT_pars](double p2){return sigma ## A ##_CT_ansatz(sigma ## A ##_CT_pars,p2);},0.1,3)
+	jack_fit_sigma ## A .fit();					\
+	cout<<sigma ## A ##_pars.ave_err()<<endl;			\
+	plot_sigma ## A .write_polygon([sigma ## A ##_pars](double p2){return sigma ## A ##_ansatz(sigma ## A ##_pars,p2);},0.1,3)
 	
-	FIT(2_CR);
-	FIT(2_TM);
-	FIT(3_CR);
-	FIT(3_TM);
+	FIT(2_PH);
+	FIT(2_CR_CT);
+	FIT(2_TM_CT);
+	FIT(3_PH);
+	FIT(3_CR_CT);
+	FIT(3_TM_CT);
 	
 	#undef FIT
       }
