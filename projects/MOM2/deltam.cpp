@@ -107,7 +107,21 @@ perens_t& perens_t::get_deltam()
 	FIT(3_CR_CT);
 	FIT(3_TM_CT);
 	
-	#undef FIT
+#undef FIT
+	
+	const djack_t& a=sigma2_PH_pars[0];
+	const djack_t& b=sigma2_CR_CT_pars[0];
+	const djack_t& c=sigma2_TM_CT_pars[0];
+	const djack_t& d=sigma3_PH_pars[0];
+	const djack_t& e=sigma3_CR_CT_pars[0];
+	const djack_t& f=sigma3_TM_CT_pars[0];
+      
+	const djack_t den=b*f-c*e;
+	const djack_t deltam_tm_corr=(-a*f+c*d)/den;
+	const djack_t deltam_cr_corr=(-b*d+a*e)/den;
+	
+	cout<<"m: "<<im<<", r: "<<r<<", deltam_tm_corr: "<<deltam_tm_corr.ave_err()<<endl;
+	cout<<"m: "<<im<<", r: "<<r<<", deltam_cr_corr: "<<deltam_cr_corr.ave_err()<<endl;
       }
   
   vector<tuple<djvec_t*,string,bool>> delta_tasks{
