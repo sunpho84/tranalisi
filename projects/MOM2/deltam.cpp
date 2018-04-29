@@ -32,7 +32,7 @@ void perens_t::compute_deltam_from_prop()
 	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[0],"sigma " #A "_pars[0]",0,0.01); \
 	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[1],"sigma " #A "_pars[1]",0,0.01);	\
 	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[2],"sigma " #A "_pars[2]",0,0.01);	\
-	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[2],"sigma " #A "_pars[2]",0,0.01)
+	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[3],"sigma " #A "_pars[3]",0,0.01)
 	
 	DEF_PARS(2_PH);
 	DEF_PARS(2_CR_CT);
