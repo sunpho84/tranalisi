@@ -43,16 +43,29 @@ inline void plot_all_Z(const string &suffix)
       .plot_Z(suffix);
 }
 
-#define DEFINE_SINGLE_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND)		\
+#define DEFINE_SINGLE_SELF_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND)	\
   inline void ALL_COMMAND()						\
   {									\
     for(auto &path : pars::ens)						\
       data(path,ASSERT_PRESENT).SINGLE_COMMAND();			\
   }
 
+DEFINE_SINGLE_SELF_COMMAND_ALL(compute_deltam_from_prop_all,compute_deltam_from_prop)
+
+#define DEFINE_SINGLE_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND)		\
+  inline void ALL_COMMAND()						\
+  {									\
+    for(auto &path : pars::ens)						\
+      {									\
+	const string name_out=path;					\
+	string name_in=path;						\
+	data(name_out,PRESENCE_NOT_NEEDED)=				\
+	  data(name_in,ASSERT_PRESENT).SINGLE_COMMAND();		\
+      }									\
+  }
+
 DEFINE_SINGLE_COMMAND_ALL(average_all_r,average_r)
 DEFINE_SINGLE_COMMAND_ALL(average_all_equiv_momenta,average_equiv_momenta)
-DEFINE_SINGLE_COMMAND_ALL(compute_deltam_from_prop_all,compute_deltam_from_prop)
 DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap)
 
 /////////////////////////////////////////////////////////////////
