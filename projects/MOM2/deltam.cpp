@@ -39,11 +39,11 @@ void perens_t::compute_deltam_from_prop()
 	    const size_t i=im_r_ilinmom_ind({im,r,ilinmom});
 	    
 	    const djack_t& a=sigma2_PH[i];
-	    const djack_t& b=sigma2_CR_CT[i];
-	    const djack_t& c=sigma2_TM_CT[i];
+	    const djack_t& b=sigma2_TM_CT[i];
+	    const djack_t& c=sigma2_CR_CT[i];
 	    const djack_t& d=sigma3_PH[i];
-	    const djack_t& e=sigma3_CR_CT[i];
-	    const djack_t& f=sigma3_TM_CT[i];
+	    const djack_t& e=sigma3_TM_CT[i];
+	    const djack_t& f=sigma3_CR_CT[i];
 	    
 	    if(both)
 	      {
@@ -56,18 +56,18 @@ void perens_t::compute_deltam_from_prop()
 		deltam_tm_ct_corr[ilinmom]=-a/b;
 		deltam_cr_ct_corr[ilinmom]=0.0;
 	      }
-	    
-	    const djvec_t deltam_tm_ct_pars=poly_fit(x,deltam_tm_ct_corr,degree,p2_min,p2_max,
-						     dir_path+"/plots/fit_deltam_tm_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
-	    const djvec_t deltam_cr_ct_pars=poly_fit(x,deltam_cr_ct_corr,degree,p2_min,p2_max,
-						 dir_path+"/plots/fit_deltam_cr_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
-	    
-	    deltam_tm[imr]=deltam_tm_ct_pars[0];
-	    deltam_cr[imr]=deltam_cr_ct_pars[0];
-	    
-	    cout<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
-	    cout<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
 	  }
+	
+	const djvec_t deltam_tm_ct_pars=poly_fit(x,deltam_tm_ct_corr,degree,p2_min,p2_max,
+						 dir_path+"/plots/fit_deltam_tm_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
+	const djvec_t deltam_cr_ct_pars=poly_fit(x,deltam_cr_ct_corr,degree,p2_min,p2_max,
+						 dir_path+"/plots/fit_deltam_cr_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
+	
+	deltam_tm[imr]=deltam_tm_ct_pars[0];
+	deltam_cr[imr]=deltam_cr_ct_pars[0];
+	
+	cout<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
+	cout<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
       }
 }
 
