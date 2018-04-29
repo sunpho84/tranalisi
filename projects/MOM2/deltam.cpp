@@ -17,6 +17,8 @@ auto sigma_ansatz(const T &p,double p2,double p4_fr_p2=0.0)
 
 void perens_t::compute_deltam_from_prop()
 {
+  const bool both=(fabs(sigma2_CR_CT[linmoms.size()/8].ave())<sigma2_CR_CT[linmoms.size()/8].err());
+  
   for(size_t im=0;im<nm;im++)
     for(size_t r=0;r<nr;r++)
       {
@@ -25,6 +27,9 @@ void perens_t::compute_deltam_from_prop()
 	vector<double> x(linmoms.size());
 	djvec_t deltam_tm_ct_corr(linmoms.size());
 	djvec_t deltam_cr_ct_corr(linmoms.size());
+	
+	const size_t degree=3;
+	const double p2_min=0.1,p2_max=2.0;
 	
 	for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
 	  {
@@ -39,23 +44,29 @@ void perens_t::compute_deltam_from_prop()
 	    const djack_t& e=sigma3_CR_CT[i];
 	    const djack_t& f=sigma3_TM_CT[i];
 	    
-	    const djack_t den=b*f-c*e;
-	    deltam_tm_ct_corr[ilinmom]=(-a*f+c*d)/den;
-	    deltam_cr_ct_corr[ilinmom]=(-b*d+a*e)/den;
-	  }
-	
-	const size_t degree=3;
-	const double p2_min=0.1,p2_max=2.0;
-	const djvec_t deltam_tm_ct_pars=poly_fit(x,deltam_tm_ct_corr,degree,p2_min,p2_max,
-						 dir_path+"/plots/fit_deltam_tm_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
-	const djvec_t deltam_cr_ct_pars=poly_fit(x,deltam_cr_ct_corr,degree,p2_min,p2_max,
+	    if(both)
+	      {
+		const djack_t den=b*f-c*e;
+		deltam_tm_ct_corr[ilinmom]=(-a*f+c*d)/den;
+		deltam_cr_ct_corr[ilinmom]=(-b*d+a*e)/den;
+	      }
+	    else
+	      {
+		deltam_tm_ct_corr[ilinmom]=-a/c;
+		deltam_cr_ct_corr[ilinmom]=0.0;
+	      }
+	    
+	    const djvec_t deltam_tm_ct_pars=poly_fit(x,deltam_tm_ct_corr,degree,p2_min,p2_max,
+						     dir_path+"/plots/fit_deltam_tm_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
+	    const djvec_t deltam_cr_ct_pars=poly_fit(x,deltam_cr_ct_corr,degree,p2_min,p2_max,
 						 dir_path+"/plots/fit_deltam_cr_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
-	
-	deltam_tm[imr]=deltam_tm_ct_pars[0];
-	deltam_cr[imr]=deltam_cr_ct_pars[0];
-	
-	cout<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
-	cout<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
+	    
+	    deltam_tm[imr]=deltam_tm_ct_pars[0];
+	    deltam_cr[imr]=deltam_cr_ct_pars[0];
+	    
+	    cout<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
+	    cout<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
+	  }
       }
 }
 
