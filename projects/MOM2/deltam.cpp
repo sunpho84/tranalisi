@@ -65,7 +65,7 @@ void perens_t::compute_deltam_from_prop()
 	
 	deltam_tm[imr]=deltam_tm_ct_pars[0];
 	deltam_cr[imr]=deltam_cr_ct_pars[0];
-	if(not both) deltam_cr[imr]=0.0;
+	if(not both) deltam_tm[imr]=0.0;
 	
 	cout<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
 	cout<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
