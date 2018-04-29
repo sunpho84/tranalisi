@@ -12,42 +12,42 @@ template <class T>
 auto sigma2_PH_ansatz(const T &p,double p2)
   -> remove_reference_t<decltype(p[0])>
 {
-  return p[0]+p[1]*p2;
+  return p[0]+p2*(p[1]+p[2]*log(p2));
 }
 
 template <class T>
 auto sigma2_CR_CT_ansatz(const T &p,double p2)
   -> remove_reference_t<decltype(p[0])>
 {
-  return p[0]+p[1]*p2;
+  return p[0]+p2*(p[1]+p[2]*log(p2));
 }
 
 template <class T>
 auto sigma2_TM_CT_ansatz(const T &p,double p2)
   -> remove_reference_t<decltype(p[0])>
 {
-  return p[0]+p[1]*p2;
+  return p[0]+p2*(p[1]+p[2]*log(p2));
 }
 
 template <class T>
 auto sigma3_PH_ansatz(const T &p,double p2)
   -> remove_reference_t<decltype(p[0])>
 {
-  return p[0]+p[1]*p2;
+  return p[0]+p2*(p[1]+p[2]*log(p2));
 }
 
 template <class T>
 auto sigma3_CR_CT_ansatz(const T &p,double p2)
   -> remove_reference_t<decltype(p[0])>
 {
-  return p[0]+p[1]*p2;
+  return p[0]+p2*(p[1]+p[2]*log(p2));
 }
 
 template <class T>
 auto sigma3_TM_CT_ansatz(const T &p,double p2)
   -> remove_reference_t<decltype(p[0])>
 {
-  return p[0]+p[1]*p2;
+  return p[0]+p2*(p[1]+p[2]*log(p2));
 }
 
 perens_t& perens_t::get_deltam()
@@ -61,9 +61,10 @@ perens_t& perens_t::get_deltam()
 	plot_sigma ## A .new_data_set();				\
 									\
 	jack_fit_t jack_fit_sigma ## A;					\
-	djvec_t sigma ## A ## _pars(2);					\
+	djvec_t sigma ## A ## _pars(3);					\
 	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[0],"sigma " #A "_pars[0]",0,0.01); \
-	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[1],"sigma " #A "_pars[1]",0,0.01)
+	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[1],"sigma " #A "_pars[1]",0,0.01);	\
+	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[2],"sigma " #A "_pars[2]",0,0.01)
 	
 	DEF_PARS(2_PH);
 	DEF_PARS(2_CR_CT);
