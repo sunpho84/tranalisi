@@ -44,7 +44,7 @@ void perens_t::compute_deltam_from_prop()
 	    deltam_cr_ct_corr[ilinmom]=(-b*d+a*e)/den;
 	  }
 	
-	const size_t degree=2;
+	const size_t degree=3;
 	const double p2_min=0.1,p2_max=2.0;
 	const djvec_t deltam_tm_ct_pars=poly_fit(x,deltam_tm_ct_corr,degree,p2_min,p2_max,
 						 dir_path+"/plots/fit_deltam_tm_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
