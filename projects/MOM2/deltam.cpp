@@ -40,8 +40,8 @@ void perens_t::compute_deltam_from_prop()
 	    const djack_t& f=sigma3_TM_CT[i];
 	    
 	    const djack_t den=b*f-c*e;
-	    deltam_tm_ct_corr[i]=(-a*f+c*d)/den;
-	    deltam_cr_ct_corr[i]=(-b*d+a*e)/den;
+	    deltam_tm_ct_corr[ilinmom]=(-a*f+c*d)/den;
+	    deltam_cr_ct_corr[ilinmom]=(-b*d+a*e)/den;
 	  }
 	
 	const size_t degree=2;
