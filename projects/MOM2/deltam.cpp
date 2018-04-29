@@ -9,10 +9,10 @@
 #include <MOM2/timings.hpp>
 
 template <class T>
-auto sigma_ansatz(const T &p,double p2,double p4=0.0)
+auto sigma_ansatz(const T &p,double p2,double p4_fr_p2=0.0)
   -> remove_reference_t<decltype(p[0])>
 {
-  return p[0]+p2*p[1]+p2*p2*p[2]+p4*p[3];
+  return p[0]+p2*p[1]+p2*p2*p[2]+p4_fr_p2*p[3];
 }
 
 void perens_t::compute_deltam_from_prop()
@@ -47,13 +47,14 @@ void perens_t::compute_deltam_from_prop()
 	for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
 	  {
 	    const double p2=all_moms[linmoms[ilinmom][0]].p(L).norm2();
+	    const double p4_fr_p2=all_moms[linmoms[ilinmom][0]].p(L).norm4()/p2;
 	    const size_t i=im_r_ilinmom_ind({im,r,ilinmom});
 	    
 	    //! add a point to the plot and the fit
 #define ADD_POINT(A)\
 	    plot_sigma ## A .write_ave_err(p2,sigma ## A [i].ave_err()); \
 	    if(p2<p2max)						\
-	      jack_fit_sigma ## A .add_point(sigma ## A [i],[p2](const vector<double> &p,int iel){return sigma_ansatz(p,p2);})
+	      jack_fit_sigma ## A .add_point(sigma ## A [i],[p2,p4_fr_p2](const vector<double> &p,int iel){return sigma_ansatz(p,p2,p4_fr_p2);})
 	    
 	    ADD_POINT(2_PH);
 	    ADD_POINT(2_CR_CT);
