@@ -17,7 +17,8 @@ auto sigma_ansatz(const T &p,double p2,double p4_fr_p2=0.0)
 
 void perens_t::compute_deltam_from_prop()
 {
-  const bool both=(fabs(sigma2_CR_CT[linmoms.size()/8].ave())<sigma2_CR_CT[linmoms.size()/8].err());
+  const bool both=(fabs(sigma2_TM_CT[linmoms.size()/8].ave())>3.0*sigma2_CR_CT[linmoms.size()/8].err());
+  if(not both) cout<<"Determining only Critical correction"<<endl;
   
   for(size_t im=0;im<nm;im++)
     for(size_t r=0;r<nr;r++)
@@ -52,7 +53,7 @@ void perens_t::compute_deltam_from_prop()
 	      }
 	    else
 	      {
-		deltam_tm_ct_corr[ilinmom]=-a/c;
+		deltam_tm_ct_corr[ilinmom]=-a/b;
 		deltam_cr_ct_corr[ilinmom]=0.0;
 	      }
 	    
