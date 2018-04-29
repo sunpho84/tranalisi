@@ -22,74 +22,37 @@ void perens_t::compute_deltam_from_prop()
       {
 	const size_t imr=im_r_ind({im,r});
 	
-	//! define parameters and open plot
-#define DEF_PARS(A)							\
-	grace_file_t plot_sigma ## A(dir_path+"/plots/fit_sigma_" #A "_m"+to_string(im)+"_r"+to_string(r)+".xmg"); \
-	plot_sigma ## A .new_data_set();				\
-									\
-	jack_fit_t jack_fit_sigma ## A;					\
-	djvec_t sigma ## A ## _pars(4);					\
-	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[0],"sigma " #A "_pars[0]",0,0.01); \
-	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[1],"sigma " #A "_pars[1]",0,0.01);	\
-	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[2],"sigma " #A "_pars[2]",0,0.01);	\
-	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[3],"sigma " #A "_pars[3]",0,0.01)
+	vector<double> x(linmoms.size());
+	djvec_t deltam_tm_ct_corr(linmoms.size());
+	djvec_t deltam_cr_ct_corr(linmoms.size());
 	
-	DEF_PARS(2_PH);
-	DEF_PARS(2_CR_CT);
-	DEF_PARS(2_TM_CT);
-	DEF_PARS(3_PH);
-	DEF_PARS(3_CR_CT);
-	DEF_PARS(3_TM_CT);
-	
-#undef DEF_PARS
-	
-	double p2max=2;
 	for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
 	  {
-	    const double p2=all_moms[linmoms[ilinmom][0]].p(L).norm2();
-	    const double p4_fr_p2=all_moms[linmoms[ilinmom][0]].p(L).norm4()/p2;
+	    x[ilinmom]=all_moms[linmoms[ilinmom][0]].p(L).norm2();
+	    
 	    const size_t i=im_r_ilinmom_ind({im,r,ilinmom});
 	    
-	    //! add a point to the plot and the fit
-#define ADD_POINT(A)\
-	    plot_sigma ## A .write_ave_err(p2,sigma ## A [i].ave_err()); \
-	    if(p2<p2max)						\
-	      jack_fit_sigma ## A .add_point(sigma ## A [i],[p2,p4_fr_p2](const vector<double> &p,int iel){return sigma_ansatz(p,p2,p4_fr_p2);})
+	    const djack_t& a=sigma2_PH[i];
+	    const djack_t& b=sigma2_CR_CT[i];
+	    const djack_t& c=sigma2_TM_CT[i];
+	    const djack_t& d=sigma3_PH[i];
+	    const djack_t& e=sigma3_CR_CT[i];
+	    const djack_t& f=sigma3_TM_CT[i];
 	    
-	    ADD_POINT(2_PH);
-	    ADD_POINT(2_CR_CT);
-	    ADD_POINT(2_TM_CT);
-	    ADD_POINT(3_PH);
-	    ADD_POINT(3_CR_CT);
-	    ADD_POINT(3_TM_CT);
-	    
-#undef ADD_POINT
+	    const djack_t den=b*f-c*e;
+	    deltam_tm_ct_corr[i]=(-a*f+c*d)/den;
+	    deltam_cr_ct_corr[i]=(-b*d+a*e)/den;
 	  }
 	
-#define FIT(A)								\
-	jack_fit_sigma ## A .fit();					\
-	cout<<sigma ## A ##_pars.ave_err()<<endl;			\
-	plot_sigma ## A .write_polygon([sigma ## A ##_pars](double p2){return sigma_ansatz(sigma ## A ##_pars,p2);},0.1,p2max)
+	const size_t degree=2;
+	const double p2_min=0.1,p2_max=2.0;
+	const djvec_t deltam_tm_ct_pars=poly_fit(x,deltam_tm_ct_corr,degree,p2_min,p2_max,
+						 dir_path+"/plots/fit_deltam_tm_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
+	const djvec_t deltam_cr_ct_pars=poly_fit(x,deltam_cr_ct_corr,degree,p2_min,p2_max,
+						 dir_path+"/plots/fit_deltam_cr_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
 	
-	FIT(2_PH);
-	FIT(2_CR_CT);
-	FIT(2_TM_CT);
-	FIT(3_PH);
-	FIT(3_CR_CT);
-	FIT(3_TM_CT);
-	
-#undef FIT
-	
-	const djack_t& a=sigma2_PH_pars[0];
-	const djack_t& b=sigma2_CR_CT_pars[0];
-	const djack_t& c=sigma2_TM_CT_pars[0];
-	const djack_t& d=sigma3_PH_pars[0];
-	const djack_t& e=sigma3_CR_CT_pars[0];
-	const djack_t& f=sigma3_TM_CT_pars[0];
-	
-	const djack_t den=b*f-c*e;
-	deltam_tm[imr]=(-a*f+c*d)/den;
-	deltam_cr[imr]=(-b*d+a*e)/den;
+	deltam_tm[imr]=deltam_tm_ct_pars[0];
+	deltam_cr[imr]=deltam_cr_ct_pars[0];
 	
 	cout<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
 	cout<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
