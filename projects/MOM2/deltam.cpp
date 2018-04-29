@@ -9,45 +9,10 @@
 #include <MOM2/timings.hpp>
 
 template <class T>
-auto sigma2_PH_ansatz(const T &p,double p2)
+auto sigma_ansatz(const T &p,double p2,double p4=0.0)
   -> remove_reference_t<decltype(p[0])>
 {
-  return p[0]+p2*(p[1]+p[2]*log(p2));
-}
-
-template <class T>
-auto sigma2_CR_CT_ansatz(const T &p,double p2)
-  -> remove_reference_t<decltype(p[0])>
-{
-  return p[0]+p2*(p[1]+p[2]*log(p2));
-}
-
-template <class T>
-auto sigma2_TM_CT_ansatz(const T &p,double p2)
-  -> remove_reference_t<decltype(p[0])>
-{
-  return p[0]+p2*(p[1]+p[2]*log(p2));
-}
-
-template <class T>
-auto sigma3_PH_ansatz(const T &p,double p2)
-  -> remove_reference_t<decltype(p[0])>
-{
-  return p[0]+p2*(p[1]+p[2]*log(p2));
-}
-
-template <class T>
-auto sigma3_CR_CT_ansatz(const T &p,double p2)
-  -> remove_reference_t<decltype(p[0])>
-{
-  return p[0]+p2*(p[1]+p[2]*log(p2));
-}
-
-template <class T>
-auto sigma3_TM_CT_ansatz(const T &p,double p2)
-  -> remove_reference_t<decltype(p[0])>
-{
-  return p[0]+p2*(p[1]+p[2]*log(p2));
+  return p[0]+p2*p[1]+p2*p2*p[2]+p4*p[3];
 }
 
 void perens_t::compute_deltam_from_prop()
@@ -63,9 +28,10 @@ void perens_t::compute_deltam_from_prop()
 	plot_sigma ## A .new_data_set();				\
 									\
 	jack_fit_t jack_fit_sigma ## A;					\
-	djvec_t sigma ## A ## _pars(3);					\
+	djvec_t sigma ## A ## _pars(4);					\
 	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[0],"sigma " #A "_pars[0]",0,0.01); \
 	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[1],"sigma " #A "_pars[1]",0,0.01);	\
+	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[2],"sigma " #A "_pars[2]",0,0.01);	\
 	jack_fit_sigma ## A .add_fit_par(sigma ## A ## _pars[2],"sigma " #A "_pars[2]",0,0.01)
 	
 	DEF_PARS(2_PH);
@@ -87,7 +53,7 @@ void perens_t::compute_deltam_from_prop()
 #define ADD_POINT(A)\
 	    plot_sigma ## A .write_ave_err(p2,sigma ## A [i].ave_err()); \
 	    if(p2<p2max)						\
-	      jack_fit_sigma ## A .add_point(sigma ## A [i],[p2](const vector<double> &p,int iel){return sigma ## A ## _ansatz(p,p2);})
+	      jack_fit_sigma ## A .add_point(sigma ## A [i],[p2](const vector<double> &p,int iel){return sigma_ansatz(p,p2);})
 	    
 	    ADD_POINT(2_PH);
 	    ADD_POINT(2_CR_CT);
@@ -102,7 +68,7 @@ void perens_t::compute_deltam_from_prop()
 #define FIT(A)								\
 	jack_fit_sigma ## A .fit();					\
 	cout<<sigma ## A ##_pars.ave_err()<<endl;			\
-	plot_sigma ## A .write_polygon([sigma ## A ##_pars](double p2){return sigma ## A ##_ansatz(sigma ## A ##_pars,p2);},0.1,p2max)
+	plot_sigma ## A .write_polygon([sigma ## A ##_pars](double p2){return sigma_ansatz(sigma ## A ##_pars,p2);},0.1,p2max)
 	
 	FIT(2_PH);
 	FIT(2_CR_CT);
