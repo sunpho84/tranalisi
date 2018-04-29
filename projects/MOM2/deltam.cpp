@@ -8,8 +8,79 @@
 #include <MOM2/prop.hpp>
 #include <MOM2/timings.hpp>
 
+template <class T>
+auto sigma2_CR_CT_ansatz(const T &p,double p2)
+  -> remove_reference_t<decltype(p[0])>
+{
+  return p[0]+p[1]*p2;
+}
+
+template <class T>
+auto sigma2_TM_CT_ansatz(const T &p,double p2)
+  -> remove_reference_t<decltype(p[0])>
+{
+  return p[0]+p[1]*p2;
+}
+
+template <class T>
+auto sigma3_CR_CT_ansatz(const T &p,double p2)
+  -> remove_reference_t<decltype(p[0])>
+{
+  return p[0]+p[1]*p2;
+}
+
+template <class T>
+auto sigma3_TM_CT_ansatz(const T &p,double p2)
+  -> remove_reference_t<decltype(p[0])>
+{
+  return p[0]+p[1]*p2;
+}
+
 perens_t& perens_t::get_deltam()
 {
+  for(size_t im=0;im<nm;im++)
+    for(size_t r=0;r<nr;r++)
+      {
+
+	//! define parameters and open plot
+#define DEF_PARS(A)							\
+	grace_file_t plot_sigma ## A ## _CT(dir_path+"/plots/fit_sigma " #A "_CT_m"+to_string(im)+"_r"+to_string(r)+".xmg"); \
+	plot_sigma ## A ##_CT.new_data_set();				\
+									\
+	jack_fit_t jack_fit_sigma ## A ## _CT;				\
+	djvec_t sigma ## A ## _CT_pars(2);				\
+	jack_fit_sigma ## A ## _CT.add_fit_par(sigma ## A ## _CT_pars[0],"sigma " #A "_CT_pars[0]",0,0.01); \
+	jack_fit_sigma ## A ## _CT.add_fit_par(sigma ## A ## _CT_pars[1],"sigma " #A "_CT_pars[1]",0,0.01)
+	
+	DEF_PARS(2_CR);
+	DEF_PARS(2_TM);
+	DEF_PARS(3_CR);
+	DEF_PARS(3_TM);
+	
+#undef DEF_PARS
+	
+	for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
+	  {
+	    const double p2=all_moms[linmoms[ilinmom][0]].p(L).norm2();
+	    const size_t i=im_r_ilinmom_ind({im,r,ilinmom});
+
+	    //! add a point to the plot and the fit
+#define ADD_POINT(A)\
+	    plot_sigma ## A ##  _CT.write_ave_err(p2,sigma ## A ##_CT[i].ave_err()); \
+	    jack_fit_sigma ## A ##_CT.add_point(sigma ## A ##_CT[i],[p2](const vector<double> &p,int iel){return sigma ## A ## _CT_ansatz(p,p2);})
+	    
+	    ADD_POINT(2_CR);
+	    ADD_POINT(2_TM);
+	    ADD_POINT(3_CR);
+	    ADD_POINT(3_TM);
+	    
+#undef ADD_POINT
+	  }
+	
+	jack_fit_sigma2_CR_CT.fit();
+	plot_sigma2_CR_CT.write_polygon([sigma2_CR_CT_pars](double p2){return sigma2_CR_CT_ansatz(sigma2_CR_CT_pars,p2);},0.1,3);
+      }	
+  
   vector<tuple<djvec_t*,string,bool>> delta_tasks{
     {&deltam_cr,"cr",pars::use_deltam_cr_ct},
     {&deltam_tm,"tm",pars::use_deltam_tm_ct}};
