@@ -174,7 +174,7 @@ perens_t& perens_t::compute_basic(const string& ingredients_path)
   return *this;
 }
 
-perens_t& perens_t::read_or_compute()
+perens_t& perens_t::read_or_compute_ingredients()
 {
   const string ingredients_path=dir_path+"/ingredients.dat";
   

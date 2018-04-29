@@ -321,7 +321,7 @@ struct perens_t
   void prepare_list_of_confs();
   
   //! try to read, otherwise compute
-  perens_t& read_or_compute();
+  perens_t& read_or_compute_ingredients();
   
   //! computes the basic Z
   perens_t& compute_basic(const string& ingredients_path);

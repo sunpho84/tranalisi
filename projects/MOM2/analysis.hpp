@@ -30,7 +30,7 @@ inline void compute_or_load_all()
       .set_pars_for_scratch()
       .set_indices()
       .allocate()
-      .read_or_compute()
+      .read_or_compute_ingredients()
       .get_deltam()
       .get_mPCAC()
       .get_meson_mass();
