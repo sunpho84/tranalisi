@@ -75,6 +75,7 @@ perens_t& perens_t::get_deltam()
 	
 #undef DEF_PARS
 	
+	double p2max=2;
 	for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
 	  {
 	    const double p2=all_moms[linmoms[ilinmom][0]].p(L).norm2();
@@ -83,7 +84,8 @@ perens_t& perens_t::get_deltam()
 	    //! add a point to the plot and the fit
 #define ADD_POINT(A)\
 	    plot_sigma ## A .write_ave_err(p2,sigma ## A [i].ave_err()); \
-	    jack_fit_sigma ## A .add_point(sigma ## A [i],[p2](const vector<double> &p,int iel){return sigma ## A ## _ansatz(p,p2);})
+	    if(p2<p2max)						\
+	      jack_fit_sigma ## A .add_point(sigma ## A [i],[p2](const vector<double> &p,int iel){return sigma ## A ## _ansatz(p,p2);})
 	    
 	    ADD_POINT(2_PH);
 	    ADD_POINT(2_CR_CT);
@@ -98,7 +100,7 @@ perens_t& perens_t::get_deltam()
 #define FIT(A)								\
 	jack_fit_sigma ## A .fit();					\
 	cout<<sigma ## A ##_pars.ave_err()<<endl;			\
-	plot_sigma ## A .write_polygon([sigma ## A ##_pars](double p2){return sigma ## A ##_ansatz(sigma ## A ##_pars,p2);},0.1,3)
+	plot_sigma ## A .write_polygon([sigma ## A ##_pars](double p2){return sigma ## A ##_ansatz(sigma ## A ##_pars,p2);},0.1,p2max)
 	
 	FIT(2_PH);
 	FIT(2_CR_CT);
