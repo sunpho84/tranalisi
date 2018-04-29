@@ -53,8 +53,8 @@ void perens_t::compute_deltam_from_prop()
 	      }
 	    else
 	      {
-		deltam_tm_ct_corr[ilinmom]=-a/c;
-		deltam_cr_ct_corr[ilinmom]=0.0;
+		deltam_tm_ct_corr[ilinmom]=0.0;
+		deltam_cr_ct_corr[ilinmom]=-a/c;
 	      }
 	  }
 	
