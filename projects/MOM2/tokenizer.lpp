@@ -87,6 +87,7 @@ Action                              DEBUG_PRINTF("Found Action\n");return TK_ACT
 BC                                  DEBUG_PRINTF("Found BC\n");return TK_BC;
 ChirExtrMethod                      DEBUG_PRINTF("Found ChirExtrMethod\n");return TK_CHIR_EXTR_METHOD;
 ComputeBilinears                    DEBUG_PRINTF("Found ComputeBilinears\n");return TK_COMPUTE_BILINEARS;
+ComputeDeltaM                       DEBUG_PRINTF("Found ComputeDeltaM\n");return TK_COMPUTE_DELTAM;
 ComputeMeslep                       DEBUG_PRINTF("Found ComputeMeslep\n");return TK_COMPUTE_MESLEP;
 ComputeMeslepWithChargesOne         DEBUG_PRINTF("Found ComputeMeslepWithChargesOne\n");return TK_COMPUTE_MESLEP_WITH_CHARGES_ONE;
 Ensembles                           DEBUG_PRINTF("Found Ensembles\n");return TK_ENSEMBLES;

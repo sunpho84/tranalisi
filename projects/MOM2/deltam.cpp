@@ -50,11 +50,13 @@ auto sigma3_TM_CT_ansatz(const T &p,double p2)
   return p[0]+p2*(p[1]+p[2]*log(p2));
 }
 
-perens_t& perens_t::get_deltam()
+void perens_t::compute_deltam_from_prop()
 {
   for(size_t im=0;im<nm;im++)
     for(size_t r=0;r<nr;r++)
       {
+	const size_t imr=im_r_ind({im,r});
+	
 	//! define parameters and open plot
 #define DEF_PARS(A)							\
 	grace_file_t plot_sigma ## A(dir_path+"/plots/fit_sigma_" #A "_m"+to_string(im)+"_r"+to_string(r)+".xmg"); \
@@ -117,15 +119,18 @@ perens_t& perens_t::get_deltam()
 	const djack_t& d=sigma3_PH_pars[0];
 	const djack_t& e=sigma3_CR_CT_pars[0];
 	const djack_t& f=sigma3_TM_CT_pars[0];
-      
-	const djack_t den=b*f-c*e;
-	const djack_t deltam_tm_corr=(-a*f+c*d)/den;
-	const djack_t deltam_cr_corr=(-b*d+a*e)/den;
 	
-	cout<<"m: "<<im<<", r: "<<r<<", deltam_tm_corr: "<<deltam_tm_corr.ave_err()<<endl;
-	cout<<"m: "<<im<<", r: "<<r<<", deltam_cr_corr: "<<deltam_cr_corr.ave_err()<<endl;
+	const djack_t den=b*f-c*e;
+	deltam_tm[imr]=(-a*f+c*d)/den;
+	deltam_cr[imr]=(-b*d+a*e)/den;
+	
+	cout<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
+	cout<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
       }
-  
+}
+
+perens_t& perens_t::get_deltam()
+{
   vector<tuple<djvec_t*,string,bool>> delta_tasks{
     {&deltam_cr,"cr",pars::use_deltam_cr_ct},
     {&deltam_tm,"tm",pars::use_deltam_tm_ct}};
@@ -372,6 +377,8 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	:
 	only_cr;
       
+      const size_t imr=im_r_ind({im,rfw});
+      
       if(strategy==both_cr_and_tm)
 	{
 	  const djvec_t old_corr=djvec_t(symmetric_derivative(V0P5_QED)/symmetric_derivative(V0P5_P)).symmetrized();
@@ -380,8 +387,6 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	  const djvec_t den=b*f-c*e;
 	  const djvec_t deltam_tm_corr=(-a*f+c*d)/den;
 	  const djvec_t deltam_cr_corr=(-b*d+a*e)/den;
-	  
-	  const size_t imr=im_r_ind({im,rfw});
 	  
 	  for(auto &oit : vector<tuple<djvec_t*,const djvec_t*,string>>{{&deltam_cr,&deltam_cr_corr,"cr"},{&deltam_tm,&deltam_tm_corr,"tm"}})
 	    {
@@ -407,10 +412,10 @@ void perens_t::compute_deltam(const size_t im,const size_t rfw)
 	  const djvec_t ma_fr_c=-a/c;
 	  const djvec_t md_fr_f=-d/f;
 	  
-	  deltam_cr=constant_fit(md_fr_f,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_P5P5.xmg");
-	  deltam_cr=constant_fit(ma_fr_c,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_V0P5.xmg");
-	  deltam_cr=-2*0.16285705871085078618;
-	  deltam_tm=0;
+	  deltam_cr[imr]=constant_fit(md_fr_f,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_P5P5.xmg");
+	  deltam_cr[imr]=constant_fit(ma_fr_c,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_V0P5.xmg");
+	  deltam_cr[imr]=-2*0.16285705871085078618;
+	  deltam_tm[imr]=0;
 	}
     }
 }

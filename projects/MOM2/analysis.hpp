@@ -39,27 +39,20 @@ inline void compute_or_load_all()
 inline void plot_all_Z(const string &suffix)
 {
   for(auto &path : pars::ens)
-    {
-      const string name=path;
-      data(name,ASSERT_PRESENT)
-	.plot_Z(suffix);
-    }
+    data(path,ASSERT_PRESENT)
+      .plot_Z(suffix);
 }
 
 #define DEFINE_SINGLE_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND)		\
   inline void ALL_COMMAND()						\
   {									\
     for(auto &path : pars::ens)						\
-      {									\
-	const string name_out=path;					\
-	string name_in=path;						\
-	data(name_out,PRESENCE_NOT_NEEDED)=				\
-	  data(name_in,ASSERT_PRESENT).SINGLE_COMMAND();		\
-      }									\
+      data(path,ASSERT_PRESENT).SINGLE_COMMAND();			\
   }
 
 DEFINE_SINGLE_COMMAND_ALL(average_all_r,average_r)
 DEFINE_SINGLE_COMMAND_ALL(average_all_equiv_momenta,average_equiv_momenta)
+DEFINE_SINGLE_COMMAND_ALL(compute_deltam_from_prop_all,compute_deltam_from_prop)
 DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap)
 
 /////////////////////////////////////////////////////////////////

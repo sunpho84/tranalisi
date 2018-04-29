@@ -359,6 +359,9 @@ struct perens_t
   
   void compute_deltam(const size_t im,const size_t r);
   
+  //! compute deltam from props
+  void compute_deltam_from_prop();
+  
   /////////////////////////////////////////////////////////////////
   
   //! computes all bilinear Z

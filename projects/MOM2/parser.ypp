@@ -56,6 +56,7 @@ using namespace scan;
 %token TK_BC
 %token TK_CHIR_EXTR_METHOD
 %token TK_COMPUTE_BILINEARS
+%token TK_COMPUTE_DELTAM
 %token TK_COMPUTE_MESLEP
 %token TK_COMPUTE_MESLEP_WITH_CHARGES_ONE
 %token TK_ENSEMBLES
@@ -108,6 +109,7 @@ commands:
         | commands average
         | commands average_r
         | commands average_equiv_momenta
+        | commands compute_deltam
         | commands sea_chir_extrap
         | commands val_chir_extrap
         | commands plot_Z
@@ -186,6 +188,9 @@ set_use_QED: TK_USE_QED '=' TK_INTE {pars::use_QED=$3;}
 /////////////////////////////////////////////////////////////////
 
 compute_or_load: TK_COMPUTE_OR_LOAD '(' ')' {compute_or_load_all();}
+;
+
+compute_deltam: TK_COMPUTE_DELTAM '(' ')' {compute_deltam_from_prop_all();}
 ;
 
 plot_Z: TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$3);delete $3;}
