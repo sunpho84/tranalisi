@@ -30,6 +30,7 @@ __top_builddir__bin_mom_SOURCES= \
 	%D%/p2eq0extrap.cpp \
 	%D%/pars.cpp \
 	%D%/perens.cpp \
+	%D%/pr_bil.cpp \
 	%D%/prop.cpp \
 	%D%/scan.cpp \
 	%D%/sigma.cpp \

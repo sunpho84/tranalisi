@@ -70,23 +70,23 @@ perens_t& perens_t::set_indices()
   
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
-  r_r_iZbil_ind.set_ranges({{"r",nr},{"r",nr},{"Zbil",nZbil}});
+  r_r_ibil_ind.set_ranges({{"r",nr},{"r",nr},{"bil",nbil}});
   im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});
   
-  im_r_im_r_iZbil_ind=im_r_ind*im_r_ind*index_t({{"iZbil",nZbil}});;
+  im_r_im_r_ibil_ind=im_r_ind*im_r_ind*index_t({{"ibil",nbil}});;
   r_ilinmom_ind.set_ranges({{"r",nr},{"linmom",linmoms.size()}});
   im_r_ilinmom_ind.set_ranges({{"m",nm},{"r",nr},{"linmom",linmoms.size()}});
-  iZbil_ibilmom_ind.set_ranges({{"iZbil",nZbil},{"bilmom",bilmoms.size()}});
-  im_r_im_r_iZbil_ibilmom_ind=im_r_im_r_iZbil_ind*index_t({{"bilmom",bilmoms.size()}});
+  ibil_ibilmom_ind.set_ranges({{"ibil",nbil},{"bilmom",bilmoms.size()}});
+  im_r_im_r_ibil_ibilmom_ind=im_r_im_r_ibil_ind*index_t({{"bilmom",bilmoms.size()}});
   
   im_r_im_r_ilistGl_ipGl_ind=im_r_ind*im_r_ind*index_t({{"listGl",meslep::listGl.size()},{"ipGl",nGamma}});
-  im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nZbil},{"iproj",nZbil}});
+  im_r_im_r_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"iop",nbil},{"iproj",nbil}});
   im_r_im_r_iop_iproj_imeslepmom_ind=im_r_im_r_iop_iproj_ind*index_t({{"imeslepmom",meslepmoms().size()}});
   im_r_im_r_iop_ilistpGl_ind.set_ranges({{"m_fw",nm},{"r_fw",nr},{"m_bw",nm},{"r_bw",nr},{"iop",meslep::nZop},{"listpGl",meslep::listpGl.size()}});
   iGl_ipGl_iclust_ind.set_ranges({{"iGamma",nGamma},{"ipGl",nGamma},{"iclust",njacks}});
-  iop_ipGl_iclust_ind.set_ranges({{"iop",nZbil},{"ipGl",nGamma},{"iclust",njacks}});
-  iop_iproj_iclust_ind.set_ranges({{"iop",nZbil},{"iproj",nZbil},{"iclust",njacks}});
+  iop_ipGl_iclust_ind.set_ranges({{"iop",nbil},{"ipGl",nGamma},{"iclust",njacks}});
+  iop_iproj_iclust_ind.set_ranges({{"iop",nbil},{"iproj",nbil},{"iclust",njacks}});
   
   ilistGl_ilistpGl_iclust_ind=index_t({{"listGl",meslep::listGl.size()},{"pGl",meslep::listpGl.size()},{"iclust",njacks}});
   
@@ -222,8 +222,8 @@ perens_t perens_t::average_r() const
   out.allocate();
   
   average_r_sigma(out);
-  average_r_Zbil(out);
-  average_r_Zmeslep(out);
+  average_r_pr_bil(out);
+  average_r_pr_meslep(out);
   
   if(nr>1)
     for(size_t im=0;im<nm;im++)
@@ -232,6 +232,7 @@ perens_t perens_t::average_r() const
 	out.deltam_tm[im]=(deltam_tm[im_r_ind({im,0})]+deltam_tm[im_r_ind({im,1})])/2.0;
       }
   
+  out.compute_Zq();
   if(pars::compute_bilinears) out.compute_Zbil();
   if(pars::compute_meslep) out.compute_Zmeslep();
   
@@ -253,12 +254,12 @@ perens_t perens_t::val_chir_extrap() const
       out.allocate();
       
       val_chir_extrap_sigma(out);
-      val_chir_extrap_Zq(out);
-      val_chir_extrap_Zbil(out);
-      val_chir_extrap_Zmeslep(out);
+      val_chir_extrap_pr_bil(out);
+      val_chir_extrap_pr_meslep(out);
       
       val_chir_extrap_deltam(out);
       
+      out.compute_Zq();
       if(pars::compute_bilinears) out.compute_Zbil();
       if(pars::compute_meslep) out.compute_Zmeslep();
     }
@@ -288,10 +289,8 @@ perens_t perens_t::average_equiv_momenta() const
   out.allocate();
   
   average_equiv_momenta_sigma(out,equiv_linmom_combos);
-#warning da togliere
-  average_equiv_momenta_Zq(out,equiv_linmom_combos);
-  average_equiv_momenta_Zbil(out,equiv_bilmom_combos);
-  average_equiv_momenta_Zmeslep(out,equiv_meslepmom_combos);
+  average_equiv_momenta_pr_bil(out,equiv_bilmom_combos);
+  average_equiv_momenta_pr_meslep(out,equiv_meslepmom_combos);
   
   if(pars::compute_bilinears) out.compute_Zbil();
   if(pars::compute_meslep) out.compute_Zmeslep();
