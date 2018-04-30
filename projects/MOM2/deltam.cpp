@@ -23,21 +23,29 @@ void perens_t::compute_deltam_from_prop()
   for(size_t im=0;im<nm;im++)
     for(size_t r=0;r<nr;r++)
       {
+	//get index
 	const size_t imr=im_r_ind({im,r});
 	
+	//allocate
 	vector<double> x(linmoms.size());
 	djvec_t deltam_tm_ct_corr(linmoms.size());
 	djvec_t deltam_cr_ct_corr(linmoms.size());
 	
+	//degree and range of fit
 	const size_t degree=3;
-	const double p2_min=0.1,p2_max=2.0;
+	const double p2_min=0.01,p2_max=2.0;
 	
 	for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
 	  {
+	    //ascissa
 	    x[ilinmom]=all_moms[linmoms[ilinmom][0]].p(L).norm2();
 	    
 	    const size_t i=im_r_ilinmom_ind({im,r,ilinmom});
 	    
+	    //elements to solve the system:
+	    //
+	    // b x + c y - a = 0
+	    // e x + f y - d = 0
 	    const djack_t& a=sigma2_PH[i];
 	    const djack_t& b=sigma2_TM_CT[i];
 	    const djack_t& c=sigma2_CR_CT[i];
@@ -45,6 +53,7 @@ void perens_t::compute_deltam_from_prop()
 	    const djack_t& e=sigma3_TM_CT[i];
 	    const djack_t& f=sigma3_CR_CT[i];
 	    
+	    //non singular case_of
 	    if(both)
 	      {
 		const djack_t den=b*f-c*e;
@@ -58,15 +67,18 @@ void perens_t::compute_deltam_from_prop()
 	      }
 	  }
 	
+	//polynomial fit of the two deltas
 	const djvec_t deltam_tm_ct_pars=poly_fit(x,deltam_tm_ct_corr,degree,p2_min,p2_max,
 						 dir_path+"/plots/fit_deltam_tm_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
 	const djvec_t deltam_cr_ct_pars=poly_fit(x,deltam_cr_ct_corr,degree,p2_min,p2_max,
 						 dir_path+"/plots/fit_deltam_cr_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
 	
+	//get extrapolation and overwrite in singular case
 	deltam_tm[imr]=deltam_tm_ct_pars[0];
 	deltam_cr[imr]=deltam_cr_ct_pars[0];
 	if(not both) deltam_tm[imr]=0.0;
 	
+	//output
 	cout<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
 	cout<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
       }
