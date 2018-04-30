@@ -23,6 +23,8 @@ void perens_t::compute_Zq()
       
       if(pars::use_QED)
 	{
+	  if(not deltam_computed) CRASH("Needs to have computed deltam")
+	  
 	  Zq_QED[im_r_ilinmom]=
 	    sigma1_PH[im_r_ilinmom]+
 	    sigma1_CR_CT[im_r_ilinmom]*deltam_cr[im_r]+

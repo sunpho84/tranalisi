@@ -11,8 +11,8 @@
 
 struct perens_t
 {
-  //! store wether deltas have been computed
-  bool delta_computed{false};
+  //! store whether deltam have been computed
+  bool deltam_computed{false};
   
   //! path where to find all data
   string dir_path;
