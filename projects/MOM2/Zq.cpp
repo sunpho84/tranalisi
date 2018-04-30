@@ -10,42 +10,25 @@
 
 #include <MOM2/perens.hpp>
 
-	  // //do the same with QED
-	  // if(pars::use_QED)
-	  //   {
-	  //     auto ji=jprops[im_r].LO[ijack].inverse();
-	  //     Z5_P[im_r_ilinmom][ijack]=(ji*jprops[im_r].CR_CT[ijack]*ji*quaGamma[0]).trace().real();
-	  //     Z5_PH[im_r_ilinmom][ijack]=(ji*jprops[im_r].PH[ijack]*ji*quaGamma[0]).trace().real()/Z5_P[im_r_ilinmom][ijack];
-	      
-	  //     sigma_time.start();
-	  //     Zq_QED[im_r_ilinmom][ijack]=compute_Zq(-jprop_QED_inv[im_r][ijack],mom);
-	  //     Zq_sig1_QED[im_r_ilinmom][ijack]=compute_Zq_sig1(-jprop_QED_inv[im_r][ijack],mom);
-	  //     sigma_time.stop();
-	  //   }
-
-double perens_t::compute_Zq(const qprop_t &prop_inv,const size_t glb_mom)
+void perens_t::compute_Zq()
 {
-  const p_t ptilde=all_moms[glb_mom].p(L).tilde();
-  const double pt2=ptilde.norm2();
-  const qprop_t pslash=qua_slash(ptilde);
-  
-  const double Zq=(prop_inv*pslash).trace().imag()/(12.0*pt2*V);
-  
-  return Zq;
-}
-
-djack_t perens_t::compute_Zq(const jqprop_t &jprop_inv,const size_t glb_mom)
-{
-  djack_t Zq;
-  
-  const p_t ptilde=all_moms[glb_mom].p(L).tilde();
-  const double pt2=ptilde.norm2();
-  const qprop_t pslash=qua_slash(ptilde);
-  
-  for(size_t ijack=0;ijack<=njacks;ijack++)
-    Zq[ijack]=(jprop_inv[ijack]*pslash).trace().imag()/(12.0*pt2*V);
-  
-  return Zq;
+#pragma omp parallel for
+  for(size_t im_r_ilinmom=0;im_r_ilinmom<im_r_ilinmom_ind.max();im_r_ilinmom++)
+    {
+      const vector<size_t> comps=im_r_ilinmom_ind(im_r_ilinmom);
+      const size_t im=comps[0];
+      const size_t r=comps[1];
+      const size_t im_r=im_r_ind({im,r});
+      Zq[im_r_ilinmom]=sigma1_LO[im_r_ilinmom];
+      
+      if(pars::use_QED)
+	{
+	  Zq_QED[im_r_ilinmom]=
+	    sigma1_PH[im_r_ilinmom]+
+	    sigma1_CR_CT[im_r_ilinmom]*deltam_cr[im_r]+
+	    sigma1_TM_CT[im_r_ilinmom]*deltam_tm[im_r];
+	}
+    }
 }
 
 vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& ens)
@@ -55,9 +38,7 @@ vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& e
     {
       in_Zq.push_back(&e->Zq);
       if(pars::use_QED)
-	{
-	  in_Zq_QED.push_back(&e->Zq_QED);
-	}
+	in_Zq_QED.push_back(&e->Zq_QED);
     }
   
   vector<task_t> Zq_tasks={{&Zq,in_Zq,im_r_ilinmom_ind,"Zq",QCD_task}};
@@ -98,34 +79,6 @@ void perens_t::plot_Zq(const string &suffix)
 		out.write_ave_err(p2tilde,Z[im_r_ilinmom_ind({im,r,imom})].ave_err());
 	      }
 	  }
-    }
-}
-
-void perens_t::average_r_Zq(perens_t &out) const
-{
-  cout<<"Averaging r for Zq"<<endl;
-  
-  for(auto &t : out.get_Zq_tasks({this}))
-    {
-      cout<<" "<<t.tag<<endl;
-      
-      const djvec_t &Zq=*t.in.front();
-      djvec_t &Zq_rave=*t.out;
-      
-      for(size_t out_i=0;out_i<out.im_r_ilinmom_ind.max();out_i++)
-	{
-	  const vector<size_t> out_im_r_ilinmom_comp=out.im_r_ilinmom_ind(out_i);
-	  vector<size_t> im_r_ilinmom_comp=out_im_r_ilinmom_comp;
-	  
-	  Zq_rave[out_i]=0.0;
-	  for(size_t r=0;r<nr;r++)
-	    {
-	      im_r_ilinmom_comp[1]=r;
-	      const size_t i=im_r_ilinmom_ind(im_r_ilinmom_comp);
-	      Zq_rave[out_i]+=Zq[i];
-	    }
-	  Zq_rave[out_i]/=nr;
-	}
     }
 }
 

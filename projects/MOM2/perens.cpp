@@ -153,7 +153,7 @@ void perens_t::prepare_list_of_confs()
   iconf_ihit_ilkind_ind=index_t({{"conf",conf_list.size()},{"hit",nhits},{"kind",mom_conf_lprops_t::nprop_kind()}});
 }
 
-perens_t& perens_t::compute_basic(const string& ingredients_path)
+perens_t& perens_t::compute_ingredients(const string& ingredients_path)
 {
   prepare_list_of_confs();
   
@@ -169,7 +169,7 @@ perens_t& perens_t::compute_basic(const string& ingredients_path)
       //smom();
       break;
     }
-  bin_write(ingredients_path);
+  bin_write_ingredients(ingredients_path);
   
   return *this;
 }
@@ -182,12 +182,12 @@ perens_t& perens_t::read_or_compute_ingredients()
   if(file_exists(ingredients_path))
     {
       cout<<"File "<<ingredients_path<<" found, opening"<<endl;
-      bin_read(ingredients_path);
+      bin_read_ingredients(ingredients_path);
     }
   else
     {
       cout<<"File "<<ingredients_path<<" not found, computing"<<endl;
-      compute_basic(ingredients_path);
+      compute_ingredients(ingredients_path);
     }
   
   if(pars::compute_bilinears) compute_Zbil();
@@ -196,13 +196,13 @@ perens_t& perens_t::read_or_compute_ingredients()
   return *this;
 }
 
-void perens_t::bin_read(raw_file_t &file)
+void perens_t::bin_read_ingredients(raw_file_t &file)
 {
   for(auto &t : concat(get_sigma_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
      t.out->bin_read(file);
 }
 
-void perens_t::bin_write(raw_file_t &file)
+void perens_t::bin_write_ingredients(raw_file_t &file)
 {
   for(auto &t : concat(get_sigma_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
     t.out->bin_write(file);
@@ -220,7 +220,6 @@ perens_t perens_t::average_r() const
   out.allocate();
   
   average_r_sigma(out);
-  average_r_Zq(out);
   average_r_Zbil(out);
   average_r_Zmeslep(out);
   

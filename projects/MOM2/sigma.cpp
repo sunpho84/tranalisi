@@ -191,28 +191,34 @@ void perens_t::average_r_sigma(perens_t &out) const
 {
   cout<<"Averaging r for sigma"<<endl;
   
-  for(auto &t : out.get_sigma_tasks({this}))
+  if(nr==1)
     {
-      cout<<" "<<t.tag<<endl;
-      
-      const djvec_t &sigma=*t.in.front();
-      djvec_t &sigma_rave=*t.out;
-      
-      for(size_t out_i=0;out_i<out.im_r_ilinmom_ind.max();out_i++)
-	{
-	  const vector<size_t> out_im_r_ilinmom_comp=out.im_r_ilinmom_ind(out_i);
-	  vector<size_t> im_r_ilinmom_comp=out_im_r_ilinmom_comp;
-	  
-	  sigma_rave[out_i]=0.0;
-	  for(size_t r=0;r<nr;r++)
-	    {
-	      im_r_ilinmom_comp[1]=r;
-	      const size_t i=im_r_ilinmom_ind(im_r_ilinmom_comp);
-	      sigma_rave[out_i]+=sigma[i];
-	    }
-	  sigma_rave[out_i]/=nr;
-	}
+      cout<<"Skipping r average of Zq"<<endl;
+      out=*this;
     }
+  else
+    for(auto &t : out.get_sigma_tasks({this}))
+      {
+	cout<<" "<<t.tag<<endl;
+	
+	const djvec_t &sigma=*t.in.front();
+	djvec_t &sigma_rave=*t.out;
+	
+	for(size_t out_i=0;out_i<out.im_r_ilinmom_ind.max();out_i++)
+	  {
+	    const vector<size_t> out_im_r_ilinmom_comp=out.im_r_ilinmom_ind(out_i);
+	    vector<size_t> im_r_ilinmom_comp=out_im_r_ilinmom_comp;
+	    
+	    sigma_rave[out_i]=0.0;
+	    for(size_t r=0;r<nr;r++)
+	      {
+		im_r_ilinmom_comp[1]=r;
+		const size_t i=im_r_ilinmom_ind(im_r_ilinmom_comp);
+		sigma_rave[out_i]+=sigma[i];
+	      }
+	    sigma_rave[out_i]/=nr;
+	  }
+      }
 }
 
 void perens_t::average_equiv_momenta_sigma(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const

@@ -11,6 +11,9 @@
 
 struct perens_t
 {
+  //! store wether deltas have been computed
+  bool delta_computed{false};
+  
   //! path where to find all data
   string dir_path;
   
@@ -133,13 +136,6 @@ struct perens_t
   
   //! return a list of tasks for sigma
   vector<task_t> get_sigma_tasks(const vector<const perens_t*> &ens={});
-
-  //Zq, with and without QED
-  djvec_t Zq;
-  djvec_t Zq_QED;  //not rel!
-  
-  //! return a list of tasks for Zq
-  vector<task_t> get_Zq_tasks(const vector<const perens_t*>& ens={});
   
   //projected bilinears with and without QED
   djvec_t pr_bil_LO;
@@ -149,19 +145,6 @@ struct perens_t
   
   //! return a list of tasks for bilinears projected vertex
   vector<task_t> get_pr_bil_tasks(const vector<const perens_t*> &ens={});
-  
-  //bilinear Z
-  djvec_t Zbil;
-  djvec_t Zbil_QED_rel;
-  
-  //! return a list of tasks for bilinears Z
-  vector<task_t> get_Zbil_tasks(const vector<const perens_t*> &ens={});
-  
-  //! return a list of tasks for bilinears Z and proj
-  vector<task_t> get_bil_tasks(const vector<const perens_t*> &ens={})
-  {
-    return concat(get_Zbil_tasks(ens),get_pr_bil_tasks(ens));
-  }
   
   //! projected meslep
   djvec_t pr_meslep_LO;
@@ -266,24 +249,24 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
-  //! read from binary
-  void bin_read(raw_file_t &file);
+  //! read from binary ingredients
+  void bin_read_ingredients(raw_file_t &file);
   
-  //! write to binary
-  void bin_write(raw_file_t &file);
+  //! write to binary ingredients
+  void bin_write_ingredients(raw_file_t &file);
   
-  //! read from a path
-  inline void bin_read(const string &path)
+  //! read ingredients from a path
+  inline void bin_read_ingredients(const string &path)
   {
     raw_file_t fin(path,"r");
-    this->bin_read(fin);
+    this->bin_read_ingredients(fin);
   }
   
-  //! write to a path
-  inline void bin_write(const string &path)
+  //! write ingredients to a path
+  inline void bin_write_ingredients(const string &path)
   {
     raw_file_t fout(path,"w");
-    this->bin_write(fout);
+    this->bin_write_ingredients(fout);
   }
   
   /////////////////////////////////////////////////////////////////
@@ -320,11 +303,11 @@ struct perens_t
   //! prepares the list of configurations to use
   void prepare_list_of_confs();
   
-  //! try to read, otherwise compute
+  //! try to read, otherwise compute the ingredients (sigma, projected bil, etc)
   perens_t& read_or_compute_ingredients();
   
   //! computes the basic Z
-  perens_t& compute_basic(const string& ingredients_path);
+  perens_t& compute_ingredients(const string& ingredients_path);
   
   //! compute according to mom scheme
   void mom()
@@ -333,10 +316,6 @@ struct perens_t
     if(pars::compute_bilinears) mom_compute_bil();
     if(pars::compute_meslep) mom_compute_meslep();
   }
-  
-  double compute_Zq(const qprop_t &prop_inv,const size_t glb_mom);
-  
-  djack_t compute_Zq(const jqprop_t &jprop_inv,const size_t glb_mom);
   
   vector<m_r_mom_conf_qprops_t> read_all_qprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
   
@@ -363,6 +342,33 @@ struct perens_t
   void compute_deltam_from_prop();
   
   /////////////////////////////////////////////////////////////////
+  
+  //Zq, with and without QED
+  djvec_t Zq;
+  djvec_t Zq_QED;  //not rel!
+  
+  //! return a list of tasks for Zq
+  vector<task_t> get_Zq_tasks(const vector<const perens_t*>& ens={});
+  
+  //! compute all Zq
+  void compute_Zq();
+  
+  /////////////////////////////////////////////////////////////////
+  
+  //bilinear Z
+  djvec_t Zbil;
+  djvec_t Zbil_QED_rel;
+  
+  //! return a list of tasks for bilinears Z
+  vector<task_t> get_Zbil_tasks(const vector<const perens_t*> &ens={});
+  
+  //! return a list of tasks for bilinears Z and proj
+  vector<task_t> get_bil_tasks(const vector<const perens_t*> &ens={})
+  {
+    return concat(get_Zbil_tasks(ens),get_pr_bil_tasks(ens));
+  }
+  
+#warning  rinominare bil in bilinears, separare prbil e zbil
   
   //! computes all bilinear Z
   void compute_Zbil();
@@ -406,12 +412,11 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
+  //! triggers r-averaging of all quantities
   perens_t average_r() const;
   
   //! average sigma
   void average_r_sigma(perens_t &out) const;
-  //! average Zq
-  void average_r_Zq(perens_t &out) const;
   //! average bil
   void average_r_Zbil(perens_t &out) const;
   //! average Zmeslep

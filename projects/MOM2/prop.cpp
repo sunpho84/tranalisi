@@ -274,10 +274,10 @@ void perens_t::get_inverse_propagators(vector<jm_r_mom_qprops_t> &jprops_inv,
       //do the same with QED
       if(pars::use_QED)
 	{
-	  invert_time.start(); //This misses a sign -1 coming from the original inverse
-	  jprops_inv[im_r].CR_CT[ijack]=prop_inv*jprops[im_r].CR_CT[ijack]*prop_inv;
-	  jprops_inv[im_r].TM_CT[ijack]=prop_inv*jprops[im_r].TM_CT[ijack]*prop_inv;
-	  jprops_inv[im_r].PH[ijack]=prop_inv*jprops[im_r].PH[ijack]*prop_inv;
+	  invert_time.start();
+	  jprops_inv[im_r].CR_CT[ijack]=-prop_inv*jprops[im_r].CR_CT[ijack]*prop_inv;
+	  jprops_inv[im_r].TM_CT[ijack]=-prop_inv*jprops[im_r].TM_CT[ijack]*prop_inv;
+	  jprops_inv[im_r].PH[ijack]=-prop_inv*jprops[im_r].PH[ijack]*prop_inv;
 	  invert_time.stop();
 	}
     }
