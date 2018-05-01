@@ -31,6 +31,7 @@ __top_builddir__bin_mom_SOURCES= \
 	%D%/pars.cpp \
 	%D%/perens.cpp \
 	%D%/pr_bil.cpp \
+	%D%/pr_meslep.cpp \
 	%D%/prop.cpp \
 	%D%/scan.cpp \
 	%D%/sigma.cpp \

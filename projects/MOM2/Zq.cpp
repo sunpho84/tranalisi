@@ -23,7 +23,7 @@ void perens_t::compute_Zq()
       
       if(pars::use_QED)
 	{
-	  if(not deltam_computed) CRASH("Needs to have computed deltam")
+	  if(not deltam_computed) CRASH("Needs to have computed deltam");
 	  
 	  Zq_QED[im_r_ilinmom]=
 	    sigma1_PH[im_r_ilinmom]+
@@ -84,72 +84,3 @@ void perens_t::plot_Zq(const string &suffix)
     }
 }
 
-void perens_t::average_equiv_momenta_Zq(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const
-{
-  for(size_t i=0;i<out.im_r_ilinmom_ind.max();i++)
-    {
-      const vector<size_t> out_im_r_ilinmom_comp=out.im_r_ilinmom_ind(i);
-      const size_t out_ilinmom_combo=out_im_r_ilinmom_comp[2];
-      
-      for(const auto &t : out.get_Zq_tasks({this}))
-	{
-  	  djack_t &ave=(*t.out)[i];
-  	  ave=0.0;
-  	  for(const size_t ieq : equiv_linmom_combos[out_ilinmom_combo])
-	    {
-	      vector<size_t> in_im_r_ilinmom_comp=out_im_r_ilinmom_comp;
-	      in_im_r_ilinmom_comp[2]=ieq;
-	      const size_t i=im_r_ilinmom_ind(in_im_r_ilinmom_comp);
-	      
-	      ave+=(*t.in.front())[i];
-	    }
-  	  ave/=equiv_linmom_combos[out_ilinmom_combo].size();
-  	}
-    }
-}
-
-void perens_t::val_chir_extrap_Zq(perens_t &out) const
-{
-  //slice m
-  vector<double> x(nm);
-  djvec_t y(nm);
-  for(size_t im=0;im<nm;im++)
-    if(pars::chir_extr_method==chir_extr::MQUARK) x[im]=am[im];
-    else                                          x[im]=sqr(meson_mass[im_im_ind({im,im})].ave());
-  
-  for(auto &t : out.get_Zq_tasks({this}))
-    {
-      const djvec_t &Zq=*t.in.front();
-      djvec_t &Zq_chir=*t.out;
-      const string &tag=t.tag;
-      
-      for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
-	{
-	  //open the plot file if needed
-	  const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_mom_"+to_string(ilinmom)+".xmg";
-	  grace_file_t *plot=nullptr;
-	  if(ilinmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
-	  
-	  for(size_t r=0;r<nr;r++)
-	    {
-	      //slice m
-	      djvec_t y(nm);
-	      for(size_t im=0;im<nm;im++)
-		y[im]=Zq[im_r_ilinmom_ind({im,r,ilinmom})];
-	      
-	      //fit, store and write the result
-	      djvec_t coeffs=poly_fit(x,y,1);
-	      Zq_chir[out.im_r_ilinmom_ind({0,r,ilinmom})]=coeffs[0];
-	      if(plot!=nullptr)
-		{
-		  auto xminmax=minmax_element(x.begin(),x.end());
-		  double xmax=*xminmax.second*1.1;
-		  write_fit_plot(*plot,0,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
-		  plot->write_ave_err(0,coeffs[0].ave_err());
-		}
-	    }
-	  
-	  if(plot!=nullptr) delete plot;
-	}
-    }
-}
