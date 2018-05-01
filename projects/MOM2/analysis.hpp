@@ -20,7 +20,7 @@ perens_t& data(const string &key,const bool assert_present_flag);
 //! remove an entry
 void data_erase(const string &key);
 
-inline void compute_or_load_all()
+inline void compute_or_load_all_ingredients()
 {
   cout<<"Going to rotate propagators: "<<(pars::twisted_run and pars::phys_basis)<<endl;
   
@@ -51,6 +51,7 @@ inline void plot_all_Z(const string &suffix)
   }
 
 DEFINE_SINGLE_SELF_COMMAND_ALL(compute_deltam_from_prop_all,compute_deltam_from_prop)
+DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_all,compute_Z)
 
 #define DEFINE_SINGLE_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND)		\
   inline void ALL_COMMAND()						\

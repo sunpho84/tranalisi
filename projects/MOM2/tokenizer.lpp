@@ -105,7 +105,8 @@ UseQED                              DEBUG_PRINTF("Found UseQED\n");return TK_USE
 Average                             DEBUG_PRINTF("Found Average\n");return TK_AVERAGE;
 AverageR                            DEBUG_PRINTF("Found AverageR\n");return TK_AVERAGE_R;
 AverageEquivMomenta                 DEBUG_PRINTF("Found AverageEquivMomenta\n");return TK_AVERAGE_EQUIV_MOMENTA;
-ComputeOrLoad                       DEBUG_PRINTF("Found ComputeOrLoad\n");return TK_COMPUTE_OR_LOAD;
+ComputeOrLoadIngredients            DEBUG_PRINTF("Found ComputeOrLoadIngredients\n");return TK_COMPUTE_OR_LOAD_INGREDIENTS;
+ComputeZ                            DEBUG_PRINTF("Found ComputeZ\n");return TK_COMPUTE_Z;
 Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVOLVE;
 ListEnsembles                       DEBUG_PRINTF("Found ListEnsembles\n");return TK_LIST_ENSEMBLES;
 PlotZ                               DEBUG_PRINTF("Found PlotZ\n");return TK_PLOT_Z;
