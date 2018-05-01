@@ -28,54 +28,7 @@ void build_jackkniffed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop_in,size_t 
     endl;
 }
 
-djvec_t perens_t::compute_proj_bil(const vjqprop_t &jprop_inv_in,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv_ou) const
-{
-    const index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks+1}});
-  
-  //combine the 16 bilinears to form the 5 vertex
-  djvec_t pr(im_r_im_r_ibil_ind.max());
-  
-#pragma omp parallel for
-  for(size_t i=0;i<ind.max();i++)
-    {
-      //split im_r_im_r_ibil and ijack
-      vector<size_t> i_comp=ind(i);
-      const size_t im_r_im_r_ibil=i_comp[0],ijack=i_comp[1];
-      const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_ibil_ind(im_r_im_r_ibil);
-      
-      //get im and r for fw and back, and ibil
-      const size_t im_fw=im_r_im_r_ibil_comp[0],r_fw=im_r_im_r_ibil_comp[1];
-      const size_t im_bw=im_r_im_r_ibil_comp[2],r_bw=im_r_im_r_ibil_comp[3];
-      const size_t ibil=im_r_im_r_ibil_comp[4];
-      
-      //loop on all gammas
-      djack_t &out=pr[im_r_im_r_ibil];
-      for(auto & iG : iG_of_bil[ibil])
-	{
-	  vector<size_t> im_r_im_r_iG_comp=im_r_im_r_ibil_comp;
-	  im_r_im_r_iG_comp[4]=iG;
-	  const size_t im_r_im_r_iG=im_r_im_r_igam_ind(im_r_im_r_iG_comp);
-	  
-	  const size_t ip_in=im_r_ind({im_fw,r_fw});
-	  const size_t ip_ou=im_r_ind({im_bw,r_bw});
-	  const qprop_t &prop_inv_in=jprop_inv_in[ip_in][ijack];
-	  const qprop_t &prop_inv_ou=jprop_inv_ou[ip_ou][ijack];
-	  
-	  const qprop_t &vert=jverts[im_r_im_r_iG][ijack];
-	  
-	  qprop_t amp_vert=prop_inv_ou*vert*quaGamma[5]*prop_inv_in.adjoint()*quaGamma[5];
-	  auto c=(amp_vert*quaGamma[iG].adjoint()).trace().real()/(12.0*iG_of_bil[ibil].size());
-	  
-	  if(0)
-	    cout<<"Amputating bil "<<ibil<<", ip_in: "<<ip_in<<", ip_ou: "<<ip_ou<<", ijack: "<<ijack<<", prop_inv_in: "<<prop_inv_in(0,0)<<", vert: "<<vert(0,0)<<", prop_inv_ou: "<<prop_inv_ou(0,0)<<", c: "<<c<<endl;
-	  out[ijack]+=c;
-	}
-    }
-  
-  return pr;
-}
-
-void perens_t::build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props_in,const vector<m_r_mom_conf_qprops_t> &props_ou) const
+void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jbil_vert_t>& jbil,const vector<m_r_mom_conf_qprops_t>& props_in,const vector<m_r_mom_conf_qprops_t>& props_ou) const
 {
   //! help finding the bilinear/clust combo
   index_t ind({{"i",im_r_im_r_igam_ind.max()},{"iclust",njacks}});
@@ -96,26 +49,94 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vecto
       //proxy for vector and props
       const m_r_mom_conf_qprops_t &p_in=props_in[im_r_ijack_ind({im_fw,r_fw,iclust})];
       const m_r_mom_conf_qprops_t &p_ou=props_ou[im_r_ijack_ind({im_bw,r_bw,iclust})];
-      
+      jbil_vert_t &bil=jbil[im_r_im_r_igam];
+
       //create list of operations
-      vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>> list={{&jbil.LO[im_r_im_r_igam],&p_in.LO,&p_ou.LO}};
+      vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>> list={{&bil.LO,&p_in.LO,&p_ou.LO}};
       if(pars::use_QED)
 	for(auto &o : vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>>({
-	      {&jbil.PH[im_r_im_r_igam],&p_in.F,&p_ou.F},
-	      {&jbil.PH[im_r_im_r_igam],&p_in.FF,&p_ou.LO},
-	      {&jbil.PH[im_r_im_r_igam],&p_in.LO,&p_ou.FF},
-	      {&jbil.PH[im_r_im_r_igam],&p_in.T,&p_ou.LO},
-	      {&jbil.PH[im_r_im_r_igam],&p_in.LO,&p_ou.T},
-	      {&jbil.CR_CT_in[im_r_im_r_igam],&p_in.P,&p_ou.LO},
-	      {&jbil.CR_CT_ou[im_r_im_r_igam],&p_in.LO,&p_ou.P},
-	      {&jbil.TM_CT_in[im_r_im_r_igam],&p_in.S,&p_ou.LO},
-	      {&jbil.TM_CT_ou[im_r_im_r_igam],&p_in.LO,&p_ou.S}
+	      {&bil.PH,&p_in.F,&p_ou.F},
+	      {&bil.PH,&p_in.FF,&p_ou.LO},
+	      {&bil.PH,&p_in.LO,&p_ou.FF},
+	      {&bil.PH,&p_in.T,&p_ou.LO},
+	      {&bil.PH,&p_in.LO,&p_ou.T},
+	      {&bil.CR_CT_in,&p_in.P,&p_ou.LO},
+	      {&bil.CR_CT_ou,&p_in.LO,&p_ou.P},
+	      {&bil.TM_CT_in,&p_in.S,&p_ou.LO},
+	      {&bil.TM_CT_ou,&p_in.LO,&p_ou.S}
 	    }))
 	  list.push_back(o);
       
       //create the vertex
       for(auto &o : list)
 	build_jackkniffed_vert_Gamma(*get<0>(o),*get<1>(o),iG,*get<2>(o),iclust);
+    }
+}
+
+void perens_t::clusterize_all_mr_jackkniffed_bilverts(vector<jbil_vert_t>& jverts) const
+{
+#pragma omp parallel for
+  for(size_t ivert=0;ivert<jverts.size();ivert++)
+    jverts[ivert].clusterize_all(clust_size);
+}
+
+void perens_t::compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,const vector<jbil_vert_t>& jverts,const vector<jm_r_mom_qprops_t>& jprop_inv_ou)
+{
+  for(auto &t : get_pr_bil_tasks())
+    *t.out=0.0;
+  
+  const index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks+1}});
+  
+#pragma omp parallel for
+  for(size_t i=0;i<ind.max();i++)
+    {
+      //split im_r_im_r_ibil and ijack
+      vector<size_t> i_comp=ind(i);
+      const size_t im_r_im_r_ibil=i_comp[0],ijack=i_comp[1];
+      const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_ibil_ind(im_r_im_r_ibil);
+      
+      //get im and r for fw and back, and ibil
+      const size_t im_fw=im_r_im_r_ibil_comp[0],r_fw=im_r_im_r_ibil_comp[1];
+      const size_t im_bw=im_r_im_r_ibil_comp[2],r_bw=im_r_im_r_ibil_comp[3];
+      const size_t ibil=im_r_im_r_ibil_comp[4];
+      
+      const size_t im_r_in=im_r_ind({im_fw,r_fw});
+      const size_t im_r_ou=im_r_ind({im_bw,r_bw});
+      
+      const jm_r_mom_qprops_t& pinv_ou=jprop_inv_ou[im_r_ou];
+      const jm_r_mom_qprops_t& pinv_in=jprop_inv_in[im_r_in];
+      
+      //loop on all gammas
+      for(auto & iG : iG_of_bil[ibil])
+	{
+	  vector<size_t> im_r_im_r_iG_comp=im_r_im_r_ibil_comp;
+	  im_r_im_r_iG_comp[4]=iG;
+	  const size_t im_r_im_r_iG=im_r_im_r_igam_ind(im_r_im_r_iG_comp);
+	  const jbil_vert_t &jv=jverts[im_r_im_r_iG];
+	  
+#define PROJ(OUT,SIGN,OU,V,IN)						\
+	  pr_bil_ ## OUT[im_r_im_r_ibil][ijack]+=			\
+	    SIGN								\
+	    (pinv_ou.OU[ijack]*jv.V[ijack]*quaGamma[5]*pinv_in.IN[ijack].adjoint()*quaGamma[5]*quaGamma[iG].adjoint()).trace().real()/(12.0*iG_of_bil[ibil].size())
+	  
+	  PROJ(LO, +,LO,LO,LO);
+	  //
+	  PROJ(PH, -,PH,LO,LO);
+	  PROJ(PH, +,LO,PH,LO);
+	  PROJ(PH, -,LO,LO,PH);
+	  //
+	  PROJ(CR_CT1, -,CR_CT,LO,LO);
+	  PROJ(TM_CT1, -,TM_CT,LO,LO);
+	  PROJ(CR_CT1, +,LO,CR_CT_ou,LO);
+	  PROJ(TM_CT1, +,LO,TM_CT_ou,LO);
+	  //
+	  PROJ(CR_CT2, -,LO,LO,CR_CT);
+	  PROJ(TM_CT2, -,LO,LO,TM_CT);
+	  PROJ(CR_CT2, +,LO,CR_CT_in,LO);
+	  PROJ(TM_CT2, +,LO,TM_CT_in,LO);
+	  
+	  #undef PROJ
+	}
     }
 }
 
@@ -129,9 +150,9 @@ void perens_t::mom_compute_bil()
       const size_t imom2=bilmoms[ibilmom][2];
       const bool read2=(imom1!=imom2);
       
-      vector<jm_r_mom_qprops_t> jprops1(im_r_ind.max()); //!< jackknived props
-      vector<jm_r_mom_qprops_t> jprops2(im_r_ind.max()); //!< jackknived props
-      jbil_vert_t jverts(im_r_im_r_igam_ind.max(),pars::use_QED);   //!< jackknived vertex
+      vector<jm_r_mom_qprops_t> jprops1(im_r_ind.max());      //!< jackknived props
+      vector<jm_r_mom_qprops_t> jprops2(im_r_ind.max());      //!< jackknived props
+      vector<jbil_vert_t> jverts(im_r_im_r_igam_ind.max());   //!< jackknived vertex
       
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
@@ -167,7 +188,7 @@ void perens_t::mom_compute_bil()
       clust_time.start();
       clusterize_all_mr_jackkniffed_qprops(jprops1);
       clusterize_all_mr_jackkniffed_qprops(jprops2);
-      jverts.clusterize_all(pars::use_QED,clust_size,im_r_im_r_igam_ind,deltam_cr,deltam_tm);
+      clusterize_all_mr_jackkniffed_bilverts(jverts);
       clust_time.stop();
       
       vector<jm_r_mom_qprops_t> jprops_inv1; //!< inverse propagator1
@@ -177,8 +198,8 @@ void perens_t::mom_compute_bil()
       get_inverse_propagators(jprops_inv2,jprops2);
       
       CRASH("");
-      // proj_time.start();
-      // djvec_t pr_bil_temp=compute_proj_bil(jprops_inv1,jverts.LO,jprop_inv2);
+      proj_time.start();
+      compute_proj_bil(jprops_inv1,jverts,jprops_inv2);
       
       // //QED
       // djvec_t pr_bil_QED_temp;
@@ -209,14 +230,22 @@ void perens_t::mom_compute_bil()
 
 vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*> &ens)
 {
-  vector<const djvec_t*> in_pr_bil_LO,in_pr_bil_CR_CT,in_pr_bil_TM_CT,in_pr_bil_PH;
+  vector<const djvec_t*>
+    in_pr_bil_LO,
+    in_pr_bil_CR_CT1,
+    in_pr_bil_CR_CT2,
+    in_pr_bil_TM_CT1,
+    in_pr_bil_TM_CT2,
+    in_pr_bil_PH;
   for(auto &e : ens)
     {
       in_pr_bil_LO.push_back(&e->pr_bil_LO);
       if(pars::use_QED)
 	{
-	  in_pr_bil_CR_CT.push_back(&e->pr_bil_CR_CT);
-	  in_pr_bil_TM_CT.push_back(&e->pr_bil_TM_CT);
+	  in_pr_bil_CR_CT1.push_back(&e->pr_bil_CR_CT1);
+	  in_pr_bil_CR_CT2.push_back(&e->pr_bil_CR_CT2);
+	  in_pr_bil_TM_CT1.push_back(&e->pr_bil_TM_CT1);
+	  in_pr_bil_TM_CT2.push_back(&e->pr_bil_TM_CT2);
 	  in_pr_bil_PH.push_back(&e->pr_bil_PH);
 	}
     }
@@ -224,8 +253,10 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
   vector<task_t> pr_bil_tasks={{&pr_bil_LO,in_pr_bil_LO,im_r_im_r_ibil_ibilmom_ind,"pr_bil_LO",QCD_task}};
   if(pars::use_QED)
     {
-      pr_bil_tasks.push_back({&pr_bil_CR_CT,in_pr_bil_CR_CT,im_r_im_r_ibil_ibilmom_ind,"pr_bil_CR_CT",QED_task});
-      pr_bil_tasks.push_back({&pr_bil_TM_CT,in_pr_bil_TM_CT,im_r_im_r_ibil_ibilmom_ind,"pr_bil_TM_CT",QED_task});
+      pr_bil_tasks.push_back({&pr_bil_CR_CT1,in_pr_bil_CR_CT1,im_r_im_r_ibil_ibilmom_ind,"pr_bil_CR_CT1",QED_task});
+      pr_bil_tasks.push_back({&pr_bil_CR_CT2,in_pr_bil_CR_CT2,im_r_im_r_ibil_ibilmom_ind,"pr_bil_CR_CT2",QED_task});
+      pr_bil_tasks.push_back({&pr_bil_TM_CT1,in_pr_bil_TM_CT1,im_r_im_r_ibil_ibilmom_ind,"pr_bil_TM_CT1",QED_task});
+      pr_bil_tasks.push_back({&pr_bil_TM_CT2,in_pr_bil_TM_CT2,im_r_im_r_ibil_ibilmom_ind,"pr_bil_TM_CT2",QED_task});
       pr_bil_tasks.push_back({&pr_bil_PH,in_pr_bil_PH,im_r_im_r_ibil_ibilmom_ind,"pr_bil_PH",QED_task});
     }
   

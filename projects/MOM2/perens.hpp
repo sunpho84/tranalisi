@@ -149,12 +149,20 @@ struct perens_t
   
   //projected bilinears with and without QED
   djvec_t pr_bil_LO;
-  djvec_t pr_bil_CR_CT;
-  djvec_t pr_bil_TM_CT;
+  djvec_t pr_bil_CR_CT1;
+  djvec_t pr_bil_TM_CT1;
+  djvec_t pr_bil_CR_CT2;
+  djvec_t pr_bil_TM_CT2;
   djvec_t pr_bil_PH;
   
   //! return a list of tasks for bilinears projected vertex
   vector<task_t> get_pr_bil_tasks(const vector<const perens_t*> &ens={});
+  
+  void build_all_mr_gbil_jackkniffed_verts(vector<jbil_vert_t>& jbil,const vector<m_r_mom_conf_qprops_t>& props_in,const vector<m_r_mom_conf_qprops_t>& props_ou) const;
+  
+  void clusterize_all_mr_jackkniffed_bilverts(vector<jbil_vert_t>& jprops) const;
+  
+  void compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,const vector<jbil_vert_t>& jverts,const vector<jm_r_mom_qprops_t>& jprop_inv_ou);
   
   /////////////////////////////////////////////////////////////////
   
@@ -378,10 +386,6 @@ struct perens_t
   
   //! compute all mom-scheme vertices
   void mom_compute_bil();
-  
-  void build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vector<m_r_mom_conf_qprops_t> &props_in,const vector<m_r_mom_conf_qprops_t> &props_ou) const;
-  
-  djvec_t compute_proj_bil(const vjqprop_t &jprop_inv_in,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv_ou) const;
   
   /////////////////////////////////////////////////////////////////
   

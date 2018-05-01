@@ -21,6 +21,8 @@ void perens_t::compute_Zbil()
 	const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_ibil_ind(im_r_im_r_ibil);
 	const vector<size_t> im_r1_comp=subset(im_r_im_r_ibil_comp,0,2);
 	const vector<size_t> im_r2_comp=subset(im_r_im_r_ibil_comp,2,4);
+	const size_t im_r1=im_r_ind(im_r1_comp);
+	const size_t im_r2=im_r_ind(im_r2_comp);
 	const size_t ibil=im_r_im_r_ibil_comp[4];
 	const size_t ilinmom1=bilmoms[ibilmom][1];
 	const size_t ilinmom2=bilmoms[ibilmom][2];
@@ -34,18 +36,27 @@ void perens_t::compute_Zbil()
 	
 	if(pars::use_QED)
 	  {
-	    auto pr_bil_QED=
+	    if(not deltam_computed) CRASH("Needs to have computed deltam");
+	    
+	    const djack_t& deltam_cr1=deltam_cr[im_r1];
+	    const djack_t& deltam_cr2=deltam_cr[im_r2];
+	    const djack_t& deltam_tm1=deltam_tm[im_r1];
+	    const djack_t& deltam_tm2=deltam_tm[im_r2];
+	    
+	    djack_t pr_bil_QED=
 	      pr_bil_PH[im_r_im_r_ibil_ibilmom]+
-	      deltam_cr*pr_bil_CR_CT[im_r_im_r_ibil_ibilmom]+
-	      deltam_tm*pr_bil_TM_CT[im_r_im_r_ibil_ibilmom];
-	    auto sigma1_QED1=
+	      deltam_cr1*pr_bil_CR_CT1[im_r_im_r_ibil_ibilmom]+
+	      deltam_cr2*pr_bil_CR_CT2[im_r_im_r_ibil_ibilmom]+
+	      deltam_tm1*pr_bil_TM_CT1[im_r_im_r_ibil_ibilmom]+
+	      deltam_tm2*pr_bil_TM_CT2[im_r_im_r_ibil_ibilmom];
+	    djack_t sigma1_QED1=
 	      sigma1_PH[im_r1_ilinmom1]+
-	      deltam_cr*sigma1_CR_CT[im_r1_ilinmom1]+
-	      deltam_tm*sigma1_TM_CT[im_r1_ilinmom1];
-	    auto sigma1_QED2=
+	      deltam_cr1*sigma1_CR_CT[im_r1_ilinmom1]+
+	      deltam_tm1*sigma1_TM_CT[im_r1_ilinmom1];
+	    djack_t sigma1_QED2=
 	      sigma2_PH[im_r2_ilinmom2]+
-	      deltam_cr*sigma2_CR_CT[im_r2_ilinmom2]+
-	      deltam_tm*sigma2_TM_CT[im_r2_ilinmom2];
+	      deltam_cr2*sigma2_CR_CT[im_r2_ilinmom2]+
+	      deltam_tm2*sigma2_TM_CT[im_r2_ilinmom2];
 	    
 	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
 	      -pr_bil_QED/pr_bil_LO[im_r_im_r_ibil_ibilmom]
