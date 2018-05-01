@@ -17,11 +17,11 @@ void set_pr_bil_a2(gaz::type_t iaz,gf::type_t gf_g)
   //     old_iaz=iaz;
   //     old_gf_g=gf_g;
       
-      double *cS=pr_bil_a2_c[iZS];
-      double *cV=pr_bil_a2_c[iZV];
-      double *cA=pr_bil_a2_c[iZA];
-      double *cP=pr_bil_a2_c[iZP];
-      double *cT=pr_bil_a2_c[iZT];
+      double *cS=pr_bil_a2_c[iS];
+      double *cV=pr_bil_a2_c[iV];
+      double *cA=pr_bil_a2_c[iA];
+      double *cP=pr_bil_a2_c[iP];
+      double *cT=pr_bil_a2_c[iT];
       
       double lambda=gf::lambda[gf_g];
       

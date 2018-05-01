@@ -12,7 +12,7 @@
 #include <oper.hpp>
 
 #include <MOM2/pars.hpp>
-#include <MOM2/Zbil.hpp>
+#include <MOM2/pr_bil.hpp>
 
 const valarray<double> c1={0,-1.0/12,-0.331};
 const valarray<double> c0=1.0-8.0*c1;
@@ -149,8 +149,8 @@ inline double sig1_a2(gaz::type_t iaz,gf::type_t gf_g,group::type_t group,const 
   return corr_a2(group,p2_tilde,p4_tilde,cq);
 }
 
-//! coefficients of Zbil
-EXTERN_CORRECTIONS double pr_bil_a2_c[nZbil][3];
+//! coefficients of bil
+EXTERN_CORRECTIONS double pr_bil_a2_c[nbil][3];
 
 //! set all coefficients for bilinears
 void set_pr_bil_a2(gaz::type_t iaz,gf::type_t gf_g);

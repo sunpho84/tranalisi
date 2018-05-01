@@ -16,27 +16,27 @@
 void perens_t::compute_Zbil()
 {
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
-    for(size_t im_r_im_r_iZbil=0;im_r_im_r_iZbil<im_r_im_r_iZbil_ind.max();im_r_im_r_iZbil++)
+    for(size_t im_r_im_r_ibil=0;im_r_im_r_ibil<im_r_im_r_ibil_ind.max();im_r_im_r_ibil++)
       {
 	CRASH("");
 	
-	// const vector<size_t> im_r_im_r_iZbil_comp=im_r_im_r_iZbil_ind(im_r_im_r_iZbil);
-	// const vector<size_t> im_r1_comp=subset(im_r_im_r_iZbil_comp,0,2);
-	// const vector<size_t> im_r2_comp=subset(im_r_im_r_iZbil_comp,2,4);
-	// const size_t iZbil=im_r_im_r_iZbil_comp[4];
+	// const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_ibil_ind(im_r_im_r_ibil);
+	// const vector<size_t> im_r1_comp=subset(im_r_im_r_ibil_comp,0,2);
+	// const vector<size_t> im_r2_comp=subset(im_r_im_r_ibil_comp,2,4);
+	// const size_t ibil=im_r_im_r_ibil_comp[4];
 	// const size_t ilinmom1=bilmoms[ibilmom][1];
 	// const size_t ilinmom2=bilmoms[ibilmom][2];
 	// const size_t im_r1_ilinmom1=im_r_ilinmom_ind(concat(im_r1_comp,ilinmom1));
 	// const size_t im_r2_ilinmom2=im_r_ilinmom_ind(concat(im_r2_comp,ilinmom2));
 	
-	// const size_t im_r_im_r_iZbil_ibilmom=im_r_im_r_iZbil_ibilmom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({iZbil,ibilmom})));
+	// const size_t im_r_im_r_ibil_ibilmom=im_r_im_r_ibil_ibilmom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({ibil,ibilmom})));
 	
-	// Zbil[im_r_im_r_iZbil_ibilmom]=
-	//   sqrt(Zq_sig1[im_r1_ilinmom1]*Zq_sig1[im_r2_ilinmom2])/pr_bil[im_r_im_r_iZbil_ibilmom];
+	// bil[im_r_im_r_ibil_ibilmom]=
+	//   sqrt(Zq_sig1[im_r1_ilinmom1]*Zq_sig1[im_r2_ilinmom2])/pr_bil[im_r_im_r_ibil_ibilmom];
 	
 	// if(pars::use_QED)
-	//     Zbil_QED_rel[im_r_im_r_iZbil_ibilmom]=
-	//       -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]
+	//     bil_QED_rel[im_r_im_r_ibil_ibilmom]=
+	//       -pr_bil_QED[im_r_im_r_ibil_ibilmom]/pr_bil[im_r_im_r_ibil_ibilmom]
 	//       +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+
 	// 	Zq_sig1_QED[im_r2_ilinmom2]/Zq_sig1[im_r2_ilinmom2])/2.0;
       }
@@ -50,9 +50,9 @@ void perens_t::plot_Zbil(const string &suffix)
       const djvec_t &Z=*t.out;
       const string &tag=t.tag;
       
-      for(size_t iZbil=0;iZbil<nZbil;iZbil++)
+      for(size_t ibil=0;ibil<nbil;ibil++)
   	{
-	  grace_file_t out(dir_path+"/plots/"+tag+"_"+Zbil_tag[iZbil]+(suffix!=""?("_"+suffix):string(""))+".xmg");
+	  grace_file_t out(dir_path+"/plots/"+tag+"_"+bil_tag[ibil]+(suffix!=""?("_"+suffix):string(""))+".xmg");
 	  
 	  //write mass by mass, only half of the combos
   	  for(size_t im1=0;im1<nm;im1++)
@@ -64,7 +64,7 @@ void perens_t::plot_Zbil(const string &suffix)
 		  for(size_t imom=0;imom<bilmoms.size();imom++)
 		    {
 		      const double p2tilde=all_moms[bilmoms[imom][0]].p(L).tilde().norm2();
-		      out.write_ave_err(p2tilde,Z[im_r_im_r_iZbil_ibilmom_ind({im1,r,im2,r,iZbil,imom})].ave_err());
+		      out.write_ave_err(p2tilde,Z[im_r_im_r_ibil_ibilmom_ind({im1,r,im2,r,ibil,imom})].ave_err());
 		    }
 		}
 	}

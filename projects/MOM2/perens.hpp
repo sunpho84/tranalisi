@@ -7,8 +7,9 @@
 #include <MOM2/pars.hpp>
 #include <MOM2/sigma.hpp>
 #include <MOM2/pr_bil.hpp>
-#include <MOM2/Zmeslep.hpp>
+#include <MOM2/pr_meslep.hpp>
 #include <MOM2/Zbil.hpp>
+#include <MOM2/Zmeslep.hpp>
 
 struct perens_t
 {
@@ -433,10 +434,14 @@ struct perens_t
   
   //! average sigma
   void average_r_sigma(perens_t &out) const;
-  //! average bil
-  void average_r_Zbil(perens_t &out) const;
-  //! average Zmeslep
-  void average_r_Zmeslep(perens_t &out) const;
+  
+  //! average pr_bil
+  void average_r_pr_bil(perens_t &out) const;
+  
+  //! average pr_meslep
+  void average_r_pr_meslep(perens_t &out) const;
+  
+#warning addosta average_r_deltam?
   
   /////////////////////////////////////////////////////////////////
   
