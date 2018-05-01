@@ -197,34 +197,9 @@ void perens_t::mom_compute_bil()
       get_inverse_propagators(jprops_inv1,jprops1);
       get_inverse_propagators(jprops_inv2,jprops2);
       
-      CRASH("");
       proj_time.start();
       compute_proj_bil(jprops_inv1,jverts,jprops_inv2);
-      
-      // //QED
-      // djvec_t pr_bil_QED_temp;
-      // if(pars::use_QED)
-      // 	{
-      // 	  const djvec_t pr_bil_QED=compute_proj_bil(jprop_inv1,jverts.QED,jprop_inv2);
-      // 	  const djvec_t pr_bil_a=compute_proj_bil(jprop_QED_inv1,jverts.LO,jprop_inv2);
-      // 	  const djvec_t pr_bil_b=compute_proj_bil(jprop_inv1,jverts.LO,jprop_QED_inv2);
-      // 	  pr_bil_QED_temp=
-      // 	    (-pr_bil_a
-      // 	     -pr_bil_b
-      // 	     +pr_bil_QED);
-      // 	}
-      
-      // //! an index running on all packed combo, and momenta
-      // const index_t all_ibilmom_ind({{"All",im_r_im_r_ibil_ind.max()},{"bilmom",bilmoms.size()}});
-      
-      // //store
-      // vector<pair<djvec_t*,djvec_t*>> store_task={{&pr_bil,&pr_bil_temp}};
-      // if(pars::use_QED) store_task.push_back({&pr_bil_QED,&pr_bil_QED_temp});
-      // for(auto &t : store_task)
-      // 	for(size_t iall=0;iall<im_r_im_r_ibil_ind.max();iall++)
-      // 	  (*t.first)[all_ibilmom_ind({iall,ibilmom})]=(*t.second)[iall];
-      
-      // proj_time.stop();
+      proj_time.stop();
     }
 }
 
