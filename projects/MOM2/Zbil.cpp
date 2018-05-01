@@ -18,27 +18,40 @@ void perens_t::compute_Zbil()
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     for(size_t im_r_im_r_ibil=0;im_r_im_r_ibil<im_r_im_r_ibil_ind.max();im_r_im_r_ibil++)
       {
-	CRASH("");
+	const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_ibil_ind(im_r_im_r_ibil);
+	const vector<size_t> im_r1_comp=subset(im_r_im_r_ibil_comp,0,2);
+	const vector<size_t> im_r2_comp=subset(im_r_im_r_ibil_comp,2,4);
+	const size_t ibil=im_r_im_r_ibil_comp[4];
+	const size_t ilinmom1=bilmoms[ibilmom][1];
+	const size_t ilinmom2=bilmoms[ibilmom][2];
+	const size_t im_r1_ilinmom1=im_r_ilinmom_ind(concat(im_r1_comp,ilinmom1));
+	const size_t im_r2_ilinmom2=im_r_ilinmom_ind(concat(im_r2_comp,ilinmom2));
 	
-	// const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_ibil_ind(im_r_im_r_ibil);
-	// const vector<size_t> im_r1_comp=subset(im_r_im_r_ibil_comp,0,2);
-	// const vector<size_t> im_r2_comp=subset(im_r_im_r_ibil_comp,2,4);
-	// const size_t ibil=im_r_im_r_ibil_comp[4];
-	// const size_t ilinmom1=bilmoms[ibilmom][1];
-	// const size_t ilinmom2=bilmoms[ibilmom][2];
-	// const size_t im_r1_ilinmom1=im_r_ilinmom_ind(concat(im_r1_comp,ilinmom1));
-	// const size_t im_r2_ilinmom2=im_r_ilinmom_ind(concat(im_r2_comp,ilinmom2));
+	const size_t im_r_im_r_ibil_ibilmom=im_r_im_r_ibil_ibilmom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({ibil,ibilmom})));
 	
-	// const size_t im_r_im_r_ibil_ibilmom=im_r_im_r_ibil_ibilmom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({ibil,ibilmom})));
+	Zbil[im_r_im_r_ibil_ibilmom]=
+	  sqrt(sigma1_LO[im_r1_ilinmom1]*sigma1_LO[im_r2_ilinmom2])/pr_bil_LO[im_r_im_r_ibil_ibilmom];
 	
-	// bil[im_r_im_r_ibil_ibilmom]=
-	//   sqrt(Zq_sig1[im_r1_ilinmom1]*Zq_sig1[im_r2_ilinmom2])/pr_bil[im_r_im_r_ibil_ibilmom];
-	
-	// if(pars::use_QED)
-	//     bil_QED_rel[im_r_im_r_ibil_ibilmom]=
-	//       -pr_bil_QED[im_r_im_r_ibil_ibilmom]/pr_bil[im_r_im_r_ibil_ibilmom]
-	//       +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+
-	// 	Zq_sig1_QED[im_r2_ilinmom2]/Zq_sig1[im_r2_ilinmom2])/2.0;
+	if(pars::use_QED)
+	  {
+	    auto pr_bil_QED=
+	      pr_bil_PH[im_r_im_r_ibil_ibilmom]+
+	      deltam_cr*pr_bil_CR_CT[im_r_im_r_ibil_ibilmom]+
+	      deltam_tm*pr_bil_TM_CT[im_r_im_r_ibil_ibilmom];
+	    auto sigma1_QED1=
+	      sigma1_PH[im_r1_ilinmom1]+
+	      deltam_cr*sigma1_CR_CT[im_r1_ilinmom1]+
+	      deltam_tm*sigma1_TM_CT[im_r1_ilinmom1];
+	    auto sigma1_QED2=
+	      sigma2_PH[im_r2_ilinmom2]+
+	      deltam_cr*sigma2_CR_CT[im_r2_ilinmom2]+
+	      deltam_tm*sigma2_TM_CT[im_r2_ilinmom2];
+	    
+	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
+	      -pr_bil_QED/pr_bil_LO[im_r_im_r_ibil_ibilmom]
+	      +(sigma1_QED1/sigma1_LO[im_r1_ilinmom1]+
+		sigma1_QED2/sigma1_LO[im_r2_ilinmom2])/2.0;
+	  }
       }
 }
 
