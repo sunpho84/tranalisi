@@ -190,11 +190,6 @@ perens_t& perens_t::read_or_compute_ingredients()
       compute_ingredients(ingredients_path);
     }
   
-  // compute all Z
-  compute_Zq();
-  if(pars::compute_bilinears) compute_Zbil();
-  if(pars::compute_meslep) compute_Zmeslep();
-  
   return *this;
 }
 
