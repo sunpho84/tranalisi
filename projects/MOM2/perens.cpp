@@ -227,10 +227,6 @@ perens_t perens_t::average_r() const
 	out.deltam_tm[im]=(deltam_tm[im_r_ind({im,0})]+deltam_tm[im_r_ind({im,1})])/2.0;
       }
   
-  out.compute_Zq();
-  if(pars::compute_bilinears) out.compute_Zbil();
-  if(pars::compute_meslep) out.compute_Zmeslep();
-  
   return out;
 }
 
@@ -253,10 +249,6 @@ perens_t perens_t::val_chir_extrap() const
       val_chir_extrap_pr_meslep(out);
       
       val_chir_extrap_deltam(out);
-      
-      out.compute_Zq();
-      if(pars::compute_bilinears) out.compute_Zbil();
-      if(pars::compute_meslep) out.compute_Zmeslep();
     }
   else
     cout<<"Skipping Valence chiral extrapolation"<<endl;
@@ -286,9 +278,6 @@ perens_t perens_t::average_equiv_momenta() const
   average_equiv_momenta_sigma(out,equiv_linmom_combos);
   average_equiv_momenta_pr_bil(out,equiv_bilmom_combos);
   average_equiv_momenta_pr_meslep(out,equiv_meslepmom_combos);
-  
-  if(pars::compute_bilinears) out.compute_Zbil();
-  if(pars::compute_meslep) out.compute_Zmeslep();
   
   return out;
 }

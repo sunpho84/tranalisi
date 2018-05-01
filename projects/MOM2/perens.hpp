@@ -418,8 +418,23 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
+  //! store whether Z are computed
+  bool Z_computed{false};
+  
+  //! compute all Z
+  void compute_Z()
+  {
+    Z_computed=true;
+    
+    compute_Zq();
+    if(pars::compute_bilinears) compute_Zbil();
+    if(pars::compute_meslep) compute_Zmeslep();
+  }
+  
   void plot_Z(const string &suffix)
   {
+    if(Z_computed==false) CRASH("Need to have computed Z");
+    
     plot_sigma(suffix);
     plot_Zq(suffix);
     plot_Zbil(suffix);
