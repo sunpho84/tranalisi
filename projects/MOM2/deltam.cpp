@@ -95,6 +95,8 @@ void perens_t::compute_deltam_from_prop()
 
 perens_t& perens_t::get_deltam()
 {
+  deltam_computed=true;
+  
   vector<tuple<djvec_t*,string,bool>> delta_tasks{
     {&deltam_cr,"cr",pars::use_deltam_cr_ct},
     {&deltam_tm,"tm",pars::use_deltam_tm_ct}};
@@ -215,8 +217,6 @@ perens_t& perens_t::get_mPCAC()
 
 void perens_t::compute_deltam(const size_t im,const size_t rfw)
 {
-  deltam_computed=true;
-  
   //ext_reim and rpar is relative to non-inserted
   auto get=[im,this]
     (qprop::ins kbw,qprop::ins kfw,const string &ID,const size_t ext_reim,const int tpar,const size_t rfw,const int rdiff)
