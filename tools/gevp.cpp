@@ -2,8 +2,8 @@
 
 const size_t T=48;
 
-const string base="/home/francesco/QCD/LAVORI/GM2/romiti/A40.24/raw_data/jacks";
-const size_t nm=3,nr=2;
+const string base="/home/francesco/QCD/LAVORI/GM2/romiti/A40.24_light/raw_data/jacks";
+const size_t nm=1,nr=2;
 
 index_t idx({{"m1",nm},{"m2",nm},{"r",nr}});
 
@@ -20,7 +20,9 @@ djvec_t get(const string base,const char si_TV,const char so_TV,const size_t im1
 
 int main(int narg,char **arg)
 {
-  set_njacks(15);
+  cout<<"Reading from: "<<base<<endl;
+ 
+ set_njacks(15);
   
   const size_t im=0;
   djvec_t VKVK=get(base,'V','V',im,im,1);
@@ -34,7 +36,7 @@ int main(int narg,char **arg)
   TKTK.ave_err().write("/tmp/TKTK");
   
   /////////////////////////////////////////////////////////////////
-
+  
   const size_t t0=3;
   const vector<djvec_t> eig=gevp({VKVK,VKTK,VKTK,TKTK},t0);
   
