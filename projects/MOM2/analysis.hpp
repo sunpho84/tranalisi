@@ -37,7 +37,7 @@ void compute_or_load_all_ingredients();
       data(path,ASSERT_PRESENT).SINGLE_COMMAND();			\
   }
 
-// DEFINE_SINGLE_SELF_COMMAND_ALL(compute_deltam_from_prop_all,compute_deltam_from_prop)
+DEFINE_SINGLE_SELF_COMMAND_ALL(compute_deltam_from_prop_all,compute_deltam_from_prop)
 // DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_all,compute_Z)
 
 #define DEFINE_SINGLE_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND)		\

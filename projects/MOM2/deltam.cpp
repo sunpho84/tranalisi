@@ -15,76 +15,82 @@ auto sigma_ansatz(const T &p,double p2,double p4_fr_p2=0.0)
   return p[0]+p2*p[1]+p2*p2*p[2]+p4_fr_p2*p[3];
 }
 
-// void perens_t::compute_deltam_from_prop()
-// {
-//   deltam_computed=true;
+void perens_t::compute_deltam_from_prop()
+{
+  deltam_computed=true;
   
-//   const bool both=(fabs(sigma2_TM_CT[linmoms.size()/8].ave())>3.0*sigma2_CR_CT[linmoms.size()/8].err());
-//   if(not both) cout<<"Determining only Critical correction"<<endl;
+  const size_t mom_probe=linmoms.size()/8;
+  const size_t iprobe=im_r_ilinmom_isigmaproj_isigmains_ind({0,0,mom_probe,sigma::SIGMA2,sigma::CR});
+  const bool both=(fabs(sigma[iprobe].ave())>3.0*sigma[iprobe].err());
+  if(not both) cout<<"Determining only Critical correction"<<endl;
   
-//   for(size_t im=0;im<nm;im++)
-//     for(size_t r=0;r<nr;r++)
-//       {
-// 	//get index
-// 	const size_t imr=im_r_ind({im,r});
+  for(size_t im=0;im<nm;im++)
+    for(size_t r=0;r<nr;r++)
+      {
+	//get index
+	const size_t imr=im_r_ind({im,r});
 	
-// 	//allocate
-// 	vector<double> x(linmoms.size());
-// 	djvec_t deltam_tm_ct_corr(linmoms.size());
-// 	djvec_t deltam_cr_ct_corr(linmoms.size());
+	//allocate
+	vector<double> x(linmoms.size());
+	djvec_t deltam_tm_ct_corr(linmoms.size());
+	djvec_t deltam_cr_ct_corr(linmoms.size());
 	
-// 	//degree and range of fit
-// 	const size_t degree=3;
-// 	const double p2_min=0.01,p2_max=2.0;
+	//degree and range of fit
+	const size_t degree=3;
+	const double p2_min=0.01,p2_max=2.0;
 	
-// 	for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
-// 	  {
-// 	    //ascissa
-// 	    x[ilinmom]=all_moms[linmoms[ilinmom][0]].p(L).norm2();
+	for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
+	  {
+	    //ascissa
+	    x[ilinmom]=all_moms[linmoms[ilinmom][0]].p(L).norm2();
 	    
-// 	    const size_t i=im_r_ilinmom_ind({im,r,ilinmom});
+	    auto get_sigma=[&](sigma::proj proj,sigma::ins ins)
+	      {
+		return im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,ins});
+	      };
 	    
-// 	    //elements to solve the system:
-// 	    //
-// 	    // b x + c y - a = 0
-// 	    // e x + f y - d = 0
-// 	    const djack_t& a=sigma2_PH[i];
-// 	    const djack_t& b=sigma2_TM_CT[i];
-// 	    const djack_t& c=sigma2_CR_CT[i];
-// 	    const djack_t& d=sigma3_PH[i];
-// 	    const djack_t& e=sigma3_TM_CT[i];
-// 	    const djack_t& f=sigma3_CR_CT[i];
+	    //elements to solve the system:
+	    //
+	    // b x + c y - a = 0
+	    // e x + f y - d = 0
+	    using namespace sigma;
+	    const djack_t& a=get_sigma(SIGMA2,PH);
+	    const djack_t& b=get_sigma(SIGMA2,TM);
+	    const djack_t& c=get_sigma(SIGMA2,CR);
+	    const djack_t& d=get_sigma(SIGMA3,PH);
+	    const djack_t& e=get_sigma(SIGMA3,TM);
+	    const djack_t& f=get_sigma(SIGMA3,CR);
 	    
-// 	    //non singular case_of
-// 	    if(both)
-// 	      {
-// 		const djack_t den=b*f-c*e;
-// 		deltam_tm_ct_corr[ilinmom]=(-a*f+c*d)/den;
-// 		deltam_cr_ct_corr[ilinmom]=(-b*d+a*e)/den;
-// 	      }
-// 	    else
-// 	      {
-// 		deltam_tm_ct_corr[ilinmom]=0.0;
-// 		deltam_cr_ct_corr[ilinmom]=-a/c;
-// 	      }
-// 	  }
+	    //non singular case_of
+	    if(both)
+	      {
+		const djack_t den=b*f-c*e;
+		deltam_tm_ct_corr[ilinmom]=(-a*f+c*d)/den;
+		deltam_cr_ct_corr[ilinmom]=(-b*d+a*e)/den;
+	      }
+	    else
+	      {
+		deltam_tm_ct_corr[ilinmom]=0.0;
+		deltam_cr_ct_corr[ilinmom]=-a/c;
+	      }
+	  }
 	
-// 	//polynomial fit of the two deltas
-// 	const djvec_t deltam_tm_ct_pars=poly_fit(x,deltam_tm_ct_corr,degree,p2_min,p2_max,
-// 						 dir_path+"/plots/fit_deltam_tm_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
-// 	const djvec_t deltam_cr_ct_pars=poly_fit(x,deltam_cr_ct_corr,degree,p2_min,p2_max,
-// 						 dir_path+"/plots/fit_deltam_cr_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
+	//polynomial fit of the two deltas
+	const djvec_t deltam_tm_ct_pars=poly_fit(x,deltam_tm_ct_corr,degree,p2_min,p2_max,
+						 dir_path+"/plots/fit_deltam_tm_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
+	const djvec_t deltam_cr_ct_pars=poly_fit(x,deltam_cr_ct_corr,degree,p2_min,p2_max,
+						 dir_path+"/plots/fit_deltam_cr_ct_m"+to_string(im)+"_r"+to_string(r)+".xmg");
 	
-// 	//get extrapolation and overwrite in singular case
-// 	deltam_tm[imr]=deltam_tm_ct_pars[0];
-// 	deltam_cr[imr]=deltam_cr_ct_pars[0];
-// 	if(not both) deltam_tm[imr]=0.0;
+	//get extrapolation and overwrite in singular case
+	deltam_tm[imr]=deltam_tm_ct_pars[0];
+	deltam_cr[imr]=deltam_cr_ct_pars[0];
+	if(not both) deltam_tm[imr]=0.0;
 	
-// 	//output
-// 	cout<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
-// 	cout<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
-//       }
-// }
+	//output
+	cout<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
+	cout<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
+      }
+}
 
 perens_t& perens_t::get_deltam()
 {

@@ -110,7 +110,7 @@ commands:
         /* | commands average */
         /* | commands average_r */
         | commands average_equiv_momenta
-        /* | commands compute_deltam */
+        | commands compute_deltam
         /* | commands sea_chir_extrap */
         /* | commands val_chir_extrap */
         /* | commands plot_Z */
@@ -195,8 +195,8 @@ compute_or_load_ingredients: TK_COMPUTE_OR_LOAD_INGREDIENTS '(' ')' {compute_or_
 /* compute_Z: TK_COMPUTE_Z '(' ')' {compute_Z_all();} */
 /* ; */
 
-/* compute_deltam: TK_COMPUTE_DELTAM '(' ')' {compute_deltam_from_prop_all();} */
-/* ; */
+compute_deltam: TK_COMPUTE_DELTAM '(' ')' {compute_deltam_from_prop_all();}
+;
 
 /* plot_Z: TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$3);delete $3;} */
 /* ; */
