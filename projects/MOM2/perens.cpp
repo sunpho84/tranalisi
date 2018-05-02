@@ -53,13 +53,13 @@ perens_t& perens_t::read_pars(const string &name)
 
 perens_t& perens_t::allocate()
 {
-  for(auto &task : get_all_tasks())
-    task.out->resize(task.ind.max());
+  // for(auto &task : get_all_tasks())
+  //   task.out->resize(task.ind.max());
   
-  for(auto &t : {&deltam_cr,&deltam_tm})
-    t->resize(im_r_ind.max());
+  // for(auto &t : {&deltam_cr,&deltam_tm})
+  //   t->resize(im_r_ind.max());
   
-  meson_mass.resize(im_im_ind.max());
+  // meson_mass.resize(im_im_ind.max());
   
   return *this;
 }
@@ -148,9 +148,12 @@ void perens_t::prepare_list_of_confs()
   conf_ind.set_ranges({{"ijack",njacks},{"i_in_clust",clust_size}});
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   i_in_clust_ihit_ind.set_ranges({{"i_in_clust",clust_size},{"ihit",nhits_to_use}});
-  im_r_iconf_ihit_iqkind_ind=im_r_ind*index_t({{"conf",conf_list.size()},{"hit",nhits},{"kind",m_r_mom_conf_qprops_t::nprop_kind()}});
-  
-  iconf_ihit_ilkind_ind=index_t({{"conf",conf_list.size()},{"hit",nhits},{"kind",mom_conf_lprops_t::nprop_kind()}});
+  im_r_iconf_ihit_iqins_ind=im_r_ind*index_t({{"conf",conf_list.size()},{"hit",nhits},{"qins",qprop::nins}});
+  im_r_iqins_ijack_ind=im_r_ind*index_t({{"qins",qprop::nins},{"ijack",njacks}});
+  im_r_ijqins_ijack_ind=im_r_ind*index_t({{"jqins",jqprop::nins},{"ijack",njacks}});
+  im_r_ijqins_ind=im_r_ind*index_t({{"jqins",jqprop::nins}});
+  ilins_ijack_ind=index_t({{"jlins",lprop::nins},{"ijack",njacks}});
+  iconf_ihit_ilins_ind=index_t({{"conf",conf_list.size()},{"hit",nhits},{"lins",lprop::nins}});
 }
 
 perens_t& perens_t::compute_ingredients(const string& ingredients_path)
@@ -195,92 +198,94 @@ perens_t& perens_t::read_or_compute_ingredients()
 
 void perens_t::bin_read_ingredients(raw_file_t &file)
 {
-  for(auto &t : concat(get_sigma_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
-     t.out->bin_read(file);
+  CRASH("");
+  //   for(auto &t : concat(get_sigma_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
+//      t.out->bin_read(file);
 }
 
 void perens_t::bin_write_ingredients(raw_file_t &file)
 {
-  for(auto &t : concat(get_sigma_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
-    t.out->bin_write(file);
+  CRASH("");
+//   for(auto &t : concat(get_sigma_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
+//     t.out->bin_write(file);
 }
 
-perens_t perens_t::average_r() const
-{
-  perens_t out=*this;
+// perens_t perens_t::average_r() const
+// {
+//   perens_t out=*this;
   
-  out.nr=1;
-  out.linmoms=linmoms;
-  out.bilmoms=bilmoms;
+//   out.nr=1;
+//   out.linmoms=linmoms;
+//   out.bilmoms=bilmoms;
   
-  out.set_indices();
-  out.allocate();
+//   out.set_indices();
+//   out.allocate();
   
-  average_r_sigma(out);
-  average_r_pr_bil(out);
-  average_r_pr_meslep(out);
+//   average_r_sigma(out);
+//   average_r_pr_bil(out);
+//   average_r_pr_meslep(out);
   
-  if(nr>1)
-    for(size_t im=0;im<nm;im++)
-      {
-	out.deltam_cr[im]=(deltam_cr[im_r_ind({im,0})]+deltam_cr[im_r_ind({im,1})])/2.0;
-	out.deltam_tm[im]=(deltam_tm[im_r_ind({im,0})]+deltam_tm[im_r_ind({im,1})])/2.0;
-      }
+//   if(nr>1)
+//     for(size_t im=0;im<nm;im++)
+//       {
+// 	out.deltam_cr[im]=(deltam_cr[im_r_ind({im,0})]+deltam_cr[im_r_ind({im,1})])/2.0;
+// 	out.deltam_tm[im]=(deltam_tm[im_r_ind({im,0})]+deltam_tm[im_r_ind({im,1})])/2.0;
+//       }
   
-  return out;
-}
+//   return out;
+// }
 
-perens_t perens_t::val_chir_extrap() const
-{
-  perens_t out=*this;
+// perens_t perens_t::val_chir_extrap() const
+// {
+//   perens_t out=*this;
   
-  if(nm>1)
-    {
-      out.nm=1;
-      out.am={0.0};
-      out.meson_mass_sea=meson_mass_sea;
-      out.meson_mass=0.0;
+//   if(nm>1)
+//     {
+//       out.nm=1;
+//       out.am={0.0};
+//       out.meson_mass_sea=meson_mass_sea;
+//       out.meson_mass=0.0;
       
-      out.set_indices();
-      out.allocate();
+//       out.set_indices();
+//       out.allocate();
       
-      val_chir_extrap_sigma(out);
-      val_chir_extrap_pr_bil(out);
-      val_chir_extrap_pr_meslep(out);
+//       val_chir_extrap_sigma(out);
+//       val_chir_extrap_pr_bil(out);
+//       val_chir_extrap_pr_meslep(out);
       
-      val_chir_extrap_deltam(out);
-    }
-  else
-    cout<<"Skipping Valence chiral extrapolation"<<endl;
+//       val_chir_extrap_deltam(out);
+//     }
+//   else
+//     cout<<"Skipping Valence chiral extrapolation"<<endl;
   
-  return out;
-}
+//   return out;
+// }
 
-perens_t perens_t::average_equiv_momenta() const
-{
-  perens_t out=*this;
+// perens_t perens_t::average_equiv_momenta() const
+// {
+//   perens_t out=*this;
   
-  //build out lin list
-  const vector<vector<size_t>> equiv_linmom_combos=get_equiv_list(linmoms,"equiv_linmoms.txt");
-  fill_output_equivalent_momenta(out.linmoms,equiv_linmom_combos,equiv_linmom_combos,linmoms);
+//   //build out lin list
+//   const vector<vector<size_t>> equiv_linmom_combos=get_equiv_list(linmoms,"equiv_linmoms.txt");
+//   fill_output_equivalent_momenta(out.linmoms,equiv_linmom_combos,equiv_linmom_combos,linmoms);
   
-  //build out bil combo
-  const vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(bilmoms,"equiv_bilmoms.txt");
-  fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
+//   //build out bil combo
+//   const vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(bilmoms,"equiv_bilmoms.txt");
+//   fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
   
-  //build out bil combo
-  const vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms(),"equiv_meslepmoms().txt");
-  //fill_output_equivalent_momenta(out.meslepmoms(),equiv_linmom_combos,equiv_meslepmom_combos,meslepmoms());
+//   //build out bil combo
+//   const vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms(),"equiv_meslepmoms().txt");
+//   //fill_output_equivalent_momenta(out.meslepmoms(),equiv_linmom_combos,equiv_meslepmom_combos,meslepmoms());
   
-  out.set_indices();
-  out.allocate();
+//   out.set_indices();
+//   out.allocate();
   
-  average_equiv_momenta_sigma(out,equiv_linmom_combos);
-  average_equiv_momenta_pr_bil(out,equiv_bilmom_combos);
-  average_equiv_momenta_pr_meslep(out,equiv_meslepmom_combos);
+//   average_equiv_momenta_sigma(out,equiv_linmom_combos);
+//   average_equiv_momenta_pr_bil(out,equiv_bilmom_combos);
+//   average_equiv_momenta_pr_meslep(out,equiv_meslepmom_combos);
   
-  return out;
-}
+//   return out;
+// }
 
 void perens_t::print_discr()
 {

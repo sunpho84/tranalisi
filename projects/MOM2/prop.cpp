@@ -13,17 +13,65 @@
 #include <MOM2/perens.hpp>
 #include <MOM2/timings.hpp>
 
-const char m_r_mom_conf_qprops_t::tag[NPROP_WITH_QED][3]={"0","FF","F","T","S","P"};
-const char mom_conf_lprops_t::tag[NPROP_WITH_QED][3]={"0","F"};
-
-string get_qprop_tag(const size_t im,const size_t ir,const size_t ikind)
+void set_qprop_ins()
 {
-  return combine("S_M%zu_R%zu_%s",im,ir,m_r_mom_conf_qprops_t::tag[ikind]);
+  using namespace qprop;
+  
+  if(pars::use_QED)
+    {
+      ins_list={LO , FF , F , T , S , P};
+      ins_tag={"0" ,"FF","F","T","S","P"};
+    }
+  else
+    {
+      ins_list={LO};
+      ins_tag={"0"};
+    }
+  
+  nins=ins_list.size();
 }
 
-string get_lprop_tag(const size_t ikind)
+void set_lprop_ins()
 {
-  return combine("L_%s",mom_conf_lprops_t::tag[ikind]);
+  using namespace lprop;
+  
+  if(pars::use_QED)
+    {
+      ins_list={LO , F };
+      ins_tag={"0" ,"F"};
+    }
+  else
+    {
+      ins_list={LO};
+      ins_tag={"0"};
+    }
+  
+  nins=ins_list.size();
+}
+
+dcompl_t coeff_to_read(const qprop::ins ins,const size_t r)
+{
+  switch(ins)
+    {
+    case qprop::P:
+      return dcompl_t(0,tau3[r]);
+      break;
+    case qprop::S:
+      return -1.0;
+      break;
+    default:
+      return 1.0;
+    }
+}
+
+string get_qprop_filename(const size_t im,const size_t ir,const qprop::ins ins)
+{
+  return combine("S_M%zu_R%zu_%s",im,ir,qprop::ins_tag[ins].c_str());
+}
+
+string get_lprop_filename(const lprop::ins ins)
+{
+  return combine("L_%s",lprop::ins_tag[ins].c_str());
 }
 
 vector<raw_file_t> perens_t::setup_read_all_qprops_mom(const vector<size_t> &conf_list) const
@@ -33,20 +81,20 @@ vector<raw_file_t> perens_t::setup_read_all_qprops_mom(const vector<size_t> &con
   string suff_hit="";
   if(nhits>1) suff_hit="_hit_%zu";
   
-  vector<raw_file_t> files(im_r_iconf_ihit_iqkind_ind.max());
+  vector<raw_file_t> files(im_r_iconf_ihit_iqins_ind.max());
   
 #pragma omp parallel for
-  for(size_t i=0;i<im_r_iconf_ihit_iqkind_ind.max();i++)
+  for(size_t i=0;i<im_r_iconf_ihit_iqins_ind.max();i++)
     {
-      const vector<size_t> comps=im_r_iconf_ihit_iqkind_ind(i);
+      const vector<size_t> comps=im_r_iconf_ihit_iqins_ind(i);
       const size_t im=comps[0];
       const size_t r=comps[1];
       const size_t iconf=comps[2];
       const size_t ihit=comps[3];
-      const size_t ikind=comps[4];
+      const qprop::ins ins=qprop::ins_list[comps[4]];
       const string path_base=combine("%s/%s/%04zu/fft_",dir_path.c_str(),prop_hadr_path.c_str(),conf_list[iconf]);
       const string path_suff=combine(suff_hit.c_str(),ihit);
-      const string path=path_base+get_qprop_tag(im,r,ikind)+path_suff;
+      const string path=path_base+get_qprop_filename(im,r,ins)+path_suff;
       
       files[i].open(path,"r");
     }
@@ -56,22 +104,22 @@ vector<raw_file_t> perens_t::setup_read_all_qprops_mom(const vector<size_t> &con
 
 vector<raw_file_t> perens_t::setup_read_all_lprops_mom(const vector<size_t> &conf_list) const
 {
-  vector<raw_file_t> files(iconf_ihit_ilkind_ind.max());
+  vector<raw_file_t> files(iconf_ihit_ilins_ind.max());
   
   string suff_hit="";
   if(nhits>1) suff_hit="_hit_%zu";
   
 #pragma omp parallel for
-  for(size_t i=0;i<iconf_ihit_ilkind_ind.max();i++)
+  for(size_t i=0;i<iconf_ihit_ilins_ind.max();i++)
     {
-      const vector<size_t> comps=iconf_ihit_ilkind_ind(i);
+      const vector<size_t> comps=iconf_ihit_ilins_ind(i);
       const size_t iconf=comps[0];
       const size_t ihit=comps[1];
-      const size_t ikind=comps[2];
+      const lprop::ins ins=lprop::ins_list[comps[2]];
       const string path_base=combine("%s/%s/%04zu/fft_",dir_path.c_str(),prop_lep_path.c_str(),conf_list[iconf]);
       const string path_suff=combine(suff_hit.c_str(),ihit);
       
-      files[i].open(path_base+get_lprop_tag(ikind)+path_suff,"r");
+      files[i].open(path_base+get_lprop_filename(ins)+path_suff,"r");
     }
   
   return files;
@@ -91,7 +139,7 @@ T get_rotator(const vector<T> &gamma,const int r)
     }
 }
 
-void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const int r_si,const int r_so)
+qprop_t read_qprop(raw_file_t &file,const dcompl_t &fact,const size_t imom,const int r_si,const int r_so)
 {
   //cout<<"Seeking file "<<file.get_path()<<" to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
   file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
@@ -111,13 +159,14 @@ void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
     {
       auto rot_si=get_rotator(quaGamma,r_si);
       auto rot_so=get_rotator(quaGamma,r_so);
-      *prop=rot_si*temp*rot_so;
+      
+      return rot_si*temp*rot_so;
     }
   else
-    *prop=temp;
+    return temp;
 }
 
-void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t imom,const int r_si,const int r_so)
+lprop_t read_lprop(raw_file_t &file,const dcompl_t &fact,const size_t imom,const int r_si,const int r_so)
 {
   //cout<<"Seeking file "<<file.get_path()<<" to mom "<<imom<<" position "<<imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL<<" from "<<file.get_pos()<<endl;
   file.set_pos(imom*sizeof(dcompl_t)*NSPIN*NSPIN*NCOL*NCOL);
@@ -137,155 +186,162 @@ void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
     {
       auto rot_si=get_rotator(lepGamma,r_si);
       auto rot_so=get_rotator(lepGamma,r_so);
-      *prop=rot_si*temp*rot_so;
+      
+      return rot_si*temp*rot_so;
     }
   else
-    *prop=temp;
+    return temp;
 }
 
-void incorporate_charge(vector<m_r_mom_conf_qprops_t> &props,const double ch)
-{
-  const double ch2=ch*ch;
+// void incorporate_charge(vector<m_r_mom_conf_qprops_t> &props,const double ch)
+// {
+//   const double ch2=ch*ch;
   
-  for(auto &p : props)
-    {
-      p.F*=ch;
-      p.FF*=ch2;
-      p.T*=ch2;
-      p.P*=ch2;
-      p.S*=ch2;
-    }
-}
+//   for(auto &p : props)
+//     {
+//       p.F*=ch;
+//       p.FF*=ch2;
+//       p.T*=ch2;
+//       p.P*=ch2;
+//       p.S*=ch2;
+//     }
+// }
 
-void incorporate_charge(vector<mom_conf_lprops_t> &props,const double ch)
-{
-  for(auto &p : props)
-    p.F*=ch;
-}
+// void incorporate_charge(vector<mom_conf_lprops_t> &props,const double ch)
+// {
+//   for(auto &p : props)
+//     p.F*=ch;
+// }
 
-vector<m_r_mom_conf_qprops_t> perens_t::read_all_qprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom)
+vector<qprop_t> perens_t::read_all_qprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom)
 {
   //! output
-  vector<m_r_mom_conf_qprops_t> props(im_r_ijack_ind.max());
+  vector<qprop_t> props(im_r_iqins_ijack_ind.max());
   
   //decompose the outer index
   const vector<size_t> i_in_clust_ihit_comp=i_in_clust_ihit_ind(i_in_clust_ihit);
   const size_t i_in_clust=i_in_clust_ihit_comp[0],ihit=i_in_clust_ihit_comp[1];
   
-  //! index of all that must be read
-  const index_t im_r_ijack_ikind_ind=im_r_ijack_ind*index_t({{"ikind",m_r_mom_conf_qprops_t::nprop_kind()}});
 #pragma omp parallel for
-  for(size_t im_r_ijack_ikind=0;im_r_ijack_ikind<im_r_ijack_ikind_ind.max();im_r_ijack_ikind++)
+  for(size_t im_r_iqins_ijack=0;im_r_iqins_ijack<im_r_iqins_ijack_ind.max();im_r_iqins_ijack++)
     {
-      const vector<size_t> im_r_ijack_ikind_comps=im_r_ijack_ikind_ind(im_r_ijack_ikind);
-      const size_t im=im_r_ijack_ikind_comps[0];
-      const size_t r=im_r_ijack_ikind_comps[1];
-      const size_t ijack=im_r_ijack_ikind_comps[2];
-      const size_t ikind=im_r_ijack_ikind_comps[3];
+      const vector<size_t> comps=im_r_iqins_ijack_ind(im_r_iqins_ijack);
+      const size_t im=comps[0];
+      const size_t r=comps[1];
+      const size_t iqins=comps[2];
+      const size_t ijack=comps[3];
       
       //! index of the conf built from ijack and i_in_clust
       const size_t iconf=i_in_clust+clust_size*ijack;
       
       //! index of the file to use
-      //cout<<im<<" "<<r<<" "<<iconf<<" "<<ihit<<" "<<ikind<<endl;
-      const size_t im_r_iconf_ihit_ikind=im_r_iconf_ihit_iqkind_ind({im,r,iconf,ihit,ikind});
+      const size_t im_r_iconf_ihit_iqins=im_r_iconf_ihit_iqins_ind({im,r,iconf,ihit,iqins});
       
-      //! index of the output propagator
-      const size_t im_r_ijack=im_r_ijack_ind({im,r,ijack});
-      
-      read_qprop(props[im_r_ijack].kind[ikind],files[im_r_iconf_ihit_ikind],m_r_mom_conf_qprops_t::coeff_to_read(ikind,r),imom,r,r);
+      props[im_r_iqins_ijack]=read_qprop(files[im_r_iconf_ihit_iqins],coeff_to_read(qprop::ins_list[iqins],r),imom,r,r);
     }
   
   return props;
 }
 
-vector<mom_conf_lprops_t> perens_t::read_all_lprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom)
+vector<lprop_t> perens_t::read_all_lprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom)
 {
   //! output
-  vector<mom_conf_lprops_t> props(njacks);
+  vector<lprop_t> props(ilins_ijack_ind.max());
   
   //decompose the outer index
   const vector<size_t> i_in_clust_ihit_comp=i_in_clust_ihit_ind(i_in_clust_ihit);
   const size_t i_in_clust=i_in_clust_ihit_comp[0],ihit=i_in_clust_ihit_comp[1];
   
-  //! index of all that must be read
-  const index_t ijack_ikind_ind=index_t({{"ijack",njacks},{"ikind",mom_conf_lprops_t::nprop_kind()}});
 #pragma omp parallel for
-  for(size_t ijack_ikind=0;ijack_ikind<ijack_ikind_ind.max();ijack_ikind++)
+  for(size_t ilins_ijack=0;ilins_ijack<ilins_ijack_ind.max();ilins_ijack++)
     {
-      const vector<size_t> ijack_ikind_comps=ijack_ikind_ind(ijack_ikind);
-      const size_t ijack=ijack_ikind_comps[0];
-      const size_t ikind=ijack_ikind_comps[1];
+      const vector<size_t> ilins_ijack_comps=ilins_ijack_ind(ilins_ijack);
+      const size_t ilins=ilins_ijack_comps[0];
+      const size_t ijack=ilins_ijack_comps[1];
       
       //! index of the conf built from ijack and i_in_clust
       const size_t iconf=i_in_clust+clust_size*ijack;
       
       //! index of the file to use
-      const size_t iconf_ihit_ikind=iconf_ihit_ilkind_ind({iconf,ihit,ikind});
+      const size_t iconf_ihit_ilins=iconf_ihit_ilins_ind({iconf,ihit,ilins});
       
-      read_lprop(props[ijack].kind[ikind],files[iconf_ihit_ikind],1.0,imom,0,0); //r of lprop is always 0
+      props[ilins_ijack]=read_lprop(files[iconf_ihit_ilins],1.0,imom,0,0); //r of lprop is always 0
     }
   
   return props;
 }
 
-void perens_t::build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops,const vector<m_r_mom_conf_qprops_t> &props) const
+void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const vector<qprop_t>& props,const size_t imom) const
 {
-#pragma omp parallel for
-  for(size_t i_im_r_ijack=0;i_im_r_ijack<im_r_ijack_ind.max();i_im_r_ijack++)
-    {
-      vector<size_t> im_r_ijack=im_r_ijack_ind(i_im_r_ijack);
-      size_t im=im_r_ijack[0],r=im_r_ijack[1],ijack=im_r_ijack[2];
-      size_t im_r=im_r_ind({im,r});
-      //cout<<"Building jack prop im="<<im<<", r="<<r<<", ijack="<<ijack<<endl;
-      
-      jm_r_mom_qprops_t &j=jprops[im_r];
-      const m_r_mom_conf_qprops_t &p=props[i_im_r_ijack];
-      
-      j.LO[ijack]+=p.LO;
-      if(pars::use_QED)
-	for(auto &jp_p : vector<tuple<jqprop_t*,const qprop_t*>>({
-	      {&j.PH,&p.FF},
-	      {&j.PH,&p.T},
-	      {&j.CR_CT,&p.P},
-	      {&j.TM_CT,&p.S}}))
-	  (*get<0>(jp_p))[ijack]+=*get<1>(jp_p);
-    }
-}
-
-void perens_t::get_inverse_propagators(vector<jm_r_mom_qprops_t> &jprops_inv,
-				       const vector<jm_r_mom_qprops_t> &jprops) const
-{
-  jprops_inv.resize(im_r_ind.max());
+  //! list of all combination of transformations to be applied
+  vector<tuple<jqprop::ins,qprop::ins,int>> map;
   
-#pragma omp parallel for reduction(+:invert_time)
-  for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
+#define ADD_COMBO(JQ,Q,SIGN) map.push_back({jqprop::JQ,qprop::Q,SIGN})
+  ADD_COMBO(LO,LO,+1);
+  if(pars::use_QED)
     {
-      //decript indices
-      const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
+      ADD_COMBO(PH,FF,+1);
+      ADD_COMBO(PH,T,+1);
+      ADD_COMBO(CR_CT,P,+1);
+      ADD_COMBO(TM_CT,S,+1);
+    }
+#undef ADD_COMBO
+  
+#pragma omp parallel for
+  for(size_t im_r_ijack=0;im_r_ijack<im_r_ijack_ind.max();im_r_ijack++)
+    {
+      const vector<size_t> im_r_ijack_comps=im_r_ijack_ind(im_r_ijack);
       const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
-      const size_t im_r=im_r_ind({im,r});
       
-      //compute inverse
-      invert_time.start();
-      qprop_t prop_inv=jprops_inv[im_r].LO[ijack]=jprops[im_r].LO[ijack].inverse();
-      invert_time.stop();
-      
-      //do the same with QED
-      if(pars::use_QED)
+      for(auto t : map)
 	{
-	  invert_time.start();
-	  jprops_inv[im_r].CR_CT[ijack]=-prop_inv*jprops[im_r].CR_CT[ijack]*prop_inv;
-	  jprops_inv[im_r].TM_CT[ijack]=-prop_inv*jprops[im_r].TM_CT[ijack]*prop_inv;
-	  jprops_inv[im_r].PH[ijack]=-prop_inv*jprops[im_r].PH[ijack]*prop_inv;
-	  invert_time.stop();
+	  jqprop::ins jins=get<jqprop::ins>(t);
+	  qprop::ins ins=get<qprop::ins>(t);
+	  int sign=get<int>(t);
+	  
+	  const size_t im_r_ijqins=im_r_ijqins_ind({im,r,jins});
+	  const size_t im_r_iqins_ijack=im_r_iqins_ijack_ind({im,r,ins,ijack});
+	  qprop_t &j=jprops[im_r_ijqins][ijack];
+	  const qprop_t &p=props[im_r_iqins_ijack];
+	  
+	  j+=sign*p;
 	}
     }
 }
 
-void perens_t::clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops) const
-{
-#pragma omp parallel for
-  for(size_t iprop=0;iprop<jprops.size();iprop++)
-    jprops[iprop].clusterize_all_mr_props(pars::use_QED,clust_size);
-}
+// void perens_t::get_inverse_propagators(vector<jqprop_t> &jprops_inv,
+// 				       const vector<jqprop_t> &jprops) const
+// {
+//   jprops_inv.resize(im_r_ind.max());
+  
+// #pragma omp parallel for reduction(+:invert_time)
+//   for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
+//     {
+//       //decript indices
+//       const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
+//       const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
+//       const size_t im_r=im_r_ind({im,r});
+      
+//       //compute inverse
+//       invert_time.start();
+//       qprop_t prop_inv=jprops_inv[im_r].LO[ijack]=jprops[im_r].LO[ijack].inverse();
+//       invert_time.stop();
+      
+//       //do the same with QED
+//       if(pars::use_QED)
+// 	{
+// 	  invert_time.start();
+// 	  jprops_inv[im_r].CR_CT[ijack]=-prop_inv*jprops[im_r].CR_CT[ijack]*prop_inv;
+// 	  jprops_inv[im_r].TM_CT[ijack]=-prop_inv*jprops[im_r].TM_CT[ijack]*prop_inv;
+// 	  jprops_inv[im_r].PH[ijack]=-prop_inv*jprops[im_r].PH[ijack]*prop_inv;
+// 	  invert_time.stop();
+// 	}
+//     }
+// }
+
+// void perens_t::clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops) const
+// {
+// #pragma omp parallel for
+//   for(size_t iprop=0;iprop<jprops.size();iprop++)
+//     jprops[iprop].clusterize_all_mr_props(pars::use_QED,clust_size);
+// }

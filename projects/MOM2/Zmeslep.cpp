@@ -15,23 +15,23 @@
 
 using namespace meslep;
 
-vector<perens_t::task_t> perens_t::get_Zmeslep_tasks(const vector<const perens_t*> &ens)
-{
-  vector<const djvec_t*> in_Zmeslep,in_Zmeslep_QED_rel;
-  for(auto &e : ens)
-    {
-      in_Zmeslep.push_back(&e->Zmeslep);
-      if(pars::use_QED) in_Zmeslep_QED_rel.push_back(&e->Zmeslep_QED_rel);
-    }
-  vector<task_t> Zmeslep_tasks={{&Zmeslep,in_Zmeslep,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep",QCD_task}};
-  if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED_rel,in_Zmeslep_QED_rel,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep_QED_rel",QED_task});
+// vector<perens_t::task_t> perens_t::get_Zmeslep_tasks(const vector<const perens_t*> &ens)
+// {
+//   vector<const djvec_t*> in_Zmeslep,in_Zmeslep_QED_rel;
+//   for(auto &e : ens)
+//     {
+//       in_Zmeslep.push_back(&e->Zmeslep);
+//       if(pars::use_QED) in_Zmeslep_QED_rel.push_back(&e->Zmeslep_QED_rel);
+//     }
+//   vector<task_t> Zmeslep_tasks={{&Zmeslep,in_Zmeslep,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep",QCD_task}};
+//   if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED_rel,in_Zmeslep_QED_rel,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep_QED_rel",QED_task});
   
-  return Zmeslep_tasks;
-}
+//   return Zmeslep_tasks;
+// }
 
-void perens_t::compute_Zmeslep()
-{
-  CRASH("");
+// void perens_t::compute_Zmeslep()
+// {
+//   CRASH("");
   
 //   for(size_t im_in=0;im_in<nm;im_in++)
 //     for(size_t r_in=0;r_in<nr;r_in++)
@@ -84,10 +84,10 @@ void perens_t::compute_Zmeslep()
 // 		      }
 // 		}
 // 	    }
-}
+// }
 
-void perens_t::plot_Zmeslep(const string &suffix)
-{
+// void perens_t::plot_Zmeslep(const string &suffix)
+// {
 //   for(const auto &t : this->get_Zmeslep_tasks())
 //       {
 // 	//decript tuple
@@ -115,4 +115,4 @@ void perens_t::plot_Zmeslep(const string &suffix)
 // 		    }
 // 	    }
 //       }
-}
+// }

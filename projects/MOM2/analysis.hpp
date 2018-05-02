@@ -11,6 +11,7 @@
 #include <MOM2/perens.hpp>
 
 EXTERN_ANALYSIS map<string,perens_t> _data;
+
 #define ASSERT_PRESENT true
 #define PRESENCE_NOT_NEEDED false
 
@@ -22,6 +23,8 @@ void data_erase(const string &key);
 
 inline void compute_or_load_all_ingredients()
 {
+  freeze_pars();
+  
   cout<<"Going to rotate propagators: "<<(pars::twisted_run and pars::phys_basis)<<endl;
   
   for(auto &name : pars::ens)
@@ -36,12 +39,12 @@ inline void compute_or_load_all_ingredients()
       .get_meson_mass();
 }
 
-inline void plot_all_Z(const string &suffix)
-{
-  for(auto &path : pars::ens)
-    data(path,ASSERT_PRESENT)
-      .plot_Z(suffix);
-}
+// inline void plot_all_Z(const string &suffix)
+// {
+//   for(auto &path : pars::ens)
+//     data(path,ASSERT_PRESENT)
+//       .plot_Z(suffix);
+// }
 
 #define DEFINE_SINGLE_SELF_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND)	\
   inline void ALL_COMMAND()						\
@@ -50,8 +53,8 @@ inline void plot_all_Z(const string &suffix)
       data(path,ASSERT_PRESENT).SINGLE_COMMAND();			\
   }
 
-DEFINE_SINGLE_SELF_COMMAND_ALL(compute_deltam_from_prop_all,compute_deltam_from_prop)
-DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_all,compute_Z)
+// DEFINE_SINGLE_SELF_COMMAND_ALL(compute_deltam_from_prop_all,compute_deltam_from_prop)
+// DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_all,compute_Z)
 
 #define DEFINE_SINGLE_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND)		\
   inline void ALL_COMMAND()						\
@@ -59,31 +62,31 @@ DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_all,compute_Z)
     for(auto &path : pars::ens)						\
       {									\
 	const string name_out=path;					\
-	string name_in=path;						\
-	data(name_out,PRESENCE_NOT_NEEDED)=				\
-	  data(name_in,ASSERT_PRESENT).SINGLE_COMMAND();		\
+ 	string name_in=path;						\
+ 	data(name_out,PRESENCE_NOT_NEEDED)=				\
+ 	  data(name_in,ASSERT_PRESENT).SINGLE_COMMAND();		\
       }									\
   }
 
-DEFINE_SINGLE_COMMAND_ALL(average_all_r,average_r)
-DEFINE_SINGLE_COMMAND_ALL(average_all_equiv_momenta,average_equiv_momenta)
-DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap)
+// DEFINE_SINGLE_COMMAND_ALL(average_all_r,average_r)
+// DEFINE_SINGLE_COMMAND_ALL(average_all_equiv_momenta,average_equiv_momenta)
+// DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap)
 
-/////////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////
 
-//! average in1 and in2 to form out, removing the in
-void average(const string out,const string in1,const string in2);
+// //! average in1 and in2 to form out, removing the in
+// void average(const string out,const string in1,const string in2);
 
-//! in1/in2-1 to form out, removing the in
-void ratio_minus_one(const string out,const string in1,const string in2);
+// //! in1/in2-1 to form out, removing the in
+// void ratio_minus_one(const string out,const string in1,const string in2);
 
-//! print all ensembles available
-void list_ensembles();
+// //! print all ensembles available
+// void list_ensembles();
 
-//! extrapolate w.r.t sea mass
-void sea_chir_extrap(const string out,const vector<string> &ens_list);
+// //! extrapolate w.r.t sea mass
+// void sea_chir_extrap(const string out,const vector<string> &ens_list);
 
-//! print momenta with discretization
-void print_discr();
+// //! print momenta with discretization
+// void print_discr();
 
 #endif

@@ -49,6 +49,8 @@ namespace reno_scheme
 
 namespace pars
 {
+  //! allow changing a few pars
+  EXTERN_PARS bool can_change_pars INIT_PARS_TO({true});
   //! gauge action
   EXTERN_PARS gaz::type_t act INIT_PARS_TO({gaz::PLAQ});
   //! extrapolation method
@@ -76,7 +78,16 @@ namespace pars
   
   //! list of ensembles
   EXTERN_PARS vector<string> ens;
+  
+  inline void set_use_QED(bool use)
+  {
+    if(not can_change_pars) CRASH("Cannot change use_QED");
+    use_QED=use;
+  }
 }
+
+//! set all parameters once forever
+void freeze_pars();
 
 #undef INIT_PARS_TO
 #undef EXTERN_PARS

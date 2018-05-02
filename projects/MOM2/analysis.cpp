@@ -21,196 +21,196 @@ void assert_compatible(const string in1,const string in2)
   ASSERT_COMPATIBLE_MEMBER(bilmoms);
 }
 
-void average(const string out,const string in1,const string in2)
-{
-  assert_compatible(in1,in2);
+// void average(const string out,const string in1,const string in2)
+// {
+//   assert_compatible(in1,in2);
   
-  cout<<"Averaging "<<in1<<" and "<<in2<<" into "<<out<<endl;
+//   cout<<"Averaging "<<in1<<" and "<<in2<<" into "<<out<<endl;
   
-  pars::ens.push_back(out);
-  data(out,PRESENCE_NOT_NEEDED)=data(in1,ASSERT_PRESENT);
-  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
+//   pars::ens.push_back(out);
+//   data(out,PRESENCE_NOT_NEEDED)=data(in1,ASSERT_PRESENT);
+//   data(out,PRESENCE_NOT_NEEDED).dir_path=out;
   
-  for(auto &p : data(out,PRESENCE_NOT_NEEDED).get_all_tasks({&data(in2,ASSERT_PRESENT)}))
-    {
-      djvec_t &out=*p.out;
-      const djvec_t &in=*p.in.front();
+//   for(auto &p : data(out,PRESENCE_NOT_NEEDED).get_all_tasks({&data(in2,ASSERT_PRESENT)}))
+//     {
+//       djvec_t &out=*p.out;
+//       const djvec_t &in=*p.in.front();
       
-      out+=in;
-      out/=2.0;
-    }
+//       out+=in;
+//       out/=2.0;
+//     }
   
-  auto &dout=data(out,PRESENCE_NOT_NEEDED);
-  const auto &din1=data(in1,PRESENCE_NOT_NEEDED);
-  const auto &din2=data(in2,PRESENCE_NOT_NEEDED);
+//   auto &dout=data(out,PRESENCE_NOT_NEEDED);
+//   const auto &din1=data(in1,PRESENCE_NOT_NEEDED);
+//   const auto &din2=data(in2,PRESENCE_NOT_NEEDED);
   
-  dout.deltam_cr=(din1.deltam_cr+din2.deltam_cr)/2.0;
-  dout.deltam_tm=(din1.deltam_tm+din2.deltam_tm)/2.0;
-  dout.meson_mass=(din1.meson_mass+din2.meson_mass)/2.0;
-  dout.meson_mass_sea=(din1.meson_mass_sea+din2.meson_mass_sea)/2.0;
-  for(size_t im=0;im<dout.nm;im++)
-  for(size_t r=0;r<dout.nr;r++)
-    {
-      size_t imr=dout.im_r_ind({im,r});
-      cout<<"deltam_cr[m="<<im<<",r="<<r<<"]: "<<
-	smart_print(dout.deltam_cr[imr].ave_err())<<" = [ "<<
-	smart_print(din1.deltam_cr[imr].ave_err())<<" + "<<
-	smart_print(din2.deltam_cr[imr].ave_err())<<" )/2.0"<<endl;
-      cout<<"deltam_tm[m="<<im<<",r="<<r<<"]: "<<
-	smart_print(dout.deltam_tm[imr].ave_err())<<" = [ "<<
-	smart_print(din1.deltam_tm[imr].ave_err())<<" + "<<
-	smart_print(din2.deltam_tm[imr].ave_err())<<" ]/2.0"<<endl;
-    }
+//   dout.deltam_cr=(din1.deltam_cr+din2.deltam_cr)/2.0;
+//   dout.deltam_tm=(din1.deltam_tm+din2.deltam_tm)/2.0;
+//   dout.meson_mass=(din1.meson_mass+din2.meson_mass)/2.0;
+//   dout.meson_mass_sea=(din1.meson_mass_sea+din2.meson_mass_sea)/2.0;
+//   for(size_t im=0;im<dout.nm;im++)
+//   for(size_t r=0;r<dout.nr;r++)
+//     {
+//       size_t imr=dout.im_r_ind({im,r});
+//       cout<<"deltam_cr[m="<<im<<",r="<<r<<"]: "<<
+// 	smart_print(dout.deltam_cr[imr].ave_err())<<" = [ "<<
+// 	smart_print(din1.deltam_cr[imr].ave_err())<<" + "<<
+// 	smart_print(din2.deltam_cr[imr].ave_err())<<" )/2.0"<<endl;
+//       cout<<"deltam_tm[m="<<im<<",r="<<r<<"]: "<<
+// 	smart_print(dout.deltam_tm[imr].ave_err())<<" = [ "<<
+// 	smart_print(din1.deltam_tm[imr].ave_err())<<" + "<<
+// 	smart_print(din2.deltam_tm[imr].ave_err())<<" ]/2.0"<<endl;
+//     }
   
-  for(size_t im1=0;im1<dout.nm;im1++)
-    for(size_t im2=0;im2<dout.nm;im2++)
-      {
-	size_t i=dout.im_im_ind({im1,im2});
-	cout<<"meson_mass[m1="<<im1<<",m2="<<im2<<"]: "<<
-	  smart_print(dout.meson_mass[i].ave_err())<<" = ["<<
-	  smart_print(din1.meson_mass[i].ave_err())<<" + "<<
-	  smart_print(din2.meson_mass[i].ave_err())<<"] /2.0"<<endl;
-      }
-  cout<<"meson_mass_sea: "<<
-    dout.meson_mass_sea.ave_err()<<" = "<<din1.meson_mass_sea.ave_err()<<" + "<<din2.meson_mass_sea.ave_err()<<endl;
+//   for(size_t im1=0;im1<dout.nm;im1++)
+//     for(size_t im2=0;im2<dout.nm;im2++)
+//       {
+// 	size_t i=dout.im_im_ind({im1,im2});
+// 	cout<<"meson_mass[m1="<<im1<<",m2="<<im2<<"]: "<<
+// 	  smart_print(dout.meson_mass[i].ave_err())<<" = ["<<
+// 	  smart_print(din1.meson_mass[i].ave_err())<<" + "<<
+// 	  smart_print(din2.meson_mass[i].ave_err())<<"] /2.0"<<endl;
+//       }
+//   cout<<"meson_mass_sea: "<<
+//     dout.meson_mass_sea.ave_err()<<" = "<<din1.meson_mass_sea.ave_err()<<" + "<<din2.meson_mass_sea.ave_err()<<endl;
   
-  //remove from the list
-  for(auto in : {in1,in2})
-    {
-      data_erase(in);
-      pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
-    }
-}
+//   //remove from the list
+//   for(auto in : {in1,in2})
+//     {
+//       data_erase(in);
+//       pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
+//     }
+// }
 
-void ratio_minus_one(const string out,const string in1,const string in2)
-{
-  assert_compatible(in1,in2);
+// void ratio_minus_one(const string out,const string in1,const string in2)
+// {
+//   assert_compatible(in1,in2);
   
-  cout<<"Taking ratio minus one of "<<in1<<" and "<<in2<<" into "<<out<<endl;
+//   cout<<"Taking ratio minus one of "<<in1<<" and "<<in2<<" into "<<out<<endl;
   
-  pars::ens.push_back(out);
-  data(out,PRESENCE_NOT_NEEDED)=data(in1,ASSERT_PRESENT);
-  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
+//   pars::ens.push_back(out);
+//   data(out,PRESENCE_NOT_NEEDED)=data(in1,ASSERT_PRESENT);
+//   data(out,PRESENCE_NOT_NEEDED).dir_path=out;
   
-  for(auto &p : data(out,PRESENCE_NOT_NEEDED).get_all_tasks({&data(in2,ASSERT_PRESENT)}))
-    {
-      djvec_t &out=*p.out;
-      const djvec_t &in=*p.in.front();
+//   for(auto &p : data(out,PRESENCE_NOT_NEEDED).get_all_tasks({&data(in2,ASSERT_PRESENT)}))
+//     {
+//       djvec_t &out=*p.out;
+//       const djvec_t &in=*p.in.front();
       
-      out/=in;
-      out-=1.0;
-    }
+//       out/=in;
+//       out-=1.0;
+//     }
   
-  auto &dout=data(out,PRESENCE_NOT_NEEDED);
-  const auto &din1=data(in1,ASSERT_PRESENT);
-  const auto &din2=data(in2,ASSERT_PRESENT);
+//   auto &dout=data(out,PRESENCE_NOT_NEEDED);
+//   const auto &din1=data(in1,ASSERT_PRESENT);
+//   const auto &din2=data(in2,ASSERT_PRESENT);
   
-  dout.deltam_cr=din1.deltam_cr/din2.deltam_cr-1.0;
-  dout.deltam_tm=din1.deltam_tm/din2.deltam_tm-1.0;
-  dout.meson_mass=din1.meson_mass/din2.meson_mass-1.0;
-  dout.meson_mass_sea=din1.meson_mass_sea/din2.meson_mass_sea-1.0;
-  for(size_t im=0;im<dout.nm;im++)
-  for(size_t r=0;r<dout.nr;r++)
-    {
-      size_t imr=dout.im_r_ind({im,r});
-      cout<<"deltam_cr[m="<<im<<",r="<<r<<"]: "<<
-	smart_print(dout.deltam_cr[imr].ave_err())<<" = "<<
-	smart_print(din1.deltam_cr[imr].ave_err())<<" / "<<
-	smart_print(din2.deltam_cr[imr].ave_err())<<" - 1.0"<<endl;
-      cout<<"deltam_tm[m="<<im<<",r="<<r<<"]: "<<
-	smart_print(dout.deltam_tm[imr].ave_err())<<" = "<<
-	smart_print(din1.deltam_tm[imr].ave_err())<<" / "<<
-	smart_print(din2.deltam_tm[imr].ave_err())<<" - 1.0"<<endl;
-    }
+//   dout.deltam_cr=din1.deltam_cr/din2.deltam_cr-1.0;
+//   dout.deltam_tm=din1.deltam_tm/din2.deltam_tm-1.0;
+//   dout.meson_mass=din1.meson_mass/din2.meson_mass-1.0;
+//   dout.meson_mass_sea=din1.meson_mass_sea/din2.meson_mass_sea-1.0;
+//   for(size_t im=0;im<dout.nm;im++)
+//   for(size_t r=0;r<dout.nr;r++)
+//     {
+//       size_t imr=dout.im_r_ind({im,r});
+//       cout<<"deltam_cr[m="<<im<<",r="<<r<<"]: "<<
+// 	smart_print(dout.deltam_cr[imr].ave_err())<<" = "<<
+// 	smart_print(din1.deltam_cr[imr].ave_err())<<" / "<<
+// 	smart_print(din2.deltam_cr[imr].ave_err())<<" - 1.0"<<endl;
+//       cout<<"deltam_tm[m="<<im<<",r="<<r<<"]: "<<
+// 	smart_print(dout.deltam_tm[imr].ave_err())<<" = "<<
+// 	smart_print(din1.deltam_tm[imr].ave_err())<<" / "<<
+// 	smart_print(din2.deltam_tm[imr].ave_err())<<" - 1.0"<<endl;
+//     }
   
-  for(size_t im1=0;im1<dout.nm;im1++)
-    for(size_t im2=0;im2<dout.nm;im2++)
-      {
-	size_t i=dout.im_im_ind({im1,im2});
-	cout<<"meson_mass[m1="<<im1<<",m2="<<im2<<"]: "<<
-	  smart_print(dout.meson_mass[i].ave_err())<<" = "<<
-	  smart_print(din1.meson_mass[i].ave_err())<<" / "<<
-	  smart_print(din2.meson_mass[i].ave_err())<<" - 1.0"<<endl;
-      }
-  cout<<"meson_mass_sea: "<<
-    dout.meson_mass_sea.ave_err()<<" = "<<din1.meson_mass_sea.ave_err()<<" / "<<din2.meson_mass_sea.ave_err()<<" -1.0"<<endl;
+//   for(size_t im1=0;im1<dout.nm;im1++)
+//     for(size_t im2=0;im2<dout.nm;im2++)
+//       {
+// 	size_t i=dout.im_im_ind({im1,im2});
+// 	cout<<"meson_mass[m1="<<im1<<",m2="<<im2<<"]: "<<
+// 	  smart_print(dout.meson_mass[i].ave_err())<<" = "<<
+// 	  smart_print(din1.meson_mass[i].ave_err())<<" / "<<
+// 	  smart_print(din2.meson_mass[i].ave_err())<<" - 1.0"<<endl;
+//       }
+//   cout<<"meson_mass_sea: "<<
+//     dout.meson_mass_sea.ave_err()<<" = "<<din1.meson_mass_sea.ave_err()<<" / "<<din2.meson_mass_sea.ave_err()<<" -1.0"<<endl;
   
-  //remove from the list
-  for(auto in : {in1,in2})
-    {
-      data_erase(in);
-      pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
-    }
-}
+//   //remove from the list
+//   for(auto in : {in1,in2})
+//     {
+//       data_erase(in);
+//       pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
+//     }
+// }
 
-void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
-{
-  if(ens_list.size()<2) CRASH("Need at least 2 ensembles, %zu passed",ens_list.size());
-  cout<<"Chirally extrapolating "<<out_name<<" in the sea mass, list of ensembles:"<<endl;
+// void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
+// {
+//   if(ens_list.size()<2) CRASH("Need at least 2 ensembles, %zu passed",ens_list.size());
+//   cout<<"Chirally extrapolating "<<out_name<<" in the sea mass, list of ensembles:"<<endl;
   
-  //take x and ensembles
-  vector<double> x;
-  vector<const perens_t*> in;
-  for(auto &en_name : ens_list)
-    {
-      //check and take the data, add it to the list
-      assert_compatible(ens_list.front(),en_name);
-      const perens_t& en=data(en_name,ASSERT_PRESENT);
-      in.push_back(&en);
+//   //take x and ensembles
+//   vector<double> x;
+//   vector<const perens_t*> in;
+//   for(auto &en_name : ens_list)
+//     {
+//       //check and take the data, add it to the list
+//       assert_compatible(ens_list.front(),en_name);
+//       const perens_t& en=data(en_name,ASSERT_PRESENT);
+//       in.push_back(&en);
       
-      //compute the x
-      double t;
-      if(pars::chir_extr_method==chir_extr::MQUARK) t=en.am[en.im_sea];
-      else                                          t=sqr(en.meson_mass_sea.ave());
-      x.push_back(t);
+//       //compute the x
+//       double t;
+//       if(pars::chir_extr_method==chir_extr::MQUARK) t=en.am[en.im_sea];
+//       else                                          t=sqr(en.meson_mass_sea.ave());
+//       x.push_back(t);
       
-      //print the name
-      cout<<" "<<en_name<<endl;
-    }
+//       //print the name
+//       cout<<" "<<en_name<<endl;
+//     }
   
-  auto xminmax=minmax_element(x.begin(),x.end());
-  double xmin=*xminmax.first;
-  xmin=0.0;
-  double xmax=*xminmax.second*1.1;
+//   auto xminmax=minmax_element(x.begin(),x.end());
+//   double xmin=*xminmax.first;
+//   xmin=0.0;
+//   double xmax=*xminmax.second*1.1;
   
-  //prepare output
-  perens_t &out=data(out_name,PRESENCE_NOT_NEEDED);
-  out=*in.front();
-  out.meson_mass_sea=0.0;
-  out.dir_path=out_name;
-  pars::ens.push_back(out_name);
+//   //prepare output
+//   perens_t &out=data(out_name,PRESENCE_NOT_NEEDED);
+//   out=*in.front();
+//   out.meson_mass_sea=0.0;
+//   out.dir_path=out_name;
+//   pars::ens.push_back(out_name);
   
-  for(auto &v : out.get_all_tasks(in))
-    for(size_t icombo=0;icombo<v.out->size();icombo++)
-      {
-	djvec_t y(ens_list.size());
-	for(size_t iens=0;iens<v.in.size();iens++) y[iens]=(*(v.in[iens]))[icombo];
+//   for(auto &v : out.get_all_tasks(in))
+//     for(size_t icombo=0;icombo<v.out->size();icombo++)
+//       {
+// 	djvec_t y(ens_list.size());
+// 	for(size_t iens=0;iens<v.in.size();iens++) y[iens]=(*(v.in[iens]))[icombo];
 	
-	string plot_path="";
-	if(icombo==100) plot_path=out_name+"/plots/sea_chirextr_"+v.tag+"_combo_"+to_string(icombo)+".xmg";
-	djvec_t coeffs=poly_fit(x,y,1);
-	if(std::isnan(coeffs[0][0])) coeffs=0.0;
-	(*v.out)[icombo]=coeffs[0];
+// 	string plot_path="";
+// 	if(icombo==100) plot_path=out_name+"/plots/sea_chirextr_"+v.tag+"_combo_"+to_string(icombo)+".xmg";
+// 	djvec_t coeffs=poly_fit(x,y,1);
+// 	if(std::isnan(coeffs[0][0])) coeffs=0.0;
+// 	(*v.out)[icombo]=coeffs[0];
 	
-	if(plot_path!="")
-	  {
-	    grace_file_t plot(plot_path);
-	    write_fit_plot(plot,xmin,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
-	    plot.set_title(v.tag+", "+v.ind.descr(icombo));
-	    plot.write_ave_err(0,coeffs[0].ave_err());
-	  }
-      }
+// 	if(plot_path!="")
+// 	  {
+// 	    grace_file_t plot(plot_path);
+// 	    write_fit_plot(plot,xmin,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
+// 	    plot.set_title(v.tag+", "+v.ind.descr(icombo));
+// 	    plot.write_ave_err(0,coeffs[0].ave_err());
+// 	  }
+//       }
   
-  //remove from the list
-  for(auto in : ens_list)
-    {
-      data_erase(in);
-      pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
-    }
+//   //remove from the list
+//   for(auto in : ens_list)
+//     {
+//       data_erase(in);
+//       pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
+//     }
   
-  if(pars::compute_bilinears) out.compute_Zbil();
-  if(pars::compute_meslep) out.compute_Zmeslep();
-}
+//   if(pars::compute_bilinears) out.compute_Zbil();
+//   if(pars::compute_meslep) out.compute_Zmeslep();
+// }
 
 auto assert_ens_present(const string &key)
 {
