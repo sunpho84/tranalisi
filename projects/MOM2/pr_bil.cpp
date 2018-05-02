@@ -46,15 +46,15 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jbil_vert_t>& jbil,con
       vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>> list={{&bil.LO,&p_in.LO,&p_ou.LO}};
       if(pars::use_QED)
 	for(auto &o : vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>>({
-	      {&bil.PH,&p_in.F,&p_ou.F},
-	      {&bil.PH,&p_in.FF,&p_ou.LO},
-	      {&bil.PH,&p_in.LO,&p_ou.FF},
-	      {&bil.PH,&p_in.T,&p_ou.LO},
-	      {&bil.PH,&p_in.LO,&p_ou.T},
-	      {&bil.CR_CT_in,&p_in.P,&p_ou.LO},
-	      {&bil.CR_CT_ou,&p_in.LO,&p_ou.P},
-	      {&bil.TM_CT_in,&p_in.S,&p_ou.LO},
-	      {&bil.TM_CT_ou,&p_in.LO,&p_ou.S}
+	      {&bil.PH,       &p_in.F,  &p_ou.F },
+	      {&bil.PH,       &p_in.FF, &p_ou.LO},
+	      {&bil.PH,       &p_in.LO, &p_ou.FF},
+	      {&bil.PH,       &p_in.T,  &p_ou.LO},
+	      {&bil.PH,       &p_in.LO, &p_ou.T },
+	      {&bil.CR_CT_in, &p_in.P,  &p_ou.LO},
+	      {&bil.CR_CT_ou, &p_in.LO, &p_ou.P },
+	      {&bil.TM_CT_in, &p_in.S,  &p_ou.LO},
+	      {&bil.TM_CT_ou, &p_in.LO, &p_ou.S }
 	    }))
 	  list.push_back(o);
       

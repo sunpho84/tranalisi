@@ -39,22 +39,22 @@ void perens_t::compute_Zbil()
 	    
 	    djack_t pr_bil_QED=
 	      0.0*pr_bil_PH[im_r_im_r_ibil_ibilmom]+
-	      0.0*pr_bil_CR_CT_OU[im_r_im_r_ibil_ibilmom]*deltam_cr[im_r_ou]+
-	      0.0*pr_bil_CR_CT_IN[im_r_im_r_ibil_ibilmom]*deltam_cr[im_r_in]+
+	      pr_bil_CR_CT_OU[im_r_im_r_ibil_ibilmom]*deltam_cr[im_r_ou]+
+	      pr_bil_CR_CT_IN[im_r_im_r_ibil_ibilmom]*deltam_cr[im_r_in]+
 	      pr_bil_TM_CT_OU[im_r_im_r_ibil_ibilmom]*deltam_tm[im_r_ou]+
 	      pr_bil_TM_CT_IN[im_r_im_r_ibil_ibilmom]*deltam_tm[im_r_in];
 	    djack_t sigma1_QED_ou=
 	      0.0*sigma1_PH[im_r_ilinmom_ou]+
-	      0.0*sigma1_CR_CT[im_r_ilinmom_ou]*deltam_cr[im_r_ou]+
+	      sigma1_CR_CT[im_r_ilinmom_ou]*deltam_cr[im_r_ou]+
 	      sigma1_TM_CT[im_r_ilinmom_ou]*deltam_tm[im_r_ou];
 	    djack_t sigma1_QED_in=
 	      0.0*sigma1_PH[im_r_ilinmom_in]+
-	      0.0*sigma1_CR_CT[im_r_ilinmom_in]*deltam_cr[im_r_in]+
+	      sigma1_CR_CT[im_r_ilinmom_in]*deltam_cr[im_r_in]+
 	      sigma1_TM_CT[im_r_ilinmom_in]*deltam_tm[im_r_in];
 	    
 	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
 	      -pr_bil_QED/pr_bil_LO[im_r_im_r_ibil_ibilmom]
-	      +(sigma1_QED_ou/sigma1_LO[im_r_ilinmom_ou]+
+	      +0.0*(sigma1_QED_ou/sigma1_LO[im_r_ilinmom_ou]+
 		sigma1_QED_in/sigma1_LO[im_r_ilinmom_in])/2.0;
 	  }
       }
