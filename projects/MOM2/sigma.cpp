@@ -194,10 +194,10 @@ void perens_t::average_r_sigma(perens_t &out) const
 	  sigma_rave[out_i]=0.0;
 	  for(size_t r=0;r<nr;r++)
 	    {
-	      cout<<" "<<in_i<<" "<<out_i<<endl;
 	      in_comps[1]=r;
 	      const size_t in_i=im_r_ilinmom_isigmaproj_isigmains_ind(in_comps);
 	      sigma_rave[out_i]+=sigma[in_i];
+	      cout<<" "<<in_i<<" "<<out_i<<endl;
 	    }
 	  sigma_rave[out_i]/=nr;
 	}
