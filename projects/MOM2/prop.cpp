@@ -72,17 +72,17 @@ namespace lprop
 
 dcompl_t coeff_to_read(const qprop::ins ins,const size_t r)
 {
-  // switch(ins)
-  //   {
-  //   case qprop::P:
-  //     return dcompl_t(0,tau3[r]);
-  //     break;
-  //   case qprop::S:
-  //     return -1.0;
-  //     break;
-  //   default:
+  switch(ins)
+    {
+    case qprop::P:
+      return dcompl_t(0,tau3[r]);
+      break;
+    case qprop::S:
       return -1.0;
-    // }
+      break;
+    default:
+      return 1.0;
+    }
 }
 
 string get_qprop_filename(const size_t im,const size_t ir,const qprop::ins ins)
