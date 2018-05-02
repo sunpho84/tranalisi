@@ -33,7 +33,7 @@ void plot_all_Z(const string &suffix);
   }
 
 DEFINE_SINGLE_SELF_COMMAND_ALL(compute_deltam_from_prop_all,compute_deltam_from_prop)
-// DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_all,compute_Z)
+ DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_all,compute_Z)
 
 #define DEFINE_SINGLE_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND)		\
   inline void ALL_COMMAND()						\
