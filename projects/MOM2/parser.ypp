@@ -108,7 +108,7 @@ commands:
         | commands set_use_deltam_cr_ct
         | commands set_use_deltam_tm_ct
         /* | commands average */
-        /* | commands average_r */
+        | commands average_r
         | commands average_equiv_momenta
         | commands compute_deltam
         /* | commands sea_chir_extrap */
@@ -204,8 +204,8 @@ plot_Z: TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$3);delete $3;}
 /* print_discr: TK_PRINT_DISCR '(' ')' {print_discr();} */
 /* ; */
 
-/* average_r: TK_AVERAGE_R '(' ')' {average_all_r();} */
-/* ; */
+average_r: TK_AVERAGE_R '(' ')' {average_all_r();}
+;
 
 average_equiv_momenta: TK_AVERAGE_EQUIV_MOMENTA '(' ')' {average_all_equiv_momenta();}
 ;
