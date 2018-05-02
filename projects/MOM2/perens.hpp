@@ -149,10 +149,10 @@ struct perens_t
   
   //projected bilinears with and without QED
   djvec_t pr_bil_LO;
-  djvec_t pr_bil_CR_CT1;
-  djvec_t pr_bil_TM_CT1;
-  djvec_t pr_bil_CR_CT2;
-  djvec_t pr_bil_TM_CT2;
+  djvec_t pr_bil_CR_CT_OU;
+  djvec_t pr_bil_TM_CT_OU;
+  djvec_t pr_bil_CR_CT_IN;
+  djvec_t pr_bil_TM_CT_IN;
   djvec_t pr_bil_PH;
   
   //! return a list of tasks for bilinears projected vertex
@@ -162,7 +162,7 @@ struct perens_t
   
   void clusterize_all_mr_jackkniffed_bilverts(vector<jbil_vert_t>& jprops) const;
   
-  void compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,const vector<jbil_vert_t>& jverts,const vector<jm_r_mom_qprops_t>& jprop_inv_ou);
+  void compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,const vector<jbil_vert_t>& jverts,const vector<jm_r_mom_qprops_t>& jprop_inv_ou,const size_t ibilmom);
   
   /////////////////////////////////////////////////////////////////
   

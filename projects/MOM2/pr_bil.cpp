@@ -17,15 +17,6 @@ void build_jackkniffed_vert_Gamma(jqprop_t &jvert,const qprop_t &prop_in,size_t 
 {
   auto c=prop_ou*quaGamma[iG]*quaGamma[5]*prop_in.adjoint()*quaGamma[5];
   jvert[iclust]+=c;
-  
-  if(0)
-  cout
-    <<"iG: "<<iG<<
-    ", iclust: "<<iclust<<
-    ", prop_in: "<<prop_in(0,0)<<
-    ", prop_ou: "<<prop_ou(0,0)<<
-    ", res: "<<c(0,0)<<
-    endl;
 }
 
 void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jbil_vert_t>& jbil,const vector<m_r_mom_conf_qprops_t>& props_in,const vector<m_r_mom_conf_qprops_t>& props_ou) const
@@ -42,15 +33,15 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jbil_vert_t>& jbil,con
       
       //decript props to combine and which Gamma to create
       const vector<size_t> im_r_im_r_igam_comp=im_r_im_r_igam_ind(im_r_im_r_igam);
-      const size_t im_fw=im_r_im_r_igam_comp[0],r_fw=im_r_im_r_igam_comp[1];
-      const size_t im_bw=im_r_im_r_igam_comp[2],r_bw=im_r_im_r_igam_comp[3];
+      const size_t im_ou=im_r_im_r_igam_comp[0],r_ou=im_r_im_r_igam_comp[1];
+      const size_t im_in=im_r_im_r_igam_comp[2],r_in=im_r_im_r_igam_comp[3];
       const size_t iG=im_r_im_r_igam_comp[4];
       
       //proxy for vector and props
-      const m_r_mom_conf_qprops_t &p_in=props_in[im_r_ijack_ind({im_fw,r_fw,iclust})];
-      const m_r_mom_conf_qprops_t &p_ou=props_ou[im_r_ijack_ind({im_bw,r_bw,iclust})];
+      const m_r_mom_conf_qprops_t &p_in=props_in[im_r_ijack_ind({im_in,r_in,iclust})];
+      const m_r_mom_conf_qprops_t &p_ou=props_ou[im_r_ijack_ind({im_ou,r_ou,iclust})];
       jbil_vert_t &bil=jbil[im_r_im_r_igam];
-
+      
       //create list of operations
       vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>> list={{&bil.LO,&p_in.LO,&p_ou.LO}};
       if(pars::use_QED)
@@ -80,7 +71,7 @@ void perens_t::clusterize_all_mr_jackkniffed_bilverts(vector<jbil_vert_t>& jvert
     jverts[ivert].clusterize_all(clust_size);
 }
 
-void perens_t::compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,const vector<jbil_vert_t>& jverts,const vector<jm_r_mom_qprops_t>& jprop_inv_ou)
+void perens_t::compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,const vector<jbil_vert_t>& jverts,const vector<jm_r_mom_qprops_t>& jprop_inv_ou,const size_t ibilmom)
 {
   const index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks+1}});
   
@@ -93,12 +84,12 @@ void perens_t::compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,co
       const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_ibil_ind(im_r_im_r_ibil);
       
       //get im and r for fw and back, and ibil
-      const size_t im_fw=im_r_im_r_ibil_comp[0],r_fw=im_r_im_r_ibil_comp[1];
-      const size_t im_bw=im_r_im_r_ibil_comp[2],r_bw=im_r_im_r_ibil_comp[3];
+      const size_t im_ou=im_r_im_r_ibil_comp[0],r_ou=im_r_im_r_ibil_comp[1];
+      const size_t im_in=im_r_im_r_ibil_comp[2],r_in=im_r_im_r_ibil_comp[3];
       const size_t ibil=im_r_im_r_ibil_comp[4];
       
-      const size_t im_r_in=im_r_ind({im_fw,r_fw});
-      const size_t im_r_ou=im_r_ind({im_bw,r_bw});
+      const size_t im_r_ou=im_r_ind({im_ou,r_ou});
+      const size_t im_r_in=im_r_ind({im_in,r_in});
       
       const jm_r_mom_qprops_t& pinv_ou=jprop_inv_ou[im_r_ou];
       const jm_r_mom_qprops_t& pinv_in=jprop_inv_in[im_r_in];
@@ -109,11 +100,12 @@ void perens_t::compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,co
 	  vector<size_t> im_r_im_r_iG_comp=im_r_im_r_ibil_comp;
 	  im_r_im_r_iG_comp[4]=iG;
 	  const size_t im_r_im_r_iG=im_r_im_r_igam_ind(im_r_im_r_iG_comp);
+	  const size_t im_r_im_r_ibil_ibilmom=im_r_im_r_ibil_ibilmom_ind(concat(im_r_im_r_ibil_comp,ibilmom));
 	  const jbil_vert_t &jv=jverts[im_r_im_r_iG];
 	  
 #define PROJ(OUT,SIGN,OU,V,IN)						\
-	  pr_bil_ ## OUT[im_r_im_r_ibil][ijack]+=			\
-	    SIGN								\
+	  pr_bil_ ## OUT[im_r_im_r_ibil_ibilmom][ijack]+=		\
+	    SIGN							\
 	    (pinv_ou.OU[ijack]*jv.V[ijack]*quaGamma[5]*pinv_in.IN[ijack].adjoint()*quaGamma[5]*quaGamma[iG].adjoint()).trace().real()/(12.0*iG_of_bil[ibil].size())
 	  
 	  PROJ(LO, +,LO,LO,LO);
@@ -122,15 +114,15 @@ void perens_t::compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,co
 	  PROJ(PH, +,LO,PH,LO);
 	  PROJ(PH, -,LO,LO,PH);
 	  //
-	  PROJ(CR_CT1, -,CR_CT,LO,LO);
-	  PROJ(TM_CT1, -,TM_CT,LO,LO);
-	  PROJ(CR_CT1, +,LO,CR_CT_ou,LO);
-	  PROJ(TM_CT1, +,LO,TM_CT_ou,LO);
+	  PROJ(CR_CT_OU, -,CR_CT,LO,LO);
+	  PROJ(TM_CT_OU, -,TM_CT,LO,LO);
+	  PROJ(CR_CT_OU, +,LO,CR_CT_ou,LO);
+	  PROJ(TM_CT_OU, +,LO,TM_CT_ou,LO);
 	  //
-	  PROJ(CR_CT2, -,LO,LO,CR_CT);
-	  PROJ(TM_CT2, -,LO,LO,TM_CT);
-	  PROJ(CR_CT2, +,LO,CR_CT_in,LO);
-	  PROJ(TM_CT2, +,LO,TM_CT_in,LO);
+	  PROJ(CR_CT_IN, -,LO,LO,CR_CT);
+	  PROJ(TM_CT_IN, -,LO,LO,TM_CT);
+	  PROJ(CR_CT_IN, +,LO,CR_CT_in,LO);
+	  PROJ(TM_CT_IN, +,LO,TM_CT_in,LO);
 	  
 	  #undef PROJ
 	}
@@ -147,59 +139,59 @@ void perens_t::mom_compute_bil()
   
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     {
-      const size_t imom1=bilmoms[ibilmom][1];
-      const size_t imom2=bilmoms[ibilmom][2];
-      const bool read2=(imom1!=imom2);
+      const size_t imom_ou=bilmoms[ibilmom][1];
+      const size_t imom_in=bilmoms[ibilmom][2];
+      const bool read_in=(imom_ou!=imom_in);
       
-      vector<jm_r_mom_qprops_t> jprops1(im_r_ind.max());      //!< jackknived props
-      vector<jm_r_mom_qprops_t> jprops2(im_r_ind.max());      //!< jackknived props
+      vector<jm_r_mom_qprops_t> jprops_ou(im_r_ind.max());      //!< jackknived props
+      vector<jm_r_mom_qprops_t> jprops_in(im_r_ind.max());      //!< jackknived props
       vector<jbil_vert_t> jverts(im_r_im_r_igam_ind.max());   //!< jackknived vertex
       
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
 	  {
-	    const size_t mom1=linmoms[imom1][0];
-	    const size_t mom2=linmoms[imom2][0];
+	    const size_t mom_ou=linmoms[imom_ou][0];
+	    const size_t mom_in=linmoms[imom_in][0];
 	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
 	    cout<<"Working on qbil, "
 	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
 	      "hit "<<ihit+1<<"/"<<nhits<<", "
 	      "momentum combo "<<ibilmom+1<<"/"<<bilmoms.size()<<", "
-	      "moms: "<<mom1<<" "<<mom2<<endl;
+	      "moms: "<<mom_ou<<" "<<mom_in<<endl;
 	    
 	    //read
 	    read_time.start();
-	    const vector<m_r_mom_conf_qprops_t> props1=read_all_qprops_mom(files,i_in_clust_ihit,mom1);
-	    const vector<m_r_mom_conf_qprops_t> props2=(read2?read_all_qprops_mom(files,i_in_clust_ihit,mom2):props1);
+	    const vector<m_r_mom_conf_qprops_t> props_ou=read_all_qprops_mom(files,i_in_clust_ihit,mom_ou);
+	    const vector<m_r_mom_conf_qprops_t> props_in=(read_in?read_all_qprops_mom(files,i_in_clust_ihit,mom_in):props_ou);
 	    read_time.stop();
 	    
 	    //build all props
 	    build_props_time.start();
-	    build_all_mr_jackkniffed_qprops(jprops1,props1);
-	    build_all_mr_jackkniffed_qprops(jprops2,props2);
+	    build_all_mr_jackkniffed_qprops(jprops_ou,props_ou);
+	    build_all_mr_jackkniffed_qprops(jprops_in,props_in);
 	    build_props_time.stop();
 	    
 	    //build all bilinear verts
 	    build_verts_time.start();
-	    build_all_mr_gbil_jackkniffed_verts(jverts,props1,props2);
+	    build_all_mr_gbil_jackkniffed_verts(jverts,props_in,props_ou);
 	    build_verts_time.stop();
 	  }
       
       //clusterize
       clust_time.start();
-      clusterize_all_mr_jackkniffed_qprops(jprops1);
-      clusterize_all_mr_jackkniffed_qprops(jprops2);
+      clusterize_all_mr_jackkniffed_qprops(jprops_ou);
+      clusterize_all_mr_jackkniffed_qprops(jprops_in);
       clusterize_all_mr_jackkniffed_bilverts(jverts);
       clust_time.stop();
       
-      vector<jm_r_mom_qprops_t> jprops_inv1; //!< inverse propagator1
-      vector<jm_r_mom_qprops_t> jprops_inv2; //!< inverse propagator2
+      vector<jm_r_mom_qprops_t> jprops_inv_ou; //!< inverse propagator_ou
+      vector<jm_r_mom_qprops_t> jprops_inv_in; //!< inverse propagator_in
       
-      get_inverse_propagators(jprops_inv1,jprops1);
-      get_inverse_propagators(jprops_inv2,jprops2);
+      get_inverse_propagators(jprops_inv_ou,jprops_ou);
+      get_inverse_propagators(jprops_inv_in,jprops_in);
       
       proj_time.start();
-      compute_proj_bil(jprops_inv1,jverts,jprops_inv2);
+      compute_proj_bil(jprops_inv_in,jverts,jprops_inv_ou,ibilmom);
       proj_time.stop();
     }
 }
@@ -208,20 +200,20 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
 {
   vector<const djvec_t*>
     in_pr_bil_LO,
-    in_pr_bil_CR_CT1,
-    in_pr_bil_CR_CT2,
-    in_pr_bil_TM_CT1,
-    in_pr_bil_TM_CT2,
+    in_pr_bil_CR_CT_OU,
+    in_pr_bil_CR_CT_IN,
+    in_pr_bil_TM_CT_OU,
+    in_pr_bil_TM_CT_IN,
     in_pr_bil_PH;
   for(auto &e : ens)
     {
       in_pr_bil_LO.push_back(&e->pr_bil_LO);
       if(pars::use_QED)
 	{
-	  in_pr_bil_CR_CT1.push_back(&e->pr_bil_CR_CT1);
-	  in_pr_bil_CR_CT2.push_back(&e->pr_bil_CR_CT2);
-	  in_pr_bil_TM_CT1.push_back(&e->pr_bil_TM_CT1);
-	  in_pr_bil_TM_CT2.push_back(&e->pr_bil_TM_CT2);
+	  in_pr_bil_CR_CT_OU.push_back(&e->pr_bil_CR_CT_OU);
+	  in_pr_bil_CR_CT_IN.push_back(&e->pr_bil_CR_CT_IN);
+	  in_pr_bil_TM_CT_OU.push_back(&e->pr_bil_TM_CT_OU);
+	  in_pr_bil_TM_CT_IN.push_back(&e->pr_bil_TM_CT_IN);
 	  in_pr_bil_PH.push_back(&e->pr_bil_PH);
 	}
     }
@@ -229,10 +221,10 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
   vector<task_t> pr_bil_tasks={{&pr_bil_LO,in_pr_bil_LO,im_r_im_r_ibil_ibilmom_ind,"pr_bil_LO",QCD_task}};
   if(pars::use_QED)
     {
-      pr_bil_tasks.push_back({&pr_bil_CR_CT1,in_pr_bil_CR_CT1,im_r_im_r_ibil_ibilmom_ind,"pr_bil_CR_CT1",QED_task});
-      pr_bil_tasks.push_back({&pr_bil_CR_CT2,in_pr_bil_CR_CT2,im_r_im_r_ibil_ibilmom_ind,"pr_bil_CR_CT2",QED_task});
-      pr_bil_tasks.push_back({&pr_bil_TM_CT1,in_pr_bil_TM_CT1,im_r_im_r_ibil_ibilmom_ind,"pr_bil_TM_CT1",QED_task});
-      pr_bil_tasks.push_back({&pr_bil_TM_CT2,in_pr_bil_TM_CT2,im_r_im_r_ibil_ibilmom_ind,"pr_bil_TM_CT2",QED_task});
+      pr_bil_tasks.push_back({&pr_bil_CR_CT_OU,in_pr_bil_CR_CT_OU,im_r_im_r_ibil_ibilmom_ind,"pr_bil_CR_CT_OU",QED_task});
+      pr_bil_tasks.push_back({&pr_bil_CR_CT_IN,in_pr_bil_CR_CT_IN,im_r_im_r_ibil_ibilmom_ind,"pr_bil_CR_CT_IN",QED_task});
+      pr_bil_tasks.push_back({&pr_bil_TM_CT_OU,in_pr_bil_TM_CT_OU,im_r_im_r_ibil_ibilmom_ind,"pr_bil_TM_CT_OU",QED_task});
+      pr_bil_tasks.push_back({&pr_bil_TM_CT_IN,in_pr_bil_TM_CT_IN,im_r_im_r_ibil_ibilmom_ind,"pr_bil_TM_CT_IN",QED_task});
       pr_bil_tasks.push_back({&pr_bil_PH,in_pr_bil_PH,im_r_im_r_ibil_ibilmom_ind,"pr_bil_PH",QED_task});
     }
   
@@ -312,24 +304,24 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 	  grace_file_t *plot=nullptr;
 	  if(ibilmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
 	  
-	  for(size_t r1=0;r1<nr;r1++)
-	    for(size_t r2=0;r2<nr;r2++)
+	  for(size_t r_ou=0;r_ou<nr;r_ou++)
+	    for(size_t r_in=0;r_in<nr;r_in++)
 	      {
 		//slice m and fit it
 		djvec_t y(nm*(nm+1)/2),y_plot(nm*(nm+1)/2);
 		vector<double> x(nm*(nm+1)/2);
 		int i=0;
-		for(size_t im1=0;im1<nm;im1++)
-		  for(size_t im2=im1;im2<nm;im2++)
+		for(size_t im_ou=0;im_ou<nm;im_ou++)
+		  for(size_t im_in=im_ou;im_in<nm;im_in++)
 		    {
 		      //compute mass sum
-		      if(pars::chir_extr_method==chir_extr::MQUARK) x[i]=am[im1]+am[im2];
-		      else                                          x[i]=sqr(meson_mass[im_im_ind({im1,im2})].ave());
+		      if(pars::chir_extr_method==chir_extr::MQUARK) x[i]=am[im_ou]+am[im_in];
+		      else                                          x[i]=sqr(meson_mass[im_im_ind({im_ou,im_in})].ave());
 		      
 		      if(std::isnan(x[i])) CRASH("Nanning %d",i);
 		      
 		      //compute y and y_plot
-		      y_plot[i]=pr[im_r_im_r_ibil_ibilmom_ind({im1,r1,im2,r2,ibil,ibilmom})];
+		      y_plot[i]=pr[im_r_im_r_ibil_ibilmom_ind({im_ou,r_ou,im_in,r_in,ibil,ibilmom})];
 		      //fit x*y if pole present
 		      y[i]=pow(x[i],x_pow)*y_plot[i];
 		      //increment the number of mass combos
@@ -338,7 +330,7 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 		
 		//fit, store and write the result
 		const djvec_t coeffs=poly_fit(x,y,1+x_pow);
-		const size_t iout=out.im_r_im_r_ibil_ibilmom_ind({0,r1,0,r2,ibil,ibilmom});
+		const size_t iout=out.im_r_im_r_ibil_ibilmom_ind({0,r_ou,0,r_in,ibil,ibilmom});
 		pr_chir[iout]=coeffs[x_pow];
 		if(plot!=nullptr)
 		  {
