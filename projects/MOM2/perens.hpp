@@ -329,10 +329,10 @@ struct perens_t
   
   djvec_t get_contraction(const string &combo,const string &ID,const dcompl_t &coeff,const int tpar);
   
-//   void compute_deltam(const size_t im,const size_t r);
+  void compute_deltam(const size_t im,const size_t r);
   
-//   //! compute deltam from props
-//   void compute_deltam_from_prop();
+  //! compute deltam from props
+  void compute_deltam_from_prop();
   
 //   /////////////////////////////////////////////////////////////////
   

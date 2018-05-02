@@ -45,6 +45,9 @@ void get_inverse_propagators(vector<jqprop_t> &jprop_inv,vector<jqprop_t> &jprop
 			     const vector<jqprop_t> &jprops,
 			     const index_t &im_r_ijackp1_ind);
 
+//! returns the coefficient to insert for each insertion
+dcompl_t coeff_to_read(const qprop::ins ins,const size_t r);
+
 #undef EXTERN_PROP
 #undef INIT_PROP_TO
 
