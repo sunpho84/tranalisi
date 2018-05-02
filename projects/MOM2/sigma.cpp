@@ -113,8 +113,6 @@ perens_t& perens_t::compute_sigmas()
 {
   vector<raw_file_t> files=setup_read_all_qprops_mom(conf_list);
   
-  sigma.resize(im_r_ilinmom_isigmaproj_isigmains_ind.max());
-  
   for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
     {
       const size_t mom=linmoms[ilinmom][0];

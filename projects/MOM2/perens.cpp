@@ -58,6 +58,8 @@ perens_t& perens_t::allocate()
   // for(auto &task : get_all_tasks())
   //   task.out->resize(task.ind.max());
   
+  sigma.resize(im_r_ilinmom_isigmaproj_isigmains_ind.max());
+  
   for(auto &t : {&deltam_cr,&deltam_tm})
     t->resize(im_r_ind.max());
   
