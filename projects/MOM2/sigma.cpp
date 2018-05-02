@@ -190,12 +190,17 @@ void perens_t::average_r_sigma(perens_t &out) const
 	{
 	  const vector<size_t> out_comps=out.im_r_ilinmom_isigmaproj_isigmains_ind(out_i);
 	  vector<size_t> in_comps=out_comps;
+	  const sigma::proj isigmaproj=sigma::proj_list[in_comps[3]];
 	  
 	  sigma_rave[out_i]=0.0;
 	  for(size_t r=0;r<nr;r++)
 	    {
 	      in_comps[1]=r;
 	      const size_t in_i=im_r_ilinmom_isigmaproj_isigmains_ind(in_comps);
+	      
+	      //include a -1 on SIGMA3 and second r
+	      const int coeff=(isigmaproj==sigma::SIGMA3 and r==1)?-1:+1;
+	      
 	      sigma_rave[out_i]+=sigma[in_i];
 	      cout<<" "<<in_i<<" "<<out_i<<endl;
 	    }
