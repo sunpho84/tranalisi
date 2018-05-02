@@ -31,31 +31,27 @@ namespace sigma
   }
 }
 
-// void perens_t::plot_sigma(const string &suffix)
-// {
-//   cout<<"Plotting all sigma of "<<dir_path<<" for suffix: \""<<suffix<<"\""<<endl;
+void perens_t::plot_sigma(const string &suffix)
+{
+  cout<<"Plotting all sigma of "<<dir_path<<" for suffix: \""<<suffix<<"\""<<endl;
   
-//   auto tasks=this->get_sigma_tasks();
-  
-//   for(auto &t : tasks)
-//     {
-//       const djvec_t &Z=*t.out;
-//       const string &tag=t.tag;
-      
-//       grace_file_t out(dir_path+"/plots/"+tag+(suffix!=""?("_"+suffix):string(""))+".xmg");
-      
-//       for(size_t im=0;im<nm;im++)
-//   	for(size_t r=0;r<nr;r++)
-// 	  {
-// 	    out.new_data_set();
-// 	    for(size_t imom=0;imom<linmoms.size();imom++)
-// 	      {
-// 		const double p2tilde=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
-// 		out.write_ave_err(p2tilde,Z[im_r_ilinmom_ind({im,r,imom})].ave_err());
-// 	      }
-// 	  }
-//     }
-// }
+  for(size_t iins=0;iins<sigma::nins;iins++)
+    for(size_t iproj=0;iproj<sigma::nproj;iproj++)
+      {
+	grace_file_t out(dir_path+"/plots/sigma"+to_string(iproj+1)+"_"+sigma::ins_tag[iins]+(suffix!=""?("_"+suffix):string(""))+".xmg");
+	
+	for(size_t im=0;im<nm;im++)
+	  for(size_t r=0;r<nr;r++)
+	    {
+	      out.new_data_set();
+	      for(size_t imom=0;imom<linmoms.size();imom++)
+		{
+		  const double p2tilde=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
+		  out.write_ave_err(p2tilde,sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,imom,iproj,iins})].ave_err());
+	      }
+	  }
+    }
+}
 
 // vector<perens_t::task_t> perens_t::get_sigma_tasks(const vector<const perens_t*> &ens)
 // {

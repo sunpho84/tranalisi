@@ -23,12 +23,7 @@ void data_erase(const string &key);
 
 void compute_or_load_all_ingredients();
 
-// inline void plot_all_Z(const string &suffix)
-// {
-//   for(auto &path : pars::ens)
-//     data(path,ASSERT_PRESENT)
-//       .plot_Z(suffix);
-// }
+void plot_all_Z(const string &suffix);
 
 #define DEFINE_SINGLE_SELF_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND)	\
   inline void ALL_COMMAND()						\

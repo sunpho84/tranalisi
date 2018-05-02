@@ -21,6 +21,13 @@ void assert_compatible(const string in1,const string in2)
   ASSERT_COMPATIBLE_MEMBER(bilmoms);
 }
 
+void plot_all_Z(const string &suffix)
+{
+  for(auto &path : pars::ens)
+    data(path,ASSERT_PRESENT)
+      .plot_Z(suffix);
+}
+
 // void average(const string out,const string in1,const string in2)
 // {
 //   assert_compatible(in1,in2);
