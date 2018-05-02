@@ -109,14 +109,14 @@ commands:
         | commands set_use_deltam_tm_ct
         /* | commands average */
         /* | commands average_r */
-        /* | commands average_equiv_momenta */
+        | commands average_equiv_momenta
         /* | commands compute_deltam */
         /* | commands sea_chir_extrap */
         /* | commands val_chir_extrap */
         /* | commands plot_Z */
         /* | commands print_discr */
         /* | commands ratio_minus_one */
-           | commands compute_or_load_ingredients
+        | commands compute_or_load_ingredients
         /* | commands compute_Z */
         /* | commands list_ensembles */
         /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
@@ -207,8 +207,8 @@ compute_or_load_ingredients: TK_COMPUTE_OR_LOAD_INGREDIENTS '(' ')' {compute_or_
 /* average_r: TK_AVERAGE_R '(' ')' {average_all_r();} */
 /* ; */
 
-/* average_equiv_momenta: TK_AVERAGE_EQUIV_MOMENTA '(' ')' {average_all_equiv_momenta();} */
-/* ; */
+average_equiv_momenta: TK_AVERAGE_EQUIV_MOMENTA '(' ')' {average_all_equiv_momenta();}
+;
 
 /* val_chir_extrap: TK_VAL_CHIR_EXTRAP '(' ')' {val_chir_extrap_all();} */
 /* ; */

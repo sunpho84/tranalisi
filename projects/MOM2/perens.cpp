@@ -263,31 +263,31 @@ void perens_t::bin_write_ingredients(raw_file_t &file)
 //   return out;
 // }
 
-// perens_t perens_t::average_equiv_momenta() const
-// {
-//   perens_t out=*this;
+perens_t perens_t::average_equiv_momenta() const
+{
+  perens_t out=*this;
   
-//   //build out lin list
-//   const vector<vector<size_t>> equiv_linmom_combos=get_equiv_list(linmoms,"equiv_linmoms.txt");
-//   fill_output_equivalent_momenta(out.linmoms,equiv_linmom_combos,equiv_linmom_combos,linmoms);
+  //build out lin list
+  const vector<vector<size_t>> equiv_linmom_combos=get_equiv_list(linmoms,"equiv_linmoms.txt");
+  fill_output_equivalent_momenta(out.linmoms,equiv_linmom_combos,equiv_linmom_combos,linmoms);
   
-//   //build out bil combo
-//   const vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(bilmoms,"equiv_bilmoms.txt");
-//   fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
+  //build out bil combo
+  const vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(bilmoms,"equiv_bilmoms.txt");
+  fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
   
-//   //build out bil combo
-//   const vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms(),"equiv_meslepmoms().txt");
-//   //fill_output_equivalent_momenta(out.meslepmoms(),equiv_linmom_combos,equiv_meslepmom_combos,meslepmoms());
+  //build out bil combo
+  const vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms(),"equiv_meslepmoms().txt");
+  //fill_output_equivalent_momenta(out.meslepmoms(),equiv_linmom_combos,equiv_meslepmom_combos,meslepmoms());
   
-//   out.set_indices();
-//   out.allocate();
+   out.set_indices();
+   out.allocate();
   
-//   average_equiv_momenta_sigma(out,equiv_linmom_combos);
-//   average_equiv_momenta_pr_bil(out,equiv_bilmom_combos);
-//   average_equiv_momenta_pr_meslep(out,equiv_meslepmom_combos);
+   average_equiv_momenta_sigma(out,equiv_linmom_combos);
+   average_equiv_momenta_pr_bil(out,equiv_bilmom_combos);
+   average_equiv_momenta_pr_meslep(out,equiv_meslepmom_combos);
   
-//   return out;
-// }
+  return out;
+}
 
 void perens_t::print_discr()
 {

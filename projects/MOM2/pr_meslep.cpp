@@ -350,9 +350,11 @@ using namespace meslep;
 //     }
 // }
 
-// void perens_t::average_equiv_momenta_pr_meslep(perens_t &out,const vector<vector<size_t>> &equiv_meslepmom_combos) const
-// {
-//   for(size_t i=0;i<out.im_r_im_r_iop_iproj_imeslepmom_ind.max();i++)
+void perens_t::average_equiv_momenta_pr_meslep(perens_t &out,const vector<vector<size_t>> &equiv_meslepmom_combos) const
+{
+  CRASH("");
+  
+  //   for(size_t i=0;i<out.im_r_im_r_iop_iproj_imeslepmom_ind.max();i++)
 //     {
 //       const vector<size_t> out_im_r_im_r_iop_iproj_imeslepmom_comp=out.im_r_im_r_iop_iproj_imeslepmom_ind(i);
 //       const size_t out_imom_combo=out_im_r_im_r_iop_iproj_imeslepmom_comp[6];
@@ -371,7 +373,7 @@ using namespace meslep;
 // 	  ave/=equiv_meslepmom_combos[out_imom_combo].size();
 // 	}
 //     }
-// }
+}
 
 // void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 // {

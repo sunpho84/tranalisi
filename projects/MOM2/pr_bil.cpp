@@ -262,9 +262,11 @@
 //     }
 // }
 
-// void perens_t::average_equiv_momenta_pr_bil(perens_t &out,const vector<vector<size_t>> &equiv_bilmom_combos) const
-// {
-//   for(size_t i=0;i<out.im_r_im_r_ibil_ibilmom_ind.max();i++)
+void perens_t::average_equiv_momenta_pr_bil(perens_t &out,const vector<vector<size_t>> &equiv_bilmom_combos) const
+{
+  CRASH("");
+  
+  //   for(size_t i=0;i<out.im_r_im_r_ibil_ibilmom_ind.max();i++)
 //     {
 //       const vector<size_t> out_im_r_im_r_ibil_ibilmom_comp=out.im_r_im_r_ibil_ibilmom_ind(i);
 //       const size_t out_imom_combo=out_im_r_im_r_ibil_ibilmom_comp[5];
@@ -283,7 +285,7 @@
 //   	  ave/=equiv_bilmom_combos[out_imom_combo].size();
 //   	}
 //     }
-// }
+}
 
 // void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 // {

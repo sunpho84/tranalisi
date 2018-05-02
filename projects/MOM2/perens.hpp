@@ -468,21 +468,21 @@ struct perens_t
   
 //   /////////////////////////////////////////////////////////////////
   
-//   perens_t average_equiv_momenta() const;
+  perens_t average_equiv_momenta() const;
   
-//   //! average sigma
-//   void average_equiv_momenta_sigma(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const;
-//   //! average bil
-//   void average_equiv_momenta_pr_bil(perens_t &out,const vector<vector<size_t>> &equiv_bilmom_combos) const;
-//   //! average meslep
-//   void average_equiv_momenta_pr_meslep(perens_t &out,const vector<vector<size_t>> &equiv_meslepmom_combos) const;
+  //! average sigma
+  void average_equiv_momenta_sigma(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const;
+  //! average bil
+  void average_equiv_momenta_pr_bil(perens_t &out,const vector<vector<size_t>> &equiv_bilmom_combos) const;
+  //! average meslep
+  void average_equiv_momenta_pr_meslep(perens_t &out,const vector<vector<size_t>> &equiv_meslepmom_combos) const;
   
-//   template <size_t N>
-//   void fill_output_equivalent_momenta(vector<array<size_t,N>> &out_equiv,const vector<vector<size_t>> &equiv_linmom_combos,
-// 				      const vector<vector<size_t>> &equiv_combos,const vector<array<size_t,N>> &mom_combos) const;
+  template <size_t N>
+  void fill_output_equivalent_momenta(vector<array<size_t,N>> &out_equiv,const vector<vector<size_t>> &equiv_linmom_combos,
+				      const vector<vector<size_t>> &equiv_combos,const vector<array<size_t,N>> &mom_combos) const;
   
-//   template <size_t N>
-//   vector<vector<size_t>> get_equiv_list(const vector<array<size_t,N>> &combo,const string &listpath) const;
+  template <size_t N>
+  vector<vector<size_t>> get_equiv_list(const vector<array<size_t,N>> &combo,const string &listpath) const;
 };
 
 // //! return the list of momenta equivalent, in the combo passed
