@@ -202,7 +202,7 @@ perens_t& perens_t::compute_sigmas()
 		
 		const size_t im_r_ilinmom_isigmaproj_isigmains=im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,iproj,isins});
 		const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});
-		sigma[im_r_ilinmom_isigmaproj_isigmains]=compute_sigma(jprops_inv[im_r_ijqins][ijack],sigma::proj_list[iproj]);
+		sigma[im_r_ilinmom_isigmaproj_isigmains][ijack]=compute_sigma(jprops_inv[im_r_ijqins][ijack],sigma::proj_list[iproj]);
 	      }
 	  sigma_time.stop();
 	  
