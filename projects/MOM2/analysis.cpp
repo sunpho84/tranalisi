@@ -250,3 +250,21 @@ void print_discr()
 {
   for(auto &path : pars::ens) data(path,ASSERT_PRESENT).print_discr();
 }
+
+void compute_or_load_all_ingredients()
+{
+  freeze_pars();
+  
+  cout<<"Going to rotate propagators: "<<(pars::twisted_run and pars::phys_basis)<<endl;
+  
+  for(auto &name : pars::ens)
+    data(name,PRESENCE_NOT_NEEDED)
+      .read_pars(name)
+      .set_pars_for_scratch()
+      .set_indices()
+      .allocate()
+      .read_or_compute_ingredients()
+      .get_deltam()
+      .get_mPCAC()
+      .get_meson_mass();
+}

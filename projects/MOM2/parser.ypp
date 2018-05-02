@@ -116,7 +116,7 @@ commands:
         /* | commands plot_Z */
         /* | commands print_discr */
         /* | commands ratio_minus_one */
-        /* | commands compute_or_load_ingredients */
+           | commands compute_or_load_ingredients
         /* | commands compute_Z */
         /* | commands list_ensembles */
         /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
@@ -189,8 +189,8 @@ set_use_QED: TK_USE_QED '=' TK_INTE {pars::set_use_QED($3);}
 
 /////////////////////////////////////////////////////////////////
 
-/* compute_or_load_ingredients: TK_COMPUTE_OR_LOAD_INGREDIENTS '(' ')' {compute_or_load_all_ingredients();} */
-/* ; */
+compute_or_load_ingredients: TK_COMPUTE_OR_LOAD_INGREDIENTS '(' ')' {compute_or_load_all_ingredients();}
+;
 
 /* compute_Z: TK_COMPUTE_Z '(' ')' {compute_Z_all();} */
 /* ; */

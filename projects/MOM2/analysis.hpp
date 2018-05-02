@@ -21,23 +21,7 @@ perens_t& data(const string &key,const bool assert_present_flag);
 //! remove an entry
 void data_erase(const string &key);
 
-inline void compute_or_load_all_ingredients()
-{
-  freeze_pars();
-  
-  cout<<"Going to rotate propagators: "<<(pars::twisted_run and pars::phys_basis)<<endl;
-  
-  for(auto &name : pars::ens)
-    data(name,PRESENCE_NOT_NEEDED)
-      .read_pars(name)
-      .set_pars_for_scratch()
-      .set_indices()
-      .allocate()
-      .read_or_compute_ingredients()
-      .get_deltam()
-      .get_mPCAC()
-      .get_meson_mass();
-}
+void compute_or_load_all_ingredients();
 
 // inline void plot_all_Z(const string &suffix)
 // {
