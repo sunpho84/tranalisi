@@ -201,8 +201,7 @@ void perens_t::average_r_sigma(perens_t &out) const
 	      //include a -1 on SIGMA3 and second r
 	      const int coeff=(isigmaproj==sigma::SIGMA3 and r==1)?-1:+1;
 	      
-	      sigma_rave[out_i]+=sigma[in_i];
-	      cout<<" "<<in_i<<" "<<out_i<<endl;
+	      sigma_rave[out_i]+=sigma[in_i]*coeff;
 	    }
 	  sigma_rave[out_i]/=nr;
 	}
