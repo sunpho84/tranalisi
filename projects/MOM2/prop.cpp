@@ -13,40 +13,61 @@
 #include <MOM2/perens.hpp>
 #include <MOM2/timings.hpp>
 
-void set_qprop_ins()
+namespace qprop
 {
-  using namespace qprop;
-  
-  if(pars::use_QED)
-    {
-      ins_list={LO , FF , F , T , S , P};
-      ins_tag={"0" ,"FF","F","T","S","P"};
-    }
-  else
-    {
-      ins_list={LO};
-      ins_tag={"0"};
-    }
-  
-  nins=ins_list.size();
+  void set_ins()
+  {
+    if(pars::use_QED)
+      {
+	ins_list={LO , FF , F , T , S , P};
+	ins_tag={"0" ,"FF","F","T","S","P"};
+      }
+    else
+      {
+	ins_list={LO};
+	ins_tag={"0"};
+      }
+    
+    nins=ins_list.size();
+  }
 }
 
-void set_lprop_ins()
+namespace jqprop
 {
-  using namespace lprop;
-  
-  if(pars::use_QED)
-    {
-      ins_list={LO , F };
-      ins_tag={"0" ,"F"};
-    }
-  else
-    {
-      ins_list={LO};
-      ins_tag={"0"};
-    }
-  
-  nins=ins_list.size();
+  void set_ins()
+  {
+    if(pars::use_QED)
+      {
+	ins_list={LO , PH , CR , TM};
+	ins_tag={"LO","PH","CR","TM"};
+      }
+    else
+      {
+	ins_list={LO};
+	ins_tag={"LO"};
+      }
+    
+    nins=ins_list.size();
+  }
+}
+
+namespace lprop
+{
+  void set_ins()
+  {
+    if(pars::use_QED)
+      {
+	ins_list={LO , F };
+	ins_tag={"0" ,"F"};
+      }
+    else
+      {
+	ins_list={LO};
+	ins_tag={"0"};
+      }
+    
+    nins=ins_list.size();
+  }
 }
 
 dcompl_t coeff_to_read(const qprop::ins ins,const size_t r)
@@ -282,8 +303,8 @@ void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const ve
     {
       ADD_COMBO(PH,FF,+1);
       ADD_COMBO(PH,T,+1);
-      ADD_COMBO(CR_CT,P,+1);
-      ADD_COMBO(TM_CT,S,+1);
+      ADD_COMBO(CR,P,+1);
+      ADD_COMBO(TM,S,+1);
     }
 #undef ADD_COMBO
   
@@ -309,35 +330,38 @@ void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const ve
     }
 }
 
-// void perens_t::get_inverse_propagators(vector<jqprop_t> &jprops_inv,
-// 				       const vector<jqprop_t> &jprops) const
-// {
-//   jprops_inv.resize(im_r_ind.max());
+vector<jqprop_t> perens_t::get_inverse_propagators(const vector<jqprop_t>& jqprops) const
+{
+  invert_time.start();
   
-// #pragma omp parallel for reduction(+:invert_time)
-//   for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
-//     {
-//       //decript indices
-//       const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
-//       const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
-//       const size_t im_r=im_r_ind({im,r});
+  vector<jqprop_t> jqprops_inv(im_r_ijqins_ind.max());
+  
+#pragma omp parallel for
+  for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
+    {
+      //decript indices
+      const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
+      const size_t im=im_r_ijack_comps[0];
+      const size_t r=im_r_ijack_comps[1];
+      const size_t ijack=im_r_ijack_comps[2];
       
-//       //compute inverse
-//       invert_time.start();
-//       qprop_t prop_inv=jprops_inv[im_r].LO[ijack]=jprops[im_r].LO[ijack].inverse();
-//       invert_time.stop();
+      //compute inverse
+      const size_t im_r_LO=im_r_ijqins_ind({im,r,jqprop::LO});
+      qprop_t prop_inv=jqprops_inv[im_r_LO][ijack]=jqprops[im_r_LO][ijack].inverse();
       
-//       //do the same with QED
-//       if(pars::use_QED)
-// 	{
-// 	  invert_time.start();
-// 	  jprops_inv[im_r].CR_CT[ijack]=-prop_inv*jprops[im_r].CR_CT[ijack]*prop_inv;
-// 	  jprops_inv[im_r].TM_CT[ijack]=-prop_inv*jprops[im_r].TM_CT[ijack]*prop_inv;
-// 	  jprops_inv[im_r].PH[ijack]=-prop_inv*jprops[im_r].PH[ijack]*prop_inv;
-// 	  invert_time.stop();
-// 	}
-//     }
-// }
+      //do the same with QED
+      if(pars::use_QED)
+	for(jqprop::ins ijqins : {jqprop::CR,jqprop::TM,jqprop::PH})
+	  {
+	    const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});
+	    jqprops_inv[im_r_ijqins][ijack]=-prop_inv*jqprops[im_r_ijqins][ijack]*prop_inv;
+	  }
+    }
+  
+  invert_time.stop();
+  
+  return jqprops_inv;
+}
 
 // void perens_t::clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops) const
 // {

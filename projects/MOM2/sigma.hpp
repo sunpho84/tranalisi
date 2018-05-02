@@ -12,14 +12,19 @@
 
 namespace sigma
 {
-  enum SIG_ins{LO,  CR,  TM,  PH};
-  EXTERN_SIGMA vector<SIG_ins>  SIG_ins_list;
-  EXTERN_SIGMA vector<string>   SIG_ins_tag;
-  EXTERN_SIGMA size_t nsig_ins;
+  enum ins{LO,  CR,  TM,  PH};
+  EXTERN_SIGMA vector<ins>     ins_list;
+  EXTERN_SIGMA vector<string>  ins_tag;
+  
+  //! set all sigma insertions
+  void set_ins();
+  EXTERN_SIGMA size_t nins;
+  
+  enum proj{SIGMA1,SIGMA2,SIGMA3};
+  EXTERN_SIGMA vector<proj>     proj_list INIT_SIGMA_TO(={SIGMA1,SIGMA2,SIGMA3});
+  const size_t nproj=3;
 }
 
-//! set all sigma insertions
-void set_sigma_ins();
 
 #undef EXTERN_SIGMA
 #undef INIT_SIGMA_TO

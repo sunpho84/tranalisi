@@ -19,6 +19,8 @@ namespace qprop
   EXTERN_PROP vector<ins>    ins_list;
   EXTERN_PROP vector<string> ins_tag;
   EXTERN_PROP size_t nins;
+  
+  void set_ins();
 }
 
 namespace lprop
@@ -27,6 +29,8 @@ namespace lprop
   EXTERN_PROP vector<ins>    ins_list;
   EXTERN_PROP vector<string> ins_tag;
   EXTERN_PROP size_t nins;
+  
+  void set_ins();
 }
 
 //! return the coefficient for reading the kind
@@ -34,16 +38,13 @@ dcompl_t coeff_to_read(const lprop::ins ikind,const size_t r);
 
 namespace jqprop
 {
-  enum ins{LO , PH , CR_CT , TM_CT };
+  enum ins{LO , PH , CR , TM };
   EXTERN_PROP vector<ins>    ins_list;
   EXTERN_PROP vector<string> ins_tag;
   EXTERN_PROP size_t nins;
+  
+  void set_ins();
 }
-
-//! returns the inverse propagators
-void get_inverse_propagators(vector<jqprop_t> &jprop_inv,vector<jqprop_t> &jprop_QED_inv,
-			     const vector<jqprop_t> &jprops,
-			     const index_t &im_r_ijackp1_ind);
 
 //! returns the coefficient to insert for each insertion
 dcompl_t coeff_to_read(const qprop::ins ins,const size_t r);

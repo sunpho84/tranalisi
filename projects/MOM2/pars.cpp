@@ -5,11 +5,16 @@
 #define EXTERN_PARS
  #include <MOM2/pars.hpp>
 
+#include <MOM2/prop.hpp>
 #include <MOM2/sigma.hpp>
 
 void freeze_pars()
 {
   pars::can_change_pars=false;
   
-  set_sigma_ins();
+  lprop::set_ins();
+  qprop::set_ins();
+  jqprop::set_ins();
+  
+  sigma::set_ins();
 }

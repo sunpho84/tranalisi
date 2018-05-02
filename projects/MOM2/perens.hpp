@@ -217,6 +217,8 @@ struct perens_t
   index_t im_r_im_r_ibil_ind;
   index_t im_r_im_r_ibil_ibilmom_ind;
   
+  index_t im_r_ilinmom_isigmaproj_isigmains_ind;
+  
   index_t im_r_im_r_iop_ilistpGl_ind;
   index_t im_r_im_r_iop_iproj_imeslepmom_ind;
   index_t im_r_im_r_ilistGl_ipGl_ind;
@@ -305,23 +307,23 @@ struct perens_t
   //! compute according to mom scheme
   void mom()
   {
-    // compute_sigmas();
+    compute_sigmas();
     // if(pars::compute_bilinears) mom_compute_bil();
     // if(pars::compute_meslep) mom_compute_meslep();
   }
   
   vector<qprop_t> read_all_qprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
   
-//   void get_inverse_propagators(vector<jm_r_mom_qprops_t> &jprops_inv,
-// 			       const vector<jm_r_mom_qprops_t> &jprops) const;
-  
   vector<lprop_t> read_all_lprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
   
   void build_all_mr_jackkniffed_qprops(vector<jqprop_t> &jprops,const vector<qprop_t> &props,const size_t imom) const;
   
-//   void clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops) const;
+  //! returns the inverse propagators
+  vector<jqprop_t> get_inverse_propagators(const vector<jqprop_t>& qprop) const;
   
-//   /////////////////////////////////////////////////////////////////
+  //   void clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops) const;
+  
+  /////////////////////////////////////////////////////////////////
   
   djack_t compute_meson_mass(const string& m1_tag,const string& m2_tag);
   

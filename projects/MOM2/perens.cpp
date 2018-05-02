@@ -1,6 +1,8 @@
 #define EXTERN_PERENS
  #include <MOM2/perens.hpp>
 
+#include <MOM2/sigma.hpp>
+
 perens_t& perens_t::read_pars(const string &name)
 {
   dir_path=name;
@@ -73,6 +75,8 @@ perens_t& perens_t::set_indices()
   r_r_ibil_ind.set_ranges({{"r",nr},{"r",nr},{"bil",nbil}});
   im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});
+  
+  im_r_ilinmom_isigmaproj_isigmains_ind.set_ranges({{"m",nm},{"r",nr},{"linmom",linmoms.size()},{"proj",sigma::nproj},{"ins",sigma::nins}});
   
   im_r_im_r_ibil_ind=im_r_ind*im_r_ind*index_t({{"ibil",nbil}});;
   r_ilinmom_ind.set_ranges({{"r",nr},{"linmom",linmoms.size()}});

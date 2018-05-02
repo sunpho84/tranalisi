@@ -12,22 +12,23 @@
 #include <perens.hpp>
 #include <timings.hpp>
 
-void set_sigma_ins()
+namespace sigma
 {
-  using namespace sigma;
-  
-  if(pars::use_QED)
-    {
-      SIG_ins_list={LO , CR , TM , PH};
-      SIG_ins_tag={"LO","CR","TM","PH"};
-    }
-  else
-    {
-      SIG_ins_list={LO};
-      SIG_ins_tag={"LO"};
-    }
-  
-  nsig_ins=SIG_ins_list.size();
+  void set_ins()
+  {
+    if(pars::use_QED)
+      {
+	ins_list={LO , CR , TM , PH};
+	ins_tag={"LO","CR","TM","PH"};
+      }
+    else
+      {
+	ins_list={LO};
+	ins_tag={"LO"};
+      }
+    
+    nins=ins_list.size();
+  }
 }
 
 // void perens_t::plot_sigma(const string &suffix)
@@ -108,105 +109,115 @@ void set_sigma_ins()
 //   return sigma_tasks;
 // }
 
-// perens_t& perens_t::compute_sigmas()
-// {
-//   vector<raw_file_t> files=setup_read_all_qprops_mom(conf_list);
+perens_t& perens_t::compute_sigmas()
+{
+  vector<raw_file_t> files=setup_read_all_qprops_mom(conf_list);
   
-//   for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
-//     {
-//       const size_t mom=linmoms[ilinmom][0];
-//       vector<jm_r_mom_qprops_t> jprops(im_r_ind.max()); //!< jackknived props
+  sigma.resize(im_r_ilinmom_isigmaproj_isigmains_ind.max());
+  
+  for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
+    {
+      const size_t mom=linmoms[ilinmom][0];
+      vector<jqprop_t> jprops(im_r_ijqins_ind.max()); //!< jackknived props
       
-//       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
-// 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
-// 	  {
-// 	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
-// 	    const size_t mom=linmoms[ilinmom][0];
-// 	    cout<<"Working on qprop, "
-// 	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
-// 	      "hit "<<ihit+1<<"/"<<nhits<<", "
-// 	      "momentum "<<ilinmom+1<<"/"<<linmoms.size()<<", "
-// 	      "mom: "<<mom<<endl;
-// 	    read_time.start();
-// 	    const vector<m_r_mom_conf_qprops_t> props=read_all_qprops_mom(files,i_in_clust_ihit,mom);
-// 	    read_time.stop();
+      for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
+	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
+	  {
+	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
+	    const size_t mom=linmoms[ilinmom][0];
+	    cout<<"Working on qprop, "
+	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
+	      "hit "<<ihit+1<<"/"<<nhits<<", "
+	      "momentum "<<ilinmom+1<<"/"<<linmoms.size()<<", "
+	      "mom: "<<mom<<endl;
+	    read_time.start();
+	    const vector<qprop_t> props=read_all_qprops_mom(files,i_in_clust_ihit,mom);
+	    read_time.stop();
 	    
-// 	    //build all props
-// 	    build_props_time.start();
-// 	    build_all_mr_jackkniffed_qprops(jprops,props);
-// 	    build_props_time.stop();
-// 	  }
+	    //build all props
+	    build_props_time.start();
+	    build_all_mr_jackkniffed_qprops(jprops,props,mom);
+	    build_props_time.stop();
+	  }
       
-//       //clusterize
-//       clust_time.start();
-//       clusterize_all_mr_jackkniffed_qprops(jprops);
-//       clust_time.stop();
+      //clusterize
+      clust_time.start();
+      for(auto &j : jprops) j.clusterize(clust_size);
+      clust_time.stop();
       
-//       vector<jm_r_mom_qprops_t> jprops_inv(im_r_ind.max()); //!< jackknived inverse props
+      const vector<jqprop_t> jprops_inv=get_inverse_propagators(jprops);
       
-//       get_inverse_propagators(jprops_inv,jprops);
-      
-// #pragma omp parallel for reduction(+:invert_time,sigma_time)
-//       for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
-// 	{
-// 	  //decript indices
-// 	  const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
-// 	  const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
-// 	  const size_t im_r=im_r_ind({im,r});
-// 	  const size_t im_r_ilinmom=im_r_ilinmom_ind({im,r,ilinmom});
+#pragma omp parallel for reduction(+:sigma_time)
+      for(size_t im_r_ijack=0;im_r_ijack<im_r_ijackp1_ind.max();im_r_ijack++)
+	{
+	  //decript indices
+	  const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
+	  const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
 	  
-// 	  const p_t ptilde=all_moms[mom].p(L).tilde();
+	  const p_t ptilde=all_moms[mom].p(L).tilde();
 	  
-// 	  //! function to compute sigma1
-// 	  auto compute_sigma1=[&](const jqprop_t prop_inv)
-// 	    {
-// 	      double out=0.0;
+	  //! function to compute sigma 1,2,3
+	  auto compute_sigma=[&](const qprop_t prop_inv,sigma::proj proj)
+	    {
+	      using namespace sigma;
 	      
-// 	      for(size_t mu=0;mu<NDIM;mu++)
-// 		if(fabs(ptilde[mu])>1e-10)
-// 		  out+=
-// 		    (prop_inv[ijack]*quaGamma[igmu[mu]]).trace().imag()/
-// 		    (12.0*ptilde[mu]*V*all_moms[mom].Np());
+	      double out=0.0;
 	      
-// 	      return out;
-// 	    };
+	      switch(proj)
+		{
+		case SIGMA1:
+		  //trace with pslash
+		  out=0.0;
+		  for(size_t mu=0;mu<NDIM;mu++)
+		    if(fabs(ptilde[mu])>1e-10)
+		      out+=
+			(prop_inv*quaGamma[igmu[mu]]).trace().imag()/
+			(12.0*ptilde[mu]*V*all_moms[mom].Np());
+		  break;
+		case SIGMA2:
+		  //trace with identity
+		  out=(prop_inv*quaGamma[0]).trace().real()/(12.0*V);
+		  break;
+		case SIGMA3:
+		  //trace with gamma5
+		  out=(prop_inv*quaGamma[5]).trace().imag()/(12.0*V);
+		};
+	      
+	      return out;
+	    };
 	  
-// 	  //! function to compute sigma2
-// 	  auto compute_sigma2=[&](const jqprop_t prop_inv)
-// 	    {
-// 	      return (prop_inv[ijack]*quaGamma[0]).trace().real()/(12.0*V);
-// 	    };
+	  //! list of all combination of transformations to be applied
+	  vector<tuple<sigma::ins,jqprop::ins>> map;
 	  
-// 	  //! function to compute sigma3
-// 	  auto compute_sigma3=[&](const jqprop_t prop_inv)
-// 	    {
-// 	      return (prop_inv[ijack]*quaGamma[5]).trace().imag()/(12.0*V);
-// 	    };
+#define ADD_COMBO(INS) map.push_back({sigma::INS,jqprop::INS})
+	  ADD_COMBO(LO);
+	  if(pars::use_QED)
+	    {
+	      ADD_COMBO(PH);
+	      ADD_COMBO(CR);
+	      ADD_COMBO(TM);
+	    }
+#undef ADD_COMBO
 	  
-// 	  //! define the computation of the sigmas
- #define COMPUTE_SIGMA(A)						\
- 	  sigma1_ ## A[im_r_ilinmom][ijack]=compute_sigma1(j.A);	\
- 	  sigma2_ ## A[im_r_ilinmom][ijack]=compute_sigma2(j.A);	\
- 	  sigma3_ ## A[im_r_ilinmom][ijack]=compute_sigma3(j.A)
+	  sigma_time.start();
+	  for(size_t iproj=0;iproj<sigma::nproj;iproj++)
+	    for(auto m : map)
+	      {
+		sigma::ins isins=get<sigma::ins>(m);
+		jqprop::ins ijqins=get<jqprop::ins>(m);
+		
+		const size_t im_r_ilinmom_isigmaproj_isigmains=im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,iproj,isins});
+		const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});
+		sigma[im_r_ilinmom_isigmaproj_isigmains]=compute_sigma(jprops_inv[im_r_ijqins][ijack],sigma::proj_list[iproj]);
+	      }
+	  sigma_time.stop();
 	  
-// 	  //compute sigma
-// 	  sigma_time.start();
-// 	  auto &j=jprops_inv[im_r];
-// 	  COMPUTE_SIGMA(LO);
-// 	  if(pars::use_QED)
-// 	    {
-// 	      COMPUTE_SIGMA(CR_CT);
-// 	      COMPUTE_SIGMA(TM_CT);
-// 	      COMPUTE_SIGMA(PH);
-// 	    }
-// 	  sigma_time.stop();
-	  
-// #undef COMPUTE_SIGMA
-// 	}
-//     }
+#undef COMPUTE_SIGMA
+	}
+    }
   
-//   return *this;
-// }
+  return *this;
+}
 
 // void perens_t::average_r_sigma(perens_t &out) const
 // {
