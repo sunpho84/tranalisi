@@ -202,16 +202,14 @@ perens_t& perens_t::read_or_compute_ingredients()
 
 void perens_t::bin_read_ingredients(raw_file_t &file)
 {
-  CRASH("");
-  //   for(auto &t : concat(get_sigma_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
-//      t.out->bin_read(file);
+  for(auto t : {&sigma})
+    t->bin_read(file);
 }
 
 void perens_t::bin_write_ingredients(raw_file_t &file)
 {
-  CRASH("");
-//   for(auto &t : concat(get_sigma_tasks(),get_pr_bil_tasks(),get_pr_meslep_tasks()))
-//     t.out->bin_write(file);
+  for(auto t : {&sigma})
+    t->bin_write(file);
 }
 
 // perens_t perens_t::average_r() const
