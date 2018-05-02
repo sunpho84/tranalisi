@@ -253,29 +253,26 @@ perens_t& perens_t::compute_sigmas()
 //       }
 // }
 
-// void perens_t::average_equiv_momenta_sigma(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const
-// {
-//   for(size_t i=0;i<out.im_r_ilinmom_ind.max();i++)
-//     {
-//       const vector<size_t> out_im_r_ilinmom_comp=out.im_r_ilinmom_ind(i);
-//       const size_t out_ilinmom_combo=out_im_r_ilinmom_comp[2];
+void perens_t::average_equiv_momenta_sigma(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const
+{
+  for(size_t iout=0;iout<out.im_r_ilinmom_isigmaproj_isigmains_ind.max();iout++)
+    {
+      const vector<size_t> out_comps=out.im_r_ilinmom_isigmaproj_isigmains_ind(iout);
+      const size_t out_ilinmom_combo=out_comps[2];
       
-//       for(const auto &t : out.get_sigma_tasks({this}))
-// 	{
-//   	  djack_t &ave=(*t.out)[i];
-//   	  ave=0.0;
-//   	  for(const size_t ieq : equiv_linmom_combos[out_ilinmom_combo])
-// 	    {
-// 	      vector<size_t> in_im_r_ilinmom_comp=out_im_r_ilinmom_comp;
-// 	      in_im_r_ilinmom_comp[2]=ieq;
-// 	      const size_t i=im_r_ilinmom_ind(in_im_r_ilinmom_comp);
-	      
-// 	      ave+=(*t.in.front())[i];
-// 	    }
-//   	  ave/=equiv_linmom_combos[out_ilinmom_combo].size();
-//   	}
-//     }
-// }
+      djack_t &ave=out.sigma[iout];
+      ave=0.0;
+      for(const size_t ieq : equiv_linmom_combos[out_ilinmom_combo])
+	{
+	  vector<size_t> in_comps=out_comps;
+	  in_comps[2]=ieq;
+	  const size_t iin=im_r_ilinmom_isigmaproj_isigmains_ind(in_comps);
+	  
+	  ave+=sigma[iin];
+	}
+      ave/=equiv_linmom_combos[out_ilinmom_combo].size();
+    }
+}
 
 // void perens_t::val_chir_extrap_sigma(perens_t &out) const
 // {

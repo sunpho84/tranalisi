@@ -53,7 +53,7 @@ void compute_or_load_all_ingredients();
   }
 
 // DEFINE_SINGLE_COMMAND_ALL(average_all_r,average_r)
-// DEFINE_SINGLE_COMMAND_ALL(average_all_equiv_momenta,average_equiv_momenta)
+DEFINE_SINGLE_COMMAND_ALL(average_all_equiv_momenta,average_equiv_momenta)
 // DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap)
 
 // /////////////////////////////////////////////////////////////////
