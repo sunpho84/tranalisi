@@ -278,15 +278,18 @@ perens_t perens_t::average_equiv_momenta() const
   fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
   
   //build out bil combo
-  const vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms(),"equiv_meslepmoms.txt");
-  //fill_output_equivalent_momenta(out.meslepmoms(),equiv_linmom_combos,equiv_meslepmom_combos,meslepmoms());
+  if(pars::compute_bilinears)
+    {
+      const vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms(),"equiv_meslepmoms.txt");
+      //fill_output_equivalent_momenta(out.meslepmoms(),equiv_linmom_combos,equiv_meslepmom_combos,meslepmoms());
+    }
   
-   out.set_indices();
-   out.allocate();
+  out.set_indices();
+  out.allocate();
   
-   average_equiv_momenta_sigma(out,equiv_linmom_combos);
-   average_equiv_momenta_pr_bil(out,equiv_bilmom_combos);
-   average_equiv_momenta_pr_meslep(out,equiv_meslepmom_combos);
+  average_equiv_momenta_sigma(out,equiv_linmom_combos);
+  if(pars::compute_bilinears) average_equiv_momenta_pr_bil(out,equiv_bilmom_combos);
+  if(pars::compute_meslep)    average_equiv_momenta_pr_meslep(out,equiv_meslepmom_combos);
   
   return out;
 }
