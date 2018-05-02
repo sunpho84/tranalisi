@@ -45,10 +45,10 @@ void perens_t::compute_deltam_from_prop()
 	    //ascissa
 	    x[ilinmom]=all_moms[linmoms[ilinmom][0]].p(L).norm2();
 	    
-	    auto get_sigma=[&](sigma::proj proj,sigma::ins ins)
+	    auto get_sigma=[&](sigma::proj proj,sigma::ins ins) -> djack_t
 	      {
 		cout<<proj<<" "<<ins<<endl;
-		return im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,ins});
+		return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,ins})];
 	      };
 	    
 	    //elements to solve the system:
