@@ -183,28 +183,25 @@ void perens_t::average_r_sigma(perens_t &out) const
       out=*this;
     }
   else
-    for(auto &t : out.get_sigma_tasks({this}))
-      {
-	cout<<" "<<t.tag<<endl;
-	
-	const djvec_t &sigma=*t.in.front();
-	djvec_t &sigma_rave=*t.out;
-	
-	for(size_t out_i=0;out_i<out.im_r_ilinmom_isigmaproj_isigmains_ind.max();out_i++)
-	  {
-	    const vector<size_t> out_comps=out.im_r_ilinmom_isigmaproj_isigmains_ind(out_i);
-	    vector<size_t> in_comps=out_comps;
-	    
-	    sigma_rave[out_i]=0.0;
-	    for(size_t r=0;r<nr;r++)
-	      {
-		in_comps[1]=r;
-		const size_t i=im_r_ilinmom_isigmaproj_isigmains_ind(in_comps);
-		sigma_rave[out_i]+=sigma[i];
-	      }
-	    sigma_rave[out_i]/=nr;
-	  }
-      }
+    {
+      djvec_t &sigma_rave=out.sigma;
+      
+      for(size_t out_i=0;out_i<out.im_r_ilinmom_isigmaproj_isigmains_ind.max();out_i++)
+	{
+	  const vector<size_t> out_comps=out.im_r_ilinmom_isigmaproj_isigmains_ind(out_i);
+	  vector<size_t> in_comps=out_comps;
+	  
+	  sigma_rave[out_i]=0.0;
+	  for(size_t r=0;r<nr;r++)
+	    {
+	      cout<<" "<<in_i<<" "<<out_i<<endl;
+	      in_comps[1]=r;
+	      const size_t in_i=im_r_ilinmom_isigmaproj_isigmains_ind(in_comps);
+	      sigma_rave[out_i]+=sigma[in_i];
+	    }
+	  sigma_rave[out_i]/=nr;
+	}
+    }
 }
 
 void perens_t::average_equiv_momenta_sigma(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const
