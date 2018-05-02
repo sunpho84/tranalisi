@@ -82,9 +82,6 @@ void perens_t::clusterize_all_mr_jackkniffed_bilverts(vector<jbil_vert_t>& jvert
 
 void perens_t::compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,const vector<jbil_vert_t>& jverts,const vector<jm_r_mom_qprops_t>& jprop_inv_ou)
 {
-  for(auto &t : get_pr_bil_tasks())
-    *t.out=0.0;
-  
   const index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks+1}});
   
 #pragma omp parallel for
@@ -142,6 +139,10 @@ void perens_t::compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,co
 
 void perens_t::mom_compute_bil()
 {
+  //reset
+  for(auto &t : get_pr_bil_tasks())
+    *t.out=0.0;
+  
   vector<raw_file_t> files=setup_read_all_qprops_mom(conf_list);
   
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
