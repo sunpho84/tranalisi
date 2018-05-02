@@ -81,7 +81,7 @@ dcompl_t coeff_to_read(const qprop::ins ins,const size_t r)
   //     return -1.0;
   //     break;
   //   default:
-      return 1.0;
+      return -1.0;
     // }
 }
 
