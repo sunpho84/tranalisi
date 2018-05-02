@@ -46,7 +46,7 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jbil_vert_t>& jbil,con
       vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>> list={{&bil.LO,&p_in.LO,&p_ou.LO}};
       if(pars::use_QED)
 	for(auto &o : vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>>({
-	      {&bil.PH,       &p_in.F,  &p_ou.F },
+  //{&bil.PH,       &p_in.F,  &p_ou.F },
 	      {&bil.PH,       &p_in.FF, &p_ou.LO},
 	      {&bil.PH,       &p_in.LO, &p_ou.FF},
 	      {&bil.PH,       &p_in.T,  &p_ou.LO},
@@ -109,20 +109,22 @@ void perens_t::compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,co
 	    (pinv_ou.OU[ijack]*jv.V[ijack]*quaGamma[5]*pinv_in.IN[ijack].adjoint()*quaGamma[5]*quaGamma[iG].adjoint()).trace().real()/(12.0*iG_of_bil[ibil].size())
 	  
 	  PROJ(LO, +,LO,LO,LO);
-	  //
-	  PROJ(PH, -,PH,LO,LO);
-	  PROJ(PH, +,LO,PH,LO);
-	  PROJ(PH, -,LO,LO,PH);
-	  //
-	  PROJ(CR_CT_OU, -,CR_CT,LO,LO);
-	  PROJ(TM_CT_OU, -,TM_CT,LO,LO);
-	  PROJ(CR_CT_OU, +,LO,CR_CT_ou,LO);
-	  PROJ(TM_CT_OU, +,LO,TM_CT_ou,LO);
-	  //
-	  PROJ(CR_CT_IN, -,LO,LO,CR_CT);
-	  PROJ(TM_CT_IN, -,LO,LO,TM_CT);
-	  PROJ(CR_CT_IN, +,LO,CR_CT_in,LO);
-	  PROJ(TM_CT_IN, +,LO,TM_CT_in,LO);
+	  
+	  if(pars::use_QED)
+	    {
+	      PROJ(PH,       +,LO, PH,       LO);
+	      PROJ(CR_CT_OU, +,LO, CR_CT_ou, LO);
+	      PROJ(TM_CT_OU, +,LO, TM_CT_ou, LO);
+	      PROJ(CR_CT_IN, +,LO, CR_CT_in, LO);
+	      PROJ(TM_CT_IN, +,LO, TM_CT_in, LO);
+	      ///
+	      PROJ(PH,       -,PH,    LO, LO);
+	      PROJ(PH,       -,LO,    LO, PH);
+	      PROJ(CR_CT_OU, -,CR_CT, LO, LO);
+	      PROJ(TM_CT_OU, -,TM_CT, LO, LO);
+	      PROJ(CR_CT_IN, -,LO,    LO, CR_CT);
+	      PROJ(TM_CT_IN, -,LO,    LO, TM_CT);
+	    }
 	  
 	  #undef PROJ
 	}
