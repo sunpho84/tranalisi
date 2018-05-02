@@ -567,43 +567,43 @@ vector<vector<size_t>> perens_t::get_equiv_list(const vector<array<size_t,N>> &c
   return equiv_of_combo;
 }
 
-// //! helper to fill the momenta index of output
-// template <size_t N>
-// void perens_t::fill_output_equivalent_momenta(vector<array<size_t,N>> &out_equiv,const vector<vector<size_t>> &equiv_linmom_combos,
-// 					      const vector<vector<size_t>> &equiv_combos,const vector<array<size_t,N>> &mom_combos) const
-// {
-//   out_equiv.clear();
-//   out_equiv.reserve(equiv_combos.size());
+//! helper to fill the momenta index of output
+template <size_t N>
+void perens_t::fill_output_equivalent_momenta(vector<array<size_t,N>> &out_equiv,const vector<vector<size_t>> &equiv_linmom_combos,
+					      const vector<vector<size_t>> &equiv_combos,const vector<array<size_t,N>> &mom_combos) const
+{
+  out_equiv.clear();
+  out_equiv.reserve(equiv_combos.size());
   
-//   for(const auto &p : equiv_combos)
-//     {
-//       const size_t &ref=p[0];
-//       const size_t &imom=mom_combos[ref][0];
+  for(const auto &p : equiv_combos)
+    {
+      const size_t &ref=p[0];
+      const size_t &imom=mom_combos[ref][0];
       
-//       array<size_t,N> temp;
-//       temp[0]=imom;
+      array<size_t,N> temp;
+      temp[0]=imom;
       
-//       for(size_t i=1;i<N;i++)
-// 	{
-// 	  //search in which output lin to search for lin
-// 	  const size_t ilin_search=mom_combos[ref][i];
-// 	  size_t &iout_lin=temp[i];
-// 	  size_t nfound=0;
-// 	  for(size_t ilin_combo=0;ilin_combo<equiv_linmom_combos.size();ilin_combo++)
-// 	    {
-// 	      const vector<size_t> &equiv_list=equiv_linmom_combos[ilin_combo];
-// 	      auto ei=find(equiv_list.begin(),equiv_list.end(),ilin_search);
-// 	      if(ei!=equiv_list.end())
-// 		{
-// 		  nfound++;
-// 		  iout_lin=ilin_combo;
-// 		}
-// 	    }
-// 	  if(nfound!=1) CRASH("found %zu times %zu",nfound,ilin_search);
-// 	}
+      for(size_t i=1;i<N;i++)
+	{
+	  //search in which output lin to search for lin
+	  const size_t ilin_search=mom_combos[ref][i];
+	  size_t &iout_lin=temp[i];
+	  size_t nfound=0;
+	  for(size_t ilin_combo=0;ilin_combo<equiv_linmom_combos.size();ilin_combo++)
+	    {
+	      const vector<size_t> &equiv_list=equiv_linmom_combos[ilin_combo];
+	      auto ei=find(equiv_list.begin(),equiv_list.end(),ilin_search);
+	      if(ei!=equiv_list.end())
+		{
+		  nfound++;
+		  iout_lin=ilin_combo;
+		}
+	    }
+	  if(nfound!=1) CRASH("found %zu times %zu",nfound,ilin_search);
+	}
 	
-//       out_equiv.push_back(temp);
-//     }
-// }
+      out_equiv.push_back(temp);
+    }
+}
 
 #endif
