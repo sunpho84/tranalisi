@@ -19,51 +19,50 @@ void perens_t::compute_Zbil()
     for(size_t im_r_im_r_ibil=0;im_r_im_r_ibil<im_r_im_r_ibil_ind.max();im_r_im_r_ibil++)
       {
 	const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_ibil_ind(im_r_im_r_ibil);
-	const vector<size_t> im_r1_comp=subset(im_r_im_r_ibil_comp,0,2);
-	const vector<size_t> im_r2_comp=subset(im_r_im_r_ibil_comp,2,4);
-	const size_t im_r1=im_r_ind(im_r1_comp);
-	const size_t im_r2=im_r_ind(im_r2_comp);
-	const size_t ibil=im_r_im_r_ibil_comp[4];
-	const size_t ilinmom1=bilmoms[ibilmom][1];
-	const size_t ilinmom2=bilmoms[ibilmom][2];
-	const size_t im_r1_ilinmom1=im_r_ilinmom_ind(concat(im_r1_comp,ilinmom1));
-	const size_t im_r2_ilinmom2=im_r_ilinmom_ind(concat(im_r2_comp,ilinmom2));
+	const vector<size_t> im_r_ou_comp=subset(im_r_im_r_ibil_comp,0,2);
+	const vector<size_t> im_r_in_comp=subset(im_r_im_r_ibil_comp,2,4);
+	const size_t im_r_ou=im_r_ind(im_r_ou_comp);
+	const size_t im_r_in=im_r_ind(im_r_in_comp);
+	const size_t ilinmom_ou=bilmoms[ibilmom][1];
+	const size_t ilinmom_in=bilmoms[ibilmom][2];
+	const size_t im_r_ilinmom_ou=im_r_ilinmom_ind(concat(im_r_ou_comp,ilinmom_ou));
+	const size_t im_r_ilinmom_in=im_r_ilinmom_ind(concat(im_r_in_comp,ilinmom_in));
 	
-	const size_t im_r_im_r_ibil_ibilmom=im_r_im_r_ibil_ibilmom_ind(concat(im_r1_comp,im_r2_comp,vector<size_t>({ibil,ibilmom})));
+	const size_t im_r_im_r_ibil_ibilmom=im_r_im_r_ibil_ibilmom_ind(concat(im_r_im_r_ibil_comp,ibilmom));
 	
 	Zbil[im_r_im_r_ibil_ibilmom]=
-	  sqrt(sigma1_LO[im_r1_ilinmom1]*sigma1_LO[im_r2_ilinmom2])/pr_bil_LO[im_r_im_r_ibil_ibilmom];
+	  sqrt(sigma1_LO[im_r_ilinmom_ou]*sigma1_LO[im_r_ilinmom_in])/pr_bil_LO[im_r_im_r_ibil_ibilmom];
 	
 	if(pars::use_QED)
 	  {
 	    if(not deltam_computed) CRASH("Needs to have computed deltam");
 	    
-	    const djack_t& deltam_cr1=deltam_cr[im_r1];
-	    const djack_t& deltam_cr2=deltam_cr[im_r2];
-	    const djack_t& deltam_tm1=deltam_tm[im_r1];
-	    const djack_t& deltam_tm2=deltam_tm[im_r2];
+	    const djack_t& deltam_cr_ou=deltam_cr[im_r_ou];
+	    const djack_t& deltam_cr_in=deltam_cr[im_r_in];
+	    const djack_t& deltam_tm_ou=deltam_tm[im_r_ou];
+	    const djack_t& deltam_tm_in=deltam_tm[im_r_in];
 	    
 	    djack_t pr_bil_QED=
 	      pr_bil_PH[im_r_im_r_ibil_ibilmom]+
-	      deltam_cr1*pr_bil_CR_CT1[im_r_im_r_ibil_ibilmom]+
-	      deltam_cr2*pr_bil_CR_CT2[im_r_im_r_ibil_ibilmom]+
-	      deltam_tm1*pr_bil_TM_CT1[im_r_im_r_ibil_ibilmom]+
-	      deltam_tm2*pr_bil_TM_CT2[im_r_im_r_ibil_ibilmom];
-	    djack_t sigma1_QED1=
-	      sigma1_PH[im_r1_ilinmom1]+
-	      deltam_cr1*sigma1_CR_CT[im_r1_ilinmom1]+
-	      deltam_tm1*sigma1_TM_CT[im_r1_ilinmom1];
-	    djack_t sigma1_QED2=
-	      sigma2_PH[im_r2_ilinmom2]+
-	      deltam_cr2*sigma2_CR_CT[im_r2_ilinmom2]+
-	      deltam_tm2*sigma2_TM_CT[im_r2_ilinmom2];
+	      deltam_cr_ou*pr_bil_CR_CT_OU[im_r_im_r_ibil_ibilmom]+
+	      deltam_cr_in*pr_bil_CR_CT_IN[im_r_im_r_ibil_ibilmom]+
+	      deltam_tm_ou*pr_bil_TM_CT_OU[im_r_im_r_ibil_ibilmom]+
+	      deltam_tm_in*pr_bil_TM_CT_IN[im_r_im_r_ibil_ibilmom];
+	    djack_t sigma1_QED_ou=
+	      sigma1_PH[im_r_ilinmom_ou]+
+	      deltam_cr_ou*sigma1_CR_CT[im_r_ilinmom_ou]+
+	      deltam_tm_ou*sigma1_TM_CT[im_r_ilinmom_ou];
+	    djack_t sigma1_QED_in=
+	      sigma2_PH[im_r_ilinmom_in]+
+	      deltam_cr_in*sigma1_CR_CT[im_r_ilinmom_in]+
+	      deltam_tm_in*sigma1_TM_CT[im_r_ilinmom_in];
 	    
-	    cout<<pr_bil_LO[im_r_im_r_ibil_ibilmom]<<" "<<sigma1_LO[im_r1_ilinmom1]<<" "<<sigma1_LO[im_r2_ilinmom2]<<endl;
+	    cout<<pr_bil_LO[im_r_im_r_ibil_ibilmom]<<" "<<sigma1_LO[im_r_ilinmom_ou]<<" "<<sigma1_LO[im_r_ilinmom_in]<<endl;
 	    
 	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
 	      -pr_bil_QED/pr_bil_LO[im_r_im_r_ibil_ibilmom]
-	      +(sigma1_QED1/sigma1_LO[im_r1_ilinmom1]+
-		sigma1_QED2/sigma1_LO[im_r2_ilinmom2])/2.0;
+	      +(sigma1_QED_ou/sigma1_LO[im_r_ilinmom_ou]+
+		sigma1_QED_in/sigma1_LO[im_r_ilinmom_in])/2.0;
 	  }
       }
 }
