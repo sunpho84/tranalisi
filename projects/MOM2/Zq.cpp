@@ -12,75 +12,73 @@
 
 void perens_t::compute_Zq()
 {
-// #pragma omp parallel for
-//   for(size_t im_r_ilinmom=0;im_r_ilinmom<im_r_ilinmom_ind.max();im_r_ilinmom++)
-//     {
-//       const vector<size_t> comps=im_r_ilinmom_ind(im_r_ilinmom);
-//       const size_t im=comps[0];
-//       const size_t r=comps[1];
-//       const size_t im_r=im_r_ind({im,r});
-//       Zq[im_r_ilinmom]=sigma1_LO[im_r_ilinmom];
+#pragma omp parallel for
+  for(size_t im_r_ilinmom=0;im_r_ilinmom<im_r_ilinmom_ind.max();im_r_ilinmom++)
+    {
+      const vector<size_t> comps=im_r_ilinmom_ind(im_r_ilinmom);
+      const size_t im=comps[0];
+      const size_t r=comps[1];
+      const size_t ilinmom=comps[2];
+      const size_t im_r=im_r_ind({im,r});
       
-//       if(pars::use_QED)
-// 	{
-// 	  if(not deltam_computed) CRASH("Needs to have computed deltam");
+      using namespace sigma;
+      auto sigma1=[&](sigma::ins ins)->djack_t
+	{
+      	  return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,SIGMA1,ins})];
+	};
+      
+      Zq[im_r_ilinmom]=sigma1(LO);
+      
+      if(pars::use_QED)
+	{
+	  if(not deltam_computed) CRASH("Needs to have computed deltam");
 	  
-// 	  Zq_QED[im_r_ilinmom]=
-// 	    sigma1_PH[im_r_ilinmom]+
-// 	    sigma1_CR_CT[im_r_ilinmom]*deltam_cr[im_r]+
-// 	    sigma1_TM_CT[im_r_ilinmom]*deltam_tm[im_r];
-// 	}
-//     }
+	  Zq_QED_rel[im_r_ilinmom]=
+	    (sigma1(PH)+
+	     sigma1(CR)*deltam_cr[im_r]+
+	     sigma1(TM)*deltam_tm[im_r])/
+	    sigma1(LO);
+	}
+    }
 }
 
-// vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& ens)
-// {
-//   vector<const djvec_t*> in_Zq,in_Zq_QED;
-//   for(auto &e : ens)
-//     {
-//       in_Zq.push_back(&e->Zq);
-//       if(pars::use_QED)
-// 	in_Zq_QED.push_back(&e->Zq_QED);
-//     }
+vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& ens)
+{
+  vector<const djvec_t*> in_Zq,in_Zq_QED_rel;
+  for(auto &e : ens)
+    {
+      in_Zq.push_back(&e->Zq);
+      if(pars::use_QED)
+	in_Zq_QED_rel.push_back(&e->Zq_QED_rel);
+    }
   
-//   vector<task_t> Zq_tasks={{&Zq,in_Zq,im_r_ilinmom_ind,"Zq",QCD_task}};
-//   if(pars::use_QED)
-//     Zq_tasks.push_back({&Zq_QED,in_Zq_QED,im_r_ilinmom_ind,"Zq_QED",QED_task});
+  vector<task_t> Zq_tasks={{&Zq,in_Zq,im_r_ilinmom_ind,"Zq",QCD_task}};
+  if(pars::use_QED)
+    Zq_tasks.push_back({&Zq_QED_rel,in_Zq_QED_rel,im_r_ilinmom_ind,"Zq_QED_rel",QED_task});
   
-//   return Zq_tasks;
-// }
+  return Zq_tasks;
+}
 
 void perens_t::plot_Zq(const string &suffix)
 {
-//   cout<<"Plotting all Zq of "<<dir_path<<" for suffix: \""<<suffix<<"\""<<endl;
+  cout<<"Plotting all Zq of "<<dir_path<<" for suffix: \""<<suffix<<"\""<<endl;
   
-//   auto tasks=this->get_Zq_tasks();
-  
-//   djvec_t Zq_QED_rel;
-//   if(pars::use_QED)
-//     {
-//       Zq_QED_rel=Zq_QED/Zq;
+  for(auto &t : get_Zq_tasks())
+    {
+      const djvec_t &Z=*t.out;
+      const string &tag=t.tag;
       
-//       tasks.push_back({&Zq_QED_rel,{},im_r_ilinmom_ind,"Zq_QED_rel",QED_task});
-//     }
-  
-//   for(auto &t : tasks)
-//     {
-//       const djvec_t &Z=*t.out;
-//       const string &tag=t.tag;
+      grace_file_t out(dir_path+"/plots/"+tag+(suffix!=""?("_"+suffix):string(""))+".xmg");
       
-//       grace_file_t out(dir_path+"/plots/"+tag+(suffix!=""?("_"+suffix):string(""))+".xmg");
-      
-//       for(size_t im=0;im<nm;im++)
-//   	for(size_t r=0;r<nr;r++)
-// 	  {
-// 	    out.new_data_set();
-// 	    for(size_t imom=0;imom<linmoms.size();imom++)
-// 	      {
-// 		const double p2tilde=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
-// 		out.write_ave_err(p2tilde,Z[im_r_ilinmom_ind({im,r,imom})].ave_err());
-// 	      }
-// 	  }
-//     }
+      for(size_t im=0;im<nm;im++)
+  	for(size_t r=0;r<nr;r++)
+	  {
+	    out.new_data_set();
+	    for(size_t imom=0;imom<linmoms.size();imom++)
+	      {
+		const double p2tilde=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
+		out.write_ave_err(p2tilde,Z[im_r_ilinmom_ind({im,r,imom})].ave_err());
+	      }
+	  }
+    }
 }
-

@@ -110,9 +110,11 @@ struct perens_t
     const index_t ind;
     //! name of the task
     const string tag;
+    //! store if is QED
+    const QCD_QED_task_t QCD_QED_task;
     //! contructor
-    task_t(djvec_t *out,const vector<const djvec_t*>& in,const index_t& ind,const string tag) :
-      in(in),out(out),ind(ind),tag(tag) {}
+    task_t(djvec_t *out,const vector<const djvec_t*>& in,const index_t& ind,const string tag,const QCD_QED_task_t QCD_QED_task) :
+      in(in),out(out),ind(ind),tag(tag),QCD_QED_task(QCD_QED_task) {}
   };
   
   /////////////////////////////////////////////////////////////////
@@ -160,18 +162,14 @@ struct perens_t
   //! allocate all data
   perens_t& allocate();
   
-  // //! return a list of all tasks
-  // vector<task_t> get_all_tasks(const vector<const perens_t*> &ens={})
-  // {
-  //   return concat(get_sigma_tasks(ens),
-  // 		  get_Zq_tasks(ens),
-  // 		  ///
-  // 		  get_pr_bil_tasks(ens),
-  // 		  get_Zbil_tasks(ens),
-  // 		  ///
-  // 		  get_pr_meslep_tasks(ens),
-  // 		  get_Zmeslep_tasks(ens));
-  // }
+  //! return a list of all Ztasks
+  vector<task_t> get_all_Ztasks(const vector<const perens_t*> &ens={})
+  {
+    return concat(get_Zq_tasks(ens)//,
+  		  // get_Zbil_tasks(ens),
+  		  // get_Zmeslep_tasks(ens)
+		  );
+  }
   
   /////////////////////////////////////////////////////////////////
   
@@ -339,11 +337,11 @@ struct perens_t
   /////////////////////////////////////////////////////////////////
   
   //Zq, with and without QED
-  
   djvec_t Zq;
+  djvec_t Zq_QED_rel;
   
-//   //! return a list of tasks for Zq
-//   vector<task_t> get_Zq_tasks(const vector<const perens_t*>& ens={});
+  //! return a list of tasks for Zq
+  vector<task_t> get_Zq_tasks(const vector<const perens_t*>& ens={});
   
   //! compute all Zq
   void compute_Zq();

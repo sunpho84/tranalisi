@@ -55,8 +55,8 @@ perens_t& perens_t::read_pars(const string &name)
 
 perens_t& perens_t::allocate()
 {
-  // for(auto &task : get_all_tasks())
-  //   task.out->resize(task.ind.max());
+  for(auto &Ztask : get_all_Ztasks())
+    Ztask.out->resize(Ztask.ind.max());
   
   sigma.resize(im_r_ilinmom_isigmaproj_isigmains_ind.max());
   

@@ -47,7 +47,6 @@ void perens_t::compute_deltam_from_prop()
 	    
 	    auto get_sigma=[&](sigma::proj proj,sigma::ins ins) -> djack_t
 	      {
-		cout<<proj<<" "<<ins<<endl;
 		return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,ins})];
 	      };
 	    
