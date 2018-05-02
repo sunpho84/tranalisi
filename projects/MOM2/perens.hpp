@@ -126,7 +126,7 @@ struct perens_t
   perens_t& compute_sigmas();
   
   //! return a list of tasks for sigma
-  // vector<task_t> get_sigma_tasks(const vector<const perens_t*> &ens={});
+  vector<task_t> get_sigma_tasks(const vector<const perens_t*> &ens={});
   
   /////////////////////////////////////////////////////////////////
   
@@ -429,11 +429,11 @@ struct perens_t
   
 //   /////////////////////////////////////////////////////////////////
   
-//   //! triggers r-averaging of all quantities
-//   perens_t average_r() const;
+  //! triggers r-averaging of all quantities
+  perens_t average_r() const;
   
-//   //! average sigma
-//   void average_r_sigma(perens_t &out) const;
+  //! average sigma
+  void average_r_sigma(perens_t &out) const;
   
 //   //! average pr_bil
 //   void average_r_pr_bil(perens_t &out) const;

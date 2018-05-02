@@ -53,57 +53,17 @@ void perens_t::plot_sigma(const string &suffix)
     }
 }
 
-// vector<perens_t::task_t> perens_t::get_sigma_tasks(const vector<const perens_t*> &ens)
-// {
-//   vector<const djvec_t*> in_sigma1_LO,in_sigma2_LO,in_sigma3_LO;
-//   vector<const djvec_t*> in_sigma1_CR_CT,in_sigma2_CR_CT,in_sigma3_CR_CT;
-//   vector<const djvec_t*> in_sigma1_TM_CT,in_sigma2_TM_CT,in_sigma3_TM_CT;
-//   vector<const djvec_t*> in_sigma1_PH,in_sigma2_PH,in_sigma3_PH;
+vector<perens_t::task_t> perens_t::get_sigma_tasks(const vector<const perens_t*> &ens)
+{
+  vector<const djvec_t*> in_sigma;
   
-//   for(auto &e : ens)
-//     {
-//       in_sigma1_LO.push_back(&e->sigma1_LO);
-//       in_sigma2_LO.push_back(&e->sigma2_LO);
-//       in_sigma3_LO.push_back(&e->sigma3_LO);
-//       ///
-//       if(pars::use_QED)
-// 	{
-// 	  in_sigma1_CR_CT.push_back(&e->sigma1_CR_CT);
-// 	  in_sigma2_CR_CT.push_back(&e->sigma2_CR_CT);
-// 	  in_sigma3_CR_CT.push_back(&e->sigma3_CR_CT);
-// 	  ///
-// 	  in_sigma1_TM_CT.push_back(&e->sigma1_TM_CT);
-// 	  in_sigma2_TM_CT.push_back(&e->sigma2_TM_CT);
-// 	  in_sigma3_TM_CT.push_back(&e->sigma3_TM_CT);
-// 	  ///
-// 	  in_sigma1_PH.push_back(&e->sigma1_PH);
-// 	  in_sigma2_PH.push_back(&e->sigma2_PH);
-// 	  in_sigma3_PH.push_back(&e->sigma3_PH);
-// 	}
-//     }
+  for(auto &e : ens)
+    in_sigma.push_back(&e->sigma);
   
-//   vector<task_t> sigma_tasks={
-//     {&sigma1_LO,in_sigma1_LO,im_r_ilinmom_ind,"sigma1_LO",QCD_task},
-//     {&sigma2_LO,in_sigma2_LO,im_r_ilinmom_ind,"sigma2_LO",QCD_task},
-//     {&sigma3_LO,in_sigma3_LO,im_r_ilinmom_ind,"sigma3_LO",QCD_task}};
-//   ///
-//   if(pars::use_QED)
-//     {
-//       sigma_tasks.push_back({&sigma1_CR_CT,in_sigma1_CR_CT,im_r_ilinmom_ind,"sigma1_CR_CT",QED_task});
-//       sigma_tasks.push_back({&sigma2_CR_CT,in_sigma2_CR_CT,im_r_ilinmom_ind,"sigma2_CR_CT",QED_task});
-//       sigma_tasks.push_back({&sigma3_CR_CT,in_sigma3_CR_CT,im_r_ilinmom_ind,"sigma3_CR_CT",QED_task});
-//       ///
-//       sigma_tasks.push_back({&sigma1_TM_CT,in_sigma1_TM_CT,im_r_ilinmom_ind,"sigma1_TM_CT",QED_task});
-//       sigma_tasks.push_back({&sigma2_TM_CT,in_sigma2_TM_CT,im_r_ilinmom_ind,"sigma2_TM_CT",QED_task});
-//       sigma_tasks.push_back({&sigma3_TM_CT,in_sigma3_TM_CT,im_r_ilinmom_ind,"sigma3_TM_CT",QED_task});
-//       ///
-//       sigma_tasks.push_back({&sigma1_PH,in_sigma1_PH,im_r_ilinmom_ind,"sigma1_PH",QED_task});
-//       sigma_tasks.push_back({&sigma2_PH,in_sigma2_PH,im_r_ilinmom_ind,"sigma2_PH",QED_task});
-//       sigma_tasks.push_back({&sigma3_PH,in_sigma3_PH,im_r_ilinmom_ind,"sigma3_PH",QED_task});
-//     }
+  vector<task_t> sigma_tasks={{&sigma,in_sigma,im_r_ilinmom_isigmaproj_isigmains_ind,"sigma",QCD_task}};
   
-//   return sigma_tasks;
-// }
+  return sigma_tasks;
+}
 
 perens_t& perens_t::compute_sigmas()
 {
@@ -213,39 +173,39 @@ perens_t& perens_t::compute_sigmas()
   return *this;
 }
 
-// void perens_t::average_r_sigma(perens_t &out) const
-// {
-//   cout<<"Averaging r for sigma"<<endl;
+void perens_t::average_r_sigma(perens_t &out) const
+{
+  cout<<"Averaging r for sigma"<<endl;
   
-//   if(nr==1)
-//     {
-//       cout<<"Skipping r average of Zq"<<endl;
-//       out=*this;
-//     }
-//   else
-//     for(auto &t : out.get_sigma_tasks({this}))
-//       {
-// 	cout<<" "<<t.tag<<endl;
+  if(nr==1)
+    {
+      cout<<"Skipping r average of Zq"<<endl;
+      out=*this;
+    }
+  else
+    for(auto &t : out.get_sigma_tasks({this}))
+      {
+	cout<<" "<<t.tag<<endl;
 	
-// 	const djvec_t &sigma=*t.in.front();
-// 	djvec_t &sigma_rave=*t.out;
+	const djvec_t &sigma=*t.in.front();
+	djvec_t &sigma_rave=*t.out;
 	
-// 	for(size_t out_i=0;out_i<out.im_r_ilinmom_ind.max();out_i++)
-// 	  {
-// 	    const vector<size_t> out_im_r_ilinmom_comp=out.im_r_ilinmom_ind(out_i);
-// 	    vector<size_t> im_r_ilinmom_comp=out_im_r_ilinmom_comp;
+	for(size_t out_i=0;out_i<out.im_r_ilinmom_isigmaproj_isigmains_ind.max();out_i++)
+	  {
+	    const vector<size_t> out_comps=out.im_r_ilinmom_isigmaproj_isigmains_ind(out_i);
+	    vector<size_t> in_comps=out_comps;
 	    
-// 	    sigma_rave[out_i]=0.0;
-// 	    for(size_t r=0;r<nr;r++)
-// 	      {
-// 		im_r_ilinmom_comp[1]=r;
-// 		const size_t i=im_r_ilinmom_ind(im_r_ilinmom_comp);
-// 		sigma_rave[out_i]+=sigma[i];
-// 	      }
-// 	    sigma_rave[out_i]/=nr;
-// 	  }
-//       }
-// }
+	    sigma_rave[out_i]=0.0;
+	    for(size_t r=0;r<nr;r++)
+	      {
+		in_comps[1]=r;
+		const size_t i=im_r_ilinmom_isigmaproj_isigmains_ind(in_comps);
+		sigma_rave[out_i]+=sigma[i];
+	      }
+	    sigma_rave[out_i]/=nr;
+	  }
+      }
+}
 
 void perens_t::average_equiv_momenta_sigma(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const
 {

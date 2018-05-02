@@ -214,30 +214,30 @@ void perens_t::bin_write_ingredients(raw_file_t &file)
     t->bin_write(file);
 }
 
-// perens_t perens_t::average_r() const
-// {
-//   perens_t out=*this;
+perens_t perens_t::average_r() const
+{
+  perens_t out=*this;
   
-//   out.nr=1;
-//   out.linmoms=linmoms;
-//   out.bilmoms=bilmoms;
+  out.nr=1;
+  out.linmoms=linmoms;
+  out.bilmoms=bilmoms;
   
-//   out.set_indices();
-//   out.allocate();
+  out.set_indices();
+  out.allocate();
   
-//   average_r_sigma(out);
+  average_r_sigma(out);
 //   average_r_pr_bil(out);
 //   average_r_pr_meslep(out);
   
-//   if(nr>1)
-//     for(size_t im=0;im<nm;im++)
-//       {
-// 	out.deltam_cr[im]=(deltam_cr[im_r_ind({im,0})]+deltam_cr[im_r_ind({im,1})])/2.0;
-// 	out.deltam_tm[im]=(deltam_tm[im_r_ind({im,0})]+deltam_tm[im_r_ind({im,1})])/2.0;
-//       }
+  if(nr>1)
+    for(size_t im=0;im<nm;im++)
+      {
+	out.deltam_cr[im]=(deltam_cr[im_r_ind({im,0})]+deltam_cr[im_r_ind({im,1})])/2.0;
+	out.deltam_tm[im]=(deltam_tm[im_r_ind({im,0})]+deltam_tm[im_r_ind({im,1})])/2.0;
+      }
   
-//   return out;
-// }
+  return out;
+}
 
 // perens_t perens_t::val_chir_extrap() const
 // {
