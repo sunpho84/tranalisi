@@ -336,18 +336,17 @@ struct perens_t
   //! compute deltam from props
   void compute_deltam_from_prop();
   
-//   /////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
   
-//   //Zq, with and without QED
+  //Zq, with and without QED
   
-//   djvec_t Zq;
-//   djvec_t Zq_QED;  //not rel!
+  djvec_t Zq;
   
 //   //! return a list of tasks for Zq
 //   vector<task_t> get_Zq_tasks(const vector<const perens_t*>& ens={});
   
-//   //! compute all Zq
-//   void compute_Zq();
+  //! compute all Zq
+  void compute_Zq();
   
 //   /////////////////////////////////////////////////////////////////
   
@@ -410,7 +409,7 @@ struct perens_t
    {
      Z_computed=true;
     
-//     compute_Zq();
+     compute_Zq();
 //     if(pars::compute_bilinears) compute_Zbil();
 //     if(pars::compute_meslep) compute_Zmeslep();
    }
@@ -420,13 +419,13 @@ struct perens_t
      if(Z_computed==false) CRASH("Need to have computed Z");
      
      plot_sigma(suffix);
-//     plot_Zq(suffix);
+     plot_Zq(suffix);
 //     plot_Zbil(suffix);
 //     plot_Zmeslep(suffix);
    }
   
-   void plot_sigma(const string &suffix);
-//   void plot_Zq(const string &suffix);
+  void plot_sigma(const string &suffix);
+  void plot_Zq(const string &suffix);
 //   void plot_Zbil(const string &suffix);
 //   void plot_Zmeslep(const string &suffix);
   

@@ -10,8 +10,8 @@
 
 #include <MOM2/perens.hpp>
 
-// void perens_t::compute_Zq()
-// {
+void perens_t::compute_Zq()
+{
 // #pragma omp parallel for
 //   for(size_t im_r_ilinmom=0;im_r_ilinmom<im_r_ilinmom_ind.max();im_r_ilinmom++)
 //     {
@@ -31,7 +31,7 @@
 // 	    sigma1_TM_CT[im_r_ilinmom]*deltam_tm[im_r];
 // 	}
 //     }
-// }
+}
 
 // vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& ens)
 // {
@@ -50,8 +50,8 @@
 //   return Zq_tasks;
 // }
 
-// void perens_t::plot_Zq(const string &suffix)
-// {
+void perens_t::plot_Zq(const string &suffix)
+{
 //   cout<<"Plotting all Zq of "<<dir_path<<" for suffix: \""<<suffix<<"\""<<endl;
   
 //   auto tasks=this->get_Zq_tasks();
@@ -82,5 +82,5 @@
 // 	      }
 // 	  }
 //     }
-// }
+}
 
