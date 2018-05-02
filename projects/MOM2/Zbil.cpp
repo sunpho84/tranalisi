@@ -53,7 +53,7 @@ void perens_t::compute_Zbil()
 	      sigma1_TM_CT[im_r_ilinmom_in]*deltam_tm[im_r_in];
 	    
 	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
-	      -pr_bil_QED/pr_bil_LO[im_r_im_r_ibil_ibilmom]*0.0
+	      -pr_bil_QED/pr_bil_LO[im_r_im_r_ibil_ibilmom]
 	      +(sigma1_QED_ou/sigma1_LO[im_r_ilinmom_ou]+
 		sigma1_QED_in/sigma1_LO[im_r_ilinmom_in])/2.0;
 	  }
