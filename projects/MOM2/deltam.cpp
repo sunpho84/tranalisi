@@ -22,7 +22,7 @@ void perens_t::compute_deltam_from_prop()
   const size_t mom_probe=linmoms.size()/8;
   const size_t iprobe=im_r_ilinmom_isigmaproj_isigmains_ind({0,0,mom_probe,sigma::SIGMA2,sigma::TM});
   cout<<"Probe sigma: "<<sigma[iprobe].ave_err()<<endl;
-  const bool both=(fabs(sigma[iprobe].ave())>1e-10 and fabs(sigma[iprobe].ave())>3.0*sigma[iprobe].err());
+  const bool both=(fabs(sigma[iprobe].ave())>1e-10);
   if(not both) cout<<"Determining only Critical correction"<<endl;
   
   for(size_t im=0;im<nm;im++)
