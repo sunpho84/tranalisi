@@ -136,8 +136,8 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
 	  const pr_bil::ins bilins=get<3>(t);
 	  const qprop::ins iqins_ou=get<4>(t);
 	  
-	  const size_t im_r_iqins_ou=im_r_ijqins_ind({im_ou,iqins_ou,r_ou});
-	  const size_t im_r_iqins_in=im_r_ijqins_ind({im_in,iqins_in,r_in});
+	  const size_t im_r_iqins_ou=im_r_ijqins_ind({im_ou,r_ou,iqins_ou});
+	  const size_t im_r_iqins_in=im_r_ijqins_ind({im_in,r_in,iqins_in});
 	  
 	  const qprop_t& pinv_ou=jprop_inv_ou[im_r_iqins_ou][ijack];
 	  const qprop_t& pinv_in=jprop_inv_in[im_r_iqins_in][ijack];
