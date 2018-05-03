@@ -101,7 +101,7 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(jbil_vert_t &jbil,const vecto
       vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>> list={{&jbil.LO[im_r_im_r_igam],&p_in.LO,&p_ou.LO}};
       if(pars::use_QED)
 	for(auto &o : vector<tuple<jqprop_t*,const qprop_t*,const qprop_t*>>({
-	      {&jbil.PH[im_r_im_r_igam],&p_in.F,&p_ou.F},
+	      //{&jbil.PH[im_r_im_r_igam],&p_in.F,&p_ou.F},
 	      {&jbil.PH[im_r_im_r_igam],&p_in.FF,&p_ou.LO},
 	      {&jbil.PH[im_r_im_r_igam],&p_in.LO,&p_ou.FF},
 	      {&jbil.PH[im_r_im_r_igam],&p_in.T,&p_ou.LO},
@@ -258,8 +258,9 @@ void perens_t::compute_Zbil()
 	if(pars::use_QED)
 	    Zbil_QED_rel[im_r_im_r_iZbil_ibilmom]=
 	      -pr_bil_QED[im_r_im_r_iZbil_ibilmom]/pr_bil[im_r_im_r_iZbil_ibilmom]
-	      +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+
-		Zq_sig1_QED[im_r2_ilinmom2]/Zq_sig1[im_r2_ilinmom2])/2.0;
+	      // +(Zq_sig1_QED[im_r1_ilinmom1]/Zq_sig1[im_r1_ilinmom1]+
+	      // 	Zq_sig1_QED[im_r2_ilinmom2]/Zq_sig1[im_r2_ilinmom2])/2.0
+	      ;
       }
 }
 
