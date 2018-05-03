@@ -52,11 +52,11 @@ void perens_t::compute_Zbil()
 	      // pr(pr_bil::TM_IN)*deltam_tm[im_r_in]
 	      ;
 	    djack_t sigma1_QED_ou=
-	      s1_ou(sigma::PH)+
+	      0*s1_ou(sigma::PH)+
 	      0*s1_ou(sigma::CR)*deltam_cr[im_r_ou]+
 	      0*s1_ou(sigma::TM)*deltam_tm[im_r_ou];
 	    djack_t sigma1_QED_in=
-	      s1_in(sigma::PH)+
+	      0*s1_in(sigma::PH)+
 	      0*s1_in(sigma::CR)*deltam_cr[im_r_in]+
 	      0*s1_in(sigma::TM)*deltam_tm[im_r_in];
 	    
