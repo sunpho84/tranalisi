@@ -127,7 +127,7 @@ struct perens_t
   {
     using namespace sigma;
     
-    return [&](sigma::ins ins)->djack_t
+    return [this,im,r,ilinmom,proj](sigma::ins ins)->djack_t
       {
 	return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,ins})];
       };
@@ -152,7 +152,7 @@ struct perens_t
   {
     using namespace pr_bil;
     
-    return [&](pr_bil::ins ins)->djack_t
+    return [this,im_ou,r_ou,im_in,r_in,ibil](pr_bil::ins ins)->djack_t
       {
 	  return pr_bil[im_r_im_r_bilins_ibil_ibilmom_ind({im_ou,r_ou,im_in,r_in,ins,ibil})];
       };
