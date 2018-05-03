@@ -188,8 +188,8 @@ struct perens_t
   //! return a list of all Ztasks
   vector<task_t> get_all_Ztasks(const vector<const perens_t*> &ens={})
   {
-    return concat(get_Zq_tasks(ens)//,
-  		  // get_Zbil_tasks(ens),
+    return concat(get_Zq_tasks(ens),
+		  get_Zbil_tasks(ens)//,
   		  // get_Zmeslep_tasks(ens)
 		  );
   }
