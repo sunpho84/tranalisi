@@ -162,6 +162,7 @@ void perens_t::prepare_list_of_confs()
   im_r_iqins_ijack_ind=im_r_ind*index_t({{"qins",qprop::nins},{"ijack",njacks}});
   im_r_ijqins_ijack_ind=im_r_ind*index_t({{"jqins",jqprop::nins},{"ijack",njacks}});
   im_r_ijqins_ind=im_r_ind*index_t({{"jqins",jqprop::nins}});
+  im_r_iqins_ind=im_r_ind*index_t({{"qins",qprop::nins}});
   ilins_ijack_ind=index_t({{"jlins",lprop::nins},{"ijack",njacks}});
   iconf_ihit_ilins_ind=index_t({{"conf",conf_list.size()},{"hit",nhits},{"lins",lprop::nins}});
 }

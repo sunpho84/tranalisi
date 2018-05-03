@@ -256,6 +256,7 @@ struct perens_t
   index_t im_r_iqins_ijack_ind;
   index_t im_r_ijqins_ijack_ind;
   index_t im_r_ijqins_ind;
+  index_t im_r_iqins_ind;
   index_t iconf_ihit_ilins_ind;
   index_t ilins_ijack_ind;
   
