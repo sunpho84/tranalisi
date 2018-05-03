@@ -267,7 +267,7 @@ void perens_t::average_equiv_momenta_pr_bil(perens_t &out,const vector<vector<si
     for(size_t i=0;i<out.im_r_im_r_ibil_ibilmom_ind.max();i++)
     {
       const vector<size_t> out_im_r_im_r_bilins_ibil_ibilmom_comp=out.im_r_im_r_bilins_ibil_ibilmom_ind(i);
-      const size_t out_imom_combo=out_im_r_im_r_bilins_ibil_ibilmom_comp[5];
+      const size_t out_imom_combo=out_im_r_im_r_bilins_ibil_ibilmom_comp[6];
       
       for(const auto &t : out.get_pr_bil_tasks({this}))
   	{
