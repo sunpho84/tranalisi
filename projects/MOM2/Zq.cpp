@@ -22,10 +22,7 @@ void perens_t::compute_Zq()
       const size_t im_r=im_r_ind({im,r});
       
       using namespace sigma;
-      auto sigma1=[&](sigma::ins ins)->djack_t
-	{
-      	  return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,SIGMA1,ins})];
-	};
+      auto sigma1=sigma_ins_getter(im,r,ilinmom,SIGMA1);
       
       Zq[im_r_ilinmom]=sigma1(LO);
       

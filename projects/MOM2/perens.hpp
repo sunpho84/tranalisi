@@ -122,29 +122,52 @@ struct perens_t
   //! Sigmas
   djvec_t sigma;
   
+  //! returns a view on a sigma, with fixed im,r,ilinmom and proj
+  auto sigma_ins_getter(const size_t im,const size_t r,const size_t ilinmom,sigma::proj proj)
+  {
+    using namespace sigma;
+    
+    return [&](sigma::ins ins)->djack_t
+      {
+	return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,ins})];
+      };
+  }
+  
   //! compute all sigmas
   perens_t& compute_sigmas();
+  
+  //! plot all sigmas
+  void plot_sigma(const string &suffix);
   
   //! return a list of tasks for sigma
   vector<task_t> get_sigma_tasks(const vector<const perens_t*> &ens={});
   
   /////////////////////////////////////////////////////////////////
   
-  // //! projected bilinears with and without QED
-  // djvec_t pr_bil;
-  // enum PR_BIL_t{LO,CR_OU,CR_IN,TM_OU,TM_IN,PH_OU,PH_IN,EX};
-  // const vector<PR_BIL_t> PR_BIL_t_list{LO , CR_OU , CR_IN , TM_OU , TM_IN , PH_OU , PH_IN , EX };
-  // const size_t npr_bil_t=PR_BIL_t_list.size();
-  // const vector<string>   PR_BIL_t_tag{"LO","CR_OU","CR_IN","TM_OU","TM_IN","PH_OU","PH_IN","EX"};
+  //! projected bilinears
+  djvec_t pr_bil;
   
-  // //! return a list of tasks for bilinears projected vertex
-  // vector<task_t> get_pr_bil_tasks(const vector<const perens_t*> &ens={});
+  //! returns a view on a pr_bil with a given im and r in and out
+  auto pr_bil_ins_getter(const size_t im_ou,const size_t r_ou,const size_t im_in,const size_t r_in,const size_t ibil)
+  {
+    using namespace pr_bil;
+    
+    return [&](pr_bil::ins ins)->djack_t
+      {
+	  return pr_bil[im_r_im_r_bilins_ibil_ibilmom_ind({im_ou,r_ou,im_in,r_in,ins,ibil})];
+      };
+  }
   
-  // void build_all_mr_gbil_jackkniffed_verts(vector<jbil_vert_t>& jbil,const vector<m_r_mom_conf_qprops_t>& props_in,const vector<m_r_mom_conf_qprops_t>& props_ou) const;
+  //! return a list of tasks for bilinears projected vertex
+  vector<task_t> get_pr_bil_tasks(const vector<const perens_t*> &ens={});
   
-  // void clusterize_all_mr_jackkniffed_bilverts(vector<jbil_vert_t>& jprops) const;
+  void build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const vector<qprop_t>& props_in,const vector<qprop_t>& props_ou) const;
   
-  // void compute_proj_bil(const vector<jm_r_mom_qprops_t>& jprop_inv_in,const vector<jbil_vert_t>& jverts,const vector<jm_r_mom_qprops_t>& jprop_inv_ou,const size_t ibilmom);
+  //! compute all bilinears
+  void compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vector<jqprop_t>& jverts,const vector<jqprop_t>& jprop_inv_ou,const size_t ibilmom);
+  
+  //! compute all mom-scheme vertices
+  void mom_compute_bil();
   
   /////////////////////////////////////////////////////////////////
   
@@ -205,6 +228,9 @@ struct perens_t
   index_t im_im_ind;
   
   index_t im_r_im_r_igam_ind;
+  index_t im_r_im_r_bilins_igam_ind;
+  index_t im_r_im_r_bilins_ibil_ibilmom_ind;
+  
   index_t r_r_ibil_ind;
   index_t im_r_ijack_ind;
   index_t im_r_ijackp1_ind;
@@ -306,7 +332,7 @@ struct perens_t
   void mom()
   {
     compute_sigmas();
-    // if(pars::compute_bilinears) mom_compute_bil();
+    if(pars::compute_bilinears) mom_compute_bil();
     // if(pars::compute_meslep) mom_compute_meslep();
   }
   
@@ -343,30 +369,27 @@ struct perens_t
   //! return a list of tasks for Zq
   vector<task_t> get_Zq_tasks(const vector<const perens_t*>& ens={});
   
+  //! plot all Zq
+  void plot_Zq(const string &suffix);
+  
   //! compute all Zq
   void compute_Zq();
   
-//   /////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
   
-//   //bilinear Z
+  //bilinear Z
   
-//   djvec_t Zbil;
-//   djvec_t Zbil_QED_rel;
+  djvec_t Zbil;
+  djvec_t Zbil_QED_rel;
   
-//   //! return a list of tasks for bilinears Z
-//   vector<task_t> get_Zbil_tasks(const vector<const perens_t*> &ens={});
+  //! return a list of tasks for bilinears Z
+  vector<task_t> get_Zbil_tasks(const vector<const perens_t*> &ens={});
   
-//   //! return a list of tasks for bilinears Z and proj
-//   vector<task_t> get_bil_tasks(const vector<const perens_t*> &ens={})
-//   {
-//     return concat(get_Zbil_tasks(ens),get_pr_bil_tasks(ens));
-//   }
+  //! plot all Zbil
+  void plot_Zbil(const string &suffix);
   
-//   //! computes all bilinear Z
-//   void compute_Zbil();
-  
-//   //! compute all mom-scheme vertices
-//   void mom_compute_bil();
+  //! computes all bilinear Z
+  void compute_Zbil();
   
 //   /////////////////////////////////////////////////////////////////
   
@@ -406,9 +429,9 @@ struct perens_t
    void compute_Z()
    {
      Z_computed=true;
-    
+     
      compute_Zq();
-//     if(pars::compute_bilinears) compute_Zbil();
+     if(pars::compute_bilinears) compute_Zbil();
 //     if(pars::compute_meslep) compute_Zmeslep();
    }
   
@@ -418,13 +441,10 @@ struct perens_t
      
      plot_sigma(suffix);
      plot_Zq(suffix);
-//     plot_Zbil(suffix);
+     plot_Zbil(suffix);
 //     plot_Zmeslep(suffix);
    }
   
-  void plot_sigma(const string &suffix);
-  void plot_Zq(const string &suffix);
-//   void plot_Zbil(const string &suffix);
 //   void plot_Zmeslep(const string &suffix);
   
 //   /////////////////////////////////////////////////////////////////
@@ -435,8 +455,8 @@ struct perens_t
   //! average sigma
   void average_r_sigma(perens_t &out) const;
   
-//   //! average pr_bil
-//   void average_r_pr_bil(perens_t &out) const;
+  //! average pr_bil
+  void average_r_pr_bil(perens_t &out) const;
   
 //   //! average pr_meslep
 //   void average_r_pr_meslep(perens_t &out) const;

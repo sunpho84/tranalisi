@@ -59,6 +59,7 @@ perens_t& perens_t::allocate()
     Ztask.out->resize(Ztask.ind.max());
   
   sigma.resize(im_r_ilinmom_isigmaproj_isigmains_ind.max());
+  pr_bil.resize(im_r_im_r_bilins_ibil_ibilmom_ind.max());
   
   for(auto &t : {&deltam_cr,&deltam_tm})
     t->resize(im_r_ind.max());
@@ -74,6 +75,9 @@ perens_t& perens_t::set_indices()
   
   im_r_ind.set_ranges({{"m",nm},{"r",nr}});
   im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
+  im_r_im_r_bilins_igam_ind=im_r_ind*im_r_ind*index_t({{"bilins",pr_bil::nins},{"igamma",nGamma}});
+  im_r_im_r_bilins_ibil_ibilmom_ind=im_r_ind*im_r_ind*index_t({{"bilins",pr_bil::nins},{"bil",nbil},{"bilmom",bilmoms.size()}});
+  
   r_r_ibil_ind.set_ranges({{"r",nr},{"r",nr},{"bil",nbil}});
   im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
   im_r_ijackp1_ind=im_r_ind*index_t({{"ijack",njacks+1}});
@@ -226,7 +230,7 @@ perens_t perens_t::average_r() const
   out.allocate();
   
   average_r_sigma(out);
-//   average_r_pr_bil(out);
+  average_r_pr_bil(out);
 //   average_r_pr_meslep(out);
   
   if(nr>1)
