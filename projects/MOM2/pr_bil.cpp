@@ -264,7 +264,7 @@ void perens_t::average_r_pr_bil(perens_t &out) const
 
 void perens_t::average_equiv_momenta_pr_bil(perens_t &out,const vector<vector<size_t>> &equiv_bilmom_combos) const
 {
-    for(size_t i=0;i<out.im_r_im_r_ibil_ibilmom_ind.max();i++)
+    for(size_t i=0;i<out.im_r_im_r_bilins_ibil_ibilmom_ind.max();i++)
     {
       const vector<size_t> out_im_r_im_r_bilins_ibil_ibilmom_comp=out.im_r_im_r_bilins_ibil_ibilmom_ind(i);
       const size_t out_imom_combo=out_im_r_im_r_bilins_ibil_ibilmom_comp[6];
@@ -275,9 +275,9 @@ void perens_t::average_equiv_momenta_pr_bil(perens_t &out,const vector<vector<si
   	  ave=0.0;
   	  for(const size_t ieq_mom : equiv_bilmom_combos[out_imom_combo])
 	    {
-	      vector<size_t> im_r_im_r_bilins_ibil_ibilmom_comp=out_im_r_im_r_bilins_ibil_ibilmom_comp;
-	      im_r_im_r_bilins_ibil_ibilmom_comp[6]=ieq_mom;
-	      const size_t ieq=im_r_im_r_bilins_ibil_ibilmom_ind(im_r_im_r_bilins_ibil_ibilmom_comp);
+	      vector<size_t> in_im_r_im_r_bilins_ibil_ibilmom_comp=out_im_r_im_r_bilins_ibil_ibilmom_comp;
+	      in_im_r_im_r_bilins_ibil_ibilmom_comp[6]=ieq_mom;
+	      const size_t ieq=im_r_im_r_bilins_ibil_ibilmom_ind(in_im_r_im_r_bilins_ibil_ibilmom_comp);
 	      ave+=(*t.in.front())[ieq];
 	    }
   	  ave/=equiv_bilmom_combos[out_imom_combo].size();
