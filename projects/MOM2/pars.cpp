@@ -5,6 +5,7 @@
 #define EXTERN_PARS
  #include <MOM2/pars.hpp>
 
+#include <MOM2/pr_bil.hpp>
 #include <MOM2/prop.hpp>
 #include <MOM2/sigma.hpp>
 
