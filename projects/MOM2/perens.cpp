@@ -208,13 +208,13 @@ perens_t& perens_t::read_or_compute_ingredients()
 
 void perens_t::bin_read_ingredients(raw_file_t &file)
 {
-  for(auto t : {&sigma})
+  for(auto t : {&sigma,&pr_bil})
     t->bin_read(file);
 }
 
 void perens_t::bin_write_ingredients(raw_file_t &file)
 {
-  for(auto t : {&sigma})
+  for(auto t : {&sigma,&pr_bil})
     t->bin_write(file);
 }
 
