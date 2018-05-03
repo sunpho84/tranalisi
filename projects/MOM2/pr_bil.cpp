@@ -101,7 +101,7 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
       ADD_COMBO(CR_OU , + , LO , CR_OU , LO);
       ADD_COMBO(TM_IN , + , LO , TM_IN , LO);
       ADD_COMBO(TM_OU , + , LO , TM_OU , LO);
-      //ADD_COMBO(PH_IN , + , LO , PH_IN , LO);
+      ADD_COMBO(PH_IN , + , LO , PH_IN , LO);
       ADD_COMBO(PH_OU , + , LO , PH_OU , LO);
       ///
       ADD_COMBO(CR_IN , - , CR , LO, LO);
@@ -171,9 +171,9 @@ void perens_t::mom_compute_bil()
       const size_t imom_in=bilmoms[ibilmom][2];
       const bool read_in=(imom_ou!=imom_in);
       
-      vector<jqprop_t> jprops_ou(im_r_ijqins_ind.max()); //!< jackknived props out
-      vector<jqprop_t> jprops_in(im_r_ijqins_ind.max()); //!< jackknived props in
-      vector<jqprop_t> jverts(im_r_im_r_bilins_igam_ind.max());   //!< jackknived vertex
+      vector<jqprop_t> jprops_ou(im_r_ijqins_ind.max());         //!< jackknived props out
+      vector<jqprop_t> jprops_in(im_r_ijqins_ind.max());         //!< jackknived props in
+      vector<jqprop_t> jverts(im_r_im_r_bilins_igam_ind.max());  //!< jackknived vertex
       
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
 	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
