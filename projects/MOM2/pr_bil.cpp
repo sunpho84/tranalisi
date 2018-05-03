@@ -90,9 +90,9 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
   const index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks+1}});
   
   
-  vector<tuple<pr_bil::ins,int,qprop::ins,pr_bil::ins,qprop::ins>> map;
+  vector<tuple<pr_bil::ins,int,jqprop::ins,pr_bil::ins,jqprop::ins>> map;
 #define ADD_COMBO(A,S,O,V,I)			\
-  map.push_back({pr_bil::A,S 1,qprop::O,pr_bil::V,qprop::I})
+  map.push_back({pr_bil::A,S 1,jqprop::O,pr_bil::V,jqprop::I})
   ADD_COMBO(LO, + ,  LO, LO, LO);
   if(pars::use_QED)
     {
@@ -104,14 +104,12 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
       ADD_COMBO(PH_IN , + , LO , PH_IN , LO);
       ADD_COMBO(PH_OU , + , LO , PH_OU , LO);
       ///
-      ADD_COMBO(PH_IN , - , FF , LO, LO);
-      ADD_COMBO(PH_IN , - , T  , LO, LO);
-      ADD_COMBO(PH_OU , - , LO , LO, FF);
-      ADD_COMBO(PH_OU , - , LO , LO, T );
-      ADD_COMBO(CR_IN , - , P  , LO, LO);
-      ADD_COMBO(CR_IN , - , LO , LO, P );
-      ADD_COMBO(TM_IN , - , S  , LO, LO);
-      ADD_COMBO(TM_IN , - , LO , LO, S);
+      ADD_COMBO(PH_IN , - , PH , LO, LO);
+      ADD_COMBO(PH_OU , - , LO , LO, PH);
+      ADD_COMBO(CR_IN , - , CR , LO, LO);
+      ADD_COMBO(CR_IN , - , LO , LO, CR);
+      ADD_COMBO(TM_IN , - , TM , LO, LO);
+      ADD_COMBO(TM_IN , - , LO , LO, TM);
     }
 #undef ADD_COMBO
   
@@ -132,15 +130,15 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
 	{
 	  const pr_bil::ins pr_bilins=get<0>(t);
 	  const int coeff=get<1>(t);
-	  const qprop::ins iqins_in=get<2>(t);
+	  const jqprop::ins ijqins_in=get<2>(t);
 	  const pr_bil::ins bilins=get<3>(t);
-	  const qprop::ins iqins_ou=get<4>(t);
+	  const jqprop::ins ijqins_ou=get<4>(t);
 	  
-	  const size_t im_r_iqins_ou=im_r_iqins_ind({im_ou,r_ou,iqins_ou});
-	  const size_t im_r_iqins_in=im_r_iqins_ind({im_in,r_in,iqins_in});
+	  const size_t im_r_ijqins_ou=im_r_ijqins_ind({im_ou,r_ou,ijqins_ou});
+	  const size_t im_r_ijqins_in=im_r_ijqins_ind({im_in,r_in,ijqins_in});
 	  
-	  const qprop_t& pinv_ou=jprop_inv_ou[im_r_iqins_ou][ijack];
-	  const qprop_t& pinv_in=jprop_inv_in[im_r_iqins_in][ijack];
+	  const qprop_t& pinv_ou=jprop_inv_ou[im_r_ijqins_ou][ijack];
+	  const qprop_t& pinv_in=jprop_inv_in[im_r_ijqins_in][ijack];
 	  
 	  //loop on all gammas
 	  for(auto & iG : iG_of_bil[ibil])
