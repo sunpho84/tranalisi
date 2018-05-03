@@ -101,14 +101,14 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
       ADD_COMBO(CR_OU , + , LO , CR_OU , LO);
       ADD_COMBO(TM_IN , + , LO , TM_IN , LO);
       ADD_COMBO(TM_OU , + , LO , TM_OU , LO);
-      ADD_COMBO(PH_IN , + , LO , PH_IN , LO);
+      //ADD_COMBO(PH_IN , + , LO , PH_IN , LO);
       ADD_COMBO(PH_OU , + , LO , PH_OU , LO);
       ///
       ADD_COMBO(CR_IN , - , CR , LO, LO);
       ADD_COMBO(CR_OU , - , LO , LO, CR);
       ADD_COMBO(TM_IN , - , TM , LO, LO);
       ADD_COMBO(TM_OU , - , LO , LO, TM);
-      ADD_COMBO(PH_IN , - , PH , LO, LO);
+      //ADD_COMBO(PH_IN , - , PH , LO, LO);
       ADD_COMBO(PH_OU , - , LO , LO, PH);
     }
 #undef ADD_COMBO
