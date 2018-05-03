@@ -17,4 +17,5 @@ void freeze_pars()
   jqprop::set_ins();
   
   sigma::set_ins();
+  pr_bil::set_ins();
 }
