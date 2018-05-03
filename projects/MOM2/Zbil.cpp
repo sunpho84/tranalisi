@@ -33,7 +33,7 @@ void perens_t::compute_Zbil()
 	
 	auto s1_ou=sigma_ins_getter(im_ou,r_ou,ilinmom_ou,sigma::SIGMA1);
 	auto s1_in=sigma_ins_getter(im_in,r_in,ilinmom_in,sigma::SIGMA1);
-	auto pr=pr_bil_ins_getter(im_ou,r_ou,im_in,r_in,ibil);
+	auto pr=pr_bil_ins_getter(im_ou,r_ou,im_in,r_in,ibil,ibilmom);
 	
 	Zbil[im_r_im_r_ibil_ibilmom]=
 	  sqrt(s1_ou(sigma::LO)*s1_in(sigma::LO))/pr(pr_bil::LO);
