@@ -148,13 +148,13 @@ struct perens_t
   djvec_t pr_bil;
   
   //! returns a view on a pr_bil with a given im and r in and out
-  auto pr_bil_ins_getter(const size_t im_ou,const size_t r_ou,const size_t im_in,const size_t r_in,const size_t ibil)
+  auto pr_bil_ins_getter(const size_t im_ou,const size_t r_ou,const size_t im_in,const size_t r_in,const size_t ibil,const size_t ibilmom)
   {
     using namespace pr_bil;
     
-    return [this,im_ou,r_ou,im_in,r_in,ibil](pr_bil::ins ins)->djack_t
+    return [this,im_ou,r_ou,im_in,r_in,ibil,ibilmom](pr_bil::ins ins)->djack_t
       {
-	  return pr_bil[im_r_im_r_bilins_ibil_ibilmom_ind({im_ou,r_ou,im_in,r_in,ins,ibil})];
+	return pr_bil[im_r_im_r_bilins_ibil_ibilmom_ind({im_ou,r_ou,im_in,r_in,ins,ibil,ibilmom})];
       };
   }
   
