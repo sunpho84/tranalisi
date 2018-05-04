@@ -37,6 +37,25 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
   //! help finding the bilinear/clust combo
   index_t ind({{"i",im_r_im_r_igam_ind.max()},{"iclust",njacks}});
   
+  //! list of all combination of transformations to be applied
+  vector<tuple<pr_bil::ins,qprop::ins,qprop::ins>> map;
+#define ADD_COMBO(V,O,I)				\
+  map.push_back({pr_bil::V,qprop::O,qprop::I})
+  ADD_COMBO(LO,    LO, LO);
+  if(pars::use_QED)
+    {
+      ADD_COMBO(EX,    F,  F);
+      ADD_COMBO(PH_IN, FF, LO);
+      ADD_COMBO(PH_IN, T,  LO);
+      ADD_COMBO(PH_OU, LO, FF);
+      ADD_COMBO(PH_OU, LO, T);
+      ADD_COMBO(CR_IN, P,  LO);
+      ADD_COMBO(CR_OU, LO, P);
+      ADD_COMBO(TM_IN, S,  LO);
+      ADD_COMBO(TM_OU, LO, S);
+    }
+#undef ADD_COMBO
+  
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
     {
@@ -49,25 +68,6 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
       const size_t im_ou=im_r_im_r_igam_comp[0],r_ou=im_r_im_r_igam_comp[1];
       const size_t im_in=im_r_im_r_igam_comp[2],r_in=im_r_im_r_igam_comp[3];
       const size_t iG=im_r_im_r_igam_comp[4];
-      
-      //! list of all combination of transformations to be applied
-      vector<tuple<pr_bil::ins,qprop::ins,qprop::ins>> map;
-#define ADD_COMBO(V,O,I)				\
-      map.push_back({pr_bil::V,qprop::O,qprop::I})
-      ADD_COMBO(LO,    LO, LO);
-      if(pars::use_QED)
-	{
-	  ADD_COMBO(EX,    F,  F);
-	  ADD_COMBO(PH_IN, FF, LO);
-	  ADD_COMBO(PH_IN, T,  LO);
-	  ADD_COMBO(PH_OU, LO, FF);
-	  ADD_COMBO(PH_OU, LO, T);
-	  ADD_COMBO(CR_IN, P,  LO);
-	  ADD_COMBO(CR_OU, LO, P);
-	  ADD_COMBO(TM_IN, S,  LO);
-	  ADD_COMBO(TM_OU, LO, S);
-	}
-#undef ADD_COMBO
       
       for(auto t : map)
 	{
@@ -88,7 +88,6 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
 void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vector<jqprop_t>& jverts,const vector<jqprop_t>& jprop_inv_ou,const size_t ibilmom)
 {
   const index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks+1}});
-  
   
   vector<tuple<pr_bil::ins,jqprop::ins,pr_bil::ins,jqprop::ins>> map;
 #define ADD_COMBO(A,O,V,I)			\

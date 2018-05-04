@@ -14,21 +14,6 @@
 
 namespace meslep
 {
-  //these are the charges in the lagrangian
-  EXTERN_PR_MESLEP double ql   INIT_PR_MESLEP_TO(=-1.0);      //!< the program simulates muon *antiparticle*
-  EXTERN_PR_MESLEP double q_in INIT_PR_MESLEP_TO(=+2.0/3.0);  //!< charge of the quark which comes into the vertex
-  EXTERN_PR_MESLEP double q_ou INIT_PR_MESLEP_TO(=-1.0/3.0);  //!< charge of the quark which comes out the vertex
-  
-  struct mesloop_t
-  {
-    vector<dcompl_t> LO;
-    vector<dcompl_t> F;
-    
-    mesloop_t(size_t size) : LO(size),F(size)
-    {
-    }
-  };
-  
   //! holds info on constructing operators
   struct Zop_t
   {
@@ -58,68 +43,16 @@ namespace meslep
   EXTERN_PR_MESLEP       vector<int>            Lg5_sign INIT_PR_MESLEP_TO(={{+1,-1,-1,-1,-1,+1,+1,+1,+1,+1,+1}}); //!< 1+sign*g5 on the quark side
 }
 
-//! holds jackkniffed vertex for an mr combo and for a given mom
-class jmeslep_vert_t
+namespace pr_meslep
 {
-  //! return a list of pointers to all internal data
-  vector<vector<jqprop_t>*> get_all_ptrs()
-  {
-    return {&LO,&PH,&CR_CT_IN,&CR_CT_OU,&TM_CT_IN,&TM_CT_OU,&QED};
-  }
+  enum ins{LO,NA_OU,NA_IN,CR_OU,CR_IN,TM_OU,TM_IN,PH_OU,PH_IN,EX};
+  EXTERN_PR_MESLEP vector<ins>      ins_list;
+  EXTERN_PR_MESLEP vector<string>   ins_tag;
   
-public:
-  vector<jqprop_t> LO; //!< jackkniffed mesolep vertex, no photon
-  
-  vector<jqprop_t> PH;        //!< jackkniffed vertex, nasty + self + tad
-  vector<jqprop_t> CR_CT_IN;  //!< jackkniffed meson-like vertex, critical counterterm on line IN
-  vector<jqprop_t> CR_CT_OU;  //!< jackkniffed meson-like vertex, critical counterterm on line OUT
-  vector<jqprop_t> TM_CT_IN;  //!< jackkniffed meson-like vertex, twisted counterterm on line IN
-  vector<jqprop_t> TM_CT_OU;  //!< jackkniffed meson-like vertex, twisted counterterm on line OUT
-  
-  vector<jqprop_t> QED; //!< full correction
-  
-  jmeslep_vert_t(size_t size)
-  {
-    for(auto &p : get_all_ptrs()) p->resize(size);
-  }
-  
-  //! clusterize
-  void clusterize_all(const size_t clust_size,const index_t &im_r_im_r_iop_ilistpGl_ind,const djvec_t &deltam_cr,const djvec_t &deltam_tm)
-  {
-    vector<vector<jqprop_t>*> ps=get_all_ptrs();
-    index_t ind({{"type",ps.size()},{"icombo",ps[0]->size()}});
-    
-#pragma omp parallel for
-    for(size_t i=0;i<ind.max();i++)
-      {
-	const vector<size_t> comp=ind(i);
-	const size_t itype=comp[0];
-	const size_t icombo=comp[1];
-	
-	(*ps[itype])[icombo].clusterize(clust_size);
-      }
-    
-    const size_t nm=im_r_im_r_iop_ilistpGl_ind.max(0);
-    const size_t nr=im_r_im_r_iop_ilistpGl_ind.max(1);
-    const index_t im_r_ind({{"nm",nm},{"nr",nr}});
-    
-#pragma omp parallel for
-    for(size_t i=0;i<im_r_im_r_iop_ilistpGl_ind.max();i++)
-	{
-	  const vector<size_t> comps=im_r_im_r_iop_ilistpGl_ind(i);
-	  const size_t im_r_in=im_r_ind({comps[0],comps[1]});
-	  const size_t im_r_ou=im_r_ind({comps[2],comps[3]});
-	  for(size_t ijack=0;ijack<=njacks;ijack++)
-	    QED[i][ijack]=
-	      PH[i][ijack]
-	      +deltam_cr[im_r_in][ijack]*CR_CT_IN[i][ijack]
-	      +deltam_cr[im_r_ou][ijack]*CR_CT_OU[i][ijack]
-	      +deltam_tm[im_r_in][ijack]*TM_CT_IN[i][ijack]
-	      +deltam_tm[im_r_ou][ijack]*TM_CT_OU[i][ijack]
-	      ;
-	}
-  }
-};
+  //! set all pr_meslep insertion
+  void set_ins();
+  EXTERN_PR_MESLEP size_t nins;
+}
 
 #undef EXTERN_PR_MESLEP
 #undef INIT_PR_MESLEP_TO

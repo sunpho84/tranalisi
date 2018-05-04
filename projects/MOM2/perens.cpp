@@ -2,6 +2,7 @@
  #include <MOM2/perens.hpp>
 
 #include <MOM2/sigma.hpp>
+#include <MOM2/pr_meslep.hpp>
 
 perens_t& perens_t::read_pars(const string &name)
 {
@@ -60,6 +61,7 @@ perens_t& perens_t::allocate()
   
   sigma.resize(im_r_ilinmom_isigmaproj_isigmains_ind.max());
   pr_bil.resize(im_r_im_r_bilins_ibil_ibilmom_ind.max());
+  pr_meslep.resize(im_r_im_r_meslepins_iop_iproj_imeslepmom_ind.max());
   
   for(auto &t : {&deltam_cr,&deltam_tm})
     t->resize(im_r_ind.max());
@@ -77,6 +79,9 @@ perens_t& perens_t::set_indices()
   im_r_im_r_igam_ind=im_r_ind*im_r_ind*index_t({{"igamma",nGamma}});
   im_r_im_r_bilins_igam_ind=im_r_ind*im_r_ind*index_t({{"bilins",pr_bil::nins},{"igamma",nGamma}});
   im_r_im_r_bilins_ibil_ibilmom_ind=im_r_ind*im_r_ind*index_t({{"bilins",pr_bil::nins},{"bil",nbil},{"bilmom",bilmoms.size()}});
+  
+  im_r_im_r_meslepins_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"meslepins",pr_meslep::nins},{"iop",nbil},{"iproj",nbil}});;
+  im_r_im_r_meslepins_iop_iproj_imeslepmom_ind=im_r_im_r_meslepins_iop_iproj_ind*index_t({{"imeslepmom",meslepmoms().size()}});
   
   r_r_ibil_ind.set_ranges({{"r",nr},{"r",nr},{"bil",nbil}});
   im_r_ijack_ind=im_r_ind*index_t({{"ijack",njacks}});
@@ -99,6 +104,8 @@ perens_t& perens_t::set_indices()
   iop_iproj_iclust_ind.set_ranges({{"iop",nbil},{"iproj",nbil},{"iclust",njacks}});
   
   ilistGl_ilistpGl_iclust_ind=index_t({{"listGl",meslep::listGl.size()},{"pGl",meslep::listpGl.size()},{"iclust",njacks}});
+  ilistGl_ilistpGl_lins_iclust_ind=index_t({{"listGl",meslep::listGl.size()},{"pGl",meslep::listpGl.size()},{"lins",lprop::nins},{"iclust",njacks}});
+  im_r_im_r_iop_ilistpGl_lins_ind.set_ranges({{"m_fw",nm},{"r_fw",nr},{"m_bw",nm},{"r_bw",nr},{"iop",meslep::nZop},{"listpGl",meslep::listpGl.size()},{"lins",lprop::nins}});
   
   return *this;
 }

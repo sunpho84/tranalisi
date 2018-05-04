@@ -214,26 +214,6 @@ lprop_t read_lprop(raw_file_t &file,const dcompl_t &fact,const size_t imom,const
     return temp;
 }
 
-// void incorporate_charge(vector<m_r_mom_conf_qprops_t> &props,const double ch)
-// {
-//   const double ch2=ch*ch;
-  
-//   for(auto &p : props)
-//     {
-//       p.F*=ch;
-//       p.FF*=ch2;
-//       p.T*=ch2;
-//       p.P*=ch2;
-//       p.S*=ch2;
-//     }
-// }
-
-// void incorporate_charge(vector<mom_conf_lprops_t> &props,const double ch)
-// {
-//   for(auto &p : props)
-//     p.F*=ch;
-// }
-
 vector<qprop_t> perens_t::read_all_qprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom)
 {
   //! output

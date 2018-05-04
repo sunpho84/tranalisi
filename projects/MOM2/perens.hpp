@@ -127,7 +127,7 @@ struct perens_t
   {
     using namespace sigma;
     
-    return [this,im,r,ilinmom,proj](sigma::ins ins)->djack_t
+    return [this,im,r,ilinmom,proj](sigma::ins ins)->djack_t&
       {
 	return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,ins})];
       };
@@ -171,14 +171,25 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
-  // //! projected meslep
-  // djvec_t pr_meslep_LO;
-  // djvec_t pr_meslep_CR_CT;
-  // djvec_t pr_meslep_TM_CT;
-  // djvec_t pr_meslep_PH;
+  //! projected meslep
+  djvec_t pr_meslep;
   
-  // //! return a list of tasks for meslep projected vertex
-  // vector<task_t> get_pr_meslep_tasks(const vector<const perens_t*> &ens={});
+  //! returns a view on a pr_meslep
+  auto pr_meslep_ins_getter(const size_t im_ou,const size_t r_ou,const size_t im_in,const size_t r_in,const size_t iop,const size_t iproj,const size_t imeslepmom)
+  {
+    using namespace pr_meslep;
+    
+    return [this,im_ou,r_ou,im_in,r_in,iop,iproj,imeslepmom](pr_meslep::ins ins)->djack_t&
+      {
+	return pr_meslep[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_ou,r_ou,im_in,r_in,ins,iop,iproj,imeslepmom})];
+      };
+  }
+  
+  //! return a list of tasks for meslep projected vertex
+  vector<task_t> get_pr_meslep_tasks(const vector<const perens_t*> &ens={});
+  
+  //! compute all mom-scheme mesoleptonic vertices
+  void mom_compute_meslep();
   
   /////////////////////////////////////////////////////////////////
   
@@ -189,9 +200,8 @@ struct perens_t
   vector<task_t> get_all_Ztasks(const vector<const perens_t*> &ens={})
   {
     return concat(get_Zq_tasks(ens),
-		  get_Zbil_tasks(ens)//,
-  		  // get_Zmeslep_tasks(ens)
-		  );
+		  get_Zbil_tasks(ens),
+  		  get_Zmeslep_tasks(ens));
   }
   
   /////////////////////////////////////////////////////////////////
@@ -231,6 +241,9 @@ struct perens_t
   index_t im_r_im_r_bilins_igam_ind;
   index_t im_r_im_r_bilins_ibil_ibilmom_ind;
   
+  index_t im_r_im_r_meslepins_iop_iproj_ind;
+  index_t im_r_im_r_meslepins_iop_iproj_imeslepmom_ind;
+  
   index_t r_r_ibil_ind;
   index_t im_r_ijack_ind;
   index_t im_r_ijackp1_ind;
@@ -263,6 +276,8 @@ struct perens_t
   index_t conf_ind;
   
   index_t ilistGl_ilistpGl_iclust_ind;
+  index_t ilistGl_ilistpGl_lins_iclust_ind;
+  index_t im_r_im_r_iop_ilistpGl_lins_ind;
   
   perens_t& set_indices();
   
@@ -333,7 +348,7 @@ struct perens_t
   {
     compute_sigmas();
     if(pars::compute_bilinears) mom_compute_bil();
-    // if(pars::compute_meslep) mom_compute_meslep();
+    if(pars::compute_meslep) mom_compute_meslep();
   }
   
   vector<qprop_t> read_all_qprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
@@ -344,8 +359,6 @@ struct perens_t
   
   //! returns the inverse propagators
   vector<jqprop_t> get_inverse_propagators(const vector<jqprop_t>& qprop) const;
-  
-  //   void clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops) const;
   
   /////////////////////////////////////////////////////////////////
   
@@ -391,36 +404,27 @@ struct perens_t
   //! computes all bilinear Z
   void compute_Zbil();
   
-//   /////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
   
-//   //meslep
+  //meslep Z
   
-//   djvec_t Zmeslep;
-//   djvec_t Zmeslep_QED_rel;
+  djvec_t Zmeslep;
+  djvec_t Zmeslep_QED_rel;
   
-//   //! return a list of tasks for meslep projected vertex
-//   vector<task_t> get_Zmeslep_tasks(const vector<const perens_t*> &ens={});
+  //! return a list of tasks for meslep projected vertex
+  vector<task_t> get_Zmeslep_tasks(const vector<const perens_t*> &ens={});
   
-//   //! return a list of tasks for meslep Z and proj
-//   vector<task_t> get_meslep_tasks(const vector<const perens_t*> &ens={})
-//   {
-//     return concat(get_Zmeslep_tasks(ens),get_pr_meslep_tasks(ens));
-//   }
+  //! computes all meslep Z
+  void compute_Zmeslep();
   
-//   //! computes all meslep Z
-//   void compute_Zmeslep();
+  vector<dcompl_t> build_mesloop(const vector<lprop_t> &props_lep) const;
   
-//   //! compute all mom-scheme mesoleptonic vertices
-//   void mom_compute_meslep();
+  void build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const vector<qprop_t> &props_in,const vector<qprop_t> &props_ou,
+					      const vector<lprop_t> &props_lep) const;
   
-//   meslep::mesloop_t build_mesloop(const vector<mom_conf_lprops_t> &props_lep) const;
+  void compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const vector<jqprop_t> &jverts,const vector<jqprop_t> &jprop_inv_ou);
   
-//   void build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const vector<m_r_mom_conf_qprops_t> &props_in,const vector<m_r_mom_conf_qprops_t> &props_ou,
-// 					      const vector<mom_conf_lprops_t> &props_lep) const;
-  
-//   djvec_t compute_proj_meslep(const vjqprop_t &jprop_inv_in,const vector<jqprop_t> &jverts,const vjqprop_t &jprop_inv_ou) const;
-  
-//   /////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
   
   //! store whether Z are computed
   bool Z_computed{false};
@@ -432,7 +436,7 @@ struct perens_t
      
      compute_Zq();
      if(pars::compute_bilinears) compute_Zbil();
-//     if(pars::compute_meslep) compute_Zmeslep();
+     if(pars::compute_meslep) compute_Zmeslep();
    }
   
    void plot_Z(const string &suffix)
@@ -442,12 +446,12 @@ struct perens_t
      plot_sigma(suffix);
      plot_Zq(suffix);
      plot_Zbil(suffix);
-//     plot_Zmeslep(suffix);
+     plot_Zmeslep(suffix);
    }
   
-//   void plot_Zmeslep(const string &suffix);
+  void plot_Zmeslep(const string &suffix);
   
-//   /////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
   
   //! triggers r-averaging of all quantities
   perens_t average_r() const;
@@ -458,8 +462,8 @@ struct perens_t
   //! average pr_bil
   void average_r_pr_bil(perens_t &out) const;
   
-//   //! average pr_meslep
-//   void average_r_pr_meslep(perens_t &out) const;
+  //! average pr_meslep
+  void average_r_pr_meslep(perens_t &out) const;
   
 // #warning addosta average_r_deltam?
   
@@ -479,11 +483,11 @@ struct perens_t
 //   //! extrapolate to chiral limit deltas
 //   void val_chir_extrap_deltam(perens_t &out) const;
   
-// /////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
   
   perens_t p2eq0extrap() const;
   
-//   /////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
   
   perens_t average_equiv_momenta() const;
   
