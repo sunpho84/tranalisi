@@ -43,28 +43,26 @@ void perens_t::compute_Zbil()
 	    if(not deltam_computed) CRASH("Needs to have computed deltam");
 	    
 	    djack_t pr_bil_QED=
-	      //pr(pr_bil::EX)+
-	      pr(pr_bil::PH_IN)//+
-	      // pr(pr_bil::PH_OU)+
-	      // pr(pr_bil::CR_OU)*deltam_cr[im_r_ou]+
-	      // pr(pr_bil::CR_IN)*deltam_cr[im_r_in]+
-	      // pr(pr_bil::TM_OU)*deltam_tm[im_r_ou]+
-	      // pr(pr_bil::TM_IN)*deltam_tm[im_r_in]
-	      ;
+	      pr(pr_bil::EX)+
+	      pr(pr_bil::PH_IN)+
+	      pr(pr_bil::PH_OU)+
+	      pr(pr_bil::CR_OU)*deltam_cr[im_r_ou]+
+	      pr(pr_bil::CR_IN)*deltam_cr[im_r_in]+
+	      pr(pr_bil::TM_OU)*deltam_tm[im_r_ou]+
+	      pr(pr_bil::TM_IN)*deltam_tm[im_r_in];
 	    djack_t sigma1_QED_ou=
-	      0*s1_ou(sigma::PH)+
-	      0*s1_ou(sigma::CR)*deltam_cr[im_r_ou]+
-	      0*s1_ou(sigma::TM)*deltam_tm[im_r_ou];
+	      s1_ou(sigma::PH)+
+	      s1_ou(sigma::CR)*deltam_cr[im_r_ou]+
+	      s1_ou(sigma::TM)*deltam_tm[im_r_ou];
 	    djack_t sigma1_QED_in=
-	      0*s1_in(sigma::PH)+
-	      0*s1_in(sigma::CR)*deltam_cr[im_r_in]+
-	      0*s1_in(sigma::TM)*deltam_tm[im_r_in];
+	      s1_in(sigma::PH)+
+	      s1_in(sigma::CR)*deltam_cr[im_r_in]+
+	      s1_in(sigma::TM)*deltam_tm[im_r_in];
 	    
 	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
 	      -pr_bil_QED/pr(pr_bil::LO)
-	      //+(sigma1_QED_ou/s1_ou(sigma::LO)+
-	      //sigma1_QED_in/s1_in(sigma::LO))/2.0
-	      ;
+	      +(sigma1_QED_ou/s1_ou(sigma::LO)+
+	      sigma1_QED_in/s1_in(sigma::LO))/2.0;
 	  }
       }
 }
