@@ -90,26 +90,26 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
   const index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks+1}});
   
   
-  vector<tuple<pr_bil::ins,int,jqprop::ins,pr_bil::ins,jqprop::ins>> map;
-#define ADD_COMBO(A,S,O,V,I)			\
-  map.push_back({pr_bil::A,S 1,jqprop::O,pr_bil::V,jqprop::I})
-  ADD_COMBO(LO, + ,  LO, LO, LO);
+  vector<tuple<pr_bil::ins,jqprop::ins,pr_bil::ins,jqprop::ins>> map;
+#define ADD_COMBO(A,O,V,I)			\
+  map.push_back({pr_bil::A,jqprop::O,pr_bil::V,jqprop::I})
+  ADD_COMBO(LO,  LO, LO, LO);
   if(pars::use_QED)
     {
-      ADD_COMBO(EX    , + , LO , EX    , LO);
-      ADD_COMBO(CR_IN , + , LO , CR_IN , LO);
-      ADD_COMBO(CR_OU , + , LO , CR_OU , LO);
-      ADD_COMBO(TM_IN , + , LO , TM_IN , LO);
-      ADD_COMBO(TM_OU , + , LO , TM_OU , LO);
-      ADD_COMBO(PH_IN , + , LO , PH_IN , LO);
-      ADD_COMBO(PH_OU , + , LO , PH_OU , LO);
+      ADD_COMBO(EX    , LO , EX    , LO);
+      ADD_COMBO(CR_IN , LO , CR_IN , LO);
+      ADD_COMBO(CR_OU , LO , CR_OU , LO);
+      ADD_COMBO(TM_IN , LO , TM_IN , LO);
+      ADD_COMBO(TM_OU , LO , TM_OU , LO);
+      ADD_COMBO(PH_IN , LO , PH_IN , LO);
+      ADD_COMBO(PH_OU , LO , PH_OU , LO);
       ///
-      ADD_COMBO(CR_IN , - , CR , LO, LO);
-      ADD_COMBO(CR_OU , - , LO , LO, CR);
-      ADD_COMBO(TM_IN , - , TM , LO, LO);
-      ADD_COMBO(TM_OU , - , LO , LO, TM);
-      ADD_COMBO(PH_IN , - , PH , LO, LO);
-      ADD_COMBO(PH_OU , - , LO , LO, PH);
+      ADD_COMBO(CR_IN , CR , LO, LO);
+      ADD_COMBO(CR_OU , LO , LO, CR);
+      ADD_COMBO(TM_IN , TM , LO, LO);
+      ADD_COMBO(TM_OU , LO , LO, TM);
+      ADD_COMBO(PH_IN , PH , LO, LO);
+      ADD_COMBO(PH_OU , LO , LO, PH);
     }
 #undef ADD_COMBO
   
@@ -129,10 +129,9 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
       for(auto t : map)
 	{
 	  const pr_bil::ins pr_bilins=get<0>(t);
-	  const int coeff=get<1>(t);
-	  const jqprop::ins ijqins_in=get<2>(t);
-	  const pr_bil::ins bilins=get<3>(t);
-	  const jqprop::ins ijqins_ou=get<4>(t);
+	  const jqprop::ins ijqins_in=get<1>(t);
+	  const pr_bil::ins bilins=get<2>(t);
+	  const jqprop::ins ijqins_ou=get<3>(t);
 	  
 	  const size_t im_r_ijqins_ou=im_r_ijqins_ind({im_ou,r_ou,ijqins_ou});
 	  const size_t im_r_ijqins_in=im_r_ijqins_ind({im_in,r_in,ijqins_in});
@@ -150,7 +149,6 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
 	      const qprop_t &jv=jverts[im_r_im_r_bilins_igam][ijack];
 	      
 	      pr_bil[im_r_im_r_bilins_ibil_ibilmom][ijack]+=
-		coeff*
 		(pinv_ou*jv*quaGamma[5]*pinv_in.adjoint()*quaGamma[5]*quaGamma[iG].adjoint()).trace().real()/(12.0*iG_of_bil[ibil].size());
 	    }
 	}
