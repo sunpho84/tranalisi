@@ -277,7 +277,7 @@ struct perens_t
   
   index_t ilistGl_ilistpGl_iclust_ind;
   index_t ilistGl_ilistpGl_lins_iclust_ind;
-  index_t im_r_im_r_iop_ilistpGl_lins_ind;
+  index_t im_r_im_r_iop_ilistpGl_meslepins_ind;
   
   perens_t& set_indices();
   

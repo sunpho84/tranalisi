@@ -128,7 +128,7 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
 	   const int    sign=zop.Qg5_sign;
 	   const int    norm=zop.norm;
 	   
-	   qprop_t &vert=j[im_r_im_r_iop_ilistpGl_lins_ind({im_in,r_in,im_ou,r_ou,iop,ilistpGl,v_ins})][iclust];
+	   qprop_t &vert=j[im_r_im_r_iop_ilistpGl_meslepins_ind({im_in,r_in,im_ou,r_ou,iop,ilistpGl,v_ins})][iclust];
 	   // cout<<" "<<endl;
 	   for(auto &contr : zop.contr)
 	     {
@@ -214,7 +214,7 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
 	  for(auto &pcontr : zops[iproj].contr) // projecting for operator is stored in contr
 	    {
 	      const size_t ilistpGl=pcontr.ilistGl;
-	      const qprop_t &vert=jverts[im_r_im_r_iop_ilistpGl_lins_ind({im_in,r_in,im_ou,r_ou,iop,ilistpGl,meslepins})][ijack];
+	      const qprop_t &vert=jverts[im_r_im_r_iop_ilistpGl_meslepins_ind({im_in,r_in,im_ou,r_ou,iop,ilistpGl,meslepins})][ijack];
 	      
 	      const qprop_t amp_vert=prop_inv_ou*vert*quaGamma[5]*prop_inv_in.adjoint()*quaGamma[5];
 	      
@@ -243,7 +243,7 @@ void perens_t::mom_compute_meslep()
       
       vector<jqprop_t> jprops_ou(im_r_ijqins_ind.max());                         //!< jackknived props out
       vector<jqprop_t> jprops_in(im_r_ijqins_ind.max());                         //!< jackknived props in
-      vector<jqprop_t> jverts(im_r_im_r_iop_ilistpGl_lins_ind.max());     //!< jackknived vertex
+      vector<jqprop_t> jverts(im_r_im_r_iop_ilistpGl_meslepins_ind.max());       //!< jackknived vertex
       for(size_t i_in_clust=0;i_in_clust<clust_size;i_in_clust++)
   	for(size_t ihit=0;ihit<nhits_to_use;ihit++)
   	  {

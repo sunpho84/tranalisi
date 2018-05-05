@@ -105,7 +105,7 @@ perens_t& perens_t::set_indices()
   
   ilistGl_ilistpGl_iclust_ind=index_t({{"listGl",meslep::listGl.size()},{"pGl",meslep::listpGl.size()},{"iclust",njacks}});
   ilistGl_ilistpGl_lins_iclust_ind=index_t({{"listGl",meslep::listGl.size()},{"pGl",meslep::listpGl.size()},{"lins",lprop::nins},{"iclust",njacks}});
-  im_r_im_r_iop_ilistpGl_lins_ind.set_ranges({{"m_fw",nm},{"r_fw",nr},{"m_bw",nm},{"r_bw",nr},{"iop",meslep::nZop},{"listpGl",meslep::listpGl.size()},{"lins",lprop::nins}});
+  im_r_im_r_iop_ilistpGl_meslepins_ind.set_ranges({{"m_fw",nm},{"r_fw",nr},{"m_bw",nm},{"r_bw",nr},{"iop",meslep::nZop},{"listpGl",meslep::listpGl.size()},{"meslepins",pr_meslep::nins}});
   
   return *this;
 }
