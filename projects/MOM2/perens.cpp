@@ -215,13 +215,13 @@ perens_t& perens_t::read_or_compute_ingredients()
 
 void perens_t::bin_read_ingredients(raw_file_t &file)
 {
-  for(auto t : {&sigma,&pr_bil})
+  for(auto t : {&sigma,&pr_bil,&pr_meslep})
     t->bin_read(file);
 }
 
 void perens_t::bin_write_ingredients(raw_file_t &file)
 {
-  for(auto t : {&sigma,&pr_bil})
+  for(auto t : {&sigma,&pr_bil,&pr_meslep})
     t->bin_write(file);
 }
 
@@ -238,7 +238,7 @@ perens_t perens_t::average_r() const
   
   average_r_sigma(out);
   average_r_pr_bil(out);
-//   average_r_pr_meslep(out);
+  average_r_pr_meslep(out);
   
   if(nr>1)
     for(size_t im=0;im<nm;im++)
