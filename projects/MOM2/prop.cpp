@@ -246,7 +246,7 @@ void perens_t::build_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &jprops
       if(pars::use_QED)
 	for(auto &jp_p : vector<tuple<jqprop_t*,const qprop_t*>>({
 	      {&j.PH,&p.FF},
-	      // {&j.PH,&p.T},
+	      {&j.PH,&p.T},
 	      {&j.CR_CT,&p.P},
 	      {&j.TM_CT,&p.S}}))
 	  (*get<0>(jp_p))[ijack]+=*get<1>(jp_p);
@@ -293,9 +293,9 @@ void perens_t::clusterize_all_mr_jackkniffed_qprops(vector<jm_r_mom_qprops_t> &j
     for(size_t im_r=0;im_r<im_r_ind.max();im_r++)
       for(size_t ijack=0;ijack<=njacks;ijack++)
 	jprops[im_r].QED[ijack]=
-	  jprops[im_r].PH[ijack]//+
-	  // deltam_tm[im_r][ijack]*jprops[im_r].TM_CT[ijack]+
-	  // deltam_cr[im_r][ijack]*jprops[im_r].CR_CT[ijack]
+	  jprops[im_r].PH[ijack]+
+	  deltam_tm[im_r][ijack]*jprops[im_r].TM_CT[ijack]+
+	  deltam_cr[im_r][ijack]*jprops[im_r].CR_CT[ijack]
 	  ;
 }
 
