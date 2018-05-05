@@ -73,13 +73,12 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
   
   //! list of all combination of transformations to be applied
   vector<tuple<pr_meslep::ins,lprop::ins,qprop::ins,qprop::ins>> map;
-#define ADD_COMBO(P,L,I,O)			\
+#define ADD_COMBO(P,L,I,O)					\
   map.push_back({pr_meslep::P,lprop::L,qprop::I,qprop::O})
   ADD_COMBO(LO,    LO, LO, LO);
   if(pars::use_QED)
     {
-      ADD_COMBO(LO,LO,LO,LO); //LO
-      //
+      ADD_COMBO(EX,    LO, F,F); //exchange
       //
       ADD_COMBO(NA_IN, F,  F,LO); //nasty_in
       ADD_COMBO(NA_OU, F,  LO,F); //nasty_ou
@@ -90,12 +89,8 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
       ADD_COMBO(PH_IN, LO, T,LO); //tad_in
       ADD_COMBO(PH_OU, LO, LO,T); //tad_ou
       //
-      ADD_COMBO(EX,    LO, F,F); //exchange
-      //
-      //
       ADD_COMBO(CR_IN, LO, P,LO); //critical counterterm_in
       ADD_COMBO(CR_OU, LO, LO,P); //critical counterterm_ou
-      //
       //
       ADD_COMBO(TM_IN, LO, S,LO); //twisted counterterm_in
       ADD_COMBO(TM_OU, LO, LO,S); //twisted counterterm_ou
