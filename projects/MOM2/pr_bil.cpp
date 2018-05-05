@@ -90,8 +90,8 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
   const index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks+1}});
   
   vector<tuple<pr_bil::ins,jqprop::ins,pr_bil::ins,jqprop::ins>> map;
-#define ADD_COMBO(A,O,V,I)			\
-  map.push_back({pr_bil::A,jqprop::O,pr_bil::V,jqprop::I})
+#define ADD_COMBO(A,I,V,O)			\
+  map.push_back({pr_bil::A,jqprop::I,pr_bil::V,jqprop::O})
   ADD_COMBO(LO,  LO, LO, LO);
   if(pars::use_QED)
     {

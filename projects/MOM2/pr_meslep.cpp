@@ -56,7 +56,7 @@ vector<dcompl_t> perens_t::build_mesloop(const vector<lprop_t> &props_lep) const
       auto pr=(lepGamma[ipGl]*(lepGamma[0]+psign*lepGamma[5])).adjoint()/2.0;
       auto ml=[&](lprop::ins ins)->dcompl_t&{return mesloop[ilistGl_ilistpGl_lins_iclust_ind({{ilistGl,ilistpGl,ins,iclust}})];};
       ml(lprop::LO)=(op*pr).toDense().trace()/4.0;   //for test: this must be 1 if iGl==ipGl
-      ml(lprop::F)=(op*pFamp*pr).trace()/4.0; //normalization for the single gamma
+      ml(lprop::F)=(op*pFamp*pr).trace()/4.0;        //normalization for the single gamma
     }
   
   return mesloop;
@@ -68,38 +68,37 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
   const vector<dcompl_t> mesloop=build_mesloop(props_lep);
   
   //! help finding the meslep/clust combo
-  index_t im_r_iclust_ind=im_r_ind*index_t({{"clust",njacks}});
   index_t im_r_im_r_iop_ilistpGl_iclust_ind=im_r_ind*im_r_ind*index_t({{"iop",nZop},{"listpGl",listpGl.size()},{"clust",njacks}});
   index_t im_r_im_r_iop_ilistpGl_ind({{"m_in",nm},{"r_in",nr},{"m_ou",nm},{"r_ou",nr},{"iop",nZop},{"listpGl",listpGl.size()}});
   
   //! list of all combination of transformations to be applied
   vector<tuple<pr_meslep::ins,lprop::ins,qprop::ins,qprop::ins>> map;
-#define ADD_COMBO(P,L,O,I)			\
-  map.push_back({pr_meslep::P,lprop::L,qprop::O,qprop::I})
+#define ADD_COMBO(P,L,I,O)			\
+  map.push_back({pr_meslep::P,lprop::L,qprop::I,qprop::O})
   ADD_COMBO(LO,    LO, LO, LO);
   if(pars::use_QED)
     {
       ADD_COMBO(LO,LO,LO,LO); //LO
       //
       //
-      ADD_COMBO(NA_IN,F,F,LO); //nasty_in
-      ADD_COMBO(NA_IN,F,LO,F); //nasty_ou
+      ADD_COMBO(NA_IN, F,  F,LO); //nasty_in
+      ADD_COMBO(NA_OU, F,  LO,F); //nasty_ou
       //
-      ADD_COMBO(PH_IN,LO,FF,LO); //self_in
-      ADD_COMBO(PH_OU,LO,LO,FF); //self_ou
+      ADD_COMBO(PH_IN, LO, FF,LO); //self_in
+      ADD_COMBO(PH_OU, LO, LO,FF); //self_ou
       //
-      ADD_COMBO(PH_IN,LO,T,LO); //tad_in
-      ADD_COMBO(PH_OU,LO,LO,T); //tad_ou
+      ADD_COMBO(PH_IN, LO, T,LO); //tad_in
+      ADD_COMBO(PH_OU, LO, LO,T); //tad_ou
       //
-      ADD_COMBO(EX,LO,F,F); //exchange
-      //
-      //
-      ADD_COMBO(CR_IN,LO,P,LO); //critical counterterm_in
-      ADD_COMBO(CR_OU,LO,LO,P); //critical counterterm_ou
+      ADD_COMBO(EX,    LO, F,F); //exchange
       //
       //
-      ADD_COMBO(TM_IN,LO,S,LO); //twisted counterterm_in
-      ADD_COMBO(TM_OU,LO,LO,S); //twisted counterterm_ou
+      ADD_COMBO(CR_IN, LO, P,LO); //critical counterterm_in
+      ADD_COMBO(CR_OU, LO, LO,P); //critical counterterm_ou
+      //
+      //
+      ADD_COMBO(TM_IN, LO, S,LO); //twisted counterterm_in
+      ADD_COMBO(TM_OU, LO, LO,S); //twisted counterterm_ou
     }
 #undef ADD_COMBO
   
@@ -285,8 +284,8 @@ void perens_t::mom_compute_meslep()
 	  j.clusterize(clust_size);
       clust_time.stop();
       
-      vector<jqprop_t> jprops_inv_ou=get_inverse_propagators(jprops_ou); //!< inverse propagator_ou
       vector<jqprop_t> jprops_inv_in=get_inverse_propagators(jprops_in); //!< inverse propagator_in
+      vector<jqprop_t> jprops_inv_ou=get_inverse_propagators(jprops_ou); //!< inverse propagator_ou
       
       proj_time.start();
       compute_proj_meslep(jprops_inv_in,jverts,jprops_inv_ou);

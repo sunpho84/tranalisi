@@ -90,21 +90,20 @@ void perens_t::compute_Zmeslep()
 	    
 			Gamma_QED_meslep_combo(iop,iproj)=
 			  ml(pr_meslep::EX)[ijack]*q_in*q_ou+
-			  ml(pr_meslep::NA_OU)[ijack]*q_ou*ql+
-			  ml(pr_meslep::NA_IN)[ijack]*q_in*ql+
+			  (ml(pr_meslep::NA_OU)[ijack]*q_ou+
+			   ml(pr_meslep::NA_IN)[ijack]*q_in)*ql+
 			  (ml(pr_meslep::PH_OU)[ijack]+
 			   ml(pr_meslep::CR_OU)[ijack]*deltam_cr[im_r_ou][ijack]+
 			   ml(pr_meslep::TM_OU)[ijack]*deltam_tm[im_r_ou][ijack])*q_ou*q_ou+
 			  (ml(pr_meslep::PH_IN)[ijack]+
 			   ml(pr_meslep::CR_IN)[ijack]*deltam_cr[im_r_in][ijack]+
-			   ml(pr_meslep::TM_IN)[ijack]*deltam_tm[im_r_in][ijack])*q_in*q_in+
-			  ml(pr_meslep::PH_IN)[ijack]*q_in*q_in;
+			   ml(pr_meslep::TM_IN)[ijack]*deltam_tm[im_r_in][ijack])*q_in*q_in;
 		      }
 		  
 		  const Zmeslep_t Gamma_meslep_combo_inv=Gamma_meslep_combo.inverse();
 		  
 		  const double Zq_contr=sqrt(s1_ou(sigma::LO)[ijack]*s1_in(sigma::LO)[ijack]);
-		  const double Zq_QED_rel_contr= 
+		  const double Zq_QED_rel_contr=
 		    (sigma1_QED_in[ijack]/s1_in(sigma::LO)[ijack]*sqr(meslep::q_in)+
 		     sigma1_QED_ou[ijack]/s1_ou(sigma::LO)[ijack]*sqr(meslep::q_ou));
 		  
