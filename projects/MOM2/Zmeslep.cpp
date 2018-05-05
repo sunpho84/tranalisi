@@ -49,13 +49,13 @@ void perens_t::compute_Zmeslep()
 	      auto s1_ou=sigma_ins_getter(im_ou,r_ou,ilinmom_ou,sigma::SIGMA1);
 	      auto s1_in=sigma_ins_getter(im_in,r_in,ilinmom_in,sigma::SIGMA1);
 	      djack_t sigma1_QED_ou=
-		s1_ou(sigma::PH)+
-		s1_ou(sigma::CR)*deltam_cr[im_r_ou]+
-		s1_ou(sigma::TM)*deltam_tm[im_r_ou];
+		(s1_ou(sigma::PH)+
+		 s1_ou(sigma::CR)*deltam_cr[im_r_ou]+
+		 s1_ou(sigma::TM)*deltam_tm[im_r_ou])*q_ou*q_ou;
 	      djack_t sigma1_QED_in=
-		s1_in(sigma::PH)+
-		s1_in(sigma::CR)*deltam_cr[im_r_in]+
-		s1_in(sigma::TM)*deltam_tm[im_r_in];
+		(s1_in(sigma::PH)+
+		 s1_in(sigma::CR)*deltam_cr[im_r_in]+
+		 s1_in(sigma::TM)*deltam_tm[im_r_in])*q_in*q_in;
 	      
 	      for(size_t ijack=0;ijack<=njacks;ijack++)
 		{
@@ -90,11 +90,14 @@ void perens_t::compute_Zmeslep()
 	    
 			Gamma_QED_meslep_combo(iop,iproj)=
 			  ml(pr_meslep::EX)[ijack]*q_in*q_ou+
+			  
 			  (ml(pr_meslep::NA_OU)[ijack]*q_ou+
 			   ml(pr_meslep::NA_IN)[ijack]*q_in)*ql+
+			  
 			  (ml(pr_meslep::PH_OU)[ijack]+
 			   ml(pr_meslep::CR_OU)[ijack]*deltam_cr[im_r_ou][ijack]+
 			   ml(pr_meslep::TM_OU)[ijack]*deltam_tm[im_r_ou][ijack])*q_ou*q_ou+
+			  
 			  (ml(pr_meslep::PH_IN)[ijack]+
 			   ml(pr_meslep::CR_IN)[ijack]*deltam_cr[im_r_in][ijack]+
 			   ml(pr_meslep::TM_IN)[ijack]*deltam_tm[im_r_in][ijack])*q_in*q_in;
@@ -104,8 +107,8 @@ void perens_t::compute_Zmeslep()
 		  
 		  const double Zq_contr=sqrt(s1_ou(sigma::LO)[ijack]*s1_in(sigma::LO)[ijack]);
 		  const double Zq_QED_rel_contr=
-		    (sigma1_QED_in[ijack]/s1_in(sigma::LO)[ijack]*sqr(meslep::q_in)+
-		     sigma1_QED_ou[ijack]/s1_ou(sigma::LO)[ijack]*sqr(meslep::q_ou));
+		    sigma1_QED_in[ijack]/s1_in(sigma::LO)[ijack]+
+		    sigma1_QED_ou[ijack]/s1_ou(sigma::LO)[ijack];
 		  
 		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
 		  auto Z_QED_rel=(Zq_QED_rel_contr*Zmeslep_t::Identity()-Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
