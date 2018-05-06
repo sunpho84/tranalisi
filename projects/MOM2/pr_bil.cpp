@@ -39,7 +39,7 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
   
   //! list of all combination of transformations to be applied
   vector<tuple<pr_bil::ins,qprop::ins,qprop::ins>> map;
-#define ADD_COMBO(V,O,I)				\
+#define ADD_COMBO(V,O,I)			\
   map.push_back({pr_bil::V,qprop::O,qprop::I})
   ADD_COMBO(LO,    LO, LO);
   if(pars::use_QED)
