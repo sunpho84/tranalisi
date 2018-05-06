@@ -110,16 +110,13 @@ public:
 	  const size_t im_r_in=im_r_ind({comps[0],comps[1]});
 	  const size_t im_r_ou=im_r_ind({comps[2],comps[3]});
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
-	    {
-	      QED[i][ijack]=
+	    QED[i][ijack]=
 	      PH[i][ijack]
 	      // +deltam_cr[im_r_in][ijack]*CR_CT_IN[i][ijack]
 	      // +deltam_cr[im_r_ou][ijack]*CR_CT_OU[i][ijack]
 	      // +deltam_tm[im_r_in][ijack]*TM_CT_IN[i][ijack]
 	      // +deltam_tm[im_r_ou][ijack]*TM_CT_OU[i][ijack]
 	      ;
-	      cout<<PH[i][ijack]<<endl;
-	    }
 	}
   }
 };
