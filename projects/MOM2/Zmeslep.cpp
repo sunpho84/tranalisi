@@ -71,7 +71,7 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const ve
        
        //create list of operations
        vector<tuple<vector<jqprop_t>*,const vector<dcompl_t>*,const qprop_t*,const qprop_t*>> list={
-	 // {&j.LO,&mesloop.LO,&p_in.LO,&p_ou.LO}, //LO
+	 {&j.LO,&mesloop.LO,&p_in.LO,&p_ou.LO}, //LO
 	 // //
 	 // //
 	 // {&j.PH,&mesloop.F,&p_in.F,&p_ou.LO}, //nasty_in
