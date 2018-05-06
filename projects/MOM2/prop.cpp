@@ -224,6 +224,8 @@ vector<mom_conf_lprops_t> perens_t::read_all_lprops_mom(vector<raw_file_t> &file
       const size_t iconf_ihit_ikind=iconf_ihit_ilkind_ind({iconf,ihit,ikind});
       
       read_lprop(props[ijack].kind[ikind],files[iconf_ihit_ikind],1.0,imom,0,0); //r of lprop is always 0
+      
+      cout<<ijack<<" "<<ikind<<" "<<props[ijack].kind[ikind]<<endl;
     }
   
   return props;
