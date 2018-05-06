@@ -273,7 +273,9 @@ vector<lprop_t> perens_t::read_all_lprops_mom(vector<raw_file_t> &files,const si
       
       props[ilins_ijack]=read_lprop(files[iconf_ihit_ilins],1.0,imom,0,0); //r of lprop is always 0
       
-      cout<<ilins_ijack<<" "<<props[ilins_ijack]<<endl;
+      cout<<ilins<<" "<<ijack<<endl;
+      cout<<"/////////////////////////////////////////////////////////////////"<<endl;
+      cout<<props[ilins_ijack]<<endl;
     }
   
   return props;
