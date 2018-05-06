@@ -38,7 +38,7 @@ mesloop_t perens_t::build_mesloop(const vector<mom_conf_lprops_t> &props_lep) co
       auto pr=(lepGamma[ipGl]*(lepGamma[0]+psign*lepGamma[5])).adjoint()/2.0;
       mesloop.LO[i]=(op*pr).toDense().trace()/4.0;   //for test: this must be 1 if iGl==ipGl
       mesloop.F[i]=(op*pFamp*pr).trace()/4.0; //normalization for the single gamma
-      cout<<mesloop.F[i]<<endl;
+      cout<<"p0 "<<p0(0,0)<<"\npF "<<pF(0,0)<<"\npFamp "<<pFamp(0,0)<<"\npr "<<((lprop_t)pr)(0,0)<<"\nml "<<mesloop.LO[i]<<"\nmlF "<<mesloop.F[i]<<endl;
     }
   
   return mesloop;
