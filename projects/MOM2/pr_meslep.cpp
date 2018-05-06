@@ -81,7 +81,7 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
   
   if(pars::use_QED)
     {
-      // ADD_COMBO(EX,    LO, F,F); //exchange
+      ADD_COMBO(EX,    LO, F,F); //exchange
       //
       // ADD_COMBO(NA_IN, F,  F,LO); //nasty_in
       // ADD_COMBO(NA_OU, F,  LO,F); //nasty_ou
