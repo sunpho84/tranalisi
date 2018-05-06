@@ -112,6 +112,8 @@ void read_qprop(qprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
       auto rot_si=get_rotator(quaGamma,r_si);
       auto rot_so=get_rotator(quaGamma,r_so);
       *prop=rot_si*temp*rot_so;
+      
+      cout<<rot_si<<endl;
     }
   else
     *prop=temp;
