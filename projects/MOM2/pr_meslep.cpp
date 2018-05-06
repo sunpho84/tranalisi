@@ -57,6 +57,7 @@ vector<dcompl_t> perens_t::build_mesloop(const vector<lprop_t> &props_lep) const
       auto ml=[&](lprop::ins ins)->dcompl_t&{return mesloop[ilistGl_ilistpGl_lins_iclust_ind({{ilistGl,ilistpGl,ins,iclust}})];};
       ml(lprop::LO)=(op*pr).toDense().trace()/4.0;   //for test: this must be 1 if iGl==ipGl
       ml(lprop::F)=(op*pFamp*pr).trace()/4.0;        //normalization for the single gamma
+      cout<<ml(lprop::F)<<endl;
     }
   
   return mesloop;
