@@ -133,15 +133,11 @@ void read_lprop(lprop_t *prop,raw_file_t &file,const dcompl_t &fact,const size_t
 	    temp(is_si,is_so)=c*fact;
 	  }
   
-  cout<<temp<<endl;
-  
   if(pars::twisted_run and pars::phys_basis)
     {
       auto rot_si=get_rotator(lepGamma,r_si);
       auto rot_so=get_rotator(lepGamma,r_so);
       *prop=rot_si*temp*rot_so;
-      
-      cout<<*prop<<endl;
     }
   else
     *prop=temp;
