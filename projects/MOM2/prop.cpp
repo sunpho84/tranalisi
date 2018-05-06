@@ -180,6 +180,7 @@ qprop_t read_qprop(raw_file_t &file,const dcompl_t &fact,const size_t imom,const
     {
       auto rot_si=get_rotator(quaGamma,r_si);
       auto rot_so=get_rotator(quaGamma,r_so);
+      cout<<rot_si<<endl;
       
       return rot_si*temp*rot_so;
     }
