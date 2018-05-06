@@ -180,7 +180,6 @@ qprop_t read_qprop(raw_file_t &file,const dcompl_t &fact,const size_t imom,const
     {
       auto rot_si=get_rotator(quaGamma,r_si);
       auto rot_so=get_rotator(quaGamma,r_so);
-      cout<<rot_si<<endl;
       
       return rot_si*temp*rot_so;
     }
@@ -204,12 +203,17 @@ lprop_t read_lprop(raw_file_t &file,const dcompl_t &fact,const size_t imom,const
 	    temp(is_si,is_so)=c*fact;
 	  }
   
+  cout<<temp<<endl;
+  
   if(pars::twisted_run and pars::phys_basis)
     {
       auto rot_si=get_rotator(lepGamma,r_si);
       auto rot_so=get_rotator(lepGamma,r_so);
+      auto out=rot_si*temp*rot_so;
       
-      return rot_si*temp*rot_so;
+      cout<<out<<endl;
+      
+      return out;
     }
   else
     return temp;
