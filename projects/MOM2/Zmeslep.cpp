@@ -131,7 +131,7 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const ve
 	       	 ", res: "<<c(0,0)<<
 	       	 endl;
 	     }
-	   cout<<" "<<jvert[iclust]<<endl;
+	   //cout<<" "<<jvert[iclust]<<endl;
 	 }
      }
 }
