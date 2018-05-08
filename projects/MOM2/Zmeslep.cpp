@@ -78,8 +78,8 @@ void perens_t::compute_Zmeslep()
 			Gamma_QED_meslep_combo(iop,iproj)=
 			  ml(EX)[ijack]*q_in*q_ou+
 			  
-			  // (ml(NA_IN)[ijack]*q_in+
-			  //  ml(NA_OU)[ijack]*q_ou)*ql+
+			  (ml(NA_IN)[ijack]*q_in+
+			   ml(NA_OU)[ijack]*q_ou)*ql+
 			  
 			  (ml(PH_IN)[ijack] //+
 			  //  ml(CR_IN)[ijack]*deltam_cr[im_r_in][ijack]+
