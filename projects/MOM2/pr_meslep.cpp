@@ -222,7 +222,6 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
 	  const size_t im_r_im_r_meslepins_iop_iproj_imeslepmom=
 	    im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_in,r_in,im_ou,r_ou,pr_meslepins,iop,iproj,imeslepmom});
 	  double &out=pr_meslep[im_r_im_r_meslepins_iop_iproj_imeslepmom][ijack];
-	  out=0.0;
 	  
 	  for(auto &pcontr : zops[iproj].contr) // projecting for operator is stored in contr
 	    {
