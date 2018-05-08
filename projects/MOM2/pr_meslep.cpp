@@ -165,8 +165,8 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
   const index_t ind({{"rest",im_r_im_r_iop_iproj_ind.max()},{"ijack",njacks+1}});
   
   vector<tuple<pr_meslep::ins,jqprop::ins,pr_meslep::ins,jqprop::ins>> map;
-#define ADD_COMBO(A,O,V,I)						\
-  map.push_back({pr_meslep::A,jqprop::O,pr_meslep::V,jqprop::I})
+#define ADD_COMBO(A,I,V,O)						\
+  map.push_back({pr_meslep::A,jqprop::I,pr_meslep::V,jqprop::O})
   ADD_COMBO(LO,  LO, LO, LO);
   if(pars::use_QED)
     {
