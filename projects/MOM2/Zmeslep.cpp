@@ -75,8 +75,8 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const ve
 	 {&j.LO,&mesloop.LO,&p_in.LO,&p_ou.LO}, //LO
 	 //
 	 //
-	 {&j.PH,&mesloop.F,&p_in.F,&p_ou.LO}, //nasty_in
-	 {&j.PH,&mesloop.F,&p_in.LO,&p_ou.F}, //nasty_ou
+	 // {&j.PH,&mesloop.F,&p_in.F,&p_ou.LO}, //nasty_in
+	 // {&j.PH,&mesloop.F,&p_in.LO,&p_ou.F}, //nasty_ou
 	 //
 	 {&j.PH,&mesloop.LO,&p_in.FF,&p_ou.LO}, //self_in
 	 {&j.PH,&mesloop.LO,&p_in.LO,&p_ou.FF}, //self_ou
@@ -87,12 +87,12 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const ve
 	  {&j.PH,&mesloop.LO,&p_in.F,&p_ou.F}, //exchange
 	 //
 	 //
-	 {&j.CR_CT_IN,&mesloop.LO,&p_in.P,&p_ou.LO}, //critical counterterm_in
-	 {&j.CR_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.P}, //critical counterterm_ou
-	 //
-	 //
-	 {&j.TM_CT_IN,&mesloop.LO,&p_in.S,&p_ou.LO}, //twisted counterterm_in
-	 {&j.TM_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.S}, //twisted counterterm_ou
+	 // {&j.CR_CT_IN,&mesloop.LO,&p_in.P,&p_ou.LO}, //critical counterterm_in
+	 // {&j.CR_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.P}, //critical counterterm_ou
+	 // //
+	 // //
+	 // {&j.TM_CT_IN,&mesloop.LO,&p_in.S,&p_ou.LO}, //twisted counterterm_in
+	 // {&j.TM_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.S}, //twisted counterterm_ou
 	 };
        
        const Zop_t &zop=zops[iop];
@@ -117,7 +117,7 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const ve
 	       const qprop_t c=prop_ou*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop_in.adjoint()*quaGamma[5]*mesloop;
 	       jvert[iclust]+=c*norm;
 	       
-	       if(1)
+	       if(0)
 	       cout
 	       	 <<"iop: "<<iop<<
 	       	 ", ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<
