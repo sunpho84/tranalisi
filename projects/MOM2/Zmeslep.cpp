@@ -290,7 +290,7 @@ void perens_t::mom_compute_meslep()
 	  pr_meslep[all_imeslepmom_ind({iall,imeslepmom})]=
 	    +pr_LO[iall];
 	  pr_meslep_QED[all_imeslepmom_ind({iall,imeslepmom})]=
-	    +pr_QED_amp_QCD[iall]
+	    // +pr_QED_amp_QCD[iall]
 	    -pr_QCD_amp_QED_in[iall]
 	    -pr_QCD_amp_QED_ou[iall]
 	    ;
