@@ -99,7 +99,7 @@ void perens_t::compute_Zmeslep()
 		    sigma1_QED_ou[ijack]/s1_ou(sigma::LO)[ijack];
 		  
 		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
-		  auto Z_QED_rel=(// Zq_QED_rel_contr*Zmeslep_t::Identity()
+		  auto Z_QED_rel=(Zq_QED_rel_contr*Zmeslep_t::Identity()
 				  -Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
 		  
 		  for(size_t iop=0;iop<nZop;iop++)
