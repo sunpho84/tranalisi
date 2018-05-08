@@ -192,8 +192,8 @@ void perens_t::mom_compute_bil()
 	    
 	    //build all props
 	    build_props_time.start();
-	    build_all_mr_jackkniffed_qprops(jprops_ou,props_ou,mom_ou);
-	    build_all_mr_jackkniffed_qprops(jprops_in,props_in,mom_in);
+	    build_all_mr_jackkniffed_qprops(jprops_ou,props_ou);
+	    build_all_mr_jackkniffed_qprops(jprops_in,props_in);
 	    build_props_time.stop();
 	    
 	    //build all bilinear verts

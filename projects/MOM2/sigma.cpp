@@ -90,7 +90,7 @@ perens_t& perens_t::compute_sigmas()
 	    
 	    //build all props
 	    build_props_time.start();
-	    build_all_mr_jackkniffed_qprops(jprops,props,mom);
+	    build_all_mr_jackkniffed_qprops(jprops,props);
 	    build_props_time.stop();
 	  }
       
