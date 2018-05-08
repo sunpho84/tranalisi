@@ -117,7 +117,7 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const ve
 	       const qprop_t c=prop_ou*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop_in.adjoint()*quaGamma[5]*mesloop;
 	       jvert[iclust]+=c*norm;
 	       
-	       if(0)
+	       if(1)
 	       cout
 	       	 <<"iop: "<<iop<<
 	       	 ", ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<
