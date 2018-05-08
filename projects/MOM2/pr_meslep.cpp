@@ -84,8 +84,8 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
     {
       ADD_COMBO(EX,    LO, F,F); //exchange
       //
-      ADD_COMBO(NA_IN, F,  F,LO); //nasty_in
-      ADD_COMBO(NA_OU, F,  LO,F); //nasty_ou
+      // ADD_COMBO(NA_IN, F,  F,LO); //nasty_in
+      // ADD_COMBO(NA_OU, F,  LO,F); //nasty_ou
       //
       ADD_COMBO(PH_IN, LO, FF,LO); //self_in
       ADD_COMBO(PH_OU, LO, LO,FF); //self_ou
@@ -93,11 +93,11 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
       ADD_COMBO(PH_IN, LO, T,LO); //tad_in
       ADD_COMBO(PH_OU, LO, LO,T); //tad_ou
       //
-      ADD_COMBO(CR_IN, LO, P,LO); //critical counterterm_in
-      ADD_COMBO(CR_OU, LO, LO,P); //critical counterterm_ou
-      //
-      ADD_COMBO(TM_IN, LO, S,LO); //twisted counterterm_in
-      ADD_COMBO(TM_OU, LO, LO,S); //twisted counterterm_ou
+      // ADD_COMBO(CR_IN, LO, P,LO); //critical counterterm_in
+      // ADD_COMBO(CR_OU, LO, LO,P); //critical counterterm_ou
+      // //
+      // ADD_COMBO(TM_IN, LO, S,LO); //twisted counterterm_in
+      // ADD_COMBO(TM_OU, LO, LO,S); //twisted counterterm_ou
     }
 #undef ADD_COMBO
   
@@ -171,21 +171,21 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
   if(pars::use_QED)
     {
       ADD_COMBO(EX    , LO , EX    , LO);
-      ADD_COMBO(NA_IN , LO , NA_IN , LO);
-      ADD_COMBO(NA_OU , LO , NA_OU , LO);
-      ADD_COMBO(CR_IN , LO , CR_IN , LO);
-      ADD_COMBO(CR_OU , LO , CR_OU , LO);
-      ADD_COMBO(TM_IN , LO , TM_IN , LO);
-      ADD_COMBO(TM_OU , LO , TM_OU , LO);
+      // ADD_COMBO(NA_IN , LO , NA_IN , LO);
+      // ADD_COMBO(NA_OU , LO , NA_OU , LO);
+      // ADD_COMBO(CR_IN , LO , CR_IN , LO);
+      // ADD_COMBO(CR_OU , LO , CR_OU , LO);
+      // ADD_COMBO(TM_IN , LO , TM_IN , LO);
+      // ADD_COMBO(TM_OU , LO , TM_OU , LO);
       ADD_COMBO(PH_IN , LO , PH_IN , LO);
       ADD_COMBO(PH_OU , LO , PH_OU , LO);
       
-      ADD_COMBO(CR_IN , CR , LO, LO);
-      ADD_COMBO(CR_OU , LO , LO, CR);
-      ADD_COMBO(TM_IN , TM , LO, LO);
-      ADD_COMBO(TM_OU , LO , LO, TM);
-      ADD_COMBO(PH_IN , PH , LO, LO);
-      ADD_COMBO(PH_OU , LO , LO, PH);
+      // ADD_COMBO(CR_IN , CR , LO, LO);
+      // ADD_COMBO(CR_OU , LO , LO, CR);
+      // ADD_COMBO(TM_IN , TM , LO, LO);
+      // ADD_COMBO(TM_OU , LO , LO, TM);
+      // ADD_COMBO(PH_IN , PH , LO, LO);
+      // ADD_COMBO(PH_OU , LO , LO, PH);
     }
 #undef ADD_COMBO
 
