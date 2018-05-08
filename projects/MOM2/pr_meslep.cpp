@@ -170,15 +170,15 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
   ADD_COMBO(LO,  LO, LO, LO);
   if(pars::use_QED)
     {
-      // ADD_COMBO(EX    , LO , EX    , LO);
-      // ADD_COMBO(NA_IN , LO , NA_IN , LO);
-      // ADD_COMBO(NA_OU , LO , NA_OU , LO);
-      // ADD_COMBO(CR_IN , LO , CR_IN , LO);
-      // ADD_COMBO(CR_OU , LO , CR_OU , LO);
-      // ADD_COMBO(TM_IN , LO , TM_IN , LO);
-      // ADD_COMBO(TM_OU , LO , TM_OU , LO);
-      // ADD_COMBO(PH_IN , LO , PH_IN , LO);
-      // ADD_COMBO(PH_OU , LO , PH_OU , LO);
+      ADD_COMBO(EX    , LO , EX    , LO);
+      ADD_COMBO(NA_IN , LO , NA_IN , LO);
+      ADD_COMBO(NA_OU , LO , NA_OU , LO);
+      ADD_COMBO(CR_IN , LO , CR_IN , LO);
+      ADD_COMBO(CR_OU , LO , CR_OU , LO);
+      ADD_COMBO(TM_IN , LO , TM_IN , LO);
+      ADD_COMBO(TM_OU , LO , TM_OU , LO);
+      ADD_COMBO(PH_IN , LO , PH_IN , LO);
+      ADD_COMBO(PH_OU , LO , PH_OU , LO);
       
       ADD_COMBO(CR_IN , CR , LO, LO);
       ADD_COMBO(CR_OU , LO , LO, CR);
