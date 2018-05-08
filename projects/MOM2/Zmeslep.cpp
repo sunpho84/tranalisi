@@ -81,15 +81,13 @@ void perens_t::compute_Zmeslep()
 			  (ml(NA_IN)[ijack]*q_in+
 			   ml(NA_OU)[ijack]*q_ou)*ql+
 			  
-			  (ml(PH_IN)[ijack] //+
-			  //  ml(CR_IN)[ijack]*deltam_cr[im_r_in][ijack]+
-			  //  ml(TM_IN)[ijack]*deltam_tm[im_r_in][ijack]
-			   )*q_in*q_in+
+			  (ml(PH_IN)[ijack]+
+			   ml(CR_IN)[ijack]*deltam_cr[im_r_in][ijack]+
+			   ml(TM_IN)[ijack]*deltam_tm[im_r_in][ijack])*q_in*q_in+
 			  
-			  (ml(PH_OU)[ijack] //+
-			  //  ml(CR_OU)[ijack]*deltam_cr[im_r_ou][ijack]+
-			  //  ml(TM_OU)[ijack]*deltam_tm[im_r_ou][ijack]
-			   )*q_ou*q_ou
+			  (ml(PH_OU)[ijack] +
+			   ml(CR_OU)[ijack]*deltam_cr[im_r_ou][ijack]+
+			   ml(TM_OU)[ijack]*deltam_tm[im_r_ou][ijack])*q_ou*q_ou
 			  ;
 		      }
 		  
