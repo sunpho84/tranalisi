@@ -155,7 +155,7 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
 	       
 	     }
 	   
-	   cout<<" "<<vert<<endl;
+	   //cout<<" "<<vert<<endl;
 	 }
      }
 }
@@ -239,7 +239,7 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
 	      out+=contr;
 	    }
 	  
-	  cout<<"amputated, im_in: "<<im_in<<", r_in: "<<r_in<<", im_ou: "<<im_ou<<", r_ou: "<<r_ou<<", iop: "<<iop<<", iproj: "<<iproj<<", ijack: "<<ijack<<", out: "<<out<<endl;
+	  //cout<<"amputated, im_in: "<<im_in<<", r_in: "<<r_in<<", im_ou: "<<im_ou<<", r_ou: "<<r_ou<<", iop: "<<iop<<", iproj: "<<iproj<<", ijack: "<<ijack<<", out: "<<out<<endl;
 	}
     }
 }
