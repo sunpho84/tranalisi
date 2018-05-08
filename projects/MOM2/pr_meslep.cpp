@@ -148,7 +148,7 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
 	       	 ", sign: "<<sign<<
 	       	 ", ilistpGl: "<<ilistpGl<<"("<<listpGl[ilistpGl]<<")"<<
 	       	 ", iclust: "<<iclust<<
-	       	 ", mesloop: "<<mesloop<<
+	       	 ", mesloop: "<<ml<<
 	       	 ", prop_in: "<<prop_in(0,0)<<
 	       	 ", prop_ou: "<<prop_ou(0,0)<<
 	       	 ", res: "<<c(0,0)<<
