@@ -57,7 +57,7 @@ vector<dcompl_t> perens_t::build_mesloop(const vector<lprop_t> &props_lep) const
       auto ml=[&](lprop::ins ins)->dcompl_t&{return mesloop[ilistGl_ilistpGl_lins_iclust_ind({{ilistGl,ilistpGl,ins,iclust}})];};
       ml(lprop::LO)=(op*pr).toDense().trace()/4.0;   //for test: this must be 1 if iGl==ipGl
       ml(lprop::F)=(op*pFamp*pr).trace()/4.0;        //normalization for the single gamma
-      cout<<"p0 "<<p0(0,0)<<"\npF "<<pF(0,0)<<"\npFamp "<<pFamp(0,0)<<"\npr "<<((lprop_t)pr)(0,0)<<"\nml "<<ml(lprop::LO)<<"\nmlF "<<ml(lprop::F)<<endl;
+      //cout<<"p0 "<<p0(0,0)<<"\npF "<<pF(0,0)<<"\npFamp "<<pFamp(0,0)<<"\npr "<<((lprop_t)pr)(0,0)<<"\nml "<<ml(lprop::LO)<<"\nmlF "<<ml(lprop::F)<<endl;
     }
   
   return mesloop;
@@ -127,7 +127,6 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
 	   const int    norm=zop.norm;
 	   
 	   qprop_t &vert=j[im_r_im_r_iop_ilistpGl_meslepins_ind({im_in,r_in,im_ou,r_ou,iop,ilistpGl,v_ins})][iclust];
-	   // cout<<" "<<endl;
 	   for(auto &contr : zop.contr)
 	     {
 	       const size_t ilistGl=contr.ilistGl;
@@ -140,6 +139,8 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
 	       const qprop_t c=prop_ou*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop_in.adjoint()*quaGamma[5]*ml;
 	       vert+=c*norm;
 	     }
+	   
+	   cout<<" "<<vert<<endl;
 	 }
      }
 }
