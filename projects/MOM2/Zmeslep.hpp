@@ -112,10 +112,10 @@ public:
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    QED[i][ijack]=
 	      PH[i][ijack]
-	      // +deltam_cr[im_r_in][ijack]*CR_CT_IN[i][ijack]
-	      // +deltam_cr[im_r_ou][ijack]*CR_CT_OU[i][ijack]
-	      // +deltam_tm[im_r_in][ijack]*TM_CT_IN[i][ijack]
-	      // +deltam_tm[im_r_ou][ijack]*TM_CT_OU[i][ijack]
+	      +deltam_cr[im_r_in][ijack]*CR_CT_IN[i][ijack]
+	      +deltam_cr[im_r_ou][ijack]*CR_CT_OU[i][ijack]
+	      +deltam_tm[im_r_in][ijack]*TM_CT_IN[i][ijack]
+	      +deltam_tm[im_r_ou][ijack]*TM_CT_OU[i][ijack]
 	      ;
 	}
   }

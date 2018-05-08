@@ -73,26 +73,26 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(jmeslep_vert_t &j,const ve
        //create list of operations
        vector<tuple<vector<jqprop_t>*,const vector<dcompl_t>*,const qprop_t*,const qprop_t*>> list={
 	 {&j.LO,&mesloop.LO,&p_in.LO,&p_ou.LO}, //LO
-	 // //
-	 // //
-	 // {&j.PH,&mesloop.F,&p_in.F,&p_ou.LO}, //nasty_in
-	 // {&j.PH,&mesloop.F,&p_in.LO,&p_ou.F}, //nasty_ou
-	 // //
-	 // {&j.PH,&mesloop.LO,&p_in.FF,&p_ou.LO}, //self_in
-	 // {&j.PH,&mesloop.LO,&p_in.LO,&p_ou.FF}, //self_ou
-	 // //
-	 // {&j.PH,&mesloop.LO,&p_in.T,&p_ou.LO}, //tad_in
-	 // {&j.PH,&mesloop.LO,&p_in.LO,&p_ou.T}, //tad_ou
-	 // //
+	 //
+	 //
+	 {&j.PH,&mesloop.F,&p_in.F,&p_ou.LO}, //nasty_in
+	 {&j.PH,&mesloop.F,&p_in.LO,&p_ou.F}, //nasty_ou
+	 //
+	 {&j.PH,&mesloop.LO,&p_in.FF,&p_ou.LO}, //self_in
+	 {&j.PH,&mesloop.LO,&p_in.LO,&p_ou.FF}, //self_ou
+	 //
+	 {&j.PH,&mesloop.LO,&p_in.T,&p_ou.LO}, //tad_in
+	 {&j.PH,&mesloop.LO,&p_in.LO,&p_ou.T}, //tad_ou
+	 //
 	  {&j.PH,&mesloop.LO,&p_in.F,&p_ou.F}, //exchange
-	 // //
-	 // //
-	 // {&j.CR_CT_IN,&mesloop.LO,&p_in.P,&p_ou.LO}, //critical counterterm_in
-	 // {&j.CR_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.P}, //critical counterterm_ou
-	 // //
-	 // //
-	 // {&j.TM_CT_IN,&mesloop.LO,&p_in.S,&p_ou.LO}, //twisted counterterm_in
-	 // {&j.TM_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.S}, //twisted counterterm_ou
+	 //
+	 //
+	 {&j.CR_CT_IN,&mesloop.LO,&p_in.P,&p_ou.LO}, //critical counterterm_in
+	 {&j.CR_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.P}, //critical counterterm_ou
+	 //
+	 //
+	 {&j.TM_CT_IN,&mesloop.LO,&p_in.S,&p_ou.LO}, //twisted counterterm_in
+	 {&j.TM_CT_OU,&mesloop.LO,&p_in.LO,&p_ou.S}, //twisted counterterm_ou
 	 };
        
        const Zop_t &zop=zops[iop];
@@ -291,8 +291,8 @@ void perens_t::mom_compute_meslep()
 	    +pr_LO[iall];
 	  pr_meslep_QED[all_imeslepmom_ind({iall,imeslepmom})]=
 	    +pr_QED_amp_QCD[iall]
-	    // -pr_QCD_amp_QED_in[iall]
-	    // -pr_QCD_amp_QED_ou[iall]
+	    -pr_QCD_amp_QED_in[iall]
+	    -pr_QCD_amp_QED_ou[iall]
 	    ;
 	}
     }
@@ -367,7 +367,7 @@ void perens_t::compute_Zmeslep()
 		     Zq_sig1_QED[im_r_ou_ilinmom_ou][ijack]/Zq_sig1[im_r_ou_ilinmom_ou][ijack]*sqr(meslep::q_ou));
 		  
 		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
-		  auto Z_QED_rel=(// Zq_QED_rel_contr*Zmeslep_t::Identity()
+		  auto Z_QED_rel=(Zq_QED_rel_contr*Zmeslep_t::Identity()
 				  -Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
 		  
 		  for(size_t iop=0;iop<nZop;iop++)
