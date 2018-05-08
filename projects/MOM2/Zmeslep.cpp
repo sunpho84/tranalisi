@@ -94,8 +94,8 @@ void perens_t::compute_Zmeslep()
 		  const Zmeslep_t Gamma_meslep_combo_inv=Gamma_meslep_combo.inverse();
 		  
 		  const double Zq_contr=sqrt(s1_ou(sigma::LO)[ijack]*s1_in(sigma::LO)[ijack]);
-		  const double Zq_QED_rel_contr=(sigma1_QED_in[ijack]/s1_in(sigma::LO)[ijack]*sqr(q_in)+
-						 sigma1_QED_ou[ijack]/s1_ou(sigma::LO)[ijack]*sqr(q_ou))/2.0;
+		  const double Zq_QED_rel_contr=(sigma1_QED_in[ijack]/s1_in(sigma::LO)[ijack]+
+						 sigma1_QED_ou[ijack]/s1_ou(sigma::LO)[ijack])/2.0;
 		  
 		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
 		  auto Z_QED_rel=(Zq_QED_rel_contr*Zmeslep_t::Identity()
