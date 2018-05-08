@@ -160,9 +160,9 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
      }
 }
 
-void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const vector<jqprop_t> &jverts,const vector<jqprop_t> &jprop_inv_ou)
+void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const vector<jqprop_t> &jverts,const vector<jqprop_t> &jprop_inv_ou,const size_t imeslepmom)
 {
-  const index_t ind({{"rest",im_r_im_r_iop_iproj_imeslepmom_ind.max()},{"ijack",njacks+1}});
+  const index_t ind({{"rest",im_r_im_r_iop_iproj_ind.max()},{"ijack",njacks+1}});
   
   vector<tuple<pr_meslep::ins,jqprop::ins,pr_meslep::ins,jqprop::ins>> map;
 #define ADD_COMBO(A,O,V,I)						\
@@ -282,8 +282,8 @@ void perens_t::mom_compute_meslep()
 	    
   	    //build all props
   	    build_props_time.start();
-  	    build_all_mr_jackkniffed_qprops(jprops_in,props_in,mom_in);
-  	    build_all_mr_jackkniffed_qprops(jprops_ou,props_ou,mom_ou);
+  	    build_all_mr_jackkniffed_qprops(jprops_in,props_in);
+  	    build_all_mr_jackkniffed_qprops(jprops_ou,props_ou);
   	    build_props_time.stop();
 	    
   	    //build all meslep_verts
@@ -303,7 +303,7 @@ void perens_t::mom_compute_meslep()
       vector<jqprop_t> jprops_inv_ou=get_inverse_propagators(jprops_ou); //!< inverse propagator_ou
       
       proj_time.start();
-      compute_proj_meslep(jprops_inv_in,jverts,jprops_inv_ou);
+      compute_proj_meslep(jprops_inv_in,jverts,jprops_inv_ou,imeslepmom);
       proj_time.stop();
     }
 }

@@ -355,7 +355,7 @@ struct perens_t
   
   vector<lprop_t> read_all_lprops_mom(vector<raw_file_t> &files,const size_t i_in_clust_ihit,const size_t imom);
   
-  void build_all_mr_jackkniffed_qprops(vector<jqprop_t> &jprops,const vector<qprop_t> &props,const size_t imom) const;
+  void build_all_mr_jackkniffed_qprops(vector<jqprop_t> &jprops,const vector<qprop_t> &props) const;
   
   //! returns the inverse propagators
   vector<jqprop_t> get_inverse_propagators(const vector<jqprop_t>& qprop) const;
@@ -422,7 +422,7 @@ struct perens_t
   void build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const vector<qprop_t> &props_in,const vector<qprop_t> &props_ou,
 					      const vector<lprop_t> &props_lep) const;
   
-  void compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const vector<jqprop_t> &jverts,const vector<jqprop_t> &jprop_inv_ou);
+  void compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const vector<jqprop_t> &jverts,const vector<jqprop_t> &jprop_inv_ou,const size_t imeslepmom);
   
   /////////////////////////////////////////////////////////////////
   

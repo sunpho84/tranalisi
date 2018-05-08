@@ -277,7 +277,7 @@ vector<lprop_t> perens_t::read_all_lprops_mom(vector<raw_file_t> &files,const si
   return props;
 }
 
-void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const vector<qprop_t>& props,const size_t imom) const
+void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const vector<qprop_t>& props) const
 {
   //! list of all combination of transformations to be applied
   vector<tuple<jqprop::ins,qprop::ins,int>> map;
