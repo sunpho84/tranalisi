@@ -93,11 +93,11 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
       ADD_COMBO(PH_IN, LO, T,LO); //tad_in
       ADD_COMBO(PH_OU, LO, LO,T); //tad_ou
       //
-      // ADD_COMBO(CR_IN, LO, P,LO); //critical counterterm_in
-      // ADD_COMBO(CR_OU, LO, LO,P); //critical counterterm_ou
+      ADD_COMBO(CR_IN, LO, P,LO); //critical counterterm_in
+      ADD_COMBO(CR_OU, LO, LO,P); //critical counterterm_ou
       //
-      // ADD_COMBO(TM_IN, LO, S,LO); //twisted counterterm_in
-      // ADD_COMBO(TM_OU, LO, LO,S); //twisted counterterm_ou
+      ADD_COMBO(TM_IN, LO, S,LO); //twisted counterterm_in
+      ADD_COMBO(TM_OU, LO, LO,S); //twisted counterterm_ou
     }
 #undef ADD_COMBO
   
