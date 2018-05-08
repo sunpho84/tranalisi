@@ -194,14 +194,13 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
     {
       //split im_r_im_r_iop_iproj and ijack
       vector<size_t> comps=ind(i);
-      const size_t im_r_im_r_iop_iproj_imeslepmom=comps[0],ijack=comps[1];
-      const vector<size_t> im_r_im_r_iop_iproj_imeslepmom_comps=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom);
+      const size_t im_r_im_r_iop_iproj=comps[0],ijack=comps[1];
+      const vector<size_t> im_r_im_r_iop_iproj_comps=im_r_im_r_iop_iproj_ind(im_r_im_r_iop_iproj);
       
       //get im and r for in and back, and iop and iproj
-      const size_t im_in=im_r_im_r_iop_iproj_imeslepmom_comps[0],r_in=im_r_im_r_iop_iproj_imeslepmom_comps[1];
-      const size_t im_ou=im_r_im_r_iop_iproj_imeslepmom_comps[2],r_ou=im_r_im_r_iop_iproj_imeslepmom_comps[3];
-      const size_t iop=im_r_im_r_iop_iproj_imeslepmom_comps[4],iproj=im_r_im_r_iop_iproj_imeslepmom_comps[5];
-      const size_t imeslepmom=im_r_im_r_iop_iproj_imeslepmom_comps[6];
+      const size_t im_in=im_r_im_r_iop_iproj_comps[0],r_in=im_r_im_r_iop_iproj_comps[1];
+      const size_t im_ou=im_r_im_r_iop_iproj_comps[2],r_ou=im_r_im_r_iop_iproj_comps[3];
+      const size_t iop=im_r_im_r_iop_iproj_comps[4],iproj=im_r_im_r_iop_iproj_comps[5];
       
       const double pnorm=12.0*zops[iproj].pnorm*2.0;
       const int pQg5_sign=zops[iproj].Qg5_sign; //same sign
