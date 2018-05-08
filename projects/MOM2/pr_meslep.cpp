@@ -49,11 +49,11 @@ vector<dcompl_t> perens_t::build_mesloop(const vector<lprop_t> &props_lep) const
       const int sign=Lg5_sign[ilistGl];
       const int psign=Lg5_sign[ilistpGl];
       
-      auto op=lepGamma[iGl]*(lepGamma[0]+sign*lepGamma[5]);
-      const lprop_t &p0=props_lep[ilins_ijack_ind({lprop::LO,iclust})];
-      const lprop_t &pF=props_lep[ilins_ijack_ind({lprop::F,iclust})];
-      auto pFamp=pF*p0.inverse();
-      auto pr=(lepGamma[ipGl]*(lepGamma[0]+psign*lepGamma[5])).adjoint()/2.0;
+      const auto op=lepGamma[iGl]*(lepGamma[0]+sign*lepGamma[5]);
+      const auto p0=lepGamma[5]*props_lep[ilins_ijack_ind({lprop::LO,iclust})].adjoint()*lepGamma[5];
+      const auto pF=lepGamma[5]*props_lep[ilins_ijack_ind({lprop::F,iclust})].adjoint()*lepGamma[5];
+      const auto pFamp=pF*p0.inverse();
+      const auto pr=(lepGamma[ipGl]*(lepGamma[0]+psign*lepGamma[5])).adjoint()/2.0;
       auto ml=[&](lprop::ins ins)->dcompl_t&{return mesloop[ilistGl_ilistpGl_lins_iclust_ind({{ilistGl,ilistpGl,ins,iclust}})];};
       ml(lprop::LO)=(op*pr).toDense().trace()/4.0;   //for test: this must be 1 if iGl==ipGl
       ml(lprop::F)=(op*pFamp*pr).trace()/4.0;        //normalization for the single gamma
