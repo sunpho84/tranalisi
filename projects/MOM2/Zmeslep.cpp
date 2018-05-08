@@ -230,9 +230,9 @@ void perens_t::mom_compute_meslep()
 	    
 	    //put the charges in place
 	    using namespace meslep;
-	    // incorporate_charge(props_in,q_in);
-	    // incorporate_charge(props_ou,q_ou);
-	    // incorporate_charge(props_lep,ql);
+	    incorporate_charge(props_in,q_in);
+	    incorporate_charge(props_ou,q_ou);
+	    incorporate_charge(props_lep,ql);
 	    
 	    //build all props
 	    build_props_time.start();
