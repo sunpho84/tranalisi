@@ -139,8 +139,7 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
 	       const qprop_t c=prop_ou*quaGamma[Gq]*(quaGamma[0]+sign*quaGamma[5])*quaGamma[5]*prop_in.adjoint()*quaGamma[5]*ml;
 	       vert+=c*norm;
 	       
-	       
-	       if(1)
+	       if(0)
 	       cout
 	       	 <<"iop: "<<iop<<
 	       	 ", ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<
@@ -240,7 +239,7 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
 	      out+=contr;
 	    }
 	  
-	  // cout<<"amputated, im_in: "<<im_in<<", r_in: "<<r_in<<", im_ou: "<<im_ou<<", r_ou: "<<r_ou<<", iop: "<<iop<<", iproj: "<<iproj<<", ijack: "<<ijack<<", out: "<<out<<endl;
+	  cout<<"amputated, im_in: "<<im_in<<", r_in: "<<r_in<<", im_ou: "<<im_ou<<", r_ou: "<<r_ou<<", iop: "<<iop<<", iproj: "<<iproj<<", ijack: "<<ijack<<", out: "<<out<<endl;
 	}
     }
 }
