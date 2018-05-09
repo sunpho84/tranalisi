@@ -49,7 +49,7 @@ DEFINE_SINGLE_SELF_COMMAND_ALL(compute_deltam_from_prop_all,compute_deltam_from_
 
 DEFINE_SINGLE_COMMAND_ALL(average_all_r,average_r)
 DEFINE_SINGLE_COMMAND_ALL(average_all_equiv_momenta,average_equiv_momenta)
-// DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap)
+DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap)
 
 // /////////////////////////////////////////////////////////////////
 
@@ -60,7 +60,7 @@ DEFINE_SINGLE_COMMAND_ALL(average_all_equiv_momenta,average_equiv_momenta)
 // void ratio_minus_one(const string out,const string in1,const string in2);
 
 // //! print all ensembles available
-// void list_ensembles();
+void list_ensembles();
 
 // //! extrapolate w.r.t sea mass
 // void sea_chir_extrap(const string out,const vector<string> &ens_list);

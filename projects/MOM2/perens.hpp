@@ -467,21 +467,21 @@ struct perens_t
   
 // #warning addosta average_r_deltam?
   
-//   /////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
   
-//   perens_t val_chir_extrap() const;
+  perens_t val_chir_extrap() const;
   
-//   //! extrapolate to chiral limit sigma
-//   void val_chir_extrap_sigma(perens_t &out) const;
+  //! extrapolate to chiral limit sigma
+  void val_chir_extrap_sigma(perens_t &out) const;
   
-//   //! extrapolate to chiral limit pr_bil
-//   void val_chir_extrap_pr_bil(perens_t &out) const;
+  //! extrapolate to chiral limit pr_bil
+  void val_chir_extrap_pr_bil(perens_t &out) const;
   
-//   //! extrapolate to chiral limit pr_meslep
-//   void val_chir_extrap_pr_meslep(perens_t &out) const;
+  //! extrapolate to chiral limit pr_meslep
+  void val_chir_extrap_pr_meslep(perens_t &out) const;
   
-//   //! extrapolate to chiral limit deltas
-//   void val_chir_extrap_deltam(perens_t &out) const;
+  //! extrapolate to chiral limit deltas
+  void val_chir_extrap_deltam(perens_t &out) const;
   
   /////////////////////////////////////////////////////////////////
   

@@ -250,31 +250,31 @@ perens_t perens_t::average_r() const
   return out;
 }
 
-// perens_t perens_t::val_chir_extrap() const
-// {
-//   perens_t out=*this;
+perens_t perens_t::val_chir_extrap() const
+{
+  perens_t out=*this;
   
-//   if(nm>1)
-//     {
-//       out.nm=1;
-//       out.am={0.0};
-//       out.meson_mass_sea=meson_mass_sea;
-//       out.meson_mass=0.0;
+  if(nm>1)
+    {
+      out.nm=1;
+      out.am={0.0};
+      out.meson_mass_sea=meson_mass_sea;
+      out.meson_mass=0.0;
       
-//       out.set_indices();
-//       out.allocate();
+      out.set_indices();
+      out.allocate();
       
-//       val_chir_extrap_sigma(out);
-//       val_chir_extrap_pr_bil(out);
-//       val_chir_extrap_pr_meslep(out);
+      val_chir_extrap_sigma(out);
+      val_chir_extrap_pr_bil(out);
+      val_chir_extrap_pr_meslep(out);
       
-//       val_chir_extrap_deltam(out);
-//     }
-//   else
-//     cout<<"Skipping Valence chiral extrapolation"<<endl;
+      val_chir_extrap_deltam(out);
+    }
+  else
+    cout<<"Skipping Valence chiral extrapolation"<<endl;
   
-//   return out;
-// }
+  return out;
+}
 
 perens_t perens_t::average_equiv_momenta() const
 {

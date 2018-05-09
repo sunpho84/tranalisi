@@ -369,64 +369,69 @@ void perens_t::average_equiv_momenta_pr_meslep(perens_t &out,const vector<vector
     }
 }
 
-// void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
-// {
-//   for(size_t imeslepmom=0;imeslepmom<meslepmoms().size();imeslepmom++)
-//     for(auto &t : out.get_meslep_tasks({this}))
-//       for(size_t iop=0;iop<meslep::nZop;iop++)
-// 	for(size_t iproj=0;iproj<meslep::nZop;iproj++)
-// 	  {
-// 	    const djvec_t &pr=*t.in.front();
-// 	    djvec_t &pr_chir=*t.out;
-// 	    const string &tag=t.tag;
-	    
-// 	    //check if we need to subtract the pole
-// 	    const bool sub_pole=(iop==2 or iop==3 or iproj==2 or iproj==3);
-// 	    const size_t coeff_to_take=(sub_pole?1:0);
-	    
-// 	    //open the plot file if needed
-// 	    const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+to_string(iop)+"_"+to_string(iproj)+"_meslepmom_"+to_string(imeslepmom)+".xmg";
-// 	    grace_file_t *plot=nullptr;
-// 	    if(imeslepmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
-	    
-// 	    for(size_t r1=0;r1<nr;r1++)
-// 	      for(size_t r2=0;r2<nr;r2++)
-// 		{
-// 		  //slice m and fit it
-// 		  djvec_t y(nm*(nm+1)/2),y_plot(nm*(nm+1)/2);
-// 		  vector<double> x(nm*(nm+1)/2);
-// 		  int i=0;
-// 		  for(size_t im1=0;im1<nm;im1++)
-// 		    for(size_t im2=im1;im2<nm;im2++)
-// 		      {
-// 			//compute mass sum
-// 			if(pars::chir_extr_method==chir_extr::MQUARK) x[i]=am[im1]+am[im2];
-// 			else                                          x[i]=sqr(meson_mass[im_im_ind({im1,im2})].ave());
-// 			//compute y and y_plot
-// 			y_plot[i]=pr[im_r_im_r_iop_iproj_imeslepmom_ind({im1,r1,im2,r2,iop,iproj,imeslepmom})];
-// 			//fit x*y if pole present
-// 			if(sub_pole) y[i]=x[i]*y_plot[i];
-// 			else         y[i]=y_plot[i];
-// 			//increment the number of mass combos
-// 			i++;
-// 		      }
-		  
-// 		  //fit, store and write the result
-// 		  djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1));
-		  
-// 		  if(std::isnan(coeffs[0][0])) coeffs=0.0;
-		  
-// 		  const size_t iout=out.im_r_im_r_iop_iproj_imeslepmom_ind({0,r1,0,r2,iop,iproj,imeslepmom});
-// 		  pr_chir[iout]=coeffs[coeff_to_take];
-// 		  if(plot!=nullptr)
-// 		    {
-// 		      auto xminmax=minmax_element(x.begin(),x.end());
-// 		      double xmin=*xminmax.first*0.9;
-// 		      double xmax=*xminmax.second*1.1;
-// 		      write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
-// 		      plot->write_ave_err(0.0,pr_chir[iout].ave_err());
-// 		    }
-// 		}
-// 	    if(plot) delete plot;
-// 	  }
-// }
+void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
+{
+  const index_t r_r_meslepins_iop_iproj_imeslepmom_ind({{"r",nr},{"r",nr},{"meslepins",pr_meslep::nins},{"op",nbil},{"proj",nbil},{"meslepmoms",meslepmoms().size()}});
+
+  for(auto &t : out.get_pr_meslep_tasks({this}))
+    for(size_t r_r_meslepins_iop_iproj_imeslepmom=0;r_r_meslepins_iop_iproj_imeslepmom<r_r_meslepins_iop_iproj_imeslepmom_ind.max();r_r_meslepins_iop_iproj_imeslepmom++)
+      {
+	const vector<size_t> r_r_meslepins_iop_iproj_imeslepmom_comps=r_r_meslepins_iop_iproj_imeslepmom_ind(r_r_meslepins_iop_iproj_imeslepmom);
+	const size_t r_in=r_r_meslepins_iop_iproj_imeslepmom_comps[0];
+	const size_t r_ou=r_r_meslepins_iop_iproj_imeslepmom_comps[1];
+	const size_t meslepins=r_r_meslepins_iop_iproj_imeslepmom_comps[2];
+	const size_t iop=r_r_meslepins_iop_iproj_imeslepmom_comps[3];
+	const size_t iproj=r_r_meslepins_iop_iproj_imeslepmom_comps[4];
+	const size_t imeslepmom=r_r_meslepins_iop_iproj_imeslepmom_comps[5];
+	
+	const djvec_t &pr=*t.in.front();
+	djvec_t &pr_chir=*t.out;
+	const string &tag=t.tag;
+	
+	//check if we need to subtract the pole
+	const bool sub_pole=(iop==2 or iop==3 or iproj==2 or iproj==3);
+	const size_t coeff_to_take=(sub_pole?1:0);
+	
+	//open the plot file if needed
+	const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+to_string(iop)+"_"+to_string(iproj)+"_meslepmom_"+to_string(imeslepmom)+".xmg";
+	grace_file_t *plot=nullptr;
+	if(imeslepmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
+	
+	//slice m and fit it
+	djvec_t y(nm*(nm+1)/2),y_plot(nm*(nm+1)/2);
+	vector<double> x(nm*(nm+1)/2);
+	int i=0;
+	for(size_t im1=0;im1<nm;im1++)
+	  for(size_t im2=im1;im2<nm;im2++)
+	    {
+	      //compute mass sum
+	      if(pars::chir_extr_method==chir_extr::MQUARK) x[i]=am[im1]+am[im2];
+	      else                                          x[i]=sqr(meson_mass[im_im_ind({im1,im2})].ave());
+	      //compute y and y_plot
+	      y_plot[i]=pr[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im1,r_in,im2,r_ou,meslepins,iop,iproj,imeslepmom})];
+	      //fit x*y if pole present
+	      if(sub_pole) y[i]=x[i]*y_plot[i];
+	      else         y[i]=y_plot[i];
+	      //increment the number of mass combos
+	      i++;
+	    }
+	
+	//fit, store and write the result
+	djvec_t coeffs=poly_fit(x,y,(sub_pole?2:1));
+	
+	if(std::isnan(coeffs[0][0])) coeffs=0.0;
+	
+	const size_t iout=out.im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({0,r_in,0,r_ou,meslepins,iop,iproj,imeslepmom});
+	pr_chir[iout]=coeffs[coeff_to_take];
+	if(plot!=nullptr)
+	  {
+	    auto xminmax=minmax_element(x.begin(),x.end());
+	    double xmin=*xminmax.first*0.9;
+	    double xmax=*xminmax.second*1.1;
+	    write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/(sub_pole?x:1);},x,y_plot);
+	    plot->write_ave_err(0.0,pr_chir[iout].ave_err());
+	  }
+	
+	if(plot) delete plot;
+      }
+}

@@ -282,64 +282,68 @@ void perens_t::average_equiv_momenta_pr_bil(perens_t &out,const vector<vector<si
     }
 }
 
-// void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
-// {
-//   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
-//     for(auto &t : out.get_pr_bil_tasks({this}))
-//       for(size_t ibil=0;ibil<nbil;ibil++)
-// 	{
-// 	  const djvec_t &pr=*t.in.front();
-// 	  djvec_t &pr_chir=*t.out;
-// 	  const string &tag=t.tag;
-	  
-// 	  //check if we need to subtract the pole
-// 	  const bool sub_pole=(ibil==iS or ibil==iP);
-// 	  const size_t x_pow=(sub_pole?
-// 			      (t.QCD_QED_task==QED_task?1:1)
-// 			      :0);
-	  
-// 	  //open the plot file if needed
-// 	  const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+bil_tag[ibil]+"_bilmom_"+to_string(ibilmom)+".xmg";
-// 	  grace_file_t *plot=nullptr;
-// 	  if(ibilmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
-	  
-// 	  for(size_t r_ou=0;r_ou<nr;r_ou++)
-// 	    for(size_t r_in=0;r_in<nr;r_in++)
-// 	      {
-// 		//slice m and fit it
-// 		djvec_t y(nm*(nm+1)/2),y_plot(nm*(nm+1)/2);
-// 		vector<double> x(nm*(nm+1)/2);
-// 		int i=0;
-// 		for(size_t im_ou=0;im_ou<nm;im_ou++)
-// 		  for(size_t im_in=im_ou;im_in<nm;im_in++)
-// 		    {
-// 		      //compute mass sum
-// 		      if(pars::chir_extr_method==chir_extr::MQUARK) x[i]=am[im_ou]+am[im_in];
-// 		      else                                          x[i]=sqr(meson_mass[im_im_ind({im_ou,im_in})].ave());
-		      
-// 		      if(std::isnan(x[i])) CRASH("Nanning %d",i);
-		      
-// 		      //compute y and y_plot
-// 		      y_plot[i]=pr[im_r_im_r_ibil_ibilmom_ind({im_ou,r_ou,im_in,r_in,ibil,ibilmom})];
-// 		      //fit x*y if pole present
-// 		      y[i]=pow(x[i],x_pow)*y_plot[i];
-// 		      //increment the number of mass combos
-// 		      i++;
-// 		    }
-		
-// 		//fit, store and write the result
-// 		const djvec_t coeffs=poly_fit(x,y,1+x_pow);
-// 		const size_t iout=out.im_r_im_r_ibil_ibilmom_ind({0,r_ou,0,r_in,ibil,ibilmom});
-// 		pr_chir[iout]=coeffs[x_pow];
-// 		if(plot!=nullptr)
-// 		  {
-// 		    auto xminmax=minmax_element(x.begin(),x.end());
-// 		    double xmin=*xminmax.first*0.5;
-// 		    double xmax=*xminmax.second*1.1;
-// 		    write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole,x_pow](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/pow(x,x_pow);},x,y_plot);
-// 		    plot->write_ave_err(0.0,pr_chir[iout].ave_err());
-// 		  }
-// 	      }
-// 	  if(plot) delete plot;
-// 	}
-// }
+void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
+{
+  const index_t r_r_bilins_ibil_ibilmom_ind({{"r",nr},{"r",nr},{"bilins",pr_bil::nins},{"bil",nbil},{"bilmoms",bilmoms.size()}});
+  
+  for(auto &t : out.get_pr_bil_tasks({this}))
+    for(size_t r_r_bilins_ibil_ibilmom=0;r_r_bilins_ibil_ibilmom<r_r_bilins_ibil_ibilmom_ind.max();r_r_bilins_ibil_ibilmom++)
+      {
+	const vector<size_t> r_r_bilins_ibil_ibilmom_comps=r_r_bilins_ibil_ibilmom_ind(r_r_bilins_ibil_ibilmom);
+	const size_t r_in=r_r_bilins_ibil_ibilmom_comps[0];
+	const size_t r_ou=r_r_bilins_ibil_ibilmom_comps[1];
+	const size_t bilins=r_r_bilins_ibil_ibilmom_comps[2];
+	const size_t ibil=r_r_bilins_ibil_ibilmom_comps[3];
+	const size_t ibilmom=r_r_bilins_ibil_ibilmom_comps[4];
+	
+	const djvec_t &pr=*t.in.front();
+	djvec_t &pr_chir=*t.out;
+	const string &tag=t.tag;
+	
+	//check if we need to subtract the pole
+	const bool sub_pole=(ibil==iS or ibil==iP);
+	const size_t x_pow=(sub_pole?
+			    (t.QCD_QED_task==QED_task?1:1)
+			    :0);
+	
+	//open the plot file if needed
+	const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+r_r_bilins_ibil_ibilmom_ind.descr(r_r_bilins_ibil_ibilmom)+".xmg";
+	grace_file_t *plot=nullptr;
+	if(ibilmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
+	
+	//slice m and fit it
+	djvec_t y(nm*(nm+1)/2),y_plot(nm*(nm+1)/2);
+	vector<double> x(nm*(nm+1)/2);
+	int i=0;
+	for(size_t im_ou=0;im_ou<nm;im_ou++)
+	  for(size_t im_in=im_ou;im_in<nm;im_in++)
+	    {
+	      //compute mass sum
+	      if(pars::chir_extr_method==chir_extr::MQUARK) x[i]=am[im_ou]+am[im_in];
+	      else                                          x[i]=sqr(meson_mass[im_im_ind({im_ou,im_in})].ave());
+	      
+	      if(std::isnan(x[i])) CRASH("Nanning %d",i);
+	      
+	      //compute y and y_plot
+	      y_plot[i]=pr[im_r_im_r_bilins_ibil_ibilmom_ind({im_ou,r_ou,im_in,r_in,bilins,ibil,ibilmom})];
+	      //fit x*y if pole present
+	      y[i]=pow(x[i],x_pow)*y_plot[i];
+	      //increment the number of mass combos
+	      i++;
+	    }
+	
+	//fit, store and write the result
+	const djvec_t coeffs=poly_fit(x,y,1+x_pow);
+	const size_t iout=out.im_r_im_r_bilins_ibil_ibilmom_ind({0,r_ou,0,r_in,bilins,ibil,ibilmom});
+	pr_chir[iout]=coeffs[x_pow];
+	if(plot!=nullptr)
+	  {
+	    auto xminmax=minmax_element(x.begin(),x.end());
+	    double xmin=*xminmax.first*0.5;
+	    double xmax=*xminmax.second*1.1;
+	    write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole,x_pow](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/pow(x,x_pow);},x,y_plot);
+	    plot->write_ave_err(0.0,pr_chir[iout].ave_err());
+	  }
+        if(plot) delete plot;
+      }
+}
