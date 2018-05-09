@@ -337,4 +337,13 @@ vector<T> concat(const vector<T> &v,Rest&&... rest)
   return concat_internal(vlist,forward<Rest>(rest)...);
 }
 
+//! concatenate at least an element and a vectors
+template <class T,typename... Rest>
+vector<T> concat(const T&c,const vector<T> &v,Rest&&... rest)
+{
+  const vector<T> vc{c};
+  vector<const vector<T>*> vlist({&vc,&v});
+  return concat_internal(vlist,forward<Rest>(rest)...);
+}
+
 #endif
