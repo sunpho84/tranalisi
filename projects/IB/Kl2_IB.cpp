@@ -979,13 +979,13 @@ dboot_t Wreg1_contr(const dboot_t &a)
 dboot_t Wreg2_contr(const dboot_t &a)
 {
   const double uss=1/(16*sqr(M_PI));
- 
+  
   dboot_t Zmarci=uss*(-1.5-2.0*log(a*MW)-11.852);
   
   //pure Wilson photon
   dboot_t Z11=uss*(4.0*log(a*MW)-15.539)-0.5*Zmarci;
   dboot_t Z22=uss*(2.0*log(a*MW)-14.850)-0.5*Zmarci;
-
+  
   return Z11-Z22;
 }
 
