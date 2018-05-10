@@ -40,11 +40,9 @@ void average_Z(const string out,const string in1,const string in2)
   
   cout<<"Averaging Z for"<<in1<<" and "<<in2<<" into "<<out<<endl;
   
-  pars::ens.push_back(out);
-  data(out,PRESENCE_NOT_NEEDED)=data(in1,ASSERT_PRESENT);
-  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
+  perens_t temp=data(in1,ASSERT_PRESENT);
   
-  for(auto &p : data(out,PRESENCE_NOT_NEEDED).get_all_Ztasks({&data(in2,ASSERT_PRESENT)}))
+  for(auto &p : temp.get_all_Ztasks({&data(in2,ASSERT_PRESENT)}))
     {
       djvec_t &out=*p.out;
       const djvec_t &in=*p.in.front();
@@ -55,13 +53,15 @@ void average_Z(const string out,const string in1,const string in2)
   
   //remove from the list
   for(auto in : {in1,in2})
-    {
-      data_erase(in);
-      pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
-    }
+    data_erase(in);
+  
+  //add to the list
+  pars::ens.push_back(out);
+  data(out,PRESENCE_NOT_NEEDED)=temp;
+  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
 }
 
-void average_ingredients(const string out,const string in1,const string in2)
+void average_ingredients(const string out_name,const string in1,const string in2)
 {
   invalidate_Z();
   
@@ -69,13 +69,11 @@ void average_ingredients(const string out,const string in1,const string in2)
   
   assert_compatible(in1,in2);
   
-  cout<<"Averaging ingredients for "<<in1<<" and "<<in2<<" into "<<out<<endl;
+  cout<<"Averaging ingredients for "<<in1<<" and "<<in2<<" into "<<out_name<<endl;
   
-  pars::ens.push_back(out);
-  data(out,PRESENCE_NOT_NEEDED)=data(in1,ASSERT_PRESENT);
-  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
-  
-  for(auto &p : data(out,PRESENCE_NOT_NEEDED).get_all_ingredients({&data(in2,ASSERT_PRESENT)}))
+  perens_t temp=data(in1,ASSERT_PRESENT);
+
+  for(auto &p : temp.get_all_ingredients({&data(in2,ASSERT_PRESENT)}))
     {
       djvec_t &out=*p.out;
       const djvec_t &in=*p.in.front();
@@ -83,7 +81,7 @@ void average_ingredients(const string out,const string in1,const string in2)
       out+=in;
       out/=2.0;
     }
-  auto &dout=data(out,PRESENCE_NOT_NEEDED);
+  auto &dout=temp;
   const auto &din1=data(in1,PRESENCE_NOT_NEEDED);
   const auto &din2=data(in2,PRESENCE_NOT_NEEDED);
   dout.meson_mass_sea=(din1.meson_mass_sea+din2.meson_mass_sea)/2.0;
@@ -115,10 +113,12 @@ void average_ingredients(const string out,const string in1,const string in2)
   
   //remove from the list
   for(auto in : {in1,in2})
-    {
-      data_erase(in);
-      pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
-    }
+    data_erase(in);
+  
+  //add to the list
+  pars::ens.push_back(out_name);
+  data(out_name,PRESENCE_NOT_NEEDED)=temp;
+  data(out_name,PRESENCE_NOT_NEEDED).dir_path=out_name;
 }
 
 void ratio_Z_minus_one(const string out,const string in1,const string in2)
@@ -131,11 +131,9 @@ void ratio_Z_minus_one(const string out,const string in1,const string in2)
   
   cout<<"Taking ratio minus one of "<<in1<<" and "<<in2<<" into "<<out<<endl;
   
-  pars::ens.push_back(out);
-  data(out,PRESENCE_NOT_NEEDED)=data(in1,ASSERT_PRESENT);
-  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
+  perens_t temp;
   
-  for(auto &p : data(out,PRESENCE_NOT_NEEDED).get_all_Ztasks({&data(in2,ASSERT_PRESENT)}))
+  for(auto &p : temp.get_all_Ztasks({&data(in2,ASSERT_PRESENT)}))
     {
       djvec_t &out=*p.out;
       const djvec_t &in=*p.in.front();
@@ -146,10 +144,12 @@ void ratio_Z_minus_one(const string out,const string in1,const string in2)
   
   //remove from the list
   for(auto in : {in1,in2})
-    {
-      data_erase(in);
-      pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
-    }
+    data_erase(in);
+  
+  //add to the list
+  pars::ens.push_back(out);
+  data(out,PRESENCE_NOT_NEEDED)=temp;
+  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
 }
 
 void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
@@ -187,11 +187,9 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
   double xmax=*xminmax.second*1.1;
   
   //prepare output
-  perens_t &out=data(out_name,PRESENCE_NOT_NEEDED);
-  out=*in.front();
+  perens_t out=*in.front();
   out.meson_mass_sea=0.0;
   out.dir_path=out_name;
-  pars::ens.push_back(out_name);
   
   for(auto &v : out.get_all_Ztasks(in))
     for(size_t icombo=0;icombo<v.out->size();icombo++)
@@ -216,10 +214,12 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
   
   //remove from the list
   for(auto in : ens_list)
-    {
-      data_erase(in);
-      pars::ens.erase(find(pars::ens.begin(),pars::ens.end(),in));
-    }
+    data_erase(in);
+  
+  //add to the list
+  pars::ens.push_back(out_name);
+  data(out_name,PRESENCE_NOT_NEEDED)=out;
+  data(out_name,PRESENCE_NOT_NEEDED).dir_path=out_name;
 }
 
 auto assert_ens_present(const string &key)
@@ -238,7 +238,16 @@ auto assert_ens_present(const string &key)
 
 void data_erase(const string &key)
 {
-  _data.erase(assert_ens_present(key));
+  auto f=_data.find(key);
+  auto e=find(pars::ens.begin(),pars::ens.end(),key);
+
+  if(f!=_data.end() and e!=pars::ens.end())
+    {
+      _data.erase(key);
+      pars::ens.erase(e);
+    }
+  else
+    cout<<"Warning, key \""<<key<<"\" not present"<<endl;
 }
 
 perens_t& data(const string &key,const bool assert_present_flag)
@@ -277,4 +286,6 @@ void compute_or_load_all_ingredients()
       .get_deltam()
       .get_mPCAC()
       .get_meson_mass();
+  
+  validate_ingredients();  
 }
