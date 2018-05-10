@@ -10,8 +10,27 @@
 
 #include <MOM2/perens.hpp>
 
+vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& ens)
+{
+  vector<const djvec_t*> in_Zq,in_Zq_QED_rel;
+  for(auto &e : ens)
+    {
+      in_Zq.push_back(&e->Zq);
+      if(pars::use_QED)
+	in_Zq_QED_rel.push_back(&e->Zq_QED_rel);
+    }
+  
+  vector<task_t> Zq_tasks={{&Zq,in_Zq,im_r_ilinmom_ind,"Zq",QCD_task}};
+  if(pars::use_QED)
+    Zq_tasks.push_back({&Zq_QED_rel,in_Zq_QED_rel,im_r_ilinmom_ind,"Zq_QED_rel",QED_task});
+  
+  return Zq_tasks;
+}
+
 void perens_t::compute_Zq()
 {
+  cout<<"Computing Zq"<<endl;
+  
 #pragma omp parallel for
   for(size_t im_r_ilinmom=0;im_r_ilinmom<im_r_ilinmom_ind.max();im_r_ilinmom++)
     {
@@ -33,23 +52,6 @@ void perens_t::compute_Zq()
 	   sigma1(TM)*deltam_tm[im_r])/
 	  sigma1(LO);
     }
-}
-
-vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& ens)
-{
-  vector<const djvec_t*> in_Zq,in_Zq_QED_rel;
-  for(auto &e : ens)
-    {
-      in_Zq.push_back(&e->Zq);
-      if(pars::use_QED)
-	in_Zq_QED_rel.push_back(&e->Zq_QED_rel);
-    }
-  
-  vector<task_t> Zq_tasks={{&Zq,in_Zq,im_r_ilinmom_ind,"Zq",QCD_task}};
-  if(pars::use_QED)
-    Zq_tasks.push_back({&Zq_QED_rel,in_Zq_QED_rel,im_r_ilinmom_ind,"Zq_QED_rel",QED_task});
-  
-  return Zq_tasks;
 }
 
 void perens_t::plot_Zq(const string &suffix)

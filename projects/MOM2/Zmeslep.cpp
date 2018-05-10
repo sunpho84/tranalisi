@@ -31,7 +31,8 @@ vector<perens_t::task_t> perens_t::get_Zmeslep_tasks(const vector<const perens_t
 
 void perens_t::compute_Zmeslep()
 {
-  //these are the charges in the lagrangian
+  cout<<"Computing Zmeslep"<<endl;
+  
   for(size_t im_in=0;im_in<nm;im_in++)
     for(size_t r_in=0;r_in<nr;r_in++)
       for(size_t im_ou=0;im_ou<nm;im_ou++)
@@ -115,6 +116,8 @@ void perens_t::compute_Zmeslep()
 
 void perens_t::plot_Zmeslep(const string &suffix)
 {
+  cout<<"Plotting all Zmeslep of "<<dir_path<<" for suffix: \""<<suffix<<"\""<<endl;
+  
   for(const auto &t : this->get_Zmeslep_tasks())
     {
       //decript tuple

@@ -13,8 +13,24 @@
 #include <MOM2/prop.hpp>
 #include <MOM2/timings.hpp>
 
+vector<perens_t::task_t> perens_t::get_Zbil_tasks(const vector<const perens_t*> &ens)
+{
+  vector<const djvec_t*> in_Zbil,in_Zbil_QED_rel;
+  for(auto &e : ens)
+    {
+      in_Zbil.push_back(&e->Zbil);
+      if(pars::use_QED) in_Zbil_QED_rel.push_back(&e->Zbil_QED_rel);
+    }
+  vector<task_t> Zbil_tasks={{&Zbil,in_Zbil,im_r_im_r_ibil_ibilmom_ind,"Zbil",QCD_task}};
+  if(pars::use_QED) Zbil_tasks.push_back({&Zbil_QED_rel,in_Zbil_QED_rel,im_r_im_r_ibil_ibilmom_ind,"Zbil_QED_rel",QED_task});
+  
+  return Zbil_tasks;
+}
+
 void perens_t::compute_Zbil()
 {
+  cout<<"Computing Zbil"<<endl;
+  
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     for(size_t im_r_im_r_ibil=0;im_r_im_r_ibil<im_r_im_r_ibil_ind.max();im_r_im_r_ibil++)
       {
@@ -65,22 +81,10 @@ void perens_t::compute_Zbil()
       }
 }
 
-vector<perens_t::task_t> perens_t::get_Zbil_tasks(const vector<const perens_t*> &ens)
-{
-  vector<const djvec_t*> in_Zbil,in_Zbil_QED_rel;
-  for(auto &e : ens)
-    {
-      in_Zbil.push_back(&e->Zbil);
-      if(pars::use_QED) in_Zbil_QED_rel.push_back(&e->Zbil_QED_rel);
-    }
-  vector<task_t> Zbil_tasks={{&Zbil,in_Zbil,im_r_im_r_ibil_ibilmom_ind,"Zbil",QCD_task}};
-  if(pars::use_QED) Zbil_tasks.push_back({&Zbil_QED_rel,in_Zbil_QED_rel,im_r_im_r_ibil_ibilmom_ind,"Zbil_QED_rel",QED_task});
-  
-  return Zbil_tasks;
-}
-
 void perens_t::plot_Zbil(const string &suffix)
 {
+  cout<<"Plotting all Zbil of "<<dir_path<<" for suffix: \""<<suffix<<"\""<<endl;
+  
   for(const auto &t : this->get_Zbil_tasks())
     {
       //decript tuple

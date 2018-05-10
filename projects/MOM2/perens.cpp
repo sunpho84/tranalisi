@@ -217,8 +217,6 @@ void perens_t::bin_read_ingredients(raw_file_t &file)
 {
   for(auto t : {&sigma,&pr_bil,&pr_meslep})
     t->bin_read(file);
-  
-  cout<<pr_meslep.ave_err()<<endl;
 }
 
 void perens_t::bin_write_ingredients(raw_file_t &file)
