@@ -455,8 +455,8 @@ struct perens_t
   {
     plot_sigma(suffix);
     plot_Zq(suffix);
-    plot_Zbil(suffix);
-    plot_Zmeslep(suffix);
+    if(pars::compute_bilinears) plot_Zbil(suffix);
+    if(pars::compute_meslep) plot_Zmeslep(suffix);
   }
   
   void plot_Zmeslep(const string &suffix);

@@ -225,7 +225,9 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
   for(auto &e : ens)
     in_pr_bil.push_back(&e->pr_bil);
   
-  vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,im_r_im_r_bilins_ibil_ibilmom_ind,"pr_bil",QCD_task}};
+  vector<task_t> pr_bil_tasks;
+  
+  if(pars::compute_bilinears) pr_bil_tasks.push_back({&pr_bil,in_pr_bil,im_r_im_r_bilins_ibil_ibilmom_ind,"pr_bil",QCD_task});
   
   return pr_bil_tasks;
 }

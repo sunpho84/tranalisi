@@ -312,7 +312,9 @@ vector<perens_t::task_t> perens_t::get_pr_meslep_tasks(const vector<const perens
   for(auto &e : ens)
     in_pr_meslep.push_back(&e->pr_meslep);
   
-  vector<task_t> pr_meslep_tasks={{&pr_meslep,in_pr_meslep,im_r_im_r_meslepins_iop_iproj_imeslepmom_ind,"pr_meslep",QCD_task}};
+  vector<task_t> pr_meslep_tasks;
+  
+  if(pars::compute_meslep) pr_meslep_tasks.push_back({&pr_meslep,in_pr_meslep,im_r_im_r_meslepins_iop_iproj_imeslepmom_ind,"pr_meslep",QCD_task});
   
   return pr_meslep_tasks;
 }
