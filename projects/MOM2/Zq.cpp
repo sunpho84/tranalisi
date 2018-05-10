@@ -27,15 +27,11 @@ void perens_t::compute_Zq()
       Zq[im_r_ilinmom]=sigma1(LO);
       
       if(pars::use_QED)
-	{
-	  if(not deltam_computed) CRASH("Needs to have computed deltam");
-	  
-	  Zq_QED_rel[im_r_ilinmom]=
-	    (sigma1(PH)+
-	     sigma1(CR)*deltam_cr[im_r]+
-	     sigma1(TM)*deltam_tm[im_r])/
-	    sigma1(LO);
-	}
+	Zq_QED_rel[im_r_ilinmom]=
+	  (sigma1(PH)+
+	   sigma1(CR)*deltam_cr[im_r]+
+	   sigma1(TM)*deltam_tm[im_r])/
+	  sigma1(LO);
     }
 }
 

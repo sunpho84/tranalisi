@@ -56,6 +56,8 @@ using namespace scan;
 %token TK_BC
 %token TK_CHIR_EXTR_METHOD
 %token TK_COMPUTE_BILINEARS
+%token TK_FROM_PROP
+%token TK_FROM_CORR
 %token TK_COMPUTE_DELTAM
 %token TK_COMPUTE_MESLEP
 %token TK_COMPUTE_MESLEP_WITH_CHARGES_ONE
@@ -71,21 +73,22 @@ using namespace scan;
 %token TK_USE_DELTAM_TM_CT
 %token TK_USE_QED
 
-%token TK_AVERAGE
-%token TK_AVERAGE_R
 %token TK_AVERAGE_EQUIV_MOMENTA
+%token TK_AVERAGE_INGREDIENTS
+%token TK_AVERAGE_R
+%token TK_AVERAGE_Z
 %token TK_COMPUTE_OR_LOAD_INGREDIENTS
 %token TK_COMPUTE_Z
 %token TK_EVOLVE
 %token TK_LIST_ENSEMBLES
 %token TK_PLOT_Z
 %token TK_PRINT_DISCR
-%token TK_RATIO_MINUS_ONE
+%token TK_RATIO_Z_MINUS_ONE
 %token TK_SEA_CHIR_EXTRAP
 %token TK_SUBTRACT_OA2
 %token TK_VAL_CHIR_EXTRAP
 
-/* %type <str_list> string_list */
+%type <str_list> string_list
 
 %%
 
@@ -96,6 +99,7 @@ commands:
         | commands set_chir_extr_method
         | commands set_compute_bilinears
         | commands set_compute_meslep
+        | commands set_compute_deltam
         | commands set_compute_meslep_with_charges_one
         | commands set_filter_thresh
         | commands set_nf
@@ -107,15 +111,15 @@ commands:
         | commands set_use_QED
         | commands set_use_deltam_cr_ct
         | commands set_use_deltam_tm_ct
-        /* | commands average */
+        | commands average_ingredients
         | commands average_r
+        | commands average_Z
         | commands average_equiv_momenta
-        | commands compute_deltam
-        /* | commands sea_chir_extrap */
+        | commands sea_chir_extrap
         | commands val_chir_extrap
         | commands plot_Z
-        /* | commands print_discr */
-        /* | commands ratio_minus_one */
+        | commands print_discr
+        | commands ratio_Z_minus_one
         | commands compute_or_load_ingredients
         | commands compute_Z
         | commands list_ensembles
@@ -149,6 +153,10 @@ set_chir_extr_method: TK_CHIR_EXTR_METHOD '=' TK_QUOTED_TEXT {pars::chir_extr_me
 ;
 
 set_compute_bilinears: TK_COMPUTE_BILINEARS '=' TK_INTE {pars::compute_bilinears=$3;}
+;
+
+set_compute_deltam: TK_COMPUTE_DELTAM '=' TK_FROM_PROP {pars::deltam_method=pars::FROM_PROP;}
+                  | TK_COMPUTE_DELTAM '=' TK_FROM_CORR {pars::deltam_method=pars::FROM_CORR;}
 ;
 
 set_compute_meslep: TK_COMPUTE_MESLEP '=' TK_INTE {pars::compute_meslep=$3;}
@@ -195,14 +203,11 @@ compute_or_load_ingredients: TK_COMPUTE_OR_LOAD_INGREDIENTS '(' ')' {compute_or_
 compute_Z: TK_COMPUTE_Z '(' ')' {compute_Z_all();}
 ;
 
-compute_deltam: TK_COMPUTE_DELTAM '(' ')' {compute_deltam_from_prop_all();}
-;
-
 plot_Z: TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$3);delete $3;}
 ;
 
-/* print_discr: TK_PRINT_DISCR '(' ')' {print_discr();} */
-/* ; */
+print_discr: TK_PRINT_DISCR '(' ')' {print_discr();}
+;
 
 average_r: TK_AVERAGE_R '(' ')' {average_all_r();}
 ;
@@ -215,18 +220,20 @@ val_chir_extrap: TK_VAL_CHIR_EXTRAP '(' ')' {val_chir_extrap_all();}
 
 /////////////////////////////////////////////////////////////////
 
-/* average: TK_QUOTED_TEXT '=' TK_AVERAGE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average(*$1,*$5,*$7);delete $1;delete $5;delete $7;} */
+average_Z: TK_QUOTED_TEXT '=' TK_AVERAGE_Z '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average_Z(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
 
-/* ratio_minus_one: TK_QUOTED_TEXT '=' TK_RATIO_MINUS_ONE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {ratio_minus_one(*$1,*$5,*$7);delete $1;delete $5;delete $7;} */
+average_ingredients: TK_QUOTED_TEXT '=' TK_AVERAGE_INGREDIENTS '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average_ingredients(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
 
-/* sea_chir_extrap: TK_QUOTED_TEXT '=' TK_SEA_CHIR_EXTRAP '(' string_list ')' {sea_chir_extrap(*$1,*$5);delete $1;delete $5;} */
-/* ; */
+ratio_Z_minus_one: TK_QUOTED_TEXT '=' TK_RATIO_Z_MINUS_ONE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {ratio_Z_minus_one(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
+
+sea_chir_extrap: TK_QUOTED_TEXT '=' TK_SEA_CHIR_EXTRAP '(' string_list ')' {sea_chir_extrap(*$1,*$5);delete $1;delete $5;}
+;
 
 list_ensembles: TK_LIST_ENSEMBLES '(' ')' {list_ensembles();}
 ;
 
 /////////////////////////////////////////////////////////////////
 
-/* string_list: TK_QUOTED_TEXT ',' TK_QUOTED_TEXT {$$=new std::vector<std::string>;$$->push_back(*$1);$$->push_back(*$3);delete $1;delete $3;} */
-/*            | string_list ',' TK_QUOTED_TEXT {$$=$1;$$->push_back(*$3);delete $3;} */
-/* ; */
+string_list: TK_QUOTED_TEXT ',' TK_QUOTED_TEXT {$$=new std::vector<std::string>;$$->push_back(*$1);$$->push_back(*$3);delete $1;delete $3;}
+           | string_list ',' TK_QUOTED_TEXT {$$=$1;$$->push_back(*$3);delete $3;}
+;

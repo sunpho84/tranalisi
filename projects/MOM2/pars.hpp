@@ -69,6 +69,10 @@ namespace pars
   EXTERN_PARS reno_scheme::type_t scheme INIT_PARS_TO({reno_scheme::RI_MOM});
   //! assume twisted run
   EXTERN_PARS bool twisted_run INIT_PARS_TO({true});
+  //! list of options to compute deltam
+  enum DELTAM_METHOD{FROM_PROP,FROM_CORR};
+  //! method to be used to compute deltam
+  EXTERN_PARS DELTAM_METHOD deltam_method INIT_PARS_TO({FROM_CORR});
   //! compute deltam_cr counterterm and subtract
   EXTERN_PARS bool use_deltam_cr_ct INIT_PARS_TO({true});
   //! compute deltam_tm counterterm and subtract

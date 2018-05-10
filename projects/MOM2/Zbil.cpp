@@ -40,8 +40,6 @@ void perens_t::compute_Zbil()
 	
 	if(pars::use_QED)
 	  {
-	    if(not deltam_computed) CRASH("Needs to have computed deltam");
-	    
 	    djack_t pr_bil_QED=
 	      pr(pr_bil::EX)+
 	      pr(pr_bil::PH_OU)+

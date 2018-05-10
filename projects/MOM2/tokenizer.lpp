@@ -92,6 +92,8 @@ ComputeMeslep                       DEBUG_PRINTF("Found ComputeMeslep\n");return
 ComputeMeslepWithChargesOne         DEBUG_PRINTF("Found ComputeMeslepWithChargesOne\n");return TK_COMPUTE_MESLEP_WITH_CHARGES_ONE;
 Ensembles                           DEBUG_PRINTF("Found Ensembles\n");return TK_ENSEMBLES;
 FilterThresh                        DEBUG_PRINTF("Found FilterThresh\n");return TK_FILTER_THRESH;
+FromCorr                            DEBUG_PRINTF("Found FromCorr\n");return TK_FROM_CORR;
+FromProp                            DEBUG_PRINTF("Found FromProp\n");return TK_FROM_PROP;
 NJacks                              DEBUG_PRINTF("Found NJacks\n");return TK_NJACKS;
 NF                                  DEBUG_PRINTF("Found NF\n");return TK_NF;
 PhysBasis                           DEBUG_PRINTF("Found PhysBasis\n");return TK_PHYS_BASIS;
@@ -102,16 +104,17 @@ UseDeltamCrCt                       DEBUG_PRINTF("Found UseDeltamCrCt\n");return
 UseDeltamTmCt                       DEBUG_PRINTF("Found UseDeltamTmCt\n");return TK_USE_DELTAM_TM_CT;
 UseQED                              DEBUG_PRINTF("Found UseQED\n");return TK_USE_QED;
 
-Average                             DEBUG_PRINTF("Found Average\n");return TK_AVERAGE;
-AverageR                            DEBUG_PRINTF("Found AverageR\n");return TK_AVERAGE_R;
 AverageEquivMomenta                 DEBUG_PRINTF("Found AverageEquivMomenta\n");return TK_AVERAGE_EQUIV_MOMENTA;
+AverageIngredients                  DEBUG_PRINTF("Found AverageIngredients\n");return TK_AVERAGE_INGREDIENTS;
+AverageR                            DEBUG_PRINTF("Found AverageR\n");return TK_AVERAGE_R;
+AverageZ                            DEBUG_PRINTF("Found AverageZ\n");return TK_AVERAGE_Z;
 ComputeOrLoadIngredients            DEBUG_PRINTF("Found ComputeOrLoadIngredients\n");return TK_COMPUTE_OR_LOAD_INGREDIENTS;
 ComputeZ                            DEBUG_PRINTF("Found ComputeZ\n");return TK_COMPUTE_Z;
 Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVOLVE;
 ListEnsembles                       DEBUG_PRINTF("Found ListEnsembles\n");return TK_LIST_ENSEMBLES;
 PlotZ                               DEBUG_PRINTF("Found PlotZ\n");return TK_PLOT_Z;
 PrintDiscr                          DEBUG_PRINTF("Found PrintDiscr\n");return TK_PRINT_DISCR;
-RatioMinusOne                       DEBUG_PRINTF("Found RatioMinusOne\n");return TK_RATIO_MINUS_ONE;
+RatioZMinusOne                      DEBUG_PRINTF("Found RatioZMinusOne\n");return TK_RATIO_Z_MINUS_ONE;
 SeaChirExtrap                       DEBUG_PRINTF("Found SeaChirExtrap\n");return TK_SEA_CHIR_EXTRAP;
 SubtractOa2                         DEBUG_PRINTF("Found SubtractOa2\n");return TK_SUBTRACT_OA2;
 ValChirExtrap                       DEBUG_PRINTF("Found ValChirExtrap\n");return TK_VAL_CHIR_EXTRAP;

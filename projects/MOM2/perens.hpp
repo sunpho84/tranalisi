@@ -13,9 +13,6 @@
 
 struct perens_t
 {
-  //! store whether deltam have been computed
-  bool deltam_computed{false};
-  
   //! path where to find all data
   string dir_path;
   
@@ -196,6 +193,16 @@ struct perens_t
   //! allocate all data
   perens_t& allocate();
   
+  //! get all ingredients
+  vector<task_t> get_all_ingredients(const vector<const perens_t*> &ens={})
+  {
+    return concat(get_sigma_tasks(ens),
+		  get_pr_bil_tasks(ens),
+		  get_pr_meslep_tasks(ens),
+		  get_deltam_tasks(ens),
+		  get_meson_mass_tasks(ens));
+  }
+  
   //! return a list of all Ztasks
   vector<task_t> get_all_Ztasks(const vector<const perens_t*> &ens={})
   {
@@ -232,6 +239,12 @@ struct perens_t
   
   //! read or compute and write mPCAC
   perens_t& get_mPCAC();
+  
+  //! returns a list of all tasks for deltam
+  vector<task_t> get_deltam_tasks(const vector<const perens_t*> &ens={});
+  
+  //! returns a list of all tasks for meson masses
+  vector<task_t> get_meson_mass_tasks(const vector<const perens_t*> &ens={});
   
   /////////////////////////////////////////////////////////////////
   
@@ -368,10 +381,14 @@ struct perens_t
   
   djvec_t get_contraction(const string &combo,const string &ID,const dcompl_t &coeff,const int tpar);
   
-  void compute_deltam(const size_t im,const size_t r);
+  //! compute deltam from correlators
+  void compute_deltam_from_corr();
   
-  //! compute deltam from props
+  //! compute deltam from propagators
   void compute_deltam_from_prop();
+  
+  //! compute deltam
+  void compute_deltam();
   
   /////////////////////////////////////////////////////////////////
   
@@ -426,28 +443,21 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
-  //! store whether Z are computed
-  bool Z_computed{false};
+  //! compute all Z
+  void compute_Z()
+  {
+    compute_Zq();
+    if(pars::compute_bilinears) compute_Zbil();
+    if(pars::compute_meslep) compute_Zmeslep();
+  }
   
-   //! compute all Z
-   void compute_Z()
-   {
-     Z_computed=true;
-     
-     compute_Zq();
-     if(pars::compute_bilinears) compute_Zbil();
-     if(pars::compute_meslep) compute_Zmeslep();
-   }
-  
-   void plot_Z(const string &suffix)
-   {
-     if(Z_computed==false) CRASH("Need to have computed Z");
-     
-     plot_sigma(suffix);
-     plot_Zq(suffix);
-     plot_Zbil(suffix);
-     plot_Zmeslep(suffix);
-   }
+  void plot_Z(const string &suffix)
+  {
+    plot_sigma(suffix);
+    plot_Zq(suffix);
+    plot_Zbil(suffix);
+    plot_Zmeslep(suffix);
+  }
   
   void plot_Zmeslep(const string &suffix);
   
@@ -465,7 +475,8 @@ struct perens_t
   //! average pr_meslep
   void average_r_pr_meslep(perens_t &out) const;
   
-// #warning addosta average_r_deltam?
+  //! average deltam
+  void average_r_deltam(perens_t &out) const;
   
   /////////////////////////////////////////////////////////////////
   

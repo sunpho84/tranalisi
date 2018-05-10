@@ -222,12 +222,12 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
 {
   vector<const djvec_t*> in_pr_bil;
   
-    for(auto &e : ens)
-      in_pr_bil.push_back(&e->pr_bil);
-    
-    vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,im_r_im_r_bilins_ibil_ibilmom_ind,"pr_bil",QCD_task}};
-    
-    return pr_bil_tasks;
+  for(auto &e : ens)
+    in_pr_bil.push_back(&e->pr_bil);
+  
+  vector<task_t> pr_bil_tasks={{&pr_bil,in_pr_bil,im_r_im_r_bilins_ibil_ibilmom_ind,"pr_bil",QCD_task}};
+  
+  return pr_bil_tasks;
 }
 
 void perens_t::average_r_pr_bil(perens_t &out) const

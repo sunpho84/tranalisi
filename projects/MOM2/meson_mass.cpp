@@ -57,3 +57,15 @@ perens_t& perens_t::get_meson_mass()
   
   return *this;
 }
+
+vector<perens_t::task_t> perens_t::get_meson_mass_tasks(const vector<const perens_t*> &ens)
+{
+  vector<const djvec_t*> in_meson_mass;
+  
+  for(auto &e : ens)
+    in_meson_mass.push_back(&e->meson_mass);
+  
+  vector<task_t> meson_mass_tasks={{&meson_mass,in_meson_mass,im_im_ind,"meson_mass",QED_task}};
+  
+  return meson_mass_tasks;
+}

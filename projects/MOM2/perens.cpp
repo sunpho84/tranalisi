@@ -239,13 +239,7 @@ perens_t perens_t::average_r() const
   average_r_sigma(out);
   average_r_pr_bil(out);
   average_r_pr_meslep(out);
-  
-  if(nr>1)
-    for(size_t im=0;im<nm;im++)
-      {
-	out.deltam_cr[im]=(deltam_cr[im_r_ind({im,0})]+deltam_cr[im_r_ind({im,1})])/2.0;
-	out.deltam_tm[im]=(deltam_tm[im_r_ind({im,0})]+deltam_tm[im_r_ind({im,1})])/2.0;
-      }
+  average_r_deltam(out);
   
   return out;
 }
