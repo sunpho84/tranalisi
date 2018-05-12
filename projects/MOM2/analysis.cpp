@@ -72,7 +72,7 @@ void average_ingredients(const string out_name,const string in1,const string in2
   cout<<"Averaging ingredients for "<<in1<<" and "<<in2<<" into "<<out_name<<endl;
   
   perens_t temp=data(in1,ASSERT_PRESENT);
-
+  
   for(auto &p : temp.get_all_ingredients({&data(in2,ASSERT_PRESENT)}))
     {
       djvec_t &out=*p.out;
@@ -131,7 +131,7 @@ void ratio_Z_minus_one(const string out,const string in1,const string in2)
   
   cout<<"Taking ratio minus one of "<<in1<<" and "<<in2<<" into "<<out<<endl;
   
-  perens_t temp;
+  perens_t temp=data(in1,ASSERT_PRESENT);
   
   for(auto &p : temp.get_all_Ztasks({&data(in2,ASSERT_PRESENT)}))
     {
@@ -155,7 +155,7 @@ void ratio_Z_minus_one(const string out,const string in1,const string in2)
 void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
 {
   needs_to_read_ingredients();
-
+  
   invalidate_Z();
   
   if(ens_list.size()<2) CRASH("Need at least 2 ensembles, %zu passed",ens_list.size());
