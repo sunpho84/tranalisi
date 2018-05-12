@@ -265,7 +265,7 @@ perens_t perens_t::val_chir_extrap() const
       val_chir_extrap_deltam(out);
     }
   else
-    cout<<"Skipping Valence chiral extrapolation"<<endl;
+    cout<<"Skipping Valence chiral extrapolation "<<dir_path<<endl;
   
   return out;
 }
