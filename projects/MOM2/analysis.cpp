@@ -44,6 +44,8 @@ void average_Z(const string out,const string in1,const string in2)
   
   for(auto &p : temp.get_all_Ztasks({&data(in2,ASSERT_PRESENT)}))
     {
+      cout<<" "<<p.tag<<endl;
+      
       djvec_t &out=*p.out;
       const djvec_t &in=*p.in.front();
       
@@ -75,6 +77,8 @@ void average_ingredients(const string out_name,const string in1,const string in2
   
   for(auto &p : temp.get_all_ingredients({&data(in2,ASSERT_PRESENT)}))
     {
+      cout<<" "<<p.tag<<endl;
+      
       djvec_t &out=*p.out;
       const djvec_t &in=*p.in.front();
       
@@ -135,6 +139,8 @@ void ratio_Z_minus_one(const string out,const string in1,const string in2)
   
   for(auto &p : temp.get_all_Ztasks({&data(in2,ASSERT_PRESENT)}))
     {
+      cout<<" "<<p.tag<<endl;
+      
       djvec_t &out=*p.out;
       const djvec_t &in=*p.in.front();
       
@@ -192,25 +198,29 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
   out.dir_path=out_name;
   
   for(auto &v : out.get_all_Ztasks(in))
-    for(size_t icombo=0;icombo<v.out->size();icombo++)
-      {
-	djvec_t y(ens_list.size());
-	for(size_t iens=0;iens<v.in.size();iens++) y[iens]=(*(v.in[iens]))[icombo];
-	
-	string plot_path="";
-	if(icombo==100) plot_path=out_name+"/plots/sea_chirextr_"+v.tag+"_"+v.ind.descr(icombo)+".xmg";
-	djvec_t coeffs=poly_fit(x,y,1);
-	if(std::isnan(coeffs[0][0])) coeffs=0.0;
-	(*v.out)[icombo]=coeffs[0];
-	
-	if(plot_path!="")
-	  {
-	    grace_file_t plot(plot_path);
-	    write_fit_plot(plot,xmin,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
-	    plot.set_title(v.tag+", "+v.ind.descr(icombo));
-	    plot.write_ave_err(0,coeffs[0].ave_err());
-	  }
-      }
+    {
+      cout<<" "<<v.tag<<endl;
+      
+      for(size_t icombo=0;icombo<v.out->size();icombo++)
+	{
+	  djvec_t y(ens_list.size());
+	  for(size_t iens=0;iens<v.in.size();iens++) y[iens]=(*(v.in[iens]))[icombo];
+	  
+	  string plot_path="";
+	  if(icombo==100) plot_path=out_name+"/plots/sea_chirextr_"+v.tag+"_"+v.ind.descr(icombo)+".xmg";
+	  djvec_t coeffs=poly_fit(x,y,1);
+	  if(std::isnan(coeffs[0][0])) coeffs=0.0;
+	  (*v.out)[icombo]=coeffs[0];
+	  
+	  if(plot_path!="")
+	    {
+	      grace_file_t plot(plot_path);
+	      write_fit_plot(plot,xmin,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
+	      plot.set_title(v.tag+", "+v.ind.descr(icombo));
+	      plot.write_ave_err(0,coeffs[0].ave_err());
+	    }
+	}
+    }
   
   //remove from the list
   for(auto in : ens_list)
@@ -240,7 +250,7 @@ void data_erase(const string &key)
 {
   auto f=_data.find(key);
   auto e=find(pars::ens.begin(),pars::ens.end(),key);
-
+  
   if(f!=_data.end() and e!=pars::ens.end())
     {
       _data.erase(key);
