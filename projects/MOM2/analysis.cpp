@@ -154,9 +154,9 @@ void ratio_Z_minus_one(const string out,const string in1,const string in2)
 
 void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
 {
-  needs_to_read_ingredients();
+  needs_to_read_Z();
   
-  invalidate_Z();
+  invalidate_ingredients();
   
   if(ens_list.size()<2) CRASH("Need at least 2 ensembles, %zu passed",ens_list.size());
   cout<<"Chirally extrapolating "<<out_name<<" in the sea mass, list of ensembles:"<<endl;
