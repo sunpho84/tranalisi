@@ -13,7 +13,11 @@
 
 int main(int narg,char **arg)
 {
-  scan::scan("analysis.txt");
+  string path="analysis.txt";
+  if(narg>1)
+    path=arg[1];
+  
+  scan::scan(path);
   
   //print time statistics
   cout<<ts<<endl;
