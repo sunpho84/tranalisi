@@ -29,6 +29,8 @@ namespace scan
   
   inline void scan(const string &path)
   {
+    cout<<"Opening "<<path<<endl;
+    
     fin.open(path);
     if(not fin.good()) CRASH("Opening %s",path.c_str());
     
