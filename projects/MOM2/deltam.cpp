@@ -91,6 +91,21 @@ void perens_t::compute_deltam_from_prop()
       }
 }
 
+void perens_t::recompute_deltam()
+{
+  deltam_time.start();
+  switch(deltam_method)
+    {
+    case FROM_PROP:
+      compute_deltam_from_prop();
+      break;
+    case FROM_CORR:
+      compute_deltam_from_corr();
+      break;
+    }
+  deltam_time.stop();
+}
+
 perens_t& perens_t::get_deltam()
 {
   vector<tuple<djvec_t*,string,bool>> delta_tasks{
@@ -113,17 +128,7 @@ perens_t& perens_t::get_deltam()
       cout<<"File "<<deltam_path<<" not found, computing"<<endl;
       prepare_list_of_confs();
       
-      deltam_time.start();
-      switch(deltam_method)
-	{
-	case FROM_PROP:
-	  compute_deltam_from_prop();
-	  break;
-	case FROM_CORR:
-	  compute_deltam_from_corr();
-	  break;
-	}
-      deltam_time.stop();
+      recompute_deltam();
       
       raw_file_t deltam_file(deltam_path,"w");
       for(auto &dtu : delta_tasks)

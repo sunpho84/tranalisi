@@ -101,6 +101,7 @@ NJacks                              DEBUG_PRINTF("Found NJacks\n");return TK_NJA
 NF                                  DEBUG_PRINTF("Found NF\n");return TK_NF;
 PhysBasis                           DEBUG_PRINTF("Found PhysBasis\n");return TK_PHYS_BASIS;
 PrintEachMom                        DEBUG_PRINTF("Found PrintEachMom\n");return TK_PRINT_EACH_MOM;
+RecomputeDeltaM                     DEBUG_PRINTF("Found RecomputeDeltaM\n");return TK_RECOMPUTE_DELTAM;
 Scheme                              DEBUG_PRINTF("Found Scheme\n");return TK_SCHEME;
 TwistedRun                          DEBUG_PRINTF("Found TwistedRun\n");return TK_TWISTED_RUN;
 Using                               DEBUG_PRINTF("Found Using\n");return TK_USING;

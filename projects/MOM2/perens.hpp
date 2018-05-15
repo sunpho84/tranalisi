@@ -225,6 +225,9 @@ struct perens_t
   //! mass of sea pseudoscalar meson
   djack_t meson_mass_sea;
   
+  //! compute or recompute deltam
+  void recompute_deltam();
+  
   //! read or compute and write deltam
   perens_t& get_deltam();
   
