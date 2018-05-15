@@ -93,6 +93,8 @@ void perens_t::compute_deltam_from_prop()
 
 void perens_t::recompute_deltam()
 {
+  using namespace pars;
+  
   deltam_time.start();
   switch(deltam_method)
     {
@@ -123,8 +125,6 @@ perens_t& perens_t::get_deltam()
     }
   else
     {
-      using namespace pars;
-      
       cout<<"File "<<deltam_path<<" not found, computing"<<endl;
       prepare_list_of_confs();
       
