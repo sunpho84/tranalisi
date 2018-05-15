@@ -93,6 +93,7 @@ ComputeDeltaM                       DEBUG_PRINTF("Found ComputeDeltaM\n");return
 ComputeMeslep                       DEBUG_PRINTF("Found ComputeMeslep\n");return TK_COMPUTE_MESLEP;
 ComputeMeslepWithChargesOne         DEBUG_PRINTF("Found ComputeMeslepWithChargesOne\n");return TK_COMPUTE_MESLEP_WITH_CHARGES_ONE;
 Ensembles                           DEBUG_PRINTF("Found Ensembles\n");return TK_ENSEMBLES;
+Extrapolate                         DEBUG_PRINTF("Found Extrapolate\n");return TK_EXTRAPOLATE;
 FilterThresh                        DEBUG_PRINTF("Found FilterThresh\n");return TK_FILTER_THRESH;
 FromCorr                            DEBUG_PRINTF("Found FromCorr\n");return TK_FROM_CORR;
 FromProp                            DEBUG_PRINTF("Found FromProp\n");return TK_FROM_PROP;

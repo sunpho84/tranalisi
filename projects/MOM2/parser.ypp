@@ -59,6 +59,7 @@ using namespace scan;
 %token TK_BC
 %token TK_CHIR_EXTR_METHOD
 %token TK_COMPUTE_BILINEARS
+%token TK_EXTRAPOLATE
 %token TK_FROM_PROP
 %token TK_FROM_CORR
 %token TK_COMPUTE_DELTAM
@@ -231,7 +232,7 @@ average_Z: TK_QUOTED_TEXT '=' TK_AVERAGE_Z '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT
 
 average_ingredients: TK_QUOTED_TEXT '=' TK_AVERAGE_INGREDIENTS '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average_ingredients(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
 
-combined_sea_chir_extr_entry: TK_USING TK_A '=' TK_REAL ',' TK_QUOTED_TEXT '=' string_list {$$=new comb_extr_t(*$6,$4,*$8);delete $6;delete $8;}
+combined_sea_chir_extr_entry: TK_USING TK_A '=' TK_REAL TK_EXTRAPOLATE TK_QUOTED_TEXT '=' string_list {$$=new comb_extr_t(*$6,$4,*$8);delete $6;delete $8;}
 ;
 
 combined_sea_chir_extr_list: TK_COMBINED_SEA_CHIR_EXTRAP '(' combined_sea_chir_extr_entry {$$=new std::vector<comb_extr_t>({*$3});delete $3;}
