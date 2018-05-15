@@ -119,4 +119,10 @@ void sea_chir_extrap(const string out,const vector<string> &ens_list);
 //! print momenta with discretization
 void print_discr();
 
+//! type used to specify a combined extrapolation
+typedef tuple<string,double,vector<string>> comb_extr_t;
+
+//! perform a combined sea chiral extrapolation
+void combined_sea_chir_extrap(const vector<comb_extr_t> &list);
+
 #endif

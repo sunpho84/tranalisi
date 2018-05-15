@@ -44,6 +44,7 @@ CPP_COMM {CPP_COMM_BEG}(({ANY}-a)|{NEWLINE})*{CPP_COMM_END}
 
 #include <tranalisi.hpp>
 
+#include <MOM2/analysis.hpp>
 #include <scan.hpp>
 
 using namespace std;
@@ -83,6 +84,7 @@ using namespace std;
 {C_COMM}                            DEBUG_PRINTF("Ignoring single line (c) comment: %s\n",yytext);
 {SPACE}+                            DEBUG_PRINTF("Ignoring spaces: \"%s\"\n",yytext);
 
+A                                   DEBUG_PRINTF("Found A\n");return TK_A;
 Action                              DEBUG_PRINTF("Found Action\n");return TK_ACTION;
 BC                                  DEBUG_PRINTF("Found BC\n");return TK_BC;
 ChirExtrMethod                      DEBUG_PRINTF("Found ChirExtrMethod\n");return TK_CHIR_EXTR_METHOD;
@@ -100,6 +102,7 @@ PhysBasis                           DEBUG_PRINTF("Found PhysBasis\n");return TK_
 PrintEachMom                        DEBUG_PRINTF("Found PrintEachMom\n");return TK_PRINT_EACH_MOM;
 Scheme                              DEBUG_PRINTF("Found Scheme\n");return TK_SCHEME;
 TwistedRun                          DEBUG_PRINTF("Found TwistedRun\n");return TK_TWISTED_RUN;
+Using                               DEBUG_PRINTF("Found Using\n");return TK_USING;
 UseDeltamCrCt                       DEBUG_PRINTF("Found UseDeltamCrCt\n");return TK_USE_DELTAM_CR_CT;
 UseDeltamTmCt                       DEBUG_PRINTF("Found UseDeltamTmCt\n");return TK_USE_DELTAM_TM_CT;
 UseQED                              DEBUG_PRINTF("Found UseQED\n");return TK_USE_QED;
@@ -108,6 +111,7 @@ AverageEquivMomenta                 DEBUG_PRINTF("Found AverageEquivMomenta\n");
 AverageIngredients                  DEBUG_PRINTF("Found AverageIngredients\n");return TK_AVERAGE_INGREDIENTS;
 AverageR                            DEBUG_PRINTF("Found AverageR\n");return TK_AVERAGE_R;
 AverageZ                            DEBUG_PRINTF("Found AverageZ\n");return TK_AVERAGE_Z;
+CombinedSeaChirExtrap               DEBUG_PRINTF("Found CombinedSeaChirExtrap\n");return TK_COMBINED_SEA_CHIR_EXTRAP;
 ComputeOrLoadIngredients            DEBUG_PRINTF("Found ComputeOrLoadIngredients\n");return TK_COMPUTE_OR_LOAD_INGREDIENTS;
 ComputeZ                            DEBUG_PRINTF("Found ComputeZ\n");return TK_COMPUTE_Z;
 Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVOLVE;

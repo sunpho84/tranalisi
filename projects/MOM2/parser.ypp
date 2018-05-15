@@ -43,6 +43,8 @@ using namespace scan;
     double      real;
     int         inte;
     std::vector<std::string> *str_list;
+    comb_extr_t *comb_extr;
+    vector<comb_extr_t> *comb_extr_list;
 }
 
 %token TK_INVALID_STRING
@@ -52,6 +54,7 @@ using namespace scan;
 %token <real> TK_REAL
 %token <inte> TK_INTE
 
+%token TK_A
 %token TK_ACTION
 %token TK_BC
 %token TK_CHIR_EXTR_METHOD
@@ -72,11 +75,13 @@ using namespace scan;
 %token TK_USE_DELTAM_CR_CT
 %token TK_USE_DELTAM_TM_CT
 %token TK_USE_QED
+%token TK_USING
 
 %token TK_AVERAGE_EQUIV_MOMENTA
 %token TK_AVERAGE_INGREDIENTS
 %token TK_AVERAGE_R
 %token TK_AVERAGE_Z
+%token TK_COMBINED_SEA_CHIR_EXTRAP
 %token TK_COMPUTE_OR_LOAD_INGREDIENTS
 %token TK_COMPUTE_Z
 %token TK_EVOLVE
@@ -89,7 +94,8 @@ using namespace scan;
 %token TK_VAL_CHIR_EXTRAP
 
 %type <str_list> string_list
-
+%type <comb_extr> combined_sea_chir_extr_entry
+%type <comb_extr_list> combined_sea_chir_extr_list
 %%
 
 commands:
@@ -116,6 +122,7 @@ commands:
         | commands average_Z
         | commands average_equiv_momenta
         | commands sea_chir_extrap
+        | commands combined_sea_chir_extr
         | commands val_chir_extrap
         | commands plot_Z
         | commands print_discr
@@ -224,7 +231,18 @@ average_Z: TK_QUOTED_TEXT '=' TK_AVERAGE_Z '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT
 
 average_ingredients: TK_QUOTED_TEXT '=' TK_AVERAGE_INGREDIENTS '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average_ingredients(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
 
+combined_sea_chir_extr_entry: TK_USING TK_A '=' TK_REAL ',' TK_QUOTED_TEXT '=' string_list {$$=new comb_extr_t(*$6,$4,*$8);delete $6;delete $8;}
+;
+
+combined_sea_chir_extr_list: TK_COMBINED_SEA_CHIR_EXTRAP '(' combined_sea_chir_extr_entry {$$=new std::vector<comb_extr_t>({*$3});delete $3;}
+                              | combined_sea_chir_extr_list combined_sea_chir_extr_entry {$$->push_back(*$2);delete $2;}
+;
+
+combined_sea_chir_extr: combined_sea_chir_extr_list ')' {combined_sea_chir_extrap(*$1);delete $1;}
+;
+
 ratio_Z_minus_one: TK_QUOTED_TEXT '=' TK_RATIO_Z_MINUS_ONE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {ratio_Z_minus_one(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
+;
 
 sea_chir_extrap: TK_QUOTED_TEXT '=' TK_SEA_CHIR_EXTRAP '(' string_list ')' {sea_chir_extrap(*$1,*$5);delete $1;delete $5;}
 ;

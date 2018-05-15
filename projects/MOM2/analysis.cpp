@@ -297,5 +297,10 @@ void compute_or_load_all_ingredients()
       .get_mPCAC()
       .get_meson_mass();
   
-  validate_ingredients();  
+  validate_ingredients();
+}
+
+void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
+{
+  CRASH("");
 }
