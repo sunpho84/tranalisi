@@ -41,10 +41,10 @@ void perens_t::compute_Zmeslep()
 	    const size_t im_r_in=im_r_ind({im_in,r_in});
 	    const size_t im_r_ou=im_r_ind({im_ou,r_ou});
 	    
-	    deltam_cr[im_r_in]=0.0;
-	    deltam_cr[im_r_ou]=0.0;
-	    deltam_tm[im_r_in]=0.0;
-	    deltam_tm[im_r_ou]=0.0;
+	    cout<<"deltam_cr[im_r_in="<<im_r_in<<", "<<im_r_ind.descr(im_r_in)<<"]: "<<deltam_cr[im_r_in].ave_err()<<endl;
+	    cout<<"deltam_cr[im_r_ou="<<im_r_ou<<", "<<im_r_ind.descr(im_r_ou)<<"]: "<<deltam_cr[im_r_ou].ave_err()<<endl;
+	    cout<<"deltam_tm[im_r_in="<<im_r_in<<", "<<im_r_ind.descr(im_r_in)<<"]: "<<deltam_tm[im_r_in].ave_err()<<endl;
+	    cout<<"deltam_tm[im_r_ou="<<im_r_ou<<", "<<im_r_ind.descr(im_r_ou)<<"]: "<<deltam_tm[im_r_ou].ave_err()<<endl;
 	    
 #pragma omp parallel for
 	    for(size_t imeslepmom=0;imeslepmom<meslepmoms().size();imeslepmom++)
