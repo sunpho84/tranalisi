@@ -229,17 +229,22 @@ perens_t perens_t::average_r() const
 {
   perens_t out=*this;
   
-  out.nr=1;
-  out.linmoms=linmoms;
-  out.bilmoms=bilmoms;
-  
-  out.set_indices();
-  out.allocate();
-  
-  average_r_sigma(out);
-  average_r_pr_bil(out);
-  average_r_pr_meslep(out);
-  average_r_deltam(out);
+  if(nr==1)
+      cout<<"Skipping r average"<<endl;
+  else
+    {
+      out.nr=1;
+      out.linmoms=linmoms;
+      out.bilmoms=bilmoms;
+      
+      out.set_indices();
+      out.allocate();
+      
+      average_r_sigma(out);
+      average_r_pr_bil(out);
+      average_r_pr_meslep(out);
+      average_r_deltam(out);
+    }
   
   return out;
 }

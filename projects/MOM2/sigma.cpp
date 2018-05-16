@@ -177,34 +177,26 @@ void perens_t::average_r_sigma(perens_t &out) const
 {
   cout<<"Averaging r for sigma"<<endl;
   
-  if(nr==1)
+  djvec_t &sigma_rave=out.sigma;
+  
+  for(size_t out_i=0;out_i<out.im_r_ilinmom_isigmaproj_isigmains_ind.max();out_i++)
     {
-      cout<<"Skipping r average of Zq"<<endl;
-      out=*this;
-    }
-  else
-    {
-      djvec_t &sigma_rave=out.sigma;
+      const vector<size_t> out_comps=out.im_r_ilinmom_isigmaproj_isigmains_ind(out_i);
+      vector<size_t> in_comps=out_comps;
+      const sigma::proj isigmaproj=sigma::proj_list[in_comps[3]];
       
-      for(size_t out_i=0;out_i<out.im_r_ilinmom_isigmaproj_isigmains_ind.max();out_i++)
+      sigma_rave[out_i]=0.0;
+      for(size_t r=0;r<nr;r++)
 	{
-	  const vector<size_t> out_comps=out.im_r_ilinmom_isigmaproj_isigmains_ind(out_i);
-	  vector<size_t> in_comps=out_comps;
-	  const sigma::proj isigmaproj=sigma::proj_list[in_comps[3]];
+	  in_comps[1]=r;
+	  const size_t in_i=im_r_ilinmom_isigmaproj_isigmains_ind(in_comps);
 	  
-	  sigma_rave[out_i]=0.0;
-	  for(size_t r=0;r<nr;r++)
-	    {
-	      in_comps[1]=r;
-	      const size_t in_i=im_r_ilinmom_isigmaproj_isigmains_ind(in_comps);
-	      
-	      //include a -1 on SIGMA3 and second r
-	      const int coeff=(isigmaproj==sigma::SIGMA3 and r==1)?-1:+1;
-	      
-	      sigma_rave[out_i]+=sigma[in_i]*coeff;
-	    }
-	  sigma_rave[out_i]/=nr;
+	  //include a -1 on SIGMA3 and second r
+	  const int coeff=(isigmaproj==sigma::SIGMA3 and r==1)?-1:+1;
+	  
+	  sigma_rave[out_i]+=sigma[in_i]*coeff;
 	}
+      sigma_rave[out_i]/=nr;
     }
 }
 
