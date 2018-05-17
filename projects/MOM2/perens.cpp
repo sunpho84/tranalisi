@@ -312,17 +312,18 @@ void perens_t::print_discr()
     }
 }
 
-perens_t perens_t::interpolate_to_p2ref() const
+perens_t perens_t::interpolate_to_p2ref()
 {
   perens_t out=*this;
   
+  //reset momenta ranges
   out.all_moms=vector<imom_t>{1};
-  
   out.linmoms=vector<array<size_t,1>>{{0}};
   out.bilmoms=vector<array<size_t,3>>{{0,0,0}};
   
   double a2p2=pars::p2ref/sqr(ainv);
   
+  //get the list of a2p2 by proximity
   vector<pair<double,size_t>> prox_list;
   for(size_t imom=0;imom<linmoms.size();imom++)
     {
@@ -330,16 +331,36 @@ perens_t perens_t::interpolate_to_p2ref() const
       const double dist=fabs(p2tilde-a2p2);
       prox_list.push_back(make_pair(dist,imom));
     }
-  
   sort(prox_list.begin(),prox_list.end());
   
+  //get min max, for drawing, and print them
   const size_t n=5;
-  const double a2p2_min=prox_list[0].second+a2p2;
-  const double a2p2_max=prox_list[n].second+a2p2;
+  const double a2p2min=prox_list[0].first+a2p2,p2min=a2p2min/sqr(ainv);
+  const double a2p2max=prox_list[n].first+a2p2,p2max=a2p2max/sqr(ainv);
+  cout<<"a2p2 range: "<<a2p2min<<" - "<<a2p2max<<endl;
+  cout<<"p2 range:   "<<p2min<<" - "<<p2max<<endl;
   
-  cout<<"a2p2 range: "<<a2p2_min<<" - "<<a2p2_max<<endl;
+  //out data
+  djvec_t y(linmoms.size());
+  vector<double> x(linmoms.size());
   
-  CRASH("");
+  for(auto &t : out.get_all_Ztasks({this}))
+    {
+      djvec_t &out=*t.out;
+      const string tag=t.tag;
+      const djvec_t &in=*t.in.front();
+      
+      //take physical units for plot
+      for(size_t imom=0;imom<linmoms.size();imom++)
+	{
+	  x[imom]=all_moms[linmoms[imom][0]].p(L).tilde().norm2()*sqr(ainv);
+	  y[imom]=in[imom];
+	}
+      
+      //fit and interpolate
+      const djvec_t coeffs=poly_fit(x,y,2,p2min,p2max,dir_path+"/plots/interpolate_to_p2ref_"+tag+".xmg");
+      out[0]=poly_eval(coeffs,pars::p2ref);
+    }
   
   return out;
 }
