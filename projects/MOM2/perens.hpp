@@ -483,6 +483,10 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
+  //! returns the range in which x is contained
+  template <size_t N>
+  pair<double,double> get_a2p2tilde_range_bracketting(const vector<array<size_t,N>> &list,const double a2p2_ref,const size_t n=5) const;
+  
   //! interpolate all quantities to reference p2
   perens_t interpolate_to_p2ref();
   
@@ -605,6 +609,32 @@ vector<vector<size_t>> perens_t::get_equiv_list(const vector<array<size_t,N>> &c
     }
   
   return equiv_of_combo;
+}
+
+template <size_t N>
+pair<double,double> perens_t::get_a2p2tilde_range_bracketting(const vector<array<size_t,N>> &list,const double a2p2_ref,const size_t n) const
+{
+  //get the list of a2p2 by proximity
+  vector<pair<double,size_t>> prox_list;
+  vector<double> x(list.size());
+  for(size_t imom=0;imom<linmoms.size();imom++)
+    {
+      x[imom]=all_moms[list[imom][0]].p(L).tilde().norm2();
+      const double dist=fabs(x[imom]-a2p2_ref);
+      prox_list.push_back(make_pair(dist,imom));
+    }
+  sort(prox_list.begin(),prox_list.end());
+  
+  //get min max
+  double a2p2min=1e300,a2p2max=1e-300;
+  for(size_t i=0;i<n;i++)
+    {
+      const size_t imom=prox_list[i].second;
+      a2p2min=min(a2p2min,x[imom]);
+      a2p2max=max(a2p2max,x[imom]);
+    }
+  
+  return {a2p2min,a2p2max};
 }
 
 //! helper to fill the momenta index of output

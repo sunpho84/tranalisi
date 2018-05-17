@@ -314,7 +314,6 @@ void perens_t::print_discr()
 
 perens_t perens_t::interpolate_to_p2ref()
 {
-  double a2p2=pars::p2ref/sqr(ainv);
   perens_t out=*this;
   
   //reset momenta ranges
@@ -322,32 +321,19 @@ perens_t perens_t::interpolate_to_p2ref()
   out.linmoms=vector<array<size_t,1>>{{0}};
   out.bilmoms=vector<array<size_t,3>>{{0,0,0}};
   
-  //get the list of a2p2 by proximity
-  vector<pair<double,size_t>> prox_list;
-  vector<double> x(linmoms.size());
-  for(size_t imom=0;imom<linmoms.size();imom++)
-    {
-      x[imom]=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
-      const double dist=fabs(x[imom]-a2p2);
-      prox_list.push_back(make_pair(dist,imom));
-    }
-  sort(prox_list.begin(),prox_list.end());
+  //set indices
+  out.set_indices();
+  out.allocate();
   
-  //get min max
-  const size_t n=5;
-  double a2p2min=1e300,a2p2max=1e-300;
-  for(size_t i=0;i<n;i++)
-    {
-      const size_t imom=prox_list[i].second;
-      a2p2min=min(a2p2min,x[imom]);
-      a2p2max=max(a2p2max,x[imom]);
-    }
-  const double p2min=a2p2min*sqr(ainv);
-  const double p2max=a2p2max*sqr(ainv);
-  cout<<"a2p2 range: "<<a2p2min<<" - "<<a2p2max<<endl;
+  //get ranges
+  double a2p2=pars::p2ref/sqr(ainv);
+  pair<double,double> a2p2minmax=get_a2p2tilde_range_bracketting(linmoms,a2p2);
+  const double p2min=a2p2minmax.first*sqr(ainv);
+  const double p2max=a2p2minmax.second*sqr(ainv);
   cout<<"p2 range:   "<<p2min<<" - "<<p2max<<endl;
   
   //out data
+  vector<double> x(linmoms.size());
   djvec_t y(linmoms.size());
   
   for(auto &t : out.get_all_Ztasks({this}))
