@@ -324,24 +324,31 @@ perens_t perens_t::interpolate_to_p2ref()
   
   //get the list of a2p2 by proximity
   vector<pair<double,size_t>> prox_list;
+  vector<double> x(linmoms.size());
   for(size_t imom=0;imom<linmoms.size();imom++)
     {
-      const double p2tilde=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
-      const double dist=fabs(p2tilde-a2p2);
+      x[imom]=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
+      const double dist=fabs(x[imom]-a2p2);
       prox_list.push_back(make_pair(dist,imom));
     }
   sort(prox_list.begin(),prox_list.end());
   
-  //get min max, for drawing, and print them
+  //get min max
   const size_t n=5;
-  const double a2p2min=prox_list[0].first+a2p2,p2min=a2p2min*sqr(ainv);
-  const double a2p2max=prox_list[n].first+a2p2,p2max=a2p2max*sqr(ainv);
+  double a2p2min=1e300,a2p2max=1e-300;
+  for(size_t i=0;i<n;i++)
+    {
+      const size_t imom=prox_list[i].second;
+      a2p2min=min(a2p2min,x[imom]);
+      a2p2max=max(a2p2max,x[imom]);
+    }
+  const double p2min=a2p2min*sqr(ainv);
+  const double p2max=a2p2max*sqr(ainv);
   cout<<"a2p2 range: "<<a2p2min<<" - "<<a2p2max<<endl;
   cout<<"p2 range:   "<<p2min<<" - "<<p2max<<endl;
   
   //out data
   djvec_t y(linmoms.size());
-  vector<double> x(linmoms.size());
   
   for(auto &t : out.get_all_Ztasks({this}))
     {
@@ -358,8 +365,14 @@ perens_t perens_t::interpolate_to_p2ref()
 	}
       
       //fit and interpolate
-      const djvec_t coeffs=poly_fit(x,y,2,p2min,p2max,dir_path+"/plots/interpolate_to_p2ref_"+tag+".xmg");
+      const djvec_t coeffs=poly_fit(x,y,2,p2min,p2max);
       out[0]=poly_eval(coeffs,pars::p2ref);
+      
+      //produce plot
+      const string path=dir_path+"/plots/interpolate_to_p2ref_"+tag+".xmg";
+      grace_file_t plot(path);
+      write_fit_plot(plot,p2min,p2max,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
+      plot.write_ave_err(pars::p2ref,out[0].ave_err());
     }
   
   return out;
