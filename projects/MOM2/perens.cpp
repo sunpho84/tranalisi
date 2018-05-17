@@ -314,14 +314,13 @@ void perens_t::print_discr()
 
 perens_t perens_t::interpolate_to_p2ref()
 {
+  double a2p2=pars::p2ref/sqr(ainv);
   perens_t out=*this;
   
   //reset momenta ranges
   out.all_moms=vector<imom_t>{1};
   out.linmoms=vector<array<size_t,1>>{{0}};
   out.bilmoms=vector<array<size_t,3>>{{0,0,0}};
-  
-  double a2p2=pars::p2ref/sqr(ainv);
   
   //get the list of a2p2 by proximity
   vector<pair<double,size_t>> prox_list;
@@ -335,8 +334,8 @@ perens_t perens_t::interpolate_to_p2ref()
   
   //get min max, for drawing, and print them
   const size_t n=5;
-  const double a2p2min=prox_list[0].first+a2p2,p2min=a2p2min/sqr(ainv);
-  const double a2p2max=prox_list[n].first+a2p2,p2max=a2p2max/sqr(ainv);
+  const double a2p2min=prox_list[0].first+a2p2,p2min=a2p2min*sqr(ainv);
+  const double a2p2max=prox_list[n].first+a2p2,p2max=a2p2max*sqr(ainv);
   cout<<"a2p2 range: "<<a2p2min<<" - "<<a2p2max<<endl;
   cout<<"p2 range:   "<<p2min<<" - "<<p2max<<endl;
   
@@ -346,6 +345,7 @@ perens_t perens_t::interpolate_to_p2ref()
   
   for(auto &t : out.get_all_Ztasks({this}))
     {
+      //decrypt the task
       djvec_t &out=*t.out;
       const string tag=t.tag;
       const djvec_t &in=*t.in.front();
