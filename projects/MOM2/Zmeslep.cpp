@@ -130,40 +130,46 @@ void perens_t::interpolate_Zmeslep_to_p2ref(perens_t &out)
   //fit points
   vector<double> x(meslepmoms().size());
   djvec_t y(meslepmoms().size());
-
+  
   for(auto &t : out.get_Zmeslep_tasks({this}))
     {
       const djvec_t &in=*t.in.front();
       djvec_t &out=*t.out;
       const string &tag=t.tag;
       
-      for(size_t im_r_im_r_iop_iproj=0;im_r_im_r_iop_iproj<im_r_im_r_iop_iproj_ind.max();im_r_im_r_iop_iproj++)
+      if(fabs(in[0].ave()-1)<1e-7 and in[0].err()<1e-7)
 	{
-	  const vector<size_t> comps=im_r_im_r_iop_iproj_ind(im_r_im_r_iop_iproj);
-	  
-	  //take physical units for plot
-	  for(size_t imom=0;imom<meslepmoms().size();imom++)
-	    {
-	      vector<size_t> comps_with_mom=comps;
-	      comps_with_mom.push_back(imom);
-	      
-	      x[imom]=all_moms[meslepmoms()[imom][0]].p(L).tilde().norm2()*sqr(ainv);
-	      y[imom]=in[im_r_im_r_iop_iproj_imeslepmom_ind(comps_with_mom)];
-	    }
-	  
-	  //fit and interpolate
-	  const djvec_t coeffs=poly_fit(x,y,2,p2min,p2max);
-	  out[0]=poly_eval(coeffs,pars::p2ref);
-	  
-	  //produce plot
-	  const string path=dir_path+"/plots/interpolate_to_p2ref_"+tag+
-	    "_"+to_string(comps[4])+"_"+to_string(comps[5])+
-	    "_m"+to_string(comps[0])+"_r"+to_string(comps[1])+
-	    "_m"+to_string(comps[2])+"_r"+to_string(comps[3])+".xmg";
-	  grace_file_t plot(path);
-	  write_fit_plot(plot,p2min,p2max,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
-	  plot.write_ave_err(pars::p2ref,out[0].ave_err());
+	  cout<<"Skipping interpolation for "<<tag<<endl;
+	  out=in[0];
 	}
+      else
+	for(size_t im_r_im_r_iop_iproj=0;im_r_im_r_iop_iproj<im_r_im_r_iop_iproj_ind.max();im_r_im_r_iop_iproj++)
+	  {
+	    const vector<size_t> comps=im_r_im_r_iop_iproj_ind(im_r_im_r_iop_iproj);
+	    
+	    //take physical units for plot
+	    for(size_t imom=0;imom<meslepmoms().size();imom++)
+	      {
+		vector<size_t> comps_with_mom=comps;
+		comps_with_mom.push_back(imom);
+		
+		x[imom]=all_moms[meslepmoms()[imom][0]].p(L).tilde().norm2()*sqr(ainv);
+		y[imom]=in[im_r_im_r_iop_iproj_imeslepmom_ind(comps_with_mom)];
+	      }
+	    
+	    //fit and interpolate
+	    const djvec_t coeffs=poly_fit(x,y,2,p2min,p2max);
+	    out[0]=poly_eval(coeffs,pars::p2ref);
+	    
+	    //produce plot
+	    const string path=dir_path+"/plots/interpolate_to_p2ref_"+tag+
+	      "_"+to_string(comps[4])+"_"+to_string(comps[5])+
+	      "_m"+to_string(comps[0])+"_r"+to_string(comps[1])+
+	      "_m"+to_string(comps[2])+"_r"+to_string(comps[3])+".xmg";
+	    grace_file_t plot(path);
+	    write_fit_plot(plot,p2min,p2max,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
+	    plot.write_ave_err(pars::p2ref,out[0].ave_err());
+	  }
     }
 }
 
