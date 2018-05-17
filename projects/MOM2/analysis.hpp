@@ -62,6 +62,8 @@ inline void invalidate_Z()
 //! returns access to the data
 perens_t& data(const string &key,const bool assert_present_flag);
 
+//! add an entry
+void add_ens(const string &name);
 //! remove an entry
 void data_erase(const string &key);
 

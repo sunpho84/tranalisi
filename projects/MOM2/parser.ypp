@@ -146,7 +146,7 @@ read_ensembles: TK_ENSEMBLES '=' '{'
               | read_ensembles ',' ensemble
 ;
 
-ensemble: TK_QUOTED_TEXT {pars::ens.push_back(*$1);delete $1;}
+ensemble: TK_QUOTED_TEXT {add_ens(*$1);delete $1;}
 ;
 
 /////////////////////////////////////////////////////////////////

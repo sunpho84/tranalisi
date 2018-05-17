@@ -246,6 +246,17 @@ auto assert_ens_present(const string &key)
   return f;
 }
 
+void add_ens(const string &name)
+{
+  pars::ens.push_back(name);
+  
+  data(name,PRESENCE_NOT_NEEDED)
+    .read_pars(name)
+    .set_pars_for_scratch()
+    .set_indices()
+    .allocate();
+}
+
 void data_erase(const string &key)
 {
   auto f=_data.find(key);
@@ -288,10 +299,6 @@ void compute_or_load_all_ingredients()
   
   for(auto &name : pars::ens)
     data(name,PRESENCE_NOT_NEEDED)
-      .read_pars(name)
-      .set_pars_for_scratch()
-      .set_indices()
-      .allocate()
       .read_or_compute_ingredients()
       .get_deltam()
       .get_mPCAC()
