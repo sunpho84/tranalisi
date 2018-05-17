@@ -327,7 +327,7 @@ perens_t perens_t::interpolate_to_p2ref()
   vector<double> x(linmoms.size());
   for(size_t imom=0;imom<linmoms.size();imom++)
     {
-      x[imom]=all_moms[linmoms[imom][0]].p(L)./*tilde().*/norm2();
+      x[imom]=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
       const double dist=fabs(x[imom]-a2p2);
       prox_list.push_back(make_pair(dist,imom));
     }
@@ -360,7 +360,7 @@ perens_t perens_t::interpolate_to_p2ref()
       //take physical units for plot
       for(size_t imom=0;imom<linmoms.size();imom++)
 	{
-	  x[imom]=all_moms[linmoms[imom][0]].p(L)./*tilde().*/norm2()*sqr(ainv);
+	  x[imom]=all_moms[linmoms[imom][0]].p(L).tilde().norm2()*sqr(ainv);
 	  y[imom]=in[imom];
 	}
       
