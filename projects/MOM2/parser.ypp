@@ -65,10 +65,12 @@ using namespace scan;
 %token TK_COMPUTE_DELTAM
 %token TK_COMPUTE_MESLEP
 %token TK_COMPUTE_MESLEP_WITH_CHARGES_ONE
+%token TK_INTERPOLATE_TO_P2REF
 %token TK_ENSEMBLES
 %token TK_FILTER_THRESH
 %token TK_NF
 %token TK_NJACKS
+%token TK_P2REF
 %token TK_PHYS_BASIS
 %token TK_PRINT_EACH_MOM
 %token TK_RECOMPUTE_DELTAM
@@ -112,6 +114,7 @@ commands:
         | commands set_filter_thresh
         | commands set_nf
         | commands set_njacks
+        | commands set_p2ref
         | commands set_phys_basis
         | commands set_print_each_mom
         | commands set_scheme
@@ -133,6 +136,7 @@ commands:
         | commands compute_or_load_ingredients
         | commands compute_Z
         | commands list_ensembles
+        | commands interpolate_to_p2ref
         /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
         /* | commands TK_QUOTED_TEXT '=' TK_EVOLVE '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].evolve();drv->suff+="_evo";} aggiungi ordine qui*/
 ;
@@ -196,6 +200,9 @@ set_scheme: TK_SCHEME '=' TK_QUOTED_TEXT {pars::scheme=reno_scheme::decrypt(*$3)
 set_twisted_run: TK_TWISTED_RUN '=' TK_INTE {pars::twisted_run=$3;if($3==false) pars::phys_basis=false;}
 ;
 
+set_p2ref: TK_P2REF '=' TK_REAL {pars::p2ref=$3;}
+;
+
 set_use_deltam_cr_ct: TK_USE_DELTAM_CR_CT '=' TK_INTE {pars::use_deltam_cr_ct=$3;}
 ;
 
@@ -254,6 +261,9 @@ sea_chir_extrap: TK_QUOTED_TEXT '=' TK_SEA_CHIR_EXTRAP '(' string_list ')' {sea_
 ;
 
 list_ensembles: TK_LIST_ENSEMBLES '(' ')' {list_ensembles();}
+;
+
+interpolate_to_p2ref: TK_INTERPOLATE_TO_P2REF '(' ')' {interpolate_to_p2ref_all();}
 ;
 
 /////////////////////////////////////////////////////////////////

@@ -302,5 +302,57 @@ void compute_or_load_all_ingredients()
 
 void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
 {
-  CRASH("");
+  // needs_to_read_Z();
+  
+  // invalidate_ingredients();
+  
+  // const size_t ngroups=list.size();
+  // if(ngroups<2) CRASH("Need at least 2 set of ensembles, %zu passed",ngroups);
+  // djvec_t extr(ngroups);
+  // djvec_t mslope(ngroups);
+  // djvec_t mslope_a2dep(ngroups);
+  
+  // jack_fit_t jack_fit;
+  
+  // //define parameters
+  // vector<size_t> iextr(ngroups);
+  // vector<size_t> imslope(ngroups);
+  // vector<size_t> imslope_a2dep(ngroups);
+  // for(size_t igroup=0;igroup<ngroups;igroup++)
+  //   {
+  //     iextr[igroup]=jack_fit.add_fit_par(extr[igroup],"extr_"+to_string(igroup),0.0,0.1);
+  //     imslope[igroup]=jack_fit.add_fit_par(mslope[igroup],"mslope_"+to_string(igroup),0.0,0.1);
+  //     imslope_a2dep[igroup]=jack_fit.add_fit_par(mslope_a2dep[igroup],"mslope_a2dep"+to_string(igroup),0.0,0.1);
+  //   }
+  
+  // //insert new
+  
+  // for(auto &p : temp.get_all_Ztasks({&data(in2,ASSERT_PRESENT)}))
+  //   {
+  //     cout<<" "<<p.tag<<endl;
+  // get_al
+  
+  //   for(size_t idata=0;idata<ext_data.size();idata++)
+  //   boot_fit.add_point(//numerical data
+  // 		       [&ext_data,&pars,idata,apow,zpow]
+  // 		       (const vector<double> &p,int iel) //dimension 2
+  // 		       {return ext_data[idata].wfse[iel]*pow(pars.get_z(p,ext_data[idata].ib,iel),zpow)/pow(pars.get_a(p,ext_data[idata].ib,iel),apow);},
+  // 		       //ansatz
+  // 		       [idata,&pars,&ext_data,&cont_chir_ansatz]
+  // 		       (const vector<double> &p,int iel)
+  // 		       {
+  // 			 size_t ib=ext_data[idata].ib;
+  // 			 double ac=pars.get_a(p,ib,iel);
+  // 			 double zc=pars.get_z(p,ib,iel);
+  // 			 double ml=ext_data[idata].aml/ac/zc;
+  // 			 double ms=ext_data[idata].ams/ac/zc;
+  // 			 double Maux=ext_data[idata].aMaux[iel]/ac;
+  // 			 double L=ext_data[idata].L;
+  // 			 return cont_chir_ansatz(p,pars,ml,ms,Maux,ac,L);
+  // 		       },
+  // 		       //for covariance/error
+  // 		       dboot_t(ext_data[idata].wfse*pow(pars.ori_z[ext_data[idata].ib],zpow)/pow(pars.ori_a[ext_data[idata].ib],apow)),1/*correlate*/);
+  
+  
+  CRASH("Can be done only after p2 extrapolation, how we deal with that?");
 }

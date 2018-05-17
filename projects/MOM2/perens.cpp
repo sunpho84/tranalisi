@@ -311,3 +311,35 @@ void perens_t::print_discr()
       out<<p2tilde<<" "<<p.norm2()<<" "<<p.norm4()<<endl;
     }
 }
+
+perens_t perens_t::interpolate_to_p2ref() const
+{
+  perens_t out=*this;
+  
+  out.all_moms=vector<imom_t>{1};
+  
+  out.linmoms=vector<array<size_t,1>>{{0}};
+  out.bilmoms=vector<array<size_t,3>>{{0,0,0}};
+  
+  double a2p2=pars::p2ref/sqr(ainv);
+  
+  vector<pair<double,size_t>> prox_list;
+  for(size_t imom=0;imom<linmoms.size();imom++)
+    {
+      const double p2tilde=all_moms[linmoms[imom][0]].p(L).tilde().norm2();
+      const double dist=fabs(p2tilde-a2p2);
+      prox_list.push_back(make_pair(dist,imom));
+    }
+  
+  sort(prox_list.begin(),prox_list.end());
+  
+  const size_t n=5;
+  const double a2p2_min=prox_list[0].second+a2p2;
+  const double a2p2_max=prox_list[n].second+a2p2;
+  
+  cout<<"a2p2 range: "<<a2p2_min<<" - "<<a2p2_max<<endl;
+  
+  CRASH("");
+  
+  return out;
+}

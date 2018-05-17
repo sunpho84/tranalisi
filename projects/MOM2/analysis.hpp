@@ -98,6 +98,7 @@ DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_all,compute_Z,needs_to_read_ingredients
 DEFINE_SINGLE_COMMAND_ALL(average_all_r,average_r,needs_to_read_ingredients,invalidate_Z)
 DEFINE_SINGLE_COMMAND_ALL(average_all_equiv_momenta,average_equiv_momenta,needs_to_read_ingredients,invalidate_Z)
 DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap,needs_to_read_ingredients,invalidate_Z)
+DEFINE_SINGLE_COMMAND_ALL(interpolate_to_p2ref_all,interpolate_to_p2ref,needs_to_read_Z,invalidate_ingredients)
 
 // /////////////////////////////////////////////////////////////////
 

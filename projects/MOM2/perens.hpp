@@ -483,6 +483,11 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
+  //! interpolate all quantities to reference p2
+  perens_t interpolate_to_p2ref() const;
+  
+  /////////////////////////////////////////////////////////////////
+  
   perens_t val_chir_extrap() const;
   
   //! extrapolate to chiral limit sigma

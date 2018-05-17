@@ -79,6 +79,8 @@ namespace pars
   EXTERN_PARS bool use_deltam_tm_ct INIT_PARS_TO({true});
   //! use QED
   EXTERN_PARS bool use_QED INIT_PARS_TO({false});
+  //! reference p2 to which interpolate, in GeV^2
+  EXTERN_PARS double p2ref INIT_PARS_TO({4});
   
   //! list of ensembles
   EXTERN_PARS vector<string> ens;
