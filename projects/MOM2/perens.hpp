@@ -490,6 +490,15 @@ struct perens_t
   //! interpolate all quantities to reference p2
   perens_t interpolate_to_p2ref();
   
+  //! interpolate Zq to reference p2
+  void interpolate_Zq_to_p2ref(perens_t &out);
+  
+  //! interpolate Zbil to reference p2
+  void interpolate_Zbil_to_p2ref(perens_t &out);
+  
+  //! interpolate Zmeslep to reference p2
+  void interpolate_Zmeslep_to_p2ref(perens_t &out);
+  
   /////////////////////////////////////////////////////////////////
   
   perens_t val_chir_extrap() const;

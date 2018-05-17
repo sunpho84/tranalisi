@@ -324,42 +324,10 @@ perens_t perens_t::interpolate_to_p2ref()
   //set indices
   out.set_indices();
   out.allocate();
-  
-  //get ranges
-  double a2p2=pars::p2ref/sqr(ainv);
-  pair<double,double> a2p2minmax=get_a2p2tilde_range_bracketting(linmoms,a2p2);
-  const double p2min=a2p2minmax.first*sqr(ainv);
-  const double p2max=a2p2minmax.second*sqr(ainv);
-  cout<<"p2 range:   "<<p2min<<" - "<<p2max<<endl;
-  
-  //out data
-  vector<double> x(linmoms.size());
-  djvec_t y(linmoms.size());
-  
-  for(auto &t : out.get_all_Ztasks({this}))
-    {
-      //decrypt the task
-      djvec_t &out=*t.out;
-      const string tag=t.tag;
-      const djvec_t &in=*t.in.front();
-      
-      //take physical units for plot
-      for(size_t imom=0;imom<linmoms.size();imom++)
-	{
-	  x[imom]=all_moms[linmoms[imom][0]].p(L).tilde().norm2()*sqr(ainv);
-	  y[imom]=in[imom];
-	}
-      
-      //fit and interpolate
-      const djvec_t coeffs=poly_fit(x,y,2,p2min,p2max);
-      out[0]=poly_eval(coeffs,pars::p2ref);
-      
-      //produce plot
-      const string path=dir_path+"/plots/interpolate_to_p2ref_"+tag+".xmg";
-      grace_file_t plot(path);
-      write_fit_plot(plot,p2min,p2max,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
-      plot.write_ave_err(pars::p2ref,out[0].ave_err());
-    }
+
+  interpolate_Zq_to_p2ref(out);
+  if(pars::compute_bilinears) interpolate_Zbil_to_p2ref(out);
+  if(pars::compute_meslep) interpolate_Zmeslep_to_p2ref(out);
   
   return out;
 }

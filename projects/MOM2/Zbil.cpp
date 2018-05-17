@@ -81,6 +81,56 @@ void perens_t::compute_Zbil()
       }
 }
 
+void perens_t::interpolate_Zbil_to_p2ref(perens_t &out)
+{
+  cout<<"Interpolating to reference p2 Zbil"<<endl;
+  
+  //get ranges
+  double a2p2=pars::p2ref/sqr(ainv);
+  pair<double,double> a2p2minmax=get_a2p2tilde_range_bracketting(bilmoms,a2p2);
+  const double p2min=a2p2minmax.first*sqr(ainv);
+  const double p2max=a2p2minmax.second*sqr(ainv);
+  cout<<"p2 range:   "<<p2min<<" - "<<p2max<<endl;
+  
+  //fit points
+  vector<double> x(bilmoms.size());
+  djvec_t y(bilmoms.size());
+
+  for(auto &t : out.get_Zbil_tasks({this}))
+    {
+      const djvec_t &in=*t.in.front();
+      djvec_t &out=*t.out;
+      const string &tag=t.tag;
+      
+      for(size_t im_r_im_r_ibil=0;im_r_im_r_ibil<im_r_im_r_ibil_ind.max();im_r_im_r_ibil++)
+	{
+	  const vector<size_t> comps=im_r_im_r_ibil_ind(im_r_im_r_ibil);
+	  
+	  //take physical units for plot
+	  for(size_t imom=0;imom<bilmoms.size();imom++)
+	    {
+	      vector<size_t> comps_with_mom=comps;
+	      comps_with_mom.push_back(imom);
+	      
+	      x[imom]=all_moms[bilmoms[imom][0]].p(L).tilde().norm2()*sqr(ainv);
+	      y[imom]=in[im_r_im_r_ibil_ibilmom_ind(comps_with_mom)];
+	    }
+	  
+	  //fit and interpolate
+	  const djvec_t coeffs=poly_fit(x,y,2,p2min,p2max);
+	  out[0]=poly_eval(coeffs,pars::p2ref);
+	  
+	  //produce plot
+	  const string path=dir_path+"/plots/interpolate_to_p2ref_"+tag+"_"+bil_tag[comps[4]]+
+	    "_m"+to_string(comps[0])+"_r"+to_string(comps[1])+
+	    "_m"+to_string(comps[2])+"_r"+to_string(comps[3])+".xmg";
+	  grace_file_t plot(path);
+	  write_fit_plot(plot,p2min,p2max,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
+	  plot.write_ave_err(pars::p2ref,out[0].ave_err());
+	}
+    }
+}
+
 void perens_t::plot_Zbil(const string &suffix)
 {
   cout<<"Plotting all Zbil of "<<dir_path<<" for suffix: \""<<suffix<<"\""<<endl;
