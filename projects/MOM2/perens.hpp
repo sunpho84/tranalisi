@@ -626,7 +626,7 @@ pair<double,double> perens_t::get_a2p2tilde_range_bracketting(const vector<array
   //get the list of a2p2 by proximity
   vector<pair<double,size_t>> prox_list;
   vector<double> x(list.size());
-  for(size_t imom=0;imom<linmoms.size();imom++)
+  for(size_t imom=0;imom<list.size();imom++)
     {
       x[imom]=all_moms[list[imom][0]].p(L).tilde().norm2();
       const double dist=fabs(x[imom]-a2p2_ref);
