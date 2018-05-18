@@ -324,7 +324,7 @@ perens_t perens_t::interpolate_to_p2ref()
   //set indices
   out.set_indices();
   out.allocate();
-
+  
   interpolate_Zq_to_p2ref(out);
   if(pars::compute_bilinears) interpolate_Zbil_to_p2ref(out);
   if(pars::compute_meslep) interpolate_Zmeslep_to_p2ref(out);
