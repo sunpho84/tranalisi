@@ -330,9 +330,9 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
   //input data per each ensemble
   struct input_per_ens_t
   {
-    const double m;    //the ensemble par
-    const djvec_t* in; //the input
-    input_per_ens_t(const double m,const djvec_t* in) : m(m),in(in) {}
+    const double m2;    //the ensemble par
+    const djvec_t* in;  //the input
+    input_per_ens_t(const double m2,const djvec_t* in) : m2(m2),in(in) {}
   };
   
   //! data per group
@@ -340,17 +340,17 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
   {
     djvec_t* out;                           //the output
     const double a;                         //the group par
-    vector<const input_per_ens_t> ens_list; //the input
+    vector<input_per_ens_t> ens_list; //the input
     
-    per_group_t(djvec_t* out,const double a,vector<const input_per_ens_t>& ens_list) : out(out),a(a),ens_list(ens_list) {}
+    per_group_t(djvec_t* out,const double a,vector<input_per_ens_t>& ens_list) : out(out),a(a),ens_list(ens_list) {}
   };
   
   //! data to be fitted, per quantity
   struct per_quantity_t
   {
     const index_t ind;                      //index to access to data
-    const vector<const per_group_t> in_out; //one per group, the input and output
-    per_quantity_t(const index_t ind,const vector<const per_group_t> &in_out) : ind(ind),in_out(in_out) {}
+    const vector<per_group_t> in_out; //one per group, the input and output
+    per_quantity_t(const index_t ind,const vector<per_group_t> &in_out) : ind(ind),in_out(in_out) {}
   };
   
   //data to be fitted, all quantities
@@ -374,29 +374,26 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
       //transpose data
       for(auto &p : data_out.back().get_all_Ztasks(data_in))
 	{
-	  const string &tag=p.tag;
-	  
 	  //prepare output
-	  vector<const per_group_t> in_out;
+	  vector<per_group_t> in_out;
 	  for(size_t i=0;i<p.ind.max();i++)
 	    {
 	      //prepare input
-	      vector<const input_per_ens_t> in;
+	      vector<input_per_ens_t> in;
 	      for(size_t iens=0;iens<p.in.size();iens++)
 		{
 		  //get mass
 		  const perens_t& en=data(names_in[i],ASSERT_PRESENT);
-		  double m;
-		  if(pars::chir_extr_method==chir_extr::MQUARK) m=en.am[en.im_sea];
-		  else                                          m=sqr(en.meson_mass_sea.ave());
+		  double m2=sqr(en.meson_mass_sea.ave())/sqr(a);
 		  
 		  //prepare data per ens
-		  in.push_back({m,&p.in[iens][i]});
+		  in.push_back({m2,&p.in[iens][i]});
 		}
 	      in_out.push_back({&p.out[i],a,in});
 	    }
 	  
-	  fit_data[tag]=per_quantity_t(p.ind,in_out);
+	  const string &tag=p.tag;
+	  fit_data.emplace(tag,per_quantity_t(p.ind,in_out));
 	}
     }
   
@@ -415,49 +412,51 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
 	  //fit and pars
 	  jack_fit_t jack_fit;
 	  djvec_t extr(ngroups);
-	  djvec_t mslope(ngroups);
-	  djvec_t mslope_a2dep(ngroups);
+	  djack_t mslope;
+	  djack_t mslope_a2dep;
 	  
 	  //define parameters
 	  vector<size_t> iextr(ngroups);
-	  vector<size_t> imslope(ngroups);
-	  vector<size_t> imslope_a2dep(ngroups);
+	  size_t imslope=jack_fit.add_fit_par(mslope,"mslope",0.0,0.1);
+	  size_t imslope_a2dep=jack_fit.add_fit_par(mslope_a2dep,"mslope_a2dep",0.0,0.1);
+	  for(size_t igroup=0;igroup<ngroups;igroup++)
+	    {
+	      const per_group_t per_group=per_quantity.in_out[igroup];
+	      const vector<input_per_ens_t> &ens_list=per_group.ens_list;
+	      const double a=per_group.a;
+	      
+	      iextr[igroup]=jack_fit.add_fit_par(extr[igroup],"extr_"+to_string(igroup),0.0,0.1);
+	      
+	      for(size_t iens=0;iens<ens_list.size();iens++)
+		{
+		  const djack_t fit_in=(*ens_list[iens].in)[i];
+		  const double m2=ens_list[iens].m2;
+		  jack_fit.add_point(//numerical data
+				     [&fit_in]
+				     (const vector<double> &p,int iel)
+				     {
+				       return fit_in[iel];
+				     },
+				     //ansatz
+				     [iextr,igroup,imslope,imslope_a2dep,a,m2]
+				     (const vector<double> &p,int iel)
+				     {
+				       return p[iextr[igroup]]+m2*(p[imslope]+sqr(a)*p[imslope_a2dep]);
+				     },
+				     //for covariance/error
+				     fit_in.err());
+		}
+	    }
+	  
+	  jack_fit.fit();
+	  
 	  for(size_t igroup=0;igroup<ngroups;igroup++)
 	    {
 	      const per_group_t per_group=per_quantity.in_out[igroup];
 	      djvec_t &out=*per_group.out;
-	      const vector<const input_per_ens_t> &ens_list=per_group.ens_list;
-	      const double a=per_group.a;
-	      
-	      iextr[igroup]=jack_fit.add_fit_par(extr[igroup],"extr_"+to_string(igroup),0.0,0.1);
-	      imslope[igroup]=jack_fit.add_fit_par(mslope[igroup],"mslope_"+to_string(igroup),0.0,0.1);
-	      imslope_a2dep[igroup]=jack_fit.add_fit_par(mslope_a2dep[igroup],"mslope_a2dep"+to_string(igroup),0.0,0.1);
-	      
 	      djack_t &fit_out=out[i];
-	      for(size_t iens=0;iens<ens_list.size();iens++)
-		{
-		  const djack_t fit_in=(*ens_list[iens].in)[i];
-		  const double m=ens_list[iens].m;
-		  jack_fit.add_point(//numerical data
-  		       [&ext_data,&pars,idata,apow,zpow]
-  		       (const vector<double> &p,int iel) //dimension 2
-  		       {return ext_data[idata].wfse[iel]*pow(pars.get_z(p,ext_data[idata].ib,iel),zpow)/pow(pars.get_a(p,ext_data[idata].ib,iel),apow);},
-  		       //ansatz
-  		       [idata,&pars,&ext_data,&cont_chir_ansatz]
-  		       (const vector<double> &p,int iel)
-  		       {
-  			 size_t ib=ext_data[idata].ib;
-  			 double ac=pars.get_a(p,ib,iel);
-  			 double zc=pars.get_z(p,ib,iel);
-  			 double ml=ext_data[idata].aml/ac/zc;
-  			 double ms=ext_data[idata].ams/ac/zc;
-  			 double Maux=ext_data[idata].aMaux[iel]/ac;
-  			 double L=ext_data[idata].L;
-  			 return cont_chir_ansatz(p,pars,ml,ms,Maux,ac,L);
-  		       },
-  		       //for covariance/error
-  		       dboot_t(ext_data[idata].wfse*pow(pars.ori_z[ext_data[idata].ib],zpow)/pow(pars.ori_a[ext_data[idata].ib],apow)),1/*correlate*/);
-  
-  
-  CRASH("Can be done only after p2 extrapolation, how we deal with that?");
+	      fit_out=extr[igroup];
+	    }
+	}
+    }
 }
