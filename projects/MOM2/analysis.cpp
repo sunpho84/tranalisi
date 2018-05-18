@@ -248,6 +248,8 @@ auto assert_ens_present(const string &key)
 
 void add_ens(const string &name)
 {
+  freeze_pars();
+  
   pars::ens.push_back(name);
   
   data(name,PRESENCE_NOT_NEEDED)
@@ -293,8 +295,6 @@ void print_discr()
 
 void compute_or_load_all_ingredients()
 {
-  freeze_pars();
-  
   cout<<"Going to rotate propagators: "<<(pars::twisted_run and pars::phys_basis)<<endl;
   
   for(auto &name : pars::ens)

@@ -12,13 +12,16 @@
 
 void freeze_pars()
 {
-  pars::can_change_pars=false;
-  
-  lprop::set_ins();
-  qprop::set_ins();
-  jqprop::set_ins();
-  
-  sigma::set_ins();
-  pr_bil::set_ins();
-  pr_meslep::set_ins();
+  if(pars::can_change_pars)
+    {
+      pars::can_change_pars=false;
+      
+      lprop::set_ins();
+      qprop::set_ins();
+      jqprop::set_ins();
+      
+      sigma::set_ins();
+      pr_bil::set_ins();
+      pr_meslep::set_ins();
+    }
 }
