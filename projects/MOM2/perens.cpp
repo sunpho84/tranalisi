@@ -125,7 +125,7 @@ perens_t& perens_t::set_pars_for_scratch()
     }
   
   //write all linear momenta
-  const string linpath="linmoms.txt";
+  const string linpath=dir_path+"/linmoms.txt";
   ofstream linmom_file(linpath);
   if(not linmom_file.good())
     CRASH("Failed to open %s",linpath.c_str());
@@ -133,7 +133,7 @@ perens_t& perens_t::set_pars_for_scratch()
     linmom_file<<m[0]<<"\t=\t"<<all_moms[m[0]]<<endl;
   
   //write all bilinear combo
-  const string bilpath="bilmoms.txt";
+  const string bilpath=dir_path+"/bilmoms.txt";
   ofstream bilmom_file(bilpath);
   if(not bilmom_file.good())
     CRASH("Failed to open %s",bilpath.c_str());
@@ -280,15 +280,15 @@ perens_t perens_t::average_equiv_momenta() const
   perens_t out=*this;
   
   //build out lin list
-  const vector<vector<size_t>> equiv_linmom_combos=get_equiv_list(linmoms,"equiv_linmoms.txt");
+  const vector<vector<size_t>> equiv_linmom_combos=get_equiv_list(linmoms,dir_path+"/equiv_linmoms.txt");
   fill_output_equivalent_momenta(out.linmoms,equiv_linmom_combos,equiv_linmom_combos,linmoms);
   
   //build out bil combo
-  const vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(bilmoms,"equiv_bilmoms.txt");
+  const vector<vector<size_t>> equiv_bilmom_combos=get_equiv_list(bilmoms,dir_path+"/equiv_bilmoms.txt");
   fill_output_equivalent_momenta(out.bilmoms,equiv_linmom_combos,equiv_bilmom_combos,bilmoms);
   
   //build out bil combo
-  const vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms(),"equiv_meslepmoms.txt");
+  const vector<vector<size_t>> equiv_meslepmom_combos=get_equiv_list(meslepmoms(),dir_path+"/equiv_meslepmoms.txt");
   //fill_output_equivalent_momenta(out.meslepmoms(),equiv_linmom_combos,equiv_meslepmom_combos,meslepmoms());
   
   out.set_indices();
