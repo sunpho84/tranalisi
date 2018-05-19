@@ -56,6 +56,7 @@ using namespace scan;
 
 %token TK_A
 %token TK_ACTION
+%token TK_ALLOCATE_IMMEDIATELY
 %token TK_AVERAGE_EQUIV_MOMENTA_IMMEDIATELY
 %token TK_AVERAGE_R_IMMEDIATELY
 %token TK_BC
@@ -107,6 +108,7 @@ using namespace scan;
 commands:
         | commands read_ensembles '}'
         | commands set_action
+	| commands set_allocate_immediately
 	| commands set_average_equiv_momenta_immediately
 	| commands set_average_r_immediately
         | commands set_boundary_conditions
@@ -159,6 +161,9 @@ set_action: TK_ACTION '=' TK_QUOTED_TEXT {pars::act=gaz::decrypt(*$3);delete $3;
 ;
 
 set_average_equiv_momenta_immediately: TK_AVERAGE_EQUIV_MOMENTA_IMMEDIATELY '=' TK_INTE {pars::average_equiv_momenta_immediately=$3;}
+;
+
+set_allocate_immediately: TK_ALLOCATE_IMMEDIATELY '=' TK_INTE {pars::allocate_immediately=$3;}
 ;
 
 set_average_r_immediately: TK_AVERAGE_R_IMMEDIATELY '=' TK_INTE {pars::average_r_immediately=$3;}

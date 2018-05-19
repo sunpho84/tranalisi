@@ -252,11 +252,14 @@ void add_ens(const string &name)
   
   pars::ens.push_back(name);
   
-  data(name,PRESENCE_NOT_NEEDED)
-    .read_pars(name)
+  perens_t &ens=data(name,PRESENCE_NOT_NEEDED);
+  
+  ens.read_pars(name)
     .set_pars_for_scratch()
-    .set_indices()
-    .allocate();
+    .set_indices();
+  
+  //allocate if asked to do immediately
+  if(pars::allocate_immediately) ens.allocate();
 }
 
 void data_erase(const string &key)
@@ -300,6 +303,9 @@ void compute_or_load_all_ingredients()
   for(auto &name : pars::ens)
     {
       perens_t &ens=data(name,ASSERT_PRESENT);
+      
+      //allocate if not asked to do immediately at definition
+      if(not pars::allocate_immediately) ens.allocate();
       
       ens
 	.read_or_compute_ingredients()
