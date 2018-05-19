@@ -81,6 +81,10 @@ namespace pars
   EXTERN_PARS bool use_QED INIT_PARS_TO({false});
   //! reference p2 to which interpolate, in GeV^2
   EXTERN_PARS double p2ref INIT_PARS_TO({13.0});
+  //! perform the equiv momenta average immediately
+  EXTERN_PARS bool average_equiv_momenta_immediately INIT_PARS_TO({false});
+  //! perform the r average immediately
+  EXTERN_PARS bool average_r_immediately INIT_PARS_TO({false});
   
   //! list of ensembles
   EXTERN_PARS vector<string> ens;

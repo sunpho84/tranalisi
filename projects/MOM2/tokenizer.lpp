@@ -86,6 +86,8 @@ using namespace std;
 
 A                                   DEBUG_PRINTF("Found A\n");return TK_A;
 Action                              DEBUG_PRINTF("Found Action\n");return TK_ACTION;
+AverageRImmediately                 DEBUG_PRINTF("Found AverageRImmediately\n");return TK_AVERAGE_R_IMMEDIATELY;
+AverageEquivMomentaImmediately      DEBUG_PRINTF("Found AverageEquivMomentaImmediately\n");return TK_AVERAGE_EQUIV_MOMENTA_IMMEDIATELY;
 BC                                  DEBUG_PRINTF("Found BC\n");return TK_BC;
 ChirExtrMethod                      DEBUG_PRINTF("Found ChirExtrMethod\n");return TK_CHIR_EXTR_METHOD;
 ComputeBilinears                    DEBUG_PRINTF("Found ComputeBilinears\n");return TK_COMPUTE_BILINEARS;

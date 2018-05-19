@@ -298,11 +298,18 @@ void compute_or_load_all_ingredients()
   cout<<"Going to rotate propagators: "<<(pars::twisted_run and pars::phys_basis)<<endl;
   
   for(auto &name : pars::ens)
-    data(name,ASSERT_PRESENT)
-      .read_or_compute_ingredients()
-      .get_deltam()
-      .get_mPCAC()
-      .get_meson_mass();
+    {
+      perens_t &ens=data(name,ASSERT_PRESENT);
+      
+      ens
+	.read_or_compute_ingredients()
+	.get_deltam()
+	.get_mPCAC()
+	.get_meson_mass();
+      
+      if(pars::average_equiv_momenta_immediately) ens.average_equiv_momenta();
+      if(pars::average_r_immediately) ens.average_r();
+    }
   
   validate_ingredients();
 }
