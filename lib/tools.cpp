@@ -20,7 +20,8 @@ using namespace std;
 
 void flush_unused_memory()
 {
-  malloc_trim(0);
+  int rc=malloc_trim(0);
+  cout<<"Flushing unused memory, result: "<<rc<<endl;
 }
 
 //! write the list of called routines
