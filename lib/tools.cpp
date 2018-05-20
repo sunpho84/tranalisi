@@ -6,6 +6,7 @@
 #include <cstdarg>
 #include <git_hash.hpp>
 #include <signal.h>
+#include <malloc.h>
 #include <sys/stat.h>
 #include <execinfo.h>
 
@@ -16,6 +17,11 @@
 #endif
 
 using namespace std;
+
+void flush_unused_memory()
+{
+  malloc_trim(0);
+}
 
 //! write the list of called routines
 void print_backtrace_list()

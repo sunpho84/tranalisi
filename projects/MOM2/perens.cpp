@@ -24,7 +24,7 @@ perens_t& perens_t::read_pars(const string &name)
   im_sea=input.read<int>("ImSea");
   if(pars::chir_extr_method==chir_extr::MQUARK and (im_sea<0 or im_sea>=(int)nm))
     CRASH("When chiral extrapolation is done in terms of quark mass, im_sea must be in the range  [0,%zu), value %d is invalid",nm,im_sea);
-     
+  
   const string mom_list_path=input.read<string>("MomList"); //!< list of momenta
   
   input.expect("ConfRange");
@@ -244,7 +244,9 @@ perens_t perens_t::average_r() const
       average_r_pr_bil(out);
       average_r_pr_meslep(out);
       average_r_deltam(out);
-    }
+      
+      flush_unused_memory();
+  }
   
   return out;
 }
@@ -297,6 +299,8 @@ perens_t perens_t::average_equiv_momenta() const
   average_equiv_momenta_sigma(out,equiv_linmom_combos);
   if(pars::compute_bilinears) average_equiv_momenta_pr_bil(out,equiv_bilmom_combos);
   if(pars::compute_meslep)    average_equiv_momenta_pr_meslep(out,equiv_meslepmom_combos);
+  
+  flush_unused_memory();
   
   return out;
 }

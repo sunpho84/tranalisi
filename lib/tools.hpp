@@ -39,6 +39,9 @@ string combine(const char *format,...);
 //! close gently with a message
 void close_with_mess(const char *format,...);
 
+//! flush the unused memory
+void flush_unused_memory();
+
 //!check if a file exists
 int file_exists(string path);
 
