@@ -243,6 +243,7 @@ void perens_t::average_r_pr_bil(perens_t &out) const
       const djvec_t &pr=*t.in.front();
       djvec_t &pr_rave=*t.out;
       
+#pragma omp parallel for
       for(size_t out_i=0;out_i<out.im_r_im_r_bilins_ibil_ibilmom_ind.max();out_i++)
 	{
 	  const vector<size_t> out_im_r_im_r_bilins_ibil_ibilmom_comp=out.im_r_im_r_bilins_ibil_ibilmom_ind(out_i);
@@ -263,7 +264,8 @@ void perens_t::average_r_pr_bil(perens_t &out) const
 
 void perens_t::average_equiv_momenta_pr_bil(perens_t &out,const vector<vector<size_t>> &equiv_bilmom_combos) const
 {
-    for(size_t i=0;i<out.im_r_im_r_bilins_ibil_ibilmom_ind.max();i++)
+#pragma omp parallel for
+  for(size_t i=0;i<out.im_r_im_r_bilins_ibil_ibilmom_ind.max();i++)
     {
       const vector<size_t> out_im_r_im_r_bilins_ibil_ibilmom_comp=out.im_r_im_r_bilins_ibil_ibilmom_ind(i);
       const size_t out_imom_combo=out_im_r_im_r_bilins_ibil_ibilmom_comp[6];

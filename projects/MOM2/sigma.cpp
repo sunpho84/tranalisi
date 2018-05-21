@@ -179,6 +179,7 @@ void perens_t::average_r_sigma(perens_t &out) const
   
   djvec_t &sigma_rave=out.sigma;
   
+#pragma omp parallel for
   for(size_t out_i=0;out_i<out.im_r_ilinmom_isigmaproj_isigmains_ind.max();out_i++)
     {
       const vector<size_t> out_comps=out.im_r_ilinmom_isigmaproj_isigmains_ind(out_i);
@@ -202,6 +203,7 @@ void perens_t::average_r_sigma(perens_t &out) const
 
 void perens_t::average_equiv_momenta_sigma(perens_t &out,const vector<vector<size_t>> &equiv_linmom_combos) const
 {
+#pragma omp parallel for
   for(size_t iout=0;iout<out.im_r_ilinmom_isigmaproj_isigmains_ind.max();iout++)
     {
       const vector<size_t> out_comps=out.im_r_ilinmom_isigmaproj_isigmains_ind(iout);
