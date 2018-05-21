@@ -372,6 +372,8 @@ perens_t perens_t::interpolate_to_p2ref()
 
 perens_t perens_t::write_checkpoint() const
 {
+  "Writing checkpoint for ens "<<data_path<<endl;
+  
   write_pars(dir_path+"/check");
   write_comp_list_of_moms(dir_path+"/check/momlist.txt");
   
