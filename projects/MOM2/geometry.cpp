@@ -72,7 +72,7 @@ void perens_t::write_comp_list_of_moms(const string &mom_list_path) const
   
   for(const auto &l : linmoms)
     {
-      const imom_t &c=l[0];
+      const imom_t &c=all_moms[l[0]];
       for(auto &ci : c) mom_file<<ci<<" ";
       mom_file<<endl;
     }
