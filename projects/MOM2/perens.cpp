@@ -375,7 +375,7 @@ perens_t perens_t::write_checkpoint() const
 {
   cout<<"Writing checkpoint for ens "<<dir_path<<endl;
   
-  write_pars(dir_path+"/check");
+  write_pars(dir_path+"/check/pars.txt");
   write_comp_list_of_moms(dir_path+"/check/mom_list.txt");
   
   return *this;
