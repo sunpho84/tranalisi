@@ -129,7 +129,4 @@ typedef tuple<string,double,vector<string>> comb_extr_t;
 //! perform a combined sea chiral extrapolation
 void combined_sea_chir_extrap(const vector<comb_extr_t> &list);
 
-//! write a checkpoint
-void write_checkpoint_all(const string &suffix);
-
 #endif

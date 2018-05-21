@@ -255,7 +255,7 @@ average_equiv_momenta: TK_AVERAGE_EQUIV_MOMENTA '(' ')' {average_all_equiv_momen
 val_chir_extrap: TK_VAL_CHIR_EXTRAP '(' ')' {val_chir_extrap_all();}
 ;
 
-write_checkpoint: TK_WRITE_CHECKPOINT '(' TK_QUOTED_TEXT ')' {write_checkpoint_all(*$3);delete $3;}
+write_checkpoint: TK_WRITE_CHECKPOINT '(' ')' {write_checkpoint_all();}
 ;
 
 /////////////////////////////////////////////////////////////////
