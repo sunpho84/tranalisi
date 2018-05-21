@@ -57,6 +57,7 @@ perens_t& perens_t::read_pars(const string &name)
 void perens_t::write_pars(const string &path) const
 {
   ofstream output(path);
+  if(not output.good()) CRASH("Unable to open %s",path.c_str());
   
   output<<"L "<<L[1]<<endl;
   output<<"T "<<L[0]<<endl;
