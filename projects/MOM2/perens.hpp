@@ -331,7 +331,7 @@ struct perens_t
   void set_comp_list_of_moms(const string &mom_list_path,double filter_thresh);
   
   //! write all momenta
-  void write_comp_list_of_moms(const string &mom_list_path);
+  void write_comp_list_of_moms(const string &mom_list_path) const;
   
   //! gets the mirrored site
   size_t get_mir_mom(size_t imom,size_t imir);
@@ -361,6 +361,9 @@ struct perens_t
   
   //! try to read, otherwise compute the ingredients (sigma, projected bil, etc)
   perens_t& read_or_compute_ingredients();
+  
+  //! write the current status
+  perens_t write_checkpoint() const;
   
   //! computes the basic quantities
   perens_t& compute_ingredients(const string& ingredients_path);
