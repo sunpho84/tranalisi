@@ -375,4 +375,6 @@ perens_t perens_t::write_checkpoint() const
 {
   write_pars(dir_path+"/check");
   write_comp_list_of_moms(dir_path+"/check/momlist.txt");
+  
+  return *this;
 }
