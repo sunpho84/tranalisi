@@ -54,6 +54,40 @@ perens_t& perens_t::read_pars(const string &name)
   return *this;
 }
 
+void perens_t::write_pars(const string &name) const
+{
+  raw_file_t output(name+"/pars.txt","w");
+  
+  output.write(L[1],"L");
+  output.write(L[0],"T");
+  
+  output.write(beta,"Beta");
+  output.write(plaq,"Plaq");
+  output.write(nm,"Nm");
+  for(size_t im=0;im<nm;im++) output.write(am[im]);
+  output.write(nr,"Nr");
+  output.write(im_sea,"ImSea");
+  
+  output.write("mom_list.txt","MomList");
+  
+  output.write("ConfRange");
+  output.write(conf_range.start);
+  output.write(conf_range.each);
+  output.write(conf_range.end);
+  
+  output.write(prop_hadr_path,"PropHadrPath");
+  output.write(prop_lep_path,"PropLepPath");
+  
+  output.write(nhits,"NHits");
+  output.write(nhits_to_use,"NHitsToUse");
+  
+  output.write(tmin,"TMin");
+  output.write(tmax,"TMax");
+  
+  output.write(tmax,"TMax");
+  output.write(ainv,"ainv");
+}
+
 perens_t& perens_t::allocate()
 {
   for(auto &Ztask : get_all_Ztasks())

@@ -473,3 +473,13 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
 	}
     }
 }
+
+void write_checkpoint_all(const string &suffix)
+{
+   for(auto &name : pars::ens)
+     {
+       perens_t &ens=data(name,ASSERT_PRESENT);
+       ens.write_pars(ens.dir_path+"_"+suffix);
+       ens.write_comp_list_of_moms(ens.dir_path+suffix+"/momlist.txt");
+     }
+}

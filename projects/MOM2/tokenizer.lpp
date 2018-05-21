@@ -129,6 +129,7 @@ RatioZMinusOne                      DEBUG_PRINTF("Found RatioZMinusOne\n");retur
 SeaChirExtrap                       DEBUG_PRINTF("Found SeaChirExtrap\n");return TK_SEA_CHIR_EXTRAP;
 SubtractOa2                         DEBUG_PRINTF("Found SubtractOa2\n");return TK_SUBTRACT_OA2;
 ValChirExtrap                       DEBUG_PRINTF("Found ValChirExtrap\n");return TK_VAL_CHIR_EXTRAP;
+WriteCheckPoint                     DEBUG_PRINTF("Found WriteCheckpoint\n");return TK_WRITE_CHECKPOINT;
 
 =                                   return '=';
 \(                                  return '(';

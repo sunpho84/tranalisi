@@ -324,8 +324,14 @@ struct perens_t
   //! load parameters and create structures
   perens_t& read_pars(const string &path);
   
+  //! save parameters
+  void write_pars(const string &path) const;
+  
   //! set all momenta
   void set_comp_list_of_moms(const string &mom_list_path,double filter_thresh);
+  
+  //! write all momenta
+  void write_comp_list_of_moms(const string &mom_list_path);
   
   //! gets the mirrored site
   size_t get_mir_mom(size_t imom,size_t imir);

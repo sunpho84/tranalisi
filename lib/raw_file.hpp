@@ -225,6 +225,7 @@ public:
 	char *pos=strchr(line,'\n');
 	if(pos) *pos='\0';
       }
+    
     return ret;
   }
   
@@ -233,6 +234,27 @@ public:
   {
     line_t skip;
     for(size_t iskip=0;iskip<nskip;iskip++) get_line(skip);
+  }
+  
+  //! write the data with a possible tag
+  template <class T>
+  int write(const T &out,const char *name=nullptr) const
+  {
+    int rc=0;
+    
+    //check tag
+    if(name!=nullptr) rc+=fprintf(file,format_str<T>::value(),get_ptr(out));
+    
+    //write a type
+    rc+=fprintf(file,format_str<T>::value(),get_ptr(out));
+    
+    return rc;
+  }
+  
+  //! write a string
+  int write(const char *in,const char *name=nullptr) const
+  {
+    return write<string>(in,name);
   }
   
   //! return whether we are at the end of file

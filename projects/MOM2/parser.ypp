@@ -99,6 +99,7 @@ using namespace scan;
 %token TK_SEA_CHIR_EXTRAP
 %token TK_SUBTRACT_OA2
 %token TK_VAL_CHIR_EXTRAP
+%token TK_WRITE_CHECKPOINT
 
 %type <str_list> string_list
 %type <comb_extr> combined_sea_chir_extr_entry
@@ -143,6 +144,7 @@ commands:
         | commands compute_Z
         | commands list_ensembles
         | commands interpolate_to_p2ref
+	| commands write_checkpoint
         /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
         /* | commands TK_QUOTED_TEXT '=' TK_EVOLVE '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].evolve();drv->suff+="_evo";} aggiungi ordine qui*/
 ;
@@ -251,6 +253,9 @@ average_equiv_momenta: TK_AVERAGE_EQUIV_MOMENTA '(' ')' {average_all_equiv_momen
 ;
 
 val_chir_extrap: TK_VAL_CHIR_EXTRAP '(' ')' {val_chir_extrap_all();}
+;
+
+write_checkpoint: TK_WRITE_CHECKPOINT '(' TK_QUOTED_TEXT ')' {write_checkpoint_all(*$3);delete $3;}
 ;
 
 /////////////////////////////////////////////////////////////////

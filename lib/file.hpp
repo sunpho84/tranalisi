@@ -18,6 +18,7 @@ template <> class format_str<int> {public: static const char *value(){return "%d
 template <> class format_str<size_t> {public: static const char *value(){return "%zu";}};
 template <> class format_str<double> {public: static const char *value(){return "%lg";}};
 template <> class format_str<char> {public: static const char *value(){return "%c";}};
+template <> class format_str<char*> {public: static const char *value(){return "%s";}};
 template <> class format_str<string> {public: static const char *value(){return "%s";}};
 
 //! class to handle return type from reader
