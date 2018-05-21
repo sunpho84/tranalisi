@@ -473,11 +473,3 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
 	}
     }
 }
-
-void write_checkpoint_all(const string &suffix)
-{
-   for(auto &name : pars::ens)
-     {
-       perens_t &ens=data(name,ASSERT_PRESENT);
-     }
-}
