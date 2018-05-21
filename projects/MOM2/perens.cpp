@@ -54,38 +54,37 @@ perens_t& perens_t::read_pars(const string &name)
   return *this;
 }
 
-void perens_t::write_pars(const string &name) const
+void perens_t::write_pars(const string &path) const
 {
-  raw_file_t output(name+"/pars.txt","w");
+  ofstream output(path);
   
-  output.write(L[1],"L");
-  output.write(L[0],"T");
+  output<<"L "<<L[1]<<endl;
+  output<<"T "<<L[0]<<endl;
   
-  output.write(beta,"Beta");
-  output.write(plaq,"Plaq");
-  output.write(nm,"Nm");
-  for(size_t im=0;im<nm;im++) output.write(am[im]);
-  output.write(nr,"Nr");
-  output.write(im_sea,"ImSea");
+  output<<"Beta "<<beta<<endl;
+  output<<"Plaq "<<plaq<<endl;
+  output<<"Nm "<<nm<<endl;
+  for(size_t im=0;im<nm;im++) output<<am[im]<<" ";
+  output<<endl;
   
-  output.write("mom_list.txt","MomList");
+  output<<"NR "<<nr<<endl;
+  output<<"ImSea "<<im_sea<<endl;
   
-  output.write("ConfRange");
-  output.write(conf_range.start);
-  output.write(conf_range.each);
-  output.write(conf_range.end);
+  output<<"MomList "<<"mom_list.txt"<<endl;
   
-  output.write(prop_hadr_path,"PropHadrPath");
-  output.write(prop_lep_path,"PropLepPath");
+  output<<"PropHadrPath "<<prop_hadr_path<<endl;
+  output<<"ConfRange "<<" "<<conf_range.start<<" "<<conf_range.each<<" "<<conf_range.end<<endl;
   
-  output.write(nhits,"NHits");
-  output.write(nhits_to_use,"NHitsToUse");
+  output<<"PropLepPath "<<prop_lep_path<<endl;
   
-  output.write(tmin,"TMin");
-  output.write(tmax,"TMax");
+  output<<"NHits "<<nhits<<endl;
+  output<<"NHitsToUse "<<nhits_to_use<<endl;
   
-  output.write(tmax,"TMax");
-  output.write(ainv,"ainv");
+  output<<"TMin "<<tmin<<endl;
+  output<<"TMax "<<tmax<<endl;
+  
+  output<<"TMax "<<tmax<<endl;
+  output<<"ainv "<<ainv<<endl;
 }
 
 perens_t& perens_t::allocate()

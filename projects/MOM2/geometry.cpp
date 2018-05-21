@@ -67,12 +67,12 @@ void perens_t::set_comp_list_of_moms(const string &mom_list_path,double filter_t
 void perens_t::write_comp_list_of_moms(const string &mom_list_path) const
 {
   //open the file to write
-  const string mom_path=dir_path+"/mom_list.txt";
-  ofstream mom_file(mom_path);
-  if(not mom_file.good()) CRASH("Unable to open %s",mom_path.c_str());
+  ofstream mom_file(mom_list_path);
+  if(not mom_file.good()) CRASH("Unable to open %s",mom_list_path.c_str());
   
-  for(const imom_t &c : all_moms)
+  for(const auto &l : linmoms)
     {
+      const imom_t &c=l[0];
       for(auto &ci : c) mom_file<<ci<<" ";
       mom_file<<endl;
     }
