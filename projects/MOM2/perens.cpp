@@ -380,6 +380,9 @@ perens_t perens_t::write_checkpoint()
   write_pars(dir_path+"/pars.txt");
   write_comp_list_of_moms(dir_path+"/mom_list.txt");
   bin_write_ingredients();
+  bin_write_deltam();
+  bin_write_meson_mass();
+  bin_write_meson_mass_sea();
   
   //put back the old path
   dir_path=old_path;

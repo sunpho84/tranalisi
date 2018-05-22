@@ -219,11 +219,54 @@ struct perens_t
   //! correction to m_tm
   djvec_t deltam_tm;
   
+  //! get the list of task for delta
+  vector<tuple<djvec_t*,string,bool>> deltam_tasks()
+  {
+    return {{&deltam_cr,"cr",pars::use_deltam_cr_ct},
+	{&deltam_tm,"tm",pars::use_deltam_tm_ct}};
+  }
+  
+  //! compose the ingredients_path
+  string deltam_path() const
+  {
+    return dir_path+"/deltam.dat";
+  }
+  
+  //! write the deltam
+  void bin_write_deltam();
+  
+  //! read the deltam
+  void bin_read_deltam();
+  
+  //! compose the meson mass path
+  string meson_mass_path()
+  {
+    return dir_path+"/meson_mass.dat";
+  }
+  
+  //! compose the meson mass sea path
+  string meson_mass_sea_path()
+  {
+    return dir_path+"/meson_mass_sea.dat";
+  }
+  
   //! mass of pseudoscalar meson
   djvec_t meson_mass;
   
   //! mass of sea pseudoscalar meson
   djack_t meson_mass_sea;
+  
+  //! write the meson_mass
+  void bin_write_meson_mass();
+  
+  //! read the meson_mass
+  void bin_read_meson_mass();
+  
+  //! write the meson_mass_sea
+  void bin_write_meson_mass_sea();
+  
+  //! read the meson_mass_sea
+  void bin_read_meson_mass_sea();
   
   //! compute or recompute deltam
   void recompute_deltam();

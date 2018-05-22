@@ -108,35 +108,40 @@ void perens_t::recompute_deltam()
   deltam_time.stop();
 }
 
+void perens_t::bin_read_deltam()
+{
+  raw_file_t deltam_file(deltam_path(),"r");
+  for(auto &dtu : deltam_tasks())
+    get<0>(dtu)->bin_read(deltam_file);
+}
+
+void perens_t::bin_write_deltam()
+{
+  raw_file_t deltam_file(deltam_path(),"w");
+  for(auto &dtu : deltam_tasks())
+    get<0>(dtu)->bin_write(deltam_file);
+}
+
 perens_t& perens_t::get_deltam()
 {
-  vector<tuple<djvec_t*,string,bool>> delta_tasks{
-    {&deltam_cr,"cr",pars::use_deltam_cr_ct},
-    {&deltam_tm,"tm",pars::use_deltam_tm_ct}};
-  
   //if file exists open it, otherwise compute it
-  const string deltam_path=dir_path+"/deltam.dat";
-  if(file_exists(deltam_path))
+  if(file_exists(deltam_path()))
     {
-      cout<<"File "<<deltam_path<<" found, opening"<<endl;
-      raw_file_t deltam_file(deltam_path,"r");
-      for(auto &dtu : delta_tasks)
-	get<0>(dtu)->bin_read(deltam_file);
+      cout<<"File "<<deltam_path()<<" found, opening"<<endl;
+      bin_read_deltam();
     }
   else
     {
-      cout<<"File "<<deltam_path<<" not found, computing"<<endl;
+      cout<<"File "<<deltam_path()<<" not found, computing"<<endl;
       prepare_list_of_confs();
       
       recompute_deltam();
       
-      raw_file_t deltam_file(deltam_path,"w");
-      for(auto &dtu : delta_tasks)
-	get<0>(dtu)->bin_write(deltam_file);
+      bin_write_deltam();
     }
   
   //Prepare plot
-  for(auto &dtu : delta_tasks)
+  for(auto &dtu : deltam_tasks())
     {
       djvec_t &deltam=*get<0>(dtu);
       const string &tag=get<1>(dtu);
@@ -155,7 +160,7 @@ perens_t& perens_t::get_deltam()
     for(size_t r=0;r<nr;r++)
       {
 	cout<<"Deltam[m="<<im<<",r="<<r<<"]\t";
-	for(auto &dtu : delta_tasks)
+	for(auto &dtu : deltam_tasks())
 	  {
 	    djvec_t &deltam=*get<0>(dtu);
 	    const string &tag=get<1>(dtu);
