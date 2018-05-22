@@ -87,6 +87,8 @@ namespace pars
   EXTERN_PARS bool average_equiv_momenta_immediately INIT_PARS_TO({false});
   //! perform the r average immediately
   EXTERN_PARS bool average_r_immediately INIT_PARS_TO({false});
+  //! compute mPCAC
+  EXTERN_PARS bool report_mPCAC INIT_PARS_TO({false});
   
   //! list of ensembles
   EXTERN_PARS vector<string> ens;

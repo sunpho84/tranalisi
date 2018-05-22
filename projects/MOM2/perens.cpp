@@ -64,7 +64,7 @@ void perens_t::write_pars(const string &path) const
   
   output<<"Beta "<<beta<<endl;
   output<<"Plaq "<<plaq<<endl;
-  output<<"Nm "<<nm<<endl;
+  output<<"Nm "<<nm<<"   ";
   for(size_t im=0;im<nm;im++) output<<am[im]<<" ";
   output<<endl;
   
@@ -73,9 +73,9 @@ void perens_t::write_pars(const string &path) const
   
   output<<"MomList "<<"mom_list.txt"<<endl;
   
-  output<<"PropHadrPath "<<prop_hadr_path<<endl;
   output<<"ConfRange "<<" "<<conf_range.start<<" "<<conf_range.each<<" "<<conf_range.end<<endl;
   
+  output<<"PropHadrPath "<<prop_hadr_path<<endl;
   output<<"PropLepPath "<<prop_lep_path<<endl;
   
   output<<"NHits "<<nhits<<endl;
@@ -84,7 +84,6 @@ void perens_t::write_pars(const string &path) const
   output<<"TMin "<<tmin<<endl;
   output<<"TMax "<<tmax<<endl;
   
-  output<<"TMax "<<tmax<<endl;
   output<<"ainv "<<ainv<<endl;
 }
 

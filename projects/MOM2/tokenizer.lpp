@@ -122,6 +122,7 @@ ComputeZ                            DEBUG_PRINTF("Found ComputeZ\n");return TK_C
 InterpolateToP2Ref                  DEBUG_PRINTF("Found InterpolateToP2Ref\n");return TK_INTERPOLATE_TO_P2REF;
 Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVOLVE;
 ListEnsembles                       DEBUG_PRINTF("Found ListEnsembles\n");return TK_LIST_ENSEMBLES;
+MeasureMPCAC                        DEBUG_PRINTF("Found MeasureMPCAC\n");return TK_MEASURE_MPCAC;
 P2Ref                               DEBUG_PRINTF("Fount P2Ref\n"); return TK_P2REF;
 PlotZ                               DEBUG_PRINTF("Found PlotZ\n");return TK_PLOT_Z;
 PrintDiscr                          DEBUG_PRINTF("Found PrintDiscr\n");return TK_PRINT_DISCR;

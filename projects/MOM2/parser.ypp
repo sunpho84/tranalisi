@@ -71,6 +71,7 @@ using namespace scan;
 %token TK_INTERPOLATE_TO_P2REF
 %token TK_ENSEMBLES
 %token TK_FILTER_THRESH
+%token TK_MEASURE_MPCAC
 %token TK_NF
 %token TK_NJACKS
 %token TK_P2REF
@@ -119,6 +120,7 @@ commands:
         | commands set_compute_deltam
         | commands set_compute_meslep_with_charges_one
         | commands set_filter_thresh
+	| commands set_measure_mPCAC
         | commands set_nf
         | commands set_njacks
         | commands set_p2ref
@@ -197,6 +199,9 @@ set_compute_meslep_with_charges_one: TK_COMPUTE_MESLEP_WITH_CHARGES_ONE {using n
 ;
 
 set_filter_thresh: TK_FILTER_THRESH '=' TK_REAL {pars::filter_thresh=$3;}
+;
+
+set_measure_mPCAC: TK_MEASURE_MPCAC '=' TK_INTE {pars::report_mPCAC=$3;}
 ;
 
 set_nf: TK_NF '=' TK_INTE {evol::Nf_t_of_Nf($3);}
