@@ -306,16 +306,16 @@ struct perens_t
   void bin_write_ingredients(raw_file_t &file);
   
   //! read ingredients from a path
-  inline void bin_read_ingredients(const string &path)
+  inline void bin_read_ingredients()
   {
-    raw_file_t fin(path,"r");
+    raw_file_t fin(ingredients_path(),"r");
     this->bin_read_ingredients(fin);
   }
   
   //! write ingredients to a path
-  inline void bin_write_ingredients(const string &path)
+  inline void bin_write_ingredients()
   {
-    raw_file_t fout(path,"w");
+    raw_file_t fout(ingredients_path(),"w");
     this->bin_write_ingredients(fout);
   }
   
@@ -359,14 +359,20 @@ struct perens_t
   //! prepares the list of configurations to use
   void prepare_list_of_confs();
   
+  //! compose the ingredients_path
+  string ingredients_path() const
+  {
+    return dir_path+"/ingredients.dat";
+  }
+  
   //! try to read, otherwise compute the ingredients (sigma, projected bil, etc)
   perens_t& read_or_compute_ingredients();
   
   //! write the current status
-  perens_t write_checkpoint() const;
+  perens_t write_checkpoint();
   
   //! computes the basic quantities
-  perens_t& compute_ingredients(const string& ingredients_path);
+  perens_t& compute_ingredients();
   
   //! compute according to mom scheme
   void mom()

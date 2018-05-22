@@ -207,7 +207,7 @@ void perens_t::prepare_list_of_confs()
   iconf_ihit_ilins_ind=index_t({{"conf",conf_list.size()},{"hit",nhits},{"lins",lprop::nins}});
 }
 
-perens_t& perens_t::compute_ingredients(const string& ingredients_path)
+perens_t& perens_t::compute_ingredients()
 {
   prepare_list_of_confs();
   
@@ -223,25 +223,23 @@ perens_t& perens_t::compute_ingredients(const string& ingredients_path)
       //smom();
       break;
     }
-  bin_write_ingredients(ingredients_path);
+  bin_write_ingredients();
   
   return *this;
 }
 
 perens_t& perens_t::read_or_compute_ingredients()
 {
-  const string ingredients_path=dir_path+"/ingredients.dat";
-  
   //if ingredients exists read it, otherwise compute it
-  if(file_exists(ingredients_path))
+  if(file_exists(ingredients_path()))
     {
-      cout<<"File "<<ingredients_path<<" found, opening"<<endl;
-      bin_read_ingredients(ingredients_path);
+      cout<<"File "<<ingredients_path()<<" found, opening"<<endl;
+      bin_read_ingredients();
     }
   else
     {
-      cout<<"File "<<ingredients_path<<" not found, computing"<<endl;
-      compute_ingredients(ingredients_path);
+      cout<<"File "<<ingredients_path()<<" not found, computing"<<endl;
+      compute_ingredients();
     }
   
   return *this;
@@ -370,13 +368,21 @@ perens_t perens_t::interpolate_to_p2ref()
   return out;
 }
 
-
-perens_t perens_t::write_checkpoint() const
+perens_t perens_t::write_checkpoint()
 {
   cout<<"Writing checkpoint for ens "<<dir_path<<endl;
   
-  write_pars(dir_path+"/check/pars.txt");
-  write_comp_list_of_moms(dir_path+"/check/mom_list.txt");
+  //take note of the old dir_path
+  const string old_path=dir_path;
+  dir_path=dir_path+"/check";
+  
+  //write everything down
+  write_pars(dir_path+"/pars.txt");
+  write_comp_list_of_moms(dir_path+"/mom_list.txt");
+  bin_write_ingredients();
+  
+  //put back the old path
+  dir_path=old_path;
   
   return *this;
 }
