@@ -288,6 +288,9 @@ perens_t perens_t::val_chir_extrap() const
   
   if(nm>1)
     {
+      cout<<meson_mass<<endl;
+      cout<<out.meson_mass<<endl;
+      
       out.nm=1;
       out.am={0.0};
       out.meson_mass_sea=meson_mass_sea;
