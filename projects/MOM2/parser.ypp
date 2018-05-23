@@ -99,6 +99,7 @@ using namespace scan;
 %token TK_RATIO_Z_MINUS_ONE
 %token TK_SEA_CHIR_EXTRAP
 %token TK_SUBTRACT_OA2
+%token TK_SUBTRACT_Z
 %token TK_VAL_CHIR_EXTRAP
 %token TK_WRITE_CHECKPOINT
 
@@ -146,6 +147,7 @@ commands:
         | commands compute_Z
         | commands list_ensembles
         | commands interpolate_to_p2ref
+        | commands subtract_Z
 	| commands write_checkpoint
         /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
         /* | commands TK_QUOTED_TEXT '=' TK_EVOLVE '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].evolve();drv->suff+="_evo";} aggiungi ordine qui*/
@@ -283,6 +285,9 @@ ratio_Z_minus_one: TK_QUOTED_TEXT '=' TK_RATIO_Z_MINUS_ONE '(' TK_QUOTED_TEXT ',
 ;
 
 sea_chir_extrap: TK_QUOTED_TEXT '=' TK_SEA_CHIR_EXTRAP '(' string_list ')' {sea_chir_extrap(*$1,*$5);delete $1;delete $5;}
+;
+
+subtract_Z: TK_QUOTED_TEXT '=' TK_SUBTRACT_Z '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {subtract_Z(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
 ;
 
 list_ensembles: TK_LIST_ENSEMBLES '(' ')' {list_ensembles();}

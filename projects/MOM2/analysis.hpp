@@ -105,6 +105,44 @@ DEFINE_SINGLE_COMMAND_ALL(interpolate_to_p2ref_all,interpolate_to_p2ref,needs_to
 
 // /////////////////////////////////////////////////////////////////
 
+//! assert the compatibility of two ensembles
+void assert_compatible(const string in1,const string in2);
+
+//! combine the Z of two ensembles according to the function
+template <class F>
+void combine_Z(const string out,const string in1,const string in2,const string &descr,const F &fun)
+{
+  needs_to_read_Z();
+  
+  invalidate_ingredients();
+  
+  assert_compatible(in1,in2);
+  
+  cout<<"Combining "<<in1<<" and "<<in2<<" into "<<out<<" for "<<descr<<endl;
+  
+  perens_t temp=data(in1,ASSERT_PRESENT);
+  
+  for(auto &p : temp.get_all_Ztasks({&data(in1,ASSERT_PRESENT),&data(in2,ASSERT_PRESENT)}))
+    {
+      cout<<" "<<p.tag<<endl;
+      
+      djvec_t &out=*p.out;
+      const djvec_t &in1=*p.in[0];
+      const djvec_t &in2=*p.in[1];
+      
+      fun(out,in1,in2);
+    }
+  
+  //remove from the list
+  for(auto in : {in1,in2})
+    data_erase(in);
+  
+  //add to the list
+  pars::ens.push_back(out);
+  data(out,PRESENCE_NOT_NEEDED)=temp;
+  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
+}
+
 //! average Z in1 and in2 to form out, removing the in
 void average_Z(const string out,const string in1,const string in2);
 
@@ -113,6 +151,9 @@ void average_ingredients(const string out,const string in1,const string in2);
 
 //! in1/in2-1 to form out, removing the in
 void ratio_Z_minus_one(const string out,const string in1,const string in2);
+
+//! in1-in2 to form out, removing the in
+void subtract_Z(const string out,const string in1,const string in2);
 
 // //! print all ensembles available
 void list_ensembles();

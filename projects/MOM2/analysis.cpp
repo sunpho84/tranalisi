@@ -32,35 +32,7 @@ void plot_all_Z(const string &suffix)
 
 void average_Z(const string out,const string in1,const string in2)
 {
-  invalidate_ingredients();
-  
-  needs_to_read_Z();
-  
-  assert_compatible(in1,in2);
-  
-  cout<<"Averaging Z for"<<in1<<" and "<<in2<<" into "<<out<<endl;
-  
-  perens_t temp=data(in1,ASSERT_PRESENT);
-  
-  for(auto &p : temp.get_all_Ztasks({&data(in2,ASSERT_PRESENT)}))
-    {
-      cout<<" "<<p.tag<<endl;
-      
-      djvec_t &out=*p.out;
-      const djvec_t &in=*p.in.front();
-      
-      out+=in;
-      out/=2.0;
-    }
-  
-  //remove from the list
-  for(auto in : {in1,in2})
-    data_erase(in);
-  
-  //add to the list
-  pars::ens.push_back(out);
-  data(out,PRESENCE_NOT_NEEDED)=temp;
-  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
+  combine_Z(out,in1,in2,"average",[](djvec_t& out,const djvec_t& in1,const djvec_t& in2){out=(in1+in2)/2.0;});
 }
 
 void average_ingredients(const string out_name,const string in1,const string in2)
@@ -127,35 +99,12 @@ void average_ingredients(const string out_name,const string in1,const string in2
 
 void ratio_Z_minus_one(const string out,const string in1,const string in2)
 {
-  needs_to_read_Z();
-  
-  invalidate_ingredients();
-  
-  assert_compatible(in1,in2);
-  
-  cout<<"Taking ratio minus one of "<<in1<<" and "<<in2<<" into "<<out<<endl;
-  
-  perens_t temp=data(in1,ASSERT_PRESENT);
-  
-  for(auto &p : temp.get_all_Ztasks({&data(in2,ASSERT_PRESENT)}))
-    {
-      cout<<" "<<p.tag<<endl;
-      
-      djvec_t &out=*p.out;
-      const djvec_t &in=*p.in.front();
-      
-      out/=in;
-      out-=1.0;
-    }
-  
-  //remove from the list
-  for(auto in : {in1,in2})
-    data_erase(in);
-  
-  //add to the list
-  pars::ens.push_back(out);
-  data(out,PRESENCE_NOT_NEEDED)=temp;
-  data(out,PRESENCE_NOT_NEEDED).dir_path=out;
+  combine_Z(out,in1,in2,"ratio minus one",[](djvec_t& out,const djvec_t& in1,const djvec_t& in2){out=in1/in2-1.0;});
+}
+
+void subtract_Z(const string out,const string in1,const string in2)
+{
+  combine_Z(out,in1,in2,"ratio minus one",[](djvec_t& out,const djvec_t& in1,const djvec_t& in2){out=in1-in2;});
 }
 
 void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
