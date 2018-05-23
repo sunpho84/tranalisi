@@ -15,6 +15,20 @@ auto sigma_ansatz(const T &p,double p2,double p4_fr_p2=0.0)
   return p[0]+p2*p[1]+p2*p2*p[2]+p4_fr_p2*p[3];
 }
 
+void perens_t::print_deltam(ostream &out) const
+{
+  for(size_t im=0;im<nm;im++)
+    for(size_t r=0;r<nr;r++)
+      {
+	//get index
+	const size_t imr=im_r_ind({im,r});
+	
+	//output
+	out<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
+	out<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
+      }
+}
+
 void perens_t::compute_deltam_from_prop()
 {
   const size_t mom_probe=linmoms.size()/8;
@@ -84,11 +98,9 @@ void perens_t::compute_deltam_from_prop()
 	deltam_tm[imr]=deltam_tm_ct_pars[0];
 	deltam_cr[imr]=deltam_cr_ct_pars[0];
 	if(not both) deltam_tm[imr]=0.0;
-	
-	//output
-	cout<<"m: "<<im<<", r: "<<r<<", deltam_tm: "<<deltam_tm[imr].ave_err()<<endl;
-	cout<<"m: "<<im<<", r: "<<r<<", deltam_cr: "<<deltam_cr[imr].ave_err()<<endl;
       }
+  
+  print_deltam();
 }
 
 void perens_t::recompute_deltam()
@@ -444,6 +456,8 @@ void perens_t::val_chir_extrap_deltam(perens_t &out) const
 	  plot.write_ave_err(0,coeffs[0].ave_err());
 	}
     }
+  
+  out.print_deltam();
 }
 
 vector<perens_t::task_t> perens_t::get_deltam_tasks(const vector<const perens_t*> &ens)

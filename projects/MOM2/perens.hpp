@@ -226,6 +226,9 @@ struct perens_t
 	{&deltam_tm,"tm",pars::use_deltam_tm_ct}};
   }
   
+  //! print the value of deltam
+  void print_deltam(ostream &out=cout) const;
+  
   //! compose the ingredients_path
   string deltam_path() const
   {
