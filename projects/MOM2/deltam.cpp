@@ -452,6 +452,8 @@ void perens_t::val_chir_extrap_deltam(perens_t &out) const
 	  double xmax=*xminmax.second*1.1;
 	  write_fit_plot(plot,0,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
 	  plot.write_ave_err(0,coeffs[0].ave_err());
+	  
+	  cout<<tag<<" "<<out.im_r_ind({0,r})<<" "<<&res[out.im_r_ind({0,r})]<<" poss1: "<<&out.deltam_cr[out.im_r_ind({0,r})]<<" poss2: "<<&out.deltam_tm[out.im_r_ind({0,r})]<<endl;
 	}
     }
   
