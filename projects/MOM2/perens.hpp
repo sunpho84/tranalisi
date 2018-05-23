@@ -219,13 +219,6 @@ struct perens_t
   //! correction to m_tm
   djvec_t deltam_tm;
   
-  //! get the list of task for delta
-  vector<tuple<djvec_t*,string,bool>> deltam_tasks()
-  {
-    return {{&deltam_cr,"cr",pars::use_deltam_cr_ct},
-	{&deltam_tm,"tm",pars::use_deltam_tm_ct}};
-  }
-  
   //! print the value of deltam
   void print_deltam(ostream &out=cout) const;
   

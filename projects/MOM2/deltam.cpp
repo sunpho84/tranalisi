@@ -123,15 +123,15 @@ void perens_t::recompute_deltam()
 void perens_t::bin_read_deltam()
 {
   raw_file_t deltam_file(deltam_path(),"r");
-  for(auto &dtu : deltam_tasks())
-    get<0>(dtu)->bin_read(deltam_file);
+  for(auto dtu : get_deltam_tasks())
+    dtu.out->bin_read(deltam_file);
 }
 
 void perens_t::bin_write_deltam()
 {
   raw_file_t deltam_file(deltam_path(),"w");
-  for(auto &dtu : deltam_tasks())
-    get<0>(dtu)->bin_write(deltam_file);
+  for(auto dtu : get_deltam_tasks({this}))
+    dtu.in[0]->bin_write(deltam_file);
 }
 
 perens_t& perens_t::get_deltam()
@@ -153,12 +153,12 @@ perens_t& perens_t::get_deltam()
     }
   
   //Prepare plot
-  for(auto &dtu : deltam_tasks())
+  for(auto dtu : get_deltam_tasks())
     {
-      djvec_t &deltam=*get<0>(dtu);
-      const string &tag=get<1>(dtu);
+      djvec_t &deltam=*dtu.out;
+      const string &tag=dtu.tag;
       
-      grace_file_t plot(dir_path+"/plots/deltam_"+tag+"_vs_am.xmg");
+      grace_file_t plot(dir_path+"/plots/"+tag+"_vs_am.xmg");
       
       for(size_t r=0;r<nr;r++)
 	{
@@ -167,23 +167,21 @@ perens_t& perens_t::get_deltam()
 	}
     }
   
-  //Print, putting it to zero if not asked to use
+  //put to zero if not asked to use
+  if(not pars::use_deltam_cr_ct) deltam_cr=0.0;
+  if(not pars::use_deltam_tm_ct) deltam_tm=0.0;
+  
+  //Print
   for(size_t im=0;im<nm;im++)
     for(size_t r=0;r<nr;r++)
       {
 	cout<<"Deltam[m="<<im<<",r="<<r<<"]\t";
-	for(auto &dtu : deltam_tasks())
+	for(auto dtu : get_deltam_tasks())
 	  {
-	    djvec_t &deltam=*get<0>(dtu);
-	    const string &tag=get<1>(dtu);
-	    const bool use=get<2>(dtu);
+	    djvec_t &deltam=*dtu.out;
+	    const string &tag=dtu.tag;
 	    
 	    cout<<" "<<tag<<": "<<deltam[im_r_ind({im,r})];
-	    if(not use)
-	      {
-		deltam[im_r_ind({im,r})]=0.0;
-		cout<<" -> "<<0.0;
-	      }
 	    cout<<"\t";
 	  }
 	cout<<endl;
@@ -429,11 +427,11 @@ void perens_t::val_chir_extrap_deltam(perens_t &out) const
     if(pars::chir_extr_method==chir_extr::MQUARK) x[im]=am[im];
     else                                          x[im]=sqr(meson_mass[im_im_ind({im,im})].ave());
   
-  for(auto &t : vector<tuple<djvec_t*,const djvec_t*,const string>>{{&out.deltam_cr,&deltam_cr,"deltam_cr"},{&out.deltam_tm,&deltam_tm,"deltam_tm"}})
+  for(auto t : out.get_deltam_tasks({this}))
     {
-      djvec_t &res=*get<0>(t);
-      const djvec_t &in=*get<1>(t);
-      const string &tag=get<2>(t);
+      djvec_t &res=*t.out;
+      const djvec_t &in=*t.in[0];
+      const string &tag=t.tag;;
       
       //open the plot file if needed
       const string plot_path=dir_path+"/plots/chir_extr_"+tag+".xmg";
