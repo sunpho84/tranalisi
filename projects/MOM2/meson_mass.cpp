@@ -32,7 +32,7 @@ perens_t& perens_t::get_meson_mass()
   if(file_exists(meson_mass_path()))
     {
       cout<<"File "<<meson_mass_path()<<" found, opening"<<endl;
-      bin_write_meson_mass();
+      bin_read_meson_mass();
     }
   else
     {
