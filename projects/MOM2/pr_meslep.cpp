@@ -378,6 +378,7 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
   const index_t r_r_meslepins_iop_iproj_imeslepmom_ind({{"r",nr},{"r",nr},{"meslepins",pr_meslep::nins},{"op",nbil},{"proj",nbil},{"meslepmoms",meslepmoms().size()}});
   
   for(auto &t : out.get_pr_meslep_tasks({this}))
+#pragma omp parallel for
     for(size_t r_r_meslepins_iop_iproj_imeslepmom=0;r_r_meslepins_iop_iproj_imeslepmom<r_r_meslepins_iop_iproj_imeslepmom_ind.max();r_r_meslepins_iop_iproj_imeslepmom++)
       {
 	const vector<size_t> r_r_meslepins_iop_iproj_imeslepmom_comps=r_r_meslepins_iop_iproj_imeslepmom_ind(r_r_meslepins_iop_iproj_imeslepmom);

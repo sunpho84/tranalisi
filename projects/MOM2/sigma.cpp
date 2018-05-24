@@ -240,6 +240,7 @@ void perens_t::val_chir_extrap_sigma(perens_t &out) const
       djvec_t &sigma_chir=*t.out;
       const string &tag=t.tag;
       
+#pragma omp parallel for
       for(size_t r_ilinmom_isigmaproj_isigmains=0;r_ilinmom_isigmaproj_isigmains<r_ilinmom_isigmaproj_isigmains_ind.max();r_ilinmom_isigmaproj_isigmains++)
 	{
 	  const vector<size_t> r_ilinmom_isigmaproj_isigmains_comps=r_ilinmom_isigmaproj_isigmains_ind(r_ilinmom_isigmaproj_isigmains);

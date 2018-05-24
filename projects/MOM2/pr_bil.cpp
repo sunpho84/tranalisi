@@ -291,6 +291,7 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
   const index_t r_r_bilins_ibil_ibilmom_ind({{"r",nr},{"r",nr},{"bilins",pr_bil::nins},{"bil",nbil},{"bilmoms",bilmoms.size()}});
   
   for(auto &t : out.get_pr_bil_tasks({this}))
+#pragma omp parallel for
     for(size_t r_r_bilins_ibil_ibilmom=0;r_r_bilins_ibil_ibilmom<r_r_bilins_ibil_ibilmom_ind.max();r_r_bilins_ibil_ibilmom++)
       {
 	const vector<size_t> r_r_bilins_ibil_ibilmom_comps=r_r_bilins_ibil_ibilmom_ind(r_r_bilins_ibil_ibilmom);
