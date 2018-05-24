@@ -398,7 +398,7 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 	const size_t coeff_to_take=(sub_pole?1:0);
 	
 	//open the plot file if needed
-	const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+to_string(iop)+"_"+to_string(iproj)+"_meslepmom_"+to_string(imeslepmom)+".xmg";
+	const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+r_r_meslepins_iop_iproj_imeslepmom_ind.descr(r_r_meslepins_iop_iproj_imeslepmom)+".xmg";
 	grace_file_t *plot=nullptr;
 	if(imeslepmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
 	
