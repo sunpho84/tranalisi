@@ -343,8 +343,8 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 	if(plot!=nullptr)
 	  {
 	    auto xminmax=minmax_element(x.begin(),x.end());
-	    double xmin=*xminmax.first*0.5;
-	    double xmax=*xminmax.second*1.1;
+	    const double xmin=*xminmax.first*(sub_pole?0.5:0.01);
+	    const double xmax=*xminmax.second*1.1;
 	    write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole,x_pow](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/pow(x,x_pow);},x,y_plot);
 	    plot->write_ave_err(0.0,pr_chir[iout].ave_err());
 	  }
