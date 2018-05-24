@@ -411,7 +411,7 @@ void perens_t::compute_deltam_from_corr()
 		
 		deltam_cr[imr]=constant_fit(md_fr_f,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_P5P5.xmg");
 		deltam_cr[imr]=constant_fit(ma_fr_c,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_V0P5.xmg");
-		deltam_cr[imr]=-2*0.16285705871085078618;
+		// deltam_cr[imr]=-2*0.16285705871085078618;
 		deltam_tm[imr]=0;
 	      }
 	  }
