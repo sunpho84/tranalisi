@@ -542,16 +542,16 @@ struct perens_t
   pair<double,double> get_a2p2tilde_range_bracketting(const vector<array<size_t,N>> &list,const double a2p2_ref,const size_t n=5) const;
   
   //! interpolate all quantities to reference p2
-  perens_t interpolate_to_p2ref();
+  perens_t interpolate_to_p2ref() const;
   
   //! interpolate Zq to reference p2
-  void interpolate_Zq_to_p2ref(perens_t &out);
+  void interpolate_Zq_to_p2ref(perens_t &out) const;
   
   //! interpolate Zbil to reference p2
-  void interpolate_Zbil_to_p2ref(perens_t &out);
+  void interpolate_Zbil_to_p2ref(perens_t &out) const;
   
   //! interpolate Zmeslep to reference p2
-  void interpolate_Zmeslep_to_p2ref(perens_t &out);
+  void interpolate_Zmeslep_to_p2ref(perens_t &out) const;
   
   /////////////////////////////////////////////////////////////////
   
@@ -571,7 +571,7 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
-  perens_t p2eq0extrap() const;
+  perens_t extrapolate_to_0_p2() const;
   
   /////////////////////////////////////////////////////////////////
   

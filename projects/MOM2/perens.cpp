@@ -350,7 +350,7 @@ void perens_t::print_discr()
     }
 }
 
-perens_t perens_t::interpolate_to_p2ref()
+perens_t perens_t::interpolate_to_p2ref() const
 {
   perens_t out=*this;
   
@@ -366,6 +366,15 @@ perens_t perens_t::interpolate_to_p2ref()
   interpolate_Zq_to_p2ref(out);
   if(pars::compute_bilinears) interpolate_Zbil_to_p2ref(out);
   if(pars::compute_meslep) interpolate_Zmeslep_to_p2ref(out);
+  
+  return out;
+}
+
+perens_t perens_t::extrapolate_to_0_p2() const
+{
+  perens_t out=*this;
+  
+  CRASH("Not yet implemented");
   
   return out;
 }

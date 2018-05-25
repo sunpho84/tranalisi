@@ -116,7 +116,7 @@ void perens_t::compute_Zmeslep()
 	  }
 }
 
-void perens_t::interpolate_Zmeslep_to_p2ref(perens_t &out)
+void perens_t::interpolate_Zmeslep_to_p2ref(perens_t &out) const
 {
   cout<<"Interpolating to reference p2 Zmeslep"<<endl;
   

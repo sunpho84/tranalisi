@@ -81,7 +81,7 @@ void perens_t::compute_Zbil()
       }
 }
 
-void perens_t::interpolate_Zbil_to_p2ref(perens_t &out)
+void perens_t::interpolate_Zbil_to_p2ref(perens_t &out) const
 {
   cout<<"Interpolating to reference p2 Zbil"<<endl;
   

@@ -83,6 +83,7 @@ void plot_all_Z(const string &suffix);
 DEFINE_SINGLE_SELF_COMMAND_ALL(recompute_deltam_all,recompute_deltam,needs_to_read_ingredients,invalidate_Z)
 DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_all,compute_Z,needs_to_read_ingredients,validate_Z)
 DEFINE_SINGLE_SELF_COMMAND_ALL(write_checkpoint_all,write_checkpoint,needs_to_read_ingredients,void)
+DEFINE_SINGLE_SELF_COMMAND_ALL(extrapolate_to_0_p2_all,extrapolate_to_0_p2,needs_to_read_Z,void)
 
 #define DEFINE_SINGLE_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND,CHECK,CLAUSE) \
   inline void ALL_COMMAND()						\

@@ -63,14 +63,16 @@ using namespace scan;
 %token TK_CHIR_EXTR_METHOD
 %token TK_COMPUTE_BILINEARS
 %token TK_EXTRAPOLATE
+%token TK_EXTRAPOLATE_TO_0_P2_RANGE
 %token TK_FROM_PROP
 %token TK_FROM_CORR
 %token TK_COMPUTE_DELTAM
 %token TK_COMPUTE_MESLEP
 %token TK_COMPUTE_MESLEP_WITH_CHARGES_ONE
-%token TK_INTERPOLATE_TO_P2REF
 %token TK_ENSEMBLES
 %token TK_FILTER_THRESH
+%token TK_EXTRAPOLATE_TO_0_P2
+%token TK_INTERPOLATE_TO_P2REF
 %token TK_MEASURE_MPCAC
 %token TK_NF
 %token TK_NJACKS
@@ -120,6 +122,7 @@ commands:
         | commands set_compute_meslep
         | commands set_compute_deltam
         | commands set_compute_meslep_with_charges_one
+        | commands set_extrapolate_to_0_p2_range
         | commands set_filter_thresh
 	| commands set_measure_mPCAC
         | commands set_nf
@@ -146,6 +149,7 @@ commands:
         | commands compute_or_load_ingredients
         | commands compute_Z
         | commands list_ensembles
+        | commands extrapolate_to_0_p2
         | commands interpolate_to_p2ref
         | commands subtract_Z
 	| commands write_checkpoint
@@ -198,6 +202,9 @@ set_compute_meslep: TK_COMPUTE_MESLEP '=' TK_INTE {pars::compute_meslep=$3;}
 ;
 
 set_compute_meslep_with_charges_one: TK_COMPUTE_MESLEP_WITH_CHARGES_ONE {using namespace meslep;ql=q_in=q_ou=1.0;}
+;
+
+set_extrapolate_to_0_p2_range: TK_EXTRAPOLATE_TO_0_P2_RANGE '=' '{' TK_REAL ',' TK_REAL '}' {pars::extrapolate_to_0_p2_range={$4,$6};}
 ;
 
 set_filter_thresh: TK_FILTER_THRESH '=' TK_REAL {pars::filter_thresh=$3;}
@@ -294,6 +301,9 @@ list_ensembles: TK_LIST_ENSEMBLES '(' ')' {list_ensembles();}
 ;
 
 interpolate_to_p2ref: TK_INTERPOLATE_TO_P2REF '(' ')' {interpolate_to_p2ref_all();}
+;
+
+extrapolate_to_0_p2: TK_EXTRAPOLATE_TO_0_P2 '(' ')' {extrapolate_to_0_p2_all();}
 ;
 
 /////////////////////////////////////////////////////////////////

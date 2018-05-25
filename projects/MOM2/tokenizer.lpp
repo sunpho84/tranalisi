@@ -119,8 +119,10 @@ AverageZ                            DEBUG_PRINTF("Found AverageZ\n");return TK_A
 CombinedSeaChirExtrap               DEBUG_PRINTF("Found CombinedSeaChirExtrap\n");return TK_COMBINED_SEA_CHIR_EXTRAP;
 ComputeOrLoadIngredients            DEBUG_PRINTF("Found ComputeOrLoadIngredients\n");return TK_COMPUTE_OR_LOAD_INGREDIENTS;
 ComputeZ                            DEBUG_PRINTF("Found ComputeZ\n");return TK_COMPUTE_Z;
-InterpolateToP2Ref                  DEBUG_PRINTF("Found InterpolateToP2Ref\n");return TK_INTERPOLATE_TO_P2REF;
 Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVOLVE;
+ExtrapolateTo0P2                    DEBUG_PRINTF("Found ExtrapolateTo0P2\n");return TK_EXTRAPOLATE_TO_0_P2;
+ExtrapolateTo0P2Range               DEBUG_PRINTF("Found ExtrapolateTo0P2Range\n");return TK_EXTRAPOLATE_TO_0_P2_RANGE;
+InterpolateToP2Ref                  DEBUG_PRINTF("Found InterpolateToP2Ref\n");return TK_INTERPOLATE_TO_P2REF;
 ListEnsembles                       DEBUG_PRINTF("Found ListEnsembles\n");return TK_LIST_ENSEMBLES;
 MeasureMPCAC                        DEBUG_PRINTF("Found MeasureMPCAC\n");return TK_MEASURE_MPCAC;
 P2Ref                               DEBUG_PRINTF("Fount P2Ref\n"); return TK_P2REF;
