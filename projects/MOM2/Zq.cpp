@@ -68,7 +68,7 @@ void perens_t::interpolate_Zq_to_p2ref(perens_t &out) const
   //fit points
   vector<double> x(linmoms.size());
   djvec_t y(linmoms.size());
-
+  
   for(auto &t : out.get_Zq_tasks({this}))
     {
       const djvec_t &in=*t.in.front();

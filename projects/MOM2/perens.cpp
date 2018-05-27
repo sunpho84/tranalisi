@@ -350,8 +350,9 @@ void perens_t::print_discr()
     }
 }
 
-perens_t perens_t::interpolate_to_p2ref() const
+perens_t perens_t::interpolate_or_extrapolate_to_single_p2_preamble() const
 {
+  
   perens_t out=*this;
   
   //reset momenta ranges
@@ -363,6 +364,13 @@ perens_t perens_t::interpolate_to_p2ref() const
   out.set_indices();
   out.allocate();
   
+  return out;
+}
+
+perens_t perens_t::interpolate_to_p2ref() const
+{
+  perens_t out=interpolate_or_extrapolate_to_single_p2_preamble();
+  
   interpolate_Zq_to_p2ref(out);
   if(pars::compute_bilinears) interpolate_Zbil_to_p2ref(out);
   if(pars::compute_meslep) interpolate_Zmeslep_to_p2ref(out);
@@ -370,11 +378,19 @@ perens_t perens_t::interpolate_to_p2ref() const
   return out;
 }
 
+
 perens_t perens_t::extrapolate_to_0_p2() const
 {
-  perens_t out=*this;
+  perens_t out=interpolate_or_extrapolate_to_single_p2_preamble();
   
-  CRASH("Not yet implemented");
+  for(auto t : out.get_Zq_tasks({this}))
+    extrapolate_to_0_p2_internal(linmoms,t);
+  
+  for(auto t : out.get_Zbil_tasks({this}))
+    extrapolate_to_0_p2_internal(bilmoms,t);
+  
+  for(auto t : out.get_Zmeslep_tasks({this}))
+    extrapolate_to_0_p2_internal(meslepmoms(),t);
   
   return out;
 }

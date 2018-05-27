@@ -541,6 +541,9 @@ struct perens_t
   template <size_t N>
   pair<double,double> get_a2p2tilde_range_bracketting(const vector<array<size_t,N>> &list,const double a2p2_ref,const size_t n=5) const;
   
+  //! interpolate or exptrapolate to a fixed p2
+  perens_t interpolate_or_extrapolate_to_single_p2_preamble() const;
+  
   //! interpolate all quantities to reference p2
   perens_t interpolate_to_p2ref() const;
   
@@ -571,7 +574,12 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
+  //! extrapolate to null momentum
   perens_t extrapolate_to_0_p2() const;
+  
+  //! internal part
+  template <size_t N>
+  void extrapolate_to_0_p2_internal(const vector<array<size_t,N>> &moms,const task_t &t) const;
   
   /////////////////////////////////////////////////////////////////
   
@@ -736,6 +744,28 @@ void perens_t::fill_output_equivalent_momenta(vector<array<size_t,N>> &out_equiv
 	}
 	
       out_equiv.push_back(temp);
+    }
+}
+
+template <size_t N>
+void perens_t::extrapolate_to_0_p2_internal(const vector<array<size_t,N>> &moms,const task_t &t) const
+{
+  for(size_t iout=0;iout<t.ind.max()/moms.size();iout++)
+    {
+      vector<double> x(moms.size());
+      djvec_t y(moms.size());
+      for(size_t imom=0;imom<moms.size();imom++)
+	{
+	  size_t iin=iout*moms.size()+imom;
+	  x[imom]=all_moms[moms[imom][0]].p(L).tilde().norm2();
+	  y[imom]=(*t.in[0])[iin];
+	}
+      
+      const double xmin=pars::extrapolate_to_0_p2_range.first;
+      const double xmax=pars::extrapolate_to_0_p2_range.second;
+      
+      const djvec_t coeffs=poly_fit(x,y,1,xmin,xmax,dir_path+"/plots/extrap_0_p2_"+t.tag+"_"+t.ind.descr(iout));
+      (*t.out)[iout]=coeffs[0];
     }
 }
 
