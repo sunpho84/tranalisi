@@ -85,6 +85,7 @@ using namespace std;
 {SPACE}+                            DEBUG_PRINTF("Ignoring spaces: \"%s\"\n",yytext);
 
 A                                   DEBUG_PRINTF("Found A\n");return TK_A;
+Abort                               DEBUG_PRINTF("Found Abort\n");terminate();
 Action                              DEBUG_PRINTF("Found Action\n");return TK_ACTION;
 AllocateImmediately                 DEBUG_PRINTF("Found AllocateImmediately");return TK_ALLOCATE_IMMEDIATELY;
 AverageRImmediately                 DEBUG_PRINTF("Found AverageRImmediately\n");return TK_AVERAGE_R_IMMEDIATELY;
