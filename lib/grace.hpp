@@ -315,6 +315,7 @@ public:
   {
     close_cur_set();
     
+    set_legend("");
     set_settype(grace::XYDY);
     set_line_style(grace::NO_LINE);
     set_all_colors(col);
