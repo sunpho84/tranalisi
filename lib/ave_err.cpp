@@ -36,7 +36,7 @@ string smart_print(double ave,const vector<double> &errors,int ndigits)
   double mel=*max_element(errors.begin(),errors.end());
   if(mel==0) out<<ave<<"(0)";
   else
-    if(isnan(mel)) out<<ave<<"(nan)"<<endl;
+    if(isnan(mel)) out<<ave<<"(nan)";
     else
       {
 	int lem=(int)ceil(log(mel)/M_LN10);
