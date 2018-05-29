@@ -73,6 +73,7 @@ using namespace scan;
 %token TK_FILTER_THRESH
 %token TK_EXTRAPOLATE_TO_0_P2
 %token TK_INTERPOLATE_TO_P2REF
+%token TK_MATCH_TO_W_REG
 %token TK_MEASURE_MPCAC
 %token TK_NF
 %token TK_NJACKS

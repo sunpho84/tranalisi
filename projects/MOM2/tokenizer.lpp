@@ -125,6 +125,7 @@ ExtrapolateTo0P2                    DEBUG_PRINTF("Found ExtrapolateTo0P2\n");ret
 ExtrapolateTo0P2Range               DEBUG_PRINTF("Found ExtrapolateTo0P2Range\n");return TK_EXTRAPOLATE_TO_0_P2_RANGE;
 InterpolateToP2Ref                  DEBUG_PRINTF("Found InterpolateToP2Ref\n");return TK_INTERPOLATE_TO_P2REF;
 ListEnsembles                       DEBUG_PRINTF("Found ListEnsembles\n");return TK_LIST_ENSEMBLES;
+MatchToWReg                         DEBUG_PRINTF("Found MatchToWReg\n");return TK_MATCH_TO_W_REG;
 MeasureMPCAC                        DEBUG_PRINTF("Found MeasureMPCAC\n");return TK_MEASURE_MPCAC;
 P2Ref                               DEBUG_PRINTF("Fount P2Ref\n"); return TK_P2REF;
 PlotZ                               DEBUG_PRINTF("Found PlotZ\n");return TK_PLOT_Z;
