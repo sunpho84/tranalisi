@@ -102,8 +102,8 @@ struct perens_t
     //! input vector
     const vector<const djvec_t*> in;
     //! output vector
-    djvec_t *out;
-    //! index
+    djvec_t* out;
+    //! index of the output
     const index_t ind;
     //! name of the task
     const string tag;
@@ -537,6 +537,34 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
+  //! triggers cut-off effects remotion  of all quantities
+  perens_t subtract_Oa2() const;
+  
+  //! correct cut-off effects for sigma
+  void subtract_Oa2_sigma(perens_t& out) const;
+  
+  //! correct cut-off effects for pr_bil
+  void subtract_Oa2_pr_bil(perens_t& out) const;
+  
+  //! correct cut-off effects for pr_meslep
+  void subtract_Oa2_pr_meslep(perens_t& out) const;
+  
+  /////////////////////////////////////////////////////////////////
+  
+  //! triggers evolve  of all quantities
+  perens_t evolve() const;
+  
+  //! evolve sigma
+  void evolve_sigma(perens_t& out) const;
+  
+  //! evolve pr_bil
+  void evolve_pr_bil(perens_t& out) const;
+  
+  //! evolve pr_meslep
+  void evolve_pr_meslep(perens_t& out) const;
+  
+  /////////////////////////////////////////////////////////////////
+  
   //! returns the range in which x is contained
   template <size_t N>
   pair<double,double> get_a2p2tilde_range_bracketting(const vector<array<size_t,N>> &list,const double a2p2_ref,const size_t n=5) const;
@@ -750,7 +778,7 @@ void perens_t::fill_output_equivalent_momenta(vector<array<size_t,N>> &out_equiv
 template <size_t N>
 void perens_t::extrapolate_to_0_p2_internal(const vector<array<size_t,N>> &moms,const task_t &t) const
 {
-  for(size_t iout=0;iout<t.ind.max()/moms.size();iout++)
+  for(size_t iout=0;iout<t.ind.max();iout++)
     {
       vector<double> x(moms.size());
       djvec_t y(moms.size());
@@ -764,8 +792,14 @@ void perens_t::extrapolate_to_0_p2_internal(const vector<array<size_t,N>> &moms,
       const double xmin=pars::extrapolate_to_0_p2_range.first;
       const double xmax=pars::extrapolate_to_0_p2_range.second;
       
-      const djvec_t coeffs=poly_fit(x,y,1,xmin,xmax,dir_path+"/plots/extrap_0_p2_"+t.tag+"_"+t.ind.descr(iout));
+      const djvec_t coeffs=poly_fit(x,y,1,xmin,xmax);
       (*t.out)[iout]=coeffs[0];
+      
+      //plot
+      grace_file_t plot(dir_path+"/plots/extrap_0_p2_"+t.tag+"_"+t.ind.descr(iout)+".xmg");
+      plot.write_polygon(bind(poly_eval<djvec_t>,coeffs,_1),0.0,*max_element(x.begin(),x.end())*1.1);
+      write_fit_plot(plot,xmin,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
+      plot.write_ave_err(0.0,coeffs[0].ave_err());
     }
 }
 

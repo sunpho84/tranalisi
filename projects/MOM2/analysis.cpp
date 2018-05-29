@@ -287,75 +287,84 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
   const size_t ngroups=list.size();
   if(ngroups<2) CRASH("Need at least 2 set of ensembles, %zu passed",ngroups);
   
-  vector<perens_t> data_out;
-  
   //input data per each ensemble
   struct input_per_ens_t
   {
-    const double m2;    //the ensemble par
-    const djvec_t* in;  //the input
-    input_per_ens_t(const double m2,const djvec_t* in) : m2(m2),in(in) {}
+    double m2;    //the ensemble par
+    djack_t in;   //the input
   };
   
   //! data per group
   struct per_group_t
   {
-    djvec_t* out;                           //the output
-    const double a;                         //the group par
+    djack_t* out;                     //reference to the output
+    double a;                         //the group par
     vector<input_per_ens_t> ens_list; //the input
-    
-    per_group_t(djvec_t* out,const double a,vector<input_per_ens_t>& ens_list) : out(out),a(a),ens_list(ens_list) {}
   };
   
   //! data to be fitted, per quantity
   struct per_quantity_t
   {
-    const index_t ind;                      //index to access to data
-    const vector<per_group_t> in_out; //one per group, the input and output
-    per_quantity_t(const index_t ind,const vector<per_group_t> &in_out) : ind(ind),in_out(in_out) {}
+    vector<per_group_t> in_out;       //one per group, the input and output
+    per_quantity_t(const size_t ngroups) : in_out(ngroups) {}
   };
   
-  //data to be fitted, all quantities
+  //data to be fitted, all quantities sorted by tag and pars
   map<string,per_quantity_t> fit_data;
-  for(auto &l : list)
+  for(size_t igroup=0;igroup<ngroups;igroup++)
     {
+      auto& l=list[igroup];
       const string &name_out=get<0>(l);
       const double &a=get<1>(l);
       const vector<string> &names_in=get<2>(l);
+      
+      //prepare output
+      cout<<"Out: "<<name_out<<endl;
+      pars::ens.push_back(name_out);
+      data(name_out,PRESENCE_NOT_NEEDED)=data(names_in.front(),ASSERT_PRESENT);
+      perens_t& data_out=data(name_out,ASSERT_PRESENT);
+      data_out.dir_path=name_out;
       
       //get data list, check compatiblity and copy first in list
       vector<const perens_t*> data_in;
       for(size_t i=0;i<names_in.size();i++)
 	{
-	  assert_compatible(names_in[0],names_in[i]);
+	  assert_compatible(name_out,names_in[i]);
 	  data_in.push_back(&data(names_in[i],ASSERT_PRESENT));
+	  
+	  cout<<" "<<names_in[i]<<endl;
 	}
-      data_out.push_back(data(names_in[0],ASSERT_PRESENT));
-      data_out.back().dir_path=name_out;
       
       //transpose data
-      for(auto &p : data_out.back().get_all_Ztasks(data_in))
+      for(auto &p : data_out.get_all_Ztasks(data_in))
 	{
 	  //prepare output
-	  vector<per_group_t> in_out;
 	  for(size_t i=0;i<p.ind.max();i++)
 	    {
+	      //prepare the list referring to a "static"
+	      const string &tag=p.tag+"_"+p.ind.descr(i);
+	      auto _d=fit_data.find(tag);
+	      if(_d==fit_data.end()) fit_data.emplace(tag,per_quantity_t(ngroups));
+	      auto& d=fit_data.find(tag)->second;
+	      per_group_t& in_out=d.in_out[igroup];
+	      in_out.out=&((*p.out)[i]);
+	      
 	      //prepare input
-	      vector<input_per_ens_t> in;
-	      for(size_t iens=0;iens<p.in.size();iens++)
+	      const size_t nens=p.in.size();
+	      in_out.ens_list.resize(nens);
+	      in_out.a=a;
+	      for(size_t iens=0;iens<nens;iens++)
 		{
 		  //get mass
-		  const perens_t& en=data(names_in[i],ASSERT_PRESENT);
+		  const perens_t& en=data(names_in[iens],ASSERT_PRESENT);
 		  double m2=sqr(en.meson_mass_sea.ave())/sqr(a);
 		  
 		  //prepare data per ens
-		  in.push_back({m2,&p.in[iens][i]});
+		  input_per_ens_t& input=in_out.ens_list[iens];
+		  input.m2=m2;
+		  input.in=(*(p.in[iens]))[i];
 		}
-	      in_out.push_back({&p.out[i],a,in});
 	    }
-	  
-	  const string &tag=p.tag;
-	  fit_data.emplace(tag,per_quantity_t(p.ind,in_out));
 	}
     }
   
@@ -367,58 +376,88 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
       
       cout<<"Extrapolating "<<tag<<" to chiral limit in the sea"<<endl;
       
-      const index_t &ind=per_quantity.ind;
+      //fit and pars
+      jack_fit_t jack_fit;
+      djack_t mslope=0.0;
+      djack_t mslope_a2dep=0.0;
       
-      for(size_t i=0;i<ind.max();i++)
+      //output plot
+      grace_file_t plot("comb_sea_chir/plots/comb_sea_chir_extrap_"+tag+".xmg");
+      {
+	using namespace grace;
+	auto color_scheme={RED,RED,BLUE,BLUE,GREEN4,GREEN4,VIOLET,VIOLET};
+	plot.set_color_scheme(color_scheme);
+	plot.set_line_color_scheme(color_scheme);
+	plot.set_symbol_scheme({SQUARE,DIAMOND,SQUARE,DIAMOND,SQUARE,DIAMOND,SQUARE,DIAMOND});
+      }
+      
+      double m2_max=0.0;
+      
+      //define parameters
+      vector<size_t> iextr(ngroups);
+      size_t imslope=jack_fit.add_fit_par(mslope,"mslope",0.0,0.1);
+      //size_t imslope_a2dep=jack_fit.add_fit_par(mslope_a2dep,"mslope_a2dep",0.0,0.1);
+      //jack_fit.fix_par(imslope_a2dep);
+      for(size_t igroup=0;igroup<ngroups;igroup++)
 	{
-	  //fit and pars
-	  jack_fit_t jack_fit;
-	  djvec_t extr(ngroups);
-	  djack_t mslope;
-	  djack_t mslope_a2dep;
+	  const per_group_t per_group=per_quantity.in_out[igroup];
+	  const vector<input_per_ens_t> &ens_list=per_group.ens_list;
+	  //const double a=per_group.a;
 	  
-	  //define parameters
-	  vector<size_t> iextr(ngroups);
-	  size_t imslope=jack_fit.add_fit_par(mslope,"mslope",0.0,0.1);
-	  size_t imslope_a2dep=jack_fit.add_fit_par(mslope_a2dep,"mslope_a2dep",0.0,0.1);
-	  for(size_t igroup=0;igroup<ngroups;igroup++)
+	  iextr[igroup]=jack_fit.add_fit_par(*per_group.out,"extr_"+to_string(igroup),0.0,0.1);
+	  
+	  plot.new_data_set();
+	  
+	  for(size_t iens=0;iens<ens_list.size();iens++)
 	    {
-	      const per_group_t per_group=per_quantity.in_out[igroup];
-	      const vector<input_per_ens_t> &ens_list=per_group.ens_list;
-	      const double a=per_group.a;
+	      const djack_t& fit_in=ens_list[iens].in;
+	      const double& m2=ens_list[iens].m2;
+	      m2_max=max(m2,m2_max);
+	      jack_fit.add_point(//numerical data
+				 [fit_in]
+				 (const vector<double> &p,int iel)
+				 {
+				   return fit_in[iel];
+				 },
+				 //ansatz
+				 [=]
+				 (const vector<double> &p,int iel)
+				 {
+				   return p[iextr[igroup]]+m2*(p[imslope]// +sqr(a)*p[imslope_a2dep]
+							       );
+				 },
+				 //for covariance/error
+				 fit_in.err());
 	      
-	      iextr[igroup]=jack_fit.add_fit_par(extr[igroup],"extr_"+to_string(igroup),0.0,0.1);
-	      
-	      for(size_t iens=0;iens<ens_list.size();iens++)
-		{
-		  const djack_t fit_in=(*ens_list[iens].in)[i];
-		  const double m2=ens_list[iens].m2;
-		  jack_fit.add_point(//numerical data
-				     [&fit_in]
-				     (const vector<double> &p,int iel)
-				     {
-				       return fit_in[iel];
-				     },
-				     //ansatz
-				     [iextr,igroup,imslope,imslope_a2dep,a,m2]
-				     (const vector<double> &p,int iel)
-				     {
-				       return p[iextr[igroup]]+m2*(p[imslope]+sqr(a)*p[imslope_a2dep]);
-				     },
-				     //for covariance/error
-				     fit_in.err());
-		}
+	      plot.write_ave_err(m2,fit_in.ave_err());
 	    }
+	}
+      
+      //fit
+      jack_fit.fit();
+      
+      //line of the fit
+      for(size_t igroup=0;igroup<ngroups;igroup++)
+	{
+	  const djack_t& c0=*per_quantity.in_out[igroup].out;
+	  const double a=per_quantity.in_out[igroup].a;
+	  plot.write_line([&](const double x)
+			  {
+			    const djack_t out=c0+x*(mslope+sqr(a)*mslope_a2dep);
+			    return out.ave();
+			  },
+			  0.0,m2_max);
+	  plot.set_legend(get<0>(list[igroup]));
+	}
+      
+      //extrapolated results
+      plot.new_data_set();
+      for(size_t igroup=0;igroup<ngroups;igroup++)
+	{
+	  const per_group_t per_group=per_quantity.in_out[igroup];
+	  const djack_t &out=*per_group.out;
 	  
-	  jack_fit.fit();
-	  
-	  for(size_t igroup=0;igroup<ngroups;igroup++)
-	    {
-	      const per_group_t per_group=per_quantity.in_out[igroup];
-	      djvec_t &out=*per_group.out;
-	      djack_t &fit_out=out[i];
-	      fit_out=extr[igroup];
-	    }
+	  plot.write_ave_err(0.0,out.ave_err());
 	}
     }
 }

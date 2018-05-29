@@ -53,6 +53,16 @@ void perens_t::plot_sigma(const string &suffix)
     }
 }
 
+void perens_t::subtract_Oa2_sigma(perens_t &out) const
+{
+  CRASH("");
+}
+
+void perens_t::evolve_sigma(perens_t &out) const
+{
+  CRASH("");
+}
+
 vector<perens_t::task_t> perens_t::get_sigma_tasks(const vector<const perens_t*> &ens)
 {
   vector<const djvec_t*> in_sigma;

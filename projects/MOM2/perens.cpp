@@ -395,6 +395,28 @@ perens_t perens_t::extrapolate_to_0_p2() const
   return out;
 }
 
+perens_t perens_t::evolve() const
+{
+  perens_t out=*this;
+  
+  evolve_sigma(out);
+  evolve_pr_bil(out);
+  evolve_pr_meslep(out);
+  
+  return out;
+}
+
+perens_t perens_t::subtract_Oa2() const
+{
+  perens_t out=*this;
+  
+  subtract_Oa2_sigma(out);
+  subtract_Oa2_pr_bil(out);
+  subtract_Oa2_pr_meslep(out);
+  
+  return out;
+}
+
 perens_t perens_t::write_checkpoint()
 {
   cout<<"Writing checkpoint for ens "<<dir_path<<endl;

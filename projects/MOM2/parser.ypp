@@ -141,6 +141,7 @@ commands:
         | commands average_Z
         | commands average_equiv_momenta
         | commands sea_chir_extrap
+        | commands evolve
         | commands combined_sea_chir_extr
         | commands val_chir_extrap
         | commands plot_Z
@@ -152,10 +153,9 @@ commands:
         | commands list_ensembles
         | commands extrapolate_to_0_p2
         | commands interpolate_to_p2ref
+        | commands subtract_Oa2
         | commands subtract_Z
 	| commands write_checkpoint
-        /* | commands TK_QUOTED_TEXT '=' TK_SUBTRACT_OA2 '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].subtract_Oa2(true);drv->suff+="_sub";} */
-        /* | commands TK_QUOTED_TEXT '=' TK_EVOLVE '(' TK_QUOTED_TEXT ')' {drv->ing[*$6].evolve();drv->suff+="_evo";} aggiungi ordine qui*/
 ;
 
 read_ensembles: TK_ENSEMBLES '=' '{'
@@ -264,6 +264,12 @@ print_discr: TK_PRINT_DISCR '(' ')' {print_discr();}
 average_r: TK_AVERAGE_R '(' ')' {average_all_r();}
 ;
 
+subtract_Oa2: TK_SUBTRACT_OA2 '(' ')' {subtract_Oa2_all();}
+;
+
+evolve: TK_EVOLVE '(' ')' {evolve_all();}
+;
+
 average_equiv_momenta: TK_AVERAGE_EQUIV_MOMENTA '(' ')' {average_all_equiv_momenta();}
 ;
 
@@ -276,8 +282,10 @@ write_checkpoint: TK_WRITE_CHECKPOINT '(' ')' {write_checkpoint_all();}
 /////////////////////////////////////////////////////////////////
 
 average_Z: TK_QUOTED_TEXT '=' TK_AVERAGE_Z '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average_Z(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
+;
 
 average_ingredients: TK_QUOTED_TEXT '=' TK_AVERAGE_INGREDIENTS '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average_ingredients(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
+;
 
 combined_sea_chir_extr_entry: TK_USING TK_A '=' TK_REAL TK_EXTRAPOLATE TK_QUOTED_TEXT '=' string_list {$$=new comb_extr_t(*$6,$4,*$8);delete $6;delete $8;}
 ;
@@ -297,6 +305,7 @@ sea_chir_extrap: TK_QUOTED_TEXT '=' TK_SEA_CHIR_EXTRAP '(' string_list ')' {sea_
 
 subtract_Z: TK_QUOTED_TEXT '=' TK_SUBTRACT_Z '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {subtract_Z(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
 ;
+
 
 list_ensembles: TK_LIST_ENSEMBLES '(' ')' {list_ensembles();}
 ;

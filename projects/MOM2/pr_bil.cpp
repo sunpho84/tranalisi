@@ -218,6 +218,16 @@ void perens_t::mom_compute_bil()
     }
 }
 
+void perens_t::subtract_Oa2_pr_bil(perens_t &out) const
+{
+  CRASH("");
+}
+
+void perens_t::evolve_pr_bil(perens_t &out) const
+{
+  CRASH("");
+}
+
 vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*> &ens)
 {
   vector<const djvec_t*> in_pr_bil;
