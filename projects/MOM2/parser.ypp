@@ -79,6 +79,7 @@ using namespace scan;
 %token TK_NJACKS
 %token TK_P2REF
 %token TK_PHYS_BASIS
+%token TK_PRINT_Z
 %token TK_PRINT_EACH_MOM
 %token TK_RECOMPUTE_DELTAM
 %token TK_SCHEME
@@ -146,6 +147,7 @@ commands:
         | commands combined_sea_chir_extr
         | commands val_chir_extrap
         | commands plot_Z
+        | commands print_Z
         | commands print_discr
         | commands recompute_deltam
         | commands ratio_Z_minus_one
@@ -257,6 +259,9 @@ compute_Z: TK_COMPUTE_Z '(' ')' {compute_Z_all();}
 ;
 
 plot_Z: TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$3);delete $3;}
+;
+
+print_Z: TK_PRINT_Z '(' TK_QUOTED_TEXT ')' {print_all_Z(*$3);delete $3;}
 ;
 
 print_discr: TK_PRINT_DISCR '(' ')' {print_discr();}

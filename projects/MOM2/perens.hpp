@@ -491,6 +491,8 @@ struct perens_t
   //! computes all meslep Z
   void compute_Zmeslep();
   
+  void plot_Zmeslep(const string &suffix);
+  
   vector<dcompl_t> build_mesloop(const vector<lprop_t> &props_lep) const;
   
   void build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const vector<qprop_t> &props_in,const vector<qprop_t> &props_ou,
@@ -516,7 +518,7 @@ struct perens_t
     if(pars::compute_meslep) plot_Zmeslep(suffix);
   }
   
-  void plot_Zmeslep(const string &suffix);
+  void print_Z(ofstream& file);
   
   /////////////////////////////////////////////////////////////////
   

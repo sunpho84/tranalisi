@@ -426,6 +426,59 @@ perens_t perens_t::match_to_W_reg() const
   return out;
 }
 
+void perens_t::print_Z(ofstream& file)
+{
+  using namespace pars;
+  
+  if(nm!=1) CRASH("Can print only 1 m, %zu present",nm);
+  if(nr!=1) CRASH("Can print only 1 r, %zu present",nr);
+  
+  /////////////////////////////////////////////////////////////////
+  file<<"/////////////////////////////////////////////////////////////////"<<endl;
+  if(linmoms.size()!=1) CRASH("Can print only 1 mom, %zu present",linmoms.size());
+  
+  for(auto t : get_Zq_tasks())
+    {
+      file<<" "<<t.tag<<endl;
+      file<<smart_print((*t.out)[0])<<endl;
+      file<<endl;
+    }
+  
+  /////////////////////////////////////////////////////////////////
+  file<<"/////////////////////////////////////////////////////////////////"<<endl;
+  if(bilmoms.size()!=1) CRASH("Can print only 1 mom, %zu present",bilmoms.size());
+  
+  for(auto t : get_Zbil_tasks())
+    {
+      file<<" "<<t.tag<<endl;
+      for(size_t ibil=0;ibil<nbil;ibil++)
+	file<<" "<<bil_tag[ibil]<<": "<<smart_print((*t.out)[ibil])<<endl;
+      file<<endl;
+    }
+  
+  /////////////////////////////////////////////////////////////////
+  file<<"/////////////////////////////////////////////////////////////////"<<endl;
+  if(bilmoms.size()!=1) CRASH("Can print only 1 mom, %zu present",meslepmoms().size());
+  
+  for(auto t : get_Zmeslep_tasks())
+    {
+      file<<" "<<t.tag<<endl;
+      for(size_t iop=0;iop<nbil;iop++)
+	{
+	  for(size_t iproj=0;iproj<nbil;iproj++)
+	    {
+	      ave_err_t ae=(*t.out)[im_r_im_r_iop_iproj_imeslepmom_ind({0,0,0,0,iop,iproj,0})].ave_err();
+	      if(isnan(ae.ave()))
+		file<<"\t";
+	      else
+		file<<" "<<smart_print(ae);
+	    }
+	file<<endl;
+	}
+      file<<endl;
+    }
+}
+
 perens_t perens_t::write_checkpoint()
 {
   cout<<"Writing checkpoint for ens "<<dir_path<<endl;

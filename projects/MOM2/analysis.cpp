@@ -30,6 +30,22 @@ void plot_all_Z(const string &suffix)
       .plot_Z(suffix);
 }
 
+void print_all_Z(const string &path)
+{
+  needs_to_read_Z();
+  
+  ofstream file(path);
+  if(not file.good()) CRASH("Opening %s",path.c_str());
+  
+  for(auto &path : pars::ens)
+    {
+      file<<path<<endl;
+      
+      data(path,ASSERT_PRESENT)
+	.print_Z(file);
+    }
+}
+
 void average_Z(const string out,const string in1,const string in2)
 {
   combine_Z(out,in1,in2,"average",[](djvec_t& out,const djvec_t& in1,const djvec_t& in2){out=(in1+in2)/2.0;});
@@ -460,4 +476,9 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
 	  plot.write_ave_err(0.0,out.ave_err());
 	}
     }
+  
+  //remove all extrapolated ensembles
+  for(auto &l : list)
+    for(auto &name : get<2>(l))
+      data_erase(name);
 }

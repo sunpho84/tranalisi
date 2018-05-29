@@ -70,6 +70,7 @@ void data_erase(const string &key);
 void compute_or_load_all_ingredients();
 
 void plot_all_Z(const string &suffix);
+void print_all_Z(const string &suffix);
 
 #define DEFINE_SINGLE_SELF_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND,CHECK,CLAUSE) \
   inline void ALL_COMMAND()						\
