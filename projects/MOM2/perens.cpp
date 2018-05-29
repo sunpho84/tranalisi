@@ -410,9 +410,9 @@ perens_t perens_t::subtract_Oa2() const
 {
   perens_t out=*this;
   
-  subtract_Oa2_sigma(out);
-  subtract_Oa2_pr_bil(out);
-  subtract_Oa2_pr_meslep(out);
+  out.subtract_Oa2_sigma();
+  out.subtract_Oa2_pr_bil();
+  //subtract_Oa2_pr_meslep();
   
   return out;
 }

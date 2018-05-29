@@ -306,7 +306,7 @@ void perens_t::mom_compute_meslep()
     }
 }
 
-void perens_t::subtract_Oa2_pr_meslep(perens_t &out) const
+void perens_t::subtract_Oa2_pr_meslep()
 {
   CRASH("");
 }

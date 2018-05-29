@@ -9,6 +9,7 @@
 #define EXTERN_PR_BIL
  #include <MOM2/pr_bil.hpp>
 
+#include <MOM2/corrections.hpp>
 #include <MOM2/perens.hpp>
 #include <MOM2/prop.hpp>
 #include <MOM2/timings.hpp>
@@ -218,10 +219,16 @@ void perens_t::mom_compute_bil()
     }
 }
 
-void perens_t::subtract_Oa2_pr_bil(perens_t &out) const
+void perens_t::subtract_Oa2_pr_bil()
 {
-  CRASH("");
-}
+  const size_t iins=pr_bil::LO;
+  for(size_t im_in=0;im_in<nm;im_in++)
+    for(size_t r_in=0;r_in<nr;r_in++)
+      for(size_t im_ou=0;im_ou<nm;im_ou++)
+	for(size_t r_ou=0;r_ou<nr;r_ou++)
+	  for(size_t ibil=0;ibil<nbil;ibil++)
+	    for(size_t imom=0;imom<bilmoms.size();imom++)
+	      pr_bil[im_r_im_r_bilins_ibil_ibilmom_ind({im_in,r_in,im_ou,r_ou,iins,ibil,imom})]-=pr_bil_a2(pars::act,gf::LANDAU,group::SU3,all_moms[bilmoms[imom][0]],L,ibil);
 
 void perens_t::evolve_pr_bil(perens_t &out) const
 {
@@ -356,7 +363,7 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 	    auto xminmax=minmax_element(x.begin(),x.end());
 	    const double xmin=*xminmax.first*(sub_pole?0.5:0.01);
 	    const double xmax=*xminmax.second*1.1;
-	    write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole,x_pow](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/pow(x,x_pow);},x,y_plot);
+	    write_fit_plot(*plot,xmin,xmax,[&coeffs,x_pow](double x)->djack_t{return poly_eval<djvec_t>(coeffs,x)/pow(x,x_pow);},x,y_plot);
 	    plot->write_ave_err(0.0,pr_chir[iout].ave_err());
 	  }
         if(plot) delete plot;

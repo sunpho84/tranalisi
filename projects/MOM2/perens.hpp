@@ -543,13 +543,13 @@ struct perens_t
   perens_t subtract_Oa2() const;
   
   //! correct cut-off effects for sigma
-  void subtract_Oa2_sigma(perens_t& out) const;
+  void subtract_Oa2_sigma();
   
   //! correct cut-off effects for pr_bil
-  void subtract_Oa2_pr_bil(perens_t& out) const;
+  void subtract_Oa2_pr_bil();
   
   //! correct cut-off effects for pr_meslep
-  void subtract_Oa2_pr_meslep(perens_t& out) const;
+  void subtract_Oa2_pr_meslep();
   
   /////////////////////////////////////////////////////////////////
   

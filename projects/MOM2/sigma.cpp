@@ -9,6 +9,7 @@
 #define EXTERN_SIGMA
  #include <MOM2/sigma.hpp>
 
+#include <corrections.hpp>
 #include <perens.hpp>
 #include <timings.hpp>
 
@@ -53,9 +54,14 @@ void perens_t::plot_sigma(const string &suffix)
     }
 }
 
-void perens_t::subtract_Oa2_sigma(perens_t &out) const
+void perens_t::subtract_Oa2_sigma()
 {
-  CRASH("");
+  const size_t iproj=sigma::SIGMA1;
+  const size_t iins=sigma::LO;
+  for(size_t im=0;im<nm;im++)
+    for(size_t r=0;r<nr;r++)
+      for(size_t imom=0;imom<linmoms.size();imom++)
+	  sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,imom,iproj,iins})]-=sig1_a2(pars::act,gf::LANDAU,group::SU3,all_moms[linmoms[imom][0]],L);
 }
 
 void perens_t::evolve_sigma(perens_t &out) const
