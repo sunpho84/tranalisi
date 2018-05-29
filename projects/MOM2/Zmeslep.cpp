@@ -29,6 +29,11 @@ vector<perens_t::task_t> perens_t::get_Zmeslep_tasks(const vector<const perens_t
   return Zmeslep_tasks;
 }
 
+void perens_t::match_to_W_reg_Zmeslep(perens_t& out) const
+{
+  CRASH("");
+}
+
 void perens_t::compute_Zmeslep()
 {
   cout<<"Computing Zmeslep"<<endl;

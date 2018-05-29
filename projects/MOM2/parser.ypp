@@ -142,6 +142,7 @@ commands:
         | commands average_equiv_momenta
         | commands sea_chir_extrap
         | commands evolve
+        | commands match_to_W_reg
         | commands combined_sea_chir_extr
         | commands val_chir_extrap
         | commands plot_Z
@@ -268,6 +269,9 @@ subtract_Oa2: TK_SUBTRACT_OA2 '(' ')' {subtract_Oa2_all();}
 ;
 
 evolve: TK_EVOLVE '(' ')' {evolve_all();}
+;
+
+match_to_W_reg: TK_MATCH_TO_W_REG '(' ')' {match_to_W_reg_all();}
 ;
 
 average_equiv_momenta: TK_AVERAGE_EQUIV_MOMENTA '(' ')' {average_all_equiv_momenta();}

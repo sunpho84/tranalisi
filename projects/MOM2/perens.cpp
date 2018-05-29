@@ -417,6 +417,15 @@ perens_t perens_t::subtract_Oa2() const
   return out;
 }
 
+perens_t perens_t::match_to_W_reg() const
+{
+  perens_t out=*this;
+  
+  match_to_W_reg_Zmeslep(out);
+  
+  return out;
+}
+
 perens_t perens_t::write_checkpoint()
 {
   cout<<"Writing checkpoint for ens "<<dir_path<<endl;

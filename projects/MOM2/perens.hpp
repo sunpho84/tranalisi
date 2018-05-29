@@ -565,6 +565,14 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
+  //! triggers match to W-reg all quantities
+  perens_t match_to_W_reg() const;
+  
+  //! match Zmeslep
+  void match_to_W_reg_Zmeslep(perens_t& out) const;
+  
+  /////////////////////////////////////////////////////////////////
+  
   //! returns the range in which x is contained
   template <size_t N>
   pair<double,double> get_a2p2tilde_range_bracketting(const vector<array<size_t,N>> &list,const double a2p2_ref,const size_t n=5) const;
