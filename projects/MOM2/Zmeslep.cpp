@@ -164,7 +164,7 @@ void perens_t::interpolate_Zmeslep_to_p2ref(perens_t &out) const
 	    
 	    //fit and interpolate
 	    const djvec_t coeffs=poly_fit(x,y,2,p2min,p2max);
-	    out[0]=poly_eval(coeffs,pars::p2ref);
+	    out[im_r_im_r_iop_iproj]=poly_eval(coeffs,pars::p2ref);
 	    
 	    //produce plot
 	    const string path=dir_path+"/plots/interpolate_to_p2ref_"+tag+
@@ -173,7 +173,7 @@ void perens_t::interpolate_Zmeslep_to_p2ref(perens_t &out) const
 	      "_m"+to_string(comps[2])+"_r"+to_string(comps[3])+".xmg";
 	    grace_file_t plot(path);
 	    write_fit_plot(plot,p2min,p2max,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
-	    plot.write_ave_err(pars::p2ref,out[0].ave_err());
+	    plot.write_ave_err(pars::p2ref,out[im_r_im_r_iop_iproj].ave_err());
 	  }
     }
 }
