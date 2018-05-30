@@ -411,7 +411,7 @@ perens_t perens_t::subtract_Oa2() const
   perens_t out=*this;
   
   out.subtract_Oa2_sigma();
-  out.subtract_Oa2_pr_bil();
+  if(pars::compute_bilinears) out.subtract_Oa2_pr_bil();
   //subtract_Oa2_pr_meslep();
   
   return out;

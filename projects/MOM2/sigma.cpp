@@ -57,11 +57,17 @@ void perens_t::plot_sigma(const string &suffix)
 void perens_t::subtract_Oa2_sigma()
 {
   const size_t iproj=sigma::SIGMA1;
-  const size_t iins=sigma::LO;
   for(size_t im=0;im<nm;im++)
     for(size_t r=0;r<nr;r++)
-      for(size_t imom=0;imom<linmoms.size();imom++)
-	  sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,imom,iproj,iins})]-=sig1_a2(pars::act,gf::LANDAU,group::SU3,all_moms[linmoms[imom][0]],L);
+      for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
+	{
+	  const size_t imom=linmoms[ilinmom][0];
+	  const imom_t mom=all_moms[imom];
+	  const double sub=g2tilde()*sig1_a2(pars::act,gf::LANDAU,group::SU3,mom,L);
+	  
+	  for(size_t iins=0;iins<sigma::nins;iins++)
+	    sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,imom,iproj,iins})]-=sub;
+	}
 }
 
 void perens_t::evolve_sigma(perens_t &out) const
