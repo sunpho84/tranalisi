@@ -15,29 +15,29 @@
 using namespace std;
 
 int parser_parse(void*);
-  
+
 namespace scan
 {
   //! opaque flex object
   EXTERN_SCAN void *scanner;
   
   //! stream from which to read
-  EXTERN_SCAN ifstream fin;
+  EXTERN_SCAN vector<pair<ifstream,string>> fin;
   
   void init_scanner();
   void destroy_scanner();
   
-  inline void scan(const string &path)
-  {
-    cout<<"Opening \""<<path<<"\""<<endl;
-    
-    fin.open(path);
-    if(not fin.good()) CRASH("Opening %s",path.c_str());
-    
-    init_scanner();
-    parser_parse(nullptr);
-    destroy_scanner();
-  }
+  //! init the scanner
+  void scan(const string& path);
+  
+  //! open a subfile
+  void include(const string& path);
+  
+  //! print the list of open file
+  void print_input_files_stack();
+  
+  //! read a character
+  void lex(char* buf,int &result,int max_size);
 }
 
 #undef INIT_SCAN_TO

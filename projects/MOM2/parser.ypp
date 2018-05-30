@@ -31,6 +31,7 @@ using namespace scan;
 
   void parser_error(YYLTYPE *locp,void *v,const char *err)
   {
+      scan::print_input_files_stack();
       CRASH("exception at line %d columns [%d-%d] %s",locp->first_line,locp->first_column,locp->last_column,err);
   }
   
@@ -69,10 +70,12 @@ using namespace scan;
 %token TK_COMPUTE_DELTAM
 %token TK_COMPUTE_MESLEP
 %token TK_COMPUTE_MESLEP_WITH_CHARGES_ONE
+%token TK_CORRECT_OA2_USING_PTILDE
 %token TK_ENSEMBLES
 %token TK_FILTER_THRESH
 %token TK_EXTRAPOLATE_TO_0_P2
 %token TK_INTERPOLATE_TO_P2REF
+%token TK_INCLUDE
 %token TK_MATCH_TO_W_REG
 %token TK_MEASURE_MPCAC
 %token TK_NF
@@ -114,7 +117,8 @@ using namespace scan;
 
 commands:
         | commands read_ensembles '}'
-        | commands set_action
+ 	| commands include
+	| commands set_action
 	| commands set_allocate_immediately
 	| commands set_average_equiv_momenta_immediately
 	| commands set_average_r_immediately
@@ -124,6 +128,7 @@ commands:
         | commands set_compute_meslep
         | commands set_compute_deltam
         | commands set_compute_meslep_with_charges_one
+	| commands set_correct_Oa2_using_ptilde
         | commands set_extrapolate_to_0_p2_range
         | commands set_filter_thresh
 	| commands set_measure_mPCAC
@@ -161,6 +166,9 @@ commands:
 	| commands write_checkpoint
 ;
 
+include: TK_INCLUDE '(' TK_QUOTED_TEXT ')' {scan::include(*$3);delete $3;}
+;
+
 read_ensembles: TK_ENSEMBLES '=' '{'
               | TK_ENSEMBLES '=' '{' ensemble
               | read_ensembles ',' ensemble
@@ -190,6 +198,9 @@ set_boundary_conditions: TK_BC '=' TK_QUOTED_TEXT
 			     ph_mom[0]=get<1>(bc_key);
 			     delete $3;
 			 }
+;
+
+set_correct_Oa2_using_ptilde: TK_CORRECT_OA2_USING_PTILDE '=' TK_INTE {pars::correct_Oa2_using_ptilde=$3;}
 ;
 
 set_chir_extr_method: TK_CHIR_EXTR_METHOD '=' TK_QUOTED_TEXT {pars::chir_extr_method=chir_extr::decrypt(*$3);delete $3;}
