@@ -132,13 +132,23 @@ inline double corr_a2(group::type_t group,double p2,double p4,double *c)
   return Cf[group]*(p2*(c[0]+c[1]*log(p2))+c[2]*p4/p2)/(16*sqr(M_PI));
 }
 
+inline p_t get_p_to_correct_Oa2(const imom_t &ip,const coords_t &L)
+{
+  p_t p=ip.p(L);
+  //change to tilde if asked
+  if(pars::correct_Oa2_using_ptilde)
+    p=p.tilde();
+  
+  return p;
+}
+
 //! corrections to sigma1,in units of g^2
 inline double sig1_a2(gaz::type_t iaz,gf::type_t gf_g,group::type_t group,const imom_t &ip,const coords_t &L)
 {
   double lambda=gf::lambda[gf_g];
-  
-  p_t p_tilde=ip.p(L).tilde();
-  double p2_tilde=p_tilde.norm2(),p4_tilde=p_tilde.norm4();
+
+  const p_t p=get_p_to_correct_Oa2(ip,L);
+  double p2=p.norm2(),p4=p.norm4();
   
   const double Np=ip.Np();
   double cq[3];
@@ -146,7 +156,7 @@ inline double sig1_a2(gaz::type_t iaz,gf::type_t gf_g,group::type_t group,const 
   cq[1]=-(59.0/240.0+c1[iaz]/2+C2[iaz]/60.0-lambda*3.0/8.0)-(101.0/120.0-11.0/30.0*C2[iaz])/Np;
   cq[2]=3.0/80.0+C2[iaz]/10.0+lambda*5.0/48.0;
   
-  return corr_a2(group,p2_tilde,p4_tilde,cq);
+  return corr_a2(group,p2,p4,cq);
 }
 
 //! coefficients of bil
@@ -158,13 +168,13 @@ void set_pr_bil_a2(gaz::type_t iaz,gf::type_t gf_g);
 //! corrections to projected,in units of g^2
 inline double pr_bil_a2(gaz::type_t iaz,gf::type_t gf_g,group::type_t group,const imom_t &ip,const coords_t &L,size_t iZ)
 {
-  p_t p_tilde=ip.p(L).tilde();
-  double p2_tilde=p_tilde.norm2(),p4_tilde=p_tilde.norm4();
+  const p_t p=get_p_to_correct_Oa2(ip,L);
+  double p2=p.norm2(),p4=p.norm4();
   
   //set the coefficients
   set_pr_bil_a2(iaz,gf_g);
   
-  return corr_a2(group,p2_tilde,p4_tilde,pr_bil_a2_c[iZ]);
+  return corr_a2(group,p2,p4,pr_bil_a2_c[iZ]);
 }
 
 #undef EXTERN_CORRECTIONS

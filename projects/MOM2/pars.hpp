@@ -59,6 +59,8 @@ namespace pars
   EXTERN_PARS bool compute_bilinears INIT_PARS_TO({true});
   //! compute mesoleptonic vertex
   EXTERN_PARS bool compute_meslep INIT_PARS_TO({false});
+  //! use p or ptilde to correct Oa2
+  EXTERN_PARS bool correct_Oa2_using_ptilde INIT_PARS_TO({false});
   //! Filter for democracy
   EXTERN_PARS double filter_thresh INIT_PARS_TO({1});
   //! assume physical basis propagator
