@@ -27,7 +27,7 @@ vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& e
   return Zq_tasks;
 }
 
-void perens_t::compute_Zq()
+void perens_t::compute_Zq(const bool also_QED)
 {
   cout<<"Computing Zq"<<endl;
   
@@ -45,7 +45,7 @@ void perens_t::compute_Zq()
       
       Zq[im_r_ilinmom]=sigma1(LO);
       
-      if(pars::use_QED)
+      if(pars::use_QED and also_QED)
 	Zq_QED_rel[im_r_ilinmom]=
 	  (sigma1(PH)+
 	   sigma1(CR)*deltam_cr[im_r]+
@@ -97,14 +97,14 @@ void perens_t::interpolate_Zq_to_p2ref(perens_t &out) const
 	    
 	    //fit and interpolate
 	    const djvec_t coeffs=poly_fit(x,y,2,p2min,p2max);
-	    out[0]=poly_eval(coeffs,pars::p2ref);
+	    out[im_r]=poly_eval(coeffs,pars::p2ref);
 	    
 	    //produce plot
 	    const string path=dir_path+"/plots/interpolate_to_p2ref_"+tag+
 	      "_m"+to_string(comps[0])+"_r"+to_string(comps[1])+".xmg";
 	    grace_file_t plot(path);
 	    write_fit_plot(plot,p2min,p2max,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
-	    plot.write_ave_err(pars::p2ref,out[0].ave_err());
+	    plot.write_ave_err(pars::p2ref,out[im_r].ave_err());
 	  }
     }
 }

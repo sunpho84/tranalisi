@@ -27,7 +27,7 @@ vector<perens_t::task_t> perens_t::get_Zbil_tasks(const vector<const perens_t*> 
   return Zbil_tasks;
 }
 
-void perens_t::compute_Zbil()
+void perens_t::compute_Zbil(const bool also_QED)
 {
   cout<<"Computing Zbil"<<endl;
   
@@ -54,7 +54,7 @@ void perens_t::compute_Zbil()
 	Zbil[im_r_im_r_ibil_ibilmom]=
 	  sqrt(s1_ou(sigma::LO)*s1_in(sigma::LO))/pr(pr_bil::LO);
 	
-	if(pars::use_QED)
+	if(pars::use_QED and also_QED)
 	  {
 	    djack_t pr_bil_QED=
 	      pr(pr_bil::EX)+
@@ -124,7 +124,7 @@ void perens_t::interpolate_Zbil_to_p2ref(perens_t &out) const
 	    
 	    //fit and interpolate
 	    const djvec_t coeffs=poly_fit(x,y,2,p2min,p2max);
-	    out[0]=poly_eval(coeffs,pars::p2ref);
+	    out[im_r_im_r_ibil]=poly_eval(coeffs,pars::p2ref);
 	    
 	    //produce plot
 	    const string path=dir_path+"/plots/interpolate_to_p2ref_"+tag+"_"+bil_tag[comps[4]]+
@@ -132,7 +132,7 @@ void perens_t::interpolate_Zbil_to_p2ref(perens_t &out) const
 	      "_m"+to_string(comps[2])+"_r"+to_string(comps[3])+".xmg";
 	    grace_file_t plot(path);
 	    write_fit_plot(plot,p2min,p2max,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
-	    plot.write_ave_err(pars::p2ref,out[0].ave_err());
+	    plot.write_ave_err(pars::p2ref,out[im_r_im_r_ibil].ave_err());
 	  }
     }
 }
