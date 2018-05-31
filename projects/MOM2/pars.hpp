@@ -93,6 +93,9 @@ namespace pars
   EXTERN_PARS bool average_r_immediately INIT_PARS_TO({false});
   //! compute mPCAC
   EXTERN_PARS bool report_mPCAC INIT_PARS_TO({false});
+  //! store whether we can compute also QED
+  EXTERN_PARS bool can_compute_QED INIT_PARS_TO({true});
+
   
   //! list of ensembles
   EXTERN_PARS vector<string> ens;

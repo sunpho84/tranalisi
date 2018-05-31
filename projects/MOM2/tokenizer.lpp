@@ -115,6 +115,7 @@ AverageZ                            DEBUG_PRINTF("Found AverageZ\n");return TK_A
 CombinedSeaChirExtrap               DEBUG_PRINTF("Found CombinedSeaChirExtrap\n");return TK_COMBINED_SEA_CHIR_EXTRAP;
 ComputeOrLoadIngredients            DEBUG_PRINTF("Found ComputeOrLoadIngredients\n");return TK_COMPUTE_OR_LOAD_INGREDIENTS;
 ComputeZ                            DEBUG_PRINTF("Found ComputeZ\n");return TK_COMPUTE_Z;
+ComputeZQCD                         DEBUG_PRINTF("Found ComputeZQCD\n");return TK_COMPUTE_Z_QCD;
 CorrectOa2UsingPTilde               DEBUG_PRINTF("Found CorrectOa2UsingPTilde\n");return TK_CORRECT_OA2_USING_PTILDE;
 Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVOLVE;
 ExtrapolateTo0P2                    DEBUG_PRINTF("Found ExtrapolateTo0P2\n");return TK_EXTRAPOLATE_TO_0_P2;

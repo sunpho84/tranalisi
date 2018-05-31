@@ -15,47 +15,55 @@ EXTERN_ANALYSIS map<string,perens_t> _data;
 #define ASSERT_PRESENT true
 #define PRESENCE_NOT_NEEDED false
 
-//! store whether ingredients are computed
-EXTERN_ANALYSIS bool ingredients_computed INIT_ANALYSIS_TO({false});
+#define DEFINE_VALIDATE_QCD_OR_QED(NAME,TYPE)				\
+  									\
+  /*! store whether ingredients for TYPE are computed */		\
+  EXTERN_ANALYSIS bool NAME ## _ ## TYPE ## _computed INIT_ANALYSIS_TO({false}); \
+  									\
+  /*! marks that TYPE NAME are computed */				\
+  inline void validate_ ## NAME ## _ ## TYPE()				\
+  {									\
+    NAME ## _ ## TYPE ## _computed=true;				\
+  }									\
+									\
+  /*! marks that TYPE NAME are not computed */				\
+  inline void invalidate_ ## NAME ## _ ## TYPE()			\
+  {									\
+    NAME ## _ ## TYPE ##_computed=false;				\
+  }									\
+  /*! ask permission to read NAME */					\
+  inline void needs_to_read_ ## NAME ## _ ## TYPE()			\
+  {									\
+    if(not NAME ## _ ## TYPE ## _computed) CRASH(#NAME "not valid");	\
+  }
 
-//! marks that ingredients are computed
-inline void validate_ingredients()
-{
-  ingredients_computed=true;
-}
+  
+#define DEFINE_VALIDATE_QCD_AND_QED(NAME)				\
+  DEFINE_VALIDATE_QCD_OR_QED(NAME,QCD)					\
+  DEFINE_VALIDATE_QCD_OR_QED(NAME,QED)					\
+									\
+  /*! marks that NAME are computed */					\
+  inline void validate_ ## NAME()					\
+  {									\
+    validate_ ## NAME ## _QCD();					\
+    validate_ ## NAME ## _QED();					\
+  }									\
+									\
+  /*! marks that NAME are not computed */				\
+  inline void invalidate_ ## NAME()					\
+  {									\
+    invalidate_ ## NAME ## _QCD();					\
+    invalidate_ ## NAME ## _QED();					\
+  }									\
+									\
+  inline void needs_to_read_ ## NAME()					\
+  {									\
+    needs_to_read_ ## NAME ## _QCD();					\
+    needs_to_read_ ## NAME ## _QED();					\
+   }
 
-//! ask permission to read ingredients
-inline void needs_to_read_ingredients()
-{
-  if(not ingredients_computed) CRASH("ingredients not valid");
-}
-
-//! marks that ingredients are not computed
-inline void invalidate_ingredients()
-{
-  ingredients_computed=false;
-}
-
-//! store whether Z are computed
-EXTERN_ANALYSIS bool Z_computed INIT_ANALYSIS_TO({false});
-
-//! marks that Z are computed
-inline void validate_Z()
-{
-  Z_computed=true;
-}
-
-//! ask permission to read Z
-inline void needs_to_read_Z()
-{
-  if(not Z_computed) CRASH("Z not valid");
-}
-
-//! marks that Z are not computed
-inline void invalidate_Z()
-{
-  Z_computed=false;
-}
+DEFINE_VALIDATE_QCD_AND_QED(ingredients)
+DEFINE_VALIDATE_QCD_AND_QED(Z)
 
 /////////////////////////////////////////////////////////////////
 
@@ -83,6 +91,7 @@ void print_all_Z(const string &suffix);
 
 DEFINE_SINGLE_SELF_COMMAND_ALL(recompute_deltam_all,recompute_deltam,needs_to_read_ingredients,invalidate_Z)
 DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_all,compute_Z,needs_to_read_ingredients,validate_Z)
+DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_QCD_all,compute_Z_QCD,needs_to_read_ingredients_QCD,validate_Z_QCD)
 DEFINE_SINGLE_SELF_COMMAND_ALL(write_checkpoint_all,write_checkpoint,needs_to_read_ingredients,void)
 
 #define DEFINE_SINGLE_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND,CHECK,CLAUSE) \
@@ -106,7 +115,7 @@ DEFINE_SINGLE_COMMAND_ALL(match_to_W_reg_all,match_to_W_reg,needs_to_read_Z,inva
 DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap,needs_to_read_ingredients,invalidate_Z)
 DEFINE_SINGLE_COMMAND_ALL(interpolate_to_p2ref_all,interpolate_to_p2ref,needs_to_read_Z,invalidate_ingredients)
 DEFINE_SINGLE_COMMAND_ALL(extrapolate_to_0_p2_all,extrapolate_to_0_p2,needs_to_read_Z,invalidate_ingredients)
-DEFINE_SINGLE_COMMAND_ALL(subtract_Oa2_all,subtract_Oa2,needs_to_read_ingredients,invalidate_Z)
+DEFINE_SINGLE_COMMAND_ALL(subtract_Oa2_all,subtract_Oa2,needs_to_read_ingredients,invalidate_Z_QCD)
 
 // /////////////////////////////////////////////////////////////////
 

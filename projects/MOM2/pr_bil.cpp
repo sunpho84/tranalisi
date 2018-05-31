@@ -221,18 +221,19 @@ void perens_t::mom_compute_bil()
 
 void perens_t::subtract_Oa2_pr_bil()
 {
+  const size_t iins=0;
+  
   for(size_t im_in=0;im_in<nm;im_in++)
     for(size_t r_in=0;r_in<nr;r_in++)
       for(size_t im_ou=0;im_ou<nm;im_ou++)
 	for(size_t r_ou=0;r_ou<nr;r_ou++)
-	  for(size_t iins=0;iins<pr_bil::nins;iins++)
-	    for(size_t ibil=0;ibil<nbil;ibil++)
-	      for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
-		{
-		  const size_t imom=bilmoms[0][0];
-		  pr_bil[im_r_im_r_bilins_ibil_ibilmom_ind({im_in,r_in,im_ou,r_ou,iins,ibil,ibilmom})]-=
-		    g2tilde()*pr_bil_a2(pars::act,gf::LANDAU,group::SU3,all_moms[bilmoms[imom][0]],L,ibil);
-		}
+	  for(size_t ibil=0;ibil<nbil;ibil++)
+	    for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
+	      {
+		const size_t imom=bilmoms[0][0];
+		pr_bil[im_r_im_r_bilins_ibil_ibilmom_ind({im_in,r_in,im_ou,r_ou,iins,ibil,ibilmom})]-=
+		  g2tilde()*pr_bil_a2(pars::act,gf::LANDAU,group::SU3,all_moms[bilmoms[imom][0]],L,ibil);
+	      }
 }
 
 void perens_t::evolve_pr_bil(perens_t &out) const

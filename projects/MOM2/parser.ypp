@@ -99,6 +99,7 @@ using namespace scan;
 %token TK_COMBINED_SEA_CHIR_EXTRAP
 %token TK_COMPUTE_OR_LOAD_INGREDIENTS
 %token TK_COMPUTE_Z
+%token TK_COMPUTE_Z_QCD
 %token TK_EVOLVE
 %token TK_LIST_ENSEMBLES
 %token TK_PLOT_Z
@@ -158,6 +159,7 @@ commands:
         | commands ratio_Z_minus_one
         | commands compute_or_load_ingredients
         | commands compute_Z
+        | commands compute_Z_QCD
         | commands list_ensembles
         | commands extrapolate_to_0_p2
         | commands interpolate_to_p2ref
@@ -267,6 +269,9 @@ recompute_deltam: TK_RECOMPUTE_DELTAM '(' ')' {recompute_deltam_all();}
 ;
 
 compute_Z: TK_COMPUTE_Z '(' ')' {compute_Z_all();}
+;
+
+compute_Z_QCD: TK_COMPUTE_Z_QCD '(' ')' {compute_Z_QCD_all();}
 ;
 
 plot_Z: TK_PLOT_Z '(' TK_QUOTED_TEXT ')' {plot_all_Z(*$3);delete $3;}

@@ -460,7 +460,7 @@ struct perens_t
   void plot_Zq(const string &suffix);
   
   //! compute all Zq
-  void compute_Zq();
+  void compute_Zq(const bool also_QED);
   
   /////////////////////////////////////////////////////////////////
   
@@ -476,7 +476,7 @@ struct perens_t
   void plot_Zbil(const string &suffix);
   
   //! computes all bilinear Z
-  void compute_Zbil();
+  void compute_Zbil(const bool also_QED);
   
   /////////////////////////////////////////////////////////////////
   
@@ -489,7 +489,7 @@ struct perens_t
   vector<task_t> get_Zmeslep_tasks(const vector<const perens_t*> &ens={});
   
   //! computes all meslep Z
-  void compute_Zmeslep();
+  void compute_Zmeslep(const bool also_QED);
   
   void plot_Zmeslep(const string &suffix);
   
@@ -503,11 +503,19 @@ struct perens_t
   /////////////////////////////////////////////////////////////////
   
   //! compute all Z
-  void compute_Z()
+  void compute_Z(const bool also_QED=true)
   {
-    compute_Zq();
-    if(pars::compute_bilinears) compute_Zbil();
-    if(pars::compute_meslep) compute_Zmeslep();
+    if(also_QED and not pars::can_compute_QED) CRASH("Cannot compute QED now");
+    
+    compute_Zq(also_QED);
+    if(pars::compute_bilinears) compute_Zbil(also_QED);
+    if(pars::compute_meslep) compute_Zmeslep(also_QED);
+  }
+  
+  //! compute all Z but not QED
+  void compute_Z_QCD()
+  {
+    compute_Z(false);
   }
   
   void plot_Z(const string &suffix)

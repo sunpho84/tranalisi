@@ -56,6 +56,7 @@ void perens_t::plot_sigma(const string &suffix)
 
 void perens_t::subtract_Oa2_sigma()
 {
+  const size_t iins=0;
   const size_t iproj=sigma::SIGMA1;
   for(size_t im=0;im<nm;im++)
     for(size_t r=0;r<nr;r++)
@@ -65,8 +66,7 @@ void perens_t::subtract_Oa2_sigma()
 	  const imom_t mom=all_moms[imom];
 	  const double sub=g2tilde()*sig1_a2(pars::act,gf::LANDAU,group::SU3,mom,L);
 	  
-	  for(size_t iins=0;iins<sigma::nins;iins++)
-	    sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,imom,iproj,iins})]-=sub;
+	  sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,imom,iproj,iins})]-=sub;
 	}
 }
 
