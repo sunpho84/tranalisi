@@ -59,6 +59,8 @@ namespace pars
   EXTERN_PARS bool compute_bilinears INIT_PARS_TO({true});
   //! compute mesoleptonic vertex
   EXTERN_PARS bool compute_meslep INIT_PARS_TO({false});
+  //! use g2 or g2tilde to correct Oa2
+  EXTERN_PARS bool correct_Oa2_using_gtilde INIT_PARS_TO({false});
   //! use p or ptilde to correct Oa2
   EXTERN_PARS bool correct_Oa2_using_ptilde INIT_PARS_TO({false});
   //! Filter for democracy

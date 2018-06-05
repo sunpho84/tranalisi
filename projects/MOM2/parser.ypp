@@ -70,6 +70,7 @@ using namespace scan;
 %token TK_COMPUTE_DELTAM
 %token TK_COMPUTE_MESLEP
 %token TK_COMPUTE_MESLEP_WITH_CHARGES_ONE
+%token TK_CORRECT_OA2_USING_GTILDE
 %token TK_CORRECT_OA2_USING_PTILDE
 %token TK_ENSEMBLES
 %token TK_FILTER_THRESH
@@ -129,6 +130,7 @@ commands:
         | commands set_compute_meslep
         | commands set_compute_deltam
         | commands set_compute_meslep_with_charges_one
+	| commands set_correct_Oa2_using_gtilde
 	| commands set_correct_Oa2_using_ptilde
         | commands set_extrapolate_to_0_p2_range
         | commands set_filter_thresh
@@ -200,6 +202,9 @@ set_boundary_conditions: TK_BC '=' TK_QUOTED_TEXT
 			     ph_mom[0]=get<1>(bc_key);
 			     delete $3;
 			 }
+;
+
+set_correct_Oa2_using_gtilde: TK_CORRECT_OA2_USING_GTILDE '=' TK_INTE {pars::correct_Oa2_using_gtilde=$3;}
 ;
 
 set_correct_Oa2_using_ptilde: TK_CORRECT_OA2_USING_PTILDE '=' TK_INTE {pars::correct_Oa2_using_ptilde=$3;}

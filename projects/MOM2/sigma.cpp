@@ -64,7 +64,7 @@ void perens_t::subtract_Oa2_sigma()
 	{
 	  const size_t imom=linmoms[ilinmom][0];
 	  const imom_t mom=all_moms[imom];
-	  const double sub=g2tilde()*sig1_a2(pars::act,gf::LANDAU,group::SU3,mom,L);
+	  const double sub=g2to_correct()*sig1_a2(pars::act,gf::LANDAU,group::SU3,mom,L);
 	  
 	  sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,imom,iproj,iins})]-=sub;
 	}

@@ -232,7 +232,7 @@ void perens_t::subtract_Oa2_pr_bil()
 	      {
 		const size_t imom=bilmoms[0][0];
 		pr_bil[im_r_im_r_bilins_ibil_ibilmom_ind({im_in,r_in,im_ou,r_ou,iins,ibil,ibilmom})]-=
-		  g2tilde()*pr_bil_a2(pars::act,gf::LANDAU,group::SU3,all_moms[bilmoms[imom][0]],L,ibil);
+		  g2to_correct()*pr_bil_a2(pars::act,gf::LANDAU,group::SU3,all_moms[bilmoms[imom][0]],L,ibil);
 	      }
 }
 

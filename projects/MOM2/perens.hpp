@@ -69,9 +69,12 @@ struct perens_t
     return 6.0/beta;
   }
   
-  double g2tilde() const
+  double g2to_correct() const
   {
-    return g2()/plaq;
+    if(pars::correct_Oa2_using_gtilde)
+      return g2()/plaq;
+    else
+      return g2();
   }
   
   /////////////////////////////////////////////////////////////////
