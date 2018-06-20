@@ -88,6 +88,7 @@ using namespace scan;
 %token TK_RECOMPUTE_DELTAM
 %token TK_SCHEME
 %token TK_TWISTED_RUN
+%token TK_INCLUDE_ZQ_CORRECTIONS_IN_BILINEARS
 %token TK_INCLUDE_SELF_ENERGY_IN_BILINEARS
 %token TK_USE_DELTAM_CR_CT
 %token TK_USE_DELTAM_TM_CT
@@ -144,6 +145,7 @@ commands:
         | commands set_scheme
         | commands set_twisted_run
         | commands set_use_QED
+        | commands set_include_Zq_corrections_in_bilinears
         | commands set_include_self_energy_in_bilinears
         | commands set_use_deltam_cr_ct
         | commands set_use_deltam_tm_ct
