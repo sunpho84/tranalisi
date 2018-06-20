@@ -88,6 +88,7 @@ using namespace scan;
 %token TK_RECOMPUTE_DELTAM
 %token TK_SCHEME
 %token TK_TWISTED_RUN
+%token TK_INCLUDE_SELF_ENERGY_IN_BILINEARS
 %token TK_USE_DELTAM_CR_CT
 %token TK_USE_DELTAM_TM_CT
 %token TK_USE_QED
@@ -143,6 +144,7 @@ commands:
         | commands set_scheme
         | commands set_twisted_run
         | commands set_use_QED
+        | commands set_include_self_energy_in_bilinears
         | commands set_use_deltam_cr_ct
         | commands set_use_deltam_tm_ct
         | commands average_ingredients
@@ -254,6 +256,9 @@ set_twisted_run: TK_TWISTED_RUN '=' TK_INTE {pars::twisted_run=$3;if($3==false) 
 ;
 
 set_p2ref: TK_P2REF '=' TK_REAL {pars::p2ref=$3;}
+;
+
+set_include_self_energy_in_bilinears: TK_INCLUDE_SELF_ENERGY_IN_BILINEARS '=' TK_INTE {pars::include_self_energy_in_bilinears=$3;}
 ;
 
 set_use_deltam_cr_ct: TK_USE_DELTAM_CR_CT '=' TK_INTE {pars::use_deltam_cr_ct=$3;}

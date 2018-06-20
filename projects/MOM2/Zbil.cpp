@@ -57,21 +57,44 @@ void perens_t::compute_Zbil(const bool also_QED)
 	if(pars::use_QED and also_QED)
 	  {
 	    djack_t pr_bil_QED=
-	      pr(pr_bil::EX)+
-	      pr(pr_bil::PH_OU)+
-	      pr(pr_bil::PH_IN)+
-	      pr(pr_bil::CR_OU)*deltam_cr[im_r_ou]+
-	      pr(pr_bil::CR_IN)*deltam_cr[im_r_in]+
-	      pr(pr_bil::TM_OU)*deltam_tm[im_r_ou]+
-	      pr(pr_bil::TM_IN)*deltam_tm[im_r_in];
-	    djack_t sigma1_QED_ou=
-	      s1_ou(sigma::PH)+
-	      s1_ou(sigma::CR)*deltam_cr[im_r_ou]+
-	      s1_ou(sigma::TM)*deltam_tm[im_r_ou];
-	    djack_t sigma1_QED_in=
-	      s1_in(sigma::PH)+
-	      s1_in(sigma::CR)*deltam_cr[im_r_in]+
-	      s1_in(sigma::TM)*deltam_tm[im_r_in];
+	      pr(pr_bil::EX);
+	    
+	    djack_t sigma1_QED_ou=0.0;
+	    
+	    djack_t sigma1_QED_in=0.0;
+	    
+	    if(pars::use_deltam_cr_ct)
+	      {
+		pr_bil_QED+=
+		  pr(pr_bil::CR_OU)*deltam_cr[im_r_ou]+
+		  pr(pr_bil::CR_IN)*deltam_cr[im_r_in];
+		
+		sigma1_QED_ou+=s1_ou(sigma::CR)*deltam_cr[im_r_ou];
+		
+		sigma1_QED_ou+=s1_in(sigma::CR)*deltam_cr[im_r_in];
+	      }
+	    
+	    if(pars::use_deltam_tm_ct)
+	      {
+		pr_bil_QED+=
+		  pr(pr_bil::TM_OU)*deltam_tm[im_r_ou]+
+		  pr(pr_bil::TM_IN)*deltam_tm[im_r_in];
+		
+		sigma1_QED_ou+=s1_ou(sigma::TM)*deltam_tm[im_r_ou];
+		
+		sigma1_QED_ou+=s1_in(sigma::TM)*deltam_tm[im_r_in];
+	      }
+	    
+	    if(pars::include_self_energy_in_bilinears)
+	      {
+		pr_bil_QED+=
+		  pr(pr_bil::PH_OU)+
+		  pr(pr_bil::PH_IN);
+		
+		sigma1_QED_ou+=s1_ou(sigma::PH);
+		
+		sigma1_QED_in+=s1_in(sigma::PH);
+	      }
 	    
 	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
 	      -pr_bil_QED/pr(pr_bil::LO)

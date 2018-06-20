@@ -104,6 +104,7 @@ RecomputeDeltaM                     DEBUG_PRINTF("Found RecomputeDeltaM\n");retu
 Scheme                              DEBUG_PRINTF("Found Scheme\n");return TK_SCHEME;
 TwistedRun                          DEBUG_PRINTF("Found TwistedRun\n");return TK_TWISTED_RUN;
 Using                               DEBUG_PRINTF("Found Using\n");return TK_USING;
+IncludeSelfEnergyInBilinears        DEBUG_PRINTF("Found IncludeSelfEnergyInBilinears\n");return TK_INCLUDE_SELF_ENERGY_IN_BILINEARS;
 UseDeltamCrCt                       DEBUG_PRINTF("Found UseDeltamCrCt\n");return TK_USE_DELTAM_CR_CT;
 UseDeltamTmCt                       DEBUG_PRINTF("Found UseDeltamTmCt\n");return TK_USE_DELTAM_TM_CT;
 UseQED                              DEBUG_PRINTF("Found UseQED\n");return TK_USE_QED;
