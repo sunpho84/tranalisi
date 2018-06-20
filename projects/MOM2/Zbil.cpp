@@ -59,9 +59,9 @@ void perens_t::compute_Zbil(const bool also_QED)
 	    djack_t pr_bil_QED=
 	      pr(pr_bil::EX);
 	    
-	    djack_t sigma1_QED_ou=0.0;
+	    djack_t sigma1_QED_ou=s1_ou(sigma::PH);
 	    
-	    djack_t sigma1_QED_in=0.0;
+	    djack_t sigma1_QED_in=s1_in(sigma::PH);
 	    
 	    if(pars::use_deltam_cr_ct)
 	      {
@@ -86,15 +86,9 @@ void perens_t::compute_Zbil(const bool also_QED)
 	      }
 	    
 	    if(pars::include_self_energy_in_bilinears)
-	      {
-		pr_bil_QED+=
-		  pr(pr_bil::PH_OU)+
-		  pr(pr_bil::PH_IN);
-		
-		sigma1_QED_ou+=s1_ou(sigma::PH);
-		
-		sigma1_QED_in+=s1_in(sigma::PH);
-	      }
+	      pr_bil_QED+=
+		pr(pr_bil::PH_OU)+
+		pr(pr_bil::PH_IN);
 	    
 	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
 	      -pr_bil_QED/pr(pr_bil::LO)
