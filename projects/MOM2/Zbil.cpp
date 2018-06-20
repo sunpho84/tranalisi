@@ -71,7 +71,7 @@ void perens_t::compute_Zbil(const bool also_QED)
 		
 		sigma1_QED_ou+=s1_ou(sigma::CR)*deltam_cr[im_r_ou];
 		
-		sigma1_QED_ou+=s1_in(sigma::CR)*deltam_cr[im_r_in];
+		sigma1_QED_in+=s1_in(sigma::CR)*deltam_cr[im_r_in];
 	      }
 	    
 	    if(pars::use_deltam_tm_ct)
@@ -82,7 +82,7 @@ void perens_t::compute_Zbil(const bool also_QED)
 		
 		sigma1_QED_ou+=s1_ou(sigma::TM)*deltam_tm[im_r_ou];
 		
-		sigma1_QED_ou+=s1_in(sigma::TM)*deltam_tm[im_r_in];
+		sigma1_QED_in+=s1_in(sigma::TM)*deltam_tm[im_r_in];
 	      }
 	    
 	    if(pars::include_self_energy_in_bilinears)
@@ -99,7 +99,7 @@ void perens_t::compute_Zbil(const bool also_QED)
 	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
 	      -pr_bil_QED/pr(pr_bil::LO)
 	      +(sigma1_QED_ou/s1_ou(sigma::LO)+
-	      sigma1_QED_in/s1_in(sigma::LO))/2.0;
+		sigma1_QED_in/s1_in(sigma::LO))/2.0;
 	  }
       }
 }
