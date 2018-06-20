@@ -77,6 +77,8 @@ namespace pars
   enum DELTAM_METHOD{FROM_PROP,FROM_CORR};
   //! method to be used to compute deltam
   EXTERN_PARS DELTAM_METHOD deltam_method INIT_PARS_TO({FROM_CORR});
+  //! include Zq corrections in bilinears
+  EXTERN_PARS bool include_Zq_corrections_in_bilinears INIT_PARS_TO({true});
   //! include self energy and tadpole in bilinears
   EXTERN_PARS bool include_self_energy_in_bilinears INIT_PARS_TO({true});
   //! compute deltam_cr counterterm and subtract

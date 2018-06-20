@@ -261,6 +261,9 @@ set_p2ref: TK_P2REF '=' TK_REAL {pars::p2ref=$3;}
 set_include_self_energy_in_bilinears: TK_INCLUDE_SELF_ENERGY_IN_BILINEARS '=' TK_INTE {pars::include_self_energy_in_bilinears=$3;}
 ;
 
+set_include_Zq_corrections_in_bilinears: TK_INCLUDE_ZQ_CORRECTIONS_IN_BILINEARS '=' TK_INTE {pars::include_Zq_corrections_in_bilinears=$3;}
+;
+
 set_use_deltam_cr_ct: TK_USE_DELTAM_CR_CT '=' TK_INTE {pars::use_deltam_cr_ct=$3;}
 ;
 
