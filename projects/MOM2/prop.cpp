@@ -32,6 +32,7 @@ namespace qprop
 	ins_tag={"0" ,"QED", "PH"};
 	break;
      }
+    
     nins=ins_list.size();
   }
 }
@@ -122,6 +123,7 @@ vector<raw_file_t> perens_t::setup_read_all_qprops_mom(const vector<size_t> &con
       const size_t iconf=comps[2];
       const size_t ihit=comps[3];
       const qprop::ins ins=qprop::ins_list[comps[4]];
+      cout<<ins<<" "<<qprop::nins<<" "<<qprop::ins_tag[ins]<<endl;
       const string path_base=combine("%s/%s/%04zu/fft_",dir_path.c_str(),prop_hadr_path.c_str(),conf_list[iconf]);
       const string path_suff=combine(suff_hit.c_str(),ihit);
       const string path=path_base+get_qprop_filename(im,r,ins)+path_suff;
