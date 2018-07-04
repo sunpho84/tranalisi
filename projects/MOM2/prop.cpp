@@ -33,7 +33,6 @@ namespace qprop
 	break;
      }
     nins=ins_list.size();
-    CRASH("%zu %zu",pars::use_QED,nins);
   }
 }
 

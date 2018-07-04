@@ -106,7 +106,7 @@ namespace pars
   //! list of ensembles
   EXTERN_PARS vector<string> ens;
   
-  inline void set_use_QED(bool use)
+  inline void set_use_QED(size_t use)
   {
     if(not can_change_pars) CRASH("Cannot change use_QED");
     use_QED=use;
