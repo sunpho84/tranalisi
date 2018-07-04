@@ -129,7 +129,7 @@ struct perens_t
     
     return [this,im,r,ilinmom,proj](sigma::ins ins)->djack_t&
       {
-	return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,ins})];
+	return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,sigma::iins_of_ins[ins]})];
       };
   }
   
