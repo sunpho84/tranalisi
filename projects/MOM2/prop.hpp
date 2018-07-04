@@ -28,7 +28,9 @@ namespace qprop
 namespace lprop
 {
   enum ins{LO , F};
-  EXTERN_PROP vector<string> ins_tag;
+  EXTERN_PROP vector<ins>    ins_list;
+  EXTERN_PROP vector<string> ins_tag INIT_PROP_TO({"0" ,"F"});
+
   EXTERN_PROP size_t nins;
   
   void set_ins();
