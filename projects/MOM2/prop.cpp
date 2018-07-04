@@ -28,12 +28,12 @@ namespace qprop
 	ins_tag={"0" ,"FF","F","T","S","P"};
 	break;
       case 2:
-	ins_list={LO , QED , PH};
+	ins_list={LO , QED ,  PH};
 	ins_tag={"0" ,"QED", "PH"};
 	break;
      }
-    
     nins=ins_list.size();
+    CRASH("%zu %zu",pars::use_QED,nins);
   }
 }
 
