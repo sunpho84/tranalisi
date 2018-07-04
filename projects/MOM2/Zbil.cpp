@@ -95,8 +95,8 @@ void perens_t::compute_Zbil(const bool also_QED)
 	    
 	    if(pars::include_Zq_corrections_in_bilinears)
 	      Zbil_QED_rel[im_r_im_r_ibil_ibilmom]+=
-	      +(sigma1_QED_ou/s1_ou(sigma::LO)+
-		sigma1_QED_in/s1_in(sigma::LO))/2.0;
+		+(sigma1_QED_ou/s1_ou(sigma::LO)+
+		  sigma1_QED_in/s1_in(sigma::LO))/2.0;
 	  }
       }
 }

@@ -17,16 +17,21 @@ namespace sigma
 {
   void set_ins()
   {
-    if(pars::use_QED)
+    switch(pars::use_QED)
       {
-	ins_list={LO , CR , TM , PH};
-	ins_tag={"LO","CR","TM","PH"};
-      }
-    else
-      {
+      case 0:
 	ins_list={LO};
 	ins_tag={"LO"};
-      }
+	break;
+      case 1:
+	ins_list={LO , CR , TM , PH};
+	ins_tag={"LO","CR","TM","PH"};
+	break;
+      case 2:
+	ins_list={LO  , QED};
+	ins_tag={"LO" ,"QED"};
+	break;
+     }
     
     nins=ins_list.size();
   }
@@ -167,11 +172,18 @@ perens_t& perens_t::compute_sigmas()
 	  
 #define ADD_COMBO(INS) map.push_back({sigma::INS,jqprop::INS})
 	  ADD_COMBO(LO);
-	  if(pars::use_QED)
+	  switch(pars::use_QED)
 	    {
+	    case 0:
+	      break;
+	    case 1:
 	      ADD_COMBO(PH);
 	      ADD_COMBO(CR);
 	      ADD_COMBO(TM);
+	      break;
+	    case 2:
+	      ADD_COMBO(QED);
+	      break;
 	    }
 #undef ADD_COMBO
 	  

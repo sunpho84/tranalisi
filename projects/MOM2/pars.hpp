@@ -86,7 +86,7 @@ namespace pars
   //! compute deltam_tm counterterm and subtract
   EXTERN_PARS bool use_deltam_tm_ct INIT_PARS_TO({true});
   //! use QED
-  EXTERN_PARS bool use_QED INIT_PARS_TO({false});
+  EXTERN_PARS size_t use_QED INIT_PARS_TO({0});
   //! reference p2 to which interpolate, in GeV^2
   EXTERN_PARS double p2ref INIT_PARS_TO({13.0});
   //! range fora2p2 fit

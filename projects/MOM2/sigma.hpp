@@ -12,7 +12,7 @@
 
 namespace sigma
 {
-  enum ins{LO,  CR,  TM,  PH};
+  enum ins{LO,  CR,  TM,  PH,  QED};
   EXTERN_SIGMA vector<ins>     ins_list;
   EXTERN_SIGMA vector<string>  ins_tag;
   

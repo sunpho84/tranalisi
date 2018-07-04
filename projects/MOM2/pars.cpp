@@ -14,6 +14,8 @@ void freeze_pars()
 {
   if(pars::can_change_pars)
     {
+      if(pars::use_QED!=1 and (pars::use_deltam_cr_ct or pars::use_deltam_tm_ct)) CRASH("Need QED with mode 1 to include deltam");
+      
       pars::can_change_pars=false;
       
       lprop::set_ins();

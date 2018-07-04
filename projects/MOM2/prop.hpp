@@ -15,7 +15,7 @@ const double tau3[2]={-1.0,+1.0}; //!< tau entering the propagator
 
 namespace qprop
 {
-  enum ins{LO ,FF , F , T , S ,P };
+  enum ins{LO ,FF , F , T , S ,P, QED, PH};
   EXTERN_PROP vector<ins>    ins_list;
   EXTERN_PROP vector<string> ins_tag;
   EXTERN_PROP size_t nins;
@@ -38,7 +38,7 @@ dcompl_t coeff_to_read(const lprop::ins ikind,const size_t r);
 
 namespace jqprop
 {
-  enum ins{LO , PH , CR , TM };
+  enum ins{LO , PH , CR , TM , QED};
   EXTERN_PROP vector<ins>    ins_list;
   EXTERN_PROP vector<string> ins_tag;
   EXTERN_PROP size_t nins;

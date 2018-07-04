@@ -17,16 +17,21 @@ namespace qprop
 {
   void set_ins()
   {
-    if(pars::use_QED)
+    switch(pars::use_QED)
       {
-	ins_list={LO , FF , F , T , S , P};
-	ins_tag={"0" ,"FF","F","T","S","P"};
-      }
-    else
-      {
+      case 0:
 	ins_list={LO};
 	ins_tag={"0"};
-      }
+	break;
+      case 1:
+	ins_list={LO , FF , F , T , S , P};
+	ins_tag={"0" ,"FF","F","T","S","P"};
+	break;
+      case 2:
+	ins_list={LO , QED , PH};
+	ins_tag={"0" ,"QED", "PH"};
+	break;
+     }
     
     nins=ins_list.size();
   }
@@ -36,15 +41,20 @@ namespace jqprop
 {
   void set_ins()
   {
-    if(pars::use_QED)
+    switch(pars::use_QED)
       {
-	ins_list={LO , PH , CR , TM};
-	ins_tag={"LO","PH","CR","TM"};
-      }
-    else
-      {
+      case 0:
 	ins_list={LO};
 	ins_tag={"LO"};
+	break;
+      case 1:
+	ins_list={LO , PH , CR , TM};
+	ins_tag={"LO","PH","CR","TM"};
+	break;
+      case 2:
+	ins_list={LO , QED};
+	ins_tag={"LO","QED"};
+	break;
       }
     
     nins=ins_list.size();
@@ -284,12 +294,19 @@ void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const ve
   
 #define ADD_COMBO(JQ,Q,SIGN) map.push_back({jqprop::JQ,qprop::Q,SIGN})
   ADD_COMBO(LO,LO,+1);
-  if(pars::use_QED)
+  switch(pars::use_QED)
     {
+    case 0:
+      break;
+    case 1:
       ADD_COMBO(PH,FF,+1);
       ADD_COMBO(PH,T,+1);
       ADD_COMBO(CR,P,+1);
       ADD_COMBO(TM,S,+1);
+      break;
+    case 2:
+      ADD_COMBO(QED,QED,+1);
+      break;
     }
 #undef ADD_COMBO
   
@@ -335,12 +352,24 @@ vector<jqprop_t> perens_t::get_inverse_propagators(const vector<jqprop_t>& jqpro
       qprop_t prop_inv=jqprops_inv[im_r_LO][ijack]=jqprops[im_r_LO][ijack].inverse();
       
       //do the same with QED
-      if(pars::use_QED)
-	for(jqprop::ins ijqins : {jqprop::CR,jqprop::TM,jqprop::PH})
-	  {
-	    const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});
-	    jqprops_inv[im_r_ijqins][ijack]=-prop_inv*jqprops[im_r_ijqins][ijack]*prop_inv;
-	  }
+      vector<jqprop::ins> QED_inv_list;
+      switch(pars::use_QED)
+	{
+	case 0:
+	  break;
+	case 1:
+	  QED_inv_list={jqprop::CR,jqprop::TM,jqprop::PH};
+	  break;
+	case 2:
+	  QED_inv_list={jqprop::QED};
+	  break;
+	}
+      
+      for(jqprop::ins ijqins : QED_inv_list)
+	{
+	  const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});
+	  jqprops_inv[im_r_ijqins][ijack]=-prop_inv*jqprops[im_r_ijqins][ijack]*prop_inv;
+	}
     }
   
   invert_time.stop();
