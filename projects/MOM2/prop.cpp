@@ -145,7 +145,7 @@ vector<raw_file_t> perens_t::setup_read_all_lprops_mom(const vector<size_t> &con
       const size_t iconf=comps[0];
       const size_t ihit=comps[1];
       const size_t iins=comps[2];
-      const size_t lins=lprop::ins_list[iins];
+      const lprop::ins lins=lprop::ins_list[iins];
       
       const string path_base=combine("%s/%s/%04zu/fft_",dir_path.c_str(),prop_lep_path.c_str(),conf_list[iconf]);
       const string path_suff=combine(suff_hit.c_str(),ihit);
