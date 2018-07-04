@@ -95,14 +95,14 @@ dcompl_t coeff_to_read(const qprop::ins ins,const size_t r)
     }
 }
 
-string get_qprop_filename(const size_t im,const size_t ir,const qprop::ins ins)
+string get_qprop_filename(const size_t im,const size_t ir,const size_t iins)
 {
-  return combine("S_M%zu_R%zu_%s",im,ir,qprop::ins_tag[ins].c_str());
+  return combine("S_M%zu_R%zu_%s",im,ir,qprop::ins_tag[iins].c_str());
 }
 
-string get_lprop_filename(const lprop::ins ins)
+string get_lprop_filename(const size_t iins)
 {
-  return combine("L_%s",lprop::ins_tag[ins].c_str());
+  return combine("L_%s",lprop::ins_tag[iins].c_str());
 }
 
 vector<raw_file_t> perens_t::setup_read_all_qprops_mom(const vector<size_t> &conf_list) const
@@ -122,11 +122,12 @@ vector<raw_file_t> perens_t::setup_read_all_qprops_mom(const vector<size_t> &con
       const size_t r=comps[1];
       const size_t iconf=comps[2];
       const size_t ihit=comps[3];
-      const qprop::ins ins=qprop::ins_list[comps[4]];
-      cout<<ins<<" "<<qprop::nins<<" "<<qprop::ins_tag[ins]<<endl;
+      const size_t iins=comps[4];
+      const qprop::ins ins=qprop::ins_list[iins];
+      cout<<ins<<" "<<qprop::nins<<" "<<qprop::ins_tag[iins]<<endl;
       const string path_base=combine("%s/%s/%04zu/fft_",dir_path.c_str(),prop_hadr_path.c_str(),conf_list[iconf]);
       const string path_suff=combine(suff_hit.c_str(),ihit);
-      const string path=path_base+get_qprop_filename(im,r,ins)+path_suff;
+      const string path=path_base+get_qprop_filename(im,r,iins)+path_suff;
       
       files[i].open(path,"r");
     }
@@ -147,11 +148,12 @@ vector<raw_file_t> perens_t::setup_read_all_lprops_mom(const vector<size_t> &con
       const vector<size_t> comps=iconf_ihit_ilins_ind(i);
       const size_t iconf=comps[0];
       const size_t ihit=comps[1];
-      const lprop::ins ins=lprop::ins_list[comps[2]];
+      const size_t iins=comps[2];
+      const lprop::ins ins=lprop::ins_list[iins];
       const string path_base=combine("%s/%s/%04zu/fft_",dir_path.c_str(),prop_lep_path.c_str(),conf_list[iconf]);
       const string path_suff=combine(suff_hit.c_str(),ihit);
       
-      files[i].open(path_base+get_lprop_filename(ins)+path_suff,"r");
+      files[i].open(path_base+get_lprop_filename(iins)+path_suff,"r");
     }
   
   return files;
