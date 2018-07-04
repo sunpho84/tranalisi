@@ -14,7 +14,8 @@ namespace sigma
 {
   enum ins{LO,  CR,  TM,  PH,  QED};
   EXTERN_SIGMA vector<ins>     ins_list;
-  EXTERN_SIGMA vector<string>  ins_tag;
+  EXTERN_SIGMA vector<size_t>  iins_of_ins;
+  EXTERN_SIGMA vector<string>  ins_tag INIT_SIGMA_TO({"LO","CR","TM","PH","QED"});
   
   //! set all sigma insertions
   void set_ins();
@@ -24,7 +25,6 @@ namespace sigma
   EXTERN_SIGMA vector<proj>     proj_list INIT_SIGMA_TO(={SIGMA1,SIGMA2,SIGMA3});
   const size_t nproj=3;
 }
-
 
 #undef EXTERN_SIGMA
 #undef INIT_SIGMA_TO

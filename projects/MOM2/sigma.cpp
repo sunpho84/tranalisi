@@ -21,17 +21,17 @@ namespace sigma
       {
       case 0:
 	ins_list={LO};
-	ins_tag={"LO"};
 	break;
       case 1:
 	ins_list={LO , CR , TM , PH};
-	ins_tag={"LO","CR","TM","PH"};
 	break;
       case 2:
-	ins_list={LO  , QED};
-	ins_tag={"LO" ,"QED"};
+	ins_list={LO , QED};
 	break;
      }
+    
+    for(size_t iins=0;iins<ins_list.size();iins++)
+      iins_of_ins[ins_list[iins]]=iins;
     
     nins=ins_list.size();
   }
@@ -168,9 +168,9 @@ perens_t& perens_t::compute_sigmas()
 	    };
 	  
 	  //! list of all combination of transformations to be applied
-	  vector<tuple<sigma::ins,jqprop::ins>> map;
+	  vector<pair<size_t,size_t>> map;
 	  
-#define ADD_COMBO(INS) map.push_back({sigma::INS,jqprop::INS})
+#define ADD_COMBO(INS) map.push_back({sigma::iins_of_ins[sigma::INS],jqprop::iins_of_ins[jqprop::INS]})
 	  ADD_COMBO(LO);
 	  switch(pars::use_QED)
 	    {
@@ -191,8 +191,8 @@ perens_t& perens_t::compute_sigmas()
 	  for(size_t iproj=0;iproj<sigma::nproj;iproj++)
 	    for(auto m : map)
 	      {
-		sigma::ins isins=get<sigma::ins>(m);
-		jqprop::ins ijqins=get<jqprop::ins>(m);
+		const size_t isins=get<0>(m);
+		const size_t ijqins=get<1>(m);
 		
 		const size_t im_r_ilinmom_isigmaproj_isigmains=im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,iproj,isins});
 		const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});

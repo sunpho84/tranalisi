@@ -21,17 +21,17 @@ namespace qprop
       {
       case 0:
 	ins_list={LO};
-	ins_tag={"0"};
 	break;
       case 1:
 	ins_list={LO , FF , F , T , S , P};
-	ins_tag={"0" ,"FF","F","T","S","P"};
 	break;
       case 2:
-	ins_list={LO , QED ,  PH};
-	ins_tag={"0" ,"QED", "PH"};
+	ins_list={LO , F, QED};
 	break;
      }
+    
+    for(size_t iins=0;iins<ins_list.size();iins++)
+      iins_of_ins[ins_list[iins]]=iins;
     
     nins=ins_list.size();
   }
@@ -45,17 +45,17 @@ namespace jqprop
       {
       case 0:
 	ins_list={LO};
-	ins_tag={"LO"};
 	break;
       case 1:
 	ins_list={LO , PH , CR , TM};
-	ins_tag={"LO","PH","CR","TM"};
 	break;
       case 2:
 	ins_list={LO , QED};
-	ins_tag={"LO","QED"};
 	break;
       }
+    
+    for(size_t iins=0;iins<ins_list.size();iins++)
+      iins_of_ins[ins_list[iins]]=iins;
     
     nins=ins_list.size();
   }
@@ -66,17 +66,11 @@ namespace lprop
   void set_ins()
   {
     if(pars::use_QED)
-      {
-	ins_list={LO , F };
-	ins_tag={"0" ,"F"};
-      }
+      ins_tag={"0" ,"F"};
     else
-      {
-	ins_list={LO};
-	ins_tag={"0"};
-      }
+      ins_tag={"0"};
     
-    nins=ins_list.size();
+    nins=ins_tag.size();
   }
 }
 
@@ -123,8 +117,7 @@ vector<raw_file_t> perens_t::setup_read_all_qprops_mom(const vector<size_t> &con
       const size_t iconf=comps[2];
       const size_t ihit=comps[3];
       const size_t iins=comps[4];
-      const qprop::ins ins=qprop::ins_list[iins];
-      cout<<ins<<" "<<qprop::nins<<" "<<qprop::ins_tag[iins]<<endl;
+      
       const string path_base=combine("%s/%s/%04zu/fft_",dir_path.c_str(),prop_hadr_path.c_str(),conf_list[iconf]);
       const string path_suff=combine(suff_hit.c_str(),ihit);
       const string path=path_base+get_qprop_filename(im,r,iins)+path_suff;
@@ -149,7 +142,7 @@ vector<raw_file_t> perens_t::setup_read_all_lprops_mom(const vector<size_t> &con
       const size_t iconf=comps[0];
       const size_t ihit=comps[1];
       const size_t iins=comps[2];
-      const lprop::ins ins=lprop::ins_list[iins];
+      
       const string path_base=combine("%s/%s/%04zu/fft_",dir_path.c_str(),prop_lep_path.c_str(),conf_list[iconf]);
       const string path_suff=combine(suff_hit.c_str(),ihit);
       
@@ -244,6 +237,7 @@ vector<qprop_t> perens_t::read_all_qprops_mom(vector<raw_file_t> &files,const si
       const size_t im=comps[0];
       const size_t r=comps[1];
       const size_t iqins=comps[2];
+      const qprop::ins qins=qprop::ins_list[iqins];
       const size_t ijack=comps[3];
       
       //! index of the conf built from ijack and i_in_clust
@@ -252,7 +246,7 @@ vector<qprop_t> perens_t::read_all_qprops_mom(vector<raw_file_t> &files,const si
       //! index of the file to use
       const size_t im_r_iconf_ihit_iqins=im_r_iconf_ihit_iqins_ind({im,r,iconf,ihit,iqins});
       
-      props[im_r_iqins_ijack]=read_qprop(files[im_r_iconf_ihit_iqins],coeff_to_read(qprop::ins_list[iqins],r),imom,r,r);
+      props[im_r_iqins_ijack]=read_qprop(files[im_r_iconf_ihit_iqins],coeff_to_read(qins,r),imom,r,r);
     }
   
   return props;
@@ -293,9 +287,9 @@ vector<lprop_t> perens_t::read_all_lprops_mom(vector<raw_file_t> &files,const si
 void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const vector<qprop_t>& props) const
 {
   //! list of all combination of transformations to be applied
-  vector<tuple<jqprop::ins,qprop::ins,int>> map;
+  vector<tuple<size_t,size_t,int>> map;
   
-#define ADD_COMBO(JQ,Q,SIGN) map.push_back({jqprop::JQ,qprop::Q,SIGN})
+#define ADD_COMBO(JQ,Q,SIGN) map.push_back({jqprop::iins_of_ins[jqprop::JQ],qprop::iins_of_ins[qprop::Q],SIGN})
   ADD_COMBO(LO,LO,+1);
   switch(pars::use_QED)
     {
@@ -321,9 +315,9 @@ void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const ve
       
       for(auto t : map)
 	{
-	  jqprop::ins jins=get<jqprop::ins>(t);
-	  qprop::ins ins=get<qprop::ins>(t);
-	  int sign=get<int>(t);
+	  const size_t jins=get<0>(t);
+	  const size_t ins=get<1>(t);
+	  const int sign=get<2>(t);
 	  
 	  const size_t im_r_ijqins=im_r_ijqins_ind({im,r,jins});
 	  const size_t im_r_iqins_ijack=im_r_iqins_ijack_ind({im,r,ins,ijack});
@@ -368,8 +362,9 @@ vector<jqprop_t> perens_t::get_inverse_propagators(const vector<jqprop_t>& jqpro
 	  break;
 	}
       
-      for(jqprop::ins ijqins : QED_inv_list)
+      for(jqprop::ins jqins : QED_inv_list)
 	{
+	  const size_t ijqins=jqprop::iins_of_ins[jqins];
 	  const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});
 	  jqprops_inv[im_r_ijqins][ijack]=-prop_inv*jqprops[im_r_ijqins][ijack]*prop_inv;
 	}
