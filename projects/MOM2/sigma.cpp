@@ -34,8 +34,9 @@ namespace sigma
     proj_list={SIGMA1,SIGMA2,SIGMA3};
     if(pars::compute_ri)
       proj_list.push_back(SIGMA4);
+    nproj=proj_list.size();
     
- iins_of_ins.resize(ins_tag.size());
+    iins_of_ins.resize(ins_tag.size());
     for(size_t iins=0;iins<ins_list.size();iins++)
       iins_of_ins[ins_list[iins]]=iins;
     
