@@ -100,6 +100,47 @@ vector<perens_t::task_t> perens_t::get_sigma_tasks(const vector<const perens_t*>
 
 perens_t& perens_t::compute_sigmas()
 {
+  //! list of all combination of transformations to be applied
+  vector<pair<size_t,size_t>> map;
+  
+#define ADD_COMBO(INS1,INS2) map.push_back({sigma::iins_of_ins[sigma::INS1],jqprop::iins_of_ins[jqprop::INS2]})
+#define ADD_COMBO_SAME(INS) ADD_COMBO(INS,INS)
+  
+  ADD_COMBO_SAME(LO);
+  switch(pars::use_QED)
+    {
+    case 0:
+      break;
+    case 1:
+      ADD_COMBO_SAME(PH);
+      ADD_COMBO_SAME(CR);
+      ADD_COMBO_SAME(TM);
+      break;
+    case 2:
+      ADD_COMBO_SAME(QED);
+      break;
+    }
+#undef ADD_COMBO_SAME
+  
+  //map for RI
+  vector<pair<size_t,size_t>> map_ri;
+  if(pars::compute_ri)
+    {
+      ADD_COMBO(LO,RI);
+      switch(pars::use_QED)
+	{
+	case 0:
+	  break;
+	case 1:
+	  CRASH("Not implemented yet");
+	  break;
+	case 2:
+	  ADD_COMBO(QED,RI_QED);
+	  break;
+	}
+    }
+#undef ADD_COMBO
+  
   vector<raw_file_t> files=setup_read_all_qprops_mom(conf_list);
   
   for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
@@ -180,47 +221,6 @@ perens_t& perens_t::compute_sigmas()
 	      return out;
 	    };
 	  
-	  //! list of all combination of transformations to be applied
-	  vector<pair<size_t,size_t>> map;
-	  
-#define ADD_COMBO(INS1,INS2) map.push_back({sigma::iins_of_ins[sigma::INS1],jqprop::iins_of_ins[jqprop::INS2]})
-#define ADD_COMBO_SAME(INS) ADD_COMBO(INS,INS)
-	  
-	  ADD_COMBO_SAME(LO);
-	  switch(pars::use_QED)
-	    {
-	    case 0:
-	      break;
-	    case 1:
-	      ADD_COMBO_SAME(PH);
-	      ADD_COMBO_SAME(CR);
-	      ADD_COMBO_SAME(TM);
-	      break;
-	    case 2:
-	      ADD_COMBO_SAME(QED);
-	      break;
-	    }
-#undef ADD_COMBO_SAME
-	  
-	  //map for RI
-	  vector<pair<size_t,size_t>> map_ri;
-	  if(pars::compute_ri)
-	    {
-	      ADD_COMBO(LO,RI);
-	      switch(pars::use_QED)
-		{
-		case 0:
-		  break;
-		case 1:
-		  CRASH("Not implemented yet");
-	      break;
-		case 2:
-		  ADD_COMBO(QED,RI_QED);
-		  break;
-		}
-	    }
-#undef ADD_COMBO
-	  
 	  sigma_time.start();
 	  for(size_t iproj=0;iproj<sigma::nproj;iproj++)
 	    {
@@ -235,8 +235,8 @@ perens_t& perens_t::compute_sigmas()
 		  const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});
 		  sigma[im_r_ilinmom_isigmaproj_isigmains][ijack]=compute_sigma(jprops_inv[im_r_ijqins][ijack],sigma::proj_list[iproj]);
 		}
-	      sigma_time.stop();
 	    }
+	  sigma_time.stop();
 	  
 #undef COMPUTE_SIGMA
 	}
