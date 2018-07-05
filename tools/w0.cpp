@@ -2,7 +2,7 @@
 
 #include <set>
 
-djvec_t load(const string &path)
+djvec_t load(const string &path,const size_t ncols)
 {
   raw_file_t fin(path,"r");
   
@@ -14,8 +14,17 @@ djvec_t load(const string &path)
       size_t iconf,imeas,acc;
       double p,r;
       double e;
-      if(sscanf(line,"%zu %zu %zu %lg %lg %lg",&iconf,&acc,&imeas,&p,&r,&e)!=6) CRASH("parsing %s",line);
-      //if(sscanf(line,"%zu %zu %zu %lg",&iconf,&acc,&imeas,&e)!=4) CRASH("parsing %s",line);
+      switch(ncols)
+	{
+	case 6:
+	  if(sscanf(line,"%zu %zu %zu %lg %lg %lg",&iconf,&acc,&imeas,&p,&r,&e)!=6) CRASH("parsing %s",line);
+	  break;
+	case 4:
+	  if(sscanf(line,"%zu %zu %zu %lg",&iconf,&acc,&imeas,&e)!=4) CRASH("parsing %s",line);
+	  break;
+	default:
+	  CRASH("Unknwon");
+	}
       tlist.insert(imeas);
       //const double c1=-1.0/12,c0=1-8*c1;
       //E.push_back(c0*6.0*(1.0-p)+c1*12.0*(1.0-r));
@@ -119,12 +128,13 @@ djack_t find_w0(const vector<double> &t,const djvec_t &E,const size_t ord=5,cons
 
 int main(int narg,char **arg)
 {
-  if(narg<4) CRASH("Use %s path dt njacks",arg[0]);
+  if(narg<5) CRASH("Use %s path dt njacks ncols",arg[0]);
   string path=arg[1];
   double dt=strtod(arg[2],NULL);
   set_njacks(atoi(arg[3]));
+  size_t ncols=atoi(arg[4]);
   
-  const djvec_t p=load(path);
+  const djvec_t p=load(path,ncols);
   const size_t nt=p.size();
   
   //compute times, t^2*p
