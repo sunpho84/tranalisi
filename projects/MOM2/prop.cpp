@@ -336,6 +336,7 @@ void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const ve
       ADD_COMBO(TM,S,+1);
       break;
     case 2:
+      ADD_COMBO(PH,PH,+1);
       ADD_COMBO(QED,QED,+1);
       break;
     }
