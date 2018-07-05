@@ -378,27 +378,16 @@ vector<jqprop_t> perens_t::get_inverse_propagators(const vector<jqprop_t>& jqpro
       const size_t r=im_r_ijack_comps[1];
       const size_t ijack=im_r_ijack_comps[2];
       
-      //compute inverse
-      const size_t im_r_LO=im_r_ijqins_ind({im,r,jqprop::LO});
-      qprop_t prop_inv=jqprops_inv[im_r_LO][ijack]=jqprops[im_r_LO][ijack].inverse();
+      //compute inverse LO
+      const size_t im_r_LO=im_r_ijqins_ind({im,r,0});
+      const qprop_t prop_inv=jqprops_inv[im_r_LO][ijack]=jqprops[im_r_LO][ijack].inverse();
       
-      //do the same with QED
-      vector<jqprop::ins> QED_inv_list;
-      switch(pars::use_QED)
+      //other insertions
+      for(size_t ijqins=1;ijqins<jqprop::nins;ijqins++)
 	{
-	case 0:
-	  break;
-	case 1:
-	  QED_inv_list={jqprop::CR,jqprop::TM,jqprop::PH};
-	  break;
-	case 2:
-	  QED_inv_list={jqprop::QED};
-	  break;
-	}
-      
-      for(jqprop::ins jqins : QED_inv_list)
-	{
-	  const size_t ijqins=jqprop::iins_of_ins[jqins];
+	  const jqprop::ins jqins=jqprop::ins_list[ijqins];
+	  cout<<"  Inverting propagator with insertion "<<ijqins<<"/"<<jqprop::nins<<" , "<<jqprop::ins_tag[jqins]<<endl;
+	  
 	  const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});
 	  jqprops_inv[im_r_ijqins][ijack]=-prop_inv*jqprops[im_r_ijqins][ijack]*prop_inv;
 	}
