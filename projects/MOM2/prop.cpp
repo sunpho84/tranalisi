@@ -369,7 +369,7 @@ void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const ve
 	  const size_t ins=get<1>(t);
 	  const int sign=get<2>(t);
 	  
-	  cout<<"  Jackknifing m="<<im<<" , r="<<r<<" , ijack="<<ijack<<" , jins="<<jins<<" , ins="<<ins<<endl;
+	  //cout<<"  Jackknifing m="<<im<<" , r="<<r<<" , ijack="<<ijack<<" , jins="<<jins<<" , ins="<<ins<<endl;
 	  
 	  const size_t im_r_ijqins=im_r_ijqins_ind({im,r,jins});
 	  const size_t im_r_iqins_ijack=im_r_iqins_ijack_ind({im,r,ins,ijack});
