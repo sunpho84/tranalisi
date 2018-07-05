@@ -51,7 +51,8 @@ void perens_t::plot_sigma(const string &suffix)
   for(size_t iins=0;iins<sigma::nins;iins++)
     for(size_t iproj=0;iproj<sigma::nproj;iproj++)
       {
-	grace_file_t out(dir_path+"/plots/sigma"+to_string(iproj+1)+"_"+sigma::ins_tag[iins]+(suffix!=""?("_"+suffix):string(""))+".xmg");
+	const sigma::ins ins=sigma::ins_list[iins];
+	grace_file_t out(dir_path+"/plots/sigma"+to_string(iproj+1)+"_"+sigma::ins_tag[ins]+(suffix!=""?("_"+suffix):string(""))+".xmg");
 	
 	for(size_t im=0;im<nm;im++)
 	  for(size_t r=0;r<nr;r++)
