@@ -155,7 +155,7 @@ perens_t& perens_t::compute_sigmas()
 	  {
 	    const size_t i_in_clust_ihit=i_in_clust_ihit_ind({i_in_clust,ihit});
 	    const size_t mom=linmoms[ilinmom][0];
-	    cout<<"Working on qprop, "
+	    cout<<"Reading qprop, "
 	      "clust_entry "<<i_in_clust+1<<"/"<<clust_size<<", "
 	      "hit "<<ihit+1<<"/"<<nhits<<", "
 	      "momentum "<<ilinmom+1<<"/"<<linmoms.size()<<", "
@@ -183,6 +183,8 @@ perens_t& perens_t::compute_sigmas()
 	  //decript indices
 	  const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
 	  const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
+	  
+	  cout<<" Computing projected propagator for combo im="<<im<<" , r="<<r<<" , ijack="<<ijack<<endl;
 	  
 	  const p_t ptilde=all_moms[mom].p(L).tilde();
 	  
@@ -227,15 +229,17 @@ perens_t& perens_t::compute_sigmas()
 	  for(size_t iproj=0;iproj<sigma::nproj;iproj++)
 	    {
 	      const sigma::proj proj=sigma::proj_list[iproj];
+	      cout<<"   Computing proj "<<iproj<<"/"<<sigma::nproj<<endl;
 	      
-	      for(auto m : (proj==sigma::SIGMA4 ? map_ri:map))
+	      
+	      for(auto m : (proj==sigma::SIGMA4 ? map_ri : map))
 		{
 		  const size_t isins=get<0>(m);
 		  const size_t ijqins=get<1>(m);
 		  
 		  const size_t im_r_ilinmom_isigmaproj_isigmains=im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,iproj,isins});
 		  const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});
-		  sigma[im_r_ilinmom_isigmaproj_isigmains][ijack]=compute_sigma(jprops_inv[im_r_ijqins][ijack],sigma::proj_list[iproj]);
+		  sigma[im_r_ilinmom_isigmaproj_isigmains][ijack]=compute_sigma(jprops_inv[im_r_ijqins][ijack],proj);
 		}
 	    }
 	  sigma_time.stop();
