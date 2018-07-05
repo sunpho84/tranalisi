@@ -21,9 +21,9 @@ namespace sigma
   void set_ins();
   EXTERN_SIGMA size_t nins;
   
-  enum proj{SIGMA1,SIGMA2,SIGMA3};
-  EXTERN_SIGMA vector<proj>     proj_list INIT_SIGMA_TO(={SIGMA1,SIGMA2,SIGMA3});
-  const size_t nproj=3;
+  enum proj{SIGMA1,SIGMA2,SIGMA3,SIGMA4};
+  EXTERN_SIGMA vector<proj>     proj_list;
+  EXTERN_SIGMA size_t nproj;
 }
 
 #undef EXTERN_SIGMA

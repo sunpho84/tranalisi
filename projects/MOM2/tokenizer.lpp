@@ -88,6 +88,7 @@ AverageEquivMomentaImmediately      DEBUG_PRINTF("Found AverageEquivMomentaImmed
 BC                                  DEBUG_PRINTF("Found BC\n");return TK_BC;
 ChirExtrMethod                      DEBUG_PRINTF("Found ChirExtrMethod\n");return TK_CHIR_EXTR_METHOD;
 ComputeBilinears                    DEBUG_PRINTF("Found ComputeBilinears\n");return TK_COMPUTE_BILINEARS;
+ComputeRi                           DEBUG_PRINTF("Found ComputeRi\n");return TK_COMPUTE_RI;
 ComputeDeltaM                       DEBUG_PRINTF("Found ComputeDeltaM\n");return TK_COMPUTE_DELTAM;
 ComputeMeslep                       DEBUG_PRINTF("Found ComputeMeslep\n");return TK_COMPUTE_MESLEP;
 ComputeMeslepWithChargesOne         DEBUG_PRINTF("Found ComputeMeslepWithChargesOne\n");return TK_COMPUTE_MESLEP_WITH_CHARGES_ONE;

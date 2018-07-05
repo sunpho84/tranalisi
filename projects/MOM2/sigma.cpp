@@ -30,7 +30,12 @@ namespace sigma
 	break;
      }
     
-    iins_of_ins.resize(ins_tag.size());
+    //set sigma list
+    proj_list={SIGMA1,SIGMA2,SIGMA3};
+    if(pars::compute_ri)
+      proj_list.push_back(SIGMA4);
+    
+ iins_of_ins.resize(ins_tag.size());
     for(size_t iins=0;iins<ins_list.size();iins++)
       iins_of_ins[ins_list[iins]]=iins;
     
@@ -163,6 +168,13 @@ perens_t& perens_t::compute_sigmas()
 		case SIGMA3:
 		  //trace with gamma5
 		  out=(prop_inv*quaGamma[5]).trace().imag()/(12.0*V);
+		case SIGMA4:
+		  //trace with gamma_mu
+		  out=0.0;
+		  for(size_t mu=0;mu<NDIM;mu++)
+		      out+=
+			(prop_inv*quaGamma[igmu[mu]]).trace().real()/(12.0*V);
+		  break;
 		};
 	      
 	      return out;
@@ -171,35 +183,60 @@ perens_t& perens_t::compute_sigmas()
 	  //! list of all combination of transformations to be applied
 	  vector<pair<size_t,size_t>> map;
 	  
-#define ADD_COMBO(INS) map.push_back({sigma::iins_of_ins[sigma::INS],jqprop::iins_of_ins[jqprop::INS]})
-	  ADD_COMBO(LO);
+#define ADD_COMBO(INS1,INS2) map.push_back({sigma::iins_of_ins[sigma::INS1],jqprop::iins_of_ins[jqprop::INS2]})
+#define ADD_COMBO_SAME(INS) ADD_COMBO(INS,INS)
+	  
+	  ADD_COMBO_SAME(LO);
 	  switch(pars::use_QED)
 	    {
 	    case 0:
 	      break;
 	    case 1:
-	      ADD_COMBO(PH);
-	      ADD_COMBO(CR);
-	      ADD_COMBO(TM);
+	      ADD_COMBO_SAME(PH);
+	      ADD_COMBO_SAME(CR);
+	      ADD_COMBO_SAME(TM);
 	      break;
 	    case 2:
-	      ADD_COMBO(QED);
+	      ADD_COMBO_SAME(QED);
 	      break;
+	    }
+#undef ADD_COMBO_SAME
+	  
+	  //map for RI
+	  vector<pair<size_t,size_t>> map_ri;
+	  if(pars::compute_ri)
+	    {
+	      ADD_COMBO(LO,RI);
+	      switch(pars::use_QED)
+		{
+		case 0:
+		  break;
+		case 1:
+		  CRASH("Not implemented yet");
+	      break;
+		case 2:
+		  ADD_COMBO(QED,RI_QED);
+		  break;
+		}
 	    }
 #undef ADD_COMBO
 	  
 	  sigma_time.start();
 	  for(size_t iproj=0;iproj<sigma::nproj;iproj++)
-	    for(auto m : map)
-	      {
-		const size_t isins=get<0>(m);
-		const size_t ijqins=get<1>(m);
-		
-		const size_t im_r_ilinmom_isigmaproj_isigmains=im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,iproj,isins});
-		const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});
-		sigma[im_r_ilinmom_isigmaproj_isigmains][ijack]=compute_sigma(jprops_inv[im_r_ijqins][ijack],sigma::proj_list[iproj]);
-	      }
-	  sigma_time.stop();
+	    {
+	      const sigma::proj proj=sigma::proj_list[iproj];
+	      
+	      for(auto m : (proj==sigma::SIGMA4 ? map_ri:map))
+		{
+		  const size_t isins=get<0>(m);
+		  const size_t ijqins=get<1>(m);
+		  
+		  const size_t im_r_ilinmom_isigmaproj_isigmains=im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,iproj,isins});
+		  const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});
+		  sigma[im_r_ilinmom_isigmaproj_isigmains][ijack]=compute_sigma(jprops_inv[im_r_ijqins][ijack],sigma::proj_list[iproj]);
+		}
+	      sigma_time.stop();
+	    }
 	  
 #undef COMPUTE_SIGMA
 	}

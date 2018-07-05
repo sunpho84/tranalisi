@@ -30,6 +30,21 @@ namespace qprop
 	break;
      }
     
+    if(pars::compute_ri)
+      switch(pars::use_QED)
+	{
+	case 0:
+	  ins_list.push_back(RI);
+	  break;
+	case 1:
+	  CRASH("Not implemented yet");
+	  break;
+	case 2:
+	  ins_list.push_back(RI);
+	  ins_list.push_back(RI_QED);
+	  break;
+	}
+    
     iins_of_ins.resize(ins_tag.size());
     for(size_t iins=0;iins<ins_list.size();iins++)
       iins_of_ins[ins_list[iins]]=iins;
@@ -54,6 +69,21 @@ namespace jqprop
 	ins_list={LO , QED};
 	break;
       }
+    
+    if(pars::compute_ri)
+      switch(pars::use_QED)
+	{
+	case 0:
+	  ins_list.push_back(RI);
+	  break;
+	case 1:
+	  CRASH("Not implemented yet");
+	  break;
+	case 2:
+	  ins_list.push_back(RI);
+	  ins_list.push_back(RI_QED);
+	  break;
+	}
     
     iins_of_ins.resize(ins_tag.size());
     for(size_t iins=0;iins<ins_list.size();iins++)
