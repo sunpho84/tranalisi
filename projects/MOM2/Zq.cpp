@@ -62,6 +62,7 @@ void perens_t::compute_Zq(const bool also_QED)
 	      Zq_QED_rel[im_r_ilinmom]=
 		sigma1(QED)/sigma1(LO);
 	    }
+	}
     }
 }
 
