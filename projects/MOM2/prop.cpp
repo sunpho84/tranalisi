@@ -339,6 +339,22 @@ void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const ve
       ADD_COMBO(QED,QED,+1);
       break;
     }
+  
+  if(pars::compute_ri)
+    {
+      ADD_COMBO(RI,RI,+1);
+      switch(pars::use_QED)
+	{
+	case 0:
+	  break;
+	case 1:
+	  CRASH("Not implemented yet");
+	  break;
+	case 2:
+	  ADD_COMBO(RI_QED,RI_QED,+1);
+	  break;
+	}
+    }
 #undef ADD_COMBO
   
 #pragma omp parallel for
@@ -380,6 +396,7 @@ vector<jqprop_t> perens_t::get_inverse_propagators(const vector<jqprop_t>& jqpro
       
       //compute inverse LO
       const size_t im_r_LO=im_r_ijqins_ind({im,r,0});
+      cout<<"  Inverting propagator with insertion "<<0<<"/"<<jqprop::nins<<" , "<<jqprop::ins_tag[jqprop::LO]<<endl;
       const qprop_t prop_inv=jqprops_inv[im_r_LO][ijack]=jqprops[im_r_LO][ijack].inverse();
       
       //other insertions
