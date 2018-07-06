@@ -107,21 +107,21 @@ perens_t& perens_t::compute_sigmas()
   //! list of all combination of transformations to be applied
   vector<pair<size_t,size_t>> map;
   
-#define ADD_COMBO(INS1,INS2) map.push_back({sigma::iins_of_ins[sigma::INS1],jqprop::iins_of_ins[jqprop::INS2]})
-#define ADD_COMBO_SAME(INS) ADD_COMBO(INS,INS)
+#define ADD_COMBO(MAP,INS1,INS2) MAP.push_back({sigma::iins_of_ins[sigma::INS1],jqprop::iins_of_ins[jqprop::INS2]})
+#define ADD_COMBO_SAME(MAP,INS) ADD_COMBO(MAP,INS,INS)
   
-  ADD_COMBO_SAME(LO);
+  ADD_COMBO_SAME(map,LO);
   switch(pars::use_QED)
     {
     case 0:
       break;
     case 1:
-      ADD_COMBO_SAME(PH);
-      ADD_COMBO_SAME(CR);
-      ADD_COMBO_SAME(TM);
+      ADD_COMBO_SAME(map,PH);
+      ADD_COMBO_SAME(map,CR);
+      ADD_COMBO_SAME(map,TM);
       break;
     case 2:
-      ADD_COMBO_SAME(QED);
+      ADD_COMBO_SAME(map,QED);
       break;
     }
 #undef ADD_COMBO_SAME
@@ -130,7 +130,7 @@ perens_t& perens_t::compute_sigmas()
   vector<pair<size_t,size_t>> map_ri;
   if(pars::compute_ri)
     {
-      ADD_COMBO(LO,RI);
+      ADD_COMBO(map_ri,LO,RI);
       switch(pars::use_QED)
 	{
 	case 0:
@@ -139,7 +139,7 @@ perens_t& perens_t::compute_sigmas()
 	  CRASH("Not implemented yet");
 	  break;
 	case 2:
-	  ADD_COMBO(QED,RI_QED);
+	  ADD_COMBO(map_ri,QED,RI_QED);
 	  break;
 	}
     }
