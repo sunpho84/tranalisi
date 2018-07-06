@@ -220,7 +220,7 @@ perens_t& perens_t::compute_sigmas()
 		  out=0.0;
 		  for(size_t mu=0;mu<NDIM;mu++)
 		      out+=
-			(prop_inv*quaGamma[igmu[mu]]).trace().imag()/(12.0*V);
+			(prop_inv*quaGamma[igmu[mu]]).trace().real()/(12.0*V);
 		  break;
 		};
 	      
