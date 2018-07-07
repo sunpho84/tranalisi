@@ -219,6 +219,7 @@ perens_t& perens_t::compute_sigmas()
 		  //trace with gamma_mu
 		  out=0.0;
 		  for(size_t mu=0;mu<NDIM;mu++)
+		    if(mu==2)
 		      out+=
 			(prop_inv*quaGamma[igmu[mu]]).trace().real()/(12.0*V);
 		  break;
