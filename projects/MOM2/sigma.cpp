@@ -186,7 +186,7 @@ perens_t& perens_t::compute_sigmas()
 	  const vector<size_t> im_r_ijack_comps=im_r_ijackp1_ind(im_r_ijack);
 	  const size_t im=im_r_ijack_comps[0],r=im_r_ijack_comps[1],ijack=im_r_ijack_comps[2];
 	  
-	  cout<<" Computing projected propagator for combo im="<<im<<" , r="<<r<<" , ijack="<<ijack<<endl;
+	  //cout<<" Computing projected propagator for combo im="<<im<<" , r="<<r<<" , ijack="<<ijack<<endl;
 	  
 	  const p_t ptilde=all_moms[mom].p(L).tilde();
 	  
