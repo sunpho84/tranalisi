@@ -404,7 +404,7 @@ vector<jqprop_t> perens_t::get_inverse_propagators(const vector<jqprop_t>& jqpro
       //other insertions
       for(size_t ijqins=1;ijqins<jqprop::nins;ijqins++)
 	{
-	  const jqprop::ins jqins=jqprop::ins_list[ijqins];
+	  //const jqprop::ins jqins=jqprop::ins_list[ijqins];
 	  //cout<<"  Inverting propagator with insertion "<<ijqins<<"/"<<jqprop::nins<<" , "<<jqprop::ins_tag[jqins]<<endl;
 	  
 	  const size_t im_r_ijqins=im_r_ijqins_ind({im,r,ijqins});

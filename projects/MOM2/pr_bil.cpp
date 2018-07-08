@@ -112,8 +112,11 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
 #define ADD_COMBO(A,I,V,O)			\
   map.push_back({pr_bil::iins_of_ins[pr_bil::A],jqprop::iins_of_ins[jqprop::I],pr_bil::iins_of_ins[pr_bil::V],jqprop::iins_of_ins[jqprop::O]})
   ADD_COMBO(LO,  LO, LO, LO);
-  if(pars::use_QED)
+  switch(pars::use_QED)
     {
+    case 0:
+      break;
+    case 1:
       ADD_COMBO(EX    , LO , EX    , LO);
       ADD_COMBO(CR_IN , LO , CR_IN , LO);
       ADD_COMBO(CR_OU , LO , CR_OU , LO);
@@ -128,6 +131,13 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
       ADD_COMBO(TM_OU , LO , LO, TM);
       ADD_COMBO(PH_IN , PH , LO, LO);
       ADD_COMBO(PH_OU , LO , LO, PH);
+      break;
+    case 2:
+      ADD_COMBO(EX    , LO , EX    , LO);
+      ADD_COMBO(QED_IN , LO , QED_IN , LO);
+      ADD_COMBO(QED_OU , LO , QED_OU , LO);
+      ADD_COMBO(QED_IN , QED , LO, LO);
+      ADD_COMBO(QED_OU , LO , LO, QED);
     }
 #undef ADD_COMBO
   
