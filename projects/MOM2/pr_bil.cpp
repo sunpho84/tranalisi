@@ -48,9 +48,9 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
   index_t ind({{"i",im_r_im_r_igam_ind.max()},{"iclust",njacks}});
   
   //! list of all combination of transformations to be applied
-  vector<tuple<pr_bil::ins,qprop::ins,qprop::ins>> map;
+  vector<tuple<size_t,size_t,size_t>> map;
 #define ADD_COMBO(V,O,I)			\
-  map.push_back({pr_bil::V,qprop::O,qprop::I})
+  map.push_back({pr_bil::iins_of_ins[pr_bil::V],qprop::iins_of_ins[qprop::O],qprop::iins_of_ins[qprop::I]})
   ADD_COMBO(LO,    LO, LO);
   switch(pars::use_QED)
     {
@@ -68,7 +68,7 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
       ADD_COMBO(TM_OU, LO, S);
       break;
     case 2:
-      ADD_COMBO(EX,    F,  F);
+      ADD_COMBO(EX,     F,  F);
       ADD_COMBO(QED_IN, QED,LO);
       ADD_COMBO(QED_OU, LO, QED);
       break;
@@ -90,9 +90,9 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
       
       for(auto t : map)
 	{
-	  const pr_bil::ins ipr_ins=get<0>(t);
-	  const qprop::ins iq_ins_in=get<1>(t);
-	  const qprop::ins iq_ins_ou=get<2>(t);
+	  const size_t ipr_ins=get<0>(t);
+	  const size_t iq_ins_in=get<1>(t);
+	  const size_t iq_ins_ou=get<2>(t);
 	  
 	  //proxy for vector and props
 	  const qprop_t &p_in=props_in[im_r_iqins_ijack_ind({im_in,r_in,iq_ins_in,iclust})];
@@ -133,11 +133,12 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
       ADD_COMBO(PH_OU , LO , LO, PH);
       break;
     case 2:
-      ADD_COMBO(EX    , LO , EX    , LO);
-      ADD_COMBO(QED_IN , LO , QED_IN , LO);
-      ADD_COMBO(QED_OU , LO , QED_OU , LO);
-      ADD_COMBO(QED_IN , QED , LO, LO);
-      ADD_COMBO(QED_OU , LO , LO, QED);
+      ADD_COMBO(EX     , LO  , EX     , LO);
+      ADD_COMBO(QED_IN , LO  , QED_IN , LO);
+      ADD_COMBO(QED_OU , LO  , QED_OU , LO);
+      ///
+      ADD_COMBO(QED_IN , QED , LO     , LO);
+      ADD_COMBO(QED_OU , LO  , LO     , QED);
     }
 #undef ADD_COMBO
   
