@@ -18,18 +18,27 @@ namespace pr_bil
 {
   void set_ins()
   {
-    if(pars::use_QED)
+    switch(pars::use_QED)
       {
-	ins_list={LO , CR_OU , CR_IN , TM_OU , TM_IN , PH_OU , PH_IN , EX };
-	ins_tag={"LO","CR_OU","CR_IN","TM_OU","TM_IN","PH_OU","PH_IN","EX"};
-      }
-    else
-      {
+      case 0:
 	ins_list={LO};
 	ins_tag={"LO"};
-      }
+	break;
+      case 1:
+	ins_list={LO , CR_OU , CR_IN , TM_OU , TM_IN , PH_OU , PH_IN , EX };
+	ins_tag={"LO","CR_OU","CR_IN","TM_OU","TM_IN","PH_OU","PH_IN","EX"};
+	break;
+      case 2:
+	ins_list={LO , PH_OU , PH_IN , QED_OU , QED_IN};
+	ins_tag={"LO","PH_OU","PH_IN","QED_OU","QED_IN"};
+	break;
+     }
     
+    iins_of_ins.resize(ins_tag.size());
+    for(size_t iins=0;iins<ins_list.size();iins++)
+      iins_of_ins[ins_list[iins]]=iins;
     nins=ins_list.size();
+    cout<<"Pr_bil, nins: "<<nins<<endl;
   }
 }
 
@@ -43,8 +52,11 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
 #define ADD_COMBO(V,O,I)			\
   map.push_back({pr_bil::V,qprop::O,qprop::I})
   ADD_COMBO(LO,    LO, LO);
-  if(pars::use_QED)
+  switch(pars::use_QED)
     {
+    case 0:
+      break;
+    case 1:
       ADD_COMBO(EX,    F,  F);
       ADD_COMBO(PH_IN, FF, LO);
       ADD_COMBO(PH_IN, T,  LO);
@@ -54,6 +66,12 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
       ADD_COMBO(CR_OU, LO, P);
       ADD_COMBO(TM_IN, S,  LO);
       ADD_COMBO(TM_OU, LO, S);
+      break;
+    case 2:
+      ADD_COMBO(EX,    F,  F);
+      ADD_COMBO(QED_IN, QED,LO);
+      ADD_COMBO(QED_OU, LO, QED);
+      break;
     }
 #undef ADD_COMBO
   
@@ -90,9 +108,9 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
 {
   const index_t ind({{"rest",im_r_im_r_ibil_ind.max()},{"ijack",njacks+1}});
   
-  vector<tuple<pr_bil::ins,jqprop::ins,pr_bil::ins,jqprop::ins>> map;
+  vector<tuple<size_t,size_t,size_t,size_t>> map;
 #define ADD_COMBO(A,I,V,O)			\
-  map.push_back({pr_bil::A,jqprop::I,pr_bil::V,jqprop::O})
+  map.push_back({pr_bil::iins_of_ins[pr_bil::A],jqprop::iins_of_ins[jqprop::I],pr_bil::iins_of_ins[pr_bil::V],jqprop::iins_of_ins[jqprop::O]})
   ADD_COMBO(LO,  LO, LO, LO);
   if(pars::use_QED)
     {
@@ -128,10 +146,10 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
       
       for(auto t : map)
 	{
-	  const pr_bil::ins pr_bilins=get<0>(t);
-	  const jqprop::ins ijqins_in=get<1>(t);
-	  const pr_bil::ins bilins=get<2>(t);
-	  const jqprop::ins ijqins_ou=get<3>(t);
+	  const size_t pr_bilins=get<0>(t);
+	  const size_t ijqins_in=get<1>(t);
+	  const size_t bilins=get<2>(t);
+	  const size_t ijqins_ou=get<3>(t);
 	  
 	  const size_t im_r_ijqins_ou=im_r_ijqins_ind({im_ou,r_ou,ijqins_ou});
 	  const size_t im_r_ijqins_in=im_r_ijqins_ind({im_in,r_in,ijqins_in});
