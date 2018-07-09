@@ -232,7 +232,7 @@ perens_t& perens_t::compute_sigmas()
 	  for(size_t iproj=0;iproj<sigma::nproj;iproj++)
 	    {
 	      const sigma::proj proj=sigma::proj_list[iproj];
-	      cout<<"   Computing proj "<<iproj<<"/"<<sigma::nproj<<endl;
+	      //cout<<"   Computing proj "<<iproj<<"/"<<sigma::nproj<<endl;
 	      
 	      
 	      for(auto m : (proj==sigma::SIGMA4 ? map_ri : map))
