@@ -58,7 +58,7 @@ void perens_t::compute_Zbil(const bool also_QED)
 	djack_t sigma1_QED_ou;
 	djack_t sigma1_QED_in;
 	
-	if(0 && also_QED)
+	if(also_QED)
 	  switch(pars::use_QED)
 	    {
 	    case 0:
