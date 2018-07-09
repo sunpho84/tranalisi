@@ -398,7 +398,7 @@ vector<jqprop_t> perens_t::get_inverse_propagators(const vector<jqprop_t>& jqpro
       
       //compute inverse LO
       const size_t im_r_LO=im_r_ijqins_ind({im,r,0});
-      cout<<"  Inverting propagator with insertion "<<0<<"/"<<jqprop::nins<<" , "<<jqprop::ins_tag[jqprop::LO]<<endl;
+      //cout<<"  Inverting propagator with insertion "<<0<<"/"<<jqprop::nins<<" , "<<jqprop::ins_tag[jqprop::LO]<<endl;
       const qprop_t prop_inv=jqprops_inv[im_r_LO][ijack]=jqprops[im_r_LO][ijack].inverse();
       
       //other insertions

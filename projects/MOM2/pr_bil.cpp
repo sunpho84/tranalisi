@@ -71,6 +71,7 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
       break;
     }
 #undef ADD_COMBO
+  cout<<"pr_bil, needs to compute "<<map.size()<<" kind of verteices"<<endl;
   
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
@@ -91,6 +92,7 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
 	  const size_t iq_ins_in=get<1>(t);
 	  const size_t iq_ins_ou=get<2>(t);
 	  
+	  cout<<" pr_bil , im_ou="<<im_ou<<" , r_ou="<<r_ou<< ", im_in="<<im_in<<" , r_in="<<r_in<<" iG="<<iG<<" , ipr_ins="<<ipr_ins<<" , iq_ins_in="<<iq_ins_in<<" , iq_ins_ou="<<iq_ins_ou<<endl;
 	  //proxy for vector and props
 	  const qprop_t &p_in=props_in[im_r_iqins_ijack_ind({im_in,r_in,iq_ins_in,iclust})];
 	  const qprop_t &p_ou=props_ou[im_r_iqins_ijack_ind({im_ou,r_ou,iq_ins_ou,iclust})];
