@@ -22,15 +22,12 @@ namespace pr_bil
       {
       case 0:
 	ins_list={LO};
-	ins_tag={"LO"};
 	break;
       case 1:
 	ins_list={LO , CR_OU , CR_IN , TM_OU , TM_IN , PH_OU , PH_IN , EX };
-	ins_tag={"LO","CR_OU","CR_IN","TM_OU","TM_IN","PH_OU","PH_IN","EX"};
 	break;
       case 2:
 	ins_list={LO , PH_OU , PH_IN , QED_OU , QED_IN};
-	ins_tag={"LO","PH_OU","PH_IN","QED_OU","QED_IN"};
 	break;
      }
     

@@ -19,7 +19,7 @@ namespace pr_bil
   enum ins{LO, CR_OU,CR_IN, TM_OU,TM_IN, PH_OU,PH_IN, QED_OU,QED_IN, EX};
   EXTERN_PR_BIL vector<size_t>   iins_of_ins;
   EXTERN_PR_BIL vector<ins>      ins_list;
-  EXTERN_PR_BIL vector<string>   ins_tag;
+  EXTERN_PR_BIL vector<string>   ins_tag; INIT_PR_BIL_TO({"LO","CR_OU","CR_IN","TM_OU","TM_IN","PH_OU","PH_IN","QED_OU","QED_IN","EX"});
   
   //! set all pr_bil insertion
   void set_ins();
