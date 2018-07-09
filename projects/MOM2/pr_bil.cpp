@@ -49,6 +49,7 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
 #define ADD_COMBO(V,O,I)			\
   map.push_back({pr_bil::iins_of_ins[pr_bil::V],qprop::iins_of_ins[qprop::O],qprop::iins_of_ins[qprop::I]})
   ADD_COMBO(LO,    LO, LO);
+  if(0)
   switch(pars::use_QED)
     {
     case 0:
@@ -111,7 +112,8 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
 #define ADD_COMBO(A,I,V,O)			\
   map.push_back({pr_bil::iins_of_ins[pr_bil::A],jqprop::iins_of_ins[jqprop::I],pr_bil::iins_of_ins[pr_bil::V],jqprop::iins_of_ins[jqprop::O]})
   ADD_COMBO(LO,  LO, LO, LO);
-  switch(pars::use_QED)
+  if(0)
+    switch(pars::use_QED)
     {
     case 0:
       break;
