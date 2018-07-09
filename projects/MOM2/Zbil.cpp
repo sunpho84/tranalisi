@@ -54,41 +54,63 @@ void perens_t::compute_Zbil(const bool also_QED)
 	Zbil[im_r_im_r_ibil_ibilmom]=
 	  sqrt(s1_ou(sigma::LO)*s1_in(sigma::LO))/pr(pr_bil::LO);
 	
-	if(pars::use_QED and also_QED)
+	djack_t pr_bil_QED;
+	djack_t sigma1_QED_ou;
+	djack_t sigma1_QED_in;
+	
+	if(also_QED)
+	  switch(pars::use_QED)
+	    {
+	    case 0:
+	      break;
+	    case 1:
+	      pr_bil_QED=
+		pr(pr_bil::EX);
+	      
+	      sigma1_QED_ou=s1_ou(sigma::PH);
+	      sigma1_QED_in=s1_in(sigma::PH);
+	      
+	      if(pars::use_deltam_cr_ct)
+		{
+		  pr_bil_QED+=
+		    pr(pr_bil::CR_OU)*deltam_cr[im_r_ou]+
+		    pr(pr_bil::CR_IN)*deltam_cr[im_r_in];
+		  
+		  sigma1_QED_ou+=s1_ou(sigma::CR)*deltam_cr[im_r_ou];
+		  sigma1_QED_in+=s1_in(sigma::CR)*deltam_cr[im_r_in];
+		}
+	      
+	      if(pars::use_deltam_tm_ct)
+		{
+		  pr_bil_QED+=
+		    pr(pr_bil::TM_OU)*deltam_tm[im_r_ou]+
+		    pr(pr_bil::TM_IN)*deltam_tm[im_r_in];
+		  
+		  sigma1_QED_ou+=s1_ou(sigma::TM)*deltam_tm[im_r_ou];
+		  sigma1_QED_in+=s1_in(sigma::TM)*deltam_tm[im_r_in];
+		}
+	      
+	      if(pars::include_self_energy_in_bilinears)
+		pr_bil_QED+=
+		  pr(pr_bil::PH_OU)+
+		  pr(pr_bil::PH_IN);
+	      break;
+	    case 2:
+	      pr_bil_QED=
+		pr(pr_bil::EX);
+	      
+	      sigma1_QED_ou=s1_ou(sigma::QED);
+	      sigma1_QED_in=s1_in(sigma::QED);
+	      break;
+	    }
+	
+	//final combination
+	if(also_QED and pars::use_QED)
 	  {
-	    djack_t pr_bil_QED=
-	      pr(pr_bil::EX);
-	    
-	    djack_t sigma1_QED_ou=s1_ou(sigma::PH);
-	    
-	    djack_t sigma1_QED_in=s1_in(sigma::PH);
-	    
-	    if(pars::use_deltam_cr_ct)
-	      {
-		pr_bil_QED+=
-		  pr(pr_bil::CR_OU)*deltam_cr[im_r_ou]+
-		  pr(pr_bil::CR_IN)*deltam_cr[im_r_in];
-		
-		sigma1_QED_ou+=s1_ou(sigma::CR)*deltam_cr[im_r_ou];
-		
-		sigma1_QED_in+=s1_in(sigma::CR)*deltam_cr[im_r_in];
-	      }
-	    
-	    if(pars::use_deltam_tm_ct)
-	      {
-		pr_bil_QED+=
-		  pr(pr_bil::TM_OU)*deltam_tm[im_r_ou]+
-		  pr(pr_bil::TM_IN)*deltam_tm[im_r_in];
-		
-		sigma1_QED_ou+=s1_ou(sigma::TM)*deltam_tm[im_r_ou];
-		
-		sigma1_QED_in+=s1_in(sigma::TM)*deltam_tm[im_r_in];
-	      }
-	    
 	    if(pars::include_self_energy_in_bilinears)
-	      pr_bil_QED+=
-		pr(pr_bil::PH_OU)+
-		pr(pr_bil::PH_IN);
+		pr_bil_QED+=
+		  pr(pr_bil::QED_OU)+
+		  pr(pr_bil::QED_IN);
 	    
 	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
 	      -pr_bil_QED/pr(pr_bil::LO);

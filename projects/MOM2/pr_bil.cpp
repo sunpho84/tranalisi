@@ -138,6 +138,7 @@ void perens_t::compute_proj_bil(const vector<jqprop_t>& jprop_inv_in,const vecto
       ///
       ADD_COMBO(QED_IN , QED , LO     , LO);
       ADD_COMBO(QED_OU , LO  , LO     , QED);
+      break;
     }
 #undef ADD_COMBO
   
