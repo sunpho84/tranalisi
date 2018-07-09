@@ -71,7 +71,7 @@ void perens_t::build_all_mr_gbil_jackkniffed_verts(vector<jqprop_t>& jbil,const 
       break;
     }
 #undef ADD_COMBO
-  cout<<"pr_bil, needs to compute "<<map.size()<<" kind of verteices"<<endl;
+  //cout<<"pr_bil, needs to compute "<<map.size()<<" kind of vertices"<<endl;
   
 #pragma omp parallel for
   for(size_t i=0;i<ind.max();i++)
