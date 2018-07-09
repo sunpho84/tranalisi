@@ -58,7 +58,7 @@ void perens_t::compute_Zbil(const bool also_QED)
 	djack_t sigma1_QED_ou;
 	djack_t sigma1_QED_in;
 	
-	if(also_QED)
+	if(0 && also_QED)
 	  switch(pars::use_QED)
 	    {
 	    case 0:
@@ -101,17 +101,17 @@ void perens_t::compute_Zbil(const bool also_QED)
 	      
 	      sigma1_QED_ou=s1_ou(sigma::QED);
 	      sigma1_QED_in=s1_in(sigma::QED);
+	      
+	      if(pars::include_self_energy_in_bilinears)
+		pr_bil_QED+=
+		  pr(pr_bil::QED_OU)+
+		  pr(pr_bil::QED_IN);
 	      break;
 	    }
 	
 	//final combination
 	if(also_QED and pars::use_QED)
 	  {
-	    if(pars::include_self_energy_in_bilinears)
-		pr_bil_QED+=
-		  pr(pr_bil::QED_OU)+
-		  pr(pr_bil::QED_IN);
-	    
 	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
 	      -pr_bil_QED/pr(pr_bil::LO);
 	    
