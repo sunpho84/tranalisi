@@ -63,13 +63,17 @@ void perens_t::compute_Zbil(const bool also_QED)
 	    {
 	    case 0:
 	      break;
+	      /////////////////////////////////////////////////////////////////
 	    case 1:
+	      //basic part
 	      pr_bil_QED=
 		pr(pr_bil::EX);
 	      
+	      //add Zq piece
 	      sigma1_QED_ou=s1_ou(sigma::PH);
 	      sigma1_QED_in=s1_in(sigma::PH);
 	      
+	      //add critical counterterm
 	      if(pars::use_deltam_cr_ct)
 		{
 		  pr_bil_QED+=
@@ -80,6 +84,7 @@ void perens_t::compute_Zbil(const bool also_QED)
 		  sigma1_QED_in+=s1_in(sigma::CR)*deltam_cr[im_r_in];
 		}
 	      
+	      //add tm counterterm
 	      if(pars::use_deltam_tm_ct)
 		{
 		  pr_bil_QED+=
@@ -90,18 +95,23 @@ void perens_t::compute_Zbil(const bool also_QED)
 		  sigma1_QED_in+=s1_in(sigma::TM)*deltam_tm[im_r_in];
 		}
 	      
+	      //include self energy if needed
 	      if(pars::include_self_energy_in_bilinears)
 		pr_bil_QED+=
 		  pr(pr_bil::PH_OU)+
 		  pr(pr_bil::PH_IN);
 	      break;
+	      /////////////////////////////////////////////////////////////////
 	    case 2:
+	      //basic part
 	      pr_bil_QED=
 		pr(pr_bil::EX);
 	      
+	      //include Zq
 	      sigma1_QED_ou=s1_ou(sigma::QED);
 	      sigma1_QED_in=s1_in(sigma::QED);
 	      
+	      //include self energy if needed
 	      if(pars::include_self_energy_in_bilinears)
 		pr_bil_QED+=
 		  pr(pr_bil::QED_OU)+

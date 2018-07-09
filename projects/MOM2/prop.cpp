@@ -26,7 +26,7 @@ namespace qprop
 	ins_list={LO , FF , F , T , S , P};
 	break;
       case 2:
-	ins_list={LO , PH, QED};
+	ins_list={LO , F, QED};
 	break;
      }
     

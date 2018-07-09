@@ -15,10 +15,10 @@ const double tau3[2]={-1.0,+1.0}; //!< tau entering the propagator
 
 namespace qprop
 {
-  enum ins{LO ,F , FF , T , S ,P, PH, QED, RI, RI_QED};
+  enum ins{LO ,F , FF , T , S ,P, QED, RI, RI_QED};
   EXTERN_PROP vector<ins>    ins_list;
   EXTERN_PROP vector<size_t> iins_of_ins;
-  EXTERN_PROP vector<string> ins_tag INIT_PROP_TO({"0" ,"F","FF","T","S","P","PH","QED","RI","RI_QED"});
+  EXTERN_PROP vector<string> ins_tag INIT_PROP_TO({"0" ,"F","FF","T","S","P","QED","RI","RI_QED"});
   
   EXTERN_PROP size_t nins;
   
