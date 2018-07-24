@@ -45,9 +45,10 @@ namespace meslep
 
 namespace pr_meslep
 {
-  enum ins{LO,NA_OU,NA_IN,CR_OU,CR_IN,TM_OU,TM_IN,PH_OU,PH_IN,EX};
+  enum ins{LO, NA_OU,NA_IN, CR_OU,CR_IN, TM_OU,TM_IN, PH_OU,PH_IN, QED_OU,QED_IN, EX};
+  EXTERN_PR_MESLEP vector<size_t>   iins_of_ins;
   EXTERN_PR_MESLEP vector<ins>      ins_list;
-  EXTERN_PR_MESLEP vector<string>   ins_tag;
+  EXTERN_PR_MESLEP vector<string>   ins_tag INIT_PR_MESLEP_TO({"LO","NA_IN","NA_OU","CR_OU","CR_IN","TM_OU","TM_IN","PH_OU","PH_IN","QED_OU","QED_IN","EX"});
   
   //! set all pr_meslep insertion
   void set_ins();

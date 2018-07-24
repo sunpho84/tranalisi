@@ -19,20 +19,26 @@ namespace pr_meslep
 {
   void set_ins()
   {
-    if(pars::use_QED)
+    switch(pars::use_QED)
       {
+      case 0:
+      	ins_list={LO};
+	break;
+      case 1:
 	ins_list={LO , NA_IN , NA_OU , CR_OU , CR_IN , TM_OU , TM_IN , PH_OU , PH_IN , EX };
-	ins_tag={"LO","NA_IN","NA_OU","CR_OU","CR_IN","TM_OU","TM_IN","PH_OU","PH_IN","EX"};
-      }
-    else
-      {
-	ins_list={LO};
-	ins_tag={"LO"};
+	break;
+      case 2:
+	ins_list={LO , NA_IN , NA_OU , QED_OU , QED_IN , EX };
+	break;
       }
     
+    iins_of_ins.resize(ins_tag.size());
+    for(size_t iins=0;iins<ins_list.size();iins++)
+      iins_of_ins[ins_list[iins]]=iins;
     nins=ins_list.size();
+    cout<<"Pr_meslep, nins: "<<nins<<endl;
   }
-}
+ }
 
 vector<dcompl_t> perens_t::build_mesloop(const vector<lprop_t> &props_lep) const
 {
@@ -73,31 +79,44 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
   index_t im_r_im_r_iop_ilistpGl_ind({{"m_in",nm},{"r_in",nr},{"m_ou",nm},{"r_ou",nr},{"iop",nZop},{"listpGl",listpGl.size()}});
   
   //! list of all combination of transformations to be applied
-  vector<tuple<pr_meslep::ins,lprop::ins,qprop::ins,qprop::ins>> map;
+  vector<tuple<size_t,lprop::ins,size_t,size_t>> map;
   
 #define ADD_COMBO(P,L,I,O)					\
-  map.push_back({pr_meslep::P,lprop::L,qprop::I,qprop::O})
+  map.push_back({pr_meslep::iins_of_ins[pr_meslep::P],lprop::L,qprop::iins_of_ins[qprop::I],qprop::iins_of_ins[qprop::O]})
   
   ADD_COMBO(    LO,    LO, LO, LO); //leading order
   
-  if(pars::use_QED)
+  switch(pars::use_QED)
     {
-      ADD_COMBO(EX,    LO, F,F); //exchange
+    case 0:
+      break;
+    case 1:
+      ADD_COMBO(EX,    LO, F,F);   //exchange
       //
-      ADD_COMBO(NA_IN, F,  F,LO); //nasty_in
-      ADD_COMBO(NA_OU, F,  LO,F); //nasty_ou
+      ADD_COMBO(NA_IN, F,  F,LO);  //nasty_in
+      ADD_COMBO(NA_OU, F,  LO,F);  //nasty_ou
       //
       ADD_COMBO(PH_IN, LO, FF,LO); //self_in
       ADD_COMBO(PH_OU, LO, LO,FF); //self_ou
       //
-      ADD_COMBO(PH_IN, LO, T,LO); //tad_in
-      ADD_COMBO(PH_OU, LO, LO,T); //tad_ou
+      ADD_COMBO(PH_IN, LO, T,LO);  //tad_in
+      ADD_COMBO(PH_OU, LO, LO,T);  //tad_ou
       //
-      ADD_COMBO(CR_IN, LO, P,LO); //critical counterterm_in
-      ADD_COMBO(CR_OU, LO, LO,P); //critical counterterm_ou
+      ADD_COMBO(CR_IN, LO, P,LO);  //critical counterterm_in
+      ADD_COMBO(CR_OU, LO, LO,P);  //critical counterterm_ou
       //
-      ADD_COMBO(TM_IN, LO, S,LO); //twisted counterterm_in
-      ADD_COMBO(TM_OU, LO, LO,S); //twisted counterterm_ou
+      ADD_COMBO(TM_IN, LO, S,LO);  //twisted counterterm_in
+      ADD_COMBO(TM_OU, LO, LO,S);  //twisted counterterm_ou
+      break;
+    case 2:
+      ADD_COMBO(EX,    LO, F,F);   //exchange
+      //
+      ADD_COMBO(NA_IN, F,  F,LO);  //nasty_in
+      ADD_COMBO(NA_OU, F,  LO,F);  //nasty_ou
+      //
+      ADD_COMBO(QED_IN, LO, QED,LO); //self_in
+      ADD_COMBO(QED_OU, LO, LO,QED); //self_ou
+      break;
     }
 #undef ADD_COMBO
   
@@ -118,10 +137,10 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
        //create the vertex
        for(auto &o : map)
 	 {
-	   const pr_meslep::ins v_ins=get<0>(o);
+	   const size_t v_ins=get<0>(o);
 	   const lprop::ins ml_ins=get<1>(o);
-	   const qprop::ins iq_ins_in=get<2>(o);
-	   const qprop::ins iq_ins_ou=get<3>(o);
+	   const size_t iq_ins_in=get<2>(o);
+	   const size_t iq_ins_ou=get<3>(o);
 	   
 	   const int    sign=zop.Qg5_sign;
 	   const int    norm=zop.norm;
@@ -140,19 +159,18 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
 	       vert+=c*norm;
 	       
 	       if(0)
-	       cout
-	       	 <<"iop: "<<iop<<
-	       	 ", ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<
-	       	 ", Gq: "<<Gq<<
-	       	 ", sign: "<<sign<<
-	       	 ", ilistpGl: "<<ilistpGl<<"("<<listpGl[ilistpGl]<<")"<<
-	       	 ", iclust: "<<iclust<<
-	       	 ", mesloop: "<<ml<<
-	       	 ", prop_in: "<<prop_in(0,0)<<
-	       	 ", prop_ou: "<<prop_ou(0,0)<<
-	       	 ", res: "<<c(0,0)<<
-	       	 endl;
-	       
+		 cout
+		   <<"iop: "<<iop<<
+		   ", ilistGl: "<<ilistGl<<"("<<listGl[ilistGl]<<")"<<
+		   ", Gq: "<<Gq<<
+		   ", sign: "<<sign<<
+		   ", ilistpGl: "<<ilistpGl<<"("<<listpGl[ilistpGl]<<")"<<
+		   ", iclust: "<<iclust<<
+		   ", mesloop: "<<ml<<
+		   ", prop_in: "<<prop_in(0,0)<<
+		   ", prop_ou: "<<prop_ou(0,0)<<
+		   ", res: "<<c(0,0)<<
+		   endl;
 	     }
 	   
 	   //cout<<" "<<vert<<endl;
@@ -164,12 +182,15 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
 {
   const index_t ind({{"rest",im_r_im_r_iop_iproj_ind.max()},{"ijack",njacks+1}});
   
-  vector<tuple<pr_meslep::ins,jqprop::ins,pr_meslep::ins,jqprop::ins>> map;
+  vector<tuple<size_t,size_t,size_t,size_t>> map;
 #define ADD_COMBO(A,I,V,O)						\
-  map.push_back({pr_meslep::A,jqprop::I,pr_meslep::V,jqprop::O})
+  map.push_back({pr_meslep::iins_of_ins[pr_meslep::A],jqprop::iins_of_ins[jqprop::I],pr_meslep::iins_of_ins[pr_meslep::V],jqprop::iins_of_ins[jqprop::O]})
   ADD_COMBO(LO,  LO, LO, LO);
-  if(pars::use_QED)
+  switch(pars::use_QED)
     {
+    case 0:
+      break;
+    case 1:
       ADD_COMBO(EX    , LO , EX    , LO);
       ADD_COMBO(NA_IN , LO , NA_IN , LO);
       ADD_COMBO(NA_OU , LO , NA_OU , LO);
@@ -186,6 +207,14 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
       ADD_COMBO(TM_OU , LO , LO, TM);
       ADD_COMBO(PH_IN , PH , LO, LO);
       ADD_COMBO(PH_OU , LO , LO, PH);
+      break;
+    case 2:
+      ADD_COMBO(EX     , LO , EX     , LO);
+      ADD_COMBO(NA_IN  , LO , NA_IN  , LO);
+      ADD_COMBO(NA_OU  , LO , NA_OU  , LO);
+      ADD_COMBO(QED_IN , LO , QED_IN , LO);
+      ADD_COMBO(QED_OU , LO , QED_OU , LO);
+      break;
     }
 #undef ADD_COMBO
 
@@ -207,10 +236,10 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
       
       for(auto t : map)
 	{
-	  const pr_meslep::ins pr_meslepins=get<0>(t);
-	  const jqprop::ins ijqins_in=get<1>(t);
-	  const pr_meslep::ins meslepins=get<2>(t);
-	  const jqprop::ins ijqins_ou=get<3>(t);
+	  const size_t pr_meslepins=get<0>(t);
+	  const size_t ijqins_in=get<1>(t);
+	  const size_t meslepins=get<2>(t);
+	  const size_t ijqins_ou=get<3>(t);
 	  
 	  const size_t ip_in=im_r_ijqins_ind({im_in,r_in,ijqins_in});
 	  const size_t ip_ou=im_r_ijqins_ind({im_ou,r_ou,ijqins_ou});
