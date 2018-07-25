@@ -114,8 +114,8 @@ void perens_t::build_all_mr_gmeslep_jackkniffed_verts(vector<jqprop_t> &j,const 
       ADD_COMBO(NA_IN, F,  F,LO);  //nasty_in
       ADD_COMBO(NA_OU, F,  LO,F);  //nasty_ou
       //
-      ADD_COMBO(QED_IN, LO, QED,LO); //self_in
-      ADD_COMBO(QED_OU, LO, LO,QED); //self_ou
+      ADD_COMBO(QED_IN, LO, QED,LO); //all QED_in
+      ADD_COMBO(QED_OU, LO, LO,QED); //all QED_ou
       break;
     }
 #undef ADD_COMBO
@@ -209,11 +209,14 @@ void perens_t::compute_proj_meslep(const vector<jqprop_t> &jprop_inv_in,const ve
       ADD_COMBO(PH_OU , LO , LO, PH);
       break;
     case 2:
-      ADD_COMBO(EX     , LO , EX     , LO);
-      ADD_COMBO(NA_IN  , LO , NA_IN  , LO);
-      ADD_COMBO(NA_OU  , LO , NA_OU  , LO);
-      ADD_COMBO(QED_IN , LO , QED_IN , LO);
-      ADD_COMBO(QED_OU , LO , QED_OU , LO);
+      ADD_COMBO(EX     , LO  , EX     , LO);
+      ADD_COMBO(NA_IN  , LO  , NA_IN  , LO);
+      ADD_COMBO(NA_OU  , LO  , NA_OU  , LO);
+      ADD_COMBO(QED_IN , LO  , QED_IN , LO);
+      ADD_COMBO(QED_OU , LO  , QED_OU , LO);
+      
+      ADD_COMBO(QED_IN , QED , LO     , LO);
+      ADD_COMBO(QED_OU , LO  , LO     , QED);
       break;
     }
 #undef ADD_COMBO
