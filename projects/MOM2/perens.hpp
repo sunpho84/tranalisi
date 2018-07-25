@@ -181,7 +181,7 @@ struct perens_t
     
     return [this,im_ou,r_ou,im_in,r_in,iop,iproj,imeslepmom](pr_meslep::ins ins)->djack_t&
       {
-	return pr_meslep[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_ou,r_ou,im_in,r_in,ins,iop,iproj,imeslepmom})];
+	return pr_meslep[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_ou,r_ou,im_in,r_in,pr_meslep::iins_of_ins[ins],iop,iproj,imeslepmom})];
       };
   }
   
