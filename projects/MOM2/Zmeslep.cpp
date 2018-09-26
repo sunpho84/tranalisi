@@ -24,7 +24,7 @@ vector<perens_t::task_t> perens_t::get_Zmeslep_tasks(const vector<const perens_t
       if(pars::use_QED) in_Zmeslep_QED_rel.push_back(&e->Zmeslep_QED_rel);
     }
   vector<task_t> Zmeslep_tasks={{&Zmeslep,in_Zmeslep,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep",QCD_task}};
-  if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED_rel,in_Zmeslep_QED_rel,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep_QED_rel",QED_task});
+  if(pars::use_QED) Zmeslep_tasks.push_back({&Zmeslep_QED_rel,in_Zmeslep_QED_rel,im_r_im_r_iop_iproj_imeslepmom_ind,"Zmeslep"+QED_tag_suffix(),QED_task});
   
   return Zmeslep_tasks;
 }
@@ -158,6 +158,50 @@ void perens_t::compute_Zmeslep(const bool also_QED)
 		  }
 	      }
 	  }
+}
+
+void perens_t::make_Zmeslep_QED_absolute()
+{
+  cout<<"Making Zmeslep QED absolute"<<endl;
+  
+#pragma omp parallel for collapse(5)
+  for(size_t im_in=0;im_in<nm;im_in++)
+    for(size_t r_in=0;r_in<nr;r_in++)
+      for(size_t im_ou=0;im_ou<nm;im_ou++)
+	for(size_t r_ou=0;r_ou<nr;r_ou++)
+	  for(size_t imeslepmom=0;imeslepmom<meslepmoms().size();imeslepmom++)
+	    {
+	      using namespace meslep;
+	      
+	      for(size_t ijack=0;ijack<=njacks;ijack++)
+		{
+		  Matrix<double,nZop,nZop> a,b,c;
+		  
+		  //take out
+		  for(size_t iop=0;iop<nZop;iop++)
+		    for(size_t iproj=0;iproj<nZop;iproj++)
+		      {
+			const size_t im_r_im_r_iop_iproj_imeslepmom=im_r_im_r_iop_iproj_imeslepmom_ind({im_in,r_in,im_ou,r_ou,iop,iproj,imeslepmom});
+			a(iop,iproj)=Zmeslep[im_r_im_r_iop_iproj_imeslepmom][ijack];
+			b(iop,iproj)=Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom][ijack];
+			
+			//zero the nan
+			for(auto t : {&a,&b})
+			  if(std::isnan((*t)(iop,iproj))) (*t)(iop,iproj)=0.0;
+		      }
+		  
+		  //product
+		  c=a*b;
+		  
+		  //store
+		  for(size_t iop=0;iop<nZop;iop++)
+		    for(size_t iproj=0;iproj<nZop;iproj++)
+		      {
+			const size_t im_r_im_r_iop_iproj_imeslepmom=im_r_im_r_iop_iproj_imeslepmom_ind({im_in,r_in,im_ou,r_ou,iop,iproj,imeslepmom});
+			Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom][ijack]=c(iop,iproj);
+		      }
+		}
+	    }
 }
 
 void perens_t::interpolate_Zmeslep_to_p2ref(perens_t &out) const

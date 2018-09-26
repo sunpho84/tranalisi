@@ -107,6 +107,8 @@ void perens_t::recompute_deltam()
 {
   using namespace pars;
   
+  if(use_QED==2) CRASH("Cannot compute delta without QED classic way");
+  
   deltam_time.start();
   switch(deltam_method)
     {
@@ -245,35 +247,13 @@ void perens_t::compute_deltam_from_corr()
     for(size_t rfw=0;rfw<nr;rfw++)
       {
 	//ext_reim and rpar is relative to non-inserted
-	auto get=[im,this]
-	  (qprop::ins kbw,qprop::ins kfw,const string &ID,const size_t ext_reim,const int tpar,const size_t rfw,const int rdiff)
-	  {
-	    const string tag_bw=qprop::ins_tag[kbw];
-	    const string tag_fw=qprop::ins_tag[kfw];
-	    
-	    const size_t rbw=(rfw+rdiff)%nr;
-	    
-	    //Compute the coefficient
-	    dcompl_t c_coeff=
-	    conj(coeff_to_read(kbw,rbw))*
-	    coeff_to_read(kfw,rfw);
-	    
-	    //Include -i if asking the imaginary part
-	    if(ext_reim==1) c_coeff*=dcompl_t(0.0,-1.0);
-	    
-	    const string name="M"+to_string(im)+"_R"+to_string(rbw)+"_"+tag_bw+"_M"+to_string(im)+"_R"+to_string(rfw)+"_"+tag_fw;
-	    const djvec_t res=get_contraction(name,ID,c_coeff,tpar);
-	    res.ave_err().write(dir_path+"/plots/"+ID+"_"+name+".xmg");
-	    
-	    return res;
-	  };
 	
 	//measure mcrit according to eq.3 of hep-lat/0701012
 	{
 	  using namespace qprop;
 	  
-	  const djvec_t P5P5_00=get(LO,LO,"P5P5",RE,EVN,rfw,0);
-	  const djvec_t V0P5_00=get(LO,LO,"V0P5",IM,ODD,rfw,0);
+	  const djvec_t P5P5_00=get_contraction(im,LO,im,LO,"P5P5",RE,EVN,rfw,0);
+	  const djvec_t V0P5_00=get_contraction(im,LO,im,LO,"V0P5",IM,ODD,rfw,0);
 	  const djvec_t m_cr_corr=2.0*forward_derivative(V0P5_00)/(2.0*P5P5_00);
 	  const djvec_t m_cr_corr_symm=2.0*symmetric_derivative(V0P5_00)/(2.0*P5P5_00);
 	  const djack_t m_cr=constant_fit(m_cr_corr,tmin,tmax,dir_path+"/plots/m_cr_"+to_string(im)+".xmg");
@@ -288,32 +268,32 @@ void perens_t::compute_deltam_from_corr()
 	    int rdiff=0;
 	    
 	    //load corrections
-	    const djvec_t P5P5_00=get(LO,LO,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_LL=get(F,F,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_0M=get(LO,FF,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_M0=get(FF,LO,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_0T=get(LO,T,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_T0=get(T,LO,"P5P5",RE,UNK,rfw,rdiff);
+	    const djvec_t P5P5_00=get_contraction(im,LO,im,LO,"P5P5",RE,UNK,rfw,rdiff);
+	    const djvec_t P5P5_LL=get_contraction(im,F,im,F,"P5P5",RE,UNK,rfw,rdiff);
+	    const djvec_t P5P5_0M=get_contraction(im,LO,im,FF,"P5P5",RE,UNK,rfw,rdiff);
+	    const djvec_t P5P5_M0=get_contraction(im,FF,im,LO,"P5P5",RE,UNK,rfw,rdiff);
+	    const djvec_t P5P5_0T=get_contraction(im,LO,im,T,"P5P5",RE,UNK,rfw,rdiff);
+	    const djvec_t P5P5_T0=get_contraction(im,T,im,LO,"P5P5",RE,UNK,rfw,rdiff);
 	    //load the derivative wrt counterterm
-	    const djvec_t P5P5_0P=get(LO,P,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_P0=get(P,LO,"P5P5",RE,UNK,rfw,rdiff);
+	    const djvec_t P5P5_0P=get_contraction(im,LO,im,P,"P5P5",RE,UNK,rfw,rdiff);
+	    const djvec_t P5P5_P0=get_contraction(im,P,im,LO,"P5P5",RE,UNK,rfw,rdiff);
 	    //load the derivative wrt mass
-	    const djvec_t P5P5_0S=get(LO,S,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_S0=get(S,LO,"P5P5",RE,UNK,rfw,rdiff);
+	    const djvec_t P5P5_0S=get_contraction(im,LO,im,S,"P5P5",RE,UNK,rfw,rdiff);
+	    const djvec_t P5P5_S0=get_contraction(im,S,im,LO,"P5P5",RE,UNK,rfw,rdiff);
 	    
 	    //load corrections
-	    const djvec_t V0P5_00=get(LO,LO,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_LL=get(F,F,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_0M=get(LO,FF,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_M0=get(FF,LO,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_0T=get(LO,T,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_T0=get(T,LO,"V0P5",IM,UNK,rfw,rdiff);
+	    const djvec_t V0P5_00=get_contraction(im,LO,im,LO,"V0P5",IM,UNK,rfw,rdiff);
+	    const djvec_t V0P5_LL=get_contraction(im,F,im,F,"V0P5",IM,UNK,rfw,rdiff);
+	    const djvec_t V0P5_0M=get_contraction(im,LO,im,FF,"V0P5",IM,UNK,rfw,rdiff);
+	    const djvec_t V0P5_M0=get_contraction(im,FF,im,LO,"V0P5",IM,UNK,rfw,rdiff);
+	    const djvec_t V0P5_0T=get_contraction(im,LO,im,T,"V0P5",IM,UNK,rfw,rdiff);
+	    const djvec_t V0P5_T0=get_contraction(im,T,im,LO,"V0P5",IM,UNK,rfw,rdiff);
 	    //load the derivative wrt counterterm
-	    const djvec_t V0P5_0P=get(LO,P,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_P0=get(P,LO,"V0P5",IM,UNK,rfw,rdiff);
+	    const djvec_t V0P5_0P=get_contraction(im,LO,im,P,"V0P5",IM,UNK,rfw,rdiff);
+	    const djvec_t V0P5_P0=get_contraction(im,P,im,LO,"V0P5",IM,UNK,rfw,rdiff);
 	    //load the derivative wrt mass
-	    const djvec_t V0P5_0S=get(LO,S,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_S0=get(S,LO,"V0P5",IM,UNK,rfw,rdiff);
+	    const djvec_t V0P5_0S=get_contraction(im,LO,im,S,"V0P5",IM,UNK,rfw,rdiff);
+	    const djvec_t V0P5_S0=get_contraction(im,S,im,LO,"V0P5",IM,UNK,rfw,rdiff);
 	    
 	    const djvec_t
 	      V0P5_LO=

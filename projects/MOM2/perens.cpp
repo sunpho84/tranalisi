@@ -500,3 +500,21 @@ perens_t perens_t::write_checkpoint()
   
   return *this;
 }
+
+void perens_t::make_Z_QED_absolute()
+{
+  if(not pars::use_QED)
+    CRASH("Need to have been instructed to compute QED");
+  
+  Zq_QED_rel*=Zq;
+  if(pars::compute_bilinears) Zbil_QED_rel*=Zbil;
+  if(pars::compute_meslep) make_Zmeslep_QED_absolute();
+}
+
+void perens_t::plot_Z(const string &suffix)
+{
+  plot_sigma(suffix);
+  plot_Zq(suffix);
+  if(pars::compute_bilinears) plot_Zbil(suffix);
+  if(pars::compute_meslep) plot_Zmeslep(suffix);
+}

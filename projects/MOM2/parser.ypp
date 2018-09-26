@@ -79,6 +79,7 @@ using namespace scan;
 %token TK_INTERPOLATE_TO_P2REF
 %token TK_INCLUDE
 %token TK_MATCH_TO_W_REG
+%token TK_MAKE_Z_QED_ABSOLUTE
 %token TK_MEASURE_MPCAC
 %token TK_NF
 %token TK_NJACKS
@@ -162,6 +163,7 @@ commands:
         | commands val_chir_extrap
         | commands plot_Z
         | commands print_Z
+	| commands make_Z_QED_absolute
         | commands print_discr
         | commands recompute_deltam
         | commands ratio_Z_minus_one
@@ -301,6 +303,9 @@ print_Z: TK_PRINT_Z '(' TK_QUOTED_TEXT ')' {print_all_Z(*$3);delete $3;}
 ;
 
 print_discr: TK_PRINT_DISCR '(' ')' {print_discr();}
+;
+
+make_Z_QED_absolute: TK_MAKE_Z_QED_ABSOLUTE '(' ')' {make_Z_QED_absolute();}
 ;
 
 average_r: TK_AVERAGE_R '(' ')' {average_all_r();}

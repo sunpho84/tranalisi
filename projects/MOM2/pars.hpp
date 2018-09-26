@@ -103,7 +103,8 @@ namespace pars
   EXTERN_PARS bool report_mPCAC INIT_PARS_TO({false});
   //! store whether we can compute also QED
   EXTERN_PARS bool can_compute_QED INIT_PARS_TO({true});
-
+  //! store whether QED Z are relative or not
+  EXTERN_PARS bool Z_QED_are_relative INIT_PARS_TO({true});
   
   //! list of ensembles
   EXTERN_PARS vector<string> ens;
@@ -113,6 +114,12 @@ namespace pars
     if(not can_change_pars) CRASH("Cannot change use_QED");
     use_QED=use;
   }
+}
+
+//! return the suffix for QED tag
+inline std::string QED_tag_suffix()
+{
+  return pars::Z_QED_are_relative?"_QED_rel":"_QED";
 }
 
 //! set all parameters once forever

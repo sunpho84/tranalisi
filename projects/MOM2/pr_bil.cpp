@@ -359,9 +359,7 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 	
 	//check if we need to subtract the pole
 	const bool sub_pole=(ibil==iS or ibil==iP);
-	const size_t x_pow=(sub_pole?
-			    (t.QCD_QED_task==QED_task?1:1)
-			    :0);
+	const size_t x_pow=(sub_pole?1:0);
 	
 	//open the plot file if needed
 	const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+r_r_bilins_ibil_ibilmom_ind.descr(r_r_bilins_ibil_ibilmom)+".xmg";
@@ -383,6 +381,7 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 	      
 	      //compute y and y_plot
 	      y_plot[i]=pr[im_r_im_r_bilins_ibil_ibilmom_ind({im_ou,r_ou,im_in,r_in,bilins,ibil,ibilmom})];
+	      
 	      //fit x*y if pole present
 	      y[i]=pow(x[i],x_pow)*y_plot[i];
 	      //increment the number of mass combos

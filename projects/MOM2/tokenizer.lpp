@@ -127,6 +127,7 @@ ExtrapolateTo0P2Range               DEBUG_PRINTF("Found ExtrapolateTo0P2Range\n"
 Include                             DEBUG_PRINTF("Found Include\n");return TK_INCLUDE;
 InterpolateToP2Ref                  DEBUG_PRINTF("Found InterpolateToP2Ref\n");return TK_INTERPOLATE_TO_P2REF;
 ListEnsembles                       DEBUG_PRINTF("Found ListEnsembles\n");return TK_LIST_ENSEMBLES;
+MakeZQEDAbsolute                    DEBUG_PRINTF("Founr MakeZQEDAbsolute\n");return TK_MAKE_Z_QED_ABSOLUTE;
 MatchToWReg                         DEBUG_PRINTF("Found MatchToWReg\n");return TK_MATCH_TO_W_REG;
 MeasureMPCAC                        DEBUG_PRINTF("Found MeasureMPCAC\n");return TK_MEASURE_MPCAC;
 P2Ref                               DEBUG_PRINTF("Fount P2Ref\n"); return TK_P2REF;

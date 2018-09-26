@@ -21,6 +21,21 @@ void assert_compatible(const string in1,const string in2)
   ASSERT_COMPATIBLE_MEMBER(bilmoms);
 }
 
+void make_Z_QED_absolute()
+{
+  CRASH("Are you sure that Z in QCD do not contain an offset?");
+  
+  needs_to_read_Z();
+  if(not pars::Z_QED_are_relative) CRASH("Need to have relative QED before");
+  
+  for(auto &path : pars::ens)
+    data(path,ASSERT_PRESENT)
+      .make_Z_QED_absolute();
+  
+  pars::Z_QED_are_relative=false;
+  invalidate_ingredients();
+}
+
 void plot_all_Z(const string &suffix)
 {
   needs_to_read_Z();

@@ -22,7 +22,7 @@ vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& e
   
   vector<task_t> Zq_tasks={{&Zq,in_Zq,im_r_ilinmom_ind,"Zq",QCD_task}};
   if(pars::use_QED)
-    Zq_tasks.push_back({&Zq_QED_rel,in_Zq_QED_rel,im_r_ilinmom_ind,"Zq_QED_rel",QED_task});
+    Zq_tasks.push_back({&Zq_QED_rel,in_Zq_QED_rel,im_r_ilinmom_ind,"Zq"+QED_tag_suffix(),QED_task});
   
   return Zq_tasks;
 }

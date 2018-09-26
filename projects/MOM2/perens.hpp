@@ -191,6 +191,9 @@ struct perens_t
   //! compute all mom-scheme mesoleptonic vertices
   void mom_compute_meslep();
   
+  //! make meslep Z of QED absolute
+  void make_Zmeslep_QED_absolute();
+  
   /////////////////////////////////////////////////////////////////
   
   //! allocate all data
@@ -441,6 +444,9 @@ struct perens_t
   
   djvec_t get_contraction(const string &combo,const string &ID,const dcompl_t &coeff,const int tpar);
   
+  //! load a given correlation function, forming the name on the basis of insertion, mass index, etc
+  djvec_t get_contraction(const int imbw,qprop::ins kbw,const int imfw,qprop::ins kfw,const string &ID,const size_t ext_reim,const int tpar,const size_t rfw,const int rdiff);
+  
   //! compute deltam from correlators
   void compute_deltam_from_corr();
   
@@ -521,13 +527,9 @@ struct perens_t
     compute_Z(false);
   }
   
-  void plot_Z(const string &suffix)
-  {
-    plot_sigma(suffix);
-    plot_Zq(suffix);
-    if(pars::compute_bilinears) plot_Zbil(suffix);
-    if(pars::compute_meslep) plot_Zmeslep(suffix);
-  }
+  void make_Z_QED_absolute();
+  
+  void plot_Z(const string &suffix);
   
   void print_Z(ofstream& file);
   

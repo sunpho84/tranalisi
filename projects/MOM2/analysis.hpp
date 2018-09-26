@@ -184,4 +184,7 @@ typedef tuple<string,double,vector<string>> comb_extr_t;
 //! perform a combined sea chiral extrapolation
 void combined_sea_chir_extrap(const vector<comb_extr_t> &list);
 
+//! change the Z of QED to absolute ones
+void make_Z_QED_absolute();
+
 #endif

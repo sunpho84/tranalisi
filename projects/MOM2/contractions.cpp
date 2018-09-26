@@ -51,6 +51,28 @@ djvec_t perens_t::get_contraction(const string &combo,const string &ID,const dco
   else     return out;
 }
 
+djvec_t perens_t::get_contraction(const int imbw,qprop::ins kbw,const int imfw,qprop::ins kfw,const string &ID,const size_t ext_reim,const int tpar,const size_t rfw,const int rdiff)
+{
+  const string tag_bw=qprop::ins_tag[kbw];
+  const string tag_fw=qprop::ins_tag[kfw];
+  
+  const size_t rbw=(rfw+rdiff)%nr;
+  
+  //Compute the coefficient
+  dcompl_t c_coeff=
+    conj(coeff_to_read(kbw,rbw))*
+    coeff_to_read(kfw,rfw);
+  
+  //Include -i if asking the imaginary part
+  if(ext_reim==1) c_coeff*=dcompl_t(0.0,-1.0);
+  
+  const string name="M"+to_string(imbw)+"_R"+to_string(rbw)+"_"+tag_bw+"_M"+to_string(imfw)+"_R"+to_string(rfw)+"_"+tag_fw;
+  const djvec_t res=get_contraction(name,ID,c_coeff,tpar);
+  res.ave_err().write(dir_path+"/plots/"+ID+"_"+name+".xmg");
+  
+  return res;
+}
+
 djack_t perens_t::compute_meson_mass(const string& m1_tag,const string& m2_tag)
 {
   djvec_t P5P5_corr(L[0]/2+1);
