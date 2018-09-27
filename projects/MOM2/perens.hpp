@@ -743,9 +743,11 @@ pair<double,double> perens_t::get_a2p2tilde_range_bracketting(const vector<array
     {
       x[imom]=all_moms[list[imom][0]].p(L).tilde().norm2();
       const double dist=fabs(x[imom]-a2p2_ref);
-      prox_list.push_back(make_pair(dist,imom));
+      prox_list.push_back({dist,imom});
     }
   sort(prox_list.begin(),prox_list.end());
+  
+  if(n>prox_list.size()) CRASH("Interpolating with a number of points %zu, but we dispose of %zu",n,prox_list.size());
   
   //get min max
   double a2p2min=1e300,a2p2max=1e-300;
