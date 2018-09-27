@@ -37,7 +37,7 @@ EXTERN_ANALYSIS map<string,perens_t> _data;
     if(not NAME ## _ ## TYPE ## _computed) CRASH(#NAME "not valid");	\
   }
 
-  
+
 #define DEFINE_VALIDATE_QCD_AND_QED(NAME)				\
   DEFINE_VALIDATE_QCD_OR_QED(NAME,QCD)					\
   DEFINE_VALIDATE_QCD_OR_QED(NAME,QED)					\
