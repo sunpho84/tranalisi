@@ -5,14 +5,14 @@
 #include <MOM2/contractions.hpp>
 #include <MOM2/perens.hpp>
 
-djvec_t perens_t::get_contraction(const string &combo,const string &ID,const dcompl_t &c_coeff,const int tpar)
+djvec_t perens_t::get_contraction_by_name(const string &suffix,const string &bil_name,const dcompl_t &c_coeff,const int tpar)
 {
   const size_t T=L[0];
   
   const vector<string> cID={"V0P5","P5P5"};
   
   const size_t ncols=2;
-  const string templ=dir_path+"/"+prop_hadr_path+"/%04zu/mes_contr_"+combo;
+  const string templ=dir_path+"/"+prop_hadr_path+"/%04zu/mes_contr_"+suffix;
   const djvec_t data=read_conf_set_t(templ,conf_list,ncols,{0,1},T,SILENT);
   if(data.size()==0)
     {
@@ -20,8 +20,8 @@ djvec_t perens_t::get_contraction(const string &combo,const string &ID,const dco
       CRASH("No file opened for template %s",templ.c_str());
     }
   
-  const auto pos=find(cID.begin(),cID.end(),ID);
-  if(pos==cID.end()) CRASH("Unknown %s",ID.c_str());
+  const auto pos=find(cID.begin(),cID.end(),bil_name);
+  if(pos==cID.end()) CRASH("Unknown %s",bil_name.c_str());
   
   if(real(c_coeff)!=0 and imag(c_coeff)!=0) CRASH("Don't know what to do");
   
@@ -67,7 +67,7 @@ djvec_t perens_t::get_contraction(const int imbw,qprop::ins kbw,const int imfw,q
   if(ext_reim==1) c_coeff*=dcompl_t(0.0,-1.0);
   
   const string name="M"+to_string(imbw)+"_R"+to_string(rbw)+"_"+tag_bw+"_M"+to_string(imfw)+"_R"+to_string(rfw)+"_"+tag_fw;
-  const djvec_t res=get_contraction(name,ID,c_coeff,tpar);
+  const djvec_t res=get_contraction_by_name(name,ID,c_coeff,tpar);
   res.ave_err().write(dir_path+"/plots/"+ID+"_"+name+".xmg");
   
   return res;
@@ -80,7 +80,7 @@ djack_t perens_t::compute_meson_mass(const string& m1_tag,const string& m2_tag)
   for(size_t r=0;r<nr;r++)
     {
       string name="M"+m1_tag+"_R"+to_string(r)+"_0_M"+m2_tag+"_R"+to_string(r)+"_0";
-      djvec_t contr=get_contraction(name,"P5P5",1.0,EVN);
+      djvec_t contr=get_contraction_by_name(name,"P5P5",1.0,EVN);
       P5P5_corr+=contr;
     }
   P5P5_corr/=nr;
@@ -99,8 +99,8 @@ djack_t perens_t::compute_mPCAC(const string& m_tag)
   for(size_t r=0;r<nr;r++)
     {
       string name="M"+m_tag+"_R"+to_string(r)+"_0_M"+m_tag+"_R"+to_string(r)+"_0";
-      djvec_t P5P5_contr=get_contraction(name,"P5P5",1.0,EVN);
-      djvec_t V0P5_contr=get_contraction(name,"V0P5",dcompl_t(0.0,-1.0),ODD);
+      djvec_t P5P5_contr=get_contraction_by_name(name,"P5P5",1.0,EVN);
+      djvec_t V0P5_contr=get_contraction_by_name(name,"V0P5",dcompl_t(0.0,-1.0),ODD);
       P5P5_corr+=P5P5_contr;
       V0P5_corr+=-tau3[r]*V0P5_contr;
     }

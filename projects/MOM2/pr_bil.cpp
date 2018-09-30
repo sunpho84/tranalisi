@@ -24,10 +24,10 @@ namespace pr_bil
 	ins_list={LO};
 	break;
       case 1:
-	ins_list={LO , CR_OU , CR_IN , TM_OU , TM_IN , PH_OU , PH_IN , EX };
+	ins_list={LO , QED , CR_OU , CR_IN , TM_OU , TM_IN , PH_OU , PH_IN , EX };
 	break;
       case 2:
-	ins_list={LO , PH_OU , PH_IN , QED_OU , QED_IN, EX};
+	ins_list={LO , QED , QED_OU , QED_IN, EX};
 	break;
      }
     
@@ -401,5 +401,67 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 	    plot->write_ave_err(0.0,pr_chir[iout].ave_err());
 	  }
         if(plot) delete plot;
+      }
+}
+
+void perens_t::assemble_pr_bil_QED_greenfunctions()
+{
+  cout<<"Assembling pr_bil QED greenfunctions"<<endl;
+  
+  for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
+    for(size_t im_r_im_r_ibil=0;im_r_im_r_ibil<im_r_im_r_ibil_ind.max();im_r_im_r_ibil++)
+      {
+	using namespace pr_bil;
+	
+	const vector<size_t> im_r_im_r_ibil_comp=im_r_im_r_ibil_ind(im_r_im_r_ibil);
+	const size_t im_ou=im_r_im_r_ibil_comp[0];
+	const size_t r_ou=im_r_im_r_ibil_comp[1];
+	const size_t im_in=im_r_im_r_ibil_comp[2];
+	const size_t r_in=im_r_im_r_ibil_comp[3];
+	const size_t ibil=im_r_im_r_ibil_comp[4];
+	const size_t im_r_ou=im_r_ind({im_ou,r_ou});
+	const size_t im_r_in=im_r_ind({im_in,r_in});
+	auto pr=pr_bil_ins_getter(im_ou,r_ou,im_in,r_in,ibil,ibilmom);
+	
+	switch(pars::use_QED)
+	  {
+	  case 0:
+	    break;
+	  case 1:
+	    //basic part
+	    pr(QED)=
+	      pr(EX);
+	    
+	    //add critical counterterm
+	    if(pars::use_deltam_cr_ct)
+	      pr(QED)+=
+		pr(CR_OU)*deltam_cr[im_r_ou]+
+		pr(CR_IN)*deltam_cr[im_r_in];
+	    
+	    //add tm counterterm
+	    if(pars::use_deltam_tm_ct)
+	      pr(QED)+=
+		pr(TM_OU)*deltam_tm[im_r_ou]+
+		pr(TM_IN)*deltam_tm[im_r_in];
+	    
+	    //include self energy if needed
+	    if(pars::include_self_energy_in_bilinears)
+	      pr(QED)+=
+		pr(PH_OU)+
+		pr(PH_IN);
+	    break;
+	  case 2:
+	    //basic part
+	    pr(QED)=
+	      pr(EX);
+	    
+	    //include self energy if needed
+	    if(pars::include_self_energy_in_bilinears)
+	      pr(QED)+=
+		pr(QED_OU)+
+		pr(QED_IN);
+	    break;
+	    
+	  }
       }
 }

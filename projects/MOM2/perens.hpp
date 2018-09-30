@@ -142,6 +142,9 @@ struct perens_t
   //! return a list of tasks for sigma
   vector<task_t> get_sigma_tasks(const vector<const perens_t*> &ens={});
   
+  //! put together the sigma needed for QED
+  void assemble_sigma_QED_greenfunctions();
+  
   /////////////////////////////////////////////////////////////////
   
   //! projected bilinears
@@ -169,6 +172,9 @@ struct perens_t
   //! compute all mom-scheme vertices
   void mom_compute_bil();
   
+  //! put together the pr_bil needed for QED
+  void assemble_pr_bil_QED_greenfunctions();
+  
   /////////////////////////////////////////////////////////////////
   
   //! projected meslep
@@ -190,6 +196,9 @@ struct perens_t
   
   //! compute all mom-scheme mesoleptonic vertices
   void mom_compute_meslep();
+  
+  //! put together the pr_meslep needed for QED
+  void assemble_pr_meslep_QED_greenfunctions();
   
   //! make meslep Z of QED absolute
   void make_Zmeslep_QED_absolute();
@@ -442,7 +451,7 @@ struct perens_t
   
   djack_t compute_mPCAC(const string& m_tag);
   
-  djvec_t get_contraction(const string &combo,const string &ID,const dcompl_t &coeff,const int tpar);
+  djvec_t get_contraction_by_name(const string &suffix,const string &bil_name,const dcompl_t &coeff,const int tpar);
   
   //! load a given correlation function, forming the name on the basis of insertion, mass index, etc
   djvec_t get_contraction(const int imbw,qprop::ins kbw,const int imfw,qprop::ins kfw,const string &ID,const size_t ext_reim,const int tpar,const size_t rfw,const int rdiff);
@@ -469,7 +478,7 @@ struct perens_t
   void plot_Zq(const string &suffix);
   
   //! compute all Zq
-  void compute_Zq(const bool also_QED);
+  void compute_Zq(const bool also_QCD,const bool also_QED);
   
   /////////////////////////////////////////////////////////////////
   
@@ -485,7 +494,7 @@ struct perens_t
   void plot_Zbil(const string &suffix);
   
   //! computes all bilinear Z
-  void compute_Zbil(const bool also_QED);
+  void compute_Zbil(const bool also_QCD,const bool also_QED);
   
   /////////////////////////////////////////////////////////////////
   
@@ -498,7 +507,7 @@ struct perens_t
   vector<task_t> get_Zmeslep_tasks(const vector<const perens_t*> &ens={});
   
   //! computes all meslep Z
-  void compute_Zmeslep(const bool also_QED);
+  void compute_Zmeslep(const bool also_QCD,const bool also_QED);
   
   void plot_Zmeslep(const string &suffix);
   
@@ -511,14 +520,17 @@ struct perens_t
   
   /////////////////////////////////////////////////////////////////
   
+  //! assemble the green function
+  perens_t assemble_QED_greenfunctions() const;
+  
   //! compute all Z
-  void compute_Z(const bool also_QED=true)
+  void compute_Z(const bool also_QCD=true,const bool also_QED=true)
   {
     if(also_QED and not pars::can_compute_QED) CRASH("Cannot compute QED now");
     
-    compute_Zq(also_QED);
-    if(pars::compute_bilinears) compute_Zbil(also_QED);
-    if(pars::compute_meslep) compute_Zmeslep(also_QED);
+    compute_Zq(also_QCD,also_QED);
+    if(pars::compute_bilinears) compute_Zbil(also_QCD,also_QED);
+    if(pars::compute_meslep) compute_Zmeslep(also_QCD,also_QED);
   }
   
   //! compute all Z but not QED

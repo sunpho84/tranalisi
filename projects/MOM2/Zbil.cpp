@@ -9,6 +9,7 @@
 #define EXTERN_ZBIL
  #include <MOM2/Zbil.hpp>
 
+#include <MOM2/analysis.hpp>
 #include <MOM2/perens.hpp>
 #include <MOM2/prop.hpp>
 #include <MOM2/timings.hpp>
@@ -27,9 +28,11 @@ vector<perens_t::task_t> perens_t::get_Zbil_tasks(const vector<const perens_t*> 
   return Zbil_tasks;
 }
 
-void perens_t::compute_Zbil(const bool also_QED)
+void perens_t::compute_Zbil(const bool also_QCD,const bool also_QED)
 {
   cout<<"Computing Zbil"<<endl;
+  
+  if(also_QED and pars::use_QED) needs_to_read_assembled_QED_greenfunctions();
   
   for(size_t ibilmom=0;ibilmom<bilmoms.size();ibilmom++)
     for(size_t im_r_im_r_ibil=0;im_r_im_r_ibil<im_r_im_r_ibil_ind.max();im_r_im_r_ibil++)
@@ -40,8 +43,6 @@ void perens_t::compute_Zbil(const bool also_QED)
 	const size_t im_in=im_r_im_r_ibil_comp[2];
 	const size_t r_in=im_r_im_r_ibil_comp[3];
 	const size_t ibil=im_r_im_r_ibil_comp[4];
-	const size_t im_r_ou=im_r_ind({im_ou,r_ou});
-	const size_t im_r_in=im_r_ind({im_in,r_in});
 	const size_t ilinmom_ou=bilmoms[ibilmom][1];
 	const size_t ilinmom_in=bilmoms[ibilmom][2];
 	
@@ -51,84 +52,19 @@ void perens_t::compute_Zbil(const bool also_QED)
 	auto s1_in=sigma_ins_getter(im_in,r_in,ilinmom_in,sigma::SIGMA1);
 	auto pr=pr_bil_ins_getter(im_ou,r_ou,im_in,r_in,ibil,ibilmom);
 	
-	Zbil[im_r_im_r_ibil_ibilmom]=
-	  sqrt(s1_ou(sigma::LO)*s1_in(sigma::LO))/pr(pr_bil::LO);
+	if(also_QCD)
+	  Zbil[im_r_im_r_ibil_ibilmom]=
+	    sqrt(s1_ou(sigma::LO)*s1_in(sigma::LO))/pr(pr_bil::LO);
 	
-	djack_t pr_bil_QED;
-	djack_t sigma1_QED_ou;
-	djack_t sigma1_QED_in;
-	
-	if(also_QED)
-	  switch(pars::use_QED)
-	    {
-	    case 0:
-	      break;
-	      /////////////////////////////////////////////////////////////////
-	    case 1:
-	      //basic part
-	      pr_bil_QED=
-		pr(pr_bil::EX);
-	      
-	      //add Zq piece
-	      sigma1_QED_ou=s1_ou(sigma::PH);
-	      sigma1_QED_in=s1_in(sigma::PH);
-	      
-	      //add critical counterterm
-	      if(pars::use_deltam_cr_ct)
-		{
-		  pr_bil_QED+=
-		    pr(pr_bil::CR_OU)*deltam_cr[im_r_ou]+
-		    pr(pr_bil::CR_IN)*deltam_cr[im_r_in];
-		  
-		  sigma1_QED_ou+=s1_ou(sigma::CR)*deltam_cr[im_r_ou];
-		  sigma1_QED_in+=s1_in(sigma::CR)*deltam_cr[im_r_in];
-		}
-	      
-	      //add tm counterterm
-	      if(pars::use_deltam_tm_ct)
-		{
-		  pr_bil_QED+=
-		    pr(pr_bil::TM_OU)*deltam_tm[im_r_ou]+
-		    pr(pr_bil::TM_IN)*deltam_tm[im_r_in];
-		  
-		  sigma1_QED_ou+=s1_ou(sigma::TM)*deltam_tm[im_r_ou];
-		  sigma1_QED_in+=s1_in(sigma::TM)*deltam_tm[im_r_in];
-		}
-	      
-	      //include self energy if needed
-	      if(pars::include_self_energy_in_bilinears)
-		pr_bil_QED+=
-		  pr(pr_bil::PH_OU)+
-		  pr(pr_bil::PH_IN);
-	      break;
-	      /////////////////////////////////////////////////////////////////
-	    case 2:
-	      //basic part
-	      pr_bil_QED=
-		pr(pr_bil::EX);
-	      
-	      //include Zq
-	      sigma1_QED_ou=s1_ou(sigma::QED);
-	      sigma1_QED_in=s1_in(sigma::QED);
-	      
-	      //include self energy if needed
-	      if(pars::include_self_energy_in_bilinears)
-		pr_bil_QED+=
-		  pr(pr_bil::QED_OU)+
-		  pr(pr_bil::QED_IN);
-	      break;
-	    }
-	
-	//final combination
 	if(also_QED and pars::use_QED)
 	  {
 	    Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
-	      -pr_bil_QED/pr(pr_bil::LO);
+	      -pr(pr_bil::QED)/pr(pr_bil::LO);
 	    
 	    if(pars::include_Zq_corrections_in_bilinears)
 	      Zbil_QED_rel[im_r_im_r_ibil_ibilmom]+=
-		+(sigma1_QED_ou/s1_ou(sigma::LO)+
-		  sigma1_QED_in/s1_in(sigma::LO))/2.0;
+		+(s1_ou(sigma::QED)/s1_ou(sigma::LO)+
+		  s1_in(sigma::QED)/s1_in(sigma::LO))/2.0;
 	  }
       }
 }

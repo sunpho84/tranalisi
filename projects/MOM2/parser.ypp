@@ -59,6 +59,7 @@ using namespace scan;
 %token TK_ACTION
 %token TK_ALLOCATE_IMMEDIATELY
 %token TK_AVERAGE_EQUIV_MOMENTA_IMMEDIATELY
+%token TK_ASSEMBLE_QED_GREENFUNCTIONS
 %token TK_AVERAGE_R_IMMEDIATELY
 %token TK_BC
 %token TK_CHIR_EXTR_METHOD
@@ -158,6 +159,7 @@ commands:
         | commands average_equiv_momenta
         | commands sea_chir_extrap
         | commands evolve
+        | commands assemble_QED_greenfunctions
         | commands match_to_W_reg
         | commands combined_sea_chir_extr
         | commands val_chir_extrap
@@ -312,6 +314,9 @@ average_r: TK_AVERAGE_R '(' ')' {average_all_r();}
 ;
 
 subtract_Oa2: TK_SUBTRACT_OA2 '(' ')' {subtract_Oa2_all();}
+;
+
+assemble_QED_greenfunctions: TK_ASSEMBLE_QED_GREENFUNCTIONS '(' ')' {assemble_all_QED_greenfunctions();}
 ;
 
 evolve: TK_EVOLVE '(' ')' {evolve_all();}

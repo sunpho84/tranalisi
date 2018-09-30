@@ -25,10 +25,10 @@ namespace pr_meslep
       	ins_list={LO};
 	break;
       case 1:
-	ins_list={LO , NA_IN , NA_OU , CR_OU , CR_IN , TM_OU , TM_IN , PH_OU , PH_IN , EX };
+	ins_list={LO , QED , NA_IN , NA_OU , CR_OU , CR_IN , TM_OU , TM_IN , PH_OU , PH_IN , EX };
 	break;
       case 2:
-	ins_list={LO , NA_IN , NA_OU , QED_OU , QED_IN , EX };
+	ins_list={LO , QED , NA_IN , NA_OU , QED_OU , QED_IN , EX };
 	break;
       }
     
@@ -481,4 +481,69 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 	
 	if(plot) delete plot;
       }
+}
+
+void perens_t::assemble_pr_meslep_QED_greenfunctions()
+{
+  cout<<"Assembling pr_meslep QED greenfunctions"<<endl;
+  
+  for(size_t im_in=0;im_in<nm;im_in++)
+    for(size_t r_in=0;r_in<nr;r_in++)
+      for(size_t im_ou=0;im_ou<nm;im_ou++)
+	for(size_t r_ou=0;r_ou<nr;r_ou++)
+	  {
+	    const size_t im_r_in=im_r_ind({im_in,r_in});
+	    const size_t im_r_ou=im_r_ind({im_ou,r_ou});
+	    
+#pragma omp parallel for
+	    for(size_t imeslepmom=0;imeslepmom<meslepmoms().size();imeslepmom++)
+	      {
+		using namespace meslep;
+		
+		for(size_t ijack=0;ijack<=njacks;ijack++)
+		    for(size_t iop=0;iop<nZop;iop++)
+		      for(size_t iproj=0;iproj<nZop;iproj++)
+			{
+			  using namespace pr_meslep;
+			  
+			  auto ml=pr_meslep_ins_getter(im_ou,r_ou,im_in,r_in,iop,iproj,imeslepmom);
+			  
+			  //QED correction
+			  switch(pars::use_QED)
+			    {
+			    case 0:
+			      break;
+			      /////////////////////////////////////////////////////////////////
+			    case 1:
+			      ml(QED)[ijack]=
+				ml(EX)[ijack]*q_in*q_ou+
+				
+				(ml(NA_IN)[ijack]*q_in+
+				 ml(NA_OU)[ijack]*q_ou)*ql+
+				
+				(ml(PH_IN)[ijack]+
+				 ml(CR_IN)[ijack]*deltam_cr[im_r_in][ijack]+
+				 ml(TM_IN)[ijack]*deltam_tm[im_r_in][ijack])*q_in*q_in+
+				
+				(ml(PH_OU)[ijack] +
+				 ml(CR_OU)[ijack]*deltam_cr[im_r_ou][ijack]+
+				 ml(TM_OU)[ijack]*deltam_tm[im_r_ou][ijack])*q_ou*q_ou
+				;
+			      break;
+			    case 2:
+			      ml(QED)[ijack]=
+				ml(EX)[ijack]*q_in*q_ou+
+				
+				(ml(NA_IN)[ijack]*q_in+
+				 ml(NA_OU)[ijack]*q_ou)*ql+
+				
+				ml(QED_IN)[ijack]*q_in*q_in+
+				
+				ml(QED_OU)[ijack]*q_ou*q_ou
+				;
+			      break;
+			    }
+			}
+		  }
+	      }
 }

@@ -23,7 +23,7 @@ namespace sigma
 	ins_list={LO};
 	break;
       case 1:
-	ins_list={LO , CR , TM , PH};
+	ins_list={LO , QED , CR , TM , PH};
 	break;
       case 2:
 	ins_list={LO , QED};
@@ -352,6 +352,39 @@ void perens_t::val_chir_extrap_sigma(perens_t &out) const
 	    }
 	  
 	  if(plot!=nullptr) delete plot;
+	}
+    }
+}
+
+void perens_t::assemble_sigma_QED_greenfunctions()
+{
+  cout<<"Assembling sigma QED greenfunctions"<<endl;
+  
+#pragma omp parallel for
+  for(size_t im_r_ilinmom=0;im_r_ilinmom<im_r_ilinmom_ind.max();im_r_ilinmom++)
+    {
+      const vector<size_t> comps=im_r_ilinmom_ind(im_r_ilinmom);
+      
+      const size_t im=comps[0];
+      const size_t r=comps[1];
+      const size_t ilinmom=comps[2];
+      const size_t im_r=im_r_ind({im,r});
+     
+      using namespace sigma;
+      auto sigma1=sigma_ins_getter(im,r,ilinmom,SIGMA1);
+      
+      switch(pars::use_QED)
+	{
+	case 0:
+	  break;
+	case 1:
+	  sigma1(QED)=
+	    sigma1(PH)+
+	    sigma1(CR)*deltam_cr[im_r]+
+	    sigma1(TM)*deltam_tm[im_r];
+	  break;
+	case 2:
+	  break;
 	}
     }
 }

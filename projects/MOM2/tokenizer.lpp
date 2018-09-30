@@ -83,6 +83,7 @@ A                                   DEBUG_PRINTF("Found A\n");return TK_A;
 Abort                               DEBUG_PRINTF("Found Abort\n");terminate();
 Action                              DEBUG_PRINTF("Found Action\n");return TK_ACTION;
 AllocateImmediately                 DEBUG_PRINTF("Found AllocateImmediately");return TK_ALLOCATE_IMMEDIATELY;
+AssembleQEDGreenfunctions           DEBUG_PRINTF("Found AssembleQEDGreenfunctions\n");return TK_ASSEMBLE_QED_GREENFUNCTIONS;
 AverageRImmediately                 DEBUG_PRINTF("Found AverageRImmediately\n");return TK_AVERAGE_R_IMMEDIATELY;
 AverageEquivMomentaImmediately      DEBUG_PRINTF("Found AverageEquivMomentaImmediately\n");return TK_AVERAGE_EQUIV_MOMENTA_IMMEDIATELY;
 BC                                  DEBUG_PRINTF("Found BC\n");return TK_BC;

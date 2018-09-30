@@ -27,7 +27,7 @@ vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& e
   return Zq_tasks;
 }
 
-void perens_t::compute_Zq(const bool also_QED)
+void perens_t::compute_Zq(const bool also_QCD,const bool also_QED)
 {
   cout<<"Computing Zq"<<endl;
   
@@ -38,31 +38,13 @@ void perens_t::compute_Zq(const bool also_QED)
       const size_t im=comps[0];
       const size_t r=comps[1];
       const size_t ilinmom=comps[2];
-      const size_t im_r=im_r_ind({im,r});
       
       using namespace sigma;
       auto sigma1=sigma_ins_getter(im,r,ilinmom,SIGMA1);
       
-      Zq[im_r_ilinmom]=sigma1(LO);
+      if(also_QCD) Zq[im_r_ilinmom]=sigma1(LO);
       
-      if(also_QED)
-	{
-	  switch(pars::use_QED)
-	    {
-	    case 0:
-	      break;
-	    case 1:
-	      Zq_QED_rel[im_r_ilinmom]=
-		(sigma1(PH)+
-		 sigma1(CR)*deltam_cr[im_r]+
-		 sigma1(TM)*deltam_tm[im_r])/
-		sigma1(LO);
-	      break;
-	    case 2:
-	      Zq_QED_rel[im_r_ilinmom]=
-		sigma1(QED)/sigma1(LO);
-	    }
-	}
+      if(also_QED) Zq_QED_rel[im_r_ilinmom]=sigma1(QED)/sigma1(LO);
     }
 }
 
