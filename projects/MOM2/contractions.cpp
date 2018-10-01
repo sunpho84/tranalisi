@@ -100,8 +100,8 @@ djack_t perens_t::compute_meson_mass_QED(const size_t im1,const size_t im2)
     {
       using namespace qprop;
       const size_t rdiff=0;
-      auto cg=[im1,im2,r,this](ins tfw,ins tbw){return get_contraction(im1,tfw,im2,tbw,"P5P5",RE,EVN,r,rdiff);};
-      P5P5_corr+=cg(LO,LO);
+      auto cg=[r,this](size_t im1,size_t im2,ins tfw,ins tbw){return get_contraction(im1,tfw,im2,tbw,"P5P5",RE,EVN,r,rdiff);};
+      P5P5_corr+=cg(im1,im2,LO,LO);
       switch(pars::use_QED)
 	{
 	case 0:
@@ -110,7 +110,7 @@ djack_t perens_t::compute_meson_mass_QED(const size_t im1,const size_t im2)
 	  CRASH("Not implemented");
 	  break;
 	case 2:
-	  P5P5_QED_corr+=cg(F,F)+cg(QED,LO)+cg(LO,QED);
+	  P5P5_QED_corr+=cg(im1,im2,F,F)+cg(im1,im2,QED,LO)+cg(im2,im1,QED,LO); //hack
 	  break;
 	}
     }
