@@ -9,6 +9,7 @@
 #define EXTERN_SIGMA
  #include <MOM2/sigma.hpp>
 
+#include <analysis.hpp>
 #include <corrections.hpp>
 #include <perens.hpp>
 #include <timings.hpp>
@@ -314,6 +315,8 @@ void perens_t::val_chir_extrap_sigma(perens_t &out) const
   for(size_t im=0;im<nm;im++)
     if(pars::chir_extr_method==chir_extr::MQUARK) x[im]=am[im];
     else                                          x[im]=sqr(meson_mass[im_im_ind({im,im})].ave());
+  
+  if(pars::use_QED) needs_to_read_assembled_QED_greenfunctions();
   
   for(auto &t : out.get_sigma_tasks({this}))
     {

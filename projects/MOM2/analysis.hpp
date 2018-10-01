@@ -34,7 +34,7 @@ EXTERN_ANALYSIS map<string,perens_t> _data;
   /*! ask permission to read NAME */					\
   inline void needs_to_read_ ## NAME ## _ ## TYPE()			\
   {									\
-    if(not NAME ## _ ## TYPE ## _computed) CRASH(#NAME "not valid");	\
+    if(not NAME ## _ ## TYPE ## _computed) CRASH(#NAME " not valid");	\
   }
 
 
@@ -109,18 +109,12 @@ DEFINE_SINGLE_SELF_COMMAND_ALL(write_checkpoint_all,write_checkpoint,needs_to_re
     CLAUSE();								\
   }
 
-inline void invalidate_ingredients_and_Z()
-{
-  invalidate_ingredients();
-  invalidate_Z();
-}
-
 DEFINE_SINGLE_COMMAND_ALL(assemble_all_QED_greenfunctions,assemble_QED_greenfunctions,needs_to_read_ingredients,validate_assembled_QED_greenfunctions)
 DEFINE_SINGLE_COMMAND_ALL(average_all_r,average_r,needs_to_read_ingredients,invalidate_Z)
 DEFINE_SINGLE_COMMAND_ALL(average_all_equiv_momenta,average_equiv_momenta,needs_to_read_ingredients,invalidate_Z)
 DEFINE_SINGLE_COMMAND_ALL(evolve_all,evolve,needs_to_read_Z,invalidate_ingredients)
 DEFINE_SINGLE_COMMAND_ALL(match_to_W_reg_all,match_to_W_reg,needs_to_read_Z,invalidate_ingredients)
-DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap,needs_to_read_assembled_QED_greenfunctions,invalidate_ingredients_and_Z)
+DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap,needs_to_read_ingredients,invalidate_Z)
 DEFINE_SINGLE_COMMAND_ALL(interpolate_to_p2ref_all,interpolate_to_p2ref,needs_to_read_Z,invalidate_ingredients)
 DEFINE_SINGLE_COMMAND_ALL(extrapolate_to_0_p2_all,extrapolate_to_0_p2,needs_to_read_Z,invalidate_ingredients)
 DEFINE_SINGLE_COMMAND_ALL(subtract_Oa2_all,subtract_Oa2,needs_to_read_ingredients,invalidate_Z_QCD)

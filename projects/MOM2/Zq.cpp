@@ -8,6 +8,7 @@
 
 #include <MOM2/Zq.hpp>
 
+#include <MOM2/analysis.hpp>
 #include <MOM2/perens.hpp>
 
 vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& ens)
@@ -44,7 +45,11 @@ void perens_t::compute_Zq(const bool also_QCD,const bool also_QED)
       
       if(also_QCD) Zq[im_r_ilinmom]=sigma1(LO);
       
-      if(also_QED) Zq_QED_rel[im_r_ilinmom]=sigma1(QED)/sigma1(LO);
+      if(also_QED)
+	{
+	  needs_to_read_assembled_QED_greenfunctions();
+	  Zq_QED_rel[im_r_ilinmom]=sigma1(QED)/sigma1(LO);
+	}
     }
 }
 
