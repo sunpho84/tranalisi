@@ -462,6 +462,9 @@ void perens_t::assemble_pr_bil_QED_greenfunctions()
 		pr(QED_IN);
 	    
 	    cout<<pr(QED)<<" "<<pr(QED_OU)<<" "<<pr(QED_IN)<<" "<<pr(EX)<<" "<<pars::include_self_energy_in_bilinears<<" "<<QED<<" "<<QED_IN<<" "<<QED_OU<<" "<<EX<<" "<<endl;
+
+	    pr(QED)=1.0;
+	    cout<<pr(QED)<<endl;
 	    
 	    break;
 	    
