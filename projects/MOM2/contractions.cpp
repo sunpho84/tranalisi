@@ -112,6 +112,7 @@ djack_t perens_t::compute_meson_mass_QED(const size_t im1,const size_t im2)
 	case 2:
 	  P5P5_QED_corr+=cg(F,F)+cg(QED,LO)+cg(LO,QED);
 	  break;
+	}
     }
   P5P5_corr/=nr;
   P5P5_QED_corr/=nr;
