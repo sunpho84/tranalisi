@@ -119,7 +119,7 @@ djack_t perens_t::compute_meson_mass_QED(const size_t im1,const size_t im2)
   
   const djack_t m_P=constant_fit(effective_mass(P5P5_corr),tmin,tmax,dir_path+"/plots/m_P_"+to_string(im1)+"_"+to_string(im2)+".xmg");
   const djack_t dm_P=constant_fit(effective_slope(djvec_t(P5P5_QED_corr/P5P5_corr),effective_mass(P5P5_corr),L[0]/2),tmin,tmax,dir_path+"/plots/dm_P_"+to_string(im1)+"_"+to_string(im2)+".xmg");
-
+  
   cout<<"dM["<<im1<<","<<im2<<"]: "<<dm_P<<endl;
   
   return dm_P;

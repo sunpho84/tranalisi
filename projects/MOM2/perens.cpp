@@ -100,6 +100,7 @@ perens_t& perens_t::allocate()
     t->resize(im_r_ind.max());
   
   meson_mass.resize(im_im_ind.max());
+  if(pars::use_QED) meson_mass_QED.resize(im_im_ind.max());
   
   return *this;
 }

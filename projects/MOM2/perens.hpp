@@ -255,6 +255,12 @@ struct perens_t
     return dir_path+"/meson_mass.dat";
   }
   
+  //! compose the meson mass QEC path
+  string meson_mass_QED_path()
+  {
+    return dir_path+"/meson_mass_QED.dat";
+  }
+  
   //! compose the meson mass sea path
   string meson_mass_sea_path()
   {
@@ -264,6 +270,9 @@ struct perens_t
   //! mass of pseudoscalar meson
   djvec_t meson_mass;
   
+  //! mass of pseudoscalar meson QED
+  djvec_t meson_mass_QED;
+  
   //! mass of sea pseudoscalar meson
   djack_t meson_mass_sea;
   
@@ -272,6 +281,12 @@ struct perens_t
   
   //! read the meson_mass
   void bin_read_meson_mass();
+  
+  //! write the meson_mass in QED
+  void bin_write_meson_mass_QED();
+  
+  //! read the meson_mass in QED
+  void bin_read_meson_mass_QED();
   
   //! write the meson_mass_sea
   void bin_write_meson_mass_sea();
