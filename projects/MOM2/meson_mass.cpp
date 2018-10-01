@@ -84,7 +84,7 @@ perens_t& perens_t::get_meson_mass()
 	  bin_write_meson_mass_QED();
 	}
       
-      grace_file_t meson_mass_QED2_plot(dir_path+"/plots/M2.xmg");
+      grace_file_t meson_mass_QED2_plot(dir_path+"/plots/M2_QED.xmg");
       meson_mass_QED2_plot.new_data_set();
       for(size_t im1=0;im1<nm;im1++)
 	for(size_t im2=im1;im2<nm;im2++)
