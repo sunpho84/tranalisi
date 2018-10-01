@@ -110,7 +110,7 @@ djack_t perens_t::compute_meson_mass_QED(const size_t im1,const size_t im2)
 	  CRASH("Not implemented");
 	  break;
 	case 2:
-	  P5P5_QED_corr+=cg(im1,im2,F,F)+cg(im1,im2,QED,LO)+cg(im2,im1,QED,LO); //hack
+	  P5P5_QED_corr+=cg(im1,im2,F,F)+cg(im1,im2,LO,QED)+cg(im2,im1,LO,QED); //hack
 	  break;
 	}
     }
