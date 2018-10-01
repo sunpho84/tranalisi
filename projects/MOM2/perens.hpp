@@ -155,7 +155,7 @@ struct perens_t
   {
     using namespace pr_bil;
     
-    return [this,im_ou,r_ou,im_in,r_in,ibil,ibilmom](pr_bil::ins ins)->djack_t
+    return [this,im_ou,r_ou,im_in,r_in,ibil,ibilmom](pr_bil::ins ins)->djack_t&
       {
 	return pr_bil[im_r_im_r_bilins_ibil_ibilmom_ind({im_ou,r_ou,im_in,r_in,pr_bil::iins_of_ins[ins],ibil,ibilmom})];
       };
