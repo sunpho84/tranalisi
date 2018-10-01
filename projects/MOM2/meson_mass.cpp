@@ -33,6 +33,9 @@ perens_t& perens_t::get_meson_mass()
     {
       cout<<"File "<<meson_mass_path()<<" found, opening"<<endl;
       bin_read_meson_mass();
+      for(size_t im1=0;im1<nm;im1++)
+	for(size_t im2=0;im2<nm;im2++)
+	  compute_meson_mass_QED(im1,im2);
     }
   else
     {

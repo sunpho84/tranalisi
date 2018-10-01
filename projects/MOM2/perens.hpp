@@ -449,6 +449,8 @@ struct perens_t
   
   djack_t compute_meson_mass(const string& m1_tag,const string& m2_tag);
   
+  djack_t compute_meson_mass(const int im1,const int im2);
+  
   djack_t compute_mPCAC(const string& m_tag);
   
   djvec_t get_contraction_by_name(const string &suffix,const string &bil_name,const dcompl_t &coeff,const int tpar);

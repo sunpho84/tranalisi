@@ -91,6 +91,39 @@ djack_t perens_t::compute_meson_mass(const string& m1_tag,const string& m2_tag)
   return m_P;
 }
 
+djack_t perens_t::compute_meson_mass_QED(const size_t im1,const size_t im2)
+{
+  djvec_t P5P5_corr(L[0]/2+1);
+  djvec_t P5P5_QED_corr(L[0]/2+1);
+  P5P5_corr=P5P5_QED_corr=0.0;
+  for(size_t r=0;r<nr;r++)
+    {
+      using namespace qprop;
+      const size_t rdiff=0;
+      auto cg=[im1,im2,r,this](ins tfw,ins tbw){return get_contraction(im1,tfw,im2,tbw,"P5P5",RE,EVN,r,rdiff);};
+      P5P5_corr+=cg(LO,LO);
+      switch(pars::use_QED)
+	{
+	case 0:
+	  break;
+	case 1:
+	  CRASH("Not implemented");
+	  break;
+	case 2:
+	  P5P5_QED_corr+=cg(F,F)+cg(QED,LO)+cg(LO,QED);
+	  break;
+    }
+  P5P5_corr/=nr;
+  P5P5_QED_corr/=nr;
+  
+  const djack_t m_P=constant_fit(effective_mass(P5P5_corr),tmin,tmax,dir_path+"/plots/m_P_"+to_string(im1)+"_"+to_string(im2)+".xmg");
+  const djack_t dm_P=constant_fit(effective_slope(djvec_t(P5P5_QED_corr/P5P5_corr).symmetrized(),effective_mass(P5P5_corr),T/2),tmin,tmax,dir_path+"/plots/dm_P_"+to_string(im1)+"_"+to_string(im2)+".xmg");
+
+  cout<<"dM["<<im1<<","<<im2<<"]: "<<dm_P<<endl;
+  
+  return dm_P;
+}
+
 djack_t perens_t::compute_mPCAC(const string& m_tag)
 {
   djvec_t P5P5_corr(L[0]/2+1);
