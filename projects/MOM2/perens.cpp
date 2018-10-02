@@ -505,6 +505,7 @@ perens_t perens_t::write_checkpoint()
   bin_write_ingredients();
   bin_write_deltam();
   bin_write_meson_mass();
+  bin_write_meson_mass_QED();
   bin_write_meson_mass_sea();
   
   //put back the old path
