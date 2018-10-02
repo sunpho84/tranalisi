@@ -98,6 +98,7 @@ Extrapolate                         DEBUG_PRINTF("Found Extrapolate\n");return T
 FilterThresh                        DEBUG_PRINTF("Found FilterThresh\n");return TK_FILTER_THRESH;
 FromCorr                            DEBUG_PRINTF("Found FromCorr\n");return TK_FROM_CORR;
 FromProp                            DEBUG_PRINTF("Found FromProp\n");return TK_FROM_PROP;
+QEDGreenfunctionsAreAssembled       DEBUG_PRINTF("Found QEDGreenfunctionsAreAssembled\n");return TK_QED_GREENFUNCTIONS_ARE_ASSEMBLED;
 NJacks                              DEBUG_PRINTF("Found NJacks\n");return TK_NJACKS;
 NF                                  DEBUG_PRINTF("Found NF\n");return TK_NF;
 PhysBasis                           DEBUG_PRINTF("Found PhysBasis\n");return TK_PHYS_BASIS;
