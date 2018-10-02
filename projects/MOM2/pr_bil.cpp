@@ -391,7 +391,7 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 		  y_plot[i]=pr[im_r_im_r_bilins_ibil_ibilmom_ind({im_ou,r_ou,im_in,r_in,bilins,ibil,ibilmom})];
 		  
 		  //if QED case and pole must be subtracted, take into account variation due to leading pole
-		  if(pars::use_QED and sub_pole)
+		  if(pars::use_QED and sub_pole and bilins>0)
 		    {
 		      const djack_t M=meson_mass[imeson],dM=meson_mass_QED[imeson];
 		      const djack_t b0=coeffs[pr_bil::LO][2],c0=coeffs[pr_bil::LO][0];
