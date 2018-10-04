@@ -164,7 +164,7 @@ djack_t perens_t::compute_mPCAC(const size_t im)
     {
       const djvec_t a=djvec_t(symmetric_derivative(V0P5_QED)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_QED);
       const djack_t dM_pcac=constant_fit(a,tmin,tmax,dir_path+"/plots/var_m_pcac_m"+m_tag+"_P5P5.xmg");
-      cout<<"dM_pcac, M["<<im<<"]: "<<dM_pcac.ave_err()<<endl;
+      cout<<"dM_pcac, M["<<im<<"]: "<<smart_print(dM_pcac)<<endl;
     }
   
   return mPCAC_symm;
