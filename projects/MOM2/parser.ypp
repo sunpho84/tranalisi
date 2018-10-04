@@ -115,6 +115,7 @@ using namespace scan;
 %token TK_SEA_CHIR_EXTRAP
 %token TK_SUBTRACT_OA2
 %token TK_SUBTRACT_Z
+%token TK_SUB_MESON_MASS_SHIFT_WHEN_NO_POLE
 %token TK_VAL_CHIR_EXTRAP
 %token TK_WRITE_CHECKPOINT
 
@@ -152,6 +153,7 @@ commands:
         | commands set_use_QED
         | commands set_include_Zq_corrections_in_bilinears
         | commands set_include_self_energy_in_bilinears
+	| commands set_sub_meson_mass_shift_when_no_pole
         | commands set_use_deltam_cr_ct
         | commands set_use_deltam_tm_ct
         | commands average_ingredients
@@ -277,6 +279,9 @@ set_include_self_energy_in_bilinears: TK_INCLUDE_SELF_ENERGY_IN_BILINEARS '=' TK
 set_include_Zq_corrections_in_bilinears: TK_INCLUDE_ZQ_CORRECTIONS_IN_BILINEARS '=' TK_INTE {pars::include_Zq_corrections_in_bilinears=$3;}
 ;
 
+set_sub_meson_mass_shift_when_no_pole: TK_SUB_MESON_MASS_SHIFT_WHEN_NO_POLE '=' TK_INTE {pars::sub_meson_mass_shift_when_no_pole=$3;}
+;
+
 set_use_deltam_cr_ct: TK_USE_DELTAM_CR_CT '=' TK_INTE {pars::use_deltam_cr_ct=$3;}
 ;
 
@@ -320,9 +325,11 @@ subtract_Oa2: TK_SUBTRACT_OA2 '(' ')' {subtract_Oa2_all();}
 
 assemble_QED_greenfunctions: TK_ASSEMBLE_QED_GREENFUNCTIONS '(' ')' {assemble_all_QED_greenfunctions();}
 ;
+
 QED_greenfunctions_are_assembled: TK_QED_GREENFUNCTIONS_ARE_ASSEMBLED '(' ')' {validate_assembled_QED_greenfunctions();}
 ;
 
+;
 evolve: TK_EVOLVE '(' ')' {evolve_all();}
 ;
 

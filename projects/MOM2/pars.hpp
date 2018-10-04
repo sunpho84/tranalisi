@@ -101,6 +101,8 @@ namespace pars
   EXTERN_PARS bool average_r_immediately INIT_PARS_TO({false});
   //! compute mPCAC
   EXTERN_PARS bool report_mPCAC INIT_PARS_TO({false});
+  //! subtract the shift induced by QED even if not pole is present
+  EXTERN_PARS bool sub_meson_mass_shift_when_no_pole INIT_PARS_TO({true});
   //! store whether we can compute also QED
   EXTERN_PARS bool can_compute_QED INIT_PARS_TO({true});
   //! store whether QED Z are relative or not
