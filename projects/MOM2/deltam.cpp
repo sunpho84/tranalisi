@@ -403,12 +403,10 @@ void perens_t::compute_deltam_from_corr()
 	    }
 	    break;
 	  case 2:
-	    {
-	      CRASH("Cannot be implemented");
-	    }
+	    CRASH("Cannot be implemented");
 	    break;
-	    }
 	  }
+      }
 }
 
 void perens_t::val_chir_extrap_deltam(perens_t &out) const
