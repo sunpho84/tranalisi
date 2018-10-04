@@ -287,11 +287,12 @@ void compute_or_load_all_ingredients()
       //allocate if not asked to do immediately at definition
       if(not pars::allocate_immediately) ens.allocate();
       
+      if(pars::report_mPCAC) ens.get_mPCAC();
+      
       ens.read_or_compute_ingredients();
       if(pars::use_deltam_cr_ct or pars::use_deltam_tm_ct) ens.get_deltam();
       ens.get_meson_mass();
       
-      if(pars::report_mPCAC) ens.get_mPCAC();
       if(pars::average_equiv_momenta_immediately) ens.average_equiv_momenta();
       if(pars::average_r_immediately) ens.average_r();
     }
