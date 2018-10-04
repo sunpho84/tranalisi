@@ -399,7 +399,6 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 			  const djack_t b0=coeffs[pr_bil::LO][2],c0=coeffs[pr_bil::LO][0];
 			  const djack_t varb=2.0*b0*dM*M;
 			  const djack_t varc=-2.0*c0*dM/(M*M*M);
-			  y[i]-=varb+varc;
 			  y_plot[i]-=varb+varc;
 			}
 		      else
@@ -407,7 +406,6 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 			  {
 			    const djack_t b0=coeffs[pr_bil::LO][1];
 			    const djack_t varb=2.0*b0*dM*M;
-			    y[i]-=varb;
 			    y_plot[i]-=varb;
 			  }
 		    }
