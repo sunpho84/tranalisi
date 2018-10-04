@@ -90,7 +90,12 @@ void print_all_Z(const string &suffix);
     CLAUSE();								\
   }
 
-DEFINE_SINGLE_SELF_COMMAND_ALL(recompute_deltam_all,recompute_deltam,needs_to_read_ingredients,invalidate_Z)
+inline void needs_to_read_ingredients_if_use_prop()
+{
+  if(pars::deltam_method==pars::FROM_PROP) needs_to_read_ingredients();
+}
+
+DEFINE_SINGLE_SELF_COMMAND_ALL(recompute_deltam_all,recompute_deltam,needs_to_read_ingredients_if_use_prop,invalidate_Z)
 DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_all,compute_Z,needs_to_read_ingredients,validate_Z)
 DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_QCD_all,compute_Z_QCD,needs_to_read_ingredients_QCD,validate_Z_QCD)
 DEFINE_SINGLE_SELF_COMMAND_ALL(write_checkpoint_all,write_checkpoint,needs_to_read_ingredients,void)
