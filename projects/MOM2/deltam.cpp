@@ -243,6 +243,8 @@ perens_t& perens_t::get_mPCAC()
 
 void perens_t::compute_deltam_from_corr()
 {
+  prepare_list_of_confs();
+  
   for(size_t im=0;im<nm;im++)
     for(size_t rfw=0;rfw<nr;rfw++)
       {
