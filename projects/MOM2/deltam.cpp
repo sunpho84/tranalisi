@@ -209,7 +209,7 @@ perens_t& perens_t::get_mPCAC()
       
       prepare_list_of_confs();
       for(size_t im=0;im<nm;im++)
-	  mPCAC[im]=compute_mPCAC(to_string(im));
+	  mPCAC[im]=compute_mPCAC(im);
       mPCAC.bin_write(mPCAC_path);
     }
   
@@ -232,7 +232,7 @@ perens_t& perens_t::get_mPCAC()
 	cout<<"File "<<mPCAC_sea_path<<" not found, computing"<<endl;
 	
 	prepare_list_of_confs();
-	mPCAC_sea=compute_mPCAC("sea");
+	mPCAC_sea=compute_mPCAC(nm);
 	mPCAC_sea.bin_write(mPCAC_sea_path);
       }
   mPCAC2_plot.write_ave_err(0,mPCAC_sea.ave_err());
@@ -263,141 +263,152 @@ void perens_t::compute_deltam_from_corr()
 	  cout<<"m_cr[m="<<im<<",rfw="<<rfw<<"]: "<<smart_print(m_cr.ave_err())<<", symm: "<<smart_print(m_cr_symm.ave_err())<<endl;
 	}
 	
-	if(pars::use_QED)
+	using namespace qprop;
+	
+	int rdiff=0;
+	
+	switch(pars::use_QED)
 	  {
-	    using namespace qprop;
-	    
-	    int rdiff=0;
-	    
-	    //load corrections
-	    const djvec_t P5P5_00=get_contraction(im,LO,im,LO,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_LL=get_contraction(im,F,im,F,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_0M=get_contraction(im,LO,im,FF,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_M0=get_contraction(im,FF,im,LO,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_0T=get_contraction(im,LO,im,T,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_T0=get_contraction(im,T,im,LO,"P5P5",RE,UNK,rfw,rdiff);
-	    //load the derivative wrt counterterm
-	    const djvec_t P5P5_0P=get_contraction(im,LO,im,P,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_P0=get_contraction(im,P,im,LO,"P5P5",RE,UNK,rfw,rdiff);
-	    //load the derivative wrt mass
-	    const djvec_t P5P5_0S=get_contraction(im,LO,im,S,"P5P5",RE,UNK,rfw,rdiff);
-	    const djvec_t P5P5_S0=get_contraction(im,S,im,LO,"P5P5",RE,UNK,rfw,rdiff);
-	    
-	    //load corrections
-	    const djvec_t V0P5_00=get_contraction(im,LO,im,LO,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_LL=get_contraction(im,F,im,F,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_0M=get_contraction(im,LO,im,FF,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_M0=get_contraction(im,FF,im,LO,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_0T=get_contraction(im,LO,im,T,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_T0=get_contraction(im,T,im,LO,"V0P5",IM,UNK,rfw,rdiff);
-	    //load the derivative wrt counterterm
-	    const djvec_t V0P5_0P=get_contraction(im,LO,im,P,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_P0=get_contraction(im,P,im,LO,"V0P5",IM,UNK,rfw,rdiff);
-	    //load the derivative wrt mass
-	    const djvec_t V0P5_0S=get_contraction(im,LO,im,S,"V0P5",IM,UNK,rfw,rdiff);
-	    const djvec_t V0P5_S0=get_contraction(im,S,im,LO,"V0P5",IM,UNK,rfw,rdiff);
-	    
-	    const djvec_t
-	      V0P5_LO=
-	      V0P5_00,
-	      V0P5_QED=
-	      V0P5_0T+
-	      V0P5_0M+
-	      V0P5_T0+
-	      V0P5_M0+
-	      V0P5_LL,
-	      V0P5_S=
-	      V0P5_0S+
-	      V0P5_S0,
-	      V0P5_P=
-	      V0P5_0P+
-	      V0P5_P0;
-	    const djvec_t
-	      P5P5_LO=
-	      P5P5_00,
-	      P5P5_QED=
-	      P5P5_0T+
-	      P5P5_0M+
-	      P5P5_T0+
-	      P5P5_M0+
-	      P5P5_LL,
-	      P5P5_S=
-	      P5P5_0S+
-	      P5P5_S0,
-	      P5P5_P=
-	      P5P5_0P+
-	      P5P5_P0;
-	    
-	    const size_t T=P5P5_LO.size();
-	    const djvec_t eff_P5P5=effective_mass(P5P5_LO.symmetrized());
-	    
-	    djvec_t a=djvec_t(symmetric_derivative(V0P5_QED)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_QED).symmetrized().subset(0,T/2-1);
-	    djvec_t b=djvec_t(symmetric_derivative(V0P5_S)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_S).symmetrized().subset(0,T/2-1);
-	    djvec_t c=djvec_t(symmetric_derivative(V0P5_P)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_P).symmetrized().subset(0,T/2-1);
-	    djvec_t d=effective_slope(djvec_t(P5P5_QED/P5P5_LO).symmetrized(),eff_P5P5,T/2);
-	    djvec_t e=effective_slope(djvec_t(P5P5_S/P5P5_LO).symmetrized(),eff_P5P5,T/2);
-	    djvec_t f=effective_slope(djvec_t(P5P5_P/P5P5_LO).symmetrized(),eff_P5P5,T/2);
-	    
-	    a.ave_err().write(dir_path+"/plots/deltam_a_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-	    b.ave_err().write(dir_path+"/plots/deltam_b_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-	    c.ave_err().write(dir_path+"/plots/deltam_c_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-	    d.ave_err().write(dir_path+"/plots/deltam_d_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-	    e.ave_err().write(dir_path+"/plots/deltam_e_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-	    f.ave_err().write(dir_path+"/plots/deltam_f_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-	    
-	    enum strategy_t{only_cr,both_cr_and_tm};
-	    const size_t t_probe=T/8;
-	    const double tol=1e-13;
-	    const strategy_t strategy=
-	      (fabs(b[t_probe].ave())>tol or
-	       fabs(e[t_probe].ave())>tol)
-	      ?
-	      both_cr_and_tm
-	      :
-	      only_cr;
-	    
-	    const size_t imr=im_r_ind({im,rfw});
-	    
-	    if(strategy==both_cr_and_tm)
-	      {
-		const djvec_t old_corr=djvec_t(symmetric_derivative(V0P5_QED)/symmetric_derivative(V0P5_P)).symmetrized();
-		const djack_t old=constant_fit(old_corr,tmin,tmax,dir_path+"/plots/old_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-		
-		const djvec_t den=b*f-c*e;
-		const djvec_t deltam_tm_corr=(-a*f+c*d)/den;
-		const djvec_t deltam_cr_corr=(-b*d+a*e)/den;
-		
-		for(auto &oit : vector<tuple<djvec_t*,const djvec_t*,string>>{{&deltam_cr,&deltam_cr_corr,"cr"},{&deltam_tm,&deltam_tm_corr,"tm"}})
-		  {
-		    djack_t &out=(*::get<0>(oit))[imr];
-		    const djvec_t &in=*::get<1>(oit);
-		    const string tag=::get<2>(oit);
-		    
-		    out=constant_fit(in,tmin,tmax,dir_path+"/plots/deltam_"+tag+"_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-		  }
-	      }
-	    else
-	      {
-		cout<<"Switching to determining only deltam_cr"<<endl;
-		
-		djvec_t a=V0P5_QED.symmetrized(-1);
-		djvec_t c=V0P5_P.symmetrized(-1);
-		djvec_t d=P5P5_QED.symmetrized();
-		djvec_t f=P5P5_P.symmetrized();
-		
-		a.ave_err().write(dir_path+"/plots/deltam_a_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-		c.ave_err().write(dir_path+"/plots/deltam_c_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
-		
-		const djvec_t ma_fr_c=-a/c;
-		const djvec_t md_fr_f=-d/f;
-		
-		deltam_cr[imr]=constant_fit(md_fr_f,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_P5P5.xmg");
-		deltam_cr[imr]=constant_fit(ma_fr_c,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_V0P5.xmg");
-		// deltam_cr[imr]=-2*0.16285705871085078618;
-		deltam_tm[imr]=0;
-	      }
+	  case 0:
+	    break;
+	  case 1:
+	    {
+	      //load corrections
+	      const djvec_t P5P5_00=get_contraction(im,LO,im,LO,"P5P5",RE,UNK,rfw,rdiff);
+	      const djvec_t P5P5_LL=get_contraction(im,F,im,F,"P5P5",RE,UNK,rfw,rdiff);
+	      const djvec_t P5P5_0M=get_contraction(im,LO,im,FF,"P5P5",RE,UNK,rfw,rdiff);
+	      const djvec_t P5P5_M0=get_contraction(im,FF,im,LO,"P5P5",RE,UNK,rfw,rdiff);
+	      const djvec_t P5P5_0T=get_contraction(im,LO,im,T,"P5P5",RE,UNK,rfw,rdiff);
+	      const djvec_t P5P5_T0=get_contraction(im,T,im,LO,"P5P5",RE,UNK,rfw,rdiff);
+	      //load the derivative wrt counterterm
+	      const djvec_t P5P5_0P=get_contraction(im,LO,im,P,"P5P5",RE,UNK,rfw,rdiff);
+	      const djvec_t P5P5_P0=get_contraction(im,P,im,LO,"P5P5",RE,UNK,rfw,rdiff);
+	      //load the derivative wrt mass
+	      const djvec_t P5P5_0S=get_contraction(im,LO,im,S,"P5P5",RE,UNK,rfw,rdiff);
+	      const djvec_t P5P5_S0=get_contraction(im,S,im,LO,"P5P5",RE,UNK,rfw,rdiff);
+	      
+	      //load corrections
+	      const djvec_t V0P5_00=get_contraction(im,LO,im,LO,"V0P5",IM,UNK,rfw,rdiff);
+	      const djvec_t V0P5_LL=get_contraction(im,F,im,F,"V0P5",IM,UNK,rfw,rdiff);
+	      const djvec_t V0P5_0M=get_contraction(im,LO,im,FF,"V0P5",IM,UNK,rfw,rdiff);
+	      const djvec_t V0P5_M0=get_contraction(im,FF,im,LO,"V0P5",IM,UNK,rfw,rdiff);
+	      const djvec_t V0P5_0T=get_contraction(im,LO,im,T,"V0P5",IM,UNK,rfw,rdiff);
+	      const djvec_t V0P5_T0=get_contraction(im,T,im,LO,"V0P5",IM,UNK,rfw,rdiff);
+	      //load the derivative wrt counterterm
+	      const djvec_t V0P5_0P=get_contraction(im,LO,im,P,"V0P5",IM,UNK,rfw,rdiff);
+	      const djvec_t V0P5_P0=get_contraction(im,P,im,LO,"V0P5",IM,UNK,rfw,rdiff);
+	      //load the derivative wrt mass
+	      const djvec_t V0P5_0S=get_contraction(im,LO,im,S,"V0P5",IM,UNK,rfw,rdiff);
+	      const djvec_t V0P5_S0=get_contraction(im,S,im,LO,"V0P5",IM,UNK,rfw,rdiff);
+	      
+	      const djvec_t
+		V0P5_LO=
+		V0P5_00,
+		V0P5_QED=
+		V0P5_0T+
+		V0P5_0M+
+		V0P5_T0+
+		V0P5_M0+
+		V0P5_LL,
+		V0P5_S=
+		V0P5_0S+
+		V0P5_S0,
+		V0P5_P=
+		V0P5_0P+
+		V0P5_P0;
+	      const djvec_t
+		P5P5_LO=
+		P5P5_00,
+		P5P5_QED=
+		P5P5_0T+
+		P5P5_0M+
+		P5P5_T0+
+		P5P5_M0+
+		P5P5_LL,
+		P5P5_S=
+		P5P5_0S+
+		P5P5_S0,
+		P5P5_P=
+		P5P5_0P+
+		P5P5_P0;
+	      
+	      const size_t T=P5P5_LO.size();
+	      const djvec_t eff_P5P5=effective_mass(P5P5_LO.symmetrized());
+	      
+	      djvec_t a=djvec_t(symmetric_derivative(V0P5_QED)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_QED).symmetrized().subset(0,T/2-1);
+	      djvec_t b=djvec_t(symmetric_derivative(V0P5_S)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_S).symmetrized().subset(0,T/2-1);
+	      djvec_t c=djvec_t(symmetric_derivative(V0P5_P)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_P).symmetrized().subset(0,T/2-1);
+	      djvec_t d=effective_slope(djvec_t(P5P5_QED/P5P5_LO).symmetrized(),eff_P5P5,T/2);
+	      djvec_t e=effective_slope(djvec_t(P5P5_S/P5P5_LO).symmetrized(),eff_P5P5,T/2);
+	      djvec_t f=effective_slope(djvec_t(P5P5_P/P5P5_LO).symmetrized(),eff_P5P5,T/2);
+	      
+	      a.ave_err().write(dir_path+"/plots/deltam_a_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	      b.ave_err().write(dir_path+"/plots/deltam_b_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	      c.ave_err().write(dir_path+"/plots/deltam_c_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	      d.ave_err().write(dir_path+"/plots/deltam_d_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	      e.ave_err().write(dir_path+"/plots/deltam_e_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	      f.ave_err().write(dir_path+"/plots/deltam_f_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+	      
+	      enum strategy_t{only_cr,both_cr_and_tm};
+	      const size_t t_probe=T/8;
+	      const double tol=1e-13;
+	      const strategy_t strategy=
+		(fabs(b[t_probe].ave())>tol or
+		 fabs(e[t_probe].ave())>tol)
+		?
+		both_cr_and_tm
+		:
+		only_cr;
+	      
+	      const size_t imr=im_r_ind({im,rfw});
+	      
+	      if(strategy==both_cr_and_tm)
+		{
+		  const djvec_t old_corr=djvec_t(symmetric_derivative(V0P5_QED)/symmetric_derivative(V0P5_P)).symmetrized();
+		  const djack_t old=constant_fit(old_corr,tmin,tmax,dir_path+"/plots/old_deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+		  
+		  const djvec_t den=b*f-c*e;
+		  const djvec_t deltam_tm_corr=(-a*f+c*d)/den;
+		  const djvec_t deltam_cr_corr=(-b*d+a*e)/den;
+		  
+		  for(auto &oit : vector<tuple<djvec_t*,const djvec_t*,string>>{{&deltam_cr,&deltam_cr_corr,"cr"},{&deltam_tm,&deltam_tm_corr,"tm"}})
+		    {
+		      djack_t &out=(*::get<0>(oit))[imr];
+		      const djvec_t &in=*::get<1>(oit);
+		      const string tag=::get<2>(oit);
+		      
+		      out=constant_fit(in,tmin,tmax,dir_path+"/plots/deltam_"+tag+"_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+		    }
+		}
+	      else
+		{
+		  cout<<"Switching to determining only deltam_cr"<<endl;
+		  
+		  djvec_t a=V0P5_QED.symmetrized(-1);
+		  djvec_t c=V0P5_P.symmetrized(-1);
+		  djvec_t d=P5P5_QED.symmetrized();
+		  djvec_t f=P5P5_P.symmetrized();
+		  
+		  a.ave_err().write(dir_path+"/plots/deltam_a_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+		  c.ave_err().write(dir_path+"/plots/deltam_c_m"+to_string(im)+"_rfw"+to_string(rfw)+".xmg");
+		  
+		  const djvec_t ma_fr_c=-a/c;
+		  const djvec_t md_fr_f=-d/f;
+		  
+		  deltam_cr[imr]=constant_fit(md_fr_f,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_P5P5.xmg");
+		  deltam_cr[imr]=constant_fit(ma_fr_c,tmin,tmax,dir_path+"/plots/deltam_cr_m"+to_string(im)+"_rfw"+to_string(rfw)+"_V0P5.xmg");
+		  // deltam_cr[imr]=-2*0.16285705871085078618;
+		  deltam_tm[imr]=0;
+		}
+	    }
+	    break;
+	  case 2:
+	    {
+	      CRASH("Cannot be implemented");
+	    }
+	    break;
+	    }
 	  }
-      }
 }
 
 void perens_t::val_chir_extrap_deltam(perens_t &out) const

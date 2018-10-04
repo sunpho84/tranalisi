@@ -63,10 +63,13 @@ djvec_t perens_t::get_contraction(const int imbw,qprop::ins kbw,const int imfw,q
     conj(coeff_to_read(kbw,rbw))*
     coeff_to_read(kfw,rfw);
   
+  const string m_tag_bw=(imbw==(int)nm)?"msea":to_string(imbw);
+  const string m_tag_fw=(imfw==(int)nm)?"msea":to_string(imfw);
+  
   //Include -i if asking the imaginary part
   if(ext_reim==1) c_coeff*=dcompl_t(0.0,-1.0);
   
-  const string name="M"+to_string(imbw)+"_R"+to_string(rbw)+"_"+tag_bw+"_M"+to_string(imfw)+"_R"+to_string(rfw)+"_"+tag_fw;
+  const string name="M"+m_tag_bw+"_R"+to_string(rbw)+"_"+tag_bw+"_M"+m_tag_fw+"_R"+to_string(rfw)+"_"+tag_fw;
   const djvec_t res=get_contraction_by_name(name,ID,c_coeff,tpar);
   res.ave_err().write(dir_path+"/plots/"+ID+"_"+name+".xmg");
   
@@ -125,28 +128,44 @@ djack_t perens_t::compute_meson_mass_QED(const size_t im1,const size_t im2)
   return dm_P;
 }
 
-djack_t perens_t::compute_mPCAC(const string& m_tag)
+djack_t perens_t::compute_mPCAC(const size_t im)
 {
-  djvec_t P5P5_corr(L[0]/2+1);
-  djvec_t V0P5_corr(L[0]/2+1);
-  P5P5_corr=V0P5_corr=0.0;
+  djvec_t P5P5_LO(L[0]/2+1);
+  djvec_t V0P5_LO(L[0]/2+1);
+  djvec_t P5P5_QED(L[0]/2+1);
+  djvec_t V0P5_QED(L[0]/2+1);
+  P5P5_LO=V0P5_LO=P5P5_QED=V0P5_QED=0.0;
+  const size_t rdiff=0;
   for(size_t r=0;r<nr;r++)
     {
-      string name="M"+m_tag+"_R"+to_string(r)+"_0_M"+m_tag+"_R"+to_string(r)+"_0";
-      djvec_t P5P5_contr=get_contraction_by_name(name,"P5P5",1.0,EVN);
-      djvec_t V0P5_contr=get_contraction_by_name(name,"V0P5",dcompl_t(0.0,-1.0),ODD);
-      P5P5_corr+=P5P5_contr;
-      V0P5_corr+=-tau3[r]*V0P5_contr;
+      using namespace qprop;
+      P5P5_LO+=get_contraction(im,LO,im,LO,"P5P5",RE,EVN,r,rdiff);
+      V0P5_LO+=get_contraction(im,LO,im,LO,"V0P5",RE,ODD,r,rdiff);
+      if(pars::use_QED==2)
+	{
+	  V0P5_QED+=2*get_contraction(im,LO,im,QED,"V0P5",IM,EVN,r,rdiff);
+	  P5P5_QED+=2*get_contraction(im,LO,im,QED,"P5P5",RE,ODD,r,rdiff);
+	}
     }
-  P5P5_corr/=nr;
-  V0P5_corr/=nr;
+  P5P5_LO/=nr;
+  V0P5_LO/=nr;
+  P5P5_QED/=nr;
+  V0P5_QED/=nr;
   
-  const djvec_t mPCAC_corr=forward_derivative(V0P5_corr)/(2.0*P5P5_corr);
-  const djvec_t mPCAC_corr_symm=symmetric_derivative(V0P5_corr)/(2.0*P5P5_corr);
-  const djack_t mPCAC=constant_fit(mPCAC_corr,tmin,tmax,dir_path+"/plots/mPCAC_"+m_tag+".xmg");
-  const djack_t mPCAC_symm=constant_fit(mPCAC_corr_symm,tmin,tmax,dir_path+"/plots/mPCAC_symm"+m_tag+".xmg");
-  cout<<"MPCAC["<<m_tag<<"]:      "<<smart_print(mPCAC)<<endl;
-  cout<<"MPCAC["<<m_tag<<"] symm: "<<smart_print(mPCAC_symm)<<endl;
+  const string m_tag=to_string(im);
+  const djvec_t mPCAC_LO=forward_derivative(V0P5_LO)/(2.0*P5P5_LO);
+  const djvec_t mPCAC_LO_symm=symmetric_derivative(V0P5_LO)/(2.0*P5P5_LO);
+  const djack_t mPCAC=constant_fit(mPCAC_LO,tmin,tmax,dir_path+"/plots/mPCAC_"+m_tag+".xmg");
+  const djack_t mPCAC_symm=constant_fit(mPCAC_LO_symm,tmin,tmax,dir_path+"/plots/mPCAC_symm"+m_tag+".xmg");
+  cout<<"MPCAC["<<im<<"]:      "<<smart_print(mPCAC)<<endl;
+  cout<<"MPCAC["<<im<<"] symm: "<<smart_print(mPCAC_symm)<<endl;
+  
+  if(pars::use_QED==2)
+    {
+      const djvec_t a=djvec_t(symmetric_derivative(V0P5_QED)/P5P5_LO-symmetric_derivative(V0P5_LO)/sqr(P5P5_LO)*P5P5_QED).symmetrized().subset(0,L[0]/2-1);
+      const djack_t dM_pcac=constant_fit(a,tmin,tmax,dir_path+"/plots/var_m_pcac_m"+m_tag+"_P5P5.xmg");
+      cout<<"dM_pcac, M["<<im<<"]: "<<dM_pcac.ave_err()<<endl;
+    }
   
   return mPCAC_symm;
 }

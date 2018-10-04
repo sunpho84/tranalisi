@@ -466,7 +466,7 @@ struct perens_t
   
   djack_t compute_meson_mass_QED(const size_t im1,const size_t im2);
   
-  djack_t compute_mPCAC(const string& m_tag);
+  djack_t compute_mPCAC(const size_t im);
   
   djvec_t get_contraction_by_name(const string &suffix,const string &bil_name,const dcompl_t &coeff,const int tpar);
   
