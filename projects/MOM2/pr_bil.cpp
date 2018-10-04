@@ -406,6 +406,7 @@ void perens_t::val_chir_extrap_pr_bil(perens_t &out) const
 			{
 			  const djack_t b0=coeffs[pr_bil::LO][1];
 			  const djack_t varb=2.0*b0*dM*M;
+			  cout<<varb.ave_err()<<endl;
 			  y[i]-=varb;
 			  y_plot[i]-=varb;
 			}
