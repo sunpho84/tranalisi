@@ -140,7 +140,7 @@ djack_t perens_t::compute_mPCAC(const size_t im)
     {
       using namespace qprop;
       P5P5_LO+=get_contraction(im,LO,im,LO,"P5P5",RE,EVN,r,rdiff);
-      V0P5_LO+=tau3[r]*get_contraction(im,LO,im,LO,"V0P5",RE,ODD,r,rdiff);
+      V0P5_LO+=tau3[r]*get_contraction(im,LO,im,LO,"V0P5",IM,ODD,r,rdiff);
       if(pars::use_QED==2)
 	{
 	  P5P5_QED+=2*get_contraction(im,LO,im,QED,"P5P5",RE,ODD,r,rdiff);
