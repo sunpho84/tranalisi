@@ -63,8 +63,8 @@ djvec_t perens_t::get_contraction(const int imbw,qprop::ins kbw,const int imfw,q
     conj(coeff_to_read(kbw,rbw))*
     coeff_to_read(kfw,rfw);
   
-  const string m_tag_bw=(imbw==(int)nm)?"msea":to_string(imbw);
-  const string m_tag_fw=(imfw==(int)nm)?"msea":to_string(imfw);
+  const string m_tag_bw=(imbw==(int)nm)?"sea":to_string(imbw);
+  const string m_tag_fw=(imfw==(int)nm)?"sea":to_string(imfw);
   
   //Include -i if asking the imaginary part
   if(ext_reim==1) c_coeff*=dcompl_t(0.0,-1.0);
