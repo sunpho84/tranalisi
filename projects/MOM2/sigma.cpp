@@ -307,14 +307,8 @@ void perens_t::average_equiv_momenta_sigma(perens_t &out,const vector<vector<siz
 
 void perens_t::val_chir_extrap_sigma(perens_t &out) const
 {
+  index_t r_ilinmom_isigmaproj_ind({{"r",nr},{"linmom",linmoms.size()},{"sigmaproj",sigma::nproj}});
   index_t r_ilinmom_isigmaproj_isigmains_ind({{"r",nr},{"linmom",linmoms.size()},{"sigmaproj",sigma::nproj},{"sigmains",sigma::nins}});
-  
-  //slice m
-  vector<double> x(nm);
-  djvec_t y(nm);
-  for(size_t im=0;im<nm;im++)
-    if(pars::chir_extr_method==chir_extr::MQUARK) x[im]=am[im];
-    else                                          x[im]=sqr(meson_mass[im_im_ind({im,im})].ave());
   
   if(pars::use_QED) needs_to_read_assembled_QED_greenfunctions();
   
@@ -325,36 +319,62 @@ void perens_t::val_chir_extrap_sigma(perens_t &out) const
       const string &tag=t.tag;
       
 #pragma omp parallel for
-      for(size_t r_ilinmom_isigmaproj_isigmains=0;r_ilinmom_isigmaproj_isigmains<r_ilinmom_isigmaproj_isigmains_ind.max();r_ilinmom_isigmaproj_isigmains++)
+      for(size_t r_ilinmom_isigmaproj=0;r_ilinmom_isigmaproj<r_ilinmom_isigmaproj_ind.max();r_ilinmom_isigmaproj++)
 	{
-	  const vector<size_t> r_ilinmom_isigmaproj_isigmains_comps=r_ilinmom_isigmaproj_isigmains_ind(r_ilinmom_isigmaproj_isigmains);
-	  const size_t ilinmom=r_ilinmom_isigmaproj_isigmains_comps[1];
+	  const vector<size_t> r_ilinmom_isigmaproj_comps=r_ilinmom_isigmaproj_ind(r_ilinmom_isigmaproj);
+	  const size_t r=r_ilinmom_isigmaproj_comps[0];
+	  const size_t ilinmom=r_ilinmom_isigmaproj_comps[1];
+	  const size_t isigmaproj=r_ilinmom_isigmaproj_comps[2];
 	  
-	  //open the plot file if needed
-	  const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+r_ilinmom_isigmaproj_isigmains_ind.descr(r_ilinmom_isigmaproj_isigmains)+".xmg";
-	  grace_file_t *plot=nullptr;
-	  if(ilinmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
+	  vector<djvec_t> coeffs(sigma::nins);
 	  
-	  for(size_t r=0;r<nr;r++)
-	    {
-	      //slice m
-	      djvec_t y(nm);
-	      for(size_t im=0;im<nm;im++)
+	  for(size_t isigmains=0;isigmains<sigma::nins;isigmains++)
+	  {
+	    const vector<size_t> r_ilinmom_isigmaproj_isigmains_comps={r,ilinmom,isigmaproj,isigmains};
+	    const size_t r_ilinmom_isigmaproj_isigmains=r_ilinmom_isigmaproj_isigmains_ind({r_ilinmom_isigmaproj_isigmains_comps});
+	    
+	    //open the plot file if needed
+	    const string plot_path=dir_path+"/plots/chir_extr_"+tag+"_"+r_ilinmom_isigmaproj_isigmains_ind.descr(r_ilinmom_isigmaproj_isigmains)+".xmg";
+	    grace_file_t *plot=nullptr;
+	    if(ilinmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
+	    
+	    //slice m and fit iter_on_n3
+	    vector<double> x(nm);
+	    djvec_t y(nm);
+	    for(size_t im=0;im<nm;im++)
+	      {
+		const size_t imeson=im_im_ind({im,im});
+		
+		//compute mass sum
+		if(pars::chir_extr_method==chir_extr::MQUARK) x[im]=2.0*am[im];
+		else                                          x[im]=sqr(meson_mass[imeson].ave());
+		
 		y[im]=sigma[im_r_ilinmom_isigmaproj_isigmains_ind(concat(im,r_ilinmom_isigmaproj_isigmains_comps))];
-	      
-	      //fit, store and write the result
-	      djvec_t coeffs=poly_fit(x,y,1);
-	      sigma_chir[out.im_r_ilinmom_isigmaproj_isigmains_ind(concat((size_t)0,r_ilinmom_isigmaproj_isigmains_comps))]=coeffs[0];
-	      if(plot!=nullptr)
-		{
-		  auto xminmax=minmax_element(x.begin(),x.end());
-		  double xmax=*xminmax.second*1.1;
-		  write_fit_plot(*plot,0,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
-		  plot->write_ave_err(0,coeffs[0].ave_err());
-		}
-	    }
-	  
+
+		//if QED case take into account variation due to leading pole
+		if(pars::use_QED and isigmains>0 and pars::sub_meson_mass_shift_when_no_pole)
+		  {
+		    const djack_t M=meson_mass[imeson],dM=meson_mass_QED[imeson];
+
+		    const djack_t b0=coeffs[sigma::LO][1];
+		    const djack_t varb=2.0*b0*dM*M;
+		    y[im]-=varb;
+		  }
+	      }
+	    
+	    //fit, store and write the result
+	    coeffs[isigmains]=poly_fit(x,y,1);
+	    sigma_chir[out.im_r_ilinmom_isigmaproj_isigmains_ind(concat((size_t)0,r_ilinmom_isigmaproj_isigmains_comps))]=coeffs[isigmains][0];
+	    if(plot!=nullptr)
+	      {
+		auto xminmax=minmax_element(x.begin(),x.end());
+		double xmax=*xminmax.second*1.1;
+		write_fit_plot(*plot,0,xmax,bind(poly_eval<djvec_t>,coeffs[isigmains],_1),x,y);
+		plot->write_ave_err(0,coeffs[isigmains][0].ave_err());
+	      }
+	    
 	  if(plot!=nullptr) delete plot;
+	  }
 	}
     }
 }
