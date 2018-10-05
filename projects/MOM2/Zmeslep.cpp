@@ -54,9 +54,9 @@ void perens_t::compute_Zmeslep(const bool also_QCD,const bool also_QED)
 	      
 	      for(size_t ijack=0;ijack<=njacks;ijack++)
 		{
-		  using Zmeslep_t=Matrix<double,nZop,nZop>;
-		  Zmeslep_t Gamma_meslep_combo;
-		  Zmeslep_t Gamma_QED_meslep_combo;
+		  using Zmeslep_t=Matrix<double,Dynamic,Dynamic>;
+		  Zmeslep_t Gamma_meslep_combo(nZop,nZop);
+		  Zmeslep_t Gamma_QED_meslep_combo(nZop,nZop);
 		  
 		  for(size_t iop=0;iop<nZop;iop++)
 		    for(size_t iproj=0;iproj<nZop;iproj++)
@@ -81,7 +81,7 @@ void perens_t::compute_Zmeslep(const bool also_QCD,const bool also_QED)
 						 s1_ou(sigma::QED)[ijack]/s1_ou(sigma::LO)[ijack])/2.0;
 		  
 		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
-		  auto Z_QED_rel=(Zq_QED_rel_contr*Zmeslep_t::Identity()
+		  auto Z_QED_rel=(Zq_QED_rel_contr*Zmeslep_t::Identity(nZop,nZop)
 				  -Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
 		  
 		  for(size_t iop=0;iop<nZop;iop++)
@@ -113,7 +113,7 @@ void perens_t::make_Zmeslep_QED_absolute()
 	      
 	      for(size_t ijack=0;ijack<=njacks;ijack++)
 		{
-		  Matrix<double,nZop,nZop> a,b,c;
+		  Matrix<double,Dynamic,Dynamic> a(nZop,nZop),b=a,c=a;
 		  
 		  //take out
 		  for(size_t iop=0;iop<nZop;iop++)

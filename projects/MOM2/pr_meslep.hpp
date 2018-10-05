@@ -36,7 +36,15 @@ namespace meslep
       {{{ 0,0}},+1,1,1},
       {{{{5,10},{6,11},{7,12},{8,13},{9,14},{10,15}}},+1,2,24}});
   
-  const size_t nZop=5;
+  const size_t nZop_max=5;
+  
+  EXTERN_PR_MESLEP size_t nZop INIT_PR_MESLEP_TO(=nZop_max);
+  
+  inline void set_nZops(const int n)
+  {
+    if(n>(int)nZop_max or n<0) CRASH("Invalid number of nmeslep_ops, %d",n);
+    nZop=n;
+  }
   
   EXTERN_PR_MESLEP       vector<size_t>         listGl   INIT_PR_MESLEP_TO(={{ 0, 1, 2, 3, 4,10,11,12,13,14,15}}); //!< list of Gamma to be inserted on lepton side of the operator
   EXTERN_PR_MESLEP       vector<size_t>         &listpGl INIT_PR_MESLEP_TO(=listGl);

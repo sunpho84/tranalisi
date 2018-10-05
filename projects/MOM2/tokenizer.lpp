@@ -101,6 +101,7 @@ FromProp                            DEBUG_PRINTF("Found FromProp\n");return TK_F
 QEDGreenfunctionsAreAssembled       DEBUG_PRINTF("Found QEDGreenfunctionsAreAssembled\n");return TK_QED_GREENFUNCTIONS_ARE_ASSEMBLED;
 NJacks                              DEBUG_PRINTF("Found NJacks\n");return TK_NJACKS;
 NF                                  DEBUG_PRINTF("Found NF\n");return TK_NF;
+NMeslepOps                          DEBUG_PRINTF("Found NMeslepOps\n");return TK_NMESLEP_OPS;
 PhysBasis                           DEBUG_PRINTF("Found PhysBasis\n");return TK_PHYS_BASIS;
 PrintEachMom                        DEBUG_PRINTF("Found PrintEachMom\n");return TK_PRINT_EACH_MOM;
 RecomputeDeltaM                     DEBUG_PRINTF("Found RecomputeDeltaM\n");return TK_RECOMPUTE_DELTAM;

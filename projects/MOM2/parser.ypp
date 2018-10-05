@@ -84,6 +84,7 @@ using namespace scan;
 %token TK_MEASURE_MPCAC
 %token TK_NF
 %token TK_NJACKS
+%token TK_NMESLEP_OPS
 %token TK_P2REF
 %token TK_PHYS_BASIS
 %token TK_PRINT_Z
@@ -145,6 +146,7 @@ commands:
 	| commands set_measure_mPCAC
         | commands set_nf
         | commands set_njacks
+        | commands set_nmeslep_ops
         | commands set_p2ref
         | commands set_phys_basis
         | commands set_print_each_mom
@@ -256,6 +258,9 @@ set_nf: TK_NF '=' TK_INTE {evol::Nf_t_of_Nf($3);}
 ;
 
 set_njacks: TK_NJACKS '=' TK_INTE {set_njacks($3);}
+;
+
+set_nmeslep_ops: TK_NMESLEP_OPS '=' TK_INTE {meslep::set_nZops($3);}
 ;
 
 set_phys_basis: TK_PHYS_BASIS '=' TK_INTE {pars::phys_basis=$3;}
