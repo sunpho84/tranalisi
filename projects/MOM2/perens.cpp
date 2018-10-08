@@ -114,7 +114,7 @@ perens_t& perens_t::set_indices()
   im_r_im_r_bilins_igam_ind=im_r_ind*im_r_ind*index_t({{"bilins",pr_bil::nins},{"igamma",nGamma}});
   im_r_im_r_bilins_ibil_ibilmom_ind=im_r_ind*im_r_ind*index_t({{"bilins",pr_bil::nins},{"bil",nbil},{"bilmom",bilmoms.size()}});
   
-  im_r_im_r_meslepins_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"meslepins",pr_meslep::nins},{"iop",nbil},{"iproj",nbil}});;
+  im_r_im_r_meslepins_iop_iproj_ind=im_r_ind*im_r_ind*index_t({{"meslepins",pr_meslep::nins},{"iop",meslep::nZop},{"iproj",meslep::nZop}});;
   im_r_im_r_meslepins_iop_iproj_imeslepmom_ind=im_r_im_r_meslepins_iop_iproj_ind*index_t({{"imeslepmom",meslepmoms().size()}});
   
   r_r_ibil_ind.set_ranges({{"r",nr},{"r",nr},{"bil",nbil}});
