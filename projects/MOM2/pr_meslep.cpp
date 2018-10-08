@@ -417,8 +417,8 @@ void perens_t::average_equiv_momenta_pr_meslep(perens_t &out,const vector<vector
 
 void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 {
-  const index_t r_r_iop_iproj_imeslepmom_ind({{"r",nr},{"r",nr},{"op",nbil},{"proj",nbil},{"meslepmoms",meslepmoms().size()}});
-  const index_t r_r_meslepins_iop_iproj_imeslepmom_ind({{"r",nr},{"r",nr},{"meslepins",pr_meslep::nins},{"op",nbil},{"proj",nbil},{"meslepmoms",meslepmoms().size()}});
+  const index_t r_r_iop_iproj_imeslepmom_ind({{"r",nr},{"r",nr},{"op",meslep::nZop},{"proj",meslep::nZop},{"meslepmoms",meslepmoms().size()}});
+  const index_t r_r_meslepins_iop_iproj_imeslepmom_ind({{"r",nr},{"r",nr},{"meslepins",pr_meslep::nins},{"op",meslep::nZop},{"proj",meslep::nZop},{"meslepmoms",meslepmoms().size()}});
   
   for(auto &t : out.get_pr_meslep_tasks({this}))
 #pragma omp parallel for
@@ -464,7 +464,7 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 		  
 		  //compute y and y_plot
 		  y_plot[imeson]=pr[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_ou,r_in,im_in,r_ou,meslepins,iop,iproj,imeslepmom})];
-	      
+		  
 		  //if QED case and pole must be subtracted, take into account variation due to leading pole
 		  if(pars::use_QED and meslepins>0)
 		    {
