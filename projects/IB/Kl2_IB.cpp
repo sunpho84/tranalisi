@@ -10,8 +10,8 @@ const bool EXCLUDE_HIGH_MASSES=false;
 #include <set>
 
 #include <tranalisi.hpp>
-#include <IB/Kl2_IB_FSE.hpp>
-#include <IB/common.hpp>
+#include <Kl2_IB_FSE.hpp>
+#include <common.hpp>
 
 const size_t nfit_range_variations=2;
 const int frange_var[2]={0,-1};
@@ -282,12 +282,15 @@ djvec_t read_QED(const ens_pars_t &ens,size_t iQED_mes,const djack_t &deltam_cr,
   
   //subtract the bare quark mass eq.85 of PRD 2013
   double Z_QED=(6.0*log(mu_MS*a)-22.5954)/(16.0*sqr(M_PI));
+
+  djack_t ZP_fact;
+  ZP_fact.fill_gauss({1.5,0.2,23492});
   
   //the insertion is of the scalar density, but
   //the correction is given by the lagrangian
   //insertion, where -S is present
-  djvec_t c_0S1=-read("0S",ens,iq2,iq1,1,RE)*am1*sqr(eq1)*Z_QED;
-  djvec_t c_0S2=-read("0S",ens,iq1,iq2,1,RE)*am2*sqr(eq2)*Z_QED;
+  djvec_t c_0S1=-read("0S",ens,iq2,iq1,1,RE)*am1*sqr(eq1)*Z_QED*ZP_fact;
+  djvec_t c_0S2=-read("0S",ens,iq1,iq2,1,RE)*am2*sqr(eq2)*Z_QED*ZP_fact;
   
   djvec_t(c_0S1/c_LO).ave_err().write(combine("%s/%s_0S1.xmg",ens_qpath.c_str(),name));
   djvec_t(c_0S2/c_LO).ave_err().write(combine("%s/%s_0S2.xmg",ens_qpath.c_str(),name));
@@ -354,6 +357,11 @@ void compute_basic_slopes()
   vector<djvec_t> jAP_QED(nens_QED_mes);
   vector<djvec_t> jAP_MASS(nens_QED_mes);
   jAP_LO_exp_removed.resize(nens_QCD_mes);
+
+  FILE* pFile;
+
+  pFile=fopen("jDM_MASS_K0.dat","w+");
+  fclose(pFile);
   
   //load everything
   for(size_t iens=0;iens<nens_used;iens++)
@@ -432,6 +440,16 @@ void compute_basic_slopes()
 	  jAP_LO_exp_removed[ind_QCD]=jAP_LO[ind_QCD];
 	  for(int t=0;t<=(int)TH;t++)
 	    jAP_LO_exp_removed[ind_QCD][t]/=exp(-t*jaM[ind_QCD])+exp(-((int)T-t)*jaM[ind_QCD]);
+	}
+
+      ////test////
+      size_t ind_ens_K0bar=ind_ens_QED_mes({iens,iK0bar});
+
+      for(size_t i=0;i<jDM_MASS[ind_ens_K0bar].size();i++)
+	{
+	  pFile=fopen("jDM_MASS_K0.dat","a+");
+	  fprintf(pFile,"%lg\n",jDM_MASS[ind_ens_K0bar][i]);
+	  fclose(pFile);
 	}
       
       //print some info useful for retuning kappa for each quark
@@ -555,10 +573,22 @@ dboot_t cont_chir_fit_dml_ren(const dbvec_t &a,const dbvec_t &z,const dboot_t &f
 //! compute the correction to the bare masses needed
 index_t ind_adml;
 dbvec_t adml_bare;
+dbvec_t MK;
 void compute_adml_bare()
 {
   ind_adml.set_ranges({{"Input",ninput_an},{"Ens",nens_used}});
   adml_bare.resize(ind_adml.max());
+  MK.resize(ind_adml.max());
+
+  FILE* pFile;
+
+  pFile=fopen("adml_bare.dat","w+");
+  fclose(pFile);
+
+  FILE* ppFile;
+
+  ppFile=fopen("MK.dat","w+");
+  fclose(ppFile);
   
   dbvec_t dml_ren_contlin(dml::ind_syst.max());
   for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
@@ -596,6 +626,22 @@ void compute_adml_bare()
 	  dboot_t QCD_dM2K_over_adm;
 	  QCD_dM2K_over_adm=dboot_t(bi,(jDM_MASS[ind_ens_Kminus]-jDM_MASS[ind_ens_K0bar])*2*jaM[ind_ens_K])/sqr(a);
 	  adml_bare[ind]=QCD_dM2K/QCD_dM2K_over_adm;
+
+	  for(size_t iboot=0;iboot<adml_bare[ind].size();iboot++)
+	    {
+	      pFile=fopen("adml_bare.dat","a+");
+	      fprintf(pFile,"%lg\n",adml_bare[ind][iboot]);
+	      fclose(pFile);
+	    }
+
+	  MK[ind]=dboot_t(bi,jaM[ind_ens_K]);
+
+	  for(size_t iboot=0;iboot<MK[ind].size();iboot++)
+	    {
+	      ppFile=fopen("MK.dat","a+");
+	      fprintf(ppFile,"%lg\n",MK[ind][iboot]);
+	      fclose(ppFile);
+	    }
 	  
 	  //subtract the bare quark mass eq.85 of PRD 2013
 	  dboot_t dml_ren=adml_bare[ind]/ZP/a;
@@ -955,7 +1001,7 @@ djvec_t prepare_z_for_FSE(const string &path,const djack_t &jbetal)
 dboot_t Wreg1_contr(const dboot_t &a)
 {
   const double uss=1/(16*sqr(M_PI));
-  
+
   //tlSym photon
   // dboot_t Z1=uss*(5.0*log(a*MW)-5.056);
   // double Z2=uss*0.323;
@@ -2005,12 +2051,12 @@ int main(int narg,char **arg)
   // extrapolate_corr(tot_corr_proc[iK]-tot_corr_proc[iPi],{{iK,+1.0},{iPi,-1.0}},STUDY_K_M_PI,iLEP,
   // 		   {hl::FSE::SUB_STDEP::NO,hl::FSE::SUB_STDEP::NO},
   // 		   {hl::FSE::FIT_STDEP::YES,hl::FSE::FIT_STDEP::NO});
-  // extrapolate_corr(tot_corr_proc[iPi],{{iPi,1.0}},STUDY_PI,iLEP,
-  // 		   {hl::FSE::SUB_STDEP::YES,hl::FSE::SUB_STDEP::NO},
-  // 		   {hl::FSE::FIT_STDEP::YES,hl::FSE::FIT_STDEP::YES});
-  extrapolate_corr(tot_corr_proc[iK],{{iK,1.0}},STUDY_K,iLEP,
+  extrapolate_corr(tot_corr_proc[iPi],{{iPi,1.0}},STUDY_PI,iLEP,
   		   {hl::FSE::SUB_STDEP::YES,hl::FSE::SUB_STDEP::NO},
   		   {hl::FSE::FIT_STDEP::YES,hl::FSE::FIT_STDEP::YES});
+  // extrapolate_corr(tot_corr_proc[iK],{{iK,1.0}},STUDY_K,iLEP,
+  // 		   {hl::FSE::SUB_STDEP::YES,hl::FSE::SUB_STDEP::NO},
+  // 		   {hl::FSE::FIT_STDEP::YES,hl::FSE::FIT_STDEP::YES});
 
   cout<<endl<<"Total time: "<<time(0)-start<<" s"<<endl;
   
