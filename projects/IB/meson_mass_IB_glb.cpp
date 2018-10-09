@@ -130,6 +130,9 @@ int main(int narg,char **arg)
   string ens_pars=input.read<string>("UltimatePath");
   init_common_IB(ens_pars);
   size_t nens_used=input.read<int>("NEnsamble");
+
+  dboot_t ZP_fact;
+  ZP_fact.fill_gauss({1.5,0.2,23492});
   
   for(size_t iens=0;iens<nens_used;iens++)
     {
@@ -299,7 +302,7 @@ int main(int narg,char **arg)
 	    
 	    boot_init_t &bi=jack_index[input_an_id][ens_id];
 	    
-	    Z_QED[iens+input_an_id*raw_data.size()]=1.0/(e2*lat_par[input_an_id].Z[ibeta]*(6.0*log(mu_MS*a)-22.596)/(16.0*sqr(M_PI)));
+	    Z_QED[iens+input_an_id*raw_data.size()]=1.0/(e2*lat_par[input_an_id].Z[ibeta]*ZP_fact*(6.0*log(mu_MS*a)-22.596)/(16.0*sqr(M_PI)));
 	    aDeltam_cr_u[iens+input_an_id*raw_data.size()]=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(eu);
 	    aDeltam_cr_d[iens+input_an_id*raw_data.size()]=dboot_t(bi,raw_data[iens].deltam_cr)*e2*sqr(ed);
 	    
