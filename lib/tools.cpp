@@ -6,7 +6,9 @@
 #include <cstdarg>
 #include <git_hash.hpp>
 #include <signal.h>
-#include <malloc.h>
+#ifdef HAVE_MALLOC_H
+ #include <malloc.h>
+#endif
 #include <sys/stat.h>
 #include <execinfo.h>
 
@@ -20,8 +22,12 @@ using namespace std;
 
 void flush_unused_memory()
 {
+#ifdef HAVE_MALLOC_H
   int rc=malloc_trim(0);
   cout<<"Flushing unused memory, result: "<<rc<<endl;
+#else
+  cout<<"malloc_trim not available, not flushing unused memory"<<endl;
+#endif
 }
 
 //! write the list of called routines
