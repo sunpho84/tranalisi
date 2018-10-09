@@ -59,6 +59,7 @@ const double a_cont=1e-5;
 //! renormalization constants taken from 1403.4504, table 20 pag. 56, first all M1, then M2
 const vector<vector<ave_err_t>> Zp_ae({{{0.529,0.007},{0.509,0.004},{0.516,0.002}},{{0.574,0.004},{0.546,0.002},{0.545,0.002}}});
 const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
+// const vector<vector<ave_err_t>> Za_ae({{{0.7375,0.0049},{0.7451,0.0026},{0.7599,0.0026}},{{0.6844,0.0020},{0.7093,0.0016},{0.7468,0.0014}}});
 const vector<vector<ave_err_t>> Zv_ae({{{0.587,0.004},{0.603,0.003},{0.655,0.003}},{{0.608,0.003},{0.614,0.002},{0.657,0.002}}});
 const vector<vector<ave_err_t>> Zt_ae({{{0.711,0.005},{0.724,0.004},{0.774,0.004}},{{0.700,0.003},{0.711,0.002},{0.767,0.002}}});
 const int Zp_seed[nbeta]={82223,224335,34434};
@@ -67,6 +68,23 @@ const int Zv_seed[nbeta]={84969,3045023,453453};
 const int Zt_seed[nbeta]={5634,917453,324338};
 
 EXTERN_COMMON dbvec_t Za INIT_ARGS(nbeta),Zp INIT_ARGS(nbeta),Zv INIT_ARGS(nbeta),Zt INIT_ARGS(nbeta);
+
+//! non-factorizable corrections to RCs of bilinear operators in Q(C+E)D first all M1, then M2
+const vector<vector<ave_err_t>> Za_fact_ae({{{0.860,0.016},{0.872,0.011},{0.910,0.006}},{{0.981,0.010},{0.979,0.008},{0.958,0.004}}});
+const vector<vector<ave_err_t>> Zv_fact_ae({{{1.127,0.013},{1.103,0.013},{1.095,0.006}},{{1.231,0.005},{1.209,0.006},{1.143,0.003}}});
+const int Za_fact_seed[nbeta]={23551,17370,3340};
+const int Zv_fact_seed[nbeta]={9724,5046,18462};
+
+EXTERN_COMMON dbvec_t Za_fact INIT_ARGS(nbeta),Zv_fact INIT_ARGS(nbeta);
+
+// //! non-factorizable corrections to RCs of 4-fermion operators (basis of  in Q(C+E)D first all M1, then M2 (e2 is factorised)
+// const vector<vector<ave_err_t>> Za_fact_ae({{{0.860,0.016},{0.872,0.011},{0.910,0.006}},{{0.981,0.010},{0.979,0.008},{0.958,0.004}}});
+// const vector<vector<ave_err_t>> Zv_fact_ae({{{1.127,0.013},{1.103,0.013},{1.095,0.006}},{{1.231,0.005},{1.209,0.006},{1.143,0.003}}});
+// const int Za_fact_seed[nbeta]={23551,17370,3340};
+// const int Zv_fact_seed[nbeta]={9724,5046,18462};
+
+// EXTERN_COMMON dbvec_t Za_fact INIT_ARGS(nbeta),Zv_fact INIT_ARGS(nbeta);
+
 
 //! boot initializer
 EXTERN_COMMON boot_init_t bi;
@@ -245,9 +263,9 @@ public:
   
   void print_common_pars() const
   {
-    for(size_t ia=0;ia<ori_a.size();ia++)
+    for(size_t ia=0;ia<fit_a.size();ia++)
       cout<<"a["<<ia<<"]: "<<fit_a[ia].ave_err()<<", orig: "<<ori_a[ia].ave_err()<<", ratio: "<<dboot_t(ori_a[ia]/fit_a[ia]-1.0).ave_err()<<endl;
-    for(size_t iz=0;iz<ori_z.size();iz++)
+    for(size_t iz=0;iz<fit_z.size();iz++)
       cout<<"Zp["<<iz<<"]: "<<fit_z[iz].ave_err()<<", orig: "<<ori_z[iz].ave_err()<<", ratio: "<<dboot_t(ori_z[iz]/fit_z[iz]-1.0).ave_err()<<endl;
     //
     cout<<"f0: "<<fit_f0.ave_err()<<", orig: "<<ori_f0.ave_err()<<", ratio: "<<dboot_t(fit_f0/ori_f0-1).ave_err()<<endl;
@@ -512,6 +530,8 @@ inline void prepare_az(int input_an_id)
       Za[ibeta].fill_gauss(Za_ae[imet][ibeta],Za_seed[ibeta]);
       Zv[ibeta].fill_gauss(Zv_ae[imet][ibeta],Zv_seed[ibeta]);
       Zt[ibeta].fill_gauss(Zt_ae[imet][ibeta],Zt_seed[ibeta]);
+      Za_fact[ibeta].fill_gauss(Za_fact_ae[imet][ibeta],Za_fact_seed[ibeta]);
+      Zv_fact[ibeta].fill_gauss(Zv_fact_ae[imet][ibeta],Zv_fact_seed[ibeta]);
     }
 }
 
