@@ -34,9 +34,9 @@ namespace grace
   EXTERN_GRACE color_t default_colour INIT_TO(RED);
   EXTERN_GRACE double default_widths INIT_TO(2);
   EXTERN_GRACE double default_label_size INIT_TO(1.5);
-  EXTERN_GRACE vector<grace::color_t> default_color_scheme INIT_TO({grace::RED,grace::BLUE,grace::GREEN4,grace::VIOLET});
+  EXTERN_GRACE vector<grace::color_t> default_color_scheme INIT_TO({grace::RED,grace::RED,grace::RED,grace::RED,grace::BLUE,grace::BLUE,grace::GREEN4,grace::VIOLET});
   EXTERN_GRACE vector<grace::color_t> default_line_color_scheme INIT_TO({grace::RED,grace::BLUE,grace::GREEN4,grace::VIOLET});
-  EXTERN_GRACE vector<grace::symbol_t> default_symbol_scheme INIT_TO({grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::SQUARE,grace::DIAMOND,grace::DIAMOND});
+  EXTERN_GRACE vector<grace::symbol_t> default_symbol_scheme INIT_TO({grace::TRIUP,grace::CIRCLE,grace::SQUARE,grace::TRIDOWN,grace::CIRCLE,grace::SQUARE,grace::DIAMOND,grace::STAR});
 };
 
 //! class to write a grace file
