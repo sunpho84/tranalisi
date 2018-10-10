@@ -5,6 +5,7 @@
 #include <meas_vec.hpp>
 
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_sf_dilog.h>
 
 #ifndef EXTERN_GM2IB
  #define EXTERN_GM2IB extern
@@ -50,31 +51,33 @@ inline double ftilde_t(size_t t,double a)
   gsl_integration_workspace_free(workspace);
   
   looktab[key]=result;
+
+  //cout<<"t: "<<t<<" "<<"ftilde: "<<result<<endl;
   
   return result;
 }
 
-template <class T> T kernl_num(const T &corr_t,double t,const T &a)
-{
-  gsl_integration_workspace *w=gsl_integration_workspace_alloc(1000);
+// template <class T> T kernl_num(const T &corr_t,double t,const T &a)
+// {
+//   gsl_integration_workspace *w=gsl_integration_workspace_alloc(1000);
   
-  params_t param(t,a);
+//   params_t param(t,a);
   
-  //! function structure
-  gsl_function ftil;
-  ftil.function=kern_Q;
-  ftil.params=&param;
+//   //! function structure
+//   gsl_function ftil;
+//   ftil.function=kern_Q;
+//   ftil.params=&param;
   
-  //integrate
-  double result;
-  double abserr;
-  double start=0,epsabs=0,epsrel=1e-6;
-  gsl_integration_qagiu(&ftil,start,epsabs,epsrel,1000,w,&result,&abserr);
+//   //integrate
+//   double result;
+//   double abserr;
+//   double start=0,epsabs=0,epsrel=1e-6;
+//   gsl_integration_qagiu(&ftil,start,epsabs,epsrel,1000,w,&result,&abserr);
   
-  gsl_integration_workspace_free(w);
+//   gsl_integration_workspace_free(w);
   
-  return result*corr_t;
-}
+//   return result*corr_t;
+// }
 
 //! wrapper
 template <class T> T ftilde_t(size_t t,const T& a)
@@ -103,11 +106,11 @@ template <class TV,class TS=typename TV::base_type> TS integrate_corr_times_kern
   return 4*sqr(alpha_em)*sqr(eq[im])*integrate_corr_up_to(kern,upto);
 }
 
-template <class TV,class TS=typename TV::base_type> TS integrate_corr_light_times_kern_up_to(const TV &corr,size_t T,const TS &a,size_t &upto,size_t ord=1)
+template <class TV,class TS=typename TV::base_type> TS integrate_bcorr_light_times_kern_up_to(const TV &corr,size_t T,const TS &a,size_t &upto,size_t ord=1)
 {
   //store the kernel
   TV kern(T/2+1);
-  for(size_t t=1;t<T/2+1;t++) kern[t]=kernl_num(corr[t],t,a);
+  for(size_t t=1;t<T/2+1;t++) kern[t]=kern_num(corr[t],t,a);
   kern[0]=0.0;
   
   return 4*sqr(alpha_em)*integrate_corr_up_to(kern,upto);
@@ -119,7 +122,7 @@ template <class TV,class TS=typename TV::base_type> TS integrate_jcorr_light_tim
   TV kern(T/2+1);
   for(size_t t=1;t<T/2+1;t++)
     for(size_t i=0;i<corr[t].size();i++)
-      kern[t][i]=kernl_num(corr[t][i],t,a[i]);
+      kern[t][i]=kern_num(corr[t][i],t,a[i]);
   
   for(size_t i=0;i<corr[0].size();i++)
     kern[0][i]=0.0;
@@ -139,14 +142,19 @@ template <class TV,class TS=typename TV::base_type> TS integrate_jcorr_light_tim
 
       for(size_t t=from+1;t<upto+1;t++)
 	for(size_t i=0;i<corr[t].size();i++)
-	  kern[t][i]=kernl_num(corr[t][i],t,a[i]);
+	  kern[t][i]=kern_num(corr[t][i],t,a[i]);
     }
   else
     {
       for(size_t t=from;t<upto+1;t++)
 	for(size_t i=0;i<corr[t].size();i++)
-	  kern[t][i]=kernl_num(corr[t][i],t,a[i]);
+	  kern[t][i]=kern_num(corr[t][i],t,a[i]);
     }
+
+  // TV ftilde=kern/corr;
+
+  // for(size_t t=0;t<ftilde.size();t++)
+  //   cout<<"t: "<<t<<"  "<<"ftilde: "<<ftilde[t].ave_err()<<endl;
   
   return 4*sqr(alpha_em)*integrate_corr(kern,from,upto);
 }
@@ -212,12 +220,57 @@ template <class TS,class Pars_wr> TS integrate_reco_from(double (*kern_gsl)(doub
   
   return 4*sqr(alpha_em)*sqr(eq[im])*result;
 }
+template <class TS,class Pars_wr> TS integrate_recol_from(double (*kern_gsl)(double,void*),const vector<TS> &p,double from)
+{
+  const bool use_gsl=false;
+  
+  TS result;
+  int workspace_size=1000;
+  gsl_integration_workspace *workspace=NULL;
+  if(use_gsl) workspace=gsl_integration_workspace_alloc(workspace_size);
+  
+  if(use_gsl)
+    for(size_t i=0;i<p[0].size();i++)
+      {
+	Pars_wr params(p,i);
+	
+	//! function structure
+	gsl_function f;
+	f.function=kern_gsl;
+	f.params=&params;
+	
+	//integrate
+	double abserr;
+	double epsabs=0,epsrel=1e-6;
+	gsl_integration_qagiu(&f,from,epsabs,epsrel,workspace_size,workspace,&result[i],&abserr);
+      }
+  else
+    {
+      size_t np=500;
+      valarray<TS> corr_reco(np);
+      for(size_t i=0;i<p[0].size();i++)
+	{
+	  Pars_wr params(p,i);
+	  for(size_t dt=0;dt<np;dt++) corr_reco[dt][i]=kern_gsl(dt+from,&params);
+	}
+      size_t extr=np-1;
+      result=integrate_corr_up_to(corr_reco,extr);
+    }
+  
+  if(use_gsl) gsl_integration_workspace_free(workspace);
+  
+  return 4*sqr(alpha_em)*result;
+}
 //! integrate the leading order reconstructed from a given point
 template <class T> T integrate_LO_reco_from(const T &Z2,const T &M,const T &a,size_t im,double from)
 {return integrate_reco_from<T,params_LO_t>(kern_LO_reco_gsl,vector<T>({Z2,M,a}),im,from);}
+template <class T> T integrate_LO_recol_from(const T &Z2,const T &M,const T &a,double from)
+{return integrate_recol_from<T,params_LO_t>(kern_LO_reco_gsl,vector<T>({Z2,M,a}),from);}
 //! integrate the QED reconstructed from a given point
 template <class T> T integrate_QED_reco_from(const T &DZ2_fr_Z2,const T &Z2,const T &SL,const T &M,const T &a,size_t im,double from)
 {return integrate_reco_from<T,params_QED_t>(kern_QED_reco_gsl,vector<T>({DZ2_fr_Z2,Z2,SL,M,a}),im,from);}
+template <class T> T integrate_QED_recol_from(const T &DZ2_fr_Z2,const T &Z2,const T &SL,const T &M,const T &a,double from)
+{return integrate_recol_from<T,params_QED_t>(kern_QED_reco_gsl,vector<T>({DZ2_fr_Z2,Z2,SL,M,a}),from);}
 
 //! kernel of LO (used only for debug)
 template <class params_t,class T> T kern_reco(double t,double (*kern_reco_gsl)(double,void*),const vector<T> &pars)

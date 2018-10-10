@@ -99,17 +99,6 @@ inline djvec_t read(const char *what,const ens_data_t &ens,size_t im,size_t r,si
   return out;
 }
 
-// inline djvec_t read_light(const char *what,const ens_data_t &ens,size_t r,size_t reim)
-// {
-//   string path=combine("%s/jacks/corr%s",ens.path.c_str(),what);
-  
-//   djvec_t out;
-
-//   out=read_djvec(path,ens.T,ind_base_light({r,reim}));
-    
-//   return out;
-// }
-
 //! read a combination of r and return appropriately symmetrized
 inline djvec_t read(const char *what,const ens_data_t &ens,int tpar,size_t im,int rpar,size_t reim)
 {
@@ -119,20 +108,6 @@ inline djvec_t read(const char *what,const ens_data_t &ens,int tpar,size_t im,in
   for(size_t r=0;r<nr;r++) o+=read(what,ens,im,r,reim)*((r==0)?1:rpar);
   return o.symmetrized(tpar)/(1+abs(rpar));
 }
-
-// inline djvec_t read_test(const char *what,const ens_data_t &ens,size_t reim)
-// {
-//   return read_light(what,ens,1,reim);
-// }
-
-// inline djvec_t read_test_VV(const char *what,const ens_data_t &ens,int tpar,int rpar,size_t reim)
-// {
-//   djvec_t o(ens.T);
-//   o=0.0;
-  
-//   for(size_t r=0;r<nr;r++) o+=read_light(what,ens,r,reim)*((r==0)?1:rpar);
-//   return o/(1+abs(rpar));
-// }
 
 //! read averaging the three channels
 inline djvec_t read(const char *what,const char *pat,const ens_data_t &ens,int tpar,size_t im,int rpar,size_t reim)
@@ -146,23 +121,9 @@ inline djvec_t read(const char *what,const char *pat,const ens_data_t &ens,int t
   else return read(combine("%s_%s",what,pat).c_str(),ens,tpar,im,rpar,reim);
 }
 
-// inline djvec_t read_light_VV(const char *what,const char *pat,const ens_data_t &ens,int tpar,int rpar,size_t reim)
-// {
-//   return djvec_t(read_test_VV(combine("%s_%c1%c1",what,pat[0],pat[1]).c_str(),ens,tpar,rpar,reim)+
-// 		 read_test_VV(combine("%s_%c2%c2",what,pat[0],pat[1]).c_str(),ens,tpar,rpar,reim)+
-// 		 read_test_VV(combine("%s_%c3%c3",what,pat[0],pat[1]).c_str(),ens,tpar,rpar,reim))
-//     /3.0;
-// }
-
 //! read PP
 inline djvec_t read_PP(const char *what,const ens_data_t &ens,size_t im,int rpar,size_t reim)
 {return read(combine("%s_%s",what,"P5P5").c_str(),ens,1,im,rpar,reim);}
-
-// inline djvec_t read_V1V1(const char *what,const ens_data_t &ens,size_t reim)
-// {return read_test(combine("%s_%s",what,"V1V1").c_str(),ens,reim);}
-
-// inline djvec_t read_VV_test(const char *what,const ens_data_t &ens,int rpar,size_t reim)
-// {return read_light_VV(what,"VV",ens,1,rpar,reim);}
 
 //! read VV
 inline djvec_t read_VV(const char *what,const ens_data_t &ens,size_t im,int rpar,size_t reim)
@@ -179,7 +140,8 @@ inline djvec_t read_VT(const char *what,const ens_data_t &ens,size_t im,int rpar
 //! compute the critical deltam
 inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
 {
-  string ens_qpath=ens.path+"/plots_"+qname[iq];
+  // string ens_qpath=ens.path+"/plots_"+qname[iq];
+  string ens_qpath=ens.path+"/plots";
   
   //compute M
   djvec_t P5P5_00=read("00_P5P5",ens,+1,iq,1,RE);
@@ -188,7 +150,7 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
   djvec_t P5P5_0T=read("0T_P5P5",ens,+1,iq,1,RE);
   djvec_t P5P5_0P=read("0P_P5P5",ens,+1,iq,-1,IM);
   djack_t M=constant_fit(effective_mass(P5P5_00),ens.tmin[iq],ens.tmax[iq],ens_qpath+"/P5P5_00_eff.xmg");
-  cout<<qname[iq]<<" mass ens "<<ens.path<<": "<<M.ave_err()<<endl;
+  //cout<<qname[iq]<<" mass ens "<<ens.path<<": "<<M.ave_err()<<endl;
   
   //test jacknife per jacknife P5P5_00
   grace_file_t out(ens_qpath+"/P5P5_00_eff_jacks.xmg");
@@ -284,8 +246,8 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
   djack_t dm_cr_LO=constant_fit(dm_cr_LO_corr,ens.tmin[iq],ens.tmax[iq],ens_qpath+"/m_cr_retune.xmg");
   djack_t kappa_true=ens.kappa/(1+2*dm_cr_LO*ens.kappa);
   djack_t dk_cr_LO=kappa_true-ens.kappa;
-  cout<<"True kappa cr (quark "<<qname[iq]<<") ens "<<ens_qpath<<": "<<smart_print(kappa_true.ave_err())
-      <<" vs "<<ens.kappa<<", diff: "<<smart_print(dk_cr_LO.ave_err())<<endl;
+  // cout<<"True kappa cr (quark "<<qname[iq]<<") ens "<<ens_qpath<<": "<<smart_print(kappa_true.ave_err())
+  //     <<" vs "<<ens.kappa<<", diff: "<<smart_print(dk_cr_LO.ave_err())<<endl;
   
   // //hep-lat/0101001 eq.2.5
   // double amq=get_amq(ens,iq);
@@ -299,7 +261,7 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
   //how much is the pion mass after retuning?
   djvec_t P5P5_00_retuned=P5P5_00+djack_t(2.0*dm_cr_LO)*P5P5_0P;
   djack_t M_retuned=constant_fit(effective_mass(P5P5_00_retuned),ens.tmin[iq],ens.tmax[iq],ens_qpath+"/P5P5_00_retuned_eff.xmg");
-  cout<<"Variation of M due to k retuning: "<<smart_print(djack_t(M_retuned/M-1).ave_err())<<endl;
+  //cout<<"Variation of M due to k retuning: "<<smart_print(djack_t(M_retuned/M-1).ave_err())<<endl;
   
   return deltam_cr_alt;
 }
@@ -308,7 +270,8 @@ inline djack_t compute_deltam_cr(const ens_data_t &ens,size_t iq)
 djack_t *Zm_fact;
 inline djvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
 {
-  string ens_qpath=ens.path+"/plots_"+qname[im];
+  // string ens_qpath=ens.path+"/plots_"+qname[im];
+  string ens_qpath=ens.path+"/plots";
   
   djvec_t c_0T=read("0T",pat,ens,tpar,im,1,RE);
   djvec_t c_0M=read("0M",pat,ens,tpar,im,1,RE);
@@ -341,13 +304,128 @@ inline djvec_t read_QED(const char *pat,const ens_data_t &ens,const int tpar,con
   return djvec_t(c+2.0*d+2.0*e)*e2*sqr(eq[im]);
 }
 
+inline djvec_t read_QED_up(const char *pat,const ens_data_t &ens,const int tpar,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
+{
+  // string ens_qpath=ens.path+"/plots_"+qname[im];
+  string ens_qpath=ens.path+"/plots";
+
+  const double qu=2.0/3.0;
+  
+  djvec_t c_0T=read("0T",pat,ens,tpar,0,1,RE);
+  djvec_t c_0M=read("0M",pat,ens,tpar,0,1,RE);
+  djvec_t c_LL=read("LL",pat,ens,tpar,0,1,RE);
+  djvec_t(c_LO).ave_err().write(ens_qpath+"/"+pat+"_00.xmg");
+  djvec_t(c_0T/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0T.xmg");
+  djvec_t(c_0M/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0M.xmg");
+  djvec_t(c_LL/c_LO).ave_err().write(ens_qpath+"/"+pat+"_LL.xmg");
+  djvec_t c=djvec_t(c_LL+2.0*djvec_t(c_0T+c_0M));
+  
+  djvec_t c_0P=read("0P",pat,ens,tpar,0,-1,IM);
+  c_0P.ave_err().write(ens_qpath+"/"+pat+"_0P_norat.xmg");
+  djvec_t(c_0P/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0P.xmg");
+  djvec_t d=-(deltam_cr*c_0P);
+  
+  djack_t dmcrit_bare=deltam_cr*e2*sqr(qu);
+  djack_t kappa_new=ens.kappa/(1+2*dmcrit_bare*ens.kappa);
+  //cout<<"dmcrit_bare (up  ens: "<<ens.path<<"): "<<dmcrit_bare.ave_err()<<", kappa: "<<kappa_new.ave_err()<<" old: "<<ens.kappa<<endl;
+  
+  djvec_t c_0S=read("0S",pat,ens,tpar,0,1,RE);
+  c_0S.ave_err().write(ens_qpath+"/"+pat+"_0S_norat.xmg");
+  djvec_t(c_0S/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0S.xmg");
+  double amq=get_amq(ens,0);
+  
+  double dm_bare_noe2=amq*(6.0*log(mu_MS*a)-22.5954)/(16.0*sqr(M_PI));
+  djvec_t e=(-dm_bare_noe2)*c_0S*(*Zm_fact); //minus? CHECK
+  
+  // double dm_bare=dm_bare_noe2*e2*sqr(qu);
+  //cout<<"dm_bare (up  ens: "<<ens.path<<"): "<<dm_bare<<", total: "<<get_amq(ens,0)+dm_bare<<" old: "<<get_amq(ens,0)<<endl;
+  
+  return djvec_t(c+2.0*d+2.0*e)*e2*sqr(qu);
+}
+
+inline djvec_t read_QED_down(const char *pat,const ens_data_t &ens,const int tpar,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
+{
+  // string ens_qpath=ens.path+"/plots_"+qname[im];
+  string ens_qpath=ens.path+"/plots";
+
+  const double qd=-1.0/3.0;
+  
+  djvec_t c_0T=read("0T",pat,ens,tpar,0,1,RE);
+  djvec_t c_0M=read("0M",pat,ens,tpar,0,1,RE);
+  djvec_t c_LL=read("LL",pat,ens,tpar,0,1,RE);
+  djvec_t(c_0T/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0T.xmg");
+  djvec_t(c_0M/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0M.xmg");
+  djvec_t(c_LL/c_LO).ave_err().write(ens_qpath+"/"+pat+"_LL.xmg");
+  djvec_t c=djvec_t(c_LL+2.0*djvec_t(c_0T+c_0M));
+  
+  djvec_t c_0P=read("0P",pat,ens,tpar,0,-1,IM);
+  c_0P.ave_err().write(ens_qpath+"/"+pat+"_0P_norat.xmg");
+  djvec_t(c_0P/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0P.xmg");
+  djvec_t d=-(deltam_cr*c_0P);
+  
+  djack_t dmcrit_bare=deltam_cr*e2*sqr(qd);
+  djack_t kappa_new=ens.kappa/(1+2*dmcrit_bare*ens.kappa);
+  //cout<<"dmcrit_bare (down  ens: "<<ens.path<<"): "<<dmcrit_bare.ave_err()<<", kappa: "<<kappa_new.ave_err()<<" old: "<<ens.kappa<<endl;
+  
+  djvec_t c_0S=read("0S",pat,ens,tpar,0,1,RE);
+  c_0S.ave_err().write(ens_qpath+"/"+pat+"_0S_norat.xmg");
+  djvec_t(c_0S/c_LO).ave_err().write(ens_qpath+"/"+pat+"_0S.xmg");
+  double amq=get_amq(ens,0);
+  
+  double dm_bare_noe2=amq*(6.0*log(mu_MS*a)-22.5954)/(16.0*sqr(M_PI));
+  djvec_t e=(-dm_bare_noe2)*c_0S*(*Zm_fact); //minus? CHECK
+  
+  // double dm_bare=dm_bare_noe2*e2*sqr(qd);
+  //cout<<"dm_bare (down  ens: "<<ens.path<<"): "<<dm_bare<<", total: "<<get_amq(ens,0)+dm_bare<<" old: "<<get_amq(ens,0)<<endl;
+  
+  return djvec_t(c+2.0*d+2.0*e)*e2*sqr(qd);
+}
+
+inline djvec_t read_QED_pion(const char *pat,const ens_data_t &ens,const int tpar,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
+{
+  // string ens_qpath=ens.path+"/plots_"+qname[im];
+  string ens_qpath=ens.path+"/plots";
+
+  const double qu=2.0/3.0;
+  const double qd=-1.0/3.0;
+  
+  djvec_t c_LL=read("LL",pat,ens,tpar,0,1,RE);
+  djvec_t(c_LL/c_LO).ave_err().write(ens_qpath+"/"+pat+"_LL.xmg");
+  
+  return c_LL*sqr(qu-qd)*e2/2.0;
+}
+
+inline djvec_t read_MASS(const char *pat,const ens_data_t &ens,const int tpar)
+{
+  string ens_qpath=ens.path+"/plots";
+
+  djvec_t c_0S=-read("0S",pat,ens,tpar,0,1,RE);
+  
+  return 2.0*c_0S;
+}
+
 //! read for PP case
 inline djvec_t read_QED_PP(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
 {return read_QED("P5P5",ens,tpar,im,deltam_cr,c_LO,a);}
 
+inline djvec_t read_QED_PP_pion(const ens_data_t &ens,const int tpar,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
+{return read_QED_pion("P5P5",ens,tpar,deltam_cr,c_LO,a);}
+
+inline djvec_t read_QED_PP_up(const ens_data_t &ens,const int tpar,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
+{return read_QED_up("P5P5",ens,tpar,deltam_cr,c_LO,a);}
+
+inline djvec_t read_QED_PP_down(const ens_data_t &ens,const int tpar,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
+{return read_QED_down("P5P5",ens,tpar,deltam_cr,c_LO,a);}
+
 //! read for VV case
 inline djvec_t read_QED_VV(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
 {return read_QED("VV",ens,tpar,im,deltam_cr,c_LO,a);}
+
+inline djvec_t read_QED_VV_up(const ens_data_t &ens,const int tpar,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
+{return read_QED_up("VV",ens,tpar,deltam_cr,c_LO,a);}
+
+inline djvec_t read_QED_VV_down(const ens_data_t &ens,const int tpar,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)
+{return read_QED_down("VV",ens,tpar,deltam_cr,c_LO,a);}
 
 //! read for TV case
 inline djvec_t read_QED_TV(const ens_data_t &ens,const int tpar,const int im,const djack_t &deltam_cr,const djvec_t &c_LO,const double a)

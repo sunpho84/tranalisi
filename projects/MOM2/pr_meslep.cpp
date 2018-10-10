@@ -417,8 +417,8 @@ void perens_t::average_equiv_momenta_pr_meslep(perens_t &out,const vector<vector
 
 void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 {
-  const index_t r_r_iop_iproj_imeslepmom_ind({{"r",nr},{"r",nr},{"op",nbil},{"proj",nbil},{"meslepmoms",meslepmoms().size()}});
-  const index_t r_r_meslepins_iop_iproj_imeslepmom_ind({{"r",nr},{"r",nr},{"meslepins",pr_meslep::nins},{"op",nbil},{"proj",nbil},{"meslepmoms",meslepmoms().size()}});
+  const index_t r_r_iop_iproj_imeslepmom_ind({{"r",nr},{"r",nr},{"op",meslep::nZop},{"proj",meslep::nZop},{"meslepmoms",meslepmoms().size()}});
+  const index_t r_r_meslepins_iop_iproj_imeslepmom_ind({{"r",nr},{"r",nr},{"meslepins",pr_meslep::nins},{"op",meslep::nZop},{"proj",meslep::nZop},{"meslepmoms",meslepmoms().size()}});
   
   for(auto &t : out.get_pr_meslep_tasks({this}))
 #pragma omp parallel for
@@ -453,18 +453,19 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 	    //slice m and fit it
 	    djvec_t y(nm*(nm+1)/2),y_plot(nm*(nm+1)/2);
 	    vector<double> x(nm*(nm+1)/2);
+	    int i=0;
 	    for(size_t im_ou=0;im_ou<nm;im_ou++)
 	      for(size_t im_in=im_ou;im_in<nm;im_in++)
 		{
 		  const size_t imeson=im_im_ind({im_ou,im_in});
 		  
 		  //compute mass sum
-		  if(pars::chir_extr_method==chir_extr::MQUARK) x[imeson]=am[im_ou]+am[im_in];
-		  else                                          x[imeson]=sqr(meson_mass[imeson].ave());
+		  if(pars::chir_extr_method==chir_extr::MQUARK) x[i]=am[im_ou]+am[im_in];
+		  else                                          x[i]=sqr(meson_mass[imeson].ave());
 		  
 		  //compute y and y_plot
-		  y_plot[imeson]=pr[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_ou,r_in,im_in,r_ou,meslepins,iop,iproj,imeslepmom})];
-	      
+		  y_plot[i]=pr[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_ou,r_in,im_in,r_ou,meslepins,iop,iproj,imeslepmom})];
+		  
 		  //if QED case and pole must be subtracted, take into account variation due to leading pole
 		  if(pars::use_QED and meslepins>0)
 		    {
@@ -474,19 +475,21 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 			  const djack_t b0=coeffs[pr_meslep::LO][2],c0=coeffs[pr_meslep::LO][0];
 			  const djack_t varb=2.0*b0*dM*M;
 			  const djack_t varc=-2.0*c0*dM/(M*M*M);
-			  y_plot[imeson]-=varb+varc;
+			  y_plot[i]-=varb+varc;
 			}
 		      else
 			if(pars::sub_meson_mass_shift_when_no_pole)
 			  {
 			    const djack_t b0=coeffs[pr_meslep::LO][1];
 			    const djack_t varb=2.0*b0*dM*M;
-			    y_plot[imeson]-=varb;
+			    y_plot[i]-=varb;
 			  }
 		    }
 		  
 		  //fit x*y if pole present
-		  y[imeson]=pow(x[imeson],x_pow)*y_plot[imeson];
+		  y[i]=pow(x[i],x_pow)*y_plot[i];
+		  
+		  i++;
 		}
 	    
 	    //fit, store and write the result

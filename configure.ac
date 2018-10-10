@@ -20,6 +20,8 @@ AC_CANONICAL_HOST
 #silent automake
 AM_SILENT_RULES([yes])
 
+AC_CHECK_HEADERS([malloc.h])
+
 #gsl
 AC_ARG_WITH(gsl,
         AS_HELP_STRING([--with-gsl[=dir]], [Specify where to find gsl]),

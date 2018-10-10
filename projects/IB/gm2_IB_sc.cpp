@@ -45,13 +45,11 @@ void write_ens_header(size_t iens)
   cout<<"----------------------- "<<iens<<" "<<ens.path<<" ---------------------"<<endl;
 }
 
-//! approximated Za_fact
-dboot_t Za_fact;
 extern djack_t *Zm_fact;
 
 //! return the perturbative correction to Za
-dboot_t Za_perturb_QED(size_t im)
-{return -0.01835*sqr(eq[im])*include_ZA_perturb*Za_fact;}
+double Za_perturb_QED(size_t im)
+{return -0.01835*sqr(eq[im])*include_ZA_perturb;}
 
 //! ansatz fit
 template <class Tpars,class Tm,class Ta>
@@ -609,6 +607,7 @@ void test_exponent_A40(const index_t &ind_2pts_fit,const djvec_t &jM_P,const djv
 	{
 	  size_t i2pts=ind_2pts_fit({0,iens});
 	  double Za=Za_ae[0][ib].ave();
+	  double Za_fact=Za_fact_ae[0][ib].ave();
 	  djack_t a=djack_t(jM_V[i2pts]/M_V_phys[im]);
 	  cout<<"a for ensemble "<<ens.path<<": "<<smart_print(a.ave_err())<<endl;
 	  size_t upto=tmin_fit(iens,0);
@@ -618,7 +617,7 @@ void test_exponent_A40(const index_t &ind_2pts_fit,const djvec_t &jM_P,const djv
 	  djack_t c2_LO=integrate_LO_reco_from(jZ2_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za);
 	  
 	  {
-	    A_QED_data[iA_L]=(c1_QED+c2_QED)+Za_perturb_QED(im)*(c1_LO+c2_LO);
+	    A_QED_data[iA_L]=(c1_QED+c2_QED)+Za_perturb_QED(im)*Za_fact*(c1_LO+c2_LO);
 	    A_x[iA_L]=1.0/ens.L+ens.aml/10;
 	    iA_L++;
 	  }
@@ -629,7 +628,7 @@ void test_exponent_A40(const index_t &ind_2pts_fit,const djvec_t &jM_P,const djv
 	      A40_MV_data[iA40_L]=jM_V[i2pts];
 	      
 	      A40_LO_data[iA40_L]=c1_LO+c2_LO;
-	      A40_QED_data[iA40_L]=c1_QED+c2_QED+Za_perturb_QED(im)*A40_LO_data[iA40_L];
+	      A40_QED_data[iA40_L]=c1_QED+c2_QED+Za_perturb_QED(im)*Za_fact*A40_LO_data[iA40_L];
 	      
 	      A40_x[iA40_L]=1.0/ens.L;
 	      
@@ -727,7 +726,7 @@ int main(int narg,char **arg)
   int start=time(0);
   
   gm2_initialize(narg,arg);
-  Za_fact.fill_gauss({0.9,0.1,9873834});
+  // Za_fact.fill_gauss({0.95,0.05,9873834});
   Zm_fact=new djack_t;
   Zm_fact->fill_gauss({1.0,1e-6,6232342});
   
@@ -870,6 +869,7 @@ int main(int narg,char **arg)
 	
 	size_t ib=ens.ib;
 	double Za=Za_ae[0][ib].ave();
+	double Za_fact=Za_fact_ae[0][ib].ave();
 	djack_t a;a=1/lat_par[0].ainv[ib].ave();
 	size_t i2pts=ind_2pts_fit({0,iens});
 	size_t tmin=tmin_fit(iens,0),tmax=ens.tmax[im];
@@ -889,8 +889,8 @@ int main(int narg,char **arg)
 	for(size_t iint=0;iint<nint_num_variations;iint++)
 	  {
 	    size_t upto=possupto[iint];
-	    djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za)+c1_LO[iint]*Za_perturb_QED(im).ave();
-	    djack_t c2_QED=integrate_QED_reco_from(k_DZ2_rel_V[i2pts],jZ2_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za)+c2_LO[iint]*Za_perturb_QED(im).ave();
+	    djack_t c1_QED=integrate_corr_times_kern_up_to(jVV_QED[iens],ens.T,a,im,upto)*sqr(Za)+c1_LO[iint]*Za_perturb_QED(im)*Za_fact;
+	    djack_t c2_QED=integrate_QED_reco_from(k_DZ2_rel_V[i2pts],jZ2_V[i2pts],jSL_V[i2pts],jM_V[i2pts],a,im,upto)*sqr(Za)+c2_LO[iint]*Za_perturb_QED(im)*Za_fact;
 	    djack_t c_QED=c1_QED+c2_QED;
 	    tab_four<<ens.path<<"\t"<<upto<<"\t"<<c1_QED.ave_err()<<"\t"<<c2_QED.ave_err()<<"\t"<<c_QED.ave_err()<<endl;
 	  }
@@ -935,8 +935,8 @@ int main(int narg,char **arg)
 	  LO_correl[ind]=integrate_corr_times_kern_up_to(VV_LO,ens.T,resc_a[ind],im,upto)*sqr(Za[ib]);
 	  LO_remaind[ind]=integrate_LO_reco_from(Z2_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib]);
 	  
-	  QED_correl[ind]=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a[ind],im,upto)*sqr(Za[ib])+Za_perturb_QED(im)*LO_correl[ind];
-	  QED_remaind[ind]=integrate_QED_reco_from(A_V,Z2_V,SL_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib])+Za_perturb_QED(im)*LO_remaind[ind];
+	  QED_correl[ind]=integrate_corr_times_kern_up_to(VV_QED,ens.T,resc_a[ind],im,upto)*sqr(Za[ib])+Za_perturb_QED(im)*Za_fact[ib]*LO_correl[ind];
+	  QED_remaind[ind]=integrate_QED_reco_from(A_V,Z2_V,SL_V,M_V,resc_a[ind],im,upto)*sqr(Za[ib])+Za_perturb_QED(im)*Za_fact[ib]*LO_remaind[ind];
 	  
 	  index_t ind_rest({{"Input",ninput_an},{"Cont",ncont_extrap},{"FitRange",nfit_range_variations}});
 	  size_t irest=ind_rest({input_an_id,icont_extrap,ifit_range});
