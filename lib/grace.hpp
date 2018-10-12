@@ -225,6 +225,8 @@ public:
       yaxis_label_size=
       grace::default_label_size;
     
+    this->precision(16);
+    
     reset_props();
     if(!this->good()) CRASH("Unable to open grace file %s",path.c_str());
   }
