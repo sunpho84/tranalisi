@@ -107,6 +107,8 @@ namespace pars
   EXTERN_PARS bool can_compute_QED INIT_PARS_TO({true});
   //! store whether QED Z are relative or not
   EXTERN_PARS bool Z_QED_are_relative INIT_PARS_TO({true});
+  //! plot or not the WI determination of Zs/Zp
+  EXTERN_PARS bool plot_Zs_fr_Zp INIT_PARS_TO({true});
   
   //! list of ensembles
   EXTERN_PARS vector<string> ens;

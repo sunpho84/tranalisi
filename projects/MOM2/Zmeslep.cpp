@@ -90,7 +90,12 @@ void perens_t::compute_Zmeslep(const bool also_QCD,const bool also_QED)
 			const size_t im_r_im_r_iop_iproj_imeslepmom=im_r_im_r_iop_iproj_imeslepmom_ind({im_in,r_in,im_ou,r_ou,iop,iproj,imeslepmom});
 			
 			if(also_QCD)
-			  Zmeslep[im_r_im_r_iop_iproj_imeslepmom][ijack]=Z_LO(iop,iproj);
+			  {
+			    double &out=Zmeslep[im_r_im_r_iop_iproj_imeslepmom][ijack];
+			    out=Z_LO(iop,iproj);
+			    if(isnan(out)) out=0.0;
+			  }
+			
 			if(also_QED)
 			  Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom][ijack]=Z_QED_rel(iop,iproj);
 		      }

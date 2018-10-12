@@ -468,6 +468,25 @@ void perens_t::print_Z(ofstream& file)
       file<<endl;
     }
   
+  if(pars::plot_Zs_fr_Zp)
+    {
+      file<<"WI"<<endl;
+      
+      const djack_t &ZS=Zbil[iS];
+      const djack_t &ZP=Zbil[iP];
+      const djack_t ZS_fr_ZP=ZS/ZP;
+      file<<" S/P: "<<smart_print(ZS_fr_ZP)<<endl;
+      
+      if(pars::use_QED)
+	{
+	  const djack_t &ZS_QED_rel=Zbil_QED_rel[iS];
+	  const djack_t &ZP_QED_rel=Zbil_QED_rel[iP];
+	  const djack_t ZS_fr_ZP_QED_rel=ZS_QED_rel-ZP_QED_rel;
+	  file<<" S/P_QED_rel: "<<smart_print(ZS_fr_ZP_QED_rel)<<endl;
+	}
+      file<<endl;
+  }
+  
   /////////////////////////////////////////////////////////////////
   file<<"/////////////////////////////////////////////////////////////////"<<endl;
   if(bilmoms.size()!=1) CRASH("Can print only 1 mom, %zu present",meslepmoms().size());

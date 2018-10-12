@@ -373,7 +373,7 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
 	  for(size_t i=0;i<p.ind.max();i++)
 	    {
 	      //prepare the list referring to a "static"
-	      const string &tag=p.tag+"_"+p.ind.descr(i);
+	      const string tag=p.tag+"_"+p.ind.descr(i);
 	      auto _d=fit_data.find(tag);
 	      if(_d==fit_data.end()) fit_data.emplace(tag,per_quantity_t(ngroups));
 	      auto& d=fit_data.find(tag)->second;
@@ -387,13 +387,14 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
 	      for(size_t iens=0;iens<nens;iens++)
 		{
 		  //get mass
+		  const djvec_t &y=(*(p.in[iens]));
 		  const perens_t& en=data(names_in[iens],ASSERT_PRESENT);
 		  double m2=sqr(en.meson_mass_sea.ave())/sqr(a);
 		  
 		  //prepare data per ens
 		  input_per_ens_t& input=in_out.ens_list[iens];
 		  input.m2=m2;
-		  input.in=(*(p.in[iens]))[i];
+		  input.in=y[i];
 		}
 	    }
 	}

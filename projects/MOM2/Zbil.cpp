@@ -154,4 +154,39 @@ void perens_t::plot_Zbil(const string &suffix)
 		}
 	}
     }
+  
+  //plot also Zs/Zp
+  if(pars::plot_Zs_fr_Zp)
+    {
+      grace_file_t out(dir_path+"/plots/Zs_fr_Zp"+(suffix!=""?("_"+suffix):string(""))+".xmg");
+      grace_file_t out_QED;
+      if(pars::use_QED) out_QED.open(dir_path+"/plots/Zs_fr_Zp_QED_rel"+(suffix!=""?("_"+suffix):string(""))+".xmg");
+      
+      //write mass by mass, only half of the combos
+      for(size_t im1=0;im1<nm;im1++)
+	for(size_t im2=im1;im2<nm;im2++)
+	  for(size_t r=0;r<nr;r++)
+	    {
+	      out.new_data_set();
+	      if(pars::use_QED) out_QED.new_data_set();
+	      
+	      for(size_t imom=0;imom<bilmoms.size();imom++)
+		{
+		  const double p2tilde=all_moms[bilmoms[imom][0]].p(L).tilde().norm2();
+		  
+		  const djack_t &ZS=Zbil[im_r_im_r_ibil_ibilmom_ind({im1,r,im2,r,iS,imom})];
+		  const djack_t &ZP=Zbil[im_r_im_r_ibil_ibilmom_ind({im1,r,im2,r,iP,imom})];
+		  const djack_t ZS_fr_ZP=ZS/ZP;
+		  out.write_ave_err(p2tilde,ZS_fr_ZP.ave_err());
+		  
+		  if(pars::use_QED)
+		    {
+		      const djack_t &ZS_QED_rel=Zbil_QED_rel[im_r_im_r_ibil_ibilmom_ind({im1,r,im2,r,iS,imom})];
+		      const djack_t &ZP_QED_rel=Zbil_QED_rel[im_r_im_r_ibil_ibilmom_ind({im1,r,im2,r,iP,imom})];
+		      const djack_t ZS_fr_ZP_QED_rel=ZS_QED_rel-ZP_QED_rel;
+		      out_QED.write_ave_err(p2tilde,ZS_fr_ZP_QED_rel.ave_err());
+		    }
+		}
+	    }
+    }
 }
