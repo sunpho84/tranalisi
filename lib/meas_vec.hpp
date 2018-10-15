@@ -321,7 +321,7 @@ TS integrate_corr(const valarray<TS> &corr,size_t &from,size_t &upto,size_t ord=
   
   size_t len=weight.size()-1;
   double norm=weight.sum()/len;
-
+  
   TS out;
   out=0.0;
   upto=size_t(upto/len)*len;
@@ -333,5 +333,29 @@ TS integrate_corr(const valarray<TS> &corr,size_t &from,size_t &upto,size_t ord=
   
   return out;
 }
+
+//! determines the vector type, forward declaration
+template <class T>
+class meas_vec_of;
+
+//! determine the vector type for a djack_t
+template <>
+class meas_vec_of<djack_t>
+{
+public:
+  typedef djvec_t type;
+};
+
+//! determine the vector type for a dboot_t
+template <>
+class meas_vec_of<dboot_t>
+{
+public:
+  typedef dbvec_t type;
+};
+
+//! helper class
+template <class T>
+using meas_vec_of_t=typename meas_vec_of<T>::type;
 
 #endif
