@@ -10,24 +10,24 @@ int main(int narg,char **arg)
   if(narg<2) CRASH("Use: %s file",arg[0]);
   
   vector<tuple<double,double,double>> tmp;
-
+  
   ifstream file(arg[1]);
   if(not file.good()) CRASH("Unable to open %s",arg[1]);
-
+  
   double x,y,ey;
   while(file>>x>>y>>ey)
     tmp.push_back(make_tuple(x,y,ey));
-
+  
   int d=1;
   
   vector <double> Al(2*d+1,0.0);
   vector<double> c(d+1,0.0);
-
+  
   for(int p=0;p<(int)tmp.size();p++)
     {
       //calculate the weight
       double w=pow(get<2>(tmp[p]),-2);
-      //cout<<w<<endl;
+      
       //compute Al and c
       for(int f=0;f<=2*d;f++)
 	{
@@ -43,7 +43,7 @@ int main(int narg,char **arg)
       A[i*(d+1)+j]=Al[i+j];
   
   vector<double> res=lin_solve<vector<double>,double>(A,c);
-
+  
   cout<<res[0]<<endl;
   
   return 0;
