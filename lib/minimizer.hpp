@@ -138,7 +138,7 @@ class minimizer_t
       minu.GetParameter(it,pars[it],dum);
     return pars;
   }
-
+  
   //! evaluate the function
   double eval(const vector<double> &pars)
   {
@@ -174,7 +174,7 @@ public:
   //! add a parameter
   void add(const string &name,double val,double err)
   {pars.Add(name,val,err);}
-
+  
   void setlimits(const string &name,double min,double max)
   {pars.SetLimits(name,min,max);}
   
