@@ -11,6 +11,7 @@ bin_PROGRAMS= \
 	effective_mass \
 	linfit \
 	onlinemeas \
+	planfit \
 	prepare_jackknives \
 	simple_effective_mass \
 	two_pts_fit \
@@ -29,6 +30,8 @@ linfit_SOURCES=linfit.cpp
 effective_mass_SOURCES=effective_mass.cpp
 
 onlinemeas_SOURCES=onlinemeas.cpp
+
+planfit_SOURCES=planfit.cpp
 
 prepare_jackknives_SOURCES=prepare_jackknives.cpp
 
