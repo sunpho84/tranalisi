@@ -140,17 +140,28 @@ int main()
   const djvec_t d=effective_slope(djvec_t(P5P5_SAME_QED/P5P5_SAME_LO),eff_P5P5_SAME_LO,TH);
   const djvec_t e=effective_slope(djvec_t(P5P5_SAME_S/P5P5_SAME_LO),eff_P5P5_SAME_LO,TH);
   const djvec_t f=effective_slope(djvec_t(P5P5_SAME_P/P5P5_SAME_LO),eff_P5P5_SAME_LO,TH);
+
+  //determine deltam ignoring mass insertion
+  const djvec_t deltam_cr_corr_simple=-a/c;
+  const djack_t deltam_cr_simple=constant_fit(deltam_cr_corr_simple,tmin,tmax,"plots/deltam_cr_corr_SAME_simple.xmg");
+  cout<<"deltam_cr_simple: "<<smart_print(deltam_cr_simple.ave_err())<<endl;
   
   //solve the system
   const djvec_t den=b*f-c*e;
-  const djvec_t deltam_tm_corr=(-a*f+c*d)/den;
-  const djvec_t deltam_cr_corr=(-b*d+a*e)/den;
+  const djvec_t deltam_tm_corr_full=(-a*f+c*d)/den;
+  const djvec_t deltam_cr_corr_full=(-b*d+a*e)/den;
   
   //fit the coefficients
-  const djack_t deltam_cr=constant_fit(deltam_cr_corr,tmin,tmax,"plots/deltam_cr_corr_SAME.xmg");
-  const djack_t deltam_tm=constant_fit(deltam_tm_corr,tmin,tmax,"plots/deltam_tm_corr_SAME.xmg");
-  cout<<"deltam_cr: "<<smart_print(deltam_cr.ave_err())<<endl;
-  cout<<"deltam_tm: "<<smart_print(deltam_tm.ave_err())<<endl;
+  const djack_t deltam_tm_full=constant_fit(deltam_tm_corr_full,tmin,tmax,"plots/deltam_tm_corr_SAME_full.xmg");
+  const djack_t deltam_cr_full=constant_fit(deltam_cr_corr_full,tmin,tmax,"plots/deltam_cr_corr_SAME_full.xmg");
+  cout<<"deltam_tm_full: "<<smart_print(deltam_tm_full.ave_err())<<endl;
+  cout<<"deltam_cr_full: "<<smart_print(deltam_cr_full.ave_err())<<endl;
+  
+  //select simple or full calculation
+  enum{SIMPLE,FULL};
+  const bool simple_full=FULL;
+  const djack_t deltam_tm=(simple_full==SIMPLE)?0.0:deltam_tm_full;
+  const djack_t deltam_cr=(simple_full==SIMPLE)?deltam_cr_simple:deltam_cr_full;
   
   //build corrected correlators with same r
   const djvec_t P5P5_SAME_CORR=P5P5_SAME_QED+deltam_tm*P5P5_SAME_S+deltam_cr*P5P5_SAME_P;
