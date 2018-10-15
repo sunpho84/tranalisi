@@ -609,7 +609,7 @@ public:
   }
   size_t add_fit_par(TS &out_par,const string &name,const ave_err_t &ae)
   {return add_fit_par(out_par,name,ae.ave(),ae.err());}
-
+  
   size_t add_fit_par_limits(TS &out_par,const string &name,double ans,double err,double min,double max)
   {
     size_t ipar=pars.size();
@@ -834,6 +834,81 @@ chi2_poly_fit(const vector<double> &x,const TV &y,int d,double xmin,double xmax,
 template <class TV,class TS=typename TV::base_type>
 TS chi2_poly_fit(const TV &y,int d,const TV &pars)
 {return chi2_poly_fit(vector_up_to<double>(y.size()+1),y,d,-0.5,y.size()+0.5,pars);}
+
+//! data type to fit a plan
+template <class T>
+using plan_fit_data_t=vector<tuple<vector<double>,T>>;
+
+//! compute the chi2 for a plan fit
+template <class T>
+double chi2_plan(const plan_fit_data_t<T>& data,const vector<double>& coeffs,const size_t iel)
+{
+  //compute chi2
+  double chi2=0.0;
+  for(auto &t : data)
+    {
+      //untie the tuple
+      const vector<double> &x=get<0>(t);
+      const double &y=get<1>(t)[iel];
+      const double ey=get<1>(t).err();
+      
+      //compute the function
+      double f=0.0;
+      for(size_t i=0;i<=coeffs.size();i++)
+	f+=coeffs[i]*x[i];
+      
+      chi2+=sqr((y-f)/ey);
+    }
+  
+  return chi2;
+}
+
+//! fit a plan: note that the first coordinate is 1
+template <class T>
+meas_vec_of_t<T> plan_fit(const plan_fit_data_t<T>& data)
+{
+  const size_t nx=get<0>(data.front()).size();
+  const size_t nel=get<1>(data.front()).size();
+  
+  meas_vec_of_t<T> out(nx);
+  
+  for(size_t iel=0;iel<nel;iel++)
+    {
+      //coefficients
+      vector<double> A(nx*nx,0.0);
+      vector<double> c(nx,0.0);
+      
+      for(auto &t : data)
+	{
+	  //untie the tuple
+	  const vector<double> &x=get<0>(t);
+	  const double &y=get<1>(t)[iel];
+	  const double ey=get<1>(t).err();
+	  
+	  //calculate the weight
+	  double w=pow(ey,-2);
+	  
+	  //check
+	  if(x[0]!=1.0) CRASH("First coordinate must be 1, found %lg",x[0]);
+	  
+	  for(size_t i=0;i<nx;i++)
+	    {
+	      c[i]+=y*w*x[i];
+	      
+	      for(size_t j=0;j<nx;j++)
+		A[i*nx+j]+=w*x[i]*x[j];
+	    }
+	}
+      
+      //solve
+      vector<double> res=lin_solve<vector<double>,double>(A,c);
+      
+      for(size_t i=0;i<nx;i++)
+	out[i][iel]=res[i];
+    }
+  
+  return out;
+}
 
 #undef EXTERN_FIT
 #undef INIT_TO
