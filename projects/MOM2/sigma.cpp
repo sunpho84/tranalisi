@@ -31,19 +31,75 @@ namespace sigma
 	break;
      }
     
-    //set sigma proj
-    proj_list={SIGMA1,SIGMA2,SIGMA3};
-    if(pars::compute_ri)
-      proj_list.push_back(SIGMA4);
-    nproj=proj_list.size();
-    cout<<"Sigma, nproj: "<<nproj<<endl;
-    
-    //set sigma ins
-    iins_of_ins.resize(ins_tag.size());
+  switch(pars::compute_RI)
+    {
+    case 0:
+      break;
+    case 1:
+      switch(pars::use_QED)
+	{
+	case 0:
+	  ins_list.push_back(RI);
+	  break;
+	case 1:
+	  CRASH("Not implemented yet");
+	  break;
+	case 2:
+	  ins_list.push_back(RI);
+	  ins_list.push_back(RI_QED);
+	  break;
+	}
+      break;
+    case 2:
+      switch(pars::use_QED)
+	{
+	case 0:
+	  ins_list.push_back(RI_VT);
+	  ins_list.push_back(RI_VX);
+	  ins_list.push_back(RI_VY);
+	  ins_list.push_back(RI_VZ);
+	  break;
+	case 1:
+	  CRASH("Not implemented yet");
+	  break;
+	case 2:
+	  CRASH("Not implemented yet");
+	  break;
+	}
+      break;
+    }
+  
+  iins_of_ins.resize(ins_tag.size());
     for(size_t iins=0;iins<ins_list.size();iins++)
       iins_of_ins[ins_list[iins]]=iins;
     nins=ins_list.size();
     cout<<"Sigma, nins: "<<nins<<endl;
+  }
+  
+  void set_proj()
+  {
+    //set sigma proj
+    proj_list={SIGMA1,SIGMA2,SIGMA3};
+    switch(pars::compute_RI)
+      {
+      case 0:
+	break;
+      case 1:
+	proj_list.push_back(SIGMA_RI);
+	break;
+      case 2:
+	proj_list.push_back(SIGMA_RI_VT);
+	proj_list.push_back(SIGMA_RI_VX);
+	proj_list.push_back(SIGMA_RI_VY);
+	proj_list.push_back(SIGMA_RI_VZ);
+	break;
+      }
+    
+    iproj_of_proj.resize(proj_tag.size());
+    for(size_t iproj=0;iproj<proj_list.size();iproj++)
+      iproj_of_proj[proj_list[iproj]]=iproj;
+    nproj=proj_list.size();
+    cout<<"Sigma, nproj: "<<nproj<<endl;
   }
 }
 
@@ -55,7 +111,8 @@ void perens_t::plot_sigma(const string &suffix)
     for(size_t iproj=0;iproj<sigma::nproj;iproj++)
       {
 	const sigma::ins ins=sigma::ins_list[iins];
-	grace_file_t out(dir_path+"/plots/sigma"+to_string(iproj+1)+"_"+sigma::ins_tag[ins]+(suffix!=""?("_"+suffix):string(""))+".xmg");
+	const sigma::proj proj=sigma::proj_list[iproj];
+	grace_file_t out(dir_path+"/plots/"+sigma::proj_tag[proj]+"_"+sigma::ins_tag[ins]+(suffix!=""?("_"+suffix):string(""))+".xmg");
 	
 	for(size_t im=0;im<nm;im++)
 	  for(size_t r=0;r<nr;r++)
@@ -73,7 +130,7 @@ void perens_t::plot_sigma(const string &suffix)
 void perens_t::subtract_Oa2_sigma()
 {
   const size_t iins=0;
-  const size_t iproj=sigma::SIGMA1;
+  const size_t iproj=sigma::iproj_of_proj[sigma::SIGMA1];
   for(size_t im=0;im<nm;im++)
     for(size_t r=0;r<nr;r++)
       for(size_t ilinmom=0;ilinmom<linmoms.size();ilinmom++)
@@ -108,41 +165,59 @@ perens_t& perens_t::compute_sigmas()
   //! list of all combination of transformations to be applied
   vector<pair<size_t,size_t>> map;
   
-#define ADD_COMBO(MAP,INS1,INS2) MAP.push_back({sigma::iins_of_ins[sigma::INS1],jqprop::iins_of_ins[jqprop::INS2]})
-#define ADD_COMBO_SAME(MAP,INS) ADD_COMBO(MAP,INS,INS)
+#define ADD_COMBO(MAP,INS) MAP.push_back({sigma::iins_of_ins[sigma::INS],jqprop::iins_of_ins[jqprop::INS]})
   
-  ADD_COMBO_SAME(map,LO);
+  ADD_COMBO(map,LO);
   switch(pars::use_QED)
     {
     case 0:
       break;
     case 1:
-      ADD_COMBO_SAME(map,PH);
-      ADD_COMBO_SAME(map,CR);
-      ADD_COMBO_SAME(map,TM);
+      ADD_COMBO(map,PH);
+      ADD_COMBO(map,CR);
+      ADD_COMBO(map,TM);
       break;
     case 2:
-      ADD_COMBO_SAME(map,QED);
+      ADD_COMBO(map,QED);
       break;
     }
-#undef ADD_COMBO_SAME
   
-  //map for RI
-  vector<pair<size_t,size_t>> map_ri;
-  if(pars::compute_ri)
+  switch(pars::compute_RI)
     {
-      ADD_COMBO(map_ri,LO,RI);
+    case 0:
+      break;
+    case 1:
       switch(pars::use_QED)
 	{
 	case 0:
+	  ADD_COMBO(map,RI);
 	  break;
 	case 1:
 	  CRASH("Not implemented yet");
 	  break;
 	case 2:
-	  ADD_COMBO(map_ri,QED,RI_QED);
+	  ADD_COMBO(map,RI);
+	  ADD_COMBO(map,RI_QED);
 	  break;
 	}
+      break;
+    case 2:
+      switch(pars::use_QED)
+	{
+	case 0:
+	  ADD_COMBO(map,RI_VT);
+	  ADD_COMBO(map,RI_VX);
+	  ADD_COMBO(map,RI_VY);
+	  ADD_COMBO(map,RI_VZ);
+	  break;
+	case 1:
+	  CRASH("Not implemented yet");
+	  break;
+	case 2:
+	  CRASH("Not implemented yet");
+	  break;
+	}
+      break;
     }
 #undef ADD_COMBO
   
@@ -191,7 +266,7 @@ perens_t& perens_t::compute_sigmas()
 	  
 	  const p_t ptilde=all_moms[mom].p(L).tilde();
 	  
-	  //! function to compute sigma 1,2,3
+	  //! function to compute sigma 1,2,3, etc
 	  auto compute_sigma=[&](const qprop_t prop_inv,sigma::proj proj)
 	    {
 	      using namespace sigma;
@@ -216,13 +291,33 @@ perens_t& perens_t::compute_sigmas()
 		case SIGMA3:
 		  //trace with gamma5
 		  out=(prop_inv*quaGamma[5]).trace().imag()/(12.0*V);
-		case SIGMA4:
+		  break;
+		case SIGMA_RI:
 		  //trace with gamma_mu
 		  out=0.0;
 		  for(size_t mu=0;mu<NDIM;mu++)
-		    if(mu==1)
 		      out+=
-			(prop_inv*quaGamma[igmu[mu]]).trace().real()/(12.0*V);
+		  	(prop_inv*quaGamma[igmu[mu]]).trace().real()/(12.0*V);
+		  break;
+		case SIGMA_RI_VT:
+		  //trace with gamma4
+		  out=
+		    (prop_inv*quaGamma[4]).trace().real()/(12.0*V);
+		  break;
+		case SIGMA_RI_VX:
+		  //trace with gamma1
+		  out=
+		    (prop_inv*quaGamma[1]).trace().real()/(12.0*V);
+		  break;
+		case SIGMA_RI_VY:
+		  //trace with gamma2
+		  out=
+		    (prop_inv*quaGamma[2]).trace().real()/(12.0*V);
+		  break;
+		case SIGMA_RI_VZ:
+		  //trace with gamma3
+		  out=
+		    (prop_inv*quaGamma[3]).trace().real()/(12.0*V);
 		  break;
 		};
 	      
@@ -235,8 +330,7 @@ perens_t& perens_t::compute_sigmas()
 	      const sigma::proj proj=sigma::proj_list[iproj];
 	      //cout<<"   Computing proj "<<iproj<<"/"<<sigma::nproj<<endl;
 	      
-	      
-	      for(auto m : (proj==sigma::SIGMA4 ? map_ri : map))
+	      for(auto m : map)
 		{
 		  const size_t isins=get<0>(m);
 		  const size_t ijqins=get<1>(m);
@@ -266,7 +360,7 @@ void perens_t::average_r_sigma(perens_t &out) const
     {
       const vector<size_t> out_comps=out.im_r_ilinmom_isigmaproj_isigmains_ind(out_i);
       vector<size_t> in_comps=out_comps;
-      const sigma::proj isigmaproj=sigma::proj_list[in_comps[3]];
+      const sigma::proj sigmaproj=sigma::proj_list[in_comps[3]];
       
       sigma_rave[out_i]=0.0;
       for(size_t r=0;r<nr;r++)
@@ -275,7 +369,7 @@ void perens_t::average_r_sigma(perens_t &out) const
 	  const size_t in_i=im_r_ilinmom_isigmaproj_isigmains_ind(in_comps);
 	  
 	  //include a -1 on SIGMA3 and second r
-	  const int coeff=(isigmaproj==sigma::SIGMA3 and r==1)?-1:+1;
+	  const int coeff=(sigmaproj==sigma::SIGMA3 and r==1)?-1:+1;
 	  
 	  sigma_rave[out_i]+=sigma[in_i]*coeff;
 	}
@@ -350,12 +444,12 @@ void perens_t::val_chir_extrap_sigma(perens_t &out) const
 		else                                          x[im]=sqr(meson_mass[imeson].ave());
 		
 		y[im]=sigma[im_r_ilinmom_isigmaproj_isigmains_ind(concat(im,r_ilinmom_isigmaproj_isigmains_comps))];
-
+		
 		//if QED case take into account variation due to leading pole
 		if(pars::use_QED and isigmains>0 and pars::sub_meson_mass_shift_when_no_pole)
 		  {
 		    const djack_t M=meson_mass[imeson],dM=meson_mass_QED[imeson];
-
+		    
 		    const djack_t b0=coeffs[sigma::LO][1];
 		    const djack_t varb=2.0*b0*dM*M;
 		    y[im]-=varb;

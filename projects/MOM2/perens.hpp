@@ -129,7 +129,7 @@ struct perens_t
     
     return [this,im,r,ilinmom,proj](sigma::ins ins)->djack_t&
       {
-	return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,sigma::iins_of_ins[ins]})];
+	return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,sigma::iproj_of_proj[proj],sigma::iins_of_ins[ins]})];
       };
   }
   
@@ -487,6 +487,8 @@ struct perens_t
   //Zq, with and without QED
   djvec_t Zq;
   djvec_t Zq_QED_rel;
+  djvec_t Zq_RI;
+  djvec_t Zq_RI_QED_rel;
   
   //! return a list of tasks for Zq
   vector<task_t> get_Zq_tasks(const vector<const perens_t*>& ens={});
@@ -553,7 +555,7 @@ struct perens_t
   //! compute all Z but not QED
   void compute_Z_QCD()
   {
-    compute_Z(false);
+    compute_Z(true,false);
   }
   
   void make_Z_QED_absolute();

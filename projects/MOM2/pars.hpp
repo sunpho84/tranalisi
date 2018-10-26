@@ -56,7 +56,7 @@ namespace pars
   //! extrapolation method
   EXTERN_PARS chir_extr::type_t chir_extr_method INIT_PARS_TO({chir_extr::MQUARK});
   //! compute ri Zq
-  EXTERN_PARS bool compute_ri INIT_PARS_TO({false});
+  EXTERN_PARS size_t compute_RI INIT_PARS_TO({0});
   //! compute bilinear vertex
   EXTERN_PARS bool compute_bilinears INIT_PARS_TO({true});
   //! compute mesoleptonic vertex

@@ -14,16 +14,30 @@
 vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& ens)
 {
   vector<const djvec_t*> in_Zq,in_Zq_QED_rel;
+  vector<const djvec_t*> in_Zq_RI,in_Zq_RI_QED_rel;
   for(auto &e : ens)
     {
       in_Zq.push_back(&e->Zq);
       if(pars::use_QED)
 	in_Zq_QED_rel.push_back(&e->Zq_QED_rel);
+      if(pars::compute_RI)
+	{
+	  in_Zq_RI.push_back(&e->Zq_RI);
+	  if(pars::use_QED)
+	    in_Zq_RI_QED_rel.push_back(&e->Zq_RI_QED_rel);
+	}
     }
   
   vector<task_t> Zq_tasks={{&Zq,in_Zq,im_r_ilinmom_ind,"Zq",QCD_task}};
   if(pars::use_QED)
     Zq_tasks.push_back({&Zq_QED_rel,in_Zq_QED_rel,im_r_ilinmom_ind,"Zq"+QED_tag_suffix(),QED_task});
+  
+  if(pars::compute_RI)
+    {
+      Zq_tasks.push_back({&Zq_RI,in_Zq_RI,im_r_ilinmom_ind,"Zq_RI",QCD_task});
+      if(pars::use_QED)
+	Zq_tasks.push_back({&Zq_RI_QED_rel,in_Zq_RI_QED_rel,im_r_ilinmom_ind,"Zq_RI"+QED_tag_suffix(),QED_task});
+    }
   
   return Zq_tasks;
 }
@@ -42,6 +56,11 @@ void perens_t::compute_Zq(const bool also_QCD,const bool also_QED)
       
       using namespace sigma;
       auto sigma1=sigma_ins_getter(im,r,ilinmom,SIGMA1);
+      auto sigma_RI=sigma_ins_getter(im,r,ilinmom,SIGMA_RI);
+      auto sigma_RI_VT=sigma_ins_getter(im,r,ilinmom,SIGMA_RI_VT);
+      auto sigma_RI_VX=sigma_ins_getter(im,r,ilinmom,SIGMA_RI_VX);
+      auto sigma_RI_VY=sigma_ins_getter(im,r,ilinmom,SIGMA_RI_VY);
+      auto sigma_RI_VZ=sigma_ins_getter(im,r,ilinmom,SIGMA_RI_VZ);
       
       if(also_QCD) Zq[im_r_ilinmom]=sigma1(LO);
       
@@ -49,6 +68,23 @@ void perens_t::compute_Zq(const bool also_QCD,const bool also_QED)
 	{
 	  needs_to_read_assembled_QED_greenfunctions();
 	  Zq_QED_rel[im_r_ilinmom]=sigma1(QED)/sigma1(LO);
+	}
+      
+      switch(pars::compute_RI)
+	{
+	case 0:
+	  break;
+	case 1:
+	  Zq_RI[im_r_ilinmom]=sigma_RI(RI);
+	  if(also_QED) CRASH("Not implemented yet");
+	  break;
+	case 2:
+	  Zq_RI[im_r_ilinmom]=(sigma_RI_VT(RI_VT)+
+			       sigma_RI_VX(RI_VX)+
+			       sigma_RI_VY(RI_VY)+
+			       sigma_RI_VZ(RI_VZ))/4.0;
+	  if(also_QED) CRASH("Not implemented yet");
+	  break;
 	}
     }
 }

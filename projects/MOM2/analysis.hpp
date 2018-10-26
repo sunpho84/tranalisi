@@ -59,7 +59,7 @@ EXTERN_ANALYSIS map<string,perens_t> _data;
   inline void needs_to_read_ ## NAME()					\
   {									\
     needs_to_read_ ## NAME ## _QCD();					\
-    needs_to_read_ ## NAME ## _QED();					\
+    if(pars::use_QED) needs_to_read_ ## NAME ## _QED();			\
    }
 
 DEFINE_VALIDATE_QCD_AND_QED(assembled_QED_greenfunctions)

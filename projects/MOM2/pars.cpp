@@ -23,6 +23,7 @@ void freeze_pars()
       jqprop::set_ins();
       
       sigma::set_ins();
+      sigma::set_proj();
       pr_bil::set_ins();
       pr_meslep::set_ins();
     }

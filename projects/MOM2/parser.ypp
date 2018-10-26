@@ -135,7 +135,7 @@ commands:
         | commands set_boundary_conditions
         | commands set_chir_extr_method
         | commands set_compute_bilinears
-        | commands set_compute_ri
+        | commands set_compute_RI
         | commands set_compute_meslep
         | commands set_compute_deltam
         | commands set_compute_meslep_with_charges_one
@@ -232,7 +232,7 @@ set_chir_extr_method: TK_CHIR_EXTR_METHOD '=' TK_QUOTED_TEXT {pars::chir_extr_me
 set_compute_bilinears: TK_COMPUTE_BILINEARS '=' TK_INTE {pars::compute_bilinears=$3;}
 ;
 
-set_compute_ri: TK_COMPUTE_RI '=' TK_INTE {pars::compute_ri=$3;}
+set_compute_RI: TK_COMPUTE_RI '=' TK_INTE {pars::compute_RI=$3;}
 ;
 
 set_compute_deltam: TK_COMPUTE_DELTAM '=' TK_FROM_PROP {pars::deltam_method=pars::FROM_PROP;}

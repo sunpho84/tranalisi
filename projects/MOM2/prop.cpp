@@ -30,20 +30,42 @@ namespace qprop
 	break;
      }
     
-    if(pars::compute_ri)
-      switch(pars::use_QED)
-	{
-	case 0:
-	  ins_list.push_back(RI);
-	  break;
-	case 1:
-	  CRASH("Not implemented yet");
-	  break;
-	case 2:
-	  ins_list.push_back(RI);
-	  ins_list.push_back(RI_QED);
-	  break;
-	}
+    switch(pars::compute_RI)
+      {
+      case 0:
+	break;
+      case 1:
+       	switch(pars::use_QED)
+	  {
+	  case 0:
+	    ins_list.push_back(RI);
+	    break;
+	  case 1:
+	    CRASH("Not implemented yet");
+	    break;
+	  case 2:
+	    ins_list.push_back(RI);
+	    ins_list.push_back(RI_QED);
+	    break;
+	  }
+	break;
+      case 2:
+       	switch(pars::use_QED)
+	  {
+	  case 0:
+	    ins_list.push_back(RI_VT);
+	    ins_list.push_back(RI_VX);
+	    ins_list.push_back(RI_VY);
+	    ins_list.push_back(RI_VZ);
+	    break;
+	  case 1:
+	    CRASH("Not implemented yet");
+	    break;
+	  case 2:
+	    CRASH("Not implemented yet");
+	    break;
+	  }
+      }
     
     iins_of_ins.resize(ins_tag.size());
     for(size_t iins=0;iins<ins_list.size();iins++)
@@ -70,8 +92,12 @@ namespace jqprop
 	break;
       }
     
-    if(pars::compute_ri)
-      switch(pars::use_QED)
+    switch(pars::compute_RI)
+      {
+      case 0:
+	break;
+      case 1:
+	switch(pars::use_QED)
 	{
 	case 0:
 	  ins_list.push_back(RI);
@@ -84,6 +110,24 @@ namespace jqprop
 	  ins_list.push_back(RI_QED);
 	  break;
 	}
+	break;
+      case 2:
+	switch(pars::use_QED)
+	{
+	case 0:
+	  ins_list.push_back(RI_VT);
+	  ins_list.push_back(RI_VX);
+	  ins_list.push_back(RI_VY);
+	  ins_list.push_back(RI_VZ);
+	  break;
+	case 1:
+	  CRASH("Not implemented yet");
+	  break;
+	case 2:
+	  CRASH("Not implemented yet");
+	  break;
+	}
+      }
     
     iins_of_ins.resize(ins_tag.size());
     for(size_t iins=0;iins<ins_list.size();iins++)
@@ -340,18 +384,39 @@ void perens_t::build_all_mr_jackkniffed_qprops(vector<jqprop_t>& jprops,const ve
       break;
     }
   
-  if(pars::compute_ri)
+  switch(pars::compute_RI)
     {
-      ADD_COMBO(RI,RI,+1);
+    case 0:
+      break;
+    case 1:
       switch(pars::use_QED)
 	{
 	case 0:
+	  ADD_COMBO(RI,RI,+1);
 	  break;
 	case 1:
 	  CRASH("Not implemented yet");
 	  break;
 	case 2:
+	  ADD_COMBO(RI,RI,+1);
 	  ADD_COMBO(RI_QED,RI_QED,+1);
+	  break;
+	}
+      break;
+    case 2:
+      switch(pars::use_QED)
+	{
+	case 0:
+	  ADD_COMBO(RI_VT,RI_VT,+1);
+	  ADD_COMBO(RI_VX,RI_VX,+1);
+	  ADD_COMBO(RI_VY,RI_VY,+1);
+	  ADD_COMBO(RI_VZ,RI_VZ,+1);
+	  break;
+	case 1:
+	  CRASH("Not implemented yet");
+	  break;
+	case 2:
+	  CRASH("Not implemented yet");
 	  break;
 	}
     }
