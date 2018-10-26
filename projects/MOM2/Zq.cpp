@@ -75,14 +75,14 @@ void perens_t::compute_Zq(const bool also_QCD,const bool also_QED)
 	case 0:
 	  break;
 	case 1:
-	  Zq_RI[im_r_ilinmom]=sigma_RI(RI);
+	  Zq_RI[im_r_ilinmom]=-sigma_RI(RI)/4.0;
 	  if(also_QED) CRASH("Not implemented yet");
 	  break;
 	case 2:
-	  Zq_RI[im_r_ilinmom]=(sigma_RI_VT(RI_VT)+
-			       sigma_RI_VX(RI_VX)+
-			       sigma_RI_VY(RI_VY)+
-			       sigma_RI_VZ(RI_VZ))/4.0;
+	  Zq_RI[im_r_ilinmom]=-(sigma_RI_VT(RI_VT)+
+				sigma_RI_VX(RI_VX)+
+				sigma_RI_VY(RI_VY)+
+				sigma_RI_VZ(RI_VZ))/4.0;
 	  if(also_QED) CRASH("Not implemented yet");
 	  break;
 	}
