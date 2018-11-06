@@ -257,7 +257,7 @@ void perens_t::bin_write_ingredients(raw_file_t &file)
     t->bin_write(file);
 }
 
-perens_t perens_t::average_r() const
+perens_t perens_t::average_r(const array<double,2> w) const
 {
   perens_t out=*this;
   
@@ -272,15 +272,22 @@ perens_t perens_t::average_r() const
       out.set_indices();
       out.allocate();
       
-      average_r_sigma(out);
-      average_r_pr_bil(out);
-      average_r_pr_meslep(out);
-      average_r_deltam(out);
+      average_r_sigma(out,w);
+      average_r_pr_bil(out,w);
+      average_r_pr_meslep(out,w);
+      average_r_deltam(out,w);
       
       flush_unused_memory();
   }
   
   return out;
+}
+
+perens_t perens_t::select_r(const size_t r) const
+{
+  array<array<double,2>,2> w={array<double,2>{2,0},array<double,2>{0,2}};
+  
+  return average_r(w[r]);
 }
 
 perens_t perens_t::val_chir_extrap() const

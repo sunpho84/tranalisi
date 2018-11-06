@@ -361,7 +361,7 @@ vector<perens_t::task_t> perens_t::get_pr_meslep_tasks(const vector<const perens
   return pr_meslep_tasks;
 }
 
-void perens_t::average_r_pr_meslep(perens_t &out) const
+void perens_t::average_r_pr_meslep(perens_t &out,const array<double,2> w) const
 {
   cout<<"Averaging r for pr_meslep"<<endl;
   
@@ -384,7 +384,7 @@ void perens_t::average_r_pr_meslep(perens_t &out) const
 	      im_r_im_r_iop_iproj_imeslepmom_comp[1]=
 		im_r_im_r_iop_iproj_imeslepmom_comp[3]=r;
 	      const size_t i=im_r_im_r_meslepins_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom_comp);
-	      pr_rave[out_i]+=pr[i];
+	      pr_rave[out_i]+=w[r]*pr[i];
 	    }
 	  pr_rave[out_i]/=nr;
 	}

@@ -284,7 +284,7 @@ vector<perens_t::task_t> perens_t::get_pr_bil_tasks(const vector<const perens_t*
   return pr_bil_tasks;
 }
 
-void perens_t::average_r_pr_bil(perens_t &out) const
+void perens_t::average_r_pr_bil(perens_t &out,const array<double,2> w) const
 {
   cout<<"Averaging r for pr_bil"<<endl;
   
@@ -307,7 +307,7 @@ void perens_t::average_r_pr_bil(perens_t &out) const
 	      im_r_im_r_bilins_ibil_ibilmom_comp[1]=
 	        im_r_im_r_bilins_ibil_ibilmom_comp[3]=r;
 	      const size_t i=im_r_im_r_bilins_ibil_ibilmom_ind(im_r_im_r_bilins_ibil_ibilmom_comp);
-	      pr_rave[out_i]+=pr[i];
+	      pr_rave[out_i]+=w[r]*pr[i];
 	    }
 	  pr_rave[out_i]/=nr;
 	}

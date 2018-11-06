@@ -114,6 +114,7 @@ using namespace scan;
 %token TK_PRINT_DISCR
 %token TK_RATIO_Z_MINUS_ONE
 %token TK_SEA_CHIR_EXTRAP
+%token TK_SELECT_R
 %token TK_SUBTRACT_OA2
 %token TK_SUBTRACT_Z
 %token TK_SUB_MESON_MASS_SHIFT_WHEN_NO_POLE
@@ -162,6 +163,7 @@ commands:
         | commands average_r
         | commands average_Z
         | commands average_equiv_momenta
+        | commands select_r
         | commands sea_chir_extrap
         | commands evolve
         | commands assemble_QED_greenfunctions
@@ -323,6 +325,9 @@ make_Z_QED_absolute: TK_MAKE_Z_QED_ABSOLUTE '(' ')' {make_Z_QED_absolute();}
 ;
 
 average_r: TK_AVERAGE_R '(' ')' {average_all_r();}
+;
+
+select_r: TK_SELECT_R '(' TK_INTE ')' {select_r_all($3);}
 ;
 
 subtract_Oa2: TK_SUBTRACT_OA2 '(' ')' {subtract_Oa2_all();}

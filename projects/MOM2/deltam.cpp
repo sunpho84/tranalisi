@@ -469,7 +469,7 @@ vector<perens_t::task_t> perens_t::get_deltam_tasks(const vector<const perens_t*
   return deltam_tasks;
 }
 
-void perens_t::average_r_deltam(perens_t &out) const
+void perens_t::average_r_deltam(perens_t &out,const array<double,2> w) const
 {
   cout<<"Averaging r for deltam"<<endl;
   
@@ -479,8 +479,8 @@ void perens_t::average_r_deltam(perens_t &out) const
 	out.deltam_cr[im]=out.deltam_tm[im]=0.0;
 	for(size_t r=0;r<nr;r++)
 	  {
-	    out.deltam_cr[im]+=deltam_cr[im_r_ind({im,r})];
-	    out.deltam_tm[im]+=deltam_tm[im_r_ind({im,r})];
+	    out.deltam_cr[im]+=w[r]*deltam_cr[im_r_ind({im,r})];
+	    out.deltam_tm[im]+=w[r]*deltam_tm[im_r_ind({im,r})];
 	  }
 	out.deltam_cr[im]/=nr;
 	out.deltam_tm[im]/=nr;

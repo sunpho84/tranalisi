@@ -101,7 +101,8 @@ DEFINE_SINGLE_SELF_COMMAND_ALL(compute_Z_QCD_all,compute_Z_QCD,needs_to_read_ing
 DEFINE_SINGLE_SELF_COMMAND_ALL(write_checkpoint_all,write_checkpoint,needs_to_read_ingredients,void)
 
 #define DEFINE_SINGLE_COMMAND_ALL(ALL_COMMAND,SINGLE_COMMAND,CHECK,CLAUSE) \
-  inline void ALL_COMMAND()						\
+  template <typename...Ts>						\
+  inline void ALL_COMMAND(Ts&&...t)					\
   {									\
     CHECK();								\
     for(auto &path : pars::ens)						\
@@ -109,13 +110,14 @@ DEFINE_SINGLE_SELF_COMMAND_ALL(write_checkpoint_all,write_checkpoint,needs_to_re
 	const string name_out=path;					\
  	string name_in=path;						\
  	data(name_out,PRESENCE_NOT_NEEDED)=				\
- 	  data(name_in,ASSERT_PRESENT).SINGLE_COMMAND();		\
+ 	  data(name_in,ASSERT_PRESENT).SINGLE_COMMAND(std::forward<Ts>(t)...); \
       }									\
     CLAUSE();								\
   }
 
 DEFINE_SINGLE_COMMAND_ALL(assemble_all_QED_greenfunctions,assemble_QED_greenfunctions,needs_to_read_ingredients,validate_assembled_QED_greenfunctions)
 DEFINE_SINGLE_COMMAND_ALL(average_all_r,average_r,needs_to_read_ingredients,invalidate_Z)
+DEFINE_SINGLE_COMMAND_ALL(select_r_all,select_r,needs_to_read_ingredients,invalidate_Z)
 DEFINE_SINGLE_COMMAND_ALL(average_all_equiv_momenta,average_equiv_momenta,needs_to_read_ingredients,invalidate_Z)
 DEFINE_SINGLE_COMMAND_ALL(evolve_all,evolve,needs_to_read_Z,invalidate_ingredients)
 DEFINE_SINGLE_COMMAND_ALL(match_to_W_reg_all,match_to_W_reg,needs_to_read_Z,invalidate_ingredients)

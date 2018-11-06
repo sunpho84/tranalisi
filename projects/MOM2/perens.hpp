@@ -567,19 +567,24 @@ struct perens_t
   /////////////////////////////////////////////////////////////////
   
   //! triggers r-averaging of all quantities
-  perens_t average_r() const;
+  perens_t average_r(const array<double,2> w={1,1}) const;
   
   //! average sigma
-  void average_r_sigma(perens_t &out) const;
+  void average_r_sigma(perens_t &out,const array<double,2> w={1,1}) const;
   
   //! average pr_bil
-  void average_r_pr_bil(perens_t &out) const;
+  void average_r_pr_bil(perens_t &out,const array<double,2> w={1,1}) const;
   
   //! average pr_meslep
-  void average_r_pr_meslep(perens_t &out) const;
+  void average_r_pr_meslep(perens_t &out,const array<double,2> w={1,1}) const;
   
   //! average deltam
-  void average_r_deltam(perens_t &out) const;
+  void average_r_deltam(perens_t &out,const array<double,2> w={1,1}) const;
+  
+  /////////////////////////////////////////////////////////////////
+  
+  //! triggers r-selecting of all quantities
+  perens_t select_r(const size_t r) const;
   
   /////////////////////////////////////////////////////////////////
   

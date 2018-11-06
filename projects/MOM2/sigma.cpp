@@ -349,7 +349,7 @@ perens_t& perens_t::compute_sigmas()
   return *this;
 }
 
-void perens_t::average_r_sigma(perens_t &out) const
+void perens_t::average_r_sigma(perens_t &out,const array<double,2> w) const
 {
   cout<<"Averaging r for sigma"<<endl;
   
@@ -371,7 +371,7 @@ void perens_t::average_r_sigma(perens_t &out) const
 	  //include a -1 on SIGMA3 and second r
 	  const int coeff=(sigmaproj==sigma::SIGMA3 and r==1)?-1:+1;
 	  
-	  sigma_rave[out_i]+=sigma[in_i]*coeff;
+	  sigma_rave[out_i]+=w[r]*sigma[in_i]*coeff;
 	}
       sigma_rave[out_i]/=nr;
     }

@@ -139,6 +139,7 @@ PrintDiscr                          DEBUG_PRINTF("Found PrintDiscr\n");return TK
 PrintZ                              DEBUG_PRINTF("Found PrintZ\n");return TK_PRINT_Z;
 RatioZMinusOne                      DEBUG_PRINTF("Found RatioZMinusOne\n");return TK_RATIO_Z_MINUS_ONE;
 SeaChirExtrap                       DEBUG_PRINTF("Found SeaChirExtrap\n");return TK_SEA_CHIR_EXTRAP;
+SelectR                             DEBUG_PRINTF("Found SelectR\n"); return TK_SELECT_R;
 SubMesonMassShiftWhenNoPole         DEBUG_PRINTF("Found SubMesonMassShiftWhenNoPole\n");return TK_SUB_MESON_MASS_SHIFT_WHEN_NO_POLE;
 SubtractOa2                         DEBUG_PRINTF("Found SubtractOa2\n");return TK_SUBTRACT_OA2;
 SubtractZ                           DEBUG_PRINTF("Found SubtractZ\n");return TK_SUBTRACT_Z;
