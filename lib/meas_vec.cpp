@@ -42,7 +42,8 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
       const size_t beg_file=ijack*clust_size;
       const size_t end_file=(ijack+1)*clust_size;
       
-      cout<<"Block of ijack:"<<ijack<<", reading from file "<<beg_file<<" to "<<end_file<<endl;
+      if(verbosity)
+	printf("Block of ijack: %zu, reading from file %zu to %zu\n",ijack,beg_file,end_file);
       
       for(size_t ifile=beg_file;ifile<end_file;ifile++)
 	{
