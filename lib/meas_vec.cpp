@@ -13,6 +13,7 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
   
   //get the list of existing files
   size_t clust_size=trim_to_njacks_multiple(id_list);
+  cout<<"Clust size: "<<clust_size<<endl;
   
   //open all files
   vector<obs_file_t> files;
@@ -31,8 +32,10 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
   if(length!=nblocks*block_nentr) CRASH("Total length is not a multiple of ncols*nlines=%zu",block_nentr);
   
   //! output
+  cout<<"Allocating data"<<endl;
   djvec_t data(length);
   
+  cout<<"Starting to read"<<endl;
 #pragma omp parallel for
   for(size_t ijack=0;ijack<njacks;ijack++)
     for(size_t ifile=ijack*clust_size;ifile<(ijack+1)*clust_size;ifile++)
