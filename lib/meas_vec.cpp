@@ -36,29 +36,32 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
   djvec_t data(length);
   
   cout<<"Starting to read"<<endl;
-#pragma omp parallel
-  {
-    printf("Thread %d started\n",omp_get_thread_num());
-#pragma omp for
-    for(size_t ijack=0;ijack<njacks;ijack++)
-    for(size_t ifile=ijack*clust_size;ifile<(ijack+1)*clust_size;ifile++)
-      {
-	if(verbosity)
+#pragma omp parallel for
+  for(size_t ijack=0;ijack<njacks;ijack++)
+    {
+      const size_t beg_file=ijack*clust_size;
+      const size_t end_file=(ijack+1)*clust_size;
+      
+      cout<<"Block of ijack:"<<ijack<<", reading from file "<<beg_file<<" to "<<end_file<<endl;
+      
+      for(size_t ifile=beg_file;ifile<end_file;ifile++)
+	{
 #ifdef USE_OMP
-	printf("Thread %d/%d reading file %zu/%zu\n",omp_get_thread_num(),omp_get_num_threads(),ifile,files.size());
+	  printf("Thread %d/%d reading file %zu/%zu\n",omp_get_thread_num(),omp_get_num_threads(),ifile,files.size());
 #else
-	printf("Reading file %zu/%zu\n",ifile,files.size());
+	  printf("Reading file %zu/%zu\n",ifile,files.size());
 #endif
-	
-	//read all blocks
-	for(size_t iblock=0;iblock<nblocks;iblock++)
-	  {
-	    vector<double> temp=files[ifile].read(nlines);
-	    if(temp.size()!=block_nentr) CRASH("Error reading file %zu, iblock %zu",ifile,iblock);
-	    
-	    //copy
-	    for(size_t ientr=0;ientr<block_nentr;ientr++) data[ientr+block_nentr*iblock][ijack]+=temp[ientr];
-	  }
+	  
+	  //read all blocks
+	  for(size_t iblock=0;iblock<nblocks;iblock++)
+	    {
+	      vector<double> temp=files[ifile].read(nlines);
+	      if(temp.size()!=block_nentr) CRASH("Error reading file %zu, iblock %zu",ifile,iblock);
+	      
+	      //copy
+	      for(size_t ientr=0;ientr<block_nentr;ientr++) data[ientr+block_nentr*iblock][ijack]+=temp[ientr];
+	    }
+	}
     }
   if(verbosity) cout<<"Finished reading"<<endl;
   
