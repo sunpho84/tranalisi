@@ -36,8 +36,11 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
   djvec_t data(length);
   
   cout<<"Starting to read"<<endl;
-#pragma omp parallel for
-  for(size_t ijack=0;ijack<njacks;ijack++)
+#pragma omp parallel
+  {
+    printf("Thread %d started\n",omp_get_thread_num());
+#pragma omp for
+    for(size_t ijack=0;ijack<njacks;ijack++)
     for(size_t ifile=ijack*clust_size;ifile<(ijack+1)*clust_size;ifile++)
       {
 	if(verbosity)
