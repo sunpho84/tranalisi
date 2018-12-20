@@ -407,9 +407,12 @@ perens_t perens_t::assemble_QED_greenfunctions() const
 {
   perens_t out=*this;
   
-  out.assemble_sigma_QED_greenfunctions();
-  if(pars::compute_bilinears) out.assemble_pr_bil_QED_greenfunctions();
-  if(pars::compute_meslep) out.assemble_pr_meslep_QED_greenfunctions();
+  if(pars::use_QED)
+    {
+      out.assemble_sigma_QED_greenfunctions();
+      if(pars::compute_bilinears) out.assemble_pr_bil_QED_greenfunctions();
+      if(pars::compute_meslep) out.assemble_pr_meslep_QED_greenfunctions();
+    }
   
   return out;
 }
