@@ -64,7 +64,7 @@ void perens_t::compute_Zq(const bool also_QCD,const bool also_QED)
       
       if(also_QCD) Zq[im_r_ilinmom]=sigma1(LO);
       
-      if(also_QED)
+      if(pars::use_QED and also_QED)
 	{
 	  needs_to_read_assembled_QED_greenfunctions();
 	  Zq_QED_rel[im_r_ilinmom]=sigma1(QED)/sigma1(LO);
