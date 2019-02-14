@@ -55,7 +55,8 @@ int main(int narg,char **arg)
   cout<<"Nconfs: "<<nconfs<<endl;
   
   const int nhits=input.read<int>("NHits");
-  
+
+  /// Allocate diagrams and initializes it
   djack_t EU1[2]={0.0,0.0};
   djack_t EU2[2]={0.0,0.0};
   djack_t EU4[2]={0.0,0.0};
@@ -70,23 +71,28 @@ int main(int narg,char **arg)
   
   for(int iconf=0;iconf<nconfs;iconf++)
     {
+      /// Finds the jack index
       int ijack=iconf/clust_size;
       
+      /// Computes the configuration id
       const int conf=iconf*conf_range.each+conf_range.start;
+      
+      /// Reads all diagrams
       vector<dcomplex> EU1_stoch=read_vector(combine("out/%04d/EU1_stoch",conf),nhits);
       vector<dcomplex> EU2_stoch=read_vector(combine("out/%04d/EU2_stoch",conf),nhits);
       vector<dcomplex> EU4_stoch=read_vector(combine("out/%04d/EU4_stoch",conf),nhits);
       vector<dcomplex> EU5_stoch=read_vector(combine("out/%04d/EU5_stoch",conf),nhits*(nhits-1)/2);
       vector<dcomplex> EU6_stoch=read_vector(combine("out/%04d/EU6_stoch",conf),nhits*(nhits-1)/2);
-      
       vector<dcomplex> pion_stoch=read_vector(combine("out/%04d/mes_contr_Pion",conf),T,5);
       
+      /// Computes the average over stochastich estimates
       dcomplex EU1_tot=average(EU1_stoch);
       dcomplex EU2_tot=average(EU2_stoch);
       dcomplex EU4_tot=average(EU4_stoch);
       dcomplex EU5_tot=average(EU5_stoch);
       dcomplex EU6_tot=average(EU6_stoch);
-
+      
+      /// Copy real and imaginary part of the disconnected diagram
       for(int ri=0;ri<2;ri++)
 	{
 	  EU1[ri][ijack]+=((double*)&EU1_tot)[ri];
@@ -96,6 +102,7 @@ int main(int narg,char **arg)
 	  EU6[ri][ijack]+=((double*)&EU6_tot)[ri];
 	}
       
+      /// Computes the connected and disconnected X connected
       for(int t=0;t<T;t++)
 	{
 	  pion[t][ijack]+=pion_stoch[t].real();
@@ -107,6 +114,7 @@ int main(int narg,char **arg)
 	}
     }
   
+  /// Prepares the jackknives of disconnected diagrams and print it
   for(int ri=0;ri<2;ri++)
     {
       EU1[ri].clusterize(clust_size);
@@ -122,15 +130,21 @@ int main(int narg,char **arg)
       cout<<"EU6: "<<EU6[ri].ave_err()<<endl;
     }
   
+  /// Creates the jackknife of the connected and disconnected diagrams and plots them
   pion.clusterize(clust_size);
-  pion.ave_err().write("plots/pion.xmg");
-  
   pion_EU1.clusterize(clust_size);
   pion_EU2.clusterize(clust_size);
   pion_EU4.clusterize(clust_size);
   pion_EU5.clusterize(clust_size);
   pion_EU6.clusterize(clust_size);
+  pion.ave_err().write("plots/pion.xmg");
+  pion_EU1.ave_err().write("plots/pion_EU1.xmg");
+  pion_EU2.ave_err().write("plots/pion_EU2.xmg");
+  pion_EU4.ave_err().write("plots/pion_EU4.xmg");
+  pion_EU5.ave_err().write("plots/pion_EU5.xmg");
+  pion_EU6.ave_err().write("plots/pion_EU6.xmg");
   
+  /// Subtract the fully disconnected part and plots it
   djvec_t pion_EU1_sub=pion_EU1-pion*EU1[0];
   djvec_t pion_EU2_sub=pion_EU2-pion*EU2[0];
   djvec_t pion_EU4_sub=pion_EU4-pion*EU4[0];
@@ -142,11 +156,12 @@ int main(int narg,char **arg)
   pion_EU5_sub.ave_err().write("plots/EU5_sub.xmg");
   pion_EU6_sub.ave_err().write("plots/EU6_sub.xmg");
   
-  djvec_t pion_EU1_rat=pion_EU1_sub/pion;
-  djvec_t pion_EU2_rat=pion_EU2_sub/pion;
-  djvec_t pion_EU4_rat=pion_EU4_sub/pion;
-  djvec_t pion_EU5_rat=pion_EU5_sub/pion;
-  djvec_t pion_EU6_rat=pion_EU6_sub/pion;
+  /// Computes the ratio with the purely connected and plots it
+  djvec_t pion_EU1_rat=djvec_t(pion_EU1_sub/pion).symmetrized();
+  djvec_t pion_EU2_rat=djvec_t(pion_EU2_sub/pion).symmetrized();
+  djvec_t pion_EU4_rat=djvec_t(pion_EU4_sub/pion).symmetrized();
+  djvec_t pion_EU5_rat=djvec_t(pion_EU5_sub/pion).symmetrized();
+  djvec_t pion_EU6_rat=djvec_t(pion_EU6_sub/pion).symmetrized();
   pion_EU1_rat.ave_err().write("plots/EU1_rat.xmg");
   pion_EU2_rat.ave_err().write("plots/EU2_rat.xmg");
   pion_EU4_rat.ave_err().write("plots/EU4_rat.xmg");
