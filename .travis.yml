@@ -1,0 +1,52 @@
+sudo: false
+
+dist: xenial
+
+# Blacklist
+branches:
+  except:
+    - gh-pages
+
+# Environment variables
+env:
+  global:
+    - GH_REPO_NAME: tranalisi
+    - GH_REPO_REF: github.com/sunpho84/tranalisi.git
+    - LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/lib"
+    - LIBRARY_PATH="$LIBRARY_PATH:$HOME/lib"
+    - CC=clang
+    - CXX=clang++
+  
+# Install dependencies
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - doxygen
+      - doxygen-doc
+      - doxygen-latex
+      - doxygen-gui
+      - graphviz
+      - g++-8
+      - clang
+      - libclang1
+
+script:
+  - bash config/bootstrap
+  - bash config/install-minuit2.sh
+  - mkdir build
+  - cd build
+  - ../configure --with-Eigen=/usr/include/eigen3 CPPFLAGS="-Wall -O0 -g -Wno-missing-braces"
+  - make
+  
+# Generate and deploy documentation
+after_success:
+  - cd $TRAVIS_BUILD_DIR/build
+  - rm -fr docs
+  - which clang
+  - clang --version
+  - doxygen -v
+  - make doxygen-run
+  - cd $TRAVIS_BUILD_DIR
+  - . config/publishDocumentation.sh

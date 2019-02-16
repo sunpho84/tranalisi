@@ -216,9 +216,18 @@ case "$arch_opt" in
 esac
 AC_MSG_RESULT([Enabling architecture optimization... $arch_opt])
 
+# Configure doxygen
+DX_INIT_DOXYGEN($PACKAGE_NAME,[config/Doxyfile],[docs])
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_MAN_FEATURE(ON)
+DX_HTML_FEATURE(ON)
+AC_SUBST([DOXYGEN_OUTPUT_DIR],[docs])
+ 
 AC_CONFIG_FILES(Makefile
 	include/Makefile
 	lib/Makefile
 	projects/Makefile
-	tools/Makefile)
+	tools/Makefile
+	config/Doxyfile)
 AC_OUTPUT
