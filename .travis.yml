@@ -31,6 +31,7 @@ addons:
       - g++-8
       - clang
       - libclang1
+      - libgsl-dev
 
 script:
   - bash config/bootstrap
