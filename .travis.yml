@@ -33,7 +33,8 @@ addons:
       - clang
       - libclang1
       - libgsl-dev
-
+      - libeigen-dev
+      
 script:
   - bash config/bootstrap
   - bash config/install_minuit2.sh
