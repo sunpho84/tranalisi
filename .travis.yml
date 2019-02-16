@@ -12,6 +12,7 @@ env:
   global:
     - GH_REPO_NAME: tranalisi
     - GH_REPO_REF: github.com/sunpho84/tranalisi.git
+    - CPATH=$CPATH:$HOME/include
     - LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/lib"
     - LIBRARY_PATH="$LIBRARY_PATH:$HOME/lib"
     - CC=clang
