@@ -16,7 +16,7 @@ env:
     - LIBRARY_PATH="$LIBRARY_PATH:$HOME/lib"
     - CC=clang
     - CXX=clang++
-  
+
 # Install dependencies
 addons:
   apt:
@@ -34,7 +34,7 @@ addons:
 
 script:
   - bash config/bootstrap
-  - bash config/install-minuit2.sh
+  - bash config/install_minuit2.sh
   - mkdir build
   - cd build
   - ../configure --with-Eigen=/usr/include/eigen3 CPPFLAGS="-Wall -O0 -g -Wno-missing-braces"
