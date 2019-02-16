@@ -1,6 +1,7 @@
 #include <tranalisi.hpp>
 
 int T,L;
+int TH;
 
 vector<dcomplex> read_vector(const string &path,int n,int nskip=0)
 {
@@ -38,6 +39,7 @@ int main(int narg,char **arg)
   cout.precision(16);
   
   T=input.read<int>("T");
+  TH=T/2;
   L=input.read<int>("L");
   range_t conf_range;
   input.expect("ConfRange");
@@ -45,9 +47,20 @@ int main(int narg,char **arg)
   conf_range.each=input.read<size_t>();
   conf_range.end=input.read<size_t>();
   
+  vector<size_t> confs_p=get_existing_paths_in_range("out/%04d/mes_contr_Pion",conf_range);
+  vector<size_t> confs_1=get_existing_paths_in_range("out/%04d/EU1_stoch",conf_range);
+  vector<size_t> confs;
+  for(auto &_p : confs_p)
+    for(auto & _1 : confs_1)
+      if(_p==_1)
+	{
+	  cout<<_p<<endl;
+	  confs.push_back(_p);
+	}
+  
   set_njacks(input.read<int>("NJacks"));
   
-  const int nposs_confs=(conf_range.end-conf_range.start)/conf_range.each;
+  const int nposs_confs=confs.size();
   cout<<"Npossible confs: "<<nposs_confs<<endl;
   const int clust_size=nposs_confs/njacks;
   cout<<"Cluster size: "<<clust_size<<endl;
@@ -55,7 +68,7 @@ int main(int narg,char **arg)
   cout<<"Nconfs: "<<nconfs<<endl;
   
   const int nhits=input.read<int>("NHits");
-
+  
   /// Allocate diagrams and initializes it
   djack_t EU1[2]={0.0,0.0};
   djack_t EU2[2]={0.0,0.0};
@@ -75,7 +88,7 @@ int main(int narg,char **arg)
       int ijack=iconf/clust_size;
       
       /// Computes the configuration id
-      const int conf=iconf*conf_range.each+conf_range.start;
+      const int conf=confs[iconf];
       
       /// Reads all diagrams
       vector<dcomplex> EU1_stoch=read_vector(combine("out/%04d/EU1_stoch",conf),nhits);
@@ -131,12 +144,13 @@ int main(int narg,char **arg)
     }
   
   /// Creates the jackknife of the connected and disconnected diagrams and plots them
-  pion.clusterize(clust_size);
-  pion_EU1.clusterize(clust_size);
-  pion_EU2.clusterize(clust_size);
-  pion_EU4.clusterize(clust_size);
-  pion_EU5.clusterize(clust_size);
-  pion_EU6.clusterize(clust_size);
+  pion.clusterize(clust_size).symmetrize();
+  pion_EU1.clusterize(clust_size).symmetrize();
+  pion_EU2.clusterize(clust_size).symmetrize();
+  pion_EU4.clusterize(clust_size).symmetrize();
+  pion_EU5.clusterize(clust_size).symmetrize();
+  pion_EU6.clusterize(clust_size).symmetrize();
+  
   pion.ave_err().write("plots/pion.xmg");
   pion_EU1.ave_err().write("plots/pion_EU1.xmg");
   pion_EU2.ave_err().write("plots/pion_EU2.xmg");
@@ -157,16 +171,31 @@ int main(int narg,char **arg)
   pion_EU6_sub.ave_err().write("plots/EU6_sub.xmg");
   
   /// Computes the ratio with the purely connected and plots it
-  djvec_t pion_EU1_rat=djvec_t(pion_EU1_sub/pion).symmetrized();
-  djvec_t pion_EU2_rat=djvec_t(pion_EU2_sub/pion).symmetrized();
-  djvec_t pion_EU4_rat=djvec_t(pion_EU4_sub/pion).symmetrized();
-  djvec_t pion_EU5_rat=djvec_t(pion_EU5_sub/pion).symmetrized();
-  djvec_t pion_EU6_rat=djvec_t(pion_EU6_sub/pion).symmetrized();
-  pion_EU1_rat.ave_err().write("plots/EU1_rat.xmg");
-  pion_EU2_rat.ave_err().write("plots/EU2_rat.xmg");
-  pion_EU4_rat.ave_err().write("plots/EU4_rat.xmg");
-  pion_EU5_rat.ave_err().write("plots/EU5_rat.xmg");
-  pion_EU6_rat.ave_err().write("plots/EU6_rat.xmg");
+  djvec_t pion_EU1_rat=pion_EU1_s;ub/pion;
+  djvec_t pion_EU2_rat=pion_EU2_sub/pion;
+  djvec_t pion_EU4_rat=pion_EU4_sub/pion;
+  djvec_t pion_EU5_rat=pion_EU5_sub/pion;
+  djvec_t pion_EU6_rat=pion_EU6_sub/pion;
+  
+  djack_t Z2,M,DZ2_fr_Z2;
+  djack_t SL_1,SL_2,SL_4,SL_5,SL_6;
+  two_pts_with_ins_ratio_fit(Z2,M,DZ2_fr_Z2,SL_1,pion,pion_EU1_sub,TH,12,TH,"plots/pion.xmg","plots/EU1_rat.xmg");
+  two_pts_with_ins_ratio_fit(Z2,M,DZ2_fr_Z2,SL_2,pion,pion_EU2_sub,TH,12,TH,"plots/pion.xmg","plots/EU2_rat.xmg");
+  two_pts_with_ins_ratio_fit(Z2,M,DZ2_fr_Z2,SL_4,pion,pion_EU4_sub,TH,12,TH,"plots/pion.xmg","plots/EU4_rat.xmg");
+  two_pts_with_ins_ratio_fit(Z2,M,DZ2_fr_Z2,SL_5,pion,pion_EU5_sub,TH,12,TH,"plots/pion.xmg","plots/EU5_rat.xmg");
+  two_pts_with_ins_ratio_fit(Z2,M,DZ2_fr_Z2,SL_6,pion,pion_EU6_sub,TH,12,TH,"plots/pion.xmg","plots/EU6_rat.xmg");
+  
+  cout<<SL_1.ave_err()<<endl;
+  cout<<SL_2.ave_err()<<endl;
+  cout<<SL_4.ave_err()<<endl;
+  cout<<SL_5.ave_err()<<endl;
+  cout<<SL_6.ave_err()<<endl;
+  
+  // pion_EU1_rat.ave_err().write("plots/EU1_rat.xmg");
+  // pion_EU2_rat.ave_err().write("plots/EU2_rat.xmg");
+  // pion_EU4_rat.ave_err().write("plots/EU4_rat.xmg");
+  // pion_EU5_rat.ave_err().write("plots/EU5_rat.xmg");
+  // pion_EU6_rat.ave_err().write("plots/EU6_rat.xmg");
   
   return 0;
 }
