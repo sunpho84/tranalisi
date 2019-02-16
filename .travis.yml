@@ -23,10 +23,10 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - doxygen
-      - doxygen-doc
-      - doxygen-latex
-      - doxygen-gui
+      # - doxygen
+      # - doxygen-doc
+      # - doxygen-latex
+      # - doxygen-gui
       - graphviz
       - g++-8
       - clang
@@ -39,14 +39,14 @@ script:
   - cd build
   - ../configure --with-Eigen=/usr/include/eigen3 CPPFLAGS="-Wall -O0 -g -Wno-missing-braces"
   - make
-  
+
 # Generate and deploy documentation
 after_success:
-  - cd $TRAVIS_BUILD_DIR/build
-  - rm -fr docs
-  - which clang
-  - clang --version
-  - doxygen -v
-  - make doxygen-run
-  - cd $TRAVIS_BUILD_DIR
-  - . config/publishDocumentation.sh
+  # - cd $TRAVIS_BUILD_DIR/build
+  # - rm -fr docs
+  # - which clang
+  # - clang --version
+  # - doxygen -v
+  # - make doxygen-run
+  # - cd $TRAVIS_BUILD_DIR
+  # - . config/publishDocumentation.sh
