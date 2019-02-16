@@ -171,7 +171,7 @@ int main(int narg,char **arg)
   pion_EU6_sub.ave_err().write("plots/EU6_sub.xmg");
   
   /// Computes the ratio with the purely connected and plots it
-  djvec_t pion_EU1_rat=pion_EU1_s;ub/pion;
+  djvec_t pion_EU1_rat=pion_EU1_sub/pion;
   djvec_t pion_EU2_rat=pion_EU2_sub/pion;
   djvec_t pion_EU4_rat=pion_EU4_sub/pion;
   djvec_t pion_EU5_rat=pion_EU5_sub/pion;
