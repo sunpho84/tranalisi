@@ -7,7 +7,7 @@ vector<dcomplex> read_vector(const string &path,int n,int nskip=0)
 {
   raw_file_t data(path,"r");
   
-  cout<<"Reading from "<<path<<" "<<n<<" lines after skipping "<<nskip<<" words"<<endl;
+  //cout<<"Reading from "<<path<<" "<<n<<" lines after skipping "<<nskip<<" words"<<endl;
   for(int iskip=0;iskip<nskip;iskip++)
     data.skip_line();
   
@@ -47,14 +47,14 @@ int main(int narg,char **arg)
   conf_range.each=input.read<size_t>();
   conf_range.end=input.read<size_t>();
   
-  vector<size_t> confs_p=get_existing_paths_in_range("out/%04d/mes_contr_Pion",conf_range);
-  vector<size_t> confs_1=get_existing_paths_in_range("out/%04d/EU1_stoch",conf_range);
+  vector<size_t> confs_p=get_existing_paths_in_range("out/%04d/mes_contr_Pion",conf_range,SILENT);
+  vector<size_t> confs_1=get_existing_paths_in_range("out/%04d/EU1_stoch",conf_range,SILENT);
   vector<size_t> confs;
   for(auto &_p : confs_p)
     for(auto & _1 : confs_1)
       if(_p==_1)
 	{
-	  cout<<_p<<endl;
+	  //cout<<_p<<endl;
 	  confs.push_back(_p);
 	}
   
@@ -68,7 +68,7 @@ int main(int narg,char **arg)
   cout<<"Nconfs: "<<nconfs<<endl;
   
   const int nhits=input.read<int>("NHits");
-
+  
   const int ndiag=5;
   enum {EU1,EU2,EU4,EU5,EU6};
   const int diag[ndiag]={1,2,4,5,6};
