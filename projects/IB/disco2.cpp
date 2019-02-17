@@ -3,7 +3,7 @@
 int T,L;
 int TH;
 
-vector<dcomplex> read_vector(const string &path,int n,int nskip=0)
+vector<dcompl_t> read_vector(const string &path,int n,int nskip=0)
 {
   raw_file_t data(path,"r");
   
@@ -11,7 +11,7 @@ vector<dcomplex> read_vector(const string &path,int n,int nskip=0)
   for(int iskip=0;iskip<nskip;iskip++)
     data.skip_line();
   
-  vector<dcomplex> d;
+  vector<dcompl_t> d;
   
   for(int i=0;i<n;i++)
     {
@@ -27,7 +27,7 @@ vector<dcomplex> read_vector(const string &path,int n,int nskip=0)
 template <typename T>
 T average(const vector<T>& v)
 {
-  return accumulate(v.begin(),v.end(),dcomplex{0,0})/(double)v.size();
+  return accumulate(v.begin(),v.end(),dcompl_t{0,0})/(double)v.size();
 }
 
 int main(int narg,char **arg)
@@ -91,9 +91,9 @@ int main(int narg,char **arg)
       const int conf=confs[iconf];
       
       /// Reads all diagrams
-      array<vector<dcomplex>,ndiag> EU_stoch;
-      vector<dcomplex> pion_stoch=read_vector(combine("out/%04d/mes_contr_Pion",conf),T,5);
-      array<dcomplex,ndiag> EU_tot;
+      array<vector<dcompl_t>,ndiag> EU_stoch;
+      vector<dcompl_t> pion_stoch=read_vector(combine("out/%04d/mes_contr_Pion",conf),T,5);
+      array<dcompl_t,ndiag> EU_tot;
       
       for(int t=0;t<T;t++)
 	pion[t][ijack]+=pion_stoch[t].real();
