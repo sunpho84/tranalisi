@@ -292,6 +292,8 @@ perens_t perens_t::select_r(const size_t r) const
 
 perens_t perens_t::val_chir_extrap() const
 {
+  if(pars::free_theory) CRASH("possible only in the interacting theory");
+  
   perens_t out=*this;
   
   if(nm>1)

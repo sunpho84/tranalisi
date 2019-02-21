@@ -140,6 +140,8 @@ void subtract_Z(const string out,const string in1,const string in2)
 
 void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
 {
+  if(pars::free_theory) CRASH("possible only in the interacting theory");
+  
   needs_to_read_Z();
   
   invalidate_ingredients();
@@ -291,7 +293,7 @@ void compute_or_load_all_ingredients()
       
       ens.read_or_compute_ingredients();
       if(pars::use_deltam_cr_ct or pars::use_deltam_tm_ct) ens.get_deltam();
-      ens.get_meson_mass();
+      if(pars::free_theory) ens.get_meson_mass();
       
       if(pars::average_equiv_momenta_immediately) ens.average_equiv_momenta();
       if(pars::average_r_immediately) ens.average_r();
@@ -302,6 +304,8 @@ void compute_or_load_all_ingredients()
 
 void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
 {
+  if(pars::free_theory) CRASH("possible only in the interacting theory");
+  
   needs_to_read_Z();
   
   invalidate_ingredients();

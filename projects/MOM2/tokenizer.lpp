@@ -127,6 +127,7 @@ CorrectOa2UsingPTilde               DEBUG_PRINTF("Found CorrectOa2UsingPTilde\n"
 Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVOLVE;
 ExtrapolateTo0P2                    DEBUG_PRINTF("Found ExtrapolateTo0P2\n");return TK_EXTRAPOLATE_TO_0_P2;
 ExtrapolateTo0P2Range               DEBUG_PRINTF("Found ExtrapolateTo0P2Range\n");return TK_EXTRAPOLATE_TO_0_P2_RANGE;
+FreeTheory                          DEBUG_PRINTF("Found FreeTheory\n");return TK_FREE_THEORY;
 Include                             DEBUG_PRINTF("Found Include\n");return TK_INCLUDE;
 InterpolateToP2Ref                  DEBUG_PRINTF("Found InterpolateToP2Ref\n");return TK_INTERPOLATE_TO_P2REF;
 ListEnsembles                       DEBUG_PRINTF("Found ListEnsembles\n");return TK_LIST_ENSEMBLES;

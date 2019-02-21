@@ -87,6 +87,8 @@ namespace pars
   EXTERN_PARS bool use_deltam_cr_ct INIT_PARS_TO({true});
   //! compute deltam_tm counterterm and subtract
   EXTERN_PARS bool use_deltam_tm_ct INIT_PARS_TO({true});
+  //! free theory
+  EXTERN_PARS bool free_theory INIT_PARS_TO({false});
   //! use QED
   EXTERN_PARS size_t use_QED INIT_PARS_TO({0});
   //! reference p2 to which interpolate, in GeV^2

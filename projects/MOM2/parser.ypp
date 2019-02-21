@@ -67,6 +67,7 @@ using namespace scan;
 %token TK_COMPUTE_RI
 %token TK_EXTRAPOLATE
 %token TK_EXTRAPOLATE_TO_0_P2_RANGE
+%token TK_FREE_THEORY
 %token TK_FROM_PROP
 %token TK_FROM_CORR
 %token TK_COMPUTE_DELTAM
@@ -144,6 +145,7 @@ commands:
 	| commands set_correct_Oa2_using_ptilde
         | commands set_extrapolate_to_0_p2_range
         | commands set_filter_thresh
+        | commands set_free_theory
 	| commands set_measure_mPCAC
         | commands set_nf
         | commands set_njacks
@@ -251,6 +253,9 @@ set_extrapolate_to_0_p2_range: TK_EXTRAPOLATE_TO_0_P2_RANGE '=' '{' TK_REAL ',' 
 ;
 
 set_filter_thresh: TK_FILTER_THRESH '=' TK_REAL {pars::filter_thresh=$3;}
+;
+
+set_free_theory: TK_FREE_THEORY '=' TK_INTE {pars::free_theory=$3;}
 ;
 
 set_measure_mPCAC: TK_MEASURE_MPCAC '=' TK_INTE {pars::report_mPCAC=$3;}
