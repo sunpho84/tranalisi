@@ -293,7 +293,7 @@ void compute_or_load_all_ingredients()
       
       ens.read_or_compute_ingredients();
       if(pars::use_deltam_cr_ct or pars::use_deltam_tm_ct) ens.get_deltam();
-      if(pars::free_theory) ens.get_meson_mass();
+      if(not pars::free_theory) ens.get_meson_mass();
       
       if(pars::average_equiv_momenta_immediately) ens.average_equiv_momenta();
       if(pars::average_r_immediately) ens.average_r();
