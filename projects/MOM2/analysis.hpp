@@ -125,6 +125,7 @@ DEFINE_SINGLE_COMMAND_ALL(val_chir_extrap_all,val_chir_extrap,needs_to_read_ingr
 DEFINE_SINGLE_COMMAND_ALL(interpolate_to_p2ref_all,interpolate_to_p2ref,needs_to_read_Z,invalidate_ingredients)
 DEFINE_SINGLE_COMMAND_ALL(extrapolate_to_0_p2_all,extrapolate_to_0_p2,needs_to_read_Z,invalidate_ingredients)
 DEFINE_SINGLE_COMMAND_ALL(subtract_Oa2_all,subtract_Oa2,needs_to_read_ingredients,invalidate_Z_QCD)
+DEFINE_SINGLE_COMMAND_ALL(evolve_QED_Zmixed_to_1_ov_a_all,evolve_QED_Zmixed_to_1_ov_a,needs_to_read_Z,invalidate_ingredients)
 
 // /////////////////////////////////////////////////////////////////
 

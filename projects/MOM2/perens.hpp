@@ -619,8 +619,22 @@ struct perens_t
   //! triggers match to W-reg all quantities
   perens_t match_to_W_reg() const;
   
-  //! match Zmeslep
-  void match_to_W_reg_Zmeslep(perens_t& out) const;
+  //! evolve QED Zbil, considering only the mixed evolver (QCD/QED)
+  void evolve_QED_Zbil_mixed_to_1_ov_a(perens_t& out) const;
+  
+  //! evolve QED Zmeslep, considering only the mixed evolver (QCD/QED)
+  void evolve_QED_Zmeslep_mixed_to_1_ov_a(perens_t& out) const;
+  
+  //! evolve QED Z, considering only the mixed evolver (QCD/QED)
+  perens_t evolve_QED_Zmixed_to_1_ov_a() const
+  {
+    perens_t out=*this;
+    
+    evolve_QED_Zbil_mixed_to_1_ov_a(out);
+    evolve_QED_Zmeslep_mixed_to_1_ov_a(out);
+    
+    return out;
+  }
   
   /////////////////////////////////////////////////////////////////
   

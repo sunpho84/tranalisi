@@ -125,6 +125,7 @@ ComputeZQCD                         DEBUG_PRINTF("Found ComputeZQCD\n");return T
 CorrectOa2UsingGtilde               DEBUG_PRINTF("Found CorrectOa2UsingGtilde\n");return TK_CORRECT_OA2_USING_GTILDE;
 CorrectOa2UsingPTilde               DEBUG_PRINTF("Found CorrectOa2UsingPTilde\n");return TK_CORRECT_OA2_USING_PTILDE;
 Evolve                              DEBUG_PRINTF("Found Evolve\n");return TK_EVOLVE;
+EvolveQEDZMixedTo1OvA               DEBUG_PRINTF("Found EvolveQEDZMixedTo1OvA\n");return TK_EVOLVE_QED_ZMIXED_TO_1_OV_A;
 ExtrapolateTo0P2                    DEBUG_PRINTF("Found ExtrapolateTo0P2\n");return TK_EXTRAPOLATE_TO_0_P2;
 ExtrapolateTo0P2Range               DEBUG_PRINTF("Found ExtrapolateTo0P2Range\n");return TK_EXTRAPOLATE_TO_0_P2_RANGE;
 FreeTheory                          DEBUG_PRINTF("Found FreeTheory\n");return TK_FREE_THEORY;

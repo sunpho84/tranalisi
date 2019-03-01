@@ -110,6 +110,7 @@ using namespace scan;
 %token TK_COMPUTE_Z
 %token TK_COMPUTE_Z_QCD
 %token TK_EVOLVE
+%token TK_EVOLVE_QED_ZMIXED_TO_1_OV_A
 %token TK_LIST_ENSEMBLES
 %token TK_PLOT_Z
 %token TK_PRINT_DISCR
@@ -168,6 +169,7 @@ commands:
         | commands select_r
         | commands sea_chir_extrap
         | commands evolve
+	| commands evolve_QED_Zmixed_to_1_ov_a
         | commands assemble_QED_greenfunctions
         | commands QED_greenfunctions_are_assembled
         | commands match_to_W_reg
@@ -346,6 +348,9 @@ QED_greenfunctions_are_assembled: TK_QED_GREENFUNCTIONS_ARE_ASSEMBLED '(' ')' {v
 
 ;
 evolve: TK_EVOLVE '(' ')' {evolve_all();}
+;
+
+evolve_QED_Zmixed_to_1_ov_a : TK_EVOLVE_QED_ZMIXED_TO_1_OV_A '(' ')' {evolve_QED_Zmixed_to_1_ov_a_all();}
 ;
 
 match_to_W_reg: TK_MATCH_TO_W_REG '(' ')' {match_to_W_reg_all();}

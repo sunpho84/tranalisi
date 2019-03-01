@@ -29,9 +29,27 @@ vector<perens_t::task_t> perens_t::get_Zmeslep_tasks(const vector<const perens_t
   return Zmeslep_tasks;
 }
 
-void perens_t::match_to_W_reg_Zmeslep(perens_t& out) const
+void perens_t::evolve_QED_Zmeslep_mixed_to_1_ov_a(perens_t& out) const
 {
-  CRASH("");
+  cout<<"Evolving Zmeslep"<<endl;
+  
+  for(size_t im_r_im_r_iop_iproj_imeslepmom=0;im_r_im_r_iop_iproj_imeslepmom<im_r_im_r_iop_iproj_imeslepmom_ind.max();im_r_im_r_iop_iproj_imeslepmom++)
+    {
+      const vector<size_t> im_r_im_r_iop_iproj_imeslepmom_comps=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom);
+      const size_t iop=im_r_im_r_iop_iproj_imeslepmom_comps[4];
+      const size_t iproj=im_r_im_r_iop_iproj_imeslepmom_comps[5];
+      const size_t imeslep_mom=im_r_im_r_iop_iproj_imeslepmom_comps[6];
+      const double p2=all_moms[meslepmoms()[imeslep_mom][0]].p(L).norm2();
+      
+      const double gamma=4;
+      const double alphas=0.3;
+      double evol=0.0;
+      if(iop==0 and iproj==0)
+	evol=alphas/pow(4*M_PI,3.0)*log(p2)*gamma*0.5;
+      
+      out.Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom]=
+	Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom]+evol;
+    }
 }
 
 void perens_t::compute_Zmeslep(const bool also_QCD,const bool also_QED)

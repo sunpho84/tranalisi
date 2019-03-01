@@ -185,7 +185,7 @@ int main()
   
   const djack_t dZs_fr_Zp_fitted=(DG2_FR_G2_SAME-DG2_FR_G2_OPPO)/2.0;
   cout<<"dZs_fr_Zp fitted: "<<smart_print(dZs_fr_Zp_fitted)<<endl;
-  cout<<M_SAME.ave()/a_GeVMOne[ib]<<" "<<dZs_fr_Zp_fitted<<endl;
+  cout<<sqr(a_GeVMOne[ib])<<" "<<sqr(M_SAME.ave()/a_GeVMOne[ib])<<" "<<dZs_fr_Zp_fitted<<endl;
   
   // const djack_t dZs_fr_Zp_fitted_with_same_const=(DG2_FR_G2_SAME_constfit-DG2_FR_G2_OPPO)/2.0;
   // cout<<"dZs_fr_Zp fitted with \"same\" constant: "<<smart_print(dZs_fr_Zp_fitted_with_same_const)<<endl;

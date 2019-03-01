@@ -84,7 +84,7 @@ void perens_t::write_pars(const string &path) const
   output<<"TMin "<<tmin<<endl;
   output<<"TMax "<<tmax<<endl;
   
-  output<<"ainv "<<ainv<<endl;
+  output<<"aInv "<<ainv<<endl;
 }
 
 perens_t& perens_t::allocate()
@@ -445,7 +445,8 @@ perens_t perens_t::match_to_W_reg() const
 {
   perens_t out=*this;
   
-  match_to_W_reg_Zmeslep(out);
+  CRASH("");
+  //match_to_W_reg_Zmeslep(out);
   
   return out;
 }
