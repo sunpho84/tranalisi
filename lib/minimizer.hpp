@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include <tools.hpp>
+
 using namespace std;
 
 //////////////////////////////////////////////// Minuit1 implementation //////////////////////////
@@ -37,6 +39,14 @@ class par_t
   double val;
   double err;
   bool is_fixed;
+  double min{0.0};
+  double max{0.0};
+  
+  void SetLimits(double _min,const double _max)
+  {
+    min=_min;
+    max=_max;
+  }
   
   par_t(const string &name,double val,double err) : name(name),val(val),err(err),is_fixed(false) {}
 };
@@ -59,6 +69,19 @@ public:
   //! add a parameter
   void add(const string &name,double val,double err)
   {pars.push_back(par_t(name,val,err));}
+  
+  void setlimits(const string &name,double min,double max)
+  {
+    bool found=false;
+    for(auto &p : pars)
+      if(p.name==name and found==false)
+	{
+	  found=true;
+	  p.SetLimits(min,max);
+	}
+    
+    if(not found) CRASH("%s not found",name.c_str());
+  }
   
   //! set a parameter
   void set(int ipar,double val)
@@ -122,7 +145,8 @@ class minimizer_t
     fun_npars=pars.size();
     for(size_t ipar=0;ipar<pars.size();ipar++)
       {
-	minu.DefineParameter(ipar,pars.pars[ipar].name.c_str(),pars.pars[ipar].val,pars.pars[ipar].err,0.0,0.0);
+	auto &p=pars.pars[ipar];
+	minu.DefineParameter(ipar,p.name.c_str(),p.val,p.err,p.min,p.max);
 	if(pars.pars[ipar].is_fixed) minu.FixParameter(ipar);
       }
   }
