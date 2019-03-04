@@ -3,7 +3,7 @@
 int T,L;
 int TH;
 
-vector<dcomplex> read_vector(const string &path,int n,int nskip=0)
+vector<dcompl_t> read_vector(const string &path,int n,int nskip=0)
 {
   raw_file_t data(path,"r");
   
@@ -11,7 +11,7 @@ vector<dcomplex> read_vector(const string &path,int n,int nskip=0)
   for(int iskip=0;iskip<nskip;iskip++)
     data.skip_line();
   
-  vector<dcomplex> d;
+  vector<dcompl_t> d;
   
   for(int i=0;i<n;i++)
     {
@@ -27,7 +27,7 @@ vector<dcomplex> read_vector(const string &path,int n,int nskip=0)
 template <typename T>
 T average(const vector<T>& v)
 {
-  return accumulate(v.begin(),v.end(),dcomplex{0,0})/(double)v.size();
+  return accumulate(v.begin(),v.end(),dcompl_t{0,0})/(double)v.size();
 }
 
 double average_double(const vector<double>& v)

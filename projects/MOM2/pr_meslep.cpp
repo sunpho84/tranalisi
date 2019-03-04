@@ -517,7 +517,7 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 		    for(int ipoint=0;ipoint<y_plot.size();ipoint++)
 		      cout<<" "<<x[ipoint]<<" "<<y_plot[ipoint][ijack]<<" "<<y_plot[ipoint].err()<<endl;
 		  }
-		    
+		
 		write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole,meslepins](double x)->djack_t{return poly_eval<djvec_t>(coeffs[meslepins],x)/(sub_pole?x:1);},x,y_plot);
 		plot->write_ave_err(0.0,pr_chir[iout].ave_err());
 	      }
