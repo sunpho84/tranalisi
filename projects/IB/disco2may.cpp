@@ -204,8 +204,6 @@ int main(int narg,char **arg)
     cout<< "dataset generated, starting analysis"<<endl;
   }
   else cout<<"dataset checked, starting analysis"<<endl;
-  index_t indhits({{"diagram",ndiag},{"nhits",div_nhits.size()}});
-  index_t indconfs({{"diagram",ndiag},{"nconf",nconfs.size()}});
   vector<ofstream> plot_conf_ave(ndiag), plot_conf_err(ndiag), plot_hits_ave(ndiag), plot_hits_err(ndiag);
   //opening outputs
   for(int idiag=0;idiag<ndiag;idiag++)
@@ -218,10 +216,10 @@ int main(int narg,char **arg)
   //opening input
   raw_file_t data("plots/data.dat","r");
   double dat;
-  array<vector<double>,ndiag> slopesconf,squared_slopesconf,errorsconf,squared_errorsconf;
   array<array<vector<double>,9>,ndiag> slopes,squared_slopes,errors,squared_errors;
   ///performing averages and errors and putting everything in output files.
     for(size_t jdiv=0;jdiv<nconfs.size();jdiv++){
+      array<vector<double>,ndiag> slopesconf,squared_slopesconf,errorsconf,squared_errorsconf;
       for(size_t jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++){
 	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++){
 	  for(size_t hrange=0;hrange<div_nhits.back()/div_nhits[hdiv];hrange++){
@@ -247,9 +245,10 @@ int main(int narg,char **arg)
 	  plot_conf_err[idiag]<<nconfs[jdiv]<<" "<<average_double(errorsconf[idiag])<<" "<<sqrt(average_double(squared_errorsconf[idiag])-pot_n(average_double(errorsconf[idiag]),2))/(errorsconf[idiag].size()-1)<<endl;
 	}
     }
-    	  ///printing average and errors vs. 1/nhits
+    ///printing average and errors vs. 1/nhits
     for(int idiag=0;idiag<ndiag;idiag++)
-      {for(int hdiv=0;hdiv<9;hdiv++)
+      {
+	for(int hdiv=0;hdiv<9;hdiv++)
 	  {
 	    plot_hits_ave[idiag]<<1./div_nhits[hdiv]<<" "<<average_double(slopes[idiag][hdiv])<<" "<<sqrt(average_double(squared_slopes[idiag][hdiv])-pot_n(average_double(slopes[idiag][hdiv]),2))/(slopes[idiag][hdiv].size()-1)<<endl;
 	    plot_hits_err[idiag]<<1./div_nhits[hdiv]<<" "<<average_double(errors[idiag][hdiv])<<" "<<sqrt(average_double(squared_errors[idiag][hdiv])-pot_n(average_double(errors[idiag][hdiv]),2))/(errors[idiag][hdiv].size()-1)<<endl;
