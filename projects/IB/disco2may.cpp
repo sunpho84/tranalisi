@@ -3,7 +3,7 @@
 int T,L;
 int TH;
 
-vector<dcomplex> read_vector(const string &path,int n,int nskip=0)
+vector<dcompl_t> read_vector(const string &path,int n,int nskip=0)
 {
   raw_file_t data(path,"r");
   
@@ -11,7 +11,7 @@ vector<dcomplex> read_vector(const string &path,int n,int nskip=0)
   for(int iskip=0;iskip<nskip;iskip++)
     data.skip_line();
   
-  vector<dcomplex> d;
+  vector<dcompl_t> d;
   
   for(int i=0;i<n;i++)
     {
@@ -27,7 +27,7 @@ vector<dcomplex> read_vector(const string &path,int n,int nskip=0)
 template <typename T>
 T average(const vector<T>& v)
 {
-  return accumulate(v.begin(),v.end(),dcomplex{0,0})/(double)v.size();
+  return accumulate(v.begin(),v.end(),dcompl_t{0,0})/(double)v.size();
 }
 
 double average_double(const vector<double>& v)
@@ -103,42 +103,11 @@ int main(int narg,char **arg)
   const int diag[ndiag]={1,2,4,5,6};
   
   
-  ///checking accessibility of input files
-  bool check=true;
-  for(size_t idiag=0;idiag<ndiag;idiag++)
-    {
-      for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	{
-	  check*=checkmethod(combine("plots/hits_variation/EU%d_averages_%03d_hits",diag[idiag],div_nhits[hdiv]));
-	  check*=checkmethod(combine("plots/hits_variation/EU%d_errors_%03d_hits",diag[idiag],div_nhits[hdiv]));
-	}
-      for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
-	{
-	  check*=checkmethod(combine("plots/confs_variation/EU%d_averages_%03d_confs",diag[idiag],nconfs[jdiv]));
-	  check*=checkmethod(combine("plots/confs_variation/EU%d_errors_%03d_confs",diag[idiag],nconfs[jdiv]));
-	}
-    }
-  if(!check){
+  ///checking accessibility of data file. If unaccessible, acquisition routine will start in order to generate it.
+  if(!checkmethod("plots/data.dat")){
     cout<<"Data set incomplete, absent or unaccessible. Starting generation routine"<<endl;
-    ///opening output files
-    index_t indhits({{"diagram",ndiag},{"nhits",div_nhits.size()}});
-    index_t indconfs({{"diagram",ndiag},{"nconf",nconfs.size()}});
-    vector<raw_file_t> fouthiterr(indhits.max()), fouthitave(indhits.max()), foutconfserr(indconfs.max()), foutconfsave(indconfs.max());
-    for(size_t idiag=0;idiag<ndiag;idiag++)
-      {
-	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	  {
-	    ///output files containing all averages and errorbars of the correction to the mass, given by respective diagrams, for a fixed number of hits
-	    fouthitave[indhits({idiag,hdiv})].open(combine("plots/hits_variation/EU%d_averages_%03d_hits",diag[idiag],div_nhits[hdiv]),"w");
-	    fouthiterr[indhits({idiag,hdiv})].open(combine("plots/hits_variation/EU%d_errors_%03d_hits",diag[idiag],div_nhits[hdiv]),"w");
-	  }
-	for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
-	  {
-	    ///output files containing all averages and errorbars of the correction to the mass, given by respective diagrams, for a fixed number of gauge configurations
-	    foutconfsave[indconfs({idiag,jdiv})].open(combine("plots/confs_variation/EU%d_averages_%03d_confs",diag[idiag],nconfs[jdiv]),"w");
-	    foutconfserr[indconfs({idiag,jdiv})].open(combine("plots/confs_variation/EU%d_error_%03d_confs",diag[idiag],nconfs[jdiv]),"w");
-	  }
-      }
+    ///opening output file
+    raw_file_t data("plots/data.dat","w");
     ///cycles over configurations numbers, configurations ranges, hits numbers and hits ranges
     for(size_t jdiv=0;jdiv<nconfs.size();jdiv++){
       for(size_t jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++){
@@ -218,14 +187,8 @@ int main(int narg,char **arg)
 	    //  cout<<"Derivative of the diagram:"<<endl;
 	    for(size_t idiag=0;idiag<ndiag;idiag++)
 	      {
-		fouthiterr[indhits({idiag,hdiv})].write(SL[idiag].err());
-		cout<<fouthiterr[indhits({idiag,hdiv})].get_path()<<endl;
-		fouthitave[indhits({idiag,hdiv})].write(SL[idiag].ave());
-		cout<<fouthitave[indhits({idiag,hdiv})].get_path()<<endl;
-		foutconfserr[indconfs({idiag,jdiv})].write(SL[idiag].err());
-		cout<<foutconfserr[indconfs({idiag,jdiv})].get_path()<<endl;
-		foutconfsave[indconfs({idiag,jdiv})].write(SL[idiag].ave());
-		cout<<foutconfsave[indconfs({idiag,jdiv})].get_path()<<endl;
+		data.bin_write(SL[idiag].err());
+		data.bin_write(SL[idiag].ave());
 		cout<<"EU"<<diag[idiag]<<": "<<SL[idiag].ave_err()<<endl;
 	      }
 	    
@@ -241,45 +204,56 @@ int main(int narg,char **arg)
     cout<< "dataset generated, starting analysis"<<endl;
   }
   else cout<<"dataset checked, starting analysis"<<endl;
-  
-  ///performing averages and errors and putting everything in output files.
+  index_t indhits({{"diagram",ndiag},{"nhits",div_nhits.size()}});
+  index_t indconfs({{"diagram",ndiag},{"nconf",nconfs.size()}});
   vector<ofstream> plot_conf_ave(ndiag), plot_conf_err(ndiag), plot_hits_ave(ndiag), plot_hits_err(ndiag);
-    for(int idiag=0;idiag<ndiag;idiag++)
+  //opening outputs
+  for(int idiag=0;idiag<ndiag;idiag++)
     {
       plot_conf_ave[idiag].open(combine("plots/fit_results/EU%d_average_vs_nconfs",diag[idiag]));
       plot_conf_err[idiag].open(combine("plots/fit_results/EU%d_errors_vs_nconfs",diag[idiag]));
       plot_hits_ave[idiag].open(combine("plots/fit_results/EU%d_average_vs_nhits",diag[idiag]));
       plot_hits_err[idiag].open(combine("plots/fit_results/EU%d_errors_vs_nhits",diag[idiag]));
-      for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	{
-	  vector<double> slopes(div_nhits.back()/div_nhits[hdiv]),squared_slopes, errors(div_nhits.back()/div_nhits[hdiv]), squared_errors;
-	  raw_file_t finave(combine("plots/hits_variation/EU%d_averages_%03d_hits",diag[idiag],div_nhits[hdiv]),"r");
-	  finave.bin_read(slopes);
-	  for(auto &a : slopes)
-	    squared_slopes.push_back(pot_n(a,2));
-	  raw_file_t finerr(combine("plots/hits_variation/EU%d_errors_%03d_hits",diag[idiag],div_nhits[hdiv]),"r");
-	  finerr.bin_read(errors);
-	  for(auto &a : errors)
-	    squared_errors.push_back(pot_n(a,2));
-	  ///printing average and errors vs. 1/nhits
-	  plot_hits_ave[idiag]<<1./div_nhits[hdiv]<<" "<<average_double(slopes)<<" "<<sqrt(average_double(squared_slopes)-pot_n(average_double(slopes),2))/(slopes.size()-1)<<endl;
-	  plot_hits_err[idiag]<<1./div_nhits[hdiv]<<" "<<average_double(errors)<<" "<<sqrt(average_double(squared_errors)-pot_n(average_double(errors),2))/(errors.size()-1)<<endl;
+    }
+  //opening input
+  raw_file_t data("plots/data.dat","r");
+  double dat;
+  array<vector<double>,ndiag> slopesconf,squared_slopesconf,errorsconf,squared_errorsconf;
+  array<array<vector<double>,9>,ndiag> slopes,squared_slopes,errors,squared_errors;
+  ///performing averages and errors and putting everything in output files.
+    for(size_t jdiv=0;jdiv<nconfs.size();jdiv++){
+      for(size_t jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++){
+	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++){
+	  for(size_t hrange=0;hrange<div_nhits.back()/div_nhits[hdiv];hrange++){
+	    for(int idiag=0;idiag<ndiag;idiag++){
+	      data.bin_read(dat);
+	      errors[idiag][hdiv].push_back(dat);
+	      errorsconf[idiag].push_back(dat);
+	      squared_errors[idiag][hdiv].push_back(pot_n(dat,2));
+	      squared_errorsconf[hdiv].push_back(pot_n(dat,2));
+	      data.bin_read(dat);
+	      slopes[idiag][hdiv].push_back(dat);
+	      slopesconf[hdiv].push_back(dat);
+	      squared_slopes[idiag][hdiv].push_back(pot_n(dat,2));
+	      squared_slopesconf[hdiv].push_back(pot_n(dat,2));
+	    }
+	  }
 	}
-      for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
+      }
+      ///printing average and errors vs. nconfs
+      for(int idiag=0;idiag<ndiag;idiag++)
 	{
-	  vector<double> slopes(nconfs.back()/nconfs[jdiv]),squared_slopes, errors(nconfs.back()/nconfs[jdiv]), squared_errors;
-	  raw_file_t finave(combine("plots/confs_variation/EU%d_averages_%03d_confs",diag[idiag],nconfs[jdiv]),"r");
-	  finave.bin_read(slopes);
-	  for(auto &a : slopes)
-	    squared_slopes.push_back(pot_n(a,2));
-	  raw_file_t finerr(combine("plots/confs_variation/EU%d_error_%03d_confs",diag[idiag],nconfs[jdiv]),"r");
-	  finerr.bin_read(errors);
-	  for(auto &a : errors)
-	    squared_errors.push_back(pot_n(a,2));
-	  ///printing average and errors vs. nconfs
-	  plot_conf_ave[idiag]<<nconfs[jdiv]<<" "<<average_double(slopes)<<" "<<sqrt(average_double(squared_slopes)-pot_n(average_double(slopes),2))/(slopes.size()-1)<<endl;
-	  plot_conf_err[idiag]<<nconfs[jdiv]<<" "<<average_double(errors)<<" "<<sqrt(average_double(squared_errors)-pot_n(average_double(errors),2))/(errors.size()-1)<<endl;
+	  plot_conf_ave[idiag]<<nconfs[jdiv]<<" "<<average_double(slopesconf[idiag])<<" "<<sqrt(average_double(squared_slopesconf[idiag])-pot_n(average_double(slopesconf[idiag]),2))/(slopesconf[idiag].size()-1)<<endl;
+	  plot_conf_err[idiag]<<nconfs[jdiv]<<" "<<average_double(errorsconf[idiag])<<" "<<sqrt(average_double(squared_errorsconf[idiag])-pot_n(average_double(errorsconf[idiag]),2))/(errorsconf[idiag].size()-1)<<endl;
 	}
     }
+    	  ///printing average and errors vs. 1/nhits
+    for(int idiag=0;idiag<ndiag;idiag++)
+      {for(int hdiv=0;hdiv<9;hdiv++)
+	  {
+	    plot_hits_ave[idiag]<<1./div_nhits[hdiv]<<" "<<average_double(slopes[idiag][hdiv])<<" "<<sqrt(average_double(squared_slopes[idiag][hdiv])-pot_n(average_double(slopes[idiag][hdiv]),2))/(slopes[idiag][hdiv].size()-1)<<endl;
+	    plot_hits_err[idiag]<<1./div_nhits[hdiv]<<" "<<average_double(errors[idiag][hdiv])<<" "<<sqrt(average_double(squared_errors[idiag][hdiv])-pot_n(average_double(errors[idiag][hdiv]),2))/(errors[idiag][hdiv].size()-1)<<endl;
+	  }
+      }
   return 0;
 }
