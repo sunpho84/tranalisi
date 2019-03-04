@@ -495,7 +495,8 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 	    
 	    //fit, store and write the result
 	    coeffs[meslepins]=poly_fit(x,y,(sub_pole?2:1));
-	    cout<<r_r_iop_iproj_imeslepmom_ind.descr(r_r_iop_iproj_imeslepmom)<<" "<<coeffs[meslepins]<<endl;	    
+	    cout<<this->dir_path<<" "<<r_r_iop_iproj_imeslepmom_ind.descr(r_r_iop_iproj_imeslepmom)<<" "<<coeffs[meslepins]<<endl;
+	    
 	    if(std::isnan(coeffs[meslepins][0][0])) coeffs[meslepins]=0.0;
 	    
 	    const size_t iout=out.im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({0,r_in,0,r_ou,meslepins,iop,iproj,imeslepmom});
