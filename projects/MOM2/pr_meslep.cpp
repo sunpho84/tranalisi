@@ -385,6 +385,9 @@ void perens_t::average_r_pr_meslep(perens_t &out,const array<double,2> w) const
 		im_r_im_r_iop_iproj_imeslepmom_comp[3]=r;
 	      const size_t i=im_r_im_r_meslepins_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom_comp);
 	      pr_rave[out_i]+=w[r]*pr[i];
+	      
+	      for(int ijack=0;ijack<=njacks;ijack++)
+		cout<<" "<<ijack<<" "<<im_r_im_r_meslepins_iop_iproj_imeslepmom_ind.descr(i)<<" "<<pr[i][ijack]<<endl;
 	    }
 	  pr_rave[out_i]/=nr;
 	}
