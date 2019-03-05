@@ -29,24 +29,11 @@ T average(const vector<T>& v)
 {
   return accumulate(v.begin(),v.end(),dcompl_t{0,0})/(double)v.size();
 }
-
-double average_double(const vector<double>& v)
-{
-  return accumulate(v.begin(),v.end(),double (0.0))/(double)v.size();
-}
-
 ///compute divisors
 vector <int> divisors(const int n)
 {
   vector <int> b;
   for(int idiv=1;idiv<n+1;idiv++) if (n%idiv==0) b.push_back(idiv);
-  return b;
-}
-///compute integer powers
-template <typename T>
-double pot_n(T a,int  n){
-  T b=1;
-  for (int i=0; i<n; i++){b*=a;}
   return b;
 }
 ///checking input files accessibility
@@ -184,19 +171,13 @@ int main(int narg,char **arg)
 	      }
 	    cout<<endl;
 	    cout << "confs: " << nconfs[jdiv] << "; range confs: " << jrange << "; hits: " << div_nhits[hdiv] << "; range hits: " << hrange <<endl;
-	    //  cout<<"Derivative of the diagram:"<<endl;
+	    ///writing on data file
 	    for(size_t idiag=0;idiag<ndiag;idiag++)
 	      {
 		data.bin_write(SL[idiag].err());
 		data.bin_write(SL[idiag].ave());
 		cout<<"EU"<<diag[idiag]<<": "<<SL[idiag].ave_err()<<endl;
 	      }
-	    
-	    // pion_EU1_rat.ave_err().write("plots/EU1_rat.xmg");
-	    // pion_EU2_rat.ave_err().write("plots/EU2_rat.xmg");
-	    // pion_EU4_rat.ave_err().write("plots/EU4_rat.xmg");
-	    // pion_EU5_rat.ave_err().write("plots/EU5_rat.xmg");
-	    // pion_EU6_rat.ave_err().write("plots/EU6_rat.xmg");
 	  }
 	}
       }
@@ -204,10 +185,10 @@ int main(int narg,char **arg)
     cout<< "dataset generated, starting analysis"<<endl;
   }
   else {cout<<"dataset checked, starting analysis"<<endl;}
-  ///opening input
+  ///opening data file
   raw_file_t data("plots/data.dat","r");
   ///opening output
-  vector<ofstream> plot_conf_ave(ndiag), plot_conf_err(ndiag), plot_hits_ave(ndiag), plot_hits_err(ndiag);
+  vector<grace_file_t> plot_conf_ave(ndiag), plot_conf_err(ndiag), plot_hits_ave(ndiag), plot_hits_err(ndiag);
   for(int idiag=0;idiag<ndiag;idiag++)
 	{
 	  plot_conf_ave[idiag].open(combine("plots/fit_results/EU%d_average_vs_nconfs",diag[idiag]));
@@ -218,9 +199,9 @@ int main(int narg,char **arg)
   ///performing averages and errors and putting everything in output files.
   double dat;
   index_t ind({{"diagrams",ndiag},{"nhits",div_nhits.size()}});
-  vector<vector<double>> slopes(ind.max(),vector<double>(0)),squared_slopes(ind.max(),vector<double>(0)),errors(ind.max(),vector<double>(0)),squared_errors(ind.max(),vector<double>(0));
+  vector<vector<double>> slopes(ind.max(),vector<double>(0)),errors(ind.max(),vector<double>(0));
     for(size_t jdiv=0;jdiv<nconfs.size();jdiv++){
-      array<vector<double>,ndiag> slopesconf,squared_slopesconf,errorsconf,squared_errorsconf;
+      array<vector<double>,ndiag> slopesconf,errorsconf;
       for(size_t jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++){
 	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++){
 	  for(size_t hrange=0;hrange<div_nhits.back()/div_nhits[hdiv];hrange++){
@@ -228,13 +209,9 @@ int main(int narg,char **arg)
 	      data.bin_read(dat);
 	      errors[ind({idiag,hdiv})].push_back(dat);
 	      errorsconf[idiag].push_back(dat);
-	      squared_errors[ind({idiag,hdiv})].push_back(pot_n(dat,2));
-	      squared_errorsconf[idiag].push_back(pot_n(dat,2));
 	      data.bin_read(dat);
 	      slopes[ind({idiag,hdiv})].push_back(dat);
 	      slopesconf[idiag].push_back(dat);
-	      squared_slopes[ind({idiag,hdiv})].push_back(pot_n(dat,2));
-	      squared_slopesconf[idiag].push_back(pot_n(dat,2));
 	    }
 	  }
 	}
@@ -242,10 +219,15 @@ int main(int narg,char **arg)
       ///printing average and errors vs. nconfs
       for(int idiag=0;idiag<ndiag;idiag++)
 	{
-	  plot_conf_ave[idiag]<<nconfs[jdiv]<<" "<<average_double(slopesconf[idiag])<<" "
-			      <<sqrt(average_double(squared_slopesconf[idiag])-pot_n(average_double(slopesconf[idiag]),2))/(slopesconf[idiag].size()-1)<<endl;
-	  plot_conf_err[idiag]<<nconfs[jdiv]<<" "<<average_double(errorsconf[idiag])<<" "
-			      <<sqrt(average_double(squared_errorsconf[idiag])-pot_n(average_double(errorsconf[idiag]),2))/(errorsconf[idiag].size()-1)<<endl;
+	  ///generating valarray from vectors
+	  valarray<double> m(slopesconf[idiag].data(),slopesconf[idiag].size()),e(errorsconf[idiag].data(),errorsconf[idiag].size());
+	  ///creating ave_err_t variables
+	  ave_err_t slop, er;
+	  slop=range_ave_stddev(m,slopesconf[idiag].size());
+	  er=range_ave_stddev(e,errorsconf[idiag].size());
+	  ///writing grace files
+	  plot_conf_ave[idiag].write_ave_err(nconfs[jdiv],slop);
+	  plot_conf_err[idiag].write_ave_err(nconfs[jdiv],er);
 	}
     }
     ///printing average and errors vs. 1/nhits
@@ -253,10 +235,15 @@ int main(int narg,char **arg)
       {
 	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
 	  {
-	    plot_hits_ave[idiag]<<1./div_nhits[hdiv]<<" "<<average_double(slopes[ind({idiag,hdiv})])<<" "
-				<<sqrt((double)average_double(squared_slopes[ind({idiag,hdiv})])-(double)pot_n(average_double(slopes[ind({idiag,hdiv})]),2))/((double)slopes[ind({idiag,hdiv})].size()-1)<<endl;
-	    plot_hits_err[idiag]<<1./div_nhits[hdiv]<<" "<<average_double(errors[ind({idiag,hdiv})])<<" "
-				<<sqrt((double)average_double(squared_errors[ind({idiag,hdiv})])-(double)pot_n(average_double(errors[ind({idiag,hdiv})]),2))/((double)errors[ind({idiag,hdiv})].size()-1)<<endl;
+	    ///generating valarray from vectors
+	    valarray<double> m(slopes[ind({idiag,hdiv})].data(),slopes[ind({idiag,hdiv})].size()),e(errors[ind({idiag,hdiv})].data(),errors[ind({idiag,hdiv})].size());
+	    ///creating ave_err_t variables
+	    ave_err_t slop, er;
+	    slop=range_ave_stddev(m,slopes[ind({idiag,hdiv})].size());
+	    er=range_ave_stddev(e,errors[ind({idiag,hdiv})].size());
+	    ///writing grace files
+	    plot_hits_ave[idiag].write_ave_err(1./div_nhits[hdiv],slop);
+	    plot_hits_err[idiag].write_ave_err(1./div_nhits[hdiv],er);
 	  }
       }
     return 0;
