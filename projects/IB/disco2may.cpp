@@ -32,7 +32,7 @@ T average(const vector<T>& v)
 
 double average_double(const vector<double>& v)
 {
-  return accumulate(v.begin(),v.end(),0)/(double)v.size();
+  return accumulate(v.begin(),v.end(),double (0.0))/(double)v.size();
 }
 
 ///compute divisors
@@ -204,20 +204,22 @@ int main(int narg,char **arg)
     cout<< "dataset generated, starting analysis"<<endl;
   }
   else {cout<<"dataset checked, starting analysis"<<endl;}
-  vector<ofstream> plot_conf_ave(ndiag), plot_conf_err(ndiag), plot_hits_ave(ndiag), plot_hits_err(ndiag);
-  //opening input
+  ///opening input
   raw_file_t data("plots/data.dat","r");
-  double dat;
-  index_t ind({{"diagrams",ndiag},{"nhits",div_nhits.size()}});
-  vector<vector<double>> slopes(ind.max(),vector<double>(0)),squared_slopes(ind.max(),vector<double>(0)),errors(ind.max(),vector<double>(0)),squared_errors(ind.max(),vector<double>(0));
-      for(int idiag=0;idiag<ndiag;idiag++)
+  ///opening output
+  vector<ofstream> plot_conf_ave(ndiag), plot_conf_err(ndiag), plot_hits_ave(ndiag), plot_hits_err(ndiag);
+  for(int idiag=0;idiag<ndiag;idiag++)
 	{
 	  plot_conf_ave[idiag].open(combine("plots/fit_results/EU%d_average_vs_nconfs",diag[idiag]));
 	  plot_conf_err[idiag].open(combine("plots/fit_results/EU%d_errors_vs_nconfs",diag[idiag]));
+	  plot_hits_ave[idiag].open(combine("plots/fit_results/EU%d_average_vs_nhits",diag[idiag]));
+	  plot_hits_err[idiag].open(combine("plots/fit_results/EU%d_errors_vs_nhits",diag[idiag]));
 	}
   ///performing averages and errors and putting everything in output files.
+  double dat;
+  index_t ind({{"diagrams",ndiag},{"nhits",div_nhits.size()}});
+  vector<vector<double>> slopes(ind.max(),vector<double>(0)),squared_slopes(ind.max(),vector<double>(0)),errors(ind.max(),vector<double>(0)),squared_errors(ind.max(),vector<double>(0));
     for(size_t jdiv=0;jdiv<nconfs.size();jdiv++){
-      cout<<1<<endl;
       array<vector<double>,ndiag> slopesconf,squared_slopesconf,errorsconf,squared_errorsconf;
       for(size_t jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++){
 	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++){
@@ -233,7 +235,6 @@ int main(int narg,char **arg)
 	      slopesconf[idiag].push_back(dat);
 	      squared_slopes[ind({idiag,hdiv})].push_back(pot_n(dat,2));
 	      squared_slopesconf[idiag].push_back(pot_n(dat,2));
-	      cout<<2<<endl;
 	    }
 	  }
 	}
@@ -250,14 +251,12 @@ int main(int narg,char **arg)
     ///printing average and errors vs. 1/nhits
     for(size_t idiag=0;idiag<ndiag;idiag++)
       {
-	plot_hits_ave[idiag].open(combine("plots/fit_results/EU%d_average_vs_nhits",diag[idiag]));
-	plot_hits_err[idiag].open(combine("plots/fit_results/EU%d_errors_vs_nhits",diag[idiag]));
 	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
 	  {
 	    plot_hits_ave[idiag]<<1./div_nhits[hdiv]<<" "<<average_double(slopes[ind({idiag,hdiv})])<<" "
-				<<sqrt(average_double(squared_slopes[ind({idiag,hdiv})])-pot_n(average_double(slopes[ind({idiag,hdiv})]),2))/(slopes[ind({idiag,hdiv})].size()-1)<<endl;
+				<<sqrt((double)average_double(squared_slopes[ind({idiag,hdiv})])-(double)pot_n(average_double(slopes[ind({idiag,hdiv})]),2))/((double)slopes[ind({idiag,hdiv})].size()-1)<<endl;
 	    plot_hits_err[idiag]<<1./div_nhits[hdiv]<<" "<<average_double(errors[ind({idiag,hdiv})])<<" "
-				<<sqrt(average_double(squared_errors[ind({idiag,hdiv})])-pot_n(average_double(errors[ind({idiag,hdiv})]),2))/(errors[ind({idiag,hdiv})].size()-1)<<endl;
+				<<sqrt((double)average_double(squared_errors[ind({idiag,hdiv})])-(double)pot_n(average_double(errors[ind({idiag,hdiv})]),2))/((double)errors[ind({idiag,hdiv})].size()-1)<<endl;
 	  }
       }
     return 0;
