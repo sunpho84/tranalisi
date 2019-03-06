@@ -176,15 +176,6 @@ public:
   void reset_cur_col()
   {cur_col=0;}
   
-  //! set logscale
-  void set_logscale(bool yes=true)
-  {
-    if(yes)
-      (*this)<<"@    xaxes scale Logarithmic\n";
-    else
-      (*this)<<"@    xaxes scale Normal\n";
-  }
-  
   //! set a line color scheme
   void set_line_color_scheme(const initializer_list<grace::color_t> &oth)
   {line_color_scheme.assign(oth.begin(),oth.end());}
@@ -262,6 +253,15 @@ public:
   void set_subtitle_size(double size)
   {subtitle_size=size;}
   
+  //! set logscale of x-axis
+  void set_xaxis_logscale(bool yes=true)
+  {
+    if(yes)
+      (*this)<<"@    xaxes scale Logarithmic\n";
+    else
+      (*this)<<"@    xaxes scale Normal\n";
+  }
+  
   //! set title of x-axis
   void set_xaxis_label(string label)
   {xaxis_label=label;}
@@ -296,6 +296,15 @@ public:
   //! set max for x-axis
   void set_xaxis_max(double xmax)
   {xaxis_max=xmax;}
+  
+  //! set logscale of y-axis
+  void set_yaxis_logscale(bool yes=true)
+  {
+    if(yes)
+      (*this)<<"@    yaxes scale Logarithmic\n";
+    else
+      (*this)<<"@    yaxes scale Normal\n";
+  }
   
   //! set max for y-axis
   void set_yaxis_max(double ymax)
