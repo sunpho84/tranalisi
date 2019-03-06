@@ -13,7 +13,7 @@ int main(){
   
   index_t ind({{"ind1",1},{"ind2",1}});
   vector<raw_file_t> fouthiterr(4);
-  for(int a=0;a<nconfs.size();a++)
+  for(size_t a=0;a<nconfs.size();a++)
   fouthiterr[a].open(combine("prova%d",a),"w");
   return 0;
 }
