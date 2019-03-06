@@ -3,6 +3,11 @@
 int T,L;
 int TH;
 
+//parametrization of the diagras
+ enum {EU1,EU2,EU4,EU5,EU6};
+const int ndiag=5;
+const int diag[ndiag]={1,2,4,5,6};
+
 vector<dcompl_t> read_vector(const string &path,int n,int nskip=0)
 {
   raw_file_t data(path,"r");
@@ -57,6 +62,60 @@ vector<size_t> determine_list_of_confs(const range_t& conf_range)
   return confs;
 }
 
+void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idiag,const vector<vector<double>>& slopes,const vector<vector<double>>& errors,const index_t& ind,int idim1,int idim2)
+{
+  const char* name=ind.name(idim2).c_str();
+  grace_file_t plot_ave(combine("plots/fit_results/EU%d_average_vs_%s",diag[idiag],name));
+  grace_file_t plot_err(combine("plots/fit_results/EU%d_errors_vs_%s",diag[idiag],name));
+  
+  for(grace_file_t* _g : {&plot_ave,&plot_err})
+    for(int idiag=0;idiag<ndiag;idiag++)
+      {
+	grace_file_t& g=(*_g);
+	
+	using namespace grace;
+	
+	g.set_color_scheme({ORANGE,RED,BLUE,GREEN4});
+	
+	g.set_title("cicicicci");
+	g.set_subtitle("cicrewgrehrehicicci");
+	g.set_xaxis_logscale();
+	g.set_yaxis_logscale();
+	g.set_xaxis_label("etichettax");
+	g.set_yaxis_label("etichettay");
+	g.set_line_style(line_style_t::NO_LINE);
+	g.set_settype(settype_t::XYDY);
+      }
+  
+  ///loop on different slices
+  vector<size_t> comps(3);
+  comps[0]=idiag;
+  for(size_t jdiv=0;jdiv<dim1.size();jdiv++)
+    {
+      comps[idim1]=jdiv;
+      for(size_t hdiv=0;hdiv<dim2.size();hdiv++)
+	{
+	  ///creating ave_err_t variables
+	  comps[idim2]=hdiv;
+	  const int i=ind(comps);
+	  const ave_err_t slop=range_ave_stddev(slopes[i]);
+	  const ave_err_t er=range_ave_stddev(errors[i]);
+	  
+	  ///writing grace files
+	  const double x=1.0/dim2[hdiv];
+	  plot_ave.write_ave_err(x,slop);
+	  plot_err.write_ave_err(x,er);
+	}
+      
+      for(auto& _p : {&plot_ave,&plot_err})
+	{
+	  grace_file_t& p=(*_p);
+	  p.set_legend(combine("%s=%d",ind.name(idim1).c_str(),dim1[jdiv]));
+	  p.new_data_set();
+	}
+    }
+}
+
 int main(int narg,char **arg)
 {
   //if argument was given, the input is read from pars
@@ -96,11 +155,6 @@ int main(int narg,char **arg)
   //computes the list of possible number of hits to be used
   cout<<"Nhits "<<nhits<<endl;
   vector <int> div_nhits=divisors(nhits);
-  
-  //parametrization of the diagras
-  const int ndiag=5;
-  enum {EU1,EU2,EU4,EU5,EU6};
-  const int diag[ndiag]={1,2,4,5,6};
   
   ///checking accessibility of data file. If unaccessible, acquisition routine will start in order to generate it.
   const char data_path[]="plots/data.dat";
@@ -202,34 +256,6 @@ int main(int narg,char **arg)
   ///opening data file
   raw_file_t data(data_path,"r");
   
-  ///opening output
-  vector<grace_file_t> plot_conf_ave(ndiag),plot_conf_err(ndiag),plot_hits_ave(ndiag),plot_hits_err(ndiag);
-  for(int idiag=0;idiag<ndiag;idiag++)
-    {
-      plot_conf_ave[idiag].open(combine("plots/fit_results/EU%d_average_vs_nconfs",diag[idiag]));
-      plot_conf_err[idiag].open(combine("plots/fit_results/EU%d_errors_vs_nconfs",diag[idiag]));
-      plot_hits_ave[idiag].open(combine("plots/fit_results/EU%d_average_vs_nhits",diag[idiag]));
-      plot_hits_err[idiag].open(combine("plots/fit_results/EU%d_errors_vs_nhits",diag[idiag]));
-    }
-  
-  for(vector<grace_file_t>* _g : {&plot_conf_ave,&plot_conf_err,&plot_hits_ave,&plot_hits_err})
-    for(int idiag=0;idiag<ndiag;idiag++)
-      {
-	grace_file_t& g=(*_g)[idiag];
-	
-	using namespace grace;
-	
-	g.set_color_scheme({ORANGE,RED,BLUE,GREEN4});
-	
-	g.set_title("cicicicci");
-	g.set_subtitle("cicrewgrehrehicicci");
-	g.set_xaxis_logscale();
-	g.set_xaxis_label("etichettax");
-	g.set_yaxis_label("etichettay");
-	g.set_line_style(line_style_t::NO_LINE);
-	g.set_settype(settype_t::XYDY);
-      }
-  
   ///performing averages and errors and putting everything in output files.
   index_t ind({{"diagrams",ndiag},{"nhits",div_nhits.size()},{"nconfs",nconfs.size()}});
   vector<vector<double>> slopes(ind.max(),vector<double>(0)),errors(ind.max(),vector<double>(0));
@@ -243,27 +269,10 @@ int main(int narg,char **arg)
       
   ///printing average and errors vs. 1/nhits
   for(size_t idiag=0;idiag<ndiag;idiag++)
-    for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
-      {
-	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	  {
-	    ///creating ave_err_t variables
-	    const int i=ind({idiag,hdiv,jdiv});
-	    const ave_err_t slop=range_ave_stddev(slopes[i]);
-	    const ave_err_t er=range_ave_stddev(errors[i]);
-	    
-	    ///writing grace files
-	    plot_hits_ave[idiag].write_ave_err((1+0*jdiv/10.0)/div_nhits[hdiv],slop);
-	    plot_hits_err[idiag].write_ave_err((1+0*jdiv/10.0)/div_nhits[hdiv],er);
-	  }
-	
-	for(auto& _p : {&plot_hits_ave,&plot_hits_err})
-	  {
-	    grace_file_t& p=(*_p)[idiag];
-	    p.set_legend(combine("Nconfs=%d",nconfs[jdiv]));
-	    p.new_data_set();
-	  }
-      }
+    {
+      slice_plot(div_nhits,nconfs,idiag,slopes,errors,ind,1,2);
+      slice_plot(nconfs,div_nhits,idiag,slopes,errors,ind,2,1);
+    }
   
   return 0;
 }
