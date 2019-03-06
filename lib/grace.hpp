@@ -176,6 +176,15 @@ public:
   void reset_cur_col()
   {cur_col=0;}
   
+  //! set logscale
+  void set_logscale(bool yes=true)
+  {
+    if(yes)
+      (*this)<<"@    xaxes scale Logarithmic\n";
+    else
+      (*this)<<"@    xaxes scale Normal\n";
+  }
+  
   //! set a line color scheme
   void set_line_color_scheme(const initializer_list<grace::color_t> &oth)
   {line_color_scheme.assign(oth.begin(),oth.end());}
@@ -228,12 +237,14 @@ public:
     this->precision(16);
     
     reset_props();
-    if(!this->good()) CRASH("Unable to open grace file %s",path.c_str());
   }
   
   //! open
   void open(const string &path)
-  {ofstream::open(path);}
+  {
+    ofstream::open(path);
+    if(!this->good()) CRASH("Unable to open grace file %s",path.c_str());
+  }
   
   //! set title of the graph
   void set_title(string label)
