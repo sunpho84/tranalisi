@@ -23,7 +23,7 @@ public:
   {return size();}
   
   //! return the name of the  index
-  string name(size_t comp) const
+  const string& name(size_t comp) const
   {
     if(comp>=rank()) CRASH("Aksing for the name of component %zu greater or equal to rank %zu",comp,rank());
     return (*this)[comp].first;
