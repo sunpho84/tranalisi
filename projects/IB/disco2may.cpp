@@ -203,7 +203,7 @@ int main(int narg,char **arg)
   raw_file_t data(data_path,"r");
   
   ///opening output
-  vector<grace_file_t> plot_conf_ave(ndiag), plot_conf_err(ndiag), plot_hits_ave(ndiag), plot_hits_err(ndiag);
+  vector<grace_file_t> plot_conf_ave(ndiag),plot_conf_err(ndiag),plot_hits_ave(ndiag),plot_hits_err(ndiag);
   for(int idiag=0;idiag<ndiag;idiag++)
     {
       plot_conf_ave[idiag].open(combine("plots/fit_results/EU%d_average_vs_nconfs",diag[idiag]));
@@ -211,6 +211,24 @@ int main(int narg,char **arg)
       plot_hits_ave[idiag].open(combine("plots/fit_results/EU%d_average_vs_nhits",diag[idiag]));
       plot_hits_err[idiag].open(combine("plots/fit_results/EU%d_errors_vs_nhits",diag[idiag]));
     }
+  
+  for(vector<grace_file_t>* _g : {&plot_conf_ave,&plot_conf_err,&plot_hits_ave,&plot_hits_err})
+    for(int idiag=0;idiag<ndiag;idiag++)
+      {
+	grace_file_t& g=(*_g)[idiag];
+	
+	using namespace grace;
+	
+	g.set_color_scheme({ORANGE,RED,BLUE,GREEN4});
+	
+	g.set_title("cicicicci");
+	g.set_subtitle("cicrewgrehrehicicci");
+	g.set_xaxis_logscale();
+	g.set_xaxis_label("etichettax");
+	g.set_yaxis_label("etichettay");
+	g.set_line_style(line_style_t::NO_LINE);
+	g.set_settype(settype_t::XYDY);
+      }
   
   ///performing averages and errors and putting everything in output files.
   double dat;
@@ -246,17 +264,26 @@ int main(int narg,char **arg)
       
       ///printing average and errors vs. 1/nhits
       for(size_t idiag=0;idiag<ndiag;idiag++)
-	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	  {
-	    ///creating ave_err_t variables
-	    const ave_err_t slop=range_ave_stddev(slopes[ind({idiag,hdiv})]);
-	    const ave_err_t er=range_ave_stddev(errors[ind({idiag,hdiv})]);
-	    
-	    ///writing grace files
-	    plot_hits_ave[idiag].write_ave_err(1.0/div_nhits[hdiv],slop);
-	    plot_hits_err[idiag].write_ave_err(1.0/div_nhits[hdiv],er);
-	  }
-      }
+	{
+	  for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
+	    {
+	      ///creating ave_err_t variables
+	      const ave_err_t slop=range_ave_stddev(slopes[ind({idiag,hdiv})]);
+	      const ave_err_t er=range_ave_stddev(errors[ind({idiag,hdiv})]);
+	      
+	      ///writing grace files
+	      plot_hits_ave[idiag].write_ave_err((1+jdiv/10.0)/div_nhits[hdiv],slop);
+	      plot_hits_err[idiag].write_ave_err((1+jdiv/10.0)/div_nhits[hdiv],er);
+	    }
+	  
+	  for(auto& _p : {&plot_hits_ave,&plot_hits_err})
+	    {
+	      grace_file_t& p=(*_p)[idiag];
+	      p.set_legend(combine("Nconfs=%d",nconfs[jdiv]));
+	      p.new_data_set();
+	    }
+	}
+    }
   
   return 0;
 }
