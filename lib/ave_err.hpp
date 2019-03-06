@@ -44,14 +44,17 @@ public:
 };
 
 //! compute average and stddev of a vector
-template <class T>
-ave_err_t range_ave_stddev(const valarray<T> &v,size_t size)
+template <class V>
+ave_err_t range_ave_stddev(const V &v,int size=-1)
 {
+  if(size==-1)
+    size=v.size();
+  
   ave_err_t ae;
   
-  for(size_t i=0;i<size;i++)
+  for(int i=0;i<size;i++)
     {
-      double x=v[i];
+      auto x=v[i];
       ae.ave()+=x;
       ae.err()+=sqr(x);
     }
