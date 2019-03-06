@@ -77,7 +77,7 @@ int main(int narg,char **arg)
   
   set_njacks(input.read<int>("NJacks"));
   const int nhits=input.read<int>("NHits");
-
+  
   const vector<size_t> confs=determine_list_of_confs(conf_range);
   
   //fix on the basis of njacks
@@ -231,59 +231,39 @@ int main(int narg,char **arg)
       }
   
   ///performing averages and errors and putting everything in output files.
-  double dat;
-  index_t ind({{"diagrams",ndiag},{"nhits",div_nhits.size()}});
+  index_t ind({{"diagrams",ndiag},{"nhits",div_nhits.size()},{"nconfs",nconfs.size()}});
   vector<vector<double>> slopes(ind.max(),vector<double>(0)),errors(ind.max(),vector<double>(0));
   for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
-    {
-      array<vector<double>,ndiag> slopesconf,errorsconf;
-      for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
+    for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
+      for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
+	for(int hrange=0;hrange<div_nhits.back()/div_nhits[hdiv];hrange++)
+	  for(size_t idiag=0;idiag<ndiag;idiag++)
+	    for(auto& es : {&errors,&slopes})
+	      (*es)[ind({idiag,hdiv,jdiv})].push_back(data.bin_read<double>());
+      
+  ///printing average and errors vs. 1/nhits
+  for(size_t idiag=0;idiag<ndiag;idiag++)
+    for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
+      {
 	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	  for(int hrange=0;hrange<div_nhits.back()/div_nhits[hdiv];hrange++)
-	    for(size_t idiag=0;idiag<ndiag;idiag++)
-	      {
-		data.bin_read(dat);
-		errors[ind({idiag,hdiv})].push_back(dat);
-		errorsconf[idiag].push_back(dat);
-		data.bin_read(dat);
-		slopes[ind({idiag,hdiv})].push_back(dat);
-		slopesconf[idiag].push_back(dat);
-	      }
-      
-      ///printing average and errors vs. nconfs
-      for(int idiag=0;idiag<ndiag;idiag++)
-	{
-	  ///creating ave_err_t variables
-	  const ave_err_t slop=range_ave_stddev(slopesconf[idiag]);
-	  const ave_err_t er=range_ave_stddev(errorsconf[idiag]);
-	  
-	  ///writing grace files
-	  plot_conf_ave[idiag].write_ave_err(nconfs[jdiv],slop);
-	  plot_conf_err[idiag].write_ave_err(nconfs[jdiv],er);
-	}
-      
-      ///printing average and errors vs. 1/nhits
-      for(size_t idiag=0;idiag<ndiag;idiag++)
-	{
-	  for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	    {
-	      ///creating ave_err_t variables
-	      const ave_err_t slop=range_ave_stddev(slopes[ind({idiag,hdiv})]);
-	      const ave_err_t er=range_ave_stddev(errors[ind({idiag,hdiv})]);
-	      
-	      ///writing grace files
-	      plot_hits_ave[idiag].write_ave_err((1+jdiv/10.0)/div_nhits[hdiv],slop);
-	      plot_hits_err[idiag].write_ave_err((1+jdiv/10.0)/div_nhits[hdiv],er);
-	    }
-	  
-	  for(auto& _p : {&plot_hits_ave,&plot_hits_err})
-	    {
-	      grace_file_t& p=(*_p)[idiag];
-	      p.set_legend(combine("Nconfs=%d",nconfs[jdiv]));
-	      p.new_data_set();
-	    }
-	}
-    }
+	  {
+	    ///creating ave_err_t variables
+	    const int i=ind({idiag,hdiv,jdiv});
+	    const ave_err_t slop=range_ave_stddev(slopes[i]);
+	    const ave_err_t er=range_ave_stddev(errors[i]);
+	    
+	    ///writing grace files
+	    plot_hits_ave[idiag].write_ave_err((1+0*jdiv/10.0)/div_nhits[hdiv],slop);
+	    plot_hits_err[idiag].write_ave_err((1+0*jdiv/10.0)/div_nhits[hdiv],er);
+	  }
+	
+	for(auto& _p : {&plot_hits_ave,&plot_hits_err})
+	  {
+	    grace_file_t& p=(*_p)[idiag];
+	    p.set_legend(combine("Nconfs=%d",nconfs[jdiv]));
+	    p.new_data_set();
+	  }
+      }
   
   return 0;
 }
