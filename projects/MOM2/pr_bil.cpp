@@ -308,6 +308,9 @@ void perens_t::average_r_pr_bil(perens_t &out,const array<double,2> w) const
 	        im_r_im_r_bilins_ibil_ibilmom_comp[3]=r;
 	      const size_t i=im_r_im_r_bilins_ibil_ibilmom_ind(im_r_im_r_bilins_ibil_ibilmom_comp);
 	      pr_rave[out_i]+=w[r]*pr[i];
+	      
+	      for(size_t ijack=0;ijack<=njacks;ijack++)
+		cout<<" pr_bil "<<ijack<<" "<<im_r_im_r_bilins_ibil_ibilmom_ind.descr(i)<<" "<<pr[i][ijack]<<endl;
 	    }
 	  pr_rave[out_i]/=nr;
 	}
