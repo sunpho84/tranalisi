@@ -467,7 +467,8 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 		  else                                          x[i]=sqr(meson_mass[imeson].ave());
 		  
 		  //compute y and y_plot
-		  y_plot[i]=pr[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_ou,r_in,im_in,r_ou,meslepins,iop,iproj,imeslepmom})];
+		  y_plot[i]=(pr[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_in,r_in,im_ou,r_ou,meslepins,iop,iproj,imeslepmom})]+
+			     pr[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_ou,r_in,im_in,r_ou,meslepins,iop,iproj,imeslepmom})])/2.0;
 		  
 		  //if QED case and pole must be subtracted, take into account variation due to leading pole
 		  if(pars::use_QED and meslepins>0)
