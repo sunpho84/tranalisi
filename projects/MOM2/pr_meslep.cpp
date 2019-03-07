@@ -454,13 +454,12 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 	    if(imeslepmom%pars::print_each_mom==0) plot=new grace_file_t(plot_path);
 	    
 	    //slice m and fit it
-	    //const int n=nm*(nm+1)/2;
-	    const int n=nm*nm;
+	    const int n=nm*(nm+1)/2;
 	    djvec_t y(n),y_plot(n);
 	    vector<double> x(n);
 	    int i=0;
 	    for(size_t im_ou=0;im_ou<nm;im_ou++)
-	      for(size_t im_in=0;im_in<nm;im_in++)
+	      for(size_t im_in=im_ou;im_in<nm;im_in++)
 		{
 		  const size_t imeson=im_im_ind({im_ou,im_in});
 		  
@@ -469,8 +468,8 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 		  else                                          x[i]=sqr(meson_mass[imeson].ave());
 		  
 		  //compute y and y_plot
-		  y_plot[i]=(0*pr[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_in,r_in,im_ou,r_ou,meslepins,iop,iproj,imeslepmom})]+
-			     2*pr[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_ou,r_in,im_in,r_ou,meslepins,iop,iproj,imeslepmom})])/2.0;
+		  y_plot[i]=(pr[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_in,r_in,im_ou,r_ou,meslepins,iop,iproj,imeslepmom})]+
+			     pr[im_r_im_r_meslepins_iop_iproj_imeslepmom_ind({im_ou,r_in,im_in,r_ou,meslepins,iop,iproj,imeslepmom})])/2.0;
 		  
 		  //if QED case and pole must be subtracted, take into account variation due to leading pole
 		  if(pars::use_QED and meslepins>0)
