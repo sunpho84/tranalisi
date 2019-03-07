@@ -500,12 +500,12 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 	    
 	    //fit, store and write the result
 	    coeffs[meslepins]=poly_fit(x,y,(sub_pole?2:1));
-	    for(size_t ipow=0;ipow<coeffs[meslepins].size();ipow++)
-	      {
-		cout<<"ipow: "<<ipow<<endl;
-		for(size_t ijack=0;ijack<=njacks;ijack++)
-		  cout<<" "<<ijack<<" "<<r_r_iop_iproj_imeslepmom_ind.descr(r_r_iop_iproj_imeslepmom)<<" "<<coeffs[meslepins][ipow][ijack]<<endl;
-	      }
+	    // for(size_t ipow=0;ipow<coeffs[meslepins].size();ipow++)
+	    //   {
+	    // 	cout<<"ipow: "<<ipow<<endl;
+	    // 	for(size_t ijack=0;ijack<=njacks;ijack++)
+	    // 	  cout<<" "<<ijack<<" "<<r_r_iop_iproj_imeslepmom_ind.descr(r_r_iop_iproj_imeslepmom)<<" "<<coeffs[meslepins][ipow][ijack]<<endl;
+	    //   }
 	    
 	    if(std::isnan(coeffs[meslepins][0][0])) coeffs[meslepins]=0.0;
 	    
@@ -516,12 +516,12 @@ void perens_t::val_chir_extrap_pr_meslep(perens_t &out) const
 		auto xminmax=minmax_element(x.begin(),x.end());
 		double xmin=*xminmax.first*0.9;
 		double xmax=*xminmax.second*1.1;
-		for(size_t ijack=0;ijack<=njacks;ijack++)
-		  {
-		    cout<<" ijack: "<<ijack<<endl;
-		    for(size_t ipoint=0;ipoint<y_plot.size();ipoint++)
-		      cout<<" "<<x[ipoint]<<" "<<y_plot[ipoint][ijack]<<" "<<y_plot[ipoint].err()<<endl;
-		  }
+		// for(size_t ijack=0;ijack<=njacks;ijack++)
+		//   {
+		//     cout<<" ijack: "<<ijack<<endl;
+		//     for(size_t ipoint=0;ipoint<y_plot.size();ipoint++)
+		//       cout<<" "<<x[ipoint]<<" "<<y_plot[ipoint][ijack]<<" "<<y_plot[ipoint].err()<<endl;
+		//   }
 		
 		write_fit_plot(*plot,xmin,xmax,[&coeffs,sub_pole,meslepins](double x)->djack_t{return poly_eval<djvec_t>(coeffs[meslepins],x)/(sub_pole?x:1);},x,y_plot);
 		plot->write_ave_err(0.0,pr_chir[iout].ave_err());
