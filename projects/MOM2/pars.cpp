@@ -10,6 +10,11 @@
 #include <MOM2/prop.hpp>
 #include <MOM2/sigma.hpp>
 
+namespace evol
+{
+  double lambda_QCD=0.250;
+}
+
 void freeze_pars()
 {
   if(pars::can_change_pars)

@@ -79,7 +79,6 @@ using namespace std;
 {C_COMM}                            DEBUG_PRINTF("Ignoring single line (c) comment: %s\n",yytext);
 {SPACE}+                            DEBUG_PRINTF("Ignoring spaces: \"%s\"\n",yytext);
 
-A                                   DEBUG_PRINTF("Found A\n");return TK_A;
 Abort                               DEBUG_PRINTF("Found Abort\n");terminate();
 Action                              DEBUG_PRINTF("Found Action\n");return TK_ACTION;
 AllocateImmediately                 DEBUG_PRINTF("Found AllocateImmediately");return TK_ALLOCATE_IMMEDIATELY;
@@ -99,6 +98,7 @@ FilterThresh                        DEBUG_PRINTF("Found FilterThresh\n");return 
 FromCorr                            DEBUG_PRINTF("Found FromCorr\n");return TK_FROM_CORR;
 FromProp                            DEBUG_PRINTF("Found FromProp\n");return TK_FROM_PROP;
 QEDGreenfunctionsAreAssembled       DEBUG_PRINTF("Found QEDGreenfunctionsAreAssembled\n");return TK_QED_GREENFUNCTIONS_ARE_ASSEMBLED;
+LambdaQCD                           DEBUG_PRINTF("Found LambdaQCD\n");return TK_LAMBDA_QCD;
 NJacks                              DEBUG_PRINTF("Found NJacks\n");return TK_NJACKS;
 NF                                  DEBUG_PRINTF("Found NF\n");return TK_NF;
 NMeslepOps                          DEBUG_PRINTF("Found NMeslepOps\n");return TK_NMESLEP_OPS;
@@ -107,7 +107,6 @@ PrintEachMom                        DEBUG_PRINTF("Found PrintEachMom\n");return 
 RecomputeDeltaM                     DEBUG_PRINTF("Found RecomputeDeltaM\n");return TK_RECOMPUTE_DELTAM;
 Scheme                              DEBUG_PRINTF("Found Scheme\n");return TK_SCHEME;
 TwistedRun                          DEBUG_PRINTF("Found TwistedRun\n");return TK_TWISTED_RUN;
-Using                               DEBUG_PRINTF("Found Using\n");return TK_USING;
 IncludeZqCorrectionsInBilinears     DEBUG_PRINTF("Found IncludeZqCorrectionsInBilinears\n");return TK_INCLUDE_ZQ_CORRECTIONS_IN_BILINEARS;
 IncludeSelfEnergyInBilinears        DEBUG_PRINTF("Found IncludeSelfEnergyInBilinears\n");return TK_INCLUDE_SELF_ENERGY_IN_BILINEARS;
 UseDeltamCrCt                       DEBUG_PRINTF("Found UseDeltamCrCt\n");return TK_USE_DELTAM_CR_CT;
@@ -145,6 +144,7 @@ SelectR                             DEBUG_PRINTF("Found SelectR\n"); return TK_S
 SubMesonMassShiftWhenNoPole         DEBUG_PRINTF("Found SubMesonMassShiftWhenNoPole\n");return TK_SUB_MESON_MASS_SHIFT_WHEN_NO_POLE;
 SubtractOa2                         DEBUG_PRINTF("Found SubtractOa2\n");return TK_SUBTRACT_OA2;
 SubtractZ                           DEBUG_PRINTF("Found SubtractZ\n");return TK_SUBTRACT_Z;
+Tag                                 DEBUG_PRINTF("Found Tag\n");return TK_TAG;
 ValChirExtrap                       DEBUG_PRINTF("Found ValChirExtrap\n");return TK_VAL_CHIR_EXTRAP;
 WriteCheckPoint                     DEBUG_PRINTF("Found WriteCheckpoint\n");return TK_WRITE_CHECKPOINT;
 

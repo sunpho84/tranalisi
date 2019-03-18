@@ -36,16 +36,13 @@ void perens_t::evolve_QED_Zbil_mixed_to_1_ov_a(perens_t& out) const
       const vector<size_t> im_r_im_r_ibil_ibilmom_comps=im_r_im_r_ibil_ibilmom_ind(im_r_im_r_ibil_ibilmom);
       const size_t ibil=im_r_im_r_ibil_ibilmom_comps[4];
       const size_t ibil_mom=im_r_im_r_ibil_ibilmom_comps[5];
-      const double p2=all_moms[bilmoms[ibil_mom][0]].p(L).norm2();
+      const double a2p2=all_moms[bilmoms[ibil_mom][0]].p(L).norm2();
       
-      const double gamma=-8;
-      const double alphas=0.3;
-      double evol=0.0;
-      if(ibil==iP)
-	evol=alphas/pow(4*M_PI,3.0)*log(p2)*gamma*0.5;
+      const double gamma[5]={-8.0,0.0,-8.0,0.0,-152.0/3};
       
       out.Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
-	Zbil_QED_rel[im_r_im_r_ibil_ibilmom]+evol;
+	Zbil_QED_rel[im_r_im_r_ibil_ibilmom]+
+	evolve_QED_mixed_alpha(a2p2,gamma[ibil]);
     }
 }
 

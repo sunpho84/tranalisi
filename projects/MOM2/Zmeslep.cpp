@@ -39,16 +39,13 @@ void perens_t::evolve_QED_Zmeslep_mixed_to_1_ov_a(perens_t& out) const
       const size_t iop=im_r_im_r_iop_iproj_imeslepmom_comps[4];
       const size_t iproj=im_r_im_r_iop_iproj_imeslepmom_comps[5];
       const size_t imeslep_mom=im_r_im_r_iop_iproj_imeslepmom_comps[6];
-      const double p2=all_moms[meslepmoms()[imeslep_mom][0]].p(L).norm2();
+      const double a2p2=all_moms[meslepmoms()[imeslep_mom][0]].p(L).norm2();
       
-      const double gamma=4;
-      const double alphas=0.3;
-      double evol=0.0;
-      if(iop==0 and iproj==0)
-	evol=alphas/pow(4*M_PI,3.0)*log(p2)*gamma*0.5;
+      const double gamma[5]={+4.0,-4.0,0.0,0.0,0.0};
       
       out.Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom]=
-	Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom]+evol;
+	Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom]+
+	(iop==iproj)*evolve_QED_mixed_alpha(a2p2,gamma[iop]);
     }
 }
 

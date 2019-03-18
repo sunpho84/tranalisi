@@ -116,7 +116,7 @@ constexpr double Adim()
 template <int Nf,int Nc=3>
 double alphas(double ainv,double mu2,const double lambdaQCD=0.250)
 {
-  constexpr int CF=(Nc*Nc-1.0)/(2.0*Nc);
+  constexpr double CF=(Nc*Nc-1.0)/(2.0*Nc);
   constexpr double Z3=1.2020569031595942;
   constexpr double beta_0=(11.0*Nc-2.0*Nf)/3.0;
   constexpr double beta_1=34.0/3.0*Sqr(Nc)-10.0/3.0*Nc*Nf-2.0*CF*Nf;

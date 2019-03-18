@@ -189,10 +189,10 @@ void sea_chir_extrap(const string out,const vector<string> &ens_list);
 void print_discr();
 
 //! type used to specify a combined extrapolation
-typedef tuple<string,double,vector<string>> comb_extr_t;
+typedef tuple<string,vector<string>> comb_extr_t;
 
 //! perform a combined sea chiral extrapolation
-void combined_sea_chir_extrap(const vector<comb_extr_t> &list);
+void combined_sea_chir_extrap(const vector<comb_extr_t> &list,const string& tag);
 
 //! change the Z of QED to absolute ones
 void make_Z_QED_absolute();

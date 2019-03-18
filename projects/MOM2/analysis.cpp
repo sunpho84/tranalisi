@@ -302,7 +302,7 @@ void compute_or_load_all_ingredients()
   validate_ingredients();
 }
 
-void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
+void combined_sea_chir_extrap(const vector<comb_extr_t> &list,const string& suffix)
 {
   if(pars::free_theory) CRASH("possible only in the interacting theory");
   
@@ -312,7 +312,7 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
   
   //check that nmom==1
   for(auto &l : list)
-    for(auto &name : get<2>(l))
+    for(auto &name : get<1>(l))
       {
 	const size_t nmoms=data(name,ASSERT_PRESENT).all_moms.size();
 	if(nmoms!=1) CRASH("%s has more than 1 momenta, %zu",name.c_str(),nmoms);
@@ -350,8 +350,7 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
     {
       auto& l=list[igroup];
       const string &name_out=get<0>(l);
-      const double &a=get<1>(l);
-      const vector<string> &names_in=get<2>(l);
+      const vector<string> &names_in=get<1>(l);
       
       //prepare output
       cout<<"Out: "<<name_out<<endl;
@@ -387,12 +386,20 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
 	      //prepare input
 	      const size_t nens=p.in.size();
 	      in_out.ens_list.resize(nens);
-	      in_out.a=a;
 	      for(size_t iens=0;iens<nens;iens++)
 		{
 		  //get mass
 		  const djvec_t &y=(*(p.in[iens]));
 		  const perens_t& en=data(names_in[iens],ASSERT_PRESENT);
+		  const double a=1.0/en.ainv;
+		  
+		  // Set the lattice spacing
+		  if(in_out.a==0)
+		    in_out.a=a;
+		  else
+		    if(in_out.a!=a)
+		      CRASH("Ensemble %s has lattice spacing %lg different from the rest of the group, %lg",en.dir_path.c_str(),a,in_out.a);
+		  
 		  double m2=sqr(en.meson_mass_sea.ave())/sqr(a);
 		  
 		  //prepare data per ens
@@ -418,7 +425,7 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
       djack_t mslope_a2dep=0.0;
       
       //output plot
-      grace_file_t plot("comb_sea_chir/plots/comb_sea_chir_extrap_"+tag+".xmg");
+      grace_file_t plot("comb_sea_chir/plots/comb_sea_chir_extrap_"+tag+"_"+suffix+".xmg");
       {
 	using namespace grace;
 	auto color_scheme={RED,RED,BLUE,BLUE,GREEN4,GREEN4,VIOLET,VIOLET};
@@ -472,6 +479,7 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
       //fit
       jack_fit.fit();
       
+      
       //line of the fit
       for(size_t igroup=0;igroup<ngroups;igroup++)
 	{
@@ -499,6 +507,6 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list)
   
   //remove all extrapolated ensembles
   for(auto &l : list)
-    for(auto &name : get<2>(l))
+    for(auto &name : get<1>(l))
       data_erase(name);
 }

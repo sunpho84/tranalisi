@@ -3,6 +3,7 @@
 
 #include <tranalisi.hpp>
 
+#include <MOM2/evolutions.hpp>
 #include <MOM2/geometry.hpp>
 #include <MOM2/pars.hpp>
 #include <MOM2/sigma.hpp>
@@ -619,6 +620,16 @@ struct perens_t
   //! triggers match to W-reg all quantities
   perens_t match_to_W_reg() const;
   
+  //! returns the evolution from p2 to 1/a2
+  double evolve_QED_mixed_alpha(const double& a2p2,const double gamma) const
+  {
+    return
+      evol::alphas<4>(a2p2*sqr(ainv))/pow(4*M_PI,3.0)*log(a2p2)*gamma*0.5;
+  }
+  
+  //! evolve QED Zq, considering only the mixed evolver (QCD/QED)
+  void evolve_QED_Zq_mixed_to_1_ov_a(perens_t& out) const;
+  
   //! evolve QED Zbil, considering only the mixed evolver (QCD/QED)
   void evolve_QED_Zbil_mixed_to_1_ov_a(perens_t& out) const;
   
@@ -630,6 +641,7 @@ struct perens_t
   {
     perens_t out=*this;
     
+    evolve_QED_Zq_mixed_to_1_ov_a(out);
     evolve_QED_Zbil_mixed_to_1_ov_a(out);
     evolve_QED_Zmeslep_mixed_to_1_ov_a(out);
     

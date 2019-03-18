@@ -55,7 +55,6 @@ using namespace scan;
 %token <real> TK_REAL
 %token <inte> TK_INTE
 
-%token TK_A
 %token TK_ACTION
 %token TK_ALLOCATE_IMMEDIATELY
 %token TK_AVERAGE_EQUIV_MOMENTA_IMMEDIATELY
@@ -80,6 +79,7 @@ using namespace scan;
 %token TK_EXTRAPOLATE_TO_0_P2
 %token TK_INTERPOLATE_TO_P2REF
 %token TK_INCLUDE
+%token TK_LAMBDA_QCD
 %token TK_MATCH_TO_W_REG
 %token TK_MAKE_Z_QED_ABSOLUTE
 %token TK_MEASURE_MPCAC
@@ -93,13 +93,13 @@ using namespace scan;
 %token TK_QED_GREENFUNCTIONS_ARE_ASSEMBLED
 %token TK_RECOMPUTE_DELTAM
 %token TK_SCHEME
+%token TK_TAG
 %token TK_TWISTED_RUN
 %token TK_INCLUDE_ZQ_CORRECTIONS_IN_BILINEARS
 %token TK_INCLUDE_SELF_ENERGY_IN_BILINEARS
 %token TK_USE_DELTAM_CR_CT
 %token TK_USE_DELTAM_TM_CT
 %token TK_USE_QED
-%token TK_USING
 
 %token TK_AVERAGE_EQUIV_MOMENTA
 %token TK_AVERAGE_INGREDIENTS
@@ -147,6 +147,7 @@ commands:
         | commands set_extrapolate_to_0_p2_range
         | commands set_filter_thresh
         | commands set_free_theory
+	| commands set_lambda_QCD
 	| commands set_measure_mPCAC
         | commands set_nf
         | commands set_njacks
@@ -258,6 +259,9 @@ set_filter_thresh: TK_FILTER_THRESH '=' TK_REAL {pars::filter_thresh=$3;}
 ;
 
 set_free_theory: TK_FREE_THEORY '=' TK_INTE {pars::free_theory=$3;}
+;
+
+set_lambda_QCD: TK_LAMBDA_QCD '=' TK_REAL {evol::lambda_QCD=$3;}
 ;
 
 set_measure_mPCAC: TK_MEASURE_MPCAC '=' TK_INTE {pars::report_mPCAC=$3;}
@@ -373,14 +377,14 @@ average_Z: TK_QUOTED_TEXT '=' TK_AVERAGE_Z '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT
 average_ingredients: TK_QUOTED_TEXT '=' TK_AVERAGE_INGREDIENTS '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {average_ingredients(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
 ;
 
-combined_sea_chir_extr_entry: TK_USING TK_A '=' TK_REAL TK_EXTRAPOLATE TK_QUOTED_TEXT '=' string_list {$$=new comb_extr_t(*$6,$4,*$8);delete $6;delete $8;}
+combined_sea_chir_extr_entry: TK_EXTRAPOLATE TK_QUOTED_TEXT '=' string_list {$$=new comb_extr_t(*$2,*$4);delete $2;delete $4;}
 ;
 
 combined_sea_chir_extr_list: TK_COMBINED_SEA_CHIR_EXTRAP '(' combined_sea_chir_extr_entry {$$=new std::vector<comb_extr_t>({*$3});delete $3;}
                            | combined_sea_chir_extr_list combined_sea_chir_extr_entry {$$->push_back(*$2);delete $2;}
 ;
 
-combined_sea_chir_extr: combined_sea_chir_extr_list ')' {combined_sea_chir_extrap(*$1);delete $1;}
+combined_sea_chir_extr: combined_sea_chir_extr_list ')' TK_TAG '=' TK_QUOTED_TEXT {combined_sea_chir_extrap(*$1,*$5);delete $1;delete $5;}
 ;
 
 ratio_Z_minus_one: TK_QUOTED_TEXT '=' TK_RATIO_Z_MINUS_ONE '(' TK_QUOTED_TEXT ',' TK_QUOTED_TEXT ')' {ratio_Z_minus_one(*$1,*$5,*$7);delete $1;delete $5;delete $7;}
