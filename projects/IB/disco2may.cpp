@@ -283,5 +283,39 @@ int main(int narg,char **arg)
       slice_plot(nconfs,div_nhits,idiag,slopes,errors,ind,2,1);
     }
   
+  ///loop on different slices
+  for(size_t idiag=0;idiag<ndiag;idiag++)
+    {
+      const int nx=2;
+      plan_fit_data_t<djack_t> plan_fit_data;
+      int seed=0;
+      
+      cout<<"DIAG "<<diag[idiag]<<endl;
+      
+      for(size_t idiv_nhits=0;idiv_nhits<div_nhits.size();idiv_nhits++)
+	for(size_t idiv_nconfs=0;idiv_nconfs<nconfs.size();idiv_nconfs++)
+	  {
+	    ///creating ave_err_t variables
+	    const int i=ind({idiag,idiv_nhits,idiv_nconfs});
+	    
+	    vector<double> x(nx);
+	    x[0]=1.0/(nconfs[idiv_nconfs]*div_nhits[idiv_nhits]);
+	    x[1]=1.0/div_nhits[idiv_nhits];
+	    
+	    const ave_err_t ae=range_ave_stddev(errors[i]);
+	    if(ae.err()>1e-10)
+	      {
+		djack_t j;
+		j.fill_gauss(sqr(ae.ave()),ae.ave()*ae.err()*2,seed++);
+		
+		plan_fit_data.push_back(make_tuple(x,j));
+	      }
+	  }
+      
+      const djvec_t res=plan_fit(plan_fit_data);
+      
+      cout<<res.ave_err()<<endl;
+    }
+  
   return 0;
 }
