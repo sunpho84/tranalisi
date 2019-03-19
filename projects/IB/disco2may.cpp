@@ -4,7 +4,7 @@ int T,L;
 int TH;
 
 //parametrization of the diagras
- enum {EU1,EU2,EU4,EU5,EU6};
+// enum {EU1,EU2,EU4,EU5,EU6};
 const int ndiag=5;
 const int diag[ndiag]={1,2,4,5,6};
 
@@ -67,25 +67,34 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
   const char* name=ind.name(idim2).c_str();
   grace_file_t plot_ave(combine("plots/fit_results/EU%d_average_vs_%s",diag[idiag],name));
   grace_file_t plot_err(combine("plots/fit_results/EU%d_errors_vs_%s",diag[idiag],name));
-  
+  bool ytitle[5]={1,1,0,0,0};
+  if(ytitle[idiag]==1)
+    {
+      plot_ave.set_yaxis_label("averages");
+      plot_err.set_yaxis_label("errors");
+    }
+  else
+    {
+      plot_ave.set_yaxis_label("averages (a*M)");
+      plot_err.set_yaxis_label("errors (a*M)");
+    }
   for(grace_file_t* _g : {&plot_ave,&plot_err})
-    for(int idiag=0;idiag<ndiag;idiag++)
-      {
-	grace_file_t& g=(*_g);
-	
-	using namespace grace;
-	
-	g.set_color_scheme({ORANGE,RED,BLUE,GREEN4});
-	
-	g.set_title("cicicicci");
-	g.set_subtitle("cicrewgrehrehicicci");
-	g.set_xaxis_logscale();
-	g.set_yaxis_logscale();
-	g.set_xaxis_label("etichettax");
-	g.set_yaxis_label("etichettay");
-	g.set_line_style(line_style_t::NO_LINE);
-	g.set_settype(settype_t::XYDY);
-      }
+    {
+      grace_file_t& g=(*_g);
+      
+      using namespace grace;
+      
+      g.set_color_scheme({ORANGE,RED,BLUE,GREEN4});
+      
+      g.set_title(combine("Errors vs %s",name));
+      g.set_subtitle(combine("EU%d",diag[idiag]));
+      g.set_xaxis_logscale();
+      g.set_yaxis_logscale();
+      g.set_xaxis_label(combine("1/%s",name));
+      g.set_line_style(line_style_t::NO_LINE);
+      g.set_settype(settype_t::XYDY);
+      g.set_xaxis_min_max(0.001, 1.1);
+    }
   
   ///loop on different slices
   vector<size_t> comps(3);
