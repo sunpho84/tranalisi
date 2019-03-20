@@ -80,9 +80,11 @@ using namespace scan;
 %token TK_INTERPOLATE_TO_P2REF
 %token TK_INCLUDE
 %token TK_LAMBDA_QCD
+%token TK_LEFT
 %token TK_MATCH_TO_W_REG
 %token TK_MAKE_Z_QED_ABSOLUTE
 %token TK_MEASURE_MPCAC
+%token TK_MESLEP_QCD_SIDE
 %token TK_NF
 %token TK_NJACKS
 %token TK_NMESLEP_OPS
@@ -92,6 +94,7 @@ using namespace scan;
 %token TK_PRINT_EACH_MOM
 %token TK_QED_GREENFUNCTIONS_ARE_ASSEMBLED
 %token TK_RECOMPUTE_DELTAM
+%token TK_RIGHT
 %token TK_SCHEME
 %token TK_TAG
 %token TK_TWISTED_RUN
@@ -149,6 +152,7 @@ commands:
         | commands set_free_theory
 	| commands set_lambda_QCD
 	| commands set_measure_mPCAC
+	| commands set_meslep_QCD_side
         | commands set_nf
         | commands set_njacks
         | commands set_nmeslep_ops
@@ -265,6 +269,10 @@ set_lambda_QCD: TK_LAMBDA_QCD '=' TK_REAL {evol::lambda_QCD=$3;}
 ;
 
 set_measure_mPCAC: TK_MEASURE_MPCAC '=' TK_INTE {pars::report_mPCAC=$3;}
+;
+
+set_meslep_QCD_side: TK_MESLEP_QCD_SIDE '=' TK_RIGHT {pars::meslep_QCD_on_the_left=false;}
+               	   | TK_MESLEP_QCD_SIDE '=' TK_LEFT {pars::meslep_QCD_on_the_left=true;}
 ;
 
 set_nf: TK_NF '=' TK_INTE {evol::Nf_t_of_Nf($3);}

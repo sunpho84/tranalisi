@@ -506,7 +506,13 @@ void perens_t::print_Z(ofstream& file)
   
   for(auto t : get_Zmeslep_tasks())
     {
-      file<<" "<<t.tag<<endl;
+      file<<" "<<t.tag;
+      
+      if(t.QCD_QED_task)
+	file<<" (QCD on the "<<(pars::meslep_QCD_on_the_left?"left":"right")<<")";
+      
+      file<<endl;
+      
       for(size_t iop=0;iop<nbil;iop++)
 	{
 	  for(size_t iproj=0;iproj<nbil;iproj++)

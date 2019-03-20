@@ -95,9 +95,13 @@ void perens_t::compute_Zmeslep(const bool also_QCD,const bool also_QED)
 		  const double Zq_QED_rel_contr=(s1_in(sigma::QED)[ijack]/s1_in(sigma::LO)[ijack]*q_in*q_in+
 						 s1_ou(sigma::QED)[ijack]/s1_ou(sigma::LO)[ijack]*q_ou*q_ou)/2.0;
 		  
-		  auto Z_LO=Zq_contr*Gamma_meslep_combo_inv;
-		  auto Z_QED_rel=(Zq_QED_rel_contr*Zmeslep_t::Identity(nZop,nZop)
-				  -Gamma_QED_meslep_combo*Gamma_meslep_combo_inv);
+		  const Zmeslep_t Z_LO=Zq_contr*Gamma_meslep_combo_inv;
+		  Zmeslep_t Z_QED_rel=Zq_QED_rel_contr*Zmeslep_t::Identity(nZop,nZop);
+		  
+		  if(pars::meslep_QCD_on_the_left)
+		    Z_QED_rel-=Gamma_QED_meslep_combo*Gamma_meslep_combo_inv;
+		  else
+		    Z_QED_rel-=Gamma_meslep_combo_inv*Gamma_QED_meslep_combo;
 		  
 		  for(size_t iop=0;iop<nZop;iop++)
 		    for(size_t iproj=0;iproj<nZop;iproj++)

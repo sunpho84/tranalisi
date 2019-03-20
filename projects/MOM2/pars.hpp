@@ -87,6 +87,8 @@ namespace pars
   EXTERN_PARS bool use_deltam_cr_ct INIT_PARS_TO({true});
   //! compute deltam_tm counterterm and subtract
   EXTERN_PARS bool use_deltam_tm_ct INIT_PARS_TO({true});
+  //! Put QCD on the left or right of QED corrections for MesLep
+  EXTERN_PARS bool meslep_QCD_on_the_left INIT_PARS_TO({true});
   //! free theory
   EXTERN_PARS bool free_theory INIT_PARS_TO({false});
   //! use QED

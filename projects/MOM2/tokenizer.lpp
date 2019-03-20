@@ -99,12 +99,14 @@ FromCorr                            DEBUG_PRINTF("Found FromCorr\n");return TK_F
 FromProp                            DEBUG_PRINTF("Found FromProp\n");return TK_FROM_PROP;
 QEDGreenfunctionsAreAssembled       DEBUG_PRINTF("Found QEDGreenfunctionsAreAssembled\n");return TK_QED_GREENFUNCTIONS_ARE_ASSEMBLED;
 LambdaQCD                           DEBUG_PRINTF("Found LambdaQCD\n");return TK_LAMBDA_QCD;
+Left                                DEBUG_PRINTF("Found Left\n");return TK_LEFT;
 NJacks                              DEBUG_PRINTF("Found NJacks\n");return TK_NJACKS;
 NF                                  DEBUG_PRINTF("Found NF\n");return TK_NF;
 NMeslepOps                          DEBUG_PRINTF("Found NMeslepOps\n");return TK_NMESLEP_OPS;
 PhysBasis                           DEBUG_PRINTF("Found PhysBasis\n");return TK_PHYS_BASIS;
 PrintEachMom                        DEBUG_PRINTF("Found PrintEachMom\n");return TK_PRINT_EACH_MOM;
 RecomputeDeltaM                     DEBUG_PRINTF("Found RecomputeDeltaM\n");return TK_RECOMPUTE_DELTAM;
+Right                               DEBUG_PRINTF("Found Right\n");return TK_RIGHT;
 Scheme                              DEBUG_PRINTF("Found Scheme\n");return TK_SCHEME;
 TwistedRun                          DEBUG_PRINTF("Found TwistedRun\n");return TK_TWISTED_RUN;
 IncludeZqCorrectionsInBilinears     DEBUG_PRINTF("Found IncludeZqCorrectionsInBilinears\n");return TK_INCLUDE_ZQ_CORRECTIONS_IN_BILINEARS;
@@ -134,6 +136,7 @@ ListEnsembles                       DEBUG_PRINTF("Found ListEnsembles\n");return
 MakeZQEDAbsolute                    DEBUG_PRINTF("Founr MakeZQEDAbsolute\n");return TK_MAKE_Z_QED_ABSOLUTE;
 MatchToWReg                         DEBUG_PRINTF("Found MatchToWReg\n");return TK_MATCH_TO_W_REG;
 MeasureMPCAC                        DEBUG_PRINTF("Found MeasureMPCAC\n");return TK_MEASURE_MPCAC;
+MesLepQCDSide                       DEBUG_PRINTF("Found MesLepQCDSide");return TK_MESLEP_QCD_SIDE;
 P2Ref                               DEBUG_PRINTF("Fount P2Ref\n"); return TK_P2REF;
 PlotZ                               DEBUG_PRINTF("Found PlotZ\n");return TK_PLOT_Z;
 PrintDiscr                          DEBUG_PRINTF("Found PrintDiscr\n");return TK_PRINT_DISCR;
