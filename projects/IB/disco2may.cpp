@@ -63,7 +63,7 @@ vector<size_t> determine_list_of_confs(const range_t& conf_range)
 }
 
 template <typename F>
-void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idiag,const vector<vector<double>>& slopes,const vector<vector<double>>& errors,const index_t& ind,int idim1,int idim2,const F& fun)
+void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idiag,const vector<vector<double>>& slopes,const vector<vector<double>>& errors,const index_t& ind,int idim1,int idim2,const F& fun,const double pow1,const double pow2)
 {
   const char* name=ind.name(idim2).c_str();
   grace_file_t plot_ave(combine("plots/fit_results/EU%d_average_vs_%s",diag[idiag],name));
@@ -90,7 +90,7 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
       g.set_subtitle(combine("EU%d",diag[idiag]));
       g.set_xaxis_logscale();
       g.set_yaxis_logscale();
-      g.set_xaxis_label(combine("1/%s",name));
+      g.set_xaxis_label(combine("1/%s\\S%d",name,(int)pow2));
       g.set_line_style(line_style_t::NO_LINE);
       g.set_settype(settype_t::XYDY);
       g.set_xaxis_min_max(0.001, 1.1);
@@ -125,7 +125,7 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
 	  const ave_err_t er=range_ave_stddev(errors[i]);
 	  
 	  ///writing grace files
-	  const double x=1.0/dim2[hdiv];
+	  const double x=1.0/pow(dim2[hdiv],pow2);
 	  plot_ave.write_ave_err(x,slop);
 	  plot_err.write_ave_err(x,er);
 	  
@@ -133,7 +133,7 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
 	  xmax=max(xmax,x);
 	}
       
-      plot_err.write_line(bind(fun,std::placeholders::_1,1.0/dim1[jdiv]),xmin/2.0,xmax*2.0,1001);
+      plot_err.write_line(bind(fun,std::placeholders::_1,1.0/pow(dim1[jdiv],pow1)),xmin/2.0,xmax*2.0,1001);
       plot_err.set_all_colors(col_scheme[jdiv%col_scheme.size()]);
       
       for(auto& p : {&plot_ave,&plot_err})
@@ -293,6 +293,7 @@ int main(int narg,char **arg)
 	      (*es)[ind({idiag,hdiv,jdiv})].push_back(data.bin_read<double>());
   
   ///loop on different slices
+  const int pow_nh[5]={1,1,1,2,2};
   for(size_t idiag=0;idiag<ndiag;idiag++)
     {
       const int nx=2;
@@ -304,15 +305,14 @@ int main(int narg,char **arg)
       for(size_t idiv_nhits=0;idiv_nhits<div_nhits.size();idiv_nhits++)
 	for(size_t idiv_nconfs=0;idiv_nconfs<nconfs.size();idiv_nconfs++)
 	  {
-	    ///creating ave_err_t variables
 	    const int i=ind({idiag,idiv_nhits,idiv_nconfs});
 	    
 	    vector<double> x(nx);
-	    x[0]=1.0/(nconfs[idiv_nconfs]*div_nhits[idiv_nhits]);
+	    x[0]=1.0/(nconfs[idiv_nconfs]*pow(div_nhits[idiv_nhits],pow_nh[idiag]));
 	    x[1]=1.0/nconfs[idiv_nconfs];
 	    
 	    const ave_err_t ae=range_ave_stddev(errors[i]);
-	     if(ae.err()>1e-10)
+	    if(ae.err()>1e-10)
 	      {
 		djack_t j;
 		j.fill_gauss(sqr(ae.ave()),ae.ave()*ae.err()*2,seed++);
@@ -325,18 +325,19 @@ int main(int narg,char **arg)
       const djvec_t res=plan_fit(plan_fit_data);
       
       //! fit ansatz
-      auto f=[&res](double inv_nconfs,double inv_nhits)
+      auto f=[&res](double inv_nconfs,double inv_nhits_to_the_pow)
 	{
-	  return djack_t(sqrt((res[0]*inv_nhits+res[1])*inv_nconfs)).ave();
+	  return djack_t(sqrt((res[0]*inv_nhits_to_the_pow+res[1])*inv_nconfs)).ave();
 	};
       
       //! same ansatz with swapped arguments
       auto f_swapped=bind(f,placeholders::_2,placeholders::_1);
       
       //cout<<res.ave_err()<<endl;
+      cout<<"the 'nhits'-associated error is no longer dominating for nhits which equals "<<(int)pow((res[0].ave()/res[1].ave()),1.0/pow_nh[idiag])<<endl;
       
-      slice_plot(div_nhits,nconfs,idiag,slopes,errors,ind,1,2,f);
-      slice_plot(nconfs,div_nhits,idiag,slopes,errors,ind,2,1,f_swapped);
+      slice_plot(div_nhits,nconfs,idiag,slopes,errors,ind,1,2,f,pow_nh[idiag],1);
+      slice_plot(nconfs,div_nhits,idiag,slopes,errors,ind,2,1,f_swapped,1,pow_nh[idiag]);
     }
   
   return 0;
