@@ -62,7 +62,7 @@ vector<size_t> determine_list_of_confs(const range_t& conf_range)
   return confs;
 }
 
-void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idiag,const vector<vector<double>>& slopes,const vector<vector<double>>& errors,const index_t& ind,int idim1,int idim2)
+void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idiag,const vector<vector<double>>& slopes,const vector<vector<double>>& errors,const index_t& ind,int idim1,int idim2,const function<double(double)> &fun,double xmin,double xmax)
 {
   const char* name=ind.name(idim2).c_str();
   grace_file_t plot_ave(combine("plots/fit_results/EU%d_average_vs_%s",diag[idiag],name));
@@ -115,7 +115,7 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
 	  plot_ave.write_ave_err(x,slop);
 	  plot_err.write_ave_err(x,er);
 	}
-      
+      plot_err.write_line(fun,xmin,xmax);
       for(auto& _p : {&plot_ave,&plot_err})
 	{
 	  grace_file_t& p=(*_p);
@@ -124,6 +124,48 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
 	}
     }
 }
+
+class function{
+  double a;
+  double b;
+  double c=0;
+  double fix_x;
+  double fix_y;
+
+  double fun_x(double x){
+    return sqrt(a/(fix_y*x)+b/fix_y+c);
+  }
+  double fun_y(double y){
+    return sqrt(a/(fix_x*y)+b/y+c);
+  }
+public:
+  function();
+  void set_a(double m){
+    a=m;
+  }
+  void set_b(double m){
+    b=m;
+  }
+  void set_c(double m){
+    c=m;
+  }
+  void set_fix_x(double m){
+    fix_x=m;
+  }
+  void set_fix_y(double m){
+    fix_y=m;
+  }
+  template <typename F>
+  F f_nhits(double x){
+    return fun_x(x);
+}
+  template <typename F>
+  F f_nconfs(double x){
+    return fun_y(x);
+  }
+  ~function();
+};
+
 
 int main(int narg,char **arg)
 {
@@ -275,18 +317,12 @@ int main(int narg,char **arg)
 	  for(size_t idiag=0;idiag<ndiag;idiag++)
 	    for(auto& es : {&errors,&slopes})
 	      (*es)[ind({idiag,hdiv,jdiv})].push_back(data.bin_read<double>());
-      
-  ///printing average and errors vs. 1/nhits
-  for(size_t idiag=0;idiag<ndiag;idiag++)
-    {
-      slice_plot(div_nhits,nconfs,idiag,slopes,errors,ind,1,2);
-      slice_plot(nconfs,div_nhits,idiag,slopes,errors,ind,2,1);
-    }
   
+  ::function err_fit;
   ///loop on different slices
   for(size_t idiag=0;idiag<ndiag;idiag++)
     {
-      const int nx=2;
+      const int nx=3;
       plan_fit_data_t<djack_t> plan_fit_data;
       int seed=0;
       
@@ -299,22 +335,26 @@ int main(int narg,char **arg)
 	    const int i=ind({idiag,idiv_nhits,idiv_nconfs});
 	    
 	    vector<double> x(nx);
-	    x[0]=1.0/(nconfs[idiv_nconfs]*div_nhits[idiv_nhits]);
-	    x[1]=1.0/div_nhits[idiv_nhits];
+	    x[0]=1.0;
+	    x[1]=1.0/(nconfs[idiv_nconfs]*div_nhits[idiv_nhits]);
+	    x[2]=1.0/div_nhits[idiv_nhits];
 	    
 	    const ave_err_t ae=range_ave_stddev(errors[i]);
-	    if(ae.err()>1e-10)
+	     if(ae.err()>1e-10)
 	      {
 		djack_t j;
 		j.fill_gauss(sqr(ae.ave()),ae.ave()*ae.err()*2,seed++);
-		
+		//j.fill_gauss((20/nconfs[idiv_nconfs]+0.1/div_nhits[idiv_nconfs]),0.00001,seed++);
 		plan_fit_data.push_back(make_tuple(x,j));
 	      }
 	  }
       
       const djvec_t res=plan_fit(plan_fit_data);
       
-      cout<<res.ave_err()<<endl;
+      //      cout<<res.ave_err()<<endl;
+      slice_plot(div_nhits,nconfs,idiag,slopes,errors,ind,1,2,err_fit.f_nhits(),0,1);
+      slice_plot(div_nhits,nconfs,idiag,slopes,errors,ind,1,2,err_fit.f_nconfs(),0,1);
+
     }
   
   return 0;
