@@ -137,7 +137,7 @@ public:
     cout<<endl;
     cout<<"Git hash: "<<GIT_HASH<<endl;
     cout<<"Last commit on: "<<GIT_TIME<<endl;
-    cout<<"Commit message: \""<<GIT_LOG<<"\""<<endl;
+    printf("Commit message: \"%s\n",GIT_LOG);
     cout<<"Configured on "<<CONFIG_TIME<<endl;
     cout<<"Configured with flags: "<<CONFIG_FLAGS<<endl;
     cout<<"Compiled at "<<__TIME__<<" of "<<__DATE__<<endl;
