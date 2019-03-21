@@ -86,8 +86,6 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
       
       using namespace grace;
       
-      g.set_color_scheme({ORANGE,RED,BLUE,GREEN4});
-      
       g.set_title(combine("Errors vs %s",name));
       g.set_subtitle(combine("EU%d",diag[idiag]));
       g.set_xaxis_logscale();
@@ -98,6 +96,12 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
       g.set_xaxis_min_max(0.001, 1.1);
     }
   
+  auto col_scheme=[]() -> vector<grace::color_t>
+    {
+      using namespace grace;
+      return {RED,BLUE,VIOLET,GREEN4,CYAN,MAGENTA,ORANGE,INDIGO,MAROON,TURQUOISE};
+    }();
+      
   ///loop on different slices
   vector<size_t> comps(3);
   comps[0]=idiag;
@@ -105,6 +109,13 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
     {
       comps[idim1]=jdiv;
       double xmin=1e300,xmax=-1e300;
+      
+      for(auto& p : {&plot_ave,&plot_err})
+	{
+	  p->new_data_set();
+      	  p->set_all_colors(col_scheme[jdiv%col_scheme.size()]);
+	}
+      
       for(size_t hdiv=0;hdiv<dim2.size();hdiv++)
 	{
 	  ///creating ave_err_t variables
@@ -123,13 +134,10 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
 	}
       
       plot_err.write_line(bind(fun,std::placeholders::_1,1.0/dim1[jdiv]),xmin/2.0,xmax*2.0,1001);
+      plot_err.set_all_colors(col_scheme[jdiv%col_scheme.size()]);
       
-      for(auto& _p : {&plot_ave,&plot_err})
-	{
-	  grace_file_t& p=(*_p);
-	  p.set_legend(combine("%s=%d",ind.name(idim1).c_str(),dim1[jdiv]));
-	  p.new_data_set();
-	}
+      for(auto& p : {&plot_ave,&plot_err})
+	p->set_legend(combine("%s=%d",ind.name(idim1).c_str(),dim1[jdiv]));
     }
 }
 
