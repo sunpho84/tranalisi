@@ -119,7 +119,7 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
 	  plot_err.write_ave_err(x,er);
 	  
 	  xmin=min(xmin,x);
-	  xmax=min(xmax,x);
+	  xmax=max(xmax,x);
 	}
       
       plot_err.write_line(bind(fun,std::placeholders::_1,1.0/dim1[jdiv]),xmin/10.0,xmax*10.0);
