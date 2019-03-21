@@ -293,6 +293,7 @@ int main(int narg,char **arg)
 	      (*es)[ind({idiag,hdiv,jdiv})].push_back(data.bin_read<double>());
   
   ///loop on different slices
+  int pow_nh[5]{1,1,1,2,2};
   for(size_t idiag=0;idiag<ndiag;idiag++)
     {
       const int nx=2;
@@ -304,15 +305,14 @@ int main(int narg,char **arg)
       for(size_t idiv_nhits=0;idiv_nhits<div_nhits.size();idiv_nhits++)
 	for(size_t idiv_nconfs=0;idiv_nconfs<nconfs.size();idiv_nconfs++)
 	  {
-	    ///creating ave_err_t variables
 	    const int i=ind({idiag,idiv_nhits,idiv_nconfs});
 	    
 	    vector<double> x(nx);
-	    x[0]=1.0/(nconfs[idiv_nconfs]*div_nhits[idiv_nhits]);
+	    x[0]=1.0/(nconfs[idiv_nconfs]*pow(div_nhits[idiv_nhits],pow_nh[idiag]));
 	    x[1]=1.0/nconfs[idiv_nconfs];
 	    
 	    const ave_err_t ae=range_ave_stddev(errors[i]);
-	     if(ae.err()>1e-10)
+	    if(ae.err()>1e-10)
 	      {
 		djack_t j;
 		j.fill_gauss(sqr(ae.ave()),ae.ave()*ae.err()*2,seed++);
@@ -325,16 +325,16 @@ int main(int narg,char **arg)
       const djvec_t res=plan_fit(plan_fit_data);
       
       //! fit ansatz
-      auto f=[&res](double inv_nconfs,double inv_nhits)
+      auto f=[&res,&pow_nh,&idiag](double inv_nconfs,double inv_nhits)
 	{
-	  return djack_t(sqrt((res[0]*inv_nhits+res[1])*inv_nconfs)).ave();
+	  return djack_t(sqrt((res[0]*pow(inv_nhits,1.0/pow_nh[idiag])+res[1])*inv_nconfs)).ave();
 	};
       
       //! same ansatz with swapped arguments
       auto f_swapped=bind(f,placeholders::_2,placeholders::_1);
       
       //cout<<res.ave_err()<<endl;
-      
+      cout<<"the 'nhits'-associated error is no longer dominating for nhits which equals "<<(int)pow((res[0].ave()/res[1].ave()),1.0/pow_nh[idiag])<<endl;
       slice_plot(div_nhits,nconfs,idiag,slopes,errors,ind,1,2,f);
       slice_plot(nconfs,div_nhits,idiag,slopes,errors,ind,2,1,f_swapped);
     }
