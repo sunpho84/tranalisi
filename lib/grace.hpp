@@ -445,7 +445,7 @@ public:
   
   //! write a polygon from a function
   template <class fun_t>
-  void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=101)
   {
     //! x coordinates
     vector<double> x=vector_grid(xmin,xmax,npoints);
@@ -465,7 +465,7 @@ public:
   
   //! write a polygon setting automatically col
   template <class fun_t>
-  void write_polygon(const fun_t &fun,double xmin,double xmax,size_t npoints=100)
+  void write_polygon(const fun_t &fun,double xmin,double xmax,size_t npoints=101)
   {write_polygon(fun,xmin,xmax,get_poly_col_and_increment(),npoints);}
   
   //! mark as a continuos line
@@ -477,7 +477,8 @@ public:
   }
   
   //! write a line
-  void write_line(const function<double(double)> &fun,double xmin,double xmax,grace::color_t col,size_t npoints=100)
+  template <typename F>
+  void write_line(const F &fun,double xmin,double xmax,grace::color_t col,size_t npoints=101)
   {
     close_cur_set();
     
@@ -497,7 +498,9 @@ public:
       (*this)<<x[ipoint]<<" "<<y[ipoint]<<endl;
     need_close_set=true;
   }
-  void write_line(const function<double(double)> &fun,double xmin,double xmax,size_t npoints=100)
+  
+  template <typename F>
+  void write_line(const F &fun,double xmin,double xmax,size_t npoints=101)
   {write_line(fun,xmin,xmax,get_line_col_and_increment(),npoints);}
   
   //! write a constant band
