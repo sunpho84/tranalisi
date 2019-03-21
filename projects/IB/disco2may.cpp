@@ -122,7 +122,7 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
 	  xmax=max(xmax,x);
 	}
       
-      plot_err.write_line(bind(fun,std::placeholders::_1,1.0/dim1[jdiv]),xmin/10.0,xmax*10.0);
+      plot_err.write_line(bind(fun,std::placeholders::_1,1.0/dim1[jdiv]),xmin/2.0,xmax*2.0,1001);
       
       for(auto& _p : {&plot_ave,&plot_err})
 	{
@@ -287,7 +287,7 @@ int main(int narg,char **arg)
   ///loop on different slices
   for(size_t idiag=0;idiag<ndiag;idiag++)
     {
-      const int nx=3;
+      const int nx=2;
       plan_fit_data_t<djack_t> plan_fit_data;
       int seed=0;
       
@@ -300,9 +300,8 @@ int main(int narg,char **arg)
 	    const int i=ind({idiag,idiv_nhits,idiv_nconfs});
 	    
 	    vector<double> x(nx);
-	    x[0]=1.0;
-	    x[1]=1.0/(nconfs[idiv_nconfs]*div_nhits[idiv_nhits]);
-	    x[2]=1.0/nconfs[idiv_nconfs];
+	    x[0]=1.0/(nconfs[idiv_nconfs]*div_nhits[idiv_nhits]);
+	    x[1]=1.0/nconfs[idiv_nconfs];
 	    
 	    const ave_err_t ae=range_ave_stddev(errors[i]);
 	     if(ae.err()>1e-10)
@@ -314,12 +313,14 @@ int main(int narg,char **arg)
 	      }
 	  }
       
-      const djvec_t res=plan_fit(plan_fit_data,true);
+      //! results for the fit
+      const bool homogeneous=true;
+      const djvec_t res=plan_fit(plan_fit_data,homogeneous);
       
       //! fit ansatz
       auto f=[&res](double inv_nconfs,double inv_nhits)
 	{
-	  return djack_t(sqrt(res[0]+(res[1]*inv_nhits+res[2])*inv_nconfs)).ave();
+	  return djack_t(sqrt((res[0]*inv_nhits+res[1])*inv_nconfs)).ave();
 	};
       
       //! same ansatz with swapped arguments
