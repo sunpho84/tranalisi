@@ -314,8 +314,7 @@ int main(int narg,char **arg)
 	  }
       
       //! results for the fit
-      const bool homogeneous=true;
-      const djvec_t res=plan_fit(plan_fit_data,homogeneous);
+      const djvec_t res=plan_fit(plan_fit_data);
       
       //! fit ansatz
       auto f=[&res](double inv_nconfs,double inv_nhits)

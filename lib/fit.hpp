@@ -863,9 +863,9 @@ double chi2_plan(const plan_fit_data_t<T>& data,const vector<double>& coeffs,con
   return chi2;
 }
 
-//! fit a plan: note that the first coordinate is 1
+//! fit a plan: note that the first coordinate is 1 if the parameter fitted is the offset
 template <class T>
-meas_vec_of_t<T> plan_fit(const plan_fit_data_t<T>& data,const bool homogeneity=false)
+meas_vec_of_t<T> plan_fit(const plan_fit_data_t<T>& data)
 {
   const size_t nx=get<0>(data.front()).size();
   const size_t nel=get<1>(data.front()).size();
@@ -887,9 +887,6 @@ meas_vec_of_t<T> plan_fit(const plan_fit_data_t<T>& data,const bool homogeneity=
 	  
 	  //calculate the weight
 	  double w=pow(ey,-2);
-	  
-	  //check
-	  if(homogeneity==false and x[0]!=1.0) CRASH("First coordinate must be 1, found %lg",x[0]);
 	  
 	  for(size_t i=0;i<nx;i++)
 	    {
