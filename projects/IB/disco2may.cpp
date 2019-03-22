@@ -7,11 +7,11 @@ int TH;
 // enum {EU1,EU2,EU4,EU5,EU6};
 const int ndiag=5;
 const int diag[ndiag]={1,2,4,5,6};
-
+const int pow_nh[ndiag]={1,1,1,2,2};
+const int nhr[ndiag]={0,0,0,1,1};
 vector<dcompl_t> read_vector(const string &path,int n,int nskip=0)
 {
   raw_file_t data(path,"r");
-  
   //cout<<"Reading from "<<path<<" "<<n<<" lines after skipping "<<nskip<<" words"<<endl;
   for(int iskip=0;iskip<nskip;iskip++)
     data.skip_line();
@@ -191,87 +191,75 @@ int main(int narg,char **arg)
       raw_file_t data(data_path,"w");
       
       ///cycles over configurations numbers, configurations ranges, hits numbers and hits ranges
-      for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
-	for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
-	  for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	    for(int hrange=0;hrange<div_nhits.back()/div_nhits[hdiv];hrange++)
-	      {
-		/// Allocate diagrams and initializes it
-		array<array<djack_t,2>,ndiag> EU;
-		djvec_t pion(T);
-		array<djvec_t,ndiag> pion_EU;
-		pion_EU.fill(djvec_t{(size_t)T});
-		for(auto &E : EU)
-		  for(auto &Eri : E)
-		    Eri=0.0;
-		
-		for(int iconf=0;iconf<nconfs[jdiv];iconf++)
-		  {
-		    /// Finds the jack index
-		    int ijack=iconf/div_clust_size[jdiv];
-		    /// Computes the configuration id
-		    const int conf=confs[iconf+(njacks*jrange)];
-		    
-		    /// Reads all diagrams
-		    array<vector<dcompl_t>,ndiag> EU_stoch;
-		    vector<dcompl_t> pion_stoch=read_vector(combine("out/%04d/mes_contr_Pion",conf),T,5);
-		    array<dcompl_t,ndiag> EU_tot;
-		    for(int t=0;t<T;t++)
-		      pion[t][ijack]+=pion_stoch[t].real();
-		    
-		    for(int idiag=0;idiag<ndiag;idiag++)
-		      {
-			EU_stoch[idiag]=read_vector(combine("out/%04d/EU%d_stoch",conf,diag[idiag]),div_nhits[hdiv],hrange*div_nhits[hdiv]);
-			
-			// Computes the average over stochastich estimates
-			EU_tot[idiag]=average(EU_stoch[idiag]);
-			
-			// Copy real and imaginary part of the disconnected diagram
-			for(int ri=0;ri<2;ri++)
-			  EU[idiag][ri][ijack]+=((double*)&(EU_tot[idiag]))[ri];
-			
-			// Computes the connected and disconnected X connected
-			for(int t=0;t<T;t++)
-			  pion_EU[idiag][t][ijack]+=pion_stoch[t].real()*EU_tot[idiag].real();
-		      }
-		  }
-		
-		// Prepares the jackknives of disconnected diagrams and print it
-		for(int idiag=0;idiag<ndiag;idiag++)
+      for(int idiag=0;idiag<ndiag;idiag++)
+	for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
+	  for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
+	    for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
+	      for(int hrange=0;hrange<(div_nhits.back()*pow(((double)div_nhits.back()-1)/2,nhr[idiag]))/div_nhits[hdiv];hrange++)
+		{
+		  /// Allocate diagrams and initializes it
+		  array<djack_t,2> EU;
+		  djvec_t pion(T);
+		  djvec_t pion_EU (T);
+		  for(auto &E : EU)
+		    E=0.0;
+		  
+		  for(int iconf=0;iconf<nconfs[jdiv];iconf++)
+		    {
+		      /// Finds the jack index
+		      int ijack=iconf/div_clust_size[jdiv];
+		      /// Computes the configuration id
+		      const int conf=confs[iconf+(njacks*jrange)];
+		      
+		      vector<dcompl_t> EU_stoch;
+		      vector<dcompl_t> pion_stoch=read_vector(combine("out/%04d/mes_contr_Pion",conf),T,5);
+		      dcompl_t EU_tot;
+		      for(int t=0;t<T;t++)
+			pion[t][ijack]+=pion_stoch[t].real();
+		      
+		      EU_stoch=read_vector(combine("out/%04d/EU%d_stoch",conf,diag[idiag]),div_nhits[hdiv],hrange*div_nhits[hdiv]);
+		      
+		      // Computes the average over stochastich estimates
+		      EU_tot=average(EU_stoch);
+		      
+		      // Copy real and imaginary part of the disconnected diagram
+		      for(int ri=0;ri<2;ri++)
+			EU[ri][ijack]+=((double*)&(EU_tot))[ri];
+		      
+		      // Computes the connected and disconnected X connected
+		      for(int t=0;t<T;t++)
+			pion_EU[t][ijack]+=pion_stoch[t].real()*EU_tot.real();
+		    }
+		  
+		  // Prepares the jackknives of disconnected diagrams and print it
 		  for(int ri=0;ri<2;ri++)
-		    EU[idiag][ri].clusterize(div_clust_size[jdiv]);
-		
-		pion.clusterize(div_clust_size[jdiv]).symmetrize();
-		pion.ave_err().write(combine("plots/%03d/pion.xmg",nconfs[jdiv]));
-		djvec_t SL(ndiag);
-		
-		// Creates the jackknife of the connected and disconnected diagrams and plots them
-		for(int idiag=0;idiag<ndiag;idiag++)
-		  {
-		    pion_EU[idiag].clusterize(div_clust_size[jdiv]).symmetrize();
-		    pion_EU[idiag].ave_err().write(combine("plots/%03d/%03d/pion_EU%d.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag]));
-		    
-		    /// Subtract the fully disconnected part and plots it
-		    djvec_t pion_EU_sub=pion_EU[idiag]-pion*EU[idiag][0];
-		    pion_EU_sub.ave_err().write(combine("plots/%03d/%03d/EU%d_rangeconfs_%03d_rangehits_%03d_sub.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag],jrange,hrange));
-		    
-		    /// Computes the ratio with the purely connected and plots it
-		    djvec_t pion_EU_rat=pion_EU_sub/pion;
-		    
-		    djack_t Z2,M,DZ2_fr_Z2;
-		    two_pts_with_ins_ratio_fit(Z2,M,DZ2_fr_Z2,SL[idiag],pion,pion_EU_sub,TH,12,TH,combine("plots/%03d/pion.xmg",nconfs[jdiv]),combine("plots/%03d/%03d/EU%d_rangeconfs_%03d_rangehits_%03d_rat.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag],jrange,hrange));
-		  }
-		cout<<endl;
-		cout << "confs: " << nconfs[jdiv] << "; range confs: " << jrange << "; hits: " << div_nhits[hdiv] << "; range hits: " << hrange <<endl;
-		
-		///writing on data file
-		for(size_t idiag=0;idiag<ndiag;idiag++)
-		  {
-		    data.bin_write(SL[idiag].err());
-		    data.bin_write(SL[idiag].ave());
-		    cout<<"EU"<<diag[idiag]<<": "<<SL[idiag].ave_err()<<endl;
-		  }
-	      }
+		    EU[ri].clusterize(div_clust_size[jdiv]);
+		  
+		  pion.clusterize(div_clust_size[jdiv]).symmetrize();
+		  pion.ave_err().write(combine("plots/%03d/pion.xmg",nconfs[jdiv]));
+		  djack_t SL;
+		  
+		  // Creates the jackknife of the connected and disconnected diagrams and plots them
+		  pion_EU.clusterize(div_clust_size[jdiv]).symmetrize();
+		  pion_EU.ave_err().write(combine("plots/%03d/%03d/pion_EU%d.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag]));
+		  
+		  /// Subtract the fully disconnected part and plots it
+		  djvec_t pion_EU_sub=pion_EU-pion*EU[0];
+		  pion_EU_sub.ave_err().write(combine("plots/%03d/%03d/EU%d_rangeconfs_%03d_rangehits_%03d_sub.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag],jrange,hrange));
+		  
+		  /// Computes the ratio with the purely connected and plots it
+		  djvec_t pion_EU_rat=pion_EU_sub/pion;
+		  
+		  djack_t Z2,M,DZ2_fr_Z2;
+		  two_pts_with_ins_ratio_fit(Z2,M,DZ2_fr_Z2,SL,pion,pion_EU_sub,TH,12,TH,combine("plots/%03d/pion.xmg",nconfs[jdiv]),combine("plots/%03d/%03d/EU%d_rangeconfs_%03d_rangehits_%03d_rat.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag],jrange,hrange));
+		  cout<<endl;
+		  cout<<"EU"<<diag[idiag]<<" confs: "<<nconfs[jdiv]<<"; range confs: "<< jrange <<"; hits: "<<div_nhits[hdiv]<<"; range hits: "<<hrange<<endl;
+		  
+		  ///writing on data file
+		  data.bin_write(SL.err());
+		  data.bin_write(SL.ave());
+		  cout<<SL.ave_err()<<endl;
+		}
       
       cout<< "dataset generated, starting analysis"<<endl;
     }
@@ -284,16 +272,15 @@ int main(int narg,char **arg)
   ///performing averages and errors and putting everything in output files.
   index_t ind({{"diagrams",ndiag},{"nhits",div_nhits.size()},{"nconfs",nconfs.size()}});
   vector<vector<double>> slopes(ind.max(),vector<double>(0)),errors(ind.max(),vector<double>(0));
-  for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
-    for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
-      for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	for(int hrange=0;hrange<div_nhits.back()/div_nhits[hdiv];hrange++)
-	  for(size_t idiag=0;idiag<ndiag;idiag++)
+  for(size_t idiag=0;idiag<ndiag;idiag++)
+    for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
+      for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
+	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
+	  for(int hrange=0;hrange<div_nhits.back()/div_nhits[hdiv];hrange++)
 	    for(auto& es : {&errors,&slopes})
 	      (*es)[ind({idiag,hdiv,jdiv})].push_back(data.bin_read<double>());
   
   ///loop on different slices
-  const int pow_nh[5]={1,1,1,2,2};
   for(size_t idiag=0;idiag<ndiag;idiag++)
     {
       const int nx=2;
