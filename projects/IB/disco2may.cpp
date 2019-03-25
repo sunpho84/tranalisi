@@ -196,8 +196,10 @@ int main(int narg,char **arg)
       vector<dcompl_t> EU56_repository;
       for(int iconf=0;iconf<nconfs.back();iconf++)
 	for(int idiag=3;idiag<ndiag;idiag++)
-	  EU56_repository=read_vector(combine("out/%04d/EU%d_stoch",confs[iconf],diag[idiag]),(nhits*(nhits-1))/2);
-	
+	  {
+	    vector<dcompl_t> v=read_vector(combine("out/%04d/EU%d_stoch",confs[iconf],diag[idiag]),(nhits*(nhits-1))/2);
+	    EU56_repository.insert(EU56_repository.end(),v.begin(),v.end());
+	  }
       ///cycles over configurations numbers, configurations ranges, hits numbers and hits ranges
       for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
 	for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
