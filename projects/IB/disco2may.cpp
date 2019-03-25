@@ -191,11 +191,18 @@ int main(int narg,char **arg)
       ///opening output file
       raw_file_t data(data_path,"w");
       
+      ///creating indexed dataset for EU5 and EU6
+      index_t ind56({{"conf",nconfs.back()},{"diag",2},{"row",(nhits*(nhits-1))/2}});
+      vector<dcompl_t> EU56_repository;
+      for(int iconf=0;iconf<nconfs.back();iconf++)
+	for(int idiag=3;idiag<ndiag;idiag++)
+	  EU56_repository=read_vector(combine("out/%04d/EU%d_stoch",confs[iconf],diag[idiag]),(nhits*(nhits-1))/2);
+	
       ///cycles over configurations numbers, configurations ranges, hits numbers and hits ranges
       for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
 	for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
 	  for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	    {
+	      {
 	      // We can't calculate EU5 and 6 with one single hit, so we avoid to do useless fit
 	      int diagmax=ndiag;
 	      if(hdiv==0)
@@ -212,7 +219,7 @@ int main(int narg,char **arg)
 		    for(auto &Eri : E)
 		      Eri=0.0;
 		  
-		  for(int iconf=0;iconf<nconfs[jdiv];iconf++)
+		  for(size_t iconf=0;iconf<nconfs[jdiv];iconf++)
 		    {
 		      /// Finds the jack index
 		      int ijack=iconf/div_clust_size[jdiv];
@@ -233,17 +240,13 @@ int main(int narg,char **arg)
 			  ///EU5 and EU6 needs to be read apart because of their structure
 			  if(idiag>2)
 			    {
-			      ///creating indexed dataset for EU5 and EU6
-			      vector<dcompl_t> EU56_repository;
-			      EU56_repository=read_vector(combine("out/%04d/EU%d_stoch",conf,diag[idiag]),(nhits*(nhits-1))/2);
-			      
 			      //routine to extract data with the right pattern
 			      int count=0;
 			      for(int i=hrange*(div_nhits[hdiv])+1;i<(hrange+1)*(div_nhits[hdiv]);i++)
 				{
 				  count++;
 				  for(size_t j=(i*(i+1))/2-count;j<(i*(i+1))/2;j++)
-				    EU_stoch[idiag].emplace_back(EU56_repository[j]);
+				    EU_stoch[idiag].emplace_back(EU56_repository[ind56({iconf,idiag-3,j})]);
 				}
 			    }
 			  // Computes the average over stochastich estimates
