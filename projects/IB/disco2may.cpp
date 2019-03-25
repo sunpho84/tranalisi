@@ -7,11 +7,11 @@ int TH;
 // enum {EU1,EU2,EU4,EU5,EU6};
 const int ndiag=5;
 const int diag[ndiag]={1,2,4,5,6};
-const int pow_nh[ndiag]={1,1,1,2,2};
-const int nhr[ndiag]={0,0,0,1,1};
+
 vector<dcompl_t> read_vector(const string &path,int n,int nskip=0)
 {
   raw_file_t data(path,"r");
+  
   //cout<<"Reading from "<<path<<" "<<n<<" lines after skipping "<<nskip<<" words"<<endl;
   for(int iskip=0;iskip<nskip;iskip++)
     data.skip_line();
@@ -63,21 +63,23 @@ vector<size_t> determine_list_of_confs(const range_t& conf_range)
 }
 
 template <typename F>
-void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idiag,const vector<vector<double>>& slopes,const vector<vector<double>>& errors,const index_t& ind,int idim1,int idim2,const F& fun,const double pow1,const double pow2)
+void slice_plot(const vector<int>& dim1,const int dim1_min,const vector<int>& dim2,const int dim2_min,const size_t idiag,const vector<vector<double>>& slopes,const vector<vector<double>>& errors,const index_t& ind,int idim1,int idim2,const F& fun,const double pow1,const double pow2)
 {
   const char* name=ind.name(idim2).c_str();
   grace_file_t plot_ave(combine("plots/fit_results/EU%d_average_vs_%s",diag[idiag],name));
   grace_file_t plot_err(combine("plots/fit_results/EU%d_errors_vs_%s",diag[idiag],name));
+  plot_ave.set_title(combine("Slopes vs %s",name));
+  plot_err.set_title(combine("Errors vs %s",name));
   bool ytitle[5]={1,1,0,0,0};
   
   if(ytitle[idiag]==1)
     {
-      plot_ave.set_yaxis_label("averages");
+      plot_ave.set_yaxis_label("slopes");
       plot_err.set_yaxis_label("errors");
     }
   else
     {
-      plot_ave.set_yaxis_label("averages (a*M)");
+      plot_ave.set_yaxis_label("slopes (a*M)");
       plot_err.set_yaxis_label("errors (a*M)");
     }
   for(grace_file_t* _g : {&plot_ave,&plot_err})
@@ -86,7 +88,6 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
       
       using namespace grace;
       
-      g.set_title(combine("Errors vs %s",name));
       g.set_subtitle(combine("EU%d",diag[idiag]));
       g.set_xaxis_logscale();
       g.set_yaxis_logscale();
@@ -105,7 +106,7 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
   ///loop on different slices
   vector<size_t> comps(3);
   comps[0]=idiag;
-  for(size_t jdiv=0;jdiv<dim1.size();jdiv++)
+  for(size_t jdiv=dim1_min;jdiv<dim1.size();jdiv++)
     {
       comps[idim1]=jdiv;
       double xmin=1e300,xmax=-1e300;
@@ -116,7 +117,7 @@ void slice_plot(const vector<int>& dim1,const vector<int>& dim2,const size_t idi
       	  p->set_all_colors(col_scheme[jdiv%col_scheme.size()]);
 	}
       
-      for(size_t hdiv=0;hdiv<dim2.size();hdiv++)
+      for(size_t hdiv=dim2_min;hdiv<dim2.size();hdiv++)
 	{
 	  ///creating ave_err_t variables
 	  comps[idim2]=hdiv;
@@ -191,18 +192,25 @@ int main(int narg,char **arg)
       raw_file_t data(data_path,"w");
       
       ///cycles over configurations numbers, configurations ranges, hits numbers and hits ranges
-      for(int idiag=0;idiag<ndiag;idiag++)
-	for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
-	  for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
-	    for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	      for(int hrange=0;hrange<(div_nhits.back()*pow(((double)div_nhits.back()-1)/2,nhr[idiag]))/div_nhits[hdiv];hrange++)
+      for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
+	for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
+	  for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
+	    {
+	      // We can't calculate EU5 and 6 with one single hit, so we avoid to do useless fit
+	      int diagmax=ndiag;
+	      if(hdiv==0)
+		diagmax=3;
+	      
+	      for(int hrange=0;hrange<div_nhits.back()/div_nhits[hdiv];hrange++)
 		{
 		  /// Allocate diagrams and initializes it
-		  array<djack_t,2> EU;
+		  array<array<djack_t,2>,ndiag> EU;
 		  djvec_t pion(T);
-		  djvec_t pion_EU (T);
+		  array<djvec_t,ndiag> pion_EU;
+		  pion_EU.fill(djvec_t{(size_t)T});
 		  for(auto &E : EU)
-		    E=0.0;
+		    for(auto &Eri : E)
+		      Eri=0.0;
 		  
 		  for(int iconf=0;iconf<nconfs[jdiv];iconf++)
 		    {
@@ -211,56 +219,83 @@ int main(int narg,char **arg)
 		      /// Computes the configuration id
 		      const int conf=confs[iconf+(njacks*jrange)];
 		      
-		      vector<dcompl_t> EU_stoch;
+		      /// Reads all diagrams
+		      array<vector<dcompl_t>,ndiag> EU_stoch;
 		      vector<dcompl_t> pion_stoch=read_vector(combine("out/%04d/mes_contr_Pion",conf),T,5);
-		      dcompl_t EU_tot;
+		      array<dcompl_t,ndiag> EU_tot;
 		      for(int t=0;t<T;t++)
 			pion[t][ijack]+=pion_stoch[t].real();
 		      
-		      EU_stoch=read_vector(combine("out/%04d/EU%d_stoch",conf,diag[idiag]),div_nhits[hdiv],hrange*div_nhits[hdiv]);
-		      
-		      // Computes the average over stochastich estimates
-		      EU_tot=average(EU_stoch);
-		      
-		      // Copy real and imaginary part of the disconnected diagram
-		      for(int ri=0;ri<2;ri++)
-			EU[ri][ijack]+=((double*)&(EU_tot))[ri];
-		      
-		      // Computes the connected and disconnected X connected
-		      for(int t=0;t<T;t++)
-			pion_EU[t][ijack]+=pion_stoch[t].real()*EU_tot.real();
+		      for(size_t idiag=0;idiag<diagmax;idiag++)
+			{
+			  if (idiag<3)
+			    EU_stoch[idiag]=read_vector(combine("out/%04d/EU%d_stoch",conf,diag[idiag]),div_nhits[hdiv],hrange*div_nhits[hdiv]);
+			  ///EU5 and EU6 needs to be read apart because of their structure
+			  if(idiag>2)
+			    {
+			      ///creating indexed dataset for EU5 and EU6
+			      vector<dcompl_t> EU56_repository;
+			      EU56_repository=read_vector(combine("out/%04d/EU%d_stoch",conf,diag[idiag]),(nhits*(nhits-1))/2);
+			      
+			      //routine to extract data with the right pattern
+			      int count=0;
+			      for(int i=hrange*(div_nhits[hdiv])+1;i<(hrange+1)*(div_nhits[hdiv]);i++)
+				{
+				  count++;
+				  for(size_t j=(i*(i+1))/2-count;j<(i*(i+1))/2;j++)
+				    EU_stoch[idiag].emplace_back(EU56_repository[j]);
+				}
+			    }
+			  // Computes the average over stochastich estimates
+			  EU_tot[idiag]=average(EU_stoch[idiag]);
+			  
+			  // Copy real and imaginary part of the disconnected diagram
+			  for(int ri=0;ri<2;ri++)
+			    EU[idiag][ri][ijack]+=((double*)&(EU_tot[idiag]))[ri];
+			  
+			  // Computes the connected and disconnected X connected
+			  for(int t=0;t<T;t++)
+			    pion_EU[idiag][t][ijack]+=pion_stoch[t].real()*EU_tot[idiag].real();
+			}
 		    }
 		  
 		  // Prepares the jackknives of disconnected diagrams and print it
-		  for(int ri=0;ri<2;ri++)
-		    EU[ri].clusterize(div_clust_size[jdiv]);
+		  for(int idiag=0;idiag<diagmax;idiag++)
+		    for(int ri=0;ri<2;ri++)
+		      EU[idiag][ri].clusterize(div_clust_size[jdiv]);
 		  
 		  pion.clusterize(div_clust_size[jdiv]).symmetrize();
 		  pion.ave_err().write(combine("plots/%03d/pion.xmg",nconfs[jdiv]));
-		  djack_t SL;
+		  djvec_t SL(diagmax);
 		  
-		  // Creates the jackknife of the connected and disconnected diagrams and plots them
-		  pion_EU.clusterize(div_clust_size[jdiv]).symmetrize();
-		  pion_EU.ave_err().write(combine("plots/%03d/%03d/pion_EU%d.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag]));
-		  
-		  /// Subtract the fully disconnected part and plots it
-		  djvec_t pion_EU_sub=pion_EU-pion*EU[0];
-		  pion_EU_sub.ave_err().write(combine("plots/%03d/%03d/EU%d_rangeconfs_%03d_rangehits_%03d_sub.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag],jrange,hrange));
-		  
-		  /// Computes the ratio with the purely connected and plots it
-		  djvec_t pion_EU_rat=pion_EU_sub/pion;
-		  
-		  djack_t Z2,M,DZ2_fr_Z2;
-		  two_pts_with_ins_ratio_fit(Z2,M,DZ2_fr_Z2,SL,pion,pion_EU_sub,TH,12,TH,combine("plots/%03d/pion.xmg",nconfs[jdiv]),combine("plots/%03d/%03d/EU%d_rangeconfs_%03d_rangehits_%03d_rat.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag],jrange,hrange));
+		  //Creates the jackknife of the connected and disconnected diagrams and plots them
+		  for(int idiag=0;idiag<diagmax;idiag++)
+		    {
+		      pion_EU[idiag].clusterize(div_clust_size[jdiv]).symmetrize();
+		      pion_EU[idiag].ave_err().write(combine("plots/%03d/%03d/pion_EU%d.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag]));
+		      
+		      /// Subtract the fully disconnected part and plots it
+		      djvec_t pion_EU_sub=pion_EU[idiag]-pion*EU[idiag][0];
+		      pion_EU_sub.ave_err().write(combine("plots/%03d/%03d/EU%d_rangeconfs_%03d_rangehits_%03d_sub.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag],jrange,hrange));
+		      
+		      /// Computes the ratio with the purely connected and plots it
+		      djvec_t pion_EU_rat=pion_EU_sub/pion;
+		      
+		      djack_t Z2,M,DZ2_fr_Z2;
+		      two_pts_with_ins_ratio_fit(Z2,M,DZ2_fr_Z2,SL[idiag],pion,pion_EU_sub,TH,12,TH,combine("plots/%03d/pion.xmg",nconfs[jdiv]),combine("plots/%03d/%03d/EU%d_rangeconfs_%03d_rangehits_%03d_rat.xmg",nconfs[jdiv],div_nhits[hdiv],diag[idiag],jrange,hrange));
+		    }
 		  cout<<endl;
-		  cout<<"EU"<<diag[idiag]<<" confs: "<<nconfs[jdiv]<<"; range confs: "<< jrange <<"; hits: "<<div_nhits[hdiv]<<"; range hits: "<<hrange<<endl;
+		  cout << "confs: " << nconfs[jdiv] << "; range confs: " << jrange << "; hits: " << div_nhits[hdiv] << "; range hits: " << hrange <<endl;
 		  
 		  ///writing on data file
-		  data.bin_write(SL.err());
-		  data.bin_write(SL.ave());
-		  cout<<SL.ave_err()<<endl;
+		  for(size_t idiag=0;idiag<diagmax;idiag++)
+		    {
+		      data.bin_write(SL[idiag].err());
+		      data.bin_write(SL[idiag].ave());
+		      cout<<"EU"<<diag[idiag]<<": "<<SL[idiag].ave_err()<<endl;
+		    }
 		}
-      
+	    }
       cout<< "dataset generated, starting analysis"<<endl;
     }
   else
@@ -272,15 +307,20 @@ int main(int narg,char **arg)
   ///performing averages and errors and putting everything in output files.
   index_t ind({{"diagrams",ndiag},{"nhits",div_nhits.size()},{"nconfs",nconfs.size()}});
   vector<vector<double>> slopes(ind.max(),vector<double>(0)),errors(ind.max(),vector<double>(0));
-  for(size_t idiag=0;idiag<ndiag;idiag++)
-    for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
-      for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
-	for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
-	  for(int hrange=0;hrange<div_nhits.back()/div_nhits[hdiv];hrange++)
+  for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
+    for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
+      for(size_t hdiv=0;hdiv<div_nhits.size();hdiv++)
+	{
+	  int diagmax=ndiag;
+	  if(hdiv==0)
+	    diagmax=3;
+	for(int hrange=0;hrange<div_nhits.back()/div_nhits[hdiv];hrange++)
+	  for(size_t idiag=0;idiag<diagmax;idiag++)
 	    for(auto& es : {&errors,&slopes})
 	      (*es)[ind({idiag,hdiv,jdiv})].push_back(data.bin_read<double>());
-  
+	}
   ///loop on different slices
+  const int pow_nh[5]={1,1,1,2,2};
   for(size_t idiag=0;idiag<ndiag;idiag++)
     {
       const int nx=2;
@@ -288,8 +328,10 @@ int main(int narg,char **arg)
       int seed=0;
       
       cout<<"DIAG "<<diag[idiag]<<endl;
-      
-      for(size_t idiv_nhits=0;idiv_nhits<div_nhits.size();idiv_nhits++)
+      int idiv_nhits_min=0;
+      if(idiag>2)
+	idiv_nhits_min=1;
+      for(size_t idiv_nhits=idiv_nhits_min;idiv_nhits<div_nhits.size();idiv_nhits++)
 	for(size_t idiv_nconfs=0;idiv_nconfs<nconfs.size();idiv_nconfs++)
 	  {
 	    const int i=ind({idiag,idiv_nhits,idiv_nconfs});
@@ -323,8 +365,8 @@ int main(int narg,char **arg)
       //cout<<res.ave_err()<<endl;
       cout<<"the 'nhits'-associated error is no longer dominating for nhits which equals "<<(int)pow((res[0].ave()/res[1].ave()),1.0/pow_nh[idiag])<<endl;
       
-      slice_plot(div_nhits,nconfs,idiag,slopes,errors,ind,1,2,f,pow_nh[idiag],1);
-      slice_plot(nconfs,div_nhits,idiag,slopes,errors,ind,2,1,f_swapped,1,pow_nh[idiag]);
+      slice_plot(div_nhits,idiv_nhits_min,nconfs,0,idiag,slopes,errors,ind,1,2,f,pow_nh[idiag],1);
+      slice_plot(nconfs,0,div_nhits,idiv_nhits_min,idiag,slopes,errors,ind,2,1,f_swapped,1,pow_nh[idiag]);
     }
   
   return 0;
