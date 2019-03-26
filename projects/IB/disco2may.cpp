@@ -248,7 +248,7 @@ int main(int narg,char **arg)
 				{
 				  count++;
 				  for(size_t j=(i*(i+1))/2-count;j<(i*(i+1))/2;j++)
-				    EU_stoch[idiag].emplace_back(EU56_repository[ind56({iconf,idiag-3,j})]);
+				    EU_stoch[idiag].emplace_back(EU56_repository[ind56({iconf+(njacks*jrange),idiag-3,j})]);
 				}
 			    }
 			  // Computes the average over stochastich estimates
