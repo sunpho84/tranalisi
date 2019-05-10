@@ -38,7 +38,7 @@ typedef struct
   int nobs;
 } file_head;
 
-void check_file(const char *path)
+void check_file(const char *path,const int nGamma)
 {
   // int first, last;
   // int cpos, epos;
@@ -86,7 +86,6 @@ void check_file(const char *path)
   const int nMoms=lh.pars.nm;
   const int nMass=lh.pars.nk;
   const int T=lh.pars.dim_t;
-  const int nGamma=lh.nobs;
   
   index_t i2pt(
 	       {{"iks",nMass},
@@ -97,7 +96,17 @@ void check_file(const char *path)
 		{"gamma",nGamma},
 		{"reim",2}});
   
-  cout<<sizeof(file_head)<<" "<<i2pt.max()*sizeof(double)<<endl;
+ // for(iks=0;iks<nk;iks++)
+ //    for(ikt=0;ikt<nk;ikt++)
+ //    for(imoms=0;imoms<nmoms;imoms++) // spectator momentum (associated for the iks mass)
+ //    for(imomt=0;imomt<nmoms;imomt++) // momentum after photon insertion
+ //    for(imom0=0;imom0<nmoms;imom0++) // momentum before photon insertion
+ //    for(t=0;t<T;t++)
+ //    for(ipol=0;ipol<2;ipol++)
+ //    for(igamma=0;igamma<Ngamma;igamma++)
+ //    for(ire=0;ire<2;ire++)
+
+      cout<<sizeof(file_head)<<" "<<i2pt.max()*sizeof(double)<<endl;
   
   // size = sizeof(double)*lh.nobs + sizeof(int);
   // cpos = ftell(fp);
@@ -159,7 +168,7 @@ void check_file(const char *path)
 
 int main(int narg,char **arg)
 {
-  check_file("oAmuGPo-gs_conf.realph.dat");
+  check_file("oPPo-ss_conf.realph.dat",1);
   
   return 0;
 }
