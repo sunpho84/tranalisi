@@ -87,8 +87,7 @@ void check_file(const char *path,const int nGamma)
   const int nMass=lh.pars.nk;
   const int T=lh.pars.dim_t;
   
-  index_t i2pt(
-	       {{"iks",nMass},
+  index_t i2pt({{"iks",nMass},
 		{"ikt",nMass},
 		{"moms",nMoms},
 		{"momt",nMoms},
@@ -105,8 +104,8 @@ void check_file(const char *path,const int nGamma)
  //    for(ipol=0;ipol<2;ipol++)
  //    for(igamma=0;igamma<Ngamma;igamma++)
  //    for(ire=0;ire<2;ire++)
-
-      cout<<sizeof(file_head)<<" "<<i2pt.max()*sizeof(double)<<endl;
+  
+  cout<<ftell(fin)<<" "<<i2pt.max()*sizeof(double)<<endl;
   
   // size = sizeof(double)*lh.nobs + sizeof(int);
   // cpos = ftell(fp);
