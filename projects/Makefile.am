@@ -14,6 +14,7 @@ include FPIEM/Makefile.am
 include IB/Makefile.am
 include MOM2/Makefile.am
 include PLNG/Makefile.am
+include REPH/Makefile.am
 include SMETEST/Makefile.am
 include SPIPOLLO/Makefile.am
 include STEP_SCALING/Makefile.am
