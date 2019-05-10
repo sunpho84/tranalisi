@@ -527,6 +527,18 @@ void perens_t::print_Z(ofstream& file)
 	}
       file<<endl;
     }
+  
+  auto b=*get_Zbil_tasks()[0].out;
+  auto m=*get_Zmeslep_tasks()[0].out;
+  djack_t e12=2*m[1]/(b[3]-b[1])*100.0-100.0;
+  djack_t e34=m[2+5*3]/m[3+5*2]*100.0-100.0;
+  djack_t e3344=m[2+5*2]/m[3+5*3]*100.0-100.0;
+  djack_t e3434=2*m[2+5*3]/(b[0]-b[2])*100.0-100.0;
+  
+  file<<"2*Z12/(ZV-ZA): "<<smart_print(e12.ave_err())<<" %"<<endl;
+  file<<"(Z34/Z43-1): "<<smart_print(e34.ave_err())<<" %"<<endl;
+  file<<"(Z33/Z44-1): "<<smart_print(e3344.ave_err())<<" %"<<endl;
+  file<<"2*Z34/(ZS-ZP): "<<smart_print(e3434.ave_err())<<" %"<<endl;
 }
 
 perens_t perens_t::write_checkpoint()
