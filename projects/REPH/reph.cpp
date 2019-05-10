@@ -38,12 +38,6 @@ typedef struct
   int nobs;
 } file_head;
 
-static int init;
-static file_head gh;
-static int c0,c1;
-static int head_size;
-static int step;
-
 void check_file(const char *path)
 {
   // int first, last;
@@ -60,7 +54,7 @@ void check_file(const char *path)
   //   {
   //     printf("\nChecking file: %s\n", fn);
   //   }
-
+  
   /// File to be read
   FILE *fin=fopen(path,"r");
   if(fin==nullptr) CRASH("Unable to open file %s",path);
@@ -72,22 +66,38 @@ void check_file(const char *path)
   fread(lh.mom,sizeof(mom_t),lh.pars.nm,fin);
   fread(&lh.nobs,sizeof(int),1,fin);
   
-  printf(" - twisted: %s\n", (lh.pars.twist ? "yes" : "no"));
-  printf(" - flavors: %d\n", lh.pars.nf);
-  printf(" - hits: %d\n", lh.pars.nhits);
-  printf(" - volume: %dx%dx%dx%d\n", lh.pars.dim_t, lh.pars.dim_x, lh.pars.dim_y, lh.pars.dim_z);
-  printf(" - masses: %d\n", lh.pars.nk);
-  printf(" - momenta: %d\n", lh.pars.nm);
-  printf(" - beta: %lf\n", lh.pars.beta);
-  printf(" - kappa: %lf\n", lh.pars.ksea);
-  printf(" - mu: %lf\n", lh.pars.musea);
-  printf(" - csw: %lf\n", lh.pars.csw);
+  printf(" - twisted: %s\n",(lh.pars.twist ? "yes" : "no"));
+  printf(" - flavors: %d\n",lh.pars.nf);
+  printf(" - hits: %d\n",lh.pars.nhits);
+  printf(" - volume: %dx%dx%dx%d\n",lh.pars.dim_t,lh.pars.dim_x,lh.pars.dim_y,lh.pars.dim_z);
+  printf(" - masses: %d\n",lh.pars.nk);
+  printf(" - momenta: %d\n",lh.pars.nm);
+  printf(" - beta: %lf\n",lh.pars.beta);
+  printf(" - kappa: %lf\n",lh.pars.ksea);
+  printf(" - mu: %lf\n",lh.pars.musea);
+  printf(" - csw: %lf\n",lh.pars.csw);
   
   for(int n = 0; n < lh.pars.nk; n++)
-    printf(" - mass#%d: ( %f , %f )\n", n, lh.kappa[n], lh.mu[n]);
+    printf(" - mass#%d: (%f,%f)\n",n,lh.kappa[n],lh.mu[n]);
   
   for(int n = 0; n < lh.pars.nm; n++)
-    printf(" - momenta#%d: ( %f , %f , %f, %f )\n", n, lh.mom[n].p0, lh.mom[n].p1, lh.mom[n].p2, lh.mom[n].p3);
+    printf(" - momenta#%d: (%f,%f,%f,%f)\n",n,lh.mom[n].p0,lh.mom[n].p1,lh.mom[n].p2,lh.mom[n].p3);
+  
+  const int nMoms=lh.pars.nm;
+  const int nMass=lh.pars.nk;
+  const int T=lh.pars.dim_t;
+  const int nGamma=lh.nobs;
+  
+  index_t i2pt(
+	       {{"iks",nMass},
+		{"ikt",nMass},
+		{"moms",nMoms},
+		{"momt",nMoms},
+		{"t",T},
+		{"gamma",nGamma},
+		{"reim",2}});
+  
+  cout<<sizeof(file_head)<<" "<<i2pt.max()*sizeof(double)<<endl;
   
   // size = sizeof(double)*lh.nobs + sizeof(int);
   // cpos = ftell(fp);
