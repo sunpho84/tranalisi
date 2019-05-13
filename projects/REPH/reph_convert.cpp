@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 int twist;
 int nF;
@@ -23,9 +24,9 @@ vector<array<double,4>> moms;
 int nobs;
 
 bool saveText=false;
-bool saveJacks=true;
+bool saveJacks=false;
 
-void check_file(const char *corr,const bool is2pt,const size_t nGamma)
+void convert_file(const char *corr,const bool is2pt,const size_t nGamma)
 {
   const string input_path=combine("data/%s_conf.realph.dat",corr);
   const string text_path=combine("converted/%s_conf.realph.txt",corr);
@@ -118,17 +119,19 @@ void check_file(const char *corr,const bool is2pt,const size_t nGamma)
   if(saveText)
     fout_text.open(text_path,"w");
   
-  djvec_t out;
+  djvec_t *out=nullptr;
   if(saveJacks)
     {
-      out.resize(indOut.max());
-      out=0.0;
+      out=new djvec_t(indOut.max());
+      *out=0.0;
     }
   
-  const int clustSize=nConfs/njacks;
+  const int clustSize=saveJacks?(nConfs/njacks):0;
   for(int iConf=0;iConf<nConfs;iConf++)
     {
-      int iClust=iConf/clustSize;
+      int iClust=0;
+      if(saveJacks)
+	iClust=iConf/clustSize;
       
       int tag;
       fin.bin_read(tag);
@@ -175,7 +178,7 @@ void check_file(const char *corr,const bool is2pt,const size_t nGamma)
 			      const int iOut=indOut({iks,ikt,imoms,imomt,imom0,iPol,iGamma,ri,t});
 			      
 			      if(saveJacks)
-				out[iOut][iClust]+=temp[iIn];
+				(*out)[iOut][iClust]+=temp[iIn];
 			      
 			      if(saveText)
 				{
@@ -189,77 +192,55 @@ void check_file(const char *corr,const bool is2pt,const size_t nGamma)
   
   if(saveJacks)
     {
-      out.clusterize();
-      out.bin_write(jack_path);
+      out->clusterize();
+      out->bin_write(jack_path);
+      
+      delete out;
     }
-  
-  // size = sizeof(double)*lh.nobs + sizeof(int);
-  // cpos = ftell(fp);
-  // fseek(fp, 0, SEEK_END);
-  // epos = ftell(fp);
-  // epos = epos-cpos;
-  // nc = epos/size;
-  
-  // if(epos % size)
-  //   {
-  //     printf(" - ERROR: file size wrong\n\n");
-  //     fclose(fp);
-  //     exit(1);
-  //   }
-  
-  // fseek(fp, -size, SEEK_END);
-  // fread(&last, sizeof(int), 1, fp);
-  // fseek(fp, cpos, SEEK_SET);
-  // fread(&first, sizeof(int), 1, fp);
-  
-  // if(init == 0)
-  //   {
-  //     step = (last-first+1)/nc;
-  //     head_size = cpos;
-  //   }
-  
-  // cpos = (last-first+1)/nc;
-  // printf(" - configurations: %d\n", nc);
-  // printf(" - range: %d - %d\n", first, last);
-  // printf(" - spacing: %d\n", cpos);
-  
-  // if(cpos != step)
-  //   {
-  //     printf(" - ERROR: configuration spacing is different\n\n");
-  // 		fclose(fp);
-  // 		exit(1);
-  //   }
-  
-  // if(init == 0)
-  //   {
-  //     c0 = first;
-  //     c1 = last;
-  //   }
-  // else
-  //   {
-  //     if(c1+step != first)
-  // 	{
-  // 	  printf(" - ERROR: range does not continue previous file\n\n");
-  // 	  fclose(fp);
-  // 	  exit(1);
-  // 	}
-  //     c1 = last;
-  //   }
-  
-  // init = 1;
   
   fin.close();
 }
 
 int main(int narg,char **arg)
 {
-  set_njacks(15);
-
-  check_file("oPPo-ss",true,1);
-  check_file("oAmuPo-ss",true,4);
-  check_file("oPGPo-gs",false,1);
-  check_file("oAmuGPo-gs",false,4);
-  check_file("oVmuGPo-gs",false,4);
+  //parse opts
+  int c;
+  while((c=getopt(narg,arg,"j:th"))!= -1)
+    switch (c)
+      {
+      case 't': saveText=true;break;
+      case 'j':
+	set_njacks(to_int(optarg));
+	saveJacks=true;
+	break;
+      case 'h':
+	cout<<"Use "<<arg[0]<<" -jnjacks -t -h"<<endl;
+	exit(0);
+	break;
+      default: CRASH("Unknown option -%c, try -h for help ",optopt);
+      }
+  
+  convert_file("oPPo-ss",true,1);
+  // convert_file("oAmuPo-ss",true,4);
+  // convert_file("oPGPo-gs",false,1);
+  // convert_file("oAmuGPo-gs",false,4);
+  // convert_file("oVmuGPo-gs",false,4);
+  
+  raw_file_t input_out("input.txt","w");
+  
+  input_out.printf("L %d\n",dims[1]);
+  input_out.printf("T %d\n",dims[0]);
+  input_out.printf("NMass %d\n",nMass);
+  for(auto &m : mu)
+    input_out.printf(" %lg\n",m);
+  
+  input_out.printf("NMoms %d\n",nMoms);
+  for(auto &m : moms)
+    {
+      for(int i=1;i<4;i++)
+	input_out.printf("%lg ",m[i]);
+      input_out.printf("\n");
+    }
   
   return 0;
 }
