@@ -148,7 +148,7 @@ void check_file(const char *corr,const bool is2pt,const size_t nGamma)
 		    
 		    for(size_t iGamma=0;iGamma<nGamma;iGamma++)
 		      {
-			fout.printf("\n # Gamma %lu\n",iGamma);
+			fout.printf("\n # Gamma %lu\n\n",iGamma);
 			
 			for(size_t t=0;t<(size_t)T;t++)
 			  for(size_t ri=0;ri<2;ri++)
