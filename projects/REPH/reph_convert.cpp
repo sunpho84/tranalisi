@@ -221,25 +221,28 @@ int main(int narg,char **arg)
       }
   
   convert_file("oPPo-ss",true,1);
-  // convert_file("oAmuPo-ss",true,4);
-  // convert_file("oPGPo-gs",false,1);
-  // convert_file("oAmuGPo-gs",false,4);
-  // convert_file("oVmuGPo-gs",false,4);
+  convert_file("oAmuPo-ss",true,4);
+  convert_file("oPGPo-gs",false,1);
+  convert_file("oAmuGPo-gs",false,4);
+  convert_file("oVmuGPo-gs",false,4);
   
-  raw_file_t input_out("input.txt","w");
-  
-  input_out.printf("L %d\n",dims[1]);
-  input_out.printf("T %d\n",dims[0]);
-  input_out.printf("NMass %d\n",nMass);
-  for(auto &m : mu)
-    input_out.printf(" %lg\n",m);
-  
-  input_out.printf("NMoms %d\n",nMoms);
-  for(auto &m : moms)
+  if(saveJacks)
     {
-      for(int i=1;i<4;i++)
-	input_out.printf("%lg ",m[i]);
-      input_out.printf("\n");
+      raw_file_t input_out("input.txt","w");
+      
+      input_out.printf("L %d\n",dims[1]);
+      input_out.printf("T %d\n",dims[0]);
+      input_out.printf("NMass %d\n",nMass);
+      for(auto &m : mu)
+	input_out.printf(" %lg\n",m);
+      
+      input_out.printf("NMoms %d\n",nMoms);
+      for(auto &m : moms)
+	{
+	  for(int i=1;i<4;i++)
+	    input_out.printf("%lg ",m[i]);
+	  input_out.printf("\n");
+	}
     }
   
   return 0;
