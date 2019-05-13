@@ -22,15 +22,17 @@ vector<double> mu;
 vector<array<double,4>> moms;
 int nobs;
 
+bool saveText=false;
+bool saveJacks=true;
+
 void check_file(const char *corr,const bool is2pt,const size_t nGamma)
 {
   const string input_path=combine("data/%s_conf.realph.dat",corr);
-  const string output_path=combine("converted/%s_conf.realph.dat",corr);
+  const string text_path=combine("converted/%s_conf.realph.txt",corr);
+  const string jack_path=combine("jacks/%s",corr);
   
-  cout<<input_path<<" -> "<<output_path<<endl;
-  
-  if(file_exists(output_path))
-     return;
+  if(saveText) cout<<input_path<<" -> "<<text_path<<endl;
+  if(saveJacks) cout<<input_path<<" -> "<<jack_path<<endl;
   
   raw_file_t fin(input_path,"r");
   
@@ -75,34 +77,34 @@ void check_file(const char *corr,const bool is2pt,const size_t nGamma)
   const size_t nMom0=(is2pt?1:nMoms);
   const size_t nPol=(is2pt?1:2);
   
-  index_t ind({{"iks",nMass},
-		{"ikt",nMass},
-		{"moms",nMoms},
-		{"momt",nMoms},
-		{"mom0",nMom0},
-		{"t",T},
-		{"pol",nPol},
-		{"gamma",nGamma},
-		{"reim",2}});
+  index_t indIn({{"iks",nMass},
+		 {"ikt",nMass},
+		 {"moms",nMoms},
+		 {"momt",nMoms},
+		 {"mom0",nMom0},
+		 {"t",T},
+		 {"pol",nPol},
+		 {"gamma",nGamma},
+		 {"reim",2}});
   
-  // for(iks=0;iks<nk;iks++)
-  //    for(ikt=0;ikt<nk;ikt++)
-  //    for(imoms=0;imoms<nmoms;imoms++) // spectator momentum (associated for the iks mass)
-  //    for(imomt=0;imomt<nmoms;imomt++) // momentum after photon insertion
-  //    for(imom0=0;imom0<nmoms;imom0++) // momentum before photon insertion
-  //    for(t=0;t<T;t++)
-  //    for(ipol=0;ipol<2;ipol++)
-  //    for(igamma=0;igamma<Ngamma;igamma++)
-  //    for(ire=0;ire<2;ire++)
+  index_t indOut({{"iks",nMass},
+		  {"ikt",nMass},
+		  {"moms",nMoms},
+		  {"momt",nMoms},
+		  {"mom0",nMom0},
+		  {"pol",nPol},
+		  {"gamma",nGamma},
+		  {"reim",2},
+		  {"t",T}});
   
-  const int nDoublesExpected=ind.max();
+  const int nDoublesExpected=indIn.max();
   const int nDoubles=fin.bin_read<int>();
   if(nDoubles!=nDoublesExpected)
     CRASH("Expecting %d doubles, obtained %d",nDoublesExpected,nDoubles);
   
   const size_t corrPerConfSize=nDoubles*sizeof(double);
   
-  vector<double> temp(ind.max());
+  vector<double> temp(indIn.max());
   
   const size_t restFileSize=fin.size()-fin.get_pos();
   const int nConfs=restFileSize/corrPerConfSize;
@@ -112,10 +114,22 @@ void check_file(const char *corr,const bool is2pt,const size_t nGamma)
   if(nConfs!=nConfsBis)
     CRASH("nConfs determined from rest of the file size %d and tags %d do not match",nConfs,nConfsBis);
   
-  raw_file_t fout(output_path,"w");
+  raw_file_t fout_text;
+  if(saveText)
+    fout_text.open(text_path,"w");
   
+  djvec_t out;
+  if(saveJacks)
+    {
+      out.resize(indOut.max());
+      out=0.0;
+    }
+  
+  const int clustSize=nConfs/njacks;
   for(int iConf=0;iConf<nConfs;iConf++)
     {
+      int iClust=iConf/clustSize;
+      
       int tag;
       fin.bin_read(tag);
       cout<<tag<<endl;
@@ -129,36 +143,54 @@ void check_file(const char *corr,const bool is2pt,const size_t nGamma)
 	      for(size_t imom0=0;imom0<(size_t)nMom0;imom0++)
 		for(size_t iPol=0;iPol<nPol;iPol++)
 		  {
-		    fout.printf("\n # mass_s %lg , mass_t %lg , mom_s ( ",mu[iks],mu[ikt]);
-		    for(int j=1;j<4;j++)
-		      fout.printf("%lg ",moms[imoms][j]);
-		    fout.printf(") , mom_t ( ");
-		    for(int j=1;j<4;j++)
-		      fout.printf("%lg ",moms[imomt][j]);
-		    
-		    if(not is2pt)
+		    if(saveText)
 		      {
-			fout.printf(") , mom_0 ( ");
-			for(int j=1;j<4;j++)
-			  fout.printf("%lg ",moms[imom0][j]);
+			fout_text.printf("\n # mass_s %lg , mass_t %lg , mom_s ( ",mu[iks],mu[ikt]);
 			
-			fout.printf(") pol %zu",iPol);
+			for(int j=1;j<4;j++)
+			  fout_text.printf("%lg ",moms[imoms][j]);
+			fout_text.printf(") , mom_t ( ");
+			for(int j=1;j<4;j++)
+			  fout_text.printf("%lg ",moms[imomt][j]);
+			
+			if(not is2pt)
+			  {
+			    fout_text.printf(") , mom_0 ( ");
+			    for(int j=1;j<4;j++)
+			      fout_text.printf("%lg ",moms[imom0][j]);
+			    
+			    fout_text.printf(") pol %zu",iPol);
+			  }
+			fout_text.printf("\n");
 		      }
-		    fout.printf("\n");
 		    
 		    for(size_t iGamma=0;iGamma<nGamma;iGamma++)
 		      {
-			fout.printf("\n # Gamma %lu\n\n",iGamma);
+			if(saveText) fout_text.printf("\n # Gamma %lu\n\n",iGamma);
 			
 			for(size_t t=0;t<(size_t)T;t++)
 			  for(size_t ri=0;ri<2;ri++)
 			    {
-			      const int i=ind({iks,ikt,imoms,imomt,imom0,t,iPol,iGamma,ri});
-			      fout.printf("%+.16lg",temp[i]);
-			      fout.printf(ri==RE?"\t":"\n");
+			      const int iIn=indIn({iks,ikt,imoms,imomt,imom0,t,iPol,iGamma,ri});
+			      const int iOut=indOut({iks,ikt,imoms,imomt,imom0,iPol,iGamma,ri,t});
+			      
+			      if(saveJacks)
+				out[iOut][iClust]+=temp[iIn];
+			      
+			      if(saveText)
+				{
+				  fout_text.printf("%+.16lg",temp[iIn]);
+				  fout_text.printf(ri==RE?"\t":"\n");
+				}
 			    }
 		      }
 		  }
+    }
+  
+  if(saveJacks)
+    {
+      out.clusterize();
+      out.bin_write(jack_path);
     }
   
   // size = sizeof(double)*lh.nobs + sizeof(int);
@@ -221,6 +253,8 @@ void check_file(const char *corr,const bool is2pt,const size_t nGamma)
 
 int main(int narg,char **arg)
 {
+  set_njacks(15);
+
   check_file("oPPo-ss",true,1);
   check_file("oAmuPo-ss",true,4);
   check_file("oPGPo-gs",false,1);
