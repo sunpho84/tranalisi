@@ -228,7 +228,7 @@ int main(int narg,char **arg)
   
   if(saveJacks)
     {
-      raw_file_t input_out("input.txt","w");
+      raw_file_t input_out("jacks/input.txt","w");
       
       input_out.printf("L %d\n",dims[1]);
       input_out.printf("T %d\n",dims[0]);
