@@ -21,7 +21,7 @@ using namespace std;
 class raw_file_t
 {
   //! handle
-  FILE *file;
+  mutable FILE *file;
   
   //! stored path
   string path;
@@ -99,7 +99,7 @@ public:
   
   //! specialization for vector
   template <class T>
-  auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value>
+  auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value and (not is_pod<T>::value)>
   {
     for(auto &it : out)
       bin_write(it);
@@ -124,7 +124,7 @@ public:
   
   //! specialization for vector
   template <class T>
-  auto bin_read(T &out) const -> enable_if_t<is_vector<T>::value>
+  auto bin_read(T &out) const -> enable_if_t<is_vector<T>::value and not is_pod<T>::value>
   {
     for(auto &it : out)
       bin_read(it);
@@ -243,18 +243,12 @@ public:
     int rc=0;
     
     //check tag
-    if(name!=nullptr) rc+=fprintf(file,format_str<T>::value(),get_ptr(out));
+    if(name!=nullptr) rc+=fprintf(file,format_str<T>::value(),name);
     
     //write a type
-    rc+=fprintf(file,format_str<T>::value(),get_ptr(out));
+    rc+=fprintf(file,format_str<T>::value(),out);
     
     return rc;
-  }
-  
-  //! write a string
-  int write(const char *in,const char *name=nullptr) const
-  {
-    return write<string>(in,name);
   }
   
   //! return whether we are at the end of file
