@@ -127,7 +127,7 @@ void convert_file(const char *corr,const bool is2pt,const size_t nGamma)
     }
   
   const int clustSize=saveJacks?(nConfs/njacks):0;
-  for(int iConf=0;iConf<nConfs;iConf++)
+  for(int iConf=0;iConf<clustSize*njacks;iConf++)
     {
       int iClust=0;
       if(saveJacks)
