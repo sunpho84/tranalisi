@@ -122,10 +122,20 @@ template <class T>
 T cont_en(const T &m,const double &pi)
 {return sqrt(3*sqr(pi)+sqr(m));}
 
+//! continuum energy with momentum in 1 direction
+template <class T>
+T cont_en_1D(const T &m,const double &pi)
+{return sqrt(sqr(pi)+sqr(m));}
+
 //! lattice energy
 template <class T>
 T latt_en(const T &m,const double &pi)
 {return 2*asinh((T)sqrt(3*sqr(sin(pi/2))+sqr((T)sinh(m/2))));}
+
+//! lattice energy with momentum in 1 direction
+template <class T>
+T latt_en_1D(const T &m,const double &pi)
+{return 2*asinh((T)sqrt(sqr(sin(pi/2))+sqr((T)sinh(m/2))));}
 
 //! compute the value of the polynomial in the point
 template <class TV,class TS=typename TV::base_type>
