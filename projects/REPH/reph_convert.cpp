@@ -192,7 +192,7 @@ void convert_file(const char *corr,const bool is2pt,const size_t nGamma)
   
   if(saveJacks)
     {
-      out->clusterize();
+      out->clusterize(clustSize);
       out->bin_write(jack_path);
       
       delete out;
