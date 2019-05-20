@@ -1,6 +1,6 @@
 #include <tranalisi.hpp>
 
-size_t L,T,spatVol;
+int L,T,spatVol;
 size_t nMass;
 vector<double> mass;
 size_t nMoms;
@@ -15,8 +15,9 @@ vector<array<double,3>> moms;
   // P ---------- <- QS -------------V-A (t)
   
 
+const char VA_tag[2][2]={"V","A"};
 
-djvec_t load2pts(const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt)
+djvec_t load2ptsPP(const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt)
 {
   const index_t ind({{"iks",nMass},
 		     {"ikt",nMass},
@@ -30,7 +31,25 @@ djvec_t load2pts(const size_t iMs,const size_t iMt,const size_t iMoms,const size
   return read_djvec("jacks/oPPo-ss",T,i).symmetrized()/spatVol;
 }
 
-djvec_t load3pts(const string VA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0)
+djvec_t load2ptsAP(const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iGamma)
+{
+  const index_t ind({{"iks",nMass},
+		     {"ikt",nMass},
+		     {"moms",nMoms},
+		     {"momt",nMoms},
+		     {"gamma",4},
+		     {"reim",2}});
+  
+  const size_t iReIm=(iGamma==0)?RE:IM;
+  const int par=(iGamma==0)?-1:+1;
+  const int sign=(iGamma==0)?-1:+1;
+  
+  const size_t i=ind({iMs,iMt,iMoms,iMomt,iGamma,iReIm});
+  
+  return sign*read_djvec("jacks/oAmuPo-ss",T,i).symmetrized(par)/spatVol;
+}
+
+djvec_t load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0)
 {
   const double s[2][2]={-1,-1,+1,-1};
   
@@ -46,13 +65,13 @@ djvec_t load3pts(const string VA,const size_t iMs,const size_t iMt,const size_t 
 		     {"gamma",4},
 		     {"reim",2}});
   
-  const size_t iReIm=0;
+  const size_t iReIm=(iVA==0)?1:0;
   for(size_t iPol=0;iPol<2;iPol++)
     for(size_t iGamma=1;iGamma<=2;iGamma++)
       {
 	const size_t i=ind({iMs,iMt,iMoms,iMomt,iMom0,iPol,iGamma,iReIm});
 	
-	corr+=read_djvec("jacks/o" + VA + "muGPo-gs",T,i)*s[iPol][iGamma-1];
+	corr+=read_djvec(combine("jacks/o%smuGPo-gs",VA_tag[iVA]),T,i)*s[iPol][iGamma-1];
       }
   corr/=2*sqrt(2);
   
@@ -88,117 +107,191 @@ vector<double> compatibilityWith(const djvec_t& corr,const djack_t& c)
   return out;
 }
 
-int main(int narg,char **arg)
+void getAxialPseudoCouplings(djack_t& ZP,djack_t& ZA,djack_t& E,
+			     const djvec_t& C_PP,const djvec_t& C_A0P,const djvec_t& C_A3P,const double P,const size_t tMin,const size_t tMax,const size_t iMom1,const size_t iMom2)
 {
-  set_njacks(15);
-  
-  raw_file_t fin("jacks/input.txt","r");
-  
-  L=fin.read<size_t>("L");
-  spatVol=L*L*L;
-  T=fin.read<size_t>("T");
-  
-  nMass=fin.read<size_t>("NMass");
-  mass.resize(nMass);
-  for(size_t iMass=0;iMass<nMass;iMass++)
-    mass[iMass]=fin.read<double>();
-  
-  nMoms=fin.read<size_t>("NMoms");
-  moms.resize(nMoms);
-  for(size_t iMom=0;iMom<nMoms;iMom++)
-    for(size_t mu=0;mu<3;mu++)
-      moms[iMom][mu]=fin.read<double>();
-  
-  /////////////////////////////////////////////////////////////////
-  
-  grace_file_t fit2ptsPlot("plots/fit2pts.xmg");
-  grace_file_t Z2Plot("plots/Z2.xmg");
-  
-  size_t iMs=0;
-  size_t iMt=0;
-  
-  const index_t indMesKin({{"mom1",nMoms},{"mom2",nMoms}});
-  const size_t nMesKin=indMesKin.max();
-  vector<double> Pmes(nMesKin);
-  djvec_t E(nMesKin),Z(nMesKin);
-  
-  double pMax=0;
-  for(size_t iMom1=0;iMom1<nMoms;iMom1++)
-    for(size_t iMom2=iMom1;iMom2<nMoms;iMom2++)
-      {
-	const size_t i1=iMom1*nMoms+iMom2;
-	const size_t i2=iMom2*nMoms+iMom1;
-	
-	const int tmin=12,tmax=T/2+1;
-	
-	const djvec_t corr=load2pts(iMs,iMt,iMom1,iMom2);
-	
-	djack_t Z2,EFit;
-	two_pts_fit(Z2,EFit,corr,T/2,tmin,tmax);
-	Z[i1]=Z[i2]=sqrt(Z2);
-	E[i1]=E[i2]=EFit;
-	
-	fit2ptsPlot.write_vec_ave_err(effective_mass(corr).ave_err());
-	fit2ptsPlot.write_constant_band(tmin,tmax,EFit);
-	
-	double P=2*3.14159*(moms[iMom2][2]-moms[iMom1][2])/L;
-	Pmes[i1]=+P;
-	Pmes[i2]=-P;
-	
-	pMax=std::max(pMax,fabs(P));
-	
-	Z2Plot.write_ave_err(EFit.ave(),Z[i1].ave_err());
-      }
-  
-  grace_file_t dispRel("plots/dispRel.xmg");
-  dispRel.write_vec_ave_err(Pmes,E.ave_err());
-  
-  const djack_t &M=E[0];
-  
-  dispRel.write_polygon([M](double x){return latt_en_1D(M,x);},0,pMax,grace::GREEN);
-  dispRel.write_polygon([M](double x){return cont_en_1D(M,x);},0,pMax,grace::VIOLET);
-  
-  /////////////////////////////////////////////////////////////////
-  
-  const index_t ind3ptsKin({{"iMoms",nMoms},{"iMomt",nMoms},{"iMom0",nMoms}});
-  
-  vector<djvec_t> corr(ind3ptsKin.max(),djvec_t{T/2+1});
-  vector<djvec_t> normaliz(ind3ptsKin.max(),djvec_t{T/2+1});
-  djvec_t dE(ind3ptsKin.max());
-  
-  vector<bool> consider(ind3ptsKin.max());
-  for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
+  if(iMom1!=iMom2)
     {
-      const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
-      const size_t iMomt=c3pts[1],iMom0=c3pts[2];
-      consider[i3ptsKin]=iMomt!=iMom0;
+      //perform a preliminary fit
+      djack_t ZPP,ZA0P,ZA3P=1.0;
+      two_pts_fit(ZPP,E,C_PP,T/2,tMin,tMax,combine("plots/CPP_%zu_%zu.xmg",iMom1,iMom2),"",+1);
+      two_pts_fit(ZA0P,E,C_A0P,T/2,tMin,tMax-1,combine("plots/CA0P_%zu_%zu.xmg",iMom1,iMom2),"",-1);
+      two_pts_fit(ZA3P,E,C_A3P,T/2,tMin,tMax,combine("plots/CA3P_%zu_%zu.xmg",iMom1,iMom2),"",+1);
+      ZP=sqrt(ZPP);
+      const djack_t M=sqrt(E*E-P*P);
+      const djack_t ZA0=ZA0P/ZP,ZA3=ZA3P/ZP;
+      ZA=(ZA0*E-ZA3*P)/M;
+      
+      //parameters to fit
+      minimizer_pars_t pars;
+      pars.add("E",E.ave(),E.err());
+      pars.add("ZA",ZA.ave(),ZA.err());
+      pars.add("ZP",ZP.ave(),ZP.err());
+      
+      //! fit for real
+      size_t iel=0;
+      auto x=vector_up_to<double>(C_PP.size());
+      multi_ch2_t<djvec_t> two_pts_fit_obj({x,x,x},{tMin,tMin,tMin},{tMax,tMax-1,tMax},{C_PP,C_A0P,C_A3P},
+					   {two_pts_corr_fun_t(T/2,+1),two_pts_corr_fun_t(T/2,-1),two_pts_corr_fun_t(T/2,+1)},
+					   [&P](const vector<double> &p,size_t icontr)
+					   {
+					     switch(icontr)
+					       {
+					       case 0:return vector<double>({p[2]*p[2],p[0]});break;
+					       case 1:return vector<double>({p[1]*p[2]*p[0],p[0]});break;
+					       case 2:return vector<double>({p[1]*p[2]*P,p[0]});break;
+					       default: CRASH("Unknown contr %zu",icontr);return p;
+					       }
+					   },iel);
+      
+      minimizer_t minimizer(two_pts_fit_obj,pars);
+      
+      for(iel=0;iel<=njacks;iel++)
+	{
+	  //minimize and print the result
+	  vector<double> par_min=minimizer.minimize();
+	  E[iel]=par_min[0];
+	  ZA[iel]=par_min[1];
+	  ZP[iel]=par_min[2];
+	}
+      
+      write_constant_fit_plot(combine("plots/CPP_fit_%zu_%zu.xmg",iMom1,iMom2),tMin,tMax,E,effective_mass(C_PP,T/2,+1));
+      write_constant_fit_plot(combine("plots/CA0P_fit_%zu_%zu.xmg",iMom1,iMom2),tMin,tMax,E,effective_mass(C_A0P,T/2,-1));
+      write_constant_fit_plot(combine("plots/CA3P_fit_%zu_%zu.xmg",iMom1,iMom2),tMin,tMax,E,effective_mass(C_A3P,T/2,+1));
     }
+  else
+    {
+      two_pts_SL_fit(ZP,ZA,E,C_A0P,C_PP,T/2,tMin,tMax-1,combine("plots/CPP_A0P_fit_%zu_%zu.xmg",iMom1,iMom2),-1,+1);
+      ZA/=E;
+    }
+}
 
-  for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-    {
-      const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
-      const size_t iMoms=c3pts[0],iMomt=c3pts[1],iMom0=c3pts[2];
-      const size_t iMes=indMesKin({iMoms,iMom0});
-      const double P=Pmes[iMes];
-      const double Pg=2*M_PI*(moms[iMomt][2]-moms[iMom0][2])/L;
-      
-      const djack_t E=latt_en_1D(M,P);
-      const double Eg=fabs(Pg);
-      dE[i3ptsKin]=E-Eg;
-      
-      cout<<iMoms<<" "<<iMomt<<" "<<iMom0<<endl;
-      cout<<" P: "<<P<<endl;
-      cout<<" Pg: "<<Pg<<endl;
-      cout<<" E: "<<E.ave_err()<<endl;
-      cout<<" Eg: "<<Eg<<endl;
-      cout<<" dE: "<<dE[i3ptsKin].ave_err()<<endl;
-      
-      corr[i3ptsKin]=load3pts("A",iMs,iMt,iMoms,iMomt,iMom0);
-      
-      for(size_t t=0;t<=T/2;t++)
-	normaliz[i3ptsKin][t]=4*E*Eg/(Z[0]*exp(-dE[i3ptsKin]*t)*exp(-(T*Eg/2)));
-    }
+// void fix_by_markov()
+//   {
+//   vector<vector<double>> Ch2(ind3ptsKin.max());
+//   vector<array<double,3>> p3pts(ind3ptsKin.max());
+//   for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
+//     {
+//       const vector<size_t> c=ind3ptsKin(i3ptsKin);
+//       for(size_t i=0;i<3;i++)
+// 	p3pts[i3ptsKin][i]=moms[c[i]][2];
+//       if(consider[i3ptsKin])
+//       	Ch2[i3ptsKin]=compatibilityWith(effective_mass(corr[i3ptsKin],T/2,0),dE[i3ptsKin]);
+//     }
   
+//   vector<array<int,6>> neigh(ind3ptsKin.max());
+//   vector<int> tMin(ind3ptsKin.max(),T/4-1);
+//   vector<int> tMax(ind3ptsKin.max(),T/4+1);
+//   for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
+//     {
+//       vector<size_t> c=ind3ptsKin(i3ptsKin);
+//       for(size_t i=0;i<3;i++)
+// 	{
+// 	  if(c[i]!=0)
+// 	    {
+// 	      c[i]--;
+// 	      neigh[i3ptsKin][i]=ind3ptsKin(c);
+// 	      c[i]++;
+// 	    }
+// 	  else
+// 	    neigh[i3ptsKin][i]=-1;
+	  
+// 	  if(c[i]!=nMoms-1)
+// 	    {
+// 	      c[i]++;
+// 	      neigh[i3ptsKin][i+3]=ind3ptsKin(c);
+// 	      c[i]--;
+// 	    }
+// 	  else
+// 	    neigh[i3ptsKin][i+3]=-1;
+// 	}
+//     }
+  
+//   auto totCh2Fun=[&]()
+// 		 {
+// 		   double C=0;
+// 		   int n=0;
+// 		   for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
+// 		     if(consider[i3ptsKin])
+// 		       {
+// 			 C+=Ch2[i3ptsKin][tMax[i3ptsKin]+T/2*tMin[i3ptsKin]];
+// 			 n+=tMax[i3ptsKin]-tMin[i3ptsKin]+1;
+			 
+// 			 //cout<<" "<<i3ptsKin<<" ["<<tMax[i3ptsKin]<<";"<<tMin[i3ptsKin]<<"], "<<Ch2[i3ptsKin][tMax[i3ptsKin]+T/2*tMin[i3ptsKin]]<<endl;
+// 		       }
+		   
+// 		   return C-n;
+// 		 };
+  
+//   const int nR=000000;
+//   mt19937 gen(1213);
+//   double Ch2Old=totCh2Fun();
+//   for(int iR=0;iR<nR;iR++)
+//     {
+//       const int i3ptsKin=uniform_int_distribution<int>(0,ind3ptsKin.max()-1)(gen);
+//       if(consider[i3ptsKin])
+// 	for(auto& tptr : {&tMin,&tMax})
+// 	  {
+// 	    int& t=(*tptr)[i3ptsKin];
+	    
+// 	    const int shift=uniform_int_distribution<int>(0,1)(gen)*2-1;
+// 	    //cout<<"kin "<<i3ptsKin<<", ["<<tMin[i3ptsKin]<<";"<<tMax[i3ptsKin]<<"] shifting "<<t<<" of "<<shift<<endl;
+	    
+// 	    vector<size_t> c=ind3ptsKin(i3ptsKin);
+// 	    int oldT=t;
+// 	    if(t+shift<(int)T/2 and t>0)
+// 	      {
+// 		t+=shift;
+// 		//cout<<" test "<<i3ptsKin<<", ["<<tMin[i3ptsKin]<<";"<<tMax[i3ptsKin]<<"]"<<endl;
+		
+// 		for(int d=0;d<6;d++)
+// 		  {
+// 		    const int n=neigh[i3ptsKin][d];
+		    
+// 		    if(n!=-1)
+// 		      if(abs((*tptr)[n]-(*tptr)[i3ptsKin])>1)
+// 			{
+// 			  // cout<<(*tptr)[n]<<" too far for neighbor "<<n<<" in dir "<<d<<", "<<(*tptr)[i3ptsKin]<<endl;
+// 			  t=oldT;
+// 			}
+// 		  }
+		
+// 		if(tMax[i3ptsKin]-tMin[i3ptsKin]<3)
+// 		  {
+// 		    // cout<<"Unordered tMin tMax "<<tMin[i3ptsKin]<<" "<<tMax[i3ptsKin]<<endl;
+// 		    t=oldT;
+// 		  }
+// 		else
+// 		  {
+// 		    double Ch2New=totCh2Fun();
+// 		    double delta=Ch2New-Ch2Old;
+// 		    double pAcc=exp(-delta);
+// 		    if(uniform_real_distribution<>(0,1)(gen)<pAcc)
+// 		      {
+// 			cout<<i3ptsKin<<" changed to ["<<tMin[i3ptsKin]<<";"<<tMax[i3ptsKin]<<"], new Ch2: "<<Ch2New<<endl;
+// 			Ch2Old=Ch2New;
+// 		      }
+// 		    else
+// 		      {
+// 			// cout<<"Ch2New>Ch2Old: "<<Ch2New<<" "<<Ch2Old<<endl;
+// 			t=oldT;
+// 		      }
+// 		  }
+// 	      }
+// 	    // else
+// 	    //    cout<<"Cannot move "<<t<<"of "<<shift<<endl;
+// 	  }
+//     }
+  
+//   for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
+//     if(consider[i3ptsKin])
+//       {
+// 	const vector<size_t> c=ind3ptsKin(i3ptsKin);
+// 	cout<<c[0]<<" "<<c[1]<<" "<<c[2]<<"   ["<<tMin[i3ptsKin]<<":"<<tMax[i3ptsKin]<<"]"<<endl;
+//       }
+  
+//   }
+
   // for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
   //   {
   //     const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
@@ -290,89 +383,15 @@ int main(int narg,char **arg)
   //     // outplot.write_vec_ave_err(y.ave_err());
   //   }
   
-  vector<vector<double>> Ch2(ind3ptsKin.max());
-  vector<array<double,3>> p3pts(ind3ptsKin.max());
-  for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-    {
-      const vector<size_t> c=ind3ptsKin(i3ptsKin);
-      for(size_t i=0;i<3;i++)
-	p3pts[i3ptsKin][i]=moms[c[i]][2];
-      if(consider[i3ptsKin])
-      	Ch2[i3ptsKin]=compatibilityWith(effective_mass(corr[i3ptsKin],T/2,0),dE[i3ptsKin]);
-    }
+	// cout<<"Best range: "<<tMinBest<<" "<<tMaxBest<<" "<<TotCh2Best<<endl;
   
-  size_t tMinBest=0,tMaxBest=T/2-1;
-  double TotCh2Best=1e300;
-  int i=0,j=0;
-  for(size_t tMin=4;tMin<T/2-4;tMin++)
-    for(size_t tMax=tMin+4;tMax<T/2-4;tMax++)
-      for(size_t tMin1=4;tMin1<T/2-4;tMin1++)
-	for(size_t tMax1=tMin1+4;tMax1<T/2-4;tMax1++)
-	  for(size_t tMin2=4;tMin2<T/2-4;tMin2++)
-	    for(size_t tMax2=tMin2+4;tMax2<T/2-4;tMax2++)
-	      for(size_t tMin3=4;tMin3<T/2-4;tMin3++)
-		for(size_t tMax3=tMin3+4;tMax3<T/2-4;tMax3++)
-		  {
-		    double a=tMin;
-		    double b=tMax;
-		    
-		    double a1=((double)tMin1-tMin)/moms.back()[2]+1e-10;
-		    double a2=((double)tMin2-tMin)/moms.back()[2]+1e-10;
-		    double a3=((double)tMin3-tMin)/moms.back()[2]+1e-10;
-		    double b1=((double)tMax1-tMax)/moms.back()[2]+1e-10;
-		    double b2=((double)tMax2-tMax)/moms.back()[2]+1e-10;
-		    double b3=((double)tMax3-tMax)/moms.back()[2]+1e-10;
-		    
-		    // cout<<"tMin: "<<tMin<<" "<<tMin1<<" "<<tMin2<<" "<<tMin3<<endl;
-		    // cout<<"tMax: "<<tMax<<" "<<tMax1<<" "<<tMax2<<" "<<tMax3<<endl;
-		    
-		    // cout<<" a: "<<a1<<" "<<a2<<" "<<a3<<endl;
-		    // cout<<" b: "<<b1<<" "<<b2<<" "<<b3<<endl;
-		    
-		    i++;
-		    double TotCh2=0;
-		    int n=0;
-		    for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-		      if(consider[i3ptsKin])
-			{
-			  const array<double,3> &p=p3pts[i3ptsKin];
-			  int tMi=round(a+a1*p[0]+a2*p[1]+a3*p[2]);
-			  int tMa=round(b+b1*p[0]+b2*p[1]+b3*p[2]);
-
-			  if(tMa<tMi) CRASH("%d %d  %lg %lg %lg",tMi,tMa,p[0],p[1],p[2]);
-			  
-			  //cout<<p[0]<<" "<<p[1]<<" "<<p[2]<<" "<<tMi<<" "<<tMa<<endl;
-			  
-			  TotCh2+=Ch2[i3ptsKin][tMa+T/2*tMi];//*(tMa-tMi+1);
-			  n+=tMa-tMi+1;
-			}
-		    TotCh2/=n;
-		    
-		    if(TotCh2<TotCh2Best)
-		      {
-			TotCh2Best=TotCh2;
-			tMinBest=tMin;
-			tMaxBest=tMax;
-			
-			cout<<"New best: "<<tMinBest<<" "<<tMaxBest<<" "<<tMin1<<" "<<tMax1<<" "<<tMin2<<" "<<tMax2<<" "<<tMin3<<" "<<tMax3<<" "<<TotCh2<<" "<<n<<endl;
-		      }
-		    
-		    if(i>j*19448100)
-		      {
-			j++;
-			cout<<j<<endl;
-		      }
-		  }
-  
-  cout<<"Best range: "<<tMinBest<<" "<<tMaxBest<<" "<<TotCh2Best<<endl;
-  
-  for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-    if(consider[i3ptsKin])
-      {
-	grace_file_t outplot(combine("plots/3pts_range_%s.xmg",ind3ptsKin.descr(i3ptsKin).c_str()));
-	outplot.write_vec_ave_err(effective_mass(corr[i3ptsKin],T/2,0).ave_err());
-	outplot.write_constant_band(tMinBest,tMaxBest,dE[i3ptsKin]);
-      }
+  // for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
+  //   if(consider[i3ptsKin])
+  //     {
+  // 	grace_file_t outplot(combine("plots/3pts_range_%s.xmg",ind3ptsKin.descr(i3ptsKin).c_str()));
+  // 	outplot.write_vec_ave_err(effective_mass(corr[i3ptsKin],T/2,0).ave_err());
+  // 	outplot.write_constant_band(tMinBest,tMaxBest,dE[i3ptsKin]);
+  //     }
   
   // const size_t s=T/2;
   // size_t tMinBestCorr=0,tMaxBestCorr=s-1;
@@ -441,17 +460,319 @@ int main(int narg,char **arg)
   // 	}
   //   }
   
-  // for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-  //   {
-  //     grace_file_t outplot(combine("plots/3pts_%s.xmg",ind3ptsKin.descr(i3ptsKin).c_str()));
-  //     outplot.write_vec_ave_err(effective_mass(corr[i3ptsKin],T/2,0).ave_err());
-  //     outplot.write_constant_band(0,T/2,dE[i3ptsKin]);
-      
-  //     // djvec_t y=corr[i3ptsKin]*normaliz[i3ptsKin];
-      
-  //     // outplot.write_vec_ave_err(y.ave_err());
-  //   }
 
+  // for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
+  //   if(consider[i3ptsKin])
+  //     {
+  // 	const djack_t N=corr[i3ptsKin][T/4]/exp(-dE[i3ptsKin]*T/4);
+	
+  // 	//parameters to fit
+  // 	minimizer_pars_t pars;
+  // 	// pars.add("Z0",N.ave(),N.err());
+  // 	pars.add("dE10",2,0.1);
+  // 	pars.add("Z1",N.ave(),N.err());
+  // 	pars.setlimits("dE10",1.0,10);
+  // 	// pars.add("dE20",2,0.1);
+  // 	// pars.add("Z2",N.ave(),N.err());
+  // 	// pars.setlimits("dE20",1.0,10);
+	
+  // 	//! fit for real
+  // 	size_t iel=0;
+  // 	auto x=vector_up_to<double>(corr[i3ptsKin].size());
+  // 	auto fw=[&](const auto& N,const auto& dE,const auto& dE10,const auto& Z1// ,const auto& dE20,const auto& Z2
+  // 		    ,double x)
+  // 		{
+  // 		  return N*exp(-dE*x)+Z1*exp(-dE*dE10*x)// +Z2*exp(-dE*dE20*(T/2-x))
+  // 		    ;
+  // 		};
+  // 	auto f=[&](const vector<double> &p,const double &x)
+  // 	       {
+  // 		 return fw(N[iel],dE[i3ptsKin][iel],p[0],p[1],// p[2],p[3],
+  // 			   x);
+  // 	       };
+  // 	simple_ch2_t<djvec_t> fit_obj(vector_up_to<double>(corr[i3ptsKin].size()),tMin[i3ptsKin],tMax[i3ptsKin],corr[i3ptsKin],f,iel);
+	
+  // 	minimizer_t minimizer(fit_obj,pars);
+	
+  // 	djack_t Z0,dE10,Z1// ,dE20,Z2
+  // 	  ;
+  // 	for(iel=0;iel<njacks;iel++)
+  // 	  {
+  // 	    //minimize and print the result
+  // 	    vector<double> par_min=minimizer.minimize();
+  // 	    // Z0[iel]=par_min[0];
+  // 	    dE10[iel]=par_min[0];
+  // 	    Z1[iel]=par_min[1];
+  // 	    // dE20[iel]=par_min[2];
+  // 	    // Z2[iel]=par_min[3];
+  // 	  }
+	
+  // 	cout<<"dE10 "<<dE10.ave_err()<<endl;
+  // 	cout<<"Z1/N2: "<<djack_t(Z1/N).ave_err()<<endl;
+  // 	// cout<<"dE20 "<<dE20.ave_err()<<endl;
+  // 	// cout<<"Z2/N2: "<<djack_t(Z2/N).ave_err()<<endl;
+	
+  // 	auto der=[&](double x) -> djack_t
+  // 		 {
+  // 		   auto f1=[&](double x) -> djack_t
+  // 			   {
+  // 			     return N*exp(-dE[i3ptsKin]*x)+Z1*exp(-(dE[i3ptsKin]*dE10)*x)// +Z2*exp(-dE[i3ptsKin]*dE20*(T/2-x))
+  // 			       ;
+  // 			   };
+		   
+  // 		   const double dx=1e-3;
+  // 		   return -log((f1(x+dx)/f1(x)))/dx;
+  // 		 };
+	
+  // 	const djvec_t eff=effective_mass(corr[i3ptsKin],T/2,0);
+  // 	grace_file_t multifit(combine("plots/3pts_bis_%s.xmg",ind3ptsKin.descr(i3ptsKin).c_str()));
+  // 	write_fit_plot(multifit,tMin[i3ptsKin],tMax[i3ptsKin],der,vector_up_to<double>(eff.size()),eff);
+	
+  // 	const double target=0.005;
+  // 	const djack_t tMinEst=-log(target*N/Z1)/(dE[i3ptsKin]*(dE10-1));
+  // 	const djack_t tMaxEst=tMinEst+4;//T/2+log(target*abs(N/Z2))/(dE[i3ptsKin]*(dE20-1));
+  // 	cout<<tMinEst.ave_err()<<endl;
+  // 	cout<<tMaxEst.ave_err()<<endl;
+  // 	multifit.set_title(smart_print(tMinEst));
+  // 	multifit.write_constant_band(tMinEst.ave(),tMaxEst.ave(),dE[i3ptsKin]);
+  //     }
+
+
+int main(int narg,char **arg)
+{
+  set_njacks(15);
+  
+  raw_file_t fin("jacks/input.txt","r");
+  
+  L=fin.read<size_t>("L");
+  spatVol=L*L*L;
+  T=fin.read<size_t>("T");
+  
+  nMass=fin.read<size_t>("NMass");
+  mass.resize(nMass);
+  for(size_t iMass=0;iMass<nMass;iMass++)
+    mass[iMass]=fin.read<double>();
+  
+  nMoms=fin.read<size_t>("NMoms");
+  moms.resize(nMoms);
+  for(size_t iMom=0;iMom<nMoms;iMom++)
+    for(size_t mu=0;mu<3;mu++)
+      moms[iMom][mu]=fin.read<double>();
+  
+  /////////////////////////////////////////////////////////////////
+  
+  // grace_file_t fit2ptsPlot("plots/fit2pts.xmg");
+  grace_file_t ZPPlot("plots/ZP.xmg");
+  grace_file_t ZAPlot("plots/ZA.xmg");
+  
+  size_t iMs=2;
+  size_t iMt=0;
+  
+  const index_t indMesKin({{"mom1",nMoms},{"mom2",nMoms}});
+  const size_t nMesKin=indMesKin.max();
+  vector<double> Pmes(nMesKin);
+  djvec_t E(nMesKin),ZP(nMesKin),ZA(nMesKin);
+  
+  double pMax=0;
+  for(size_t iMom1=0;iMom1<nMoms;iMom1++)
+    for(size_t iMom2=iMom1;iMom2<nMoms;iMom2++)
+      {
+	const size_t i1=iMom1*nMoms+iMom2;
+	const size_t i2=iMom2*nMoms+iMom1;
+	
+	const int tMin=12,tMax=T/2+1;
+	
+	const djvec_t corrPP=load2ptsPP(iMs,iMt,iMom1,iMom2);
+	corrPP.ave_err().write(combine("plots/2pts_PP_corr_%d.xmg",i1));
+	
+	const djvec_t corrA0P=load2ptsAP(iMs,iMt,iMom1,iMom2,0);
+	corrA0P.ave_err().write(combine("plots/2pts_AP0_corr_%d.xmg",i1));
+	
+	const djvec_t corrA3P=load2ptsAP(iMs,iMt,iMom1,iMom2,3);
+	corrA3P.ave_err().write(combine("plots/2pts_AP3_corr_%d.xmg",i1));
+	
+	// djack_t Z2,EFit;
+	// two_pts_fit(Z2,EFit,corrPP,T/2,tMin,tMax);
+	// Z[i1]=Z[i2]=sqrt(Z2);
+	// E[i1]=E[i2]=EFit;
+	
+	// fit2ptsPlot.write_vec_ave_err(effective_mass(corrPP).ave_err());
+	// fit2ptsPlot.write_constant_band(tMin,tMax,EFit);
+	
+	double P=2*M_PI*(moms[iMom2][2]-moms[iMom1][2])/L;
+	Pmes[i1]=+P;
+	Pmes[i2]=-P;
+	
+	pMax=std::max(pMax,fabs(P));
+	
+	//ZPPlot.write_ave_err(EFit.ave(),Z[i1].ave_err());
+	
+	getAxialPseudoCouplings(ZP[i1],ZA[i1],E[i1],corrPP,corrA0P,corrA3P,Pmes[i1],tMin,tMax,iMom1,iMom2);
+	ZA[i2]=ZA[i1];
+	ZP[i2]=ZP[i1];
+	E[i2]=E[i1];
+	
+	ZAPlot.write_ave_err(E[i1].ave(),ZA[i1].ave_err());
+	ZPPlot.write_ave_err(E[i1].ave(),ZP[i1].ave_err());
+      }
+  
+  const djack_t fP=ZP[0]*(mass[iMs]+mass[iMt])/sqr(E[0]);
+  const djack_t fP_bis=ZA[0];
+  cout<<"fP: "<<fP.ave_err()<<endl;
+  cout<<"fP_bis: "<<fP_bis.ave_err()<<endl;
+  
+  grace_file_t dispRel("plots/dispRel.xmg");
+  dispRel.write_vec_ave_err(Pmes,E.ave_err());
+  
+  const djack_t &M=E[0];
+  
+  dispRel.write_polygon([M](double x){return latt_en_1D(M,x);},0,pMax,grace::GREEN);
+  dispRel.write_polygon([M](double x){return cont_en_1D(M,x);},0,pMax,grace::VIOLET);
+  
+  /////////////////////////////////////////////////////////////////
+  
+  const index_t ind3ptsKin({{"iMoms",nMoms},{"iMomt",nMoms},{"iMom0",nMoms}});
+  
+  vector<vector<djvec_t>> corr(2,vector<djvec_t>(ind3ptsKin.max(),djvec_t{(size_t)T/2+1}));
+  vector<djvec_t> normaliz(ind3ptsKin.max(),djvec_t{(size_t)T/2+1});
+  djvec_t dE(ind3ptsKin.max());
+  djvec_t PK(ind3ptsKin.max());
+  
+  vector<bool> consider(ind3ptsKin.max());
+  for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
+    {
+      const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
+      const size_t iMomt=c3pts[1],iMom0=c3pts[2];
+      consider[i3ptsKin]=iMomt!=iMom0;
+    }
+  
+  vector<double> k(ind3ptsKin.max()),khat(ind3ptsKin.max());
+  for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
+    {
+      const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
+      const size_t iMoms=c3pts[0],iMomt=c3pts[1],iMom0=c3pts[2];
+      const size_t iMes=indMesKin({iMoms,iMom0});
+      const double P=2*M_PI*(moms[iMom0][2]-moms[iMoms][2])/L;
+      k[i3ptsKin]=2*M_PI*(moms[iMom0][2]-moms[iMomt][2])/L;
+      khat[i3ptsKin]=2*sin(k[i3ptsKin]/2);
+      
+      // const djack_t E=latt_en_1D(M,P);
+      const double Eg=2*asinh(fabs(khat[i3ptsKin])/2);
+      const double EgT=sinh(Eg)*(1-exp(-T*Eg));
+      dE[i3ptsKin]=E[iMes]-Eg;
+      PK[i3ptsKin]=E[iMes]*Eg-P*k[i3ptsKin];
+      
+      
+      cout<<iMoms<<" "<<iMomt<<" "<<iMom0<<endl;
+      cout<<" P: "<<P<<endl;
+      cout<<" Pg: "<<k[i3ptsKin]<<endl;
+      cout<<" Pghat: "<<khat[i3ptsKin]<<endl;
+      cout<<" E: "<<E[iMes].ave_err()<<endl;
+      cout<<" Eg: "<<Eg<<endl;
+      cout<<" EgT: "<<EgT<<endl;
+      cout<<" dE: "<<dE[i3ptsKin].ave_err()<<endl;
+      
+      for(int iVA=0;iVA<2;iVA++)
+	corr[iVA][i3ptsKin]=load3pts(iVA,iMs,iMt,iMoms,iMomt,iMom0);
+      
+      for(int t=0;t<=T/2;t++)
+	normaliz[i3ptsKin][t]=4*E[iMes]*EgT/(ZP[iMes]*exp(-t*E[iMes]-(T/2-t)*Eg));
+    }
+  
+  /////////////////////////////////////////////////////////////////
+  
+  vector<size_t> tMin(ind3ptsKin.max(),0);
+  vector<size_t> tMax(ind3ptsKin.max(),0);
+  
+  for(int iVA=0;iVA<2;iVA++)
+    {
+      for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
+	if(consider[i3ptsKin])
+	  {
+	    grace_file_t outplot(combine("plots/3pts_%s_range_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
+	    const djvec_t eff=effective_mass(corr[iVA][i3ptsKin],T/2,0);
+	    outplot.write_vec_ave_err(eff.ave_err());
+	    
+	    vector<size_t> cl;
+	    bool incl=false;
+	    for(int t=0;t<T/2-1;t++)
+	      {
+		const djack_t e=eff[t]-dE[i3ptsKin];
+		const double c=fabs(e.ave()/e.err());
+		const int nDev=2;
+		const bool newIncl=(c<nDev);
+		
+		if(incl and not newIncl) cl.push_back(t-1);
+		if((not incl) and newIncl) cl.push_back(t);
+		
+		incl=newIncl;
+	      }
+	    
+	    if(incl)
+	      cl.push_back(T/2);
+	    
+	    if(cl.size()%2)
+	      CRASH("Size %d of %d should be even",(int)i3ptsKin,(int)cl.size());
+	    
+	    for(size_t iCl=0;iCl<cl.size()/2;iCl++)
+	      outplot.write_constant_band(cl[iCl*2]-0.5,cl[iCl*2+1]+0.5,dE[i3ptsKin]);
+	    
+	    cout<<"Merging "<<i3ptsKin<<endl;
+	    size_t iCl=0;
+	    const size_t gap=3;
+	    int nMerged=0;
+	    while(cl.size()/2>1 and iCl<cl.size()/2)
+	      {
+		auto begThis=cl.begin()+iCl;
+		auto endThis=cl.begin()+iCl+1;
+		auto begNext=cl.begin()+iCl+2;
+		auto endNext=cl.begin()+iCl+3;
+		if(*(endThis+1)<=(*endThis)+gap)
+		  {
+		    cout<<"Merged ["<<*begThis<<";"<<*endThis<<"] with ["<<*begNext<<";"<<*endNext<<"], result";
+		    cl.erase(endThis,begNext+1);
+		    cout<<" ["<<*begThis<<";"<<*endThis<<"]"<<endl;
+		    
+		    nMerged++;
+		  }
+		else
+		  {
+		    cout<<"Not merged ["<<*begThis<<";"<<*endThis<<"] with ["<<*begNext<<";"<<*endNext<<"]"<<endl;
+		    iCl+=2;
+		  }
+	      }
+	    cout<<"NMerged: "<<nMerged<<endl;
+	    cout<<endl;
+	    
+	    for(size_t iCl=0;iCl<cl.size()/2;iCl++)
+	      outplot.write_constant_band(cl[iCl*2]-0.5,cl[iCl*2+1]+0.5,djack_t(dE[i3ptsKin]-dE[i3ptsKin].err()*3));
+	    
+	    outplot.set_title(to_string(i3ptsKin));
+	    
+	    for(size_t iCl=0;iCl<cl.size()/2;iCl++)
+	      if(tMax[i3ptsKin]-tMin[i3ptsKin]<cl[iCl*2+1]-cl[iCl*2])
+		{
+		  tMax[i3ptsKin]=cl[iCl*2+1];
+		  tMin[i3ptsKin]=cl[iCl*2];
+		}
+	  }
+      
+      grace_file_t H(combine("plots/H_%s.xmg",VA_tag[iVA]));
+      grace_file_t ff(combine("plots/ff_%s.xmg",VA_tag[iVA]));
+      for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
+	if(consider[i3ptsKin])
+	  {
+	    const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
+	    
+	    const djvec_t y=corr[iVA][i3ptsKin]*normaliz[i3ptsKin]/PK[i3ptsKin];
+	    const djack_t C=constant_fit(y,tMin[i3ptsKin],tMax[i3ptsKin],combine("plots/3pts_%s_fit_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
+	    const djack_t x=2*PK[i3ptsKin]/sqr(E[0]);
+	    const djack_t f=C+fP_bis/PK[i3ptsKin];
+	    
+	    H.write_ave_err(1/PK[i3ptsKin].ave(),C.ave_err());
+	    ff.write_ave_err(x.ave(),f.ave_err());
+	  }
+    }
   
   return 0;
 }
