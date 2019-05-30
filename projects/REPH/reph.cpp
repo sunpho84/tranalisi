@@ -588,6 +588,7 @@ int main(int narg,char **arg)
   const size_t nMesKin=indMesKin.max();
   vector<double> Pmes(nMesKin);
   djvec_t E(nMesKin),ZP(nMesKin),ZA(nMesKin);
+  vector<djvec_t> Eeff(nMesKin,djvec_t(T));
   
   double pMax=0;
   for(size_t iMom1=0;iMom1<nMoms;iMom1++)
@@ -600,7 +601,7 @@ int main(int narg,char **arg)
 	
 	const djvec_t corrPP=load2ptsPP(iMs,iMt,iMom1,iMom2);
 	corrPP.ave_err().write(combine("plots/2pts_PP_corr_%d.xmg",i1));
-	
+	Eeff[i1]=Eeff[i2]=effective_mass(corrPP);
 	const djvec_t corrA0P=load2ptsAP(iMs,iMt,iMom1,iMom2,0);
 	corrA0P.ave_err().write(combine("plots/2pts_AP0_corr_%d.xmg",i1));
 	
@@ -677,8 +678,7 @@ int main(int narg,char **arg)
       const double EgT=sinh(Eg)*(1-exp(-T*Eg));
       dE[i3ptsKin]=E[iMes]-Eg;
       PK[i3ptsKin]=E[iMes]*Eg-P*k[i3ptsKin];
-      
-      
+            
       cout<<iMoms<<" "<<iMomt<<" "<<iMom0<<endl;
       cout<<" P: "<<P<<endl;
       cout<<" Pg: "<<k[i3ptsKin]<<endl;
@@ -692,7 +692,12 @@ int main(int narg,char **arg)
 	corr[iVA][i3ptsKin]=load3pts(iVA,iMs,iMt,iMoms,iMomt,iMom0);
       
       for(int t=0;t<=T/2;t++)
-	normaliz[i3ptsKin][t]=4*E[iMes]*EgT/(ZP[iMes]*exp(-t*E[iMes]-(T/2-t)*Eg));
+	{
+	  const djack_t &A=E[iMes];
+	  const djack_t &B=Eeff[iMes][std::min(std::min(t,T-t),T/2-1)];
+	  cout<<t<<" "<<smart_print(A.ave_err())<<" "<<smart_print(B.ave_err())<<endl;
+	  normaliz[i3ptsKin][t]=4*E[iMes]*EgT/(ZP[iMes]*exp(-t*A-(T/2-t)*Eg));
+	}
     }
   
   /////////////////////////////////////////////////////////////////
