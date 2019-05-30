@@ -663,22 +663,23 @@ int main(int narg,char **arg)
       consider[i3ptsKin]=iMomt!=iMom0;
     }
   
-  vector<double> k(ind3ptsKin.max()),khat(ind3ptsKin.max());
+  vector<int> iMesOf3ptsKin(ind3ptsKin.max());
+  vector<double> P(ind3ptsKin.max()),Eg(ind3ptsKin.max()),k(ind3ptsKin.max()),khat(ind3ptsKin.max());
   for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
     {
       const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
       const size_t iMoms=c3pts[0],iMomt=c3pts[1],iMom0=c3pts[2];
-      const size_t iMes=indMesKin({iMoms,iMom0});
-      const double P=2*M_PI*(moms[iMom0][2]-moms[iMoms][2])/L;
+      const size_t iMes=iMesOf3ptsKin[i3ptsKin]=indMesKin({iMoms,iMom0});
+      P[i3ptsKin]=2*M_PI*(moms[iMom0][2]-moms[iMoms][2])/L;
       k[i3ptsKin]=2*M_PI*(moms[iMom0][2]-moms[iMomt][2])/L;
       khat[i3ptsKin]=2*sin(k[i3ptsKin]/2);
       
       // const djack_t E=latt_en_1D(M,P);
-      const double Eg=2*asinh(fabs(khat[i3ptsKin])/2);
-      const double EgT=sinh(Eg)*(1-exp(-T*Eg));
-      dE[i3ptsKin]=E[iMes]-Eg;
-      PK[i3ptsKin]=E[iMes]*Eg-P*k[i3ptsKin];
-            
+      Eg[i3ptsKin]=2*asinh(fabs(khat[i3ptsKin])/2);
+      const double EgT=sinh(Eg[i3ptsKin])*(1-exp(-T*Eg[i3ptsKin]));
+      dE[i3ptsKin]=E[iMes]-Eg[i3ptsKin];
+      PK[i3ptsKin]=E[iMes]*Eg[i3ptsKin]-P[i3ptsKin]*khat[i3ptsKin];
+      
       cout<<iMoms<<" "<<iMomt<<" "<<iMom0<<endl;
       cout<<" P: "<<P<<endl;
       cout<<" Pg: "<<k[i3ptsKin]<<endl;
@@ -696,7 +697,7 @@ int main(int narg,char **arg)
 	  const djack_t &A=E[iMes];
 	  const djack_t &B=Eeff[iMes][std::min(std::min(t,T-t),T/2-1)];
 	  cout<<t<<" "<<smart_print(A.ave_err())<<" "<<smart_print(B.ave_err())<<endl;
-	  normaliz[i3ptsKin][t]=4*E[iMes]*EgT/(ZP[iMes]*exp(-t*A-(T/2-t)*Eg));
+	  normaliz[i3ptsKin][t]=4*E[iMes]*EgT/(ZP[iMes]*exp(-t*A-(T/2-t)*Eg[i3ptsKin]));
 	}
     }
   
@@ -778,20 +779,27 @@ int main(int narg,char **arg)
 		}
 	  }
       
-      grace_file_t H(combine("plots/H_%s.xmg",VA_tag[iVA]));
-      grace_file_t ff(combine("plots/ff_%s.xmg",VA_tag[iVA]));
+      grace_file_t H_plot(combine("plots/H_%s.xmg",VA_tag[iVA]));
+      grace_file_t ff_plot(combine("plots/ff_%s.xmg",VA_tag[iVA]));
       for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
 	if(consider[i3ptsKin])
 	  {
+	    const int iMes=iMesOf3ptsKin[i3ptsKin];
+	    
 	    const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
 	    
-	    const djvec_t y=corr[iVA][i3ptsKin]*normaliz[i3ptsKin]/PK[i3ptsKin];
-	    const djack_t C=constant_fit(y,tMin[i3ptsKin],tMax[i3ptsKin],combine("plots/3pts_%s_fit_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
+	    const djvec_t y=corr[iVA][i3ptsKin]*normaliz[i3ptsKin];
+	    const djack_t H=constant_fit(y,tMin[i3ptsKin],tMax[i3ptsKin],combine("plots/3pts_%s_fit_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
 	    const djack_t x=2*PK[i3ptsKin]/sqr(E[0]);
-	    const djack_t f=C+fP_bis/PK[i3ptsKin];
+	    djack_t f;
 	    
-	    H.write_ave_err(1/PK[i3ptsKin].ave(),C.ave_err());
-	    ff.write_ave_err(x.ave(),f.ave_err());
+	    if(iVA==1)
+	      f=(H+fP_bis)/PK[i3ptsKin];
+	    else
+	      f=H*E[0]/(Eg[i3ptsKin]*P[i3ptsKin]-E[iMes]*khat[i3ptsKin]);
+	    
+	    H_plot.write_ave_err(1/PK[i3ptsKin].ave(),H.ave_err());
+	    ff_plot.write_ave_err(x.ave(),f.ave_err());
 	  }
     }
   
