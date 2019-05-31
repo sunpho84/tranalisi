@@ -70,11 +70,32 @@ int main()
   constant_fit(effective_mass(sig0_55,T/2,-1),tMin,tMax,"plots/sig_55.xmg");
   constant_fit(effective_mass(nuc_55,T/2,-1),tMin,tMax,"plots/nuc_55.xmg");
   constant_fit(effective_mass(nuc_alt,T/2,-1),tMin,tMax,"plots/nuc_alt.xmg");
+  
   const djack_t aMomega=constant_fit(effective_mass(omega,T/2,-1),tMin,tMax,"plots/omega.xmg");
   const djack_t mOmega=aMomega/a;
   const double mOmega_exp=1.672;
-  cout<<smart_print(mOmega)<<endl;
-
+  cout<<"MOmega: "<<smart_print(mOmega)<<" GeV"<<endl;
+  
+  if(file_exists("jacks/bar_alt_contr_LPPPL_proj_4_Wick_0"))
+    {
+      const djvec_t dir_00=read(SM_SI,SM_SO,3,0);
+      const djvec_t exc_00=read(SM_SI,SM_SO,3,1);
+      const djvec_t dir_0i=read(SM_SI,SM_SO,4,0);
+      const djvec_t exc_0i=read(SM_SI,SM_SO,4,1);
+      const djvec_t dir_i0=read(SM_SI,SM_SO,5,0);
+      const djvec_t exc_i0=read(SM_SI,SM_SO,5,1);
+      
+      const djvec_t _00=dir_00-2*exc_00;
+      const djvec_t _0i=dir_0i-2*exc_0i;
+      const djvec_t _i0=dir_i0-2*exc_i0;
+      constant_fit(effective_mass(_00,T/2,-1),tMin,tMax,"plots/00.xmg");
+      constant_fit(effective_mass(_0i,T/2,-1),tMin,tMax,"plots/0i.xmg");
+      constant_fit(effective_mass(_i0,T/2,-1),tMin,tMax,"plots/i0.xmg");
+      const djack_t aM00=constant_fit(effective_mass(_00,T/2,-1),tMin,tMax,"plots/00.xmg");
+      const djack_t m00=aM00/a;
+      cout<<"M00: "<<smart_print(m00)<<" GeV"<<endl;
+    }
+  
   const djack_t rat1=aMomega/aMeta_ss;
   const double rat1_exp=mOmega_exp/mEta_ss_exp;
   const djack_t rat1_offset=rat1_exp/rat1-1;
