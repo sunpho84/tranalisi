@@ -6,14 +6,12 @@ vector<double> mass;
 size_t nMoms;
 vector<array<double,3>> moms;
 
-
-  //               ~~~~~~~~~~~~~~~~~~~~~~~~~~ T/2
-  //               }                           |
-  //     --- -> Q0 --- X --- -> Qt ---         |
-  //    /                             \        |
-  //   /                               \       |
-  // P ---------- <- QS -------------V-A (t)
-  
+//               ~~~~~~~~~~~~~~~~~~~~~~~~~~ T/2
+//               }                           |
+//     --- -> Q0 --- X --- -> Qt ---         |
+//    /                             \        |
+//   /                               \       |
+// P ---------- <- QS -------------V-A (t)
 
 const char VA_tag[2][2]={"V","A"};
 
@@ -85,8 +83,8 @@ djvec_t load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t
       }
   corr/=2*sqrt(2);
   
-  corr/=(L*L*L);
-
+  corr/=-(L*L*L);
+  
   corr.symmetrize(par);
   const size_t iave=ind_ave({iMs,iMt,iMoms,iMomt,iMom0});
   corr.ave_err().write(combine("plots/o%smuGPo-gs_%s.xmg",VA_tag[iVA],ind_ave.descr(iave).c_str()));
@@ -581,8 +579,17 @@ int main(int narg,char **arg)
   grace_file_t ZPPlot("plots/ZP.xmg");
   grace_file_t ZAPlot("plots/ZA.xmg");
   
-  size_t iMs=2;
-  size_t iMt=0;
+  const size_t iMs=1;
+  const size_t iMt=3;
+  
+  const double es=-1.0/3;
+  const double et=+2.0/3;
+  
+  // const size_t iMs=3;
+  // const size_t iMt=1;
+  
+  // const double es=+2.0/3;
+  // const double et=-1.0/3;
   
   const index_t indMesKin({{"mom1",nMoms},{"mom2",nMoms}});
   const size_t nMesKin=indMesKin.max();
@@ -637,6 +644,8 @@ int main(int narg,char **arg)
   const djack_t fP_bis=ZA[0];
   cout<<"fP: "<<fP.ave_err()<<endl;
   cout<<"fP_bis: "<<fP_bis.ave_err()<<endl;
+  const djack_t Zv=fP/fP_bis;
+  cout<<"Zv: "<<Zv.ave_err()<<endl;
   
   grace_file_t dispRel("plots/dispRel.xmg");
   dispRel.write_vec_ave_err(Pmes,E.ave_err());
@@ -656,11 +665,16 @@ int main(int narg,char **arg)
   djvec_t PK(ind3ptsKin.max());
   
   vector<bool> consider(ind3ptsKin.max());
+  vector<bool> hasSymm(ind3ptsKin.max());
+  vector<int> symmOf(ind3ptsKin.max(),-1);
   for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
     {
       const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
-      const size_t iMomt=c3pts[1],iMom0=c3pts[2];
-      consider[i3ptsKin]=iMomt!=iMom0;
+      const size_t iMoms=c3pts[0],iMomt=c3pts[1],iMom0=c3pts[2];
+      consider[i3ptsKin]=(iMomt!=iMom0);
+      hasSymm[i3ptsKin]=(iMoms==iMom0);
+      if(hasSymm[i3ptsKin])
+	symmOf[i3ptsKin]=ind3ptsKin({iMomt,iMoms,iMomt});
     }
   
   vector<int> iMesOf3ptsKin(ind3ptsKin.max());
@@ -681,23 +695,28 @@ int main(int narg,char **arg)
       PK[i3ptsKin]=E[iMes]*Eg[i3ptsKin]-P[i3ptsKin]*khat[i3ptsKin];
       
       cout<<iMoms<<" "<<iMomt<<" "<<iMom0<<endl;
-      cout<<" P: "<<P<<endl;
+      cout<<" P: "<<P[i3ptsKin]<<endl;
       cout<<" Pg: "<<k[i3ptsKin]<<endl;
       cout<<" Pghat: "<<khat[i3ptsKin]<<endl;
       cout<<" E: "<<E[iMes].ave_err()<<endl;
-      cout<<" Eg: "<<Eg<<endl;
+      cout<<" Eg: "<<Eg[i3ptsKin]<<endl;
       cout<<" EgT: "<<EgT<<endl;
       cout<<" dE: "<<dE[i3ptsKin].ave_err()<<endl;
       
       for(int iVA=0;iVA<2;iVA++)
-	corr[iVA][i3ptsKin]=load3pts(iVA,iMs,iMt,iMoms,iMomt,iMom0);
+	corr[iVA][i3ptsKin]=
+	  load3pts(iVA,iMs,iMt,iMoms,iMomt,iMom0)*et+
+	  ((iVA==0)?+1.0:-1.0)*
+	  load3pts(iVA,iMt,iMs,iMoms,iMomt,iMom0)*es;
+	  // load3pts(iVA,iMs,iMt,iMoms,iMomt,iMom0);
       
       for(int t=0;t<=T/2;t++)
 	{
 	  const djack_t &A=E[iMes];
-	  const djack_t &B=Eeff[iMes][std::min(std::min(t,T-t),T/2-1)];
-	  cout<<t<<" "<<smart_print(A.ave_err())<<" "<<smart_print(B.ave_err())<<endl;
-	  normaliz[i3ptsKin][t]=4*E[iMes]*EgT/(ZP[iMes]*exp(-t*A-(T/2-t)*Eg[i3ptsKin]));
+	  //const djack_t &B=Eeff[iMes][std::min(std::min(t,T-t),T/2-1)];
+	  const djack_t &W=A;
+	  //cout<<t<<" "<<smart_print(A.ave_err())<<" "<<smart_print(B.ave_err())<<endl;
+	  normaliz[i3ptsKin][t]=4*W*EgT/(ZP[iMes]*exp(-t*W-(T/2-t)*Eg[i3ptsKin]));
 	}
     }
   
@@ -715,13 +734,49 @@ int main(int narg,char **arg)
 	    const djvec_t eff=effective_mass(corr[iVA][i3ptsKin],T/2,0);
 	    outplot.write_vec_ave_err(eff.ave_err());
 	    
+	    //compute the compatibility level
+	    vector<double> err(T/2),comp(T/2);
+	    grace_file_t outcomp(combine("plots/3pts_%s_comp_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
+	    for(int t=T/12;t<T/2-T/12;t++)
+	      {
+		const djack_t e=eff[t]-dE[i3ptsKin];
+		if(not isnan(e.err()))
+		  {
+		    err[t]=e.err();
+		    comp[t]=fabs(e.ave()/e.err());
+		    outcomp.write_xy(t,comp[t]);
+		  }
+	      }
+	    
+	    if(hasSymm[i3ptsKin])
+	      {
+		const int i3ptsKinSymm=symmOf[i3ptsKin];
+		cout<<dE[i3ptsKin].ave_err()<<" "<<dE[i3ptsKinSymm].ave_err()<<endl;
+		grace_file_t out(combine("plots/3pts_%s_symm_rat_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
+		const djvec_t s=-corr[iVA][i3ptsKin]/corr[iVA][symmOf[i3ptsKin]]-1.0;
+		out.write_vec_ave_err(s.ave_err());
+	      }
+	    
+	    //plot the compatibility level
+	    outcomp.new_data_set();
+	    outcomp.set_all_colors(grace::BLUE);
+	    const double &err_min=*min_element(err.begin()+T/12,err.end()-T/12);
+	    const double &comp_min=*min_element(comp.begin()+T/12,comp.end()-T/12);
+	    cout<<"comp min: "<<comp_min<<endl;
+	    cout<<"err min: "<<err_min<<endl;
+	    for(int t=0;t<T/2;t++)
+	      outcomp.write_xy(t,err[t]/err_min);
+	    
+	    //! Number of stddev for compatibility
+	    const double nDev=std::max(comp_min*1.1,1.0);
+	    cout<<"nDev: "<<nDev<<endl;
+	    
 	    vector<size_t> cl;
 	    bool incl=false;
-	    for(int t=0;t<T/2-1;t++)
+	    for(int t=T/12;t<T/2-T/12;t++)
 	      {
 		const djack_t e=eff[t]-dE[i3ptsKin];
 		const double c=fabs(e.ave()/e.err());
-		const int nDev=2;
 		const bool newIncl=(c<nDev);
 		
 		if(incl and not newIncl) cl.push_back(t-1);
@@ -731,7 +786,17 @@ int main(int narg,char **arg)
 	      }
 	    
 	    if(incl)
-	      cl.push_back(T/2);
+	      cl.push_back(T/2-T/12);
+	    
+	    if(cl.size()==0)
+	      CRASH("No compatible point for kinematic %s",ind3ptsKin.descr(i3ptsKin).c_str());
+	    else
+	      {
+		cout<<"NRanges: "<<cl.size()/2<<"  ";
+		for(size_t iCl=0;iCl<cl.size()/2;iCl++)
+		  cout<<"["<<cl[iCl*2]<<";"<<cl[iCl*2+1]<<"] ";
+		cout<<endl;
+	      }
 	    
 	    if(cl.size()%2)
 	      CRASH("Size %d of %d should be even",(int)i3ptsKin,(int)cl.size());
@@ -777,19 +842,26 @@ int main(int narg,char **arg)
 		  tMax[i3ptsKin]=cl[iCl*2+1];
 		  tMin[i3ptsKin]=cl[iCl*2];
 		}
+	    
+	    cout<<i3ptsKin<<": range ["<<tMin[i3ptsKin]<<";"<<tMax[i3ptsKin]<<"]"<<endl;
 	  }
       
       grace_file_t H_plot(combine("plots/H_%s.xmg",VA_tag[iVA]));
       grace_file_t ff_plot(combine("plots/ff_%s.xmg",VA_tag[iVA]));
+      ff_plot.set_line_style(grace::NO_LINE);
+      
       for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-	if(consider[i3ptsKin])
+	if(consider[i3ptsKin] // and hasSymm[i3ptsKin]
+	   )
 	  {
 	    const int iMes=iMesOf3ptsKin[i3ptsKin];
 	    
 	    const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
 	    
 	    const djvec_t y=corr[iVA][i3ptsKin]*normaliz[i3ptsKin];
-	    const djack_t H=constant_fit(y,tMin[i3ptsKin],tMax[i3ptsKin],combine("plots/3pts_%s_fit_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
+	    const djack_t H=constant_fit(y,// T/4-1+0*
+					 tMin[i3ptsKin],// T/4+1+0*
+					 tMax[i3ptsKin],combine("plots/3pts_%s_fit_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
 	    const djack_t x=2*PK[i3ptsKin]/sqr(E[0]);
 	    djack_t f;
 	    
@@ -799,6 +871,7 @@ int main(int narg,char **arg)
 	      f=H*E[0]/(Eg[i3ptsKin]*P[i3ptsKin]-E[iMes]*khat[i3ptsKin]);
 	    
 	    H_plot.write_ave_err(1/PK[i3ptsKin].ave(),H.ave_err());
+	    ff_plot<<"# "<<i3ptsKin<<" "<<ind3ptsKin.descr(i3ptsKin)<<"\n";
 	    ff_plot.write_ave_err(x.ave(),f.ave_err());
 	  }
     }
