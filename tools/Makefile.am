@@ -8,6 +8,7 @@ bin_PROGRAMS= \
 	combine_vdoubles \
 	gevp \
 	djvec_load \
+	djvec_ratio \
 	effective_mass \
 	linfit \
 	onlinemeas \
@@ -22,6 +23,8 @@ backstab_SOURCES=backstab.cpp
 combine_vdoubles_SOURCES=combine_vdoubles.cpp
 
 djvec_load_SOURCES=djvec_load.cpp
+
+djvec_ratio_SOURCES=djvec_ratio.cpp
 
 gevp_SOURCES=gevp.cpp
 
