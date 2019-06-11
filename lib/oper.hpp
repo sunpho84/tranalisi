@@ -232,6 +232,22 @@ template <class T> T subset(const T &v,size_t beg,size_t end)
   return T(&v[beg],&v[end]);
 }
 
+//! Smooth over a range
+template <class T> T smooth(const T &v,const size_t size)
+{
+  const size_t n=v.size();
+  T out(n);
+  for(size_t it=0;it<n;it++)
+    for(size_t i=0;i<size;i++)
+      {
+	int jt=std::max(std::min((int)it+(int)i-((int)size-1)/2,(int)n-1),0);
+	out[it]+=v[jt];
+      }
+  out/=size;
+  
+  return out;
+}
+
 //! compute the covariance error
 template <class T>
 T distr_cov(const T &x,const T &y)

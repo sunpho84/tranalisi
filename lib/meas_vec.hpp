@@ -101,6 +101,16 @@ public:
     return out;
   }
   
+  //! significativity (number of sigma of difference from 0)
+  vector<double> significativity() const
+  {
+    vector<double> out(this->size());
+    
+    for(size_t it=0;it<this->size();it++) out[it]=(*this)[it].significativity();
+    
+    return out;
+  }
+  
   //! write to a stream
   void bin_write(raw_file_t &out) const
   {out.bin_write(*this);}

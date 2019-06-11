@@ -131,6 +131,13 @@ public:
   //! return only the error
   T err() const {return ave_err().err();}
   
+  //! significativity (number of sigma of difference from 0)
+  T significativity() const
+  {
+    auto ae=ave_err();
+    return fabs(ae.ave()/ae.err());
+  }
+  
   //! initialize from aver_err_t and a seed
   void fill_gauss(const gauss_filler_t &gf)
   {
