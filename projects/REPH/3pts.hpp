@@ -1,10 +1,15 @@
 #ifndef _3PTS_HPP
 #define _3PTS_HPP
 
-#include <REPH/perens.hpp>
+#include <REPH/permes_combo.hpp>
 
-djvec_t perens_t::load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0)
+djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMoms,const size_t iMomt,const size_t iMom0)
 {
+  const size_t& T=ens.T;
+  const size_t& L=ens.L;
+  const size_t& nMass=ens.nMass;
+  const size_t& nMoms=ens.nMoms;
+  
   const double s[2][2][2]={{{-1,+1},{-1,-1}},
 			   {{-1,-1},{+1,-1}}};
   
