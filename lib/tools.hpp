@@ -48,6 +48,9 @@ int file_exists(string path);
 //! check if a directoy exists
 int dir_exists(string path);
 
+//! create a directory
+void mkdir(string path);
+
 //! handle signals
 void signal_handler(int sig);
 

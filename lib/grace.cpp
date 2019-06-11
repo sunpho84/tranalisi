@@ -143,7 +143,8 @@ grace_file_t::grace_file_t(const string &path) :
   yaxis_min(0),
   yaxis_max(1)
 {
-  if(path!="") ofstream::open(path);
+  if(path!="") this->open(path);
+  
   title_size=
     subtitle_size=
     xaxis_label_size=
