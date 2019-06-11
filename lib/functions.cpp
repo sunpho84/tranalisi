@@ -2,6 +2,8 @@
  #include "config.hpp"
 #endif
 
+#include <map>
+
 #include <functions.hpp>
 
 //! parameters to compute the kernel
@@ -17,7 +19,7 @@ public:
 
 //! compute the kernel
 double shifted_mom_Tiburzi_kernel(const double &tau,const double &ML,const int &i,const vector<double> &shifts)
-{  
+{
   //compute product of theta and theta primed
   double ret=1.0;
   for(int j=0;j<3;j++)
@@ -59,4 +61,13 @@ double shifted_mom_Tiburzi(const double &M,const double &L,const double &fpi,con
   gsl_integration_workspace_free(w);
   
   return -result/(sqrt(M_PI)*sqr(fpi)*pow(L,3));
+}
+
+double ch2Distr(const double x,const int n)
+{
+  static std::map<int,double> norm;
+  if(norm.find(n)==norm.end())
+    norm[n]=pow(2,n/2.0)*std::tgamma(n/2.0);
+  
+  return pow(x,n/2.0-1.0)*exp(-x/2.0)/norm[n];
 }

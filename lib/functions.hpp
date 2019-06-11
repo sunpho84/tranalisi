@@ -180,4 +180,7 @@ T ell_theta(const T &tau,const T &theta,const bool &primed=false,const double &t
 //! compute the shifted momenta according to eq.47 of 0812.4042, shifts are in units of 2*pi!!! NISSA uses pi... be careful!
 double shifted_mom_Tiburzi(const double &M,const double &L,const double &fpi,const int &i,const vector<double> &shifts_in_2pi);
 
+//! distribution of the chi2 for a given number of dof
+double ch2Distr(const double x,const int n);
+
 #endif
