@@ -1,7 +1,7 @@
 #ifndef _2PTS_HPP
 #define _2PTS_HPP
 
-#include <REPH/reph.hpp>
+#include <REPH/perens.hpp>
 
 djvec_t perens_t::load2ptsPP(const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt)
 {

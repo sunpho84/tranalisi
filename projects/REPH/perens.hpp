@@ -3,63 +3,55 @@
 
 #include <tranalisi.hpp>
 
+#include <REPH/base.hpp>
+
 //! Incapsulate all info and operations
 class perens_t
 {
-  int L,T,spatVol;
-  size_t nMass;
-  vector<double> mass;
-  size_t nMoms;
-  vector<array<double,3>> moms;
+  //! Folder where to find data and create plots
+  const std::string dirPath;
   
+  //! Spatial size
+  int L;
+  
+  //! Temporal size
+  int T;
+  
+  //! Total spatial volume
+  int spatVol;
+  
+  //! Number of masses
+  size_t nMass;
+  
+  //! List of mass
+  vector<double> mass;
+  
+  //! Number of momenta
+  size_t nMoms;
+  
+  //! List of momenta
+  vector<array<double,3>> moms;
+
+  //! Index spanning all momenta combination
+  index_t indMesKin;
+
+  //! Number of momenta combination
+  size_t nMesKin;
+  
+  //! Momenta of mesons in all kinematics
+  vector<double> pMes;
+
+  //! Maximal momentum
+  double pMesMax;
+  
+  //! Load the PP correlation function
   djvec_t load2ptsPP(const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt);
   
+  //! Load the AP correlation function
   djvec_t load2ptsAP(const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iGamma);
   
-  djvec_t load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0)
-  {
-    const double s[2][2][2]={{{-1,+1},{-1,-1}},
-			     {{-1,-1},{+1,-1}}};
-    
-    djvec_t corr(T);
-    corr=0.0;
-    
-    const index_t ind({{"iks",nMass},
-		       {"ikt",nMass},
-		       {"moms",nMoms},
-		       {"momt",nMoms},
-		       {"mom0",nMoms},
-		       {"pol",2},
-		       {"gamma",4},
-		       {"reim",2}});
-    
-    const index_t ind_ave({{"iks",nMass},
-			   {"ikt",nMass},
-			   {"moms",nMoms},
-			   {"momt",nMoms},
-			   {"mom0",nMoms}});
-    
-    const size_t iReIm=(iVA==0)?1:0;
-    const int par=(iVA==0)?-1:+1;
-    for(size_t iPol=0;iPol<2;iPol++)
-      for(size_t iGamma=1;iGamma<=2;iGamma++)
-	{
-	  const size_t i=ind({iMs,iMt,iMoms,iMomt,iMom0,iPol,iGamma,iReIm});
-	  const djvec_t contr=read_djvec(combine("jacks/o%smuGPo-gs",VA_tag[iVA]),T,i);
-	  corr+=contr*s[iVA][iPol][iGamma-1];
-	  
-	  contr.ave_err().write(combine("plots/o%smuGPo-gs_%s.xmg",VA_tag[iVA],ind.descr(i).c_str()));
-	}
-    corr/=2*sqrt(2);
-    
-    corr/=-(L*L*L);
-    
-    corr.symmetrize(par);
-    const size_t iave=ind_ave({iMs,iMt,iMoms,iMomt,iMom0});
-    corr.ave_err().write(combine("plots/o%smuGPo-gs_%s.xmg",VA_tag[iVA],ind_ave.descr(iave).c_str()));
-    
-    return corr;
-  }
+  //! Load the three points correlation functions
+  djvec_t load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0);
   
   void getAxialPseudoCouplings(djack_t& ZP,djack_t& ZA,djack_t& E,
 			       const djvec_t& C_PP,const djvec_t& C_A0P,const djvec_t& C_A3P,const double P,const size_t tMin,const size_t tMax,const size_t iMom1,const size_t iMom2)
@@ -120,11 +112,10 @@ class perens_t
       }
   }
   
-public:
-  
-  perens_t()
+  //! Read the input file
+  void readInput()
   {
-    raw_file_t fin("jacks/input.txt","r");
+    raw_file_t fin(combine("%s/jacks/input.txt",dirPath.c_str()),"r");
     
     L=fin.read<size_t>("L");
     spatVol=L*L*L;
@@ -140,7 +131,40 @@ public:
     for(size_t iMom=0;iMom<nMoms;iMom++)
       for(size_t mu=0;mu<3;mu++)
 	moms[iMom][mu]=fin.read<double>();
+  }
+  
+  //! Set all kinematics
+  void setKinematics()
+  {
+    indMesKin.set_ranges({{"mom1",nMoms},{"mom2",nMoms}});
     
+    nMesKin=indMesKin.max();
+
+    pMes.resize(nMesKin);
+    
+    pMesMax=0;
+    for(size_t iKin=0;iKin<nMesKin;iKin++)
+      {
+	const vector<size_t> c=indMesKin(iKin);
+	
+	pMes[iKin]=2*M_PI*(moms[c[1]][2]-moms[c[0]][2])/L;
+	
+	pMesMax=std::max(pMesMax,fabs(pMes[iKin]));
+      }
+  }
+  
+public:
+  
+  //! Constructor
+  perens_t(const std::string dirPath) : dirPath(dirPath)
+  {
+    readInput();
+    
+    setKinematics();
+  }
+  
+  void fuffa()
+  {
     /////////////////////////////////////////////////////////////////
     
     // grace_file_t fit2ptsPlot("plots/fit2pts.xmg");
@@ -159,13 +183,9 @@ public:
     // const double es=+2.0/3;
     // const double et=-1.0/3;
     
-    const index_t indMesKin({{"mom1",nMoms},{"mom2",nMoms}});
-    const size_t nMesKin=indMesKin.max();
-    vector<double> Pmes(nMesKin);
     djvec_t E(nMesKin),ZP(nMesKin),ZA(nMesKin);
     vector<djvec_t> Eeff(nMesKin,djvec_t(T));
     
-    double pMax=0;
     for(size_t iMom1=0;iMom1<nMoms;iMom1++)
       for(size_t iMom2=iMom1;iMom2<nMoms;iMom2++)
 	{
@@ -190,16 +210,10 @@ public:
 	  
 	  // fit2ptsPlot.write_vec_ave_err(effective_mass(corrPP).ave_err());
 	  // fit2ptsPlot.write_constant_band(tMin,tMax,EFit);
-	  
-	  double P=2*M_PI*(moms[iMom2][2]-moms[iMom1][2])/L;
-	  Pmes[i1]=+P;
-	  Pmes[i2]=-P;
-	  
-	  pMax=std::max(pMax,fabs(P));
-	  
+	  	  
 	  //ZPPlot.write_ave_err(EFit.ave(),Z[i1].ave_err());
 	  
-	  getAxialPseudoCouplings(ZP[i1],ZA[i1],E[i1],corrPP,corrA0P,corrA3P,Pmes[i1],tMin,tMax,iMom1,iMom2);
+	  getAxialPseudoCouplings(ZP[i1],ZA[i1],E[i1],corrPP,corrA0P,corrA3P,pMes[i1],tMin,tMax,iMom1,iMom2);
 	  ZA[i2]=ZA[i1];
 	  ZP[i2]=ZP[i1];
 	  E[i2]=E[i1];
@@ -216,12 +230,12 @@ public:
     cout<<"Zv: "<<Zv.ave_err()<<endl;
     
     grace_file_t dispRel("plots/dispRel.xmg");
-    dispRel.write_vec_ave_err(Pmes,E.ave_err());
+    dispRel.write_vec_ave_err(pMes,E.ave_err());
     
     const djack_t &M=E[0];
     
-    dispRel.write_polygon([M](double x){return latt_en_1D(M,x);},0,pMax,grace::GREEN);
-    dispRel.write_polygon([M](double x){return cont_en_1D(M,x);},0,pMax,grace::VIOLET);
+    dispRel.write_polygon([M](double x){return latt_en_1D(M,x);},0,pMesMax,grace::GREEN);
+    dispRel.write_polygon([M](double x){return cont_en_1D(M,x);},0,pMesMax,grace::VIOLET);
     
     /////////////////////////////////////////////////////////////////
     

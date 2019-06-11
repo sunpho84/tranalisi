@@ -13,7 +13,7 @@ int main(int narg,char **arg)
 {
   set_njacks(15);
   
-  perens_t();
+  perens_t(".");
   
   /*
     - loop on all physical mesons
