@@ -171,19 +171,21 @@ void grace_file_t::set_subtitle(string label)
 {
   subtitle=label;
 }
-  
+
 void grace_file_t::set_title_size(double size)
 {
   title_size=size;
 }
-  
+
 void grace_file_t::set_subtitle_size(double size)
 {
   subtitle_size=size;
 }
-  
+
 void grace_file_t::set_xaxis_logscale(bool yes)
 {
+  xaxis_logscale=yes;
+  
   if(yes)
     (*this)<<"@    xaxes scale Logarithmic\n";
   else
@@ -233,6 +235,8 @@ void grace_file_t::set_xaxis_max(double xmax)
 
 void grace_file_t::set_yaxis_logscale(bool yes)
 {
+  yaxis_logscale=yes;
+  
   if(yes)
     (*this)<<"@    yaxes scale Logarithmic\n";
   else

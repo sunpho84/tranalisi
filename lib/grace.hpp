@@ -56,54 +56,56 @@ class grace_file_t : private ofstream
     return out;
   }
   
-  size_t cur_col; //<! current color for set (auto-incremented)
+  size_t cur_col; //!< current color for set (auto-incremented)
   grace::color_t get_col_no_increment();
   
-  size_t cur_poly_col; //<! current color for polygon
+  size_t cur_poly_col; //!< current color for polygon
   grace::color_t get_poly_col_no_increment();
   
-  size_t cur_line_col; //<! current color for line
+  size_t cur_line_col; //!< current color for line
   grace::color_t get_line_col_no_increment();
   
-  size_t cur_symbol; //<! current symbol
+  size_t cur_symbol; //!< current symbol
   grace::symbol_t get_symbol_no_increment();
   
-  size_t iset; //<! set id
+  size_t iset; //!< set id
   string legend; //! legend of the set
   
-  grace::settype_t settype; //<! set type
-  grace::symbol_t symbol; //<! symbol
-  grace::color_t symbol_color; //<! color for symbol
-  bool symbol_fill_pattern; //<! epmty or filled symbols
-  grace::color_t symbol_fill_color; //<! color for symbol filling
-  double symbol_size; //<! size of the symbol
-  double symbol_linewidth; //<! width of the symbol line
+  grace::settype_t settype; //!< set type
+  grace::symbol_t symbol; //!< symbol
+  grace::color_t symbol_color; //!< color for symbol
+  bool symbol_fill_pattern; //!< epmty or filled symbols
+  grace::color_t symbol_fill_color; //!< color for symbol filling
+  double symbol_size; //!< size of the symbol
+  double symbol_linewidth; //!< width of the symbol line
   
-  grace::line_type_t line_type; //<! no line, straight
-  grace::line_style_t line_linestyle; //<! empty or continuous, or dashed in various way
-  grace::color_t line_color; //<! color for line
-  double linewidth; //<! width of the line
+  grace::line_type_t line_type; //!< no line, straight
+  grace::line_style_t line_linestyle; //!< empty or continuous, or dashed in various way
+  grace::color_t line_color; //!< color for line
+  double linewidth; //!< width of the line
   
-  grace::fill_type_t fill_type; //<! filling type
-  grace::color_t fill_color; //<! filling type
+  grace::fill_type_t fill_type; //!< filling type
+  grace::color_t fill_color; //!< filling type
   
-  grace::color_t errorbar_color; //<! color for errorbar
-  double errorbar_size; //<! size of the errorbar
-  double errorbar_linewidth; //<! width of the bar of therror
-  double errorbar_riser_linewidth; //<! width of the bar of the error-riser
+  grace::color_t errorbar_color; //!< color for errorbar
+  double errorbar_size; //!< size of the errorbar
+  double errorbar_linewidth; //!< width of the bar of therror
+  double errorbar_riser_linewidth; //!< width of the bar of the error-riser
   
-  string title; //<! title of the plot
-  string subtitle; //<! subtitle of the plot
-  double title_size; //! size of the title
-  double subtitle_size; //! size of the subtitle
-  string xaxis_label; //<! label of the x-axis
-  string yaxis_label; //<! lable of the y-axis
-  double xaxis_min,xaxis_max; //<! min and max for x-axis
-  double yaxis_min,yaxis_max; //<! min and max for y-axis
-  double xaxis_label_size; //<! size of the font of the x-axis
-  double yaxis_label_size; //<! size of the font of the y-axis
+  string title; //!< title of the plot
+  string subtitle; //!< subtitle of the plot
+  double title_size; //!< size of the title
+  double subtitle_size; //!< size of the subtitle
+  bool xaxis_logscale; //!< Whether or not the x-axis is on log scale
+  bool yaxis_logscale; //!< Whether or not the y-axis is on log scale
+  string xaxis_label; //!< label of the x-axis
+  string yaxis_label; //!< lable of the y-axis
+  double xaxis_min,xaxis_max; //!< min and max for x-axis
+  double yaxis_min,yaxis_max; //!< min and max for y-axis
+  double xaxis_label_size; //!< size of the font of the x-axis
+  double yaxis_label_size; //!< size of the font of the y-axis
   
-  unsigned short int transparency; //<! transparency of all fillings
+  unsigned short int transparency; //!< transparency of all fillings
   
   //! write all props and start a new set
   void close_cur_set();
@@ -296,7 +298,10 @@ public:
 #pragma omp parallel for
     for(size_t ipoint=0;ipoint<npoints;ipoint++)
       {
-	x[ipoint]=xmin+(xmax-xmin)/(npoints-1)*ipoint;
+	if(this->xaxis_logscale)
+	  x[ipoint]=xmin*pow(xmax/xmin,ipoint/(double)(npoints-1));
+	else
+	  x[ipoint]=xmin+(xmax-xmin)/(npoints-1)*ipoint;
 	y[ipoint]=fun(x[ipoint]);
       }
     for(size_t ipoint=0;ipoint<npoints;ipoint++)
@@ -331,6 +336,7 @@ public:
     for(size_t i=0;i<data.size();i++)
       if(!std::isnan(data[i].err()))
 	(*this)<<x[i]<<" "<<data[i]<<endl;
+    close_cur_set();
   }
   
   void write_vec_ave_err(const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym);
