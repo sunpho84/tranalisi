@@ -122,10 +122,20 @@ template <class T>
 T cont_en(const T &m,const double &pi)
 {return sqrt(3*sqr(pi)+sqr(m));}
 
+//! continuum energy with momentum in 1 direction
+template <class T>
+T cont_en_1D(const T &m,const double &pi)
+{return sqrt(sqr(pi)+sqr(m));}
+
 //! lattice energy
 template <class T>
 T latt_en(const T &m,const double &pi)
 {return 2*asinh((T)sqrt(3*sqr(sin(pi/2))+sqr((T)sinh(m/2))));}
+
+//! lattice energy with momentum in 1 direction
+template <class T>
+T latt_en_1D(const T &m,const double &pi)
+{return 2*asinh((T)sqrt(sqr(sin(pi/2))+sqr((T)sinh(m/2))));}
 
 //! compute the value of the polynomial in the point
 template <class TV,class TS=typename TV::base_type>
@@ -169,5 +179,8 @@ T ell_theta(const T &tau,const T &theta,const bool &primed=false,const double &t
 
 //! compute the shifted momenta according to eq.47 of 0812.4042, shifts are in units of 2*pi!!! NISSA uses pi... be careful!
 double shifted_mom_Tiburzi(const double &M,const double &L,const double &fpi,const int &i,const vector<double> &shifts_in_2pi);
+
+//! distribution of the chi2 for a given number of dof
+double ch2Distr(const double x,const int n);
 
 #endif

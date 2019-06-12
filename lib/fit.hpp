@@ -206,12 +206,12 @@ public:
 
 //! perform a fit to determine the slope
 template <class TV,class TS=typename TV::base_type>
-void two_pts_SL_fit(TS &Z_S,TS &Z_L,TS &M,const TV &corr_SL,const TV &corr_SS,size_t TH,size_t tmin,size_t tmax,string path="",int par=1)
+void two_pts_SL_fit(TS &Z_S,TS &Z_L,TS &M,const TV &corr_SL,const TV &corr_SS,size_t TH,size_t tmin,size_t tmax,string path="",int par_SL=1,int par_SS=1)
 {
   //perform a preliminary fit
   TS Z_SS,Z_SL;
-  two_pts_fit(Z_SS,M,corr_SS,TH,tmin,tmax,"/tmp/test_eff_mass_sme_sme.xmg","",par);
-  two_pts_fit(Z_SL,M,corr_SL,TH,tmin,tmax,"/tmp/test_eff_mass_sme_sme.xmg","",par);
+  two_pts_fit(Z_SS,M,corr_SS,TH,tmin,tmax,"/tmp/test_eff_mass_sme_sme.xmg","",par_SS);
+  two_pts_fit(Z_SL,M,corr_SL,TH,tmin,tmax,"/tmp/test_eff_mass_sme_sme.xmg","",par_SL);
   Z_S=sqrt(Z_SS);
   Z_L=Z_SL/Z_S;
   
@@ -225,7 +225,7 @@ void two_pts_SL_fit(TS &Z_S,TS &Z_L,TS &M,const TV &corr_SL,const TV &corr_SS,si
   size_t iel=0;
   auto x=vector_up_to<double>(corr_SL.size());
   multi_ch2_t<TV> two_pts_SL_fit_obj({x,x},{tmin,tmin},{tmax,tmax},{corr_SL,corr_SS},
-				  {two_pts_corr_fun_t(TH,par),two_pts_corr_fun_t(TH,par)},
+				  {two_pts_corr_fun_t(TH,par_SL),two_pts_corr_fun_t(TH,par_SS)},
 				     [](const vector<double> &p,size_t icontr)
 				     {
 				       switch(icontr)
@@ -252,8 +252,8 @@ void two_pts_SL_fit(TS &Z_S,TS &Z_L,TS &M,const TV &corr_SL,const TV &corr_SS,si
     {
       grace_file_t out(path);
       out.write_polygon([&M](double x){return M;},tmin,tmax);
-      out.write_vec_ave_err(x,effective_mass(corr_SL,TH,par).ave_err());
-      out.write_vec_ave_err(x,effective_mass(corr_SS,TH,par).ave_err());
+      out.write_vec_ave_err(x,effective_mass(corr_SL,TH,par_SL).ave_err());
+      out.write_vec_ave_err(x,effective_mass(corr_SS,TH,par_SS).ave_err());
     }
 }
 
