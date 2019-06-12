@@ -1,5 +1,7 @@
 #include <tranalisi.hpp>
 
+#include <set>
+
 int T,L;
 int TH;
 
@@ -35,6 +37,11 @@ T average(const vector<T>& v)
   return accumulate(v.begin(),v.end(),dcompl_t{0,0})/(double)v.size();
 }
 
+///Source number
+int Ndd(int div_nhits, int idiag){
+  int b=(idiag<3)?div_nhits:div_nhits*(div_nhits-1);
+  return b;
+}
 ///compute divisors
 vector<int> divisors(const int n)
 {
@@ -134,7 +141,7 @@ void slice_plot(const vector<int>& dim1,const int dim1_min,const vector<int>& di
 	  xmax=max(xmax,x);
 	}
       
-      plot_err.write_line(bind(fun,std::placeholders::_1,1.0/pow(dim1[jdiv],pow1)),xmin/2.0,xmax*2.0,1001);
+      plot_err.write_line(bind(fun,std::placeholders::_1,1.0/pow(dim1[jdiv],pow1),pow2),xmin/2.0,xmax*2.0,1001);
       plot_err.set_all_colors(col_scheme[jdiv%col_scheme.size()]);
       
       for(auto& p : {&plot_ave,&plot_err})
@@ -196,8 +203,10 @@ int main(int narg,char **arg)
       vector<dcompl_t> EU56_repository;
       for(int iconf=0;iconf<nconfs.back();iconf++)
 	for(int idiag=3;idiag<ndiag;idiag++)
-	  EU56_repository=read_vector(combine("out/%04d/EU%d_stoch",confs[iconf],diag[idiag]),(nhits*(nhits-1))/2);
-	
+	  {
+	    vector<dcompl_t> v=read_vector(combine("out/%04d/EU%d_stoch",confs[iconf],diag[idiag]),(nhits*(nhits-1))/2);
+	    EU56_repository.insert(EU56_repository.end(),v.begin(),v.end());
+	  }
       ///cycles over configurations numbers, configurations ranges, hits numbers and hits ranges
       for(size_t jdiv=0;jdiv<nconfs.size();jdiv++)
 	for(int jrange=0;jrange<nconfs.back()/nconfs[jdiv];jrange++)
@@ -244,7 +253,7 @@ int main(int narg,char **arg)
 				{
 				  count++;
 				  for(size_t j=(i*(i+1))/2-count;j<(size_t)((i*(i+1))/2);j++)
-				    EU_stoch[idiag].emplace_back(EU56_repository[ind56({iconf,idiag-3,j})]);
+				    EU_stoch[idiag].emplace_back(EU56_repository[ind56({iconf+(njacks*jrange),idiag-3,j})]);
 				}
 			    }
 			  // Computes the average over stochastich estimates
@@ -324,8 +333,6 @@ int main(int narg,char **arg)
   const int pow_nh[5]={1,1,1,2,2};
   for(size_t idiag=0;idiag<ndiag;idiag++)
     {
-      // const int nx=2;
-      // plan_fit_data_t<djack_t> plan_fit_data;
       int seed=0;
       
       cout<<"DIAG "<<diag[idiag]<<endl;
@@ -333,19 +340,18 @@ int main(int narg,char **arg)
       if(idiag>2)
 	idiv_nhits_min=1;
       
-      djvec_t res(2);
-      jack_fit_t jack_fit;
-      const size_t ipconfs=jack_fit.add_fit_par_limits(res[0],"pconfs",0.0,0.1,0.0,1e3);
-      const size_t iphits=jack_fit.add_fit_par_limits(res[1],"phits",0.1,0.1,0.0,1e3);
+      /////////////////////////////////////////////////////////////////
       
+      plan_fit_data_t<djack_t> plan_fit_data;
+      const int nx=2;
       for(size_t idiv_nhits=idiv_nhits_min;idiv_nhits<div_nhits.size();idiv_nhits++)
 	for(size_t idiv_nconfs=0;idiv_nconfs<nconfs.size();idiv_nconfs++)
 	  {
 	    const int i=ind({idiag,idiv_nhits,idiv_nconfs});
 	    
-	    // vector<double> x(nx);
-	    // x[0]=1.0/(nconfs[idiv_nconfs]*pow(div_nhits[idiv_nhits],pow_nh[idiag]));
-	    // x[1]=1.0/nconfs[idiv_nconfs];
+	    vector<double> x(nx);
+	    x[0]=1.0/(nconfs[idiv_nconfs]*Ndd(div_nhits[idiv_nhits],idiag));
+	    x[1]=1.0/nconfs[idiv_nconfs];
 	    
 	    const ave_err_t ae=range_ave_stddev(errors[i]);
 	    if(ae.err()>1e-10)
@@ -376,20 +382,85 @@ int main(int narg,char **arg)
 	  }
       
       //! results for the fit
+      const djvec_t res_plan=plan_fit(plan_fit_data);
+      cout<<"res_plan of diagram EU"<<diag[idiag]<<": "<<res_plan.ave_err()<<endl;
+      const djvec_t temp=sqrt(abs(res_plan));
+      /////////////////////////////////////////////////////////////////
+      
+      djvec_t res(2);
+      jack_fit_t jack_fit;
+      // const size_t ipconfs=jack_fit.add_fit_par_limits(res[0],"pconfs",21,0.1,0.0,40);
+      // const size_t iphits=jack_fit.add_fit_par_limits(res[1],"phits",11,0.1,0.0,40);
+      const size_t ipconfs=(idiag!=3)?jack_fit.add_fit_par(res[0],"pconfs",temp[0].ave(),temp[0].err()):jack_fit.add_fit_par_limits(res[0],"pconfs",0.1,0.1,0.0,1e3);
+      const size_t iphits=(idiag!=3)?jack_fit.add_fit_par(res[1],"phits",temp[1].ave(),temp[1].err()):jack_fit.add_fit_par_limits(res[1],"phits",0.1,0.1,0.0,1e3);
+      
+      for(size_t idiv_nhits=idiv_nhits_min;idiv_nhits<div_nhits.size();idiv_nhits++)
+	for(size_t idiv_nconfs=0;idiv_nconfs<nconfs.size();idiv_nconfs++)
+	  {
+	    const int i=ind({idiag,idiv_nhits,idiv_nconfs});
+	    
+	    // vector<double> x(nx);
+	    // x[0]=1.0/(nconfs[idiv_nconfs]*pow(div_nhits[idiv_nhits],pow_nh[idiag]));
+	    // x[1]=1.0/nconfs[idiv_nconfs];
+	    
+	    const ave_err_t ae=range_ave_stddev(errors[i]);
+	    if(ae.err()>1e-6*fabs(ae.ave()))
+	      {
+		djack_t j;
+		j.fill_gauss(sqr(ae.ave()),ae.ave()*ae.err()*2,seed++);
+		//j.fill_gauss((20/nconfs[idiv_nconfs]+0.1/div_nhits[idiv_nconfs]),0.00001,seed++);
+		//plan_fit_data.push_back(make_tuple(x,j));
+		
+		jack_fit.add_point(//numerical data
+				   [j// ,i,ae,idiv_nhits,idiv_nconfs
+				    ]
+				   (const vector<double> &p,int iel)
+				   {
+				     // static set<pair<int,int>> l;
+				     // if(l.find({iel,i})==l.end())
+				     //   {
+				     // 	 l.insert({iel,i});
+				     // 	 cout<<iel<<" "<<i<<" "<<j[iel]<<"     "<<ae<<"    idiv_nhit: "<<idiv_nhits<<"    idiv_nconfs: "<<idiv_nconfs<<endl;
+				     //   }
+				     return j[iel];
+				   },
+				   //ansatz
+				   [ipconfs,nconfs,idiv_nconfs,div_nhits,idiv_nhits,idiag,iphits]
+				   (const vector<double> &p,int iel)
+				   {
+				     const double A=sqr(p[ipconfs]);
+				     const double B=sqr(p[iphits]);
+				     return
+				       A/(nconfs[idiv_nconfs]*Ndd(div_nhits[idiv_nhits],idiag))+
+				       B/nconfs[idiv_nconfs];
+				   },
+				   
+				   //for covariance/error
+				   j.err());
+	      }
+	  }
+      
+      //! results for the fit
       // const djvec_t res=plan_fit(plan_fit_data);
       jack_fit.fit();
       
+      
       //! fit ansatz
-      auto f=[&res](double inv_nconfs,double inv_nhits_to_the_pow)
+      auto f=[&res](const double inv_nconfs,const double x,const int pow)
 	{
-	  return djack_t(sqrt((res[0]*inv_nhits_to_the_pow+res[1])*inv_nconfs)).ave();
+	  const djack_t A=sqr(res[0]);
+	  const djack_t B=sqr(res[1]);
+	  const double inv_Ndd=(pow==1)?x:(x/(1-sqrt(x)));
+	  //if(pow!=1) cout<<pow<<" "<<x<<" "<<inv_Ndd<<endl;
+	  return djack_t(sqrt((A*inv_Ndd+B)*inv_nconfs)).ave();
 	};
       
       //! same ansatz with swapped arguments
-      auto f_swapped=bind(f,placeholders::_2,placeholders::_1);
+      auto f_swapped=bind(f,placeholders::_2,placeholders::_1,placeholders::_3);
       
-      //cout<<res.ave_err()<<endl;
-      const djack_t lim=pow((res[0]/res[1]),1.0/pow_nh[idiag]);
+      cout<<res.ave_err()<<endl;
+      const djack_t r=res[0]/res[1];
+      const djack_t lim=pow(sqr(r),1.0/pow_nh[idiag]);
       cout<<"the 'nhits'-associated error is no longer dominating for nhits which equals "<<smart_print(lim.ave_err())<<endl;
       
       slice_plot(div_nhits,idiv_nhits_min,nconfs,0,idiag,slopes,errors,ind,1,2,f,pow_nh[idiag],1);
