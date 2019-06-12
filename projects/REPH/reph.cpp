@@ -15,22 +15,40 @@ int main(int narg,char **arg)
   
   perens_t ens(".");
   
-  const size_t iQuarkS=get<1>(mesons[D_PLUS]);
-  const size_t iQuarkT=get<2>(mesons[D_PLUS]);
-  
-  const size_t iMs=iMassesOfQuarks[iQuarkS][0];
-  const size_t iMt=iMassesOfQuarks[iQuarkT][0];
-  
-  const double eS=quarkCharge[iQuarkS];
-  const double eT=quarkCharge[iQuarkT];
-  
-  permes_combo_t mesCombo(ens,iMs,iMt,eS,eT,"fixed_tfit");
+  for(size_t iMes=0;iMes<nMesons;iMes++)
+    {
+      //! Meson to study
+      const meson_t& mes=mesons[iMes];
+      
+      cout<<"Meson: "<<get<0>(mes)<<endl;
+      
+      const size_t iQuarkS=get<1>(mes);
+      const size_t iQuarkT=get<2>(mes);
+      
+      const double eS=quarkCharge[iQuarkS];
+      const double eT=quarkCharge[iQuarkT];
+      
+      //! Loop on all meson combos
+      const size_t nMs=iMassesOfQuarks[iQuarkS].size();
+      const size_t nMt=iMassesOfQuarks[iQuarkT].size();
+      const index_t indMesCombo({{"iMs",nMs},{"iMt",nMt}});
+      vector<permes_combo_t> mesCombos;
+      const size_t nMesCombos=indMesCombo.max();
+      
+      for(size_t iMesCombo=0;iMesCombo<nMesCombos;iMesCombo++)
+	{
+	  const vector<size_t> c=indMesCombo(iMesCombo);
+	  const size_t iMs=c[0];
+	  const size_t iMt=c[1];
+	  mesCombos.emplace_back(ens,iMs,iMt,eS,eT,"fixed_tfit");
+	}
+    }
   
   /*
-    - loop on all physical mesons
+    - * loop on all physical mesons
     - | loop on all ensembles
     - | | * read the input
-    - | | loop on all meson combo
+    - | | * loop on all meson combo
     - | | | * read 2pts correlators
     - | | |
     - | | | loop on all algorithms to select 2pts fit range

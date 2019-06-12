@@ -24,7 +24,7 @@ const double qUp=+2.0/3;
 const std::array<double,nQuarks> quarkCharge{qDw,qUp,qDw,qUp};
 
 //! Index of the mass to be used for each quark
-const std::array<std::vector<int>,nQuarks> iMassesOfQuarks{{{0},{0},{1,2},{3,4}}};
+const std::array<std::vector<size_t>,nQuarks> iMassesOfQuarks{{{0},{0},{1,2},{3,4}}};
 
 //! Number of physical mesons
 const int nMesons=4;

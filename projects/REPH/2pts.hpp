@@ -42,7 +42,9 @@ void permes_combo_t::plotDispRel() const
   
   const djack_t &M=E[0];
   
+  dispRel.set_legend("Lattice");
   dispRel.write_polygon([M](double x){return latt_en_1D(M,x);},0,ens.pMesMax,grace::GREEN);
+  dispRel.set_legend("Continuum");
   dispRel.write_polygon([M](double x){return cont_en_1D(M,x);},0,ens.pMesMax,grace::VIOLET);
 }
 
