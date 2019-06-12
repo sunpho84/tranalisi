@@ -358,26 +358,7 @@ int main(int narg,char **arg)
 	      {
 		djack_t j;
 		j.fill_gauss(sqr(ae.ave()),ae.ave()*ae.err()*2,seed++);
-		//j.fill_gauss((20/nconfs[idiv_nconfs]+0.1/div_nhits[idiv_nconfs]),0.00001,seed++);
-		//plan_fit_data.push_back(make_tuple(x,j));
-		
-		jack_fit.add_point(//numerical data
-				   [j]
-				   (const vector<double> &p,int iel)
-				   {
-				     return j[iel];
-				   },
-				   //ansatz
-				   [ipconfs,nconfs,idiv_nconfs,div_nhits,idiv_nhits,pow_nh,idiag,iphits]
-				   (const vector<double> &p,int iel)
-				   {
-				     return
-				       p[ipconfs]/(nconfs[idiv_nconfs]*pow(div_nhits[idiv_nhits],pow_nh[idiag]))+
-				       p[iphits]/nconfs[idiv_nconfs];
-				   },
-				   
-				   //for covariance/error
-				   j.err());
+		plan_fit_data.push_back(make_tuple(x,j));
 	      }
 	  }
       
