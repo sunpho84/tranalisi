@@ -25,6 +25,7 @@ int main(int narg,char **arg)
       const size_t iQuarkS=get<1>(mes);
       const size_t iQuarkT=get<2>(mes);
       
+      //! Charge of the spectator and forward line
       const double eS=quarkCharge[iQuarkS];
       const double eT=quarkCharge[iQuarkT];
       
@@ -32,16 +33,22 @@ int main(int narg,char **arg)
       const size_t nMs=iMassesOfQuarks[iQuarkS].size();
       const size_t nMt=iMassesOfQuarks[iQuarkT].size();
       const index_t indMesCombo({{"iMs",nMs},{"iMt",nMt}});
+      
+      //! Holds the 2pts info for each meson combination
       vector<permes_combo_t> mesCombos;
       const size_t nMesCombos=indMesCombo.max();
       
+      //! Setup all meson combos
       for(size_t iMesCombo=0;iMesCombo<nMesCombos;iMesCombo++)
 	{
 	  const vector<size_t> c=indMesCombo(iMesCombo);
-	  const size_t iMs=c[0];
-	  const size_t iMt=c[1];
-	  mesCombos.emplace_back(ens,iMs,iMt,eS,eT,"fixed_tfit");
+	  const size_t iMs=iMassesOfQuarks[iQuarkS][c[0]];
+	  const size_t iMt=iMassesOfQuarks[iQuarkT][c[1]];
+	  mesCombos.emplace_back(ens,iMs,iMt,eS,eT);
 	}
+      
+      for(size_t iMesCombo=0;iMesCombo<nMesCombos;iMesCombo++)
+	mesCombos[iMesCombo].fit2pts("fixed_tfit");
     }
   
   /*
