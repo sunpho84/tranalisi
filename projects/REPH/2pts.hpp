@@ -41,7 +41,7 @@ void permes_combo_t::load()
   
   for(auto dir : {"PP","A0P","AP3"})
     {
-      const std::string path=combine("plots/%s/2pts_corr/%s/",mesComboTag.c_str(),dir);
+      const std::string path=combine("%s/2pts_corr/%s/",mesPlotsPath.c_str(),dir);
       if(not dir_exists(path))
 	mkdir(path);
     }
@@ -55,14 +55,14 @@ void permes_combo_t::load()
       const std::string kinTag=combine("imom1_%zu_imom2_%zu",iMom1,iMom2);
       
       corrPP[iMesKin]=load2ptsPP(iMom1,iMom2);
-      corrPP[iMesKin].ave_err().write(combine("plots/%s/2pts_corr/PP/%s.xmg",mesComboTag.c_str(),kinTag.c_str()));
+      corrPP[iMesKin].ave_err().write(combine("%s/2pts_corr/PP/%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()));
       eEff[iMesKin]=effective_mass(corrPP[iMesKin]);
       
       corrA0P[iMesKin]=load2ptsAP(iMom1,iMom2,0);
-      corrA0P[iMesKin].ave_err().write(combine("plots/%s/2pts_corr/A0P/%s.xmg",mesComboTag.c_str(),kinTag.c_str()));
+      corrA0P[iMesKin].ave_err().write(combine("%s/2pts_corr/A0P/%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()));
       
       corrA3P[iMesKin]=load2ptsAP(iMom1,iMom2,3);
-      corrA3P[iMesKin].ave_err().write(combine("plots/%s/2pts_corr/AP3/%s.xmg",mesComboTag.c_str(),kinTag.c_str()));
+      corrA3P[iMesKin].ave_err().write(combine("%s/2pts_corr/AP3/%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()));
     }
 }
 

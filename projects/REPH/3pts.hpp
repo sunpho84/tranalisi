@@ -5,6 +5,10 @@
 
 djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMoms,const size_t iMomt,const size_t iMom0)
 {
+  const std::string plot3ptsPath=combine("%s/3pts_corr/",mesPlotsPath.c_str());
+  if(not dir_exists(plot3ptsPath))
+    mkdir(plot3ptsPath);
+  
   const size_t& T=ens.T;
   const size_t& L=ens.L;
   const size_t& nMass=ens.nMass;
@@ -15,6 +19,8 @@ djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMoms,const size_
   
   djvec_t corr(T);
   corr=0.0;
+  
+  const std::string momTag=combine("iMomT%zu_iMomO%zu.xmg",plot3ptsPath.c_str(),VA_tag[iVA],iMoms,iMomt,iMom0);
   
   const index_t ind({{"iks",nMass},
 		     {"ikt",nMass},
@@ -40,7 +46,7 @@ djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMoms,const size_
 	const djvec_t contr=read_djvec(combine("jacks/o%smuGPo-gs",VA_tag[iVA]),T,i);
 	corr+=contr*s[iVA][iPol][iGamma-1];
 	
-	contr.ave_err().write(combine("plots/o%smuGPo-gs_%s.xmg",VA_tag[iVA],ind.descr(i).c_str()));
+	contr.ave_err().write(combine("%s/o%smuGPo-gs_%s.xmg",plot3ptsPath.c_str(),VA_tag[iVA],momTag.c_str()));
       }
   corr/=2*sqrt(2);
   
@@ -48,7 +54,7 @@ djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMoms,const size_
   
   corr.symmetrize(par);
   const size_t iave=ind_ave({iMs,iMt,iMoms,iMomt,iMom0});
-  corr.ave_err().write(combine("plots/o%smuGPo-gs_%s.xmg",VA_tag[iVA],ind_ave.descr(iave).c_str()));
+  corr.ave_err().write(combine("%s/plots/3pts_corr/o%smuGPo-gs_%s.xmg",VA_tag[iVA],ind_ave.descr(iave).c_str()));
   
   return corr;
 }
