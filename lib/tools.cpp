@@ -108,7 +108,7 @@ int dir_exists(string path)
 void mkdir(string path)
 {
   if(not dir_exists(path))
-    if(system(combine("mkdir -p %s",path.c_str()).c_str()))
+    if(system(combine("mkdir -vp %s",path.c_str()).c_str()))
       CRASH(combine("Creating %s",path.c_str()).c_str());
 }
 

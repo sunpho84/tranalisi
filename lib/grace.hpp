@@ -295,6 +295,7 @@ public:
     this->continuous_line(col);
     
     double x[npoints],y[npoints];
+    
 #pragma omp parallel for
     for(size_t ipoint=0;ipoint<npoints;ipoint++)
       {
