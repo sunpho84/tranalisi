@@ -38,11 +38,44 @@ struct perens_t
   //! Number of momenta combination
   size_t nMesKin;
   
+  //! Index spanning all decay momenta combination
+  index_t indDecKin;
+  
+  //! Number of decay momenta combination
+  size_t nDecKin;
+  
   //! Momenta of mesons in all kinematics
   vector<double> pMes;
   
   //! Maximal momentum
   double pMesMax;
+  
+  //! State whether or not to consider to study the decay
+  vector<bool> considerDec;
+  
+  //! State whether there is a symmetric decay
+  vector<bool> hasSymmDec;
+  
+  //! Symmetric of the decay
+  vector<int> symmOfDec;
+  
+  //! Index of meson kinematic of the decay
+  vector<int> iMesKinOfDecKin;
+  
+  //! Energy of the photon
+  vector<double> Eg;
+  
+  //! Finite size correction for the photon energy
+  double EgT(const size_t iDecKin) const
+  {
+    return sinh(Eg[iDecKin])*(1-exp(-T*Eg[iDecKin]));
+  }
+  
+  //! Momentum of the decaying pair of lepton
+  vector<double> kDec;
+  
+  //! Lattice version of the decaying momentum
+  vector<double> kHatDec;
   
   //! Read the input file
   void readInput()
@@ -71,6 +104,9 @@ struct perens_t
     indMesKin.set_ranges({{"mom1",nMoms},{"mom2",nMoms}});
     nMesKin=indMesKin.max();
     
+    indDecKin.set_ranges({{"iMoms",nMoms},{"iMomt",nMoms},{"iMom0",nMoms}});
+    nDecKin=indDecKin.max();
+    
     pMes.resize(nMesKin);
     
     pMesMax=0;
@@ -81,6 +117,27 @@ struct perens_t
 	pMes[iKin]=2*M_PI*(moms[c[1]][2]-moms[c[0]][2])/L;
 	
 	pMesMax=std::max(pMesMax,fabs(pMes[iKin]));
+      }
+    
+    resizeListOfContainers({&considerDec,&hasSymmDec},indDecKin.max());
+    resizeListOfContainers({&symmOfDec,&iMesKinOfDecKin},indDecKin.max(),-1);
+    resizeListOfContainers({&Eg,&kDec,&kHatDec},indDecKin.max());
+    
+    for(size_t iDecKin=0;iDecKin<indDecKin.max();iDecKin++)
+      {
+     	const vector<size_t> cDec=indDecKin(iDecKin);
+	const size_t iMoms=cDec[0],iMomt=cDec[1],iMom0=cDec[2];
+	considerDec[iDecKin]=(iMomt!=iMom0);
+	hasSymmDec[iDecKin]=(iMoms==iMom0);
+	if(hasSymmDec[iDecKin])
+	  symmOfDec[iDecKin]=indDecKin({iMomt,iMoms,iMomt});
+	
+	kDec[iDecKin]=2*M_PI*(moms[iMom0][2]-moms[iMomt][2])/L;
+	kHatDec[iDecKin]=2*sin(kDec[iDecKin]/2);
+	
+    	Eg[iDecKin]=2*asinh(fabs(kHatDec[iDecKin])/2);
+	cout<<iDecKin<<" Eg: "<<Eg[iDecKin]<<endl;
+	iMesKinOfDecKin[iDecKin]=indMesKin({iMoms,iMom0});
       }
   }
   

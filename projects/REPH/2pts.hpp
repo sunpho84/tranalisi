@@ -3,6 +3,11 @@
 
 #include <REPH/permes_combo.hpp>
 
+std::string kinTag(const size_t iMom1,const size_t iMom2)
+{
+  return combine("imom1_%zu_imom2_%zu",iMom1,iMom2);
+}
+
 djvec_t permes_combo_t::load2ptsPP(const size_t iMoms,const size_t iMomt)
 {
   const index_t ind({{"iks",ens.nMass},
@@ -35,13 +40,15 @@ djvec_t permes_combo_t::load2ptsAP(const size_t iMoms,const size_t iMomt,const s
   return sign*read_djvec(combine("%s/jacks/oAmuPo-ss",ens.dirPath.c_str()),ens.T,i).symmetrized(par)/ens.spatVol;
 }
 
-void permes_combo_t::load()
+void permes_combo_t::load2pts()
 {
   cout<<"Loading 2pts correlators"<<endl;
   
+  const string plotsPath=combine("%s/plots/%s/2pts_corr/",ens.dirPath.c_str(),mesComboTag.c_str());
+  
   for(auto dir : {"PP","A0P","AP3"})
     {
-      const std::string path=combine("%s/2pts_corr/%s/",mesPlotsPath.c_str(),dir);
+      const std::string path=combine("%s/%s/",plotsPath.c_str(),dir);
       if(not dir_exists(path))
 	mkdir(path);
     }
@@ -55,14 +62,14 @@ void permes_combo_t::load()
       const std::string kinTag=combine("imom1_%zu_imom2_%zu",iMom1,iMom2);
       
       corrPP[iMesKin]=load2ptsPP(iMom1,iMom2);
-      corrPP[iMesKin].ave_err().write(combine("%s/2pts_corr/PP/%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()));
+      corrPP[iMesKin].ave_err().write(combine("%s/PP/%s.xmg",plotsPath.c_str(),kinTag.c_str()));
       eEff[iMesKin]=effective_mass(corrPP[iMesKin]);
       
       corrA0P[iMesKin]=load2ptsAP(iMom1,iMom2,0);
-      corrA0P[iMesKin].ave_err().write(combine("%s/2pts_corr/A0P/%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()));
+      corrA0P[iMesKin].ave_err().write(combine("%s/A0P/%s.xmg",plotsPath.c_str(),kinTag.c_str()));
       
       corrA3P[iMesKin]=load2ptsAP(iMom1,iMom2,3);
-      corrA3P[iMesKin].ave_err().write(combine("%s/2pts_corr/AP3/%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()));
+      corrA3P[iMesKin].ave_err().write(combine("%s/AP3/%s.xmg",plotsPath.c_str(),kinTag.c_str()));
     }
 }
 
@@ -101,17 +108,15 @@ void permes_combo_t::computeAxialPseudoCouplings()
       const size_t iMom1=c[0];
       const size_t iMom2=c[1];
       
-      const std::string kinTag=combine("imom1_%zu_imom2_%zu",iMom1,iMom2);
-      
       if(iMom1!=iMom2)
 	{
 	  const double P=ens.pMes[iMesKin];
 	  
 	  //perform a preliminary fit
 	  djack_t fit_E,ZPP,ZA0P,ZA3P=1.0;
-	  two_pts_fit(ZPP, fit_E,corrPP[iMesKin], T/2,tMin,tMax,combine("%s/CPP_fit/prel_%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()),"",+1);
-	  two_pts_fit(ZA0P,fit_E,corrA0P[iMesKin],T/2,tMin,tMax-1,combine("%s/CA0P_fit/prel_%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()),"",-1);
-	  two_pts_fit(ZA3P,fit_E,corrA3P[iMesKin],T/2,tMin,tMax,combine("%s/CA3P_fit/prel_%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()),"",+1);
+	  two_pts_fit(ZPP, fit_E,corrPP[iMesKin], T/2,tMin,tMax,combine("%s/CPP_fit/prel_%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),"",+1);
+	  two_pts_fit(ZA0P,fit_E,corrA0P[iMesKin],T/2,tMin,tMax-1,combine("%s/CA0P_fit/prel_%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),"",-1);
+	  two_pts_fit(ZA3P,fit_E,corrA3P[iMesKin],T/2,tMin,tMax,combine("%s/CA3P_fit/prel_%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),"",+1);
 	  const djack_t fit_ZP=sqrt(ZPP);
 	  const djack_t M=sqrt(sqr(fit_E)-sqr(P));
 	  const djack_t ZA0=ZA0P/fit_ZP,ZA3=ZA3P/fit_ZP;
@@ -150,13 +155,13 @@ void permes_combo_t::computeAxialPseudoCouplings()
 	      ZP[iMesKin][iel]=par_min[2];
 	    }
 	  
-	  write_constant_fit_plot(combine("%s/CPP_fit/%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()),tMin,tMax,E[iMesKin],effective_mass(corrPP[iMesKin],T/2,+1));
-	  write_constant_fit_plot(combine("%s/CA0P_fit/%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()),tMin,tMax,E[iMesKin],effective_mass(corrA0P[iMesKin],T/2,-1));
-	  write_constant_fit_plot(combine("%s/CA3P_fit/%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()),tMin,tMax,E[iMesKin],effective_mass(corrA3P[iMesKin],T/2,+1));
+	  write_constant_fit_plot(combine("%s/CPP_fit/%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),tMin,tMax,E[iMesKin],effective_mass(corrPP[iMesKin],T/2,+1));
+	  write_constant_fit_plot(combine("%s/CA0P_fit/%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),tMin,tMax,E[iMesKin],effective_mass(corrA0P[iMesKin],T/2,-1));
+	  write_constant_fit_plot(combine("%s/CA3P_fit/%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),tMin,tMax,E[iMesKin],effective_mass(corrA3P[iMesKin],T/2,+1));
 	}
       else
 	{
-	  two_pts_SL_fit(ZP[iMesKin],ZA[iMesKin],E[iMesKin],corrA0P[iMesKin],corrPP[iMesKin],T/2,tMin,tMax-1,combine("%s/CPP_A0P_fit/%s.xmg",mesPlotsPath.c_str(),kinTag.c_str()),-1,+1);
+	  two_pts_SL_fit(ZP[iMesKin],ZA[iMesKin],E[iMesKin],corrA0P[iMesKin],corrPP[iMesKin],T/2,tMin,tMax-1,combine("%s/CPP_A0P_fit/%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),-1,+1);
 	  ZA[iMesKin]/=E[iMesKin];
 	}
       
@@ -166,6 +171,17 @@ void permes_combo_t::computeAxialPseudoCouplings()
       fP[iMesKin]=ZP[iMesKin]*(ens.mass[iMs]+ens.mass[iMt])/sqr(E[iMesKin]);
       fPbare[iMesKin]=ZA[iMesKin];
     }
+}
+
+permes_combo_t& permes_combo_t::fit2pts(const char* fitTag)
+{
+  mesPlotsPath=combine("%s/plots/%s/%s",ens.dirPath.c_str(),mesComboTag.c_str(),fitTag);
+  mkdir(mesPlotsPath);
+  
+  computeAxialPseudoCouplings();
+  plotDispRel();
+  
+  return *this;
 }
 
 #endif

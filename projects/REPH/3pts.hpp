@@ -3,9 +3,14 @@
 
 #include <REPH/permes_combo.hpp>
 
-djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMoms,const size_t iMomt,const size_t iMom0)
+std::string decKinTag(const size_t iMoms,const size_t iMomt,const size_t iMom0)
 {
-  const std::string plot3ptsPath=combine("%s/3pts_corr/",mesPlotsPath.c_str());
+  return combine("iMomS%zu_iMomT%zu_iMomO%zu",iMoms,iMomt,iMom0);
+}
+
+djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0)
+{
+  const std::string plot3ptsPath=combine("%s/plots/%s/3pts_corr/",ens.dirPath.c_str(),mesComboTag.c_str());
   if(not dir_exists(plot3ptsPath))
     mkdir(plot3ptsPath);
   
@@ -19,8 +24,6 @@ djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMoms,const size_
   
   djvec_t corr(T);
   corr=0.0;
-  
-  const std::string momTag=combine("iMomT%zu_iMomO%zu.xmg",plot3ptsPath.c_str(),VA_tag[iVA],iMoms,iMomt,iMom0);
   
   const index_t ind({{"iks",nMass},
 		     {"ikt",nMass},
@@ -46,91 +49,71 @@ djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMoms,const size_
 	const djvec_t contr=read_djvec(combine("jacks/o%smuGPo-gs",VA_tag[iVA]),T,i);
 	corr+=contr*s[iVA][iPol][iGamma-1];
 	
-	contr.ave_err().write(combine("%s/o%smuGPo-gs_%s.xmg",plot3ptsPath.c_str(),VA_tag[iVA],momTag.c_str()));
+	contr.ave_err().write(combine("%s/o%smuGPo-gs_%s_pol_%zu_gamma_%zu.xmg",plot3ptsPath.c_str(),VA_tag[iVA],decKinTag(iMoms,iMomt,iMom0).c_str(),iPol,iGamma));
       }
   corr/=2*sqrt(2);
   
-  corr/=-(L*L*L);
+  corr/=-((double)L*L*L);
   
   corr.symmetrize(par);
-  const size_t iave=ind_ave({iMs,iMt,iMoms,iMomt,iMom0});
-  corr.ave_err().write(combine("%s/plots/3pts_corr/o%smuGPo-gs_%s.xmg",VA_tag[iVA],ind_ave.descr(iave).c_str()));
+  corr.ave_err().write(combine("%s/o%smuGPo-gs_%s.xmg",plot3ptsPath.c_str(),VA_tag[iVA],decKinTag(iMoms,iMomt,iMom0).c_str()));
   
   return corr;
 }
 
-  // void fuffa()
+void permes_combo_t::load3pts()
+{
+  cout<<"Loading 3pts correlators"<<endl;
+  
+  //! Coefficient to combine the two insertions
+  const double coeff[2]={+1.0,-1.0};
+  
+  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+    {
+      const vector<size_t> c=ens.indDecKin(iDecKin);
+      
+      for(int iVA=0;iVA<2;iVA++)
+	{
+	  corrPX[iVA][iDecKin]=
+	    load3pts(iVA,iMs,iMt,c[0],c[1],c[2])*eT+
+	    coeff[iVA]*
+	    load3pts(iVA,iMt,iMs,c[0],c[1],c[2])*eS;
+	  // cout<<eT<<" "<<eS<<" "<<corrPX[iVA][iDecKin][10].ave_err()<<endl;
+	}
+    }
+}
+
+//! Prepare the 3pts normalization
+permes_combo_t& permes_combo_t::prepare3ptsNormalization()
+{
+  cout<<"Preparing 3pts normalization"<<endl;
+  
+  for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
+    {
+      const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
+      const double& Eg=ens.Eg[iDecKin];
+      const double EgT=ens.EgT(iDecKin);
+      
+      dEdec[iDecKin]=E[iMesKin]-Eg;
+      PKdec[iDecKin]=E[iMesKin]*Eg-ens.pMes[iMesKin]*ens.kHatDec[iDecKin];
+      X[iDecKin]=2*PKdec[iDecKin]/sqr(E[iMesKin]);
+      
+      
+      for(int t=0;t<=(int)ens.T/2;t++)
+	{
+	  const djack_t &A=E[iMesKin];
+	  //const djack_t &B=Eeff[iMes][std::min(std::min(t,T-t),T/2-1)];
+	  const djack_t &W=A;
+	  //cout<<t<<" "<<smart_print(A.ave_err())<<" "<<smart_print(B.ave_err())<<endl;
+	  normaliz[iDecKin][t]=4*W*EgT/(ZP[iMesKin]*exp(-t*W-(ens.T/2-t)*Eg));
+	}
+    }
+  
+  return *this;
+}
+
+// void fuffa()
   // {
-  //   //set proxies
-  //   const vector<std::array<double,3>>& moms=ens.moms;
-  //   const size_t& nMoms=ens.nMoms;
-  //   const size_t& T=ens.T;
-  //   const size_t& L=ens.L;
-    
-    /////////////////////////////////////////////////////////////////
-    
-    // const index_t ind3ptsKin({{"iMoms",nMoms},{"iMomt",nMoms},{"iMom0",nMoms}});
-    
-    // vector<vector<djvec_t>> corr(2,vector<djvec_t>(ind3ptsKin.max(),djvec_t{(size_t)T/2+1}));
-    // vector<djvec_t> normaliz(ind3ptsKin.max(),djvec_t{(size_t)T/2+1});
-    // djvec_t dE(ind3ptsKin.max());
-    // djvec_t PK(ind3ptsKin.max());
-    
-    // vector<bool> consider(ind3ptsKin.max());
-    // vector<bool> hasSymm(ind3ptsKin.max());
-    // vector<int> symmOf(ind3ptsKin.max(),-1);
-    // for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-    //   {
-    // 	const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
-    // 	const size_t iMoms=c3pts[0],iMomt=c3pts[1],iMom0=c3pts[2];
-    // 	consider[i3ptsKin]=(iMomt!=iMom0);
-    // 	hasSymm[i3ptsKin]=(iMoms==iMom0);
-    // 	if(hasSymm[i3ptsKin])
-    // 	  symmOf[i3ptsKin]=ind3ptsKin({iMomt,iMoms,iMomt});
-    //   }
-    
-    // vector<int> iMesOf3ptsKin(ind3ptsKin.max());
-    // vector<double> P(ind3ptsKin.max()),Eg(ind3ptsKin.max()),k(ind3ptsKin.max()),khat(ind3ptsKin.max());
-    // for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-    //   {
-    // 	const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
-    // 	const size_t iMoms=c3pts[0],iMomt=c3pts[1],iMom0=c3pts[2];
-    // 	const size_t iMes=iMesOf3ptsKin[i3ptsKin]=ens.indMesKin({iMoms,iMom0});
-    // 	P[i3ptsKin]=2*M_PI*(moms[iMom0][2]-moms[iMoms][2])/L;
-    // 	k[i3ptsKin]=2*M_PI*(moms[iMom0][2]-moms[iMomt][2])/L;
-    // 	khat[i3ptsKin]=2*sin(k[i3ptsKin]/2);
-	
-    // 	// const djack_t E=latt_en_1D(M,P);
-    // 	Eg[i3ptsKin]=2*asinh(fabs(khat[i3ptsKin])/2);
-    // 	const double EgT=sinh(Eg[i3ptsKin])*(1-exp(-T*Eg[i3ptsKin]));
-    // 	dE[i3ptsKin]=E[iMes]-Eg[i3ptsKin];
-    // 	PK[i3ptsKin]=E[iMes]*Eg[i3ptsKin]-P[i3ptsKin]*khat[i3ptsKin];
-	
-    // 	cout<<iMoms<<" "<<iMomt<<" "<<iMom0<<endl;
-    // 	cout<<" P: "<<P[i3ptsKin]<<endl;
-    // 	cout<<" Pg: "<<k[i3ptsKin]<<endl;
-    // 	cout<<" Pghat: "<<khat[i3ptsKin]<<endl;
-    // 	cout<<" E: "<<E[iMes].ave_err()<<endl;
-    // 	cout<<" Eg: "<<Eg[i3ptsKin]<<endl;
-    // 	cout<<" EgT: "<<EgT<<endl;
-    // 	cout<<" dE: "<<dE[i3ptsKin].ave_err()<<endl;
-	
-    // 	for(int iVA=0;iVA<2;iVA++)
-    // 	  corr[iVA][i3ptsKin]=
-    // 	    load3pts(iVA,iMoms,iMomt,iMom0)*eT+
-    // 	    ((iVA==0)?+1.0:-1.0)*
-    // 	    load3pts(iVA,iMoms,iMomt,iMom0)*eS;
-    // 	// load3pts(iVA,iMs,iMt,iMoms,iMomt,iMom0);
-	
-    // 	for(size_t t=0;t<=T/2;t++)
-    // 	  {
-    // 	    const djack_t &A=E[iMes];
-    // 	    //const djack_t &B=Eeff[iMes][std::min(std::min(t,T-t),T/2-1)];
-    // 	    const djack_t &W=A;
-    // 	    //cout<<t<<" "<<smart_print(A.ave_err())<<" "<<smart_print(B.ave_err())<<endl;
-    // 	    normaliz[i3ptsKin][t]=4*W*EgT/(ZP[iMes]*exp(-t*W-(T/2-t)*Eg[i3ptsKin]));
-    // 	  }
-    //   }
     
     // /////////////////////////////////////////////////////////////////
     
@@ -349,36 +332,55 @@ djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMoms,const size_
     // 	      /////////////////////////////////////////////////////////////////
     // 	    }
 	
-    // 	grace_file_t H_plot(combine("plots/H_%s.xmg",VA_tag[iVA]));
-    // 	grace_file_t ff_plot(combine("plots/ff_%s.xmg",VA_tag[iVA]));
-    // 	ff_plot.set_line_style(grace::NO_LINE);
-	
-    // 	for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-    // 	  if(consider[i3ptsKin] // and hasSymm[i3ptsKin]
-    // 	     )
-    // 	    {
-    // 	      const int iMes=iMesOf3ptsKin[i3ptsKin];
-	      
-    // 	      const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
-	      
-    // 	      const djvec_t y=corr[iVA][i3ptsKin]*normaliz[i3ptsKin];
-    // 	      const djack_t H=constant_fit(y,// T/4-1+0*
-    // 					   tMin[i3ptsKin],// T/4+1+0*
-    // 					   tMax[i3ptsKin],combine("plots/3pts_%s_fit_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
-    // 	      const djack_t x=2*PK[i3ptsKin]/sqr(E[0]);
-    // 	      djack_t f;
-	      
-    // 	      if(iVA==1)
-    // 		f=(H-fPbare[iMes]*(eT-eS))/PK[i3ptsKin];
-    // 	      else
-    // 		f=H*E[0]/(Eg[i3ptsKin]*P[i3ptsKin]-E[iMes]*khat[i3ptsKin]);
-	      
-    // 	      H_plot.write_ave_err(1/PK[i3ptsKin].ave(),H.ave_err());
-    // 	      ff_plot<<"# "<<i3ptsKin<<" "<<ind3ptsKin.descr(i3ptsKin)<<"\n";
-    // 	      ff_plot.write_ave_err(x.ave(),f.ave_err());
-    // 	    }
-    //   }
-  // }
+permes_combo_t& permes_combo_t::fit3pts(const char* fitTag)
+{
+  cout<<"Fitting 3pts correlators"<<endl;
   
+  decPlotsPath=combine("%s/plots/%s/3pts_fit/%s",ens.dirPath.c_str(),mesComboTag.c_str(),fitTag);
+  mkdir(decPlotsPath);
+  
+  for(int iVA=0;iVA<2;iVA++)
+    for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+      if(ens.considerDec[iDecKin] // and hasSymm[iDecKin]
+	 )
+	{
+	  const int iMesKin=ens.iMesKinOfDecKin[iDecKin];
+	  
+	  const vector<size_t> cDec=ens.indDecKin(iDecKin);
+	  
+	  const djvec_t y=corrPX[iVA][iDecKin]*normaliz[iDecKin];
+	  const djack_t H=constant_fit(y,ens.T/4-1// +0*tMin[iDecKin]
+				       ,ens.T/4+1// +0*tMax[iDecKin]
+				       ,combine("%s/c%s_%s.xmg",decPlotsPath.c_str(),VA_tag[iVA],decKinTag(cDec[0],cDec[1],cDec[2]).c_str()));
+	
+  	if(iVA==1)
+  	  ff[iVA][iDecKin]=(H-fPbare[iMesKin]*(eT-eS))/PKdec[iDecKin];
+  	else
+  	  ff[iVA][iDecKin]=H*E[iMesKin]/(ens.Eg[iDecKin]*ens.pMes[iMesKin]-E[iMesKin]*ens.kHatDec[iDecKin]);
+	}
+  
+  return *this;
+}
+
+permes_combo_t& permes_combo_t::plotFf()
+{
+  cout<<"Plotting ff"<<endl;
+  
+  for(int iVA=0;iVA<2;iVA++)
+    {
+      grace_file_t ffPlot(combine("%s/plots/%s/ff_%s.xmg",ens.dirPath.c_str(),mesComboTag.c_str(),VA_tag[iVA]));
+      ffPlot.set_line_style(grace::NO_LINE);
+      
+      for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+	if(ens.considerDec[iDecKin] // and hasSymm[iDecKin]
+	   )
+	  {
+	    ffPlot<<"# "<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<"\n";
+	    ffPlot.write_ave_err(X[iDecKin].ave(),ff[iVA][iDecKin].ave_err());
+	  }
+    }
+  
+  return *this;
+}
 
 #endif

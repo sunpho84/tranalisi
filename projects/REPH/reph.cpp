@@ -48,7 +48,13 @@ int main(int narg,char **arg)
 	}
       
       for(size_t iMesCombo=0;iMesCombo<nMesCombos;iMesCombo++)
-	mesCombos[iMesCombo].fit2pts("fixed_tfit");
+	{
+	  mesCombos[iMesCombo]
+	    .fit2pts("fixed_tfit")
+	    .prepare3ptsNormalization()
+	    .fit3pts("tfixed_tfit")
+	    .plotFf();
+	}
     }
   
   /*
@@ -63,13 +69,13 @@ int main(int narg,char **arg)
     - | | | | * do the fit of PP and AP
     - | | | | * check dispersion relation
     - | | | |
-    - | | | read V and A correlation functions
+    - | | | * read V and A correlation functions
     - | | | | loop on all ratios definitions
-    - | | | | | build the ratios
+    - | | | | | * build the ratios
     - | | | | | ..
     - | | | | |
     - | | | | | loop on all 3pts fit range
-    - | | | | | | fit 3pts
+    - | | | | | | *fit 3pts
     - | | | |
     - | loop on all systematics so far
     - | | loop on all 8 analysis
