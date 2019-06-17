@@ -135,7 +135,11 @@ public:
   T significativity() const
   {
     auto ae=ave_err();
-    return fabs(ae.ave()/ae.err());
+    
+    if(ae.err())
+      return fabs(ae.ave()/ae.err());
+    else
+      return 10000;
   }
   
   //! initialize from aver_err_t and a seed
