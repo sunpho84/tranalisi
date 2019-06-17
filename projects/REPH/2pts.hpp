@@ -90,8 +90,6 @@ void permes_combo_t::computeAxialPseudoCouplings()
 {
   const size_t& T=ens.T;
   
-  const size_t tMin=12,tMax=T/2+1;
-  
   grace_file_t ZPPlot(combine("%s/ZP.xmg",mesPlotsPath.c_str()));
   grace_file_t ZAPlot(combine("%s/ZA.xmg",mesPlotsPath.c_str()));
   
@@ -107,6 +105,10 @@ void permes_combo_t::computeAxialPseudoCouplings()
       const vector<size_t> c=ens.indMesKin(iMesKin);
       const size_t iMom1=c[0];
       const size_t iMom2=c[1];
+      
+      const djvec_t temp=forward_derivative(effective_mass(corrPP[iMesKin]));
+      size_t tMin,tMax;
+      compWithZero<true>(tMin,tMax,temp,3,ens.T/2-2);
       
       if(iMom1!=iMom2)
 	{
