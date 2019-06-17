@@ -52,6 +52,7 @@ int main(int narg,char **arg)
 	  mesCombos[iMesCombo]
 	    .fit2pts("fixed_tfit")
 	    .prepare3ptsNormalization()
+	    .chooseTint()
 	    .fit3pts("tfixed_tfit")
 	    .plotFf();
 	}

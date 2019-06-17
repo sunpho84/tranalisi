@@ -90,7 +90,7 @@ void permes_combo_t::computeAxialPseudoCouplings()
 {
   const size_t& T=ens.T;
   
-  const size_t tMin=12,tMax=T/2+1;
+  const size_t tMin=24,tMax=T/2+1;
   
   grace_file_t ZPPlot(combine("%s/ZP.xmg",mesPlotsPath.c_str()));
   grace_file_t ZAPlot(combine("%s/ZA.xmg",mesPlotsPath.c_str()));

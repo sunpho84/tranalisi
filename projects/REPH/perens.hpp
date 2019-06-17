@@ -41,6 +41,20 @@ struct perens_t
   //! Index spanning all decay momenta combination
   index_t indDecKin;
   
+  //! Returnt he tag of decKin ind
+  string decKinTag(const size_t iMoms,const size_t iMomt,const size_t iMom0) const
+  {
+    return combine("iMomS%zu_iMomT%zu_iMomO%zu",iMoms,iMomt,iMom0);
+  }
+  
+  //! Wrapper to the function returning the tag
+  string decKinTag(const size_t iDecKin) const
+  {
+    const vector<size_t> c=indDecKin(iDecKin);
+    
+    return decKinTag(c[0],c[1],c[2]);
+  }
+  
   //! Number of decay momenta combination
   size_t nDecKin;
   
@@ -136,7 +150,6 @@ struct perens_t
 	kHatDec[iDecKin]=2*sin(kDec[iDecKin]/2);
 	
     	Eg[iDecKin]=2*asinh(fabs(kHatDec[iDecKin])/2);
-	cout<<iDecKin<<" Eg: "<<Eg[iDecKin]<<endl;
 	iMesKinOfDecKin[iDecKin]=indMesKin({iMoms,iMom0});
       }
   }
