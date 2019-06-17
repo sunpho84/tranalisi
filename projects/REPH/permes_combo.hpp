@@ -113,11 +113,11 @@ struct permes_combo_t
   }
   
   //! Constructor
-  permes_combo_t(const perens_t& ens,const size_t& iMs,const size_t& iMt,const double& eS,const double& eT) :
+  permes_combo_t(const perens_t& ens,const string& mesName,const size_t& iMs,const size_t& iMt,const double& eS,const double& eT) :
     ens(ens),
     iMs(iMs),
     iMt(iMt),
-    mesComboTag(combine("Mes_iMs%zu" "_" "iMt%zu",iMs,iMt)),
+    mesComboTag(combine("mes_%s/iMs%zu" "_" "iMt%zu",mesName.c_str(),iMs,iMt)),
     eS(eS),
     eT(eT)
   {
