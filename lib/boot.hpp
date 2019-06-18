@@ -125,6 +125,18 @@ public:
     return ae;
   }
   
+  //! Return the error with error
+  ave_err_t err_with_err() const
+  {
+    return ::err_with_err(*this,njacks);
+  }
+  
+  //! Return the skewness
+  ave_err_t skewness() const
+  {
+    return ::skewness(*this,njacks);
+  }
+  
   //! return only the average
   T ave() const {return ave_err().ave();}
   

@@ -93,6 +93,22 @@ public:
     return out;
   }
   
+  //! compute error with error
+  vec_ave_err_t err_with_err() const
+  {
+    vec_ave_err_t out(this->size());
+    for(size_t it=0;it<this->size();it++) out[it]=(*this)[it].err_with_err();
+    return out;
+  }
+  
+  //! Return the skewness
+  vec_ave_err_t skewness() const
+  {
+    vec_ave_err_t out(this->size());
+    for(size_t it=0;it<this->size();it++) out[it]=(*this)[it].skewness();
+    return out;
+  }
+  
   //! compute average
   vector<double> ave() const
   {
