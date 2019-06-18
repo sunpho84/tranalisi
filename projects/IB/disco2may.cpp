@@ -336,6 +336,7 @@ int main(int narg,char **arg)
       int seed=0;
       
       cout<<"DIAG "<<diag[idiag]<<endl;
+      cout<<"best signal/noise ratio: "<<slopes[ind({idiag,div_nhits.size()-1,nconfs.size()-1})].back()/errors[ind({idiag,div_nhits.size()-1,nconfs.size()-1})].back()<<endl;
       int idiv_nhits_min=0;
       if(idiag>2)
 	idiv_nhits_min=1;
@@ -364,7 +365,7 @@ int main(int narg,char **arg)
       
       //! results for the fit
       const djvec_t res_plan=plan_fit(plan_fit_data);
-      cout<<"res_plan of diagram EU"<<diag[idiag]<<": "<<res_plan.ave_err()<<endl;
+      // cout<<"res_plan of diagram EU"<<diag[idiag]<<": "<<res_plan.ave_err()<<endl;
       const djvec_t temp=sqrt(abs(res_plan));
       /////////////////////////////////////////////////////////////////
       
@@ -439,10 +440,12 @@ int main(int narg,char **arg)
       //! same ansatz with swapped arguments
       auto f_swapped=bind(f,placeholders::_2,placeholders::_1,placeholders::_3);
       
-      cout<<res.ave_err()<<endl;
+      // cout<<res.ave_err()<<endl;
+      cout<<"A = "<<sqr(res[1].ave())<<"+/-"<<2*res[1].ave()*res[1].err()<<endl;
+      cout<<"B = "<<sqr(res[0].ave())<<"+/-"<<2*res[0].ave()*res[0].err()<<endl;
       const djack_t r=res[0]/res[1];
       const djack_t lim=pow(sqr(r),1.0/pow_nh[idiag]);
-      cout<<"the 'nhits'-associated error is no longer dominating for nhits which equals "<<smart_print(lim.ave_err())<<endl;
+      cout<<"the 'nhits'-associated error is no longer dominating for nhits which equals "<<smart_print(lim.ave_err())<<endl<<endl<<endl<<endl;
       
       slice_plot(div_nhits,idiv_nhits_min,nconfs,0,idiag,slopes,errors,ind,1,2,f,pow_nh[idiag],1);
       slice_plot(nconfs,0,div_nhits,idiv_nhits_min,idiag,slopes,errors,ind,2,1,f_swapped,1,pow_nh[idiag]);
