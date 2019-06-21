@@ -93,7 +93,7 @@ void permes_combo_t::computeAxialPseudoCouplings()
   grace_file_t ZPPlot(combine("%s/ZP.xmg",mesPlotsPath.c_str()));
   grace_file_t ZAPlot(combine("%s/ZA.xmg",mesPlotsPath.c_str()));
   
-  for(auto dir : {"CPP_fit","CA0P_fit","CA3P_fit","CPP_A0P_fit"})
+  for(auto dir : {"CPP_fit","CA0P_fit","CA3P_fit","CPP_A0P_fit","range"})
     {
       const std::string path=combine("%s/%s/",mesPlotsPath.c_str(),dir);
       if(not dir_exists(path))
@@ -106,9 +106,30 @@ void permes_combo_t::computeAxialPseudoCouplings()
       const size_t iMom1=c[0];
       const size_t iMom2=c[1];
       
-      const djvec_t temp=forward_derivative(effective_mass(corrPP[iMesKin]));
-      size_t tMin,tMax;
-      compWithZero<true>(tMin,tMax,temp,3,ens.T/2-2);
+      const djvec_t temp=smooth(forward_derivative(effective_mass(corrPP[iMesKin])),3);
+      
+      const string rangePath=combine("%s/range/%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str());
+      cout<<rangePath<<endl;
+      
+      CompatibilityRangeFinder<> comp(temp,rangePath);
+      
+      comp.setRangeToConsiderByFraction(1.0/12)
+	.selectClosestCompatiblePointWithinNsigma(0,1)
+	.plotSelected()
+	.selectEnlargingError(2,2)
+	.plotSelected()
+	.mergeSelectionByDistanceSize<true>()
+	.plotSelected()
+	.selectLargestRange()
+	.plotSelected();
+      
+      const Range fitRange=comp.getSelectionRange(0);
+      cout<<"Fit Range: "<<fitRange<<endl;
+      
+      const size_t tMin=fitRange.begin;
+      const size_t tMax=fitRange.end+1;
+      
+      cout<<temp.size()<<" "<<ens.T<<endl;
       
       if(iMom1!=iMom2)
 	{

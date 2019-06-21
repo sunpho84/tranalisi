@@ -69,17 +69,13 @@ struct permes_combo_t
   //! Z component of axial current
   vector<djvec_t> corrA3P;
   
-  //! Decay correlators for V and A
-  vector<djvec_t> corrPX[2];
+  enum{insOnS,insOnT};
   
-  //! Decay correlators for V
-  vector<djvec_t>& corrPXV=corrPX[0];
-  
-  //! Decay correlators for A
-  vector<djvec_t>& corrPXA=corrPX[1];
+  //! Decay correlators for V and A, with the insertion on S or T
+  vector<djvec_t> corrPX[2][2];
   
   //! Time interval for 3pts fit
-  vector<std::pair<size_t,size_t>> tint3pts[2];
+  vector<Range> tint3pts[2][2];
   
   //! Form factors for V and A
   djvec_t ff[2];
@@ -127,9 +123,12 @@ struct permes_combo_t
     
     resizeListOfContainers({&ff[0],&ff[1]},ens.nDecKin);
     
-    resizeListOfContainers({&tint3pts[0],&tint3pts[1]},ens.nDecKin,std::pair<size_t,size_t>{0,0});
-    
-    resizeListOfContainers({&corrPXA,&corrPXV},ens.nDecKin);
+    for(size_t iVA=0;iVA<2;iVA++)
+      for(size_t iST=0;iST<2;iST++)
+	{
+	  resizeListOfContainers({&corrPX[iVA][iST]},ens.nDecKin);
+	  resizeListOfContainers({&tint3pts[iVA][iST]},ens.nDecKin,Range{0,0});
+	}
     
     resizeListOfContainers({&dEdec,&PKdec,&X},ens.nDecKin);
     
@@ -144,6 +143,7 @@ struct permes_combo_t
   //! Perform the 2pts fit
   permes_combo_t& fit2pts(const char* fitTag);
   
+  //! Chosses the time interval
   permes_combo_t& chooseTint();
   
   //! Perform the 3pts fit
