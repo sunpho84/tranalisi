@@ -112,6 +112,9 @@ class grace_file_t : private ofstream
   
 public:
   
+  //! Detect if open
+  using ofstream::is_open;
+  
   //! direct write
   template <class T>
   friend grace_file_t& operator<<(grace_file_t &file,const T& out)
