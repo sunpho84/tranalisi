@@ -132,16 +132,16 @@ grace_file_t::grace_file_t(const string &path) :
   color_scheme(grace::default_color_scheme),
   line_color_scheme(grace::default_line_color_scheme),
   symbol_scheme(grace::default_symbol_scheme),
-  cur_col(0),
-  cur_poly_col(0),
-  cur_line_col(0),
-  cur_symbol(0),
   iset(0),
   settype(grace::XY),
   xaxis_min(0),
   xaxis_max(1),
   yaxis_min(0),
-  yaxis_max(1)
+  yaxis_max(1),
+  cur_col(0),
+  cur_poly_col(0),
+  cur_line_col(0),
+  cur_symbol(0)
 {
   if(path!="") this->open(path);
   
@@ -276,7 +276,6 @@ void grace_file_t::new_data_set(grace::color_t col,grace::symbol_t sym)
   
   set_legend("");
   set_settype(grace::XYDY);
-  set_line_style(grace::NO_LINE);
   set_all_colors(col);
   set_symbol(sym);
   

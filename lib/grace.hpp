@@ -56,18 +56,6 @@ class grace_file_t : private ofstream
     return out;
   }
   
-  size_t cur_col; //!< current color for set (auto-incremented)
-  grace::color_t get_col_no_increment();
-  
-  size_t cur_poly_col; //!< current color for polygon
-  grace::color_t get_poly_col_no_increment();
-  
-  size_t cur_line_col; //!< current color for line
-  grace::color_t get_line_col_no_increment();
-  
-  size_t cur_symbol; //!< current symbol
-  grace::symbol_t get_symbol_no_increment();
-  
   size_t iset; //!< set id
   string legend; //! legend of the set
   
@@ -111,6 +99,18 @@ class grace_file_t : private ofstream
   void close_cur_set();
   
 public:
+  
+  size_t cur_col; //!< current color for set (auto-incremented)
+  grace::color_t get_col_no_increment();
+  
+  size_t cur_poly_col; //!< current color for polygon
+  grace::color_t get_poly_col_no_increment();
+  
+  size_t cur_line_col; //!< current color for line
+  grace::color_t get_line_col_no_increment();
+  
+  size_t cur_symbol; //!< current symbol
+  grace::symbol_t get_symbol_no_increment();
   
   //! Detect if open
   using ofstream::is_open;
