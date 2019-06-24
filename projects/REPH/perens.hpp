@@ -85,6 +85,19 @@ struct perens_t
     return sinh(Eg[iDecKin])*(1-exp(-T*Eg[iDecKin]));
   }
   
+  //! Find X given a mass and kinematic
+  double getX(const double m,const double thS,const double thT,const double th0) const
+  {
+    const double pi=2*M_PI*(th0-thS)/L;
+    const double en=latt_en_1D(m,pi);
+    const double kHat=2*M_PI*(th0-thT)/L;
+    const double eg=2*asinh(fabs(kHat)/2);
+    const double pk=en*eg-pi*kHat;
+    const double x=2*pk/sqr(en);
+    
+    return x;
+  }
+  
   //! Momentum of the decaying pair of lepton
   vector<double> kDec;
   

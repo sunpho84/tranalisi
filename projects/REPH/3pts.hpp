@@ -140,15 +140,39 @@ permes_combo_t& permes_combo_t::chooseTint()
 	      
 	      CompatibilityRangeFinder<> comp(y,outRangePath);
 	      
-	      comp.setRangeToConsiderByFraction(1.0/12)
-		.selectClosestCompatiblePointWithinNsigma(ens.T/4,1)
-		.plotSelected()
-		.selectEnlargingError(2,1.5)
-		.plotSelected()
-		.mergeSelectionByDistanceSize<true>()
-		.plotSelected()
-		.selectLargestRange()
-		.plotSelected();
+	      //! Initial value of enlarging factor
+	      double nSigEnl=2.0;
+	      
+	      const auto receipt=[T=ens.T,&comp,&nSigEnl](const bool verb=false)
+				 {
+				   double nSigSel=1;
+				   comp
+				     .setVerbose(verb)
+				     .setRangeToConsiderByFraction(1.0/12)
+				     .selectClosestCompatiblePointWithinNsigma(T/4,nSigSel)
+				     .plotSelected()
+				     .selectEnlargingError(2,nSigEnl)
+				     .plotSelected()
+				     .mergeSelectionByDistanceSize()
+				     .plotSelected()
+				     .selectLargestRange()
+				     .plotSelected();
+				 };
+	      
+	      receipt();
+	      
+	      //! Minimal length
+	      const size_t lengthMin=3;
+	      
+	      // Extend
+	      while(comp.getSelectionRange(0).size()<lengthMin)
+		{
+		  nSigEnl+=1.0;
+		  
+		  cout<<"WARNING, compatibility range too short, "<<comp.getSelectionRange(0)<<" when at least "<<lengthMin<<" needed, enlarging of "<<nSigEnl<<endl;
+		  
+		  receipt(true);
+		}
 	      
 	      const Range& fitRange=tint3pts[iVA][iST][i3ptsKin]=comp.getSelectionRange(0);
 	      
@@ -284,15 +308,25 @@ permes_combo_t& permes_combo_t::plotFf()
   
   for(int iVA=0;iVA<2;iVA++)
     {
+      using namespace grace;
       grace_file_t ffPlot(combine("%s/ff_%s.xmg",path.c_str(),VA_tag[iVA]));
-      ffPlot.set_line_style(grace::NO_LINE);
+      ffPlot.set_line_type(grace::line_type_t::STRAIGHT_LINE);
+      ffPlot.set_color_scheme({RED,BLUE,GREEN4,VIOLET,ORANGE});
       
-      for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	if(ens.considerDec[iDecKin] // and hasSymm[iDecKin]
-	   )
+      for(size_t iMom1=0;iMom1<ens.nMoms;iMom1++)
+	for(size_t iMom2=0;iMom2<ens.nMoms;iMom2++)
 	  {
-	    ffPlot<<"# "<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<"\n";
-	    ffPlot.write_ave_err(X[iDecKin].ave(),ff[iVA][iDecKin].ave_err());
+	    for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+	      {
+		const vector<size_t> c=ens.indDecKin(iDecKin);
+		
+		if(ens.considerDec[iDecKin] and c[1]==iMom1 && c[2]==iMom2)
+		  {
+		    ffPlot<<"# "<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<"\n";
+		    ffPlot.write_ave_err(X[iDecKin].ave(),ff[iVA][iDecKin].ave_err());
+		  }
+	      }
+	    ffPlot.new_data_set();
 	  }
     }
   

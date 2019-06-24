@@ -113,15 +113,55 @@ void permes_combo_t::computeAxialPseudoCouplings()
       
       CompatibilityRangeFinder<> comp(temp,rangePath);
       
-      comp.setRangeToConsiderByFraction(1.0/12)
-	.selectClosestCompatiblePointWithinNsigma(0,1)
-	.plotSelected()
-	.selectEnlargingError(2,2)
-	.plotSelected()
-	.mergeSelectionByDistanceSize<true>()
-	.plotSelected()
-	.selectLargestRange()
-	.plotSelected();
+      //! Initial value of enlarging factor
+      double nSigEnl=2.0;
+      
+      const auto receipt=[&comp,&nSigEnl](const bool verb=false)
+			 {
+			   double nSigSel=1;
+			   comp
+			     .setVerbose(verb)
+			     .setRangeToConsiderByFraction(1.0/12)
+			     .selectClosestCompatiblePointWithinNsigma(0,nSigSel)
+			     .plotSelected()
+			     .selectEnlargingError(2,nSigEnl)
+			     .plotSelected()
+			     .mergeSelectionByDistanceSize()
+			     .plotSelected()
+			     .selectLargestRange()
+			     .plotSelected()
+			     .setRangeToConsiderByFraction(0.0)
+			     .extendRightWithCompatiblePoints(nSigEnl);
+			 };
+      
+      receipt();
+      
+      //! Minimal length
+      const size_t lengthMin=T/6;
+      
+      //! Function to check if redo
+      const auto checkReDo=[&comp,&lengthMin](){return comp.getSelectionRange(0).size()<lengthMin;};
+      
+      //! If needed to redo, verbose
+      if(checkReDo())
+	receipt(true);
+      
+      // Extend
+      while(checkReDo())
+	{
+	  nSigEnl+=1.0;
+	  
+	  cout<<"WARNING, compatibility range too short, "<<comp.getSelectionRange(0)<<" when at least "<<lengthMin<<" needed, enlarging right of "<<nSigEnl<<endl;
+	  
+	  comp
+	    .setRangeToConsiderByFraction(0.0)
+	    .extendRightWithCompatiblePoints(nSigEnl)
+	    .plotSelected()
+	    .selectLargestRange()
+	    .plotSelected();
+	}
+      
+      //miglioramenti: fai loop fino a quando ci sono almeno n punti (6?) aumentando il numero di sigma progressivamente, e togli gli ultimi punti se ce ne sono almeno m (8?)
       
       const Range fitRange=comp.getSelectionRange(0);
       cout<<"Fit Range: "<<fitRange<<endl;

@@ -53,8 +53,7 @@ ostream& operator<<(ostream& os,const Range& r)
 }
 
 //! Merges selection if their distance (from their middle) is smaller than their total size
-template <bool Verbose=false>
-vector<Range> mergeRangesByDistanceSize(vector<Range> ranges)
+vector<Range> mergeRangesByDistanceSize(vector<Range> ranges,const bool verbose=false)
 {
   size_t nMerged;
   size_t iRange;
@@ -79,21 +78,21 @@ vector<Range> mergeRangesByDistanceSize(vector<Range> ranges)
 	  
 	  if(tol>=gap)
 	    {
-	      if(Verbose) cout<<"Merged "<<ranges[iRange]<<" with "<<ranges[iRange+1]<<", sizes: "<<thisSize<<" "<<nextSize<<", gap: "<<gap<<", tol: "<<tol<<", result";
+	      if(verbose) cout<<"Merged "<<ranges[iRange]<<" with "<<ranges[iRange+1]<<", sizes: "<<thisSize<<" "<<nextSize<<", gap: "<<gap<<", tol: "<<tol<<", result";
 	      ranges[iRange].end=endNext;
 	      ranges.erase(ranges.begin()+iRange+1);
-	      if(Verbose) cout<<" "<<ranges[iRange]<<endl;
+	      if(verbose) cout<<" "<<ranges[iRange]<<endl;
 	      
 	      nMerged++;
 	    }
 	  else
 	    {
-	      if(Verbose) cout<<"Not Merged "<<ranges[iRange]<<" with "<<ranges[iRange+1]<<", sizes: "<<thisSize<<" "<<nextSize<<", gap: "<<gap<<", tol: "<<tol<<endl;;
+	      if(verbose) cout<<"Not Merged "<<ranges[iRange]<<" with "<<ranges[iRange+1]<<", sizes: "<<thisSize<<" "<<nextSize<<", gap: "<<gap<<", tol: "<<tol<<endl;;
 	      iRange++;
 	    }
 	}
       
-      if(Verbose)
+      if(verbose)
 	{
 	  cout<<"NMerged: "<<nMerged<<endl;
 	  cout<<endl;
@@ -138,6 +137,9 @@ class CompatibilityRangeFinder
   //! Offset between consecutive range plots
   double plotOffset;
   
+  //! Verbosity
+  bool verbose;
+  
 public:
   
   //! Return covariance matrix
@@ -177,10 +179,7 @@ public:
   //! Check that the range is sensible
   void verifyRange() const
   {
-    if(tSearchMin<1)
-      CRASH("Cannot have %zu as minimal range",tSearchMin);
-    
-    if(tSearchMax>=y.size()-1)
+    if(tSearchMax>y.size())
       CRASH("Cannot have %zu as maximal range",tSearchMax);
     
     if(tSearchMax<=tSearchMin)
@@ -194,6 +193,8 @@ public:
     tSearchMax=round(y.size()*(1-frac));
     
     verifyRange();
+    
+    if(verbose) cout<<"Selection range: "<<Range{tSearchMin,tSearchMax}<<endl;
     
     return *this;
   }
@@ -217,9 +218,17 @@ public:
   }
   
   //! Constructor
-  CompatibilityRangeFinder(const TV& y,const string& path="") : y(y),aveErr(y.ave_err()),tSearchMin(1),tSearchMax(y.size()-1),signif(y.significativity()),selected(y.size(),false)
+  CompatibilityRangeFinder(const TV& y,const string& path="",const bool verbose=false) : y(y),aveErr(y.ave_err()),tSearchMin(1),tSearchMax(y.size()-1),signif(y.significativity()),selected(y.size(),false),verbose(verbose)
   {
     openPlot(path);
+  }
+  
+  //! Set verbosity
+  CompatibilityRangeFinder& setVerbose(const bool val)
+  {
+    verbose=val;
+    
+    return *this;
   }
   
   //! Destructor
@@ -229,8 +238,8 @@ public:
       delete _covMatr;
   }
   
-  //! Finds the point which is more compatible with zero, closest to tRef, withing nSig
-  size_t getClosestCompatiblePointWithinNsigma(const size_t& tRef,double nSig) const
+  //! Finds the point which is more compatible with zero, closest to tRef, within nSig (adjusted if needed)
+  size_t getClosestCompatiblePointWithinNsigma(const size_t& tRef,double& nSig) const
   {
     size_t tF=0;
     
@@ -250,17 +259,25 @@ public:
 	      }
 	  }
 	
-	if(not found) nSig*=1.1;
+	if(not found)
+	  {
+	    nSig*=1.1;
+	    if(verbose) cout<<"No compatible point found, increasing nSigma to "<<nSig<<endl;
+	  }
       }
     while(not found);
+    
+    if(verbose) cout<<"Most compatible point found: "<<tF<<endl;
     
     return tF;
   }
   
-  //! Select the point which is more compatible with zero, closest to tRef, withing nSig
-  CompatibilityRangeFinder& selectClosestCompatiblePointWithinNsigma(const size_t& tRef,const double& nSig)
+  //! Select the point which is more compatible with zero, closest to tRef, withing nSig (adjusted if needed)
+  CompatibilityRangeFinder& selectClosestCompatiblePointWithinNsigma(const size_t& tRef,double& nSig)
   {
-    return selectPoint(getClosestCompatiblePointWithinNsigma(tRef,nSig));
+    selectPoint(getClosestCompatiblePointWithinNsigma(tRef,nSig));
+    
+    return *this;
   }
   
   //! Deselect all
@@ -299,11 +316,14 @@ public:
     return *this;
   }
   
-  //! Select all points compatible withing nSig
+  //! Select also all points compatible withing nSig
   CompatibilityRangeFinder& selectAllPointCompatibleWithinNSigma(const double nSig)
   {
     for(size_t t=tSearchMin;t<tSearchMax;t++)
-      selected[t]=(signif[t]<=nSig);
+      {
+	cout<<t<<" "<<selected[t]<<" "<<signif[t]<<" "<<nSig<<endl;
+	selected[t]=selected[t] or (signif[t]<=nSig);
+      }
     
     return *this;
   }
@@ -324,15 +344,38 @@ public:
     return tF;
   }
   
-  //! Gets all points compatible within nSig and erorr not larger of a fraction f
-  CompatibilityRangeFinder& selectEnlargingError(const double& f,const double nSig=1.0)
+  //! Gets all points compatible within nSig and errrr not larger of a fraction f
+  CompatibilityRangeFinder& selectEnlargingError(const double& f,const double& nSig=1.0)
   {
     const size_t tMaxErr=getSelectedPointWithLargestError();
+    if(verbose) cout<<"Point with largest error: "<<tMaxErr<<endl;
     const double eF=f*aveErr[tMaxErr].err();
     
     return
       selectAllPointCompatibleWithinNSigma(nSig).
       trimAllPointsWithErrorLargerThan(eF);
+  }
+  
+  //! Include rightermost point, if compatible within n sigma
+  CompatibilityRangeFinder& extendRightWithCompatiblePoints(const double& nSig=1.0)
+  {
+    size_t t=getSelectionRanges().back().end+1;
+    
+    while(t<tSearchMax and signif[t]<nSig)
+      selected[t++]=true;
+    
+    return *this;
+  }
+  
+  //! Include lefterrmost point, if compatible within n sigma
+  CompatibilityRangeFinder& extendLeftWithCompatiblePoints(const double& nSig=1.0)
+  {
+    size_t t=getSelectionRanges().front().begin-1;
+    
+    while(t>tSearchMin and signif[t]<nSig)
+      selected[t--]=true;
+    
+    return *this;
   }
   
   //! Remove from the selection points with too large error
@@ -357,14 +400,17 @@ public:
     vector<Range> ranges;
     for(size_t t=tSearchMin;t<=tSearchMax;t++)
       {
-	if(selected[t-1] and not selected[t])
-	  ranges.back().end=t-1;
-	if(selected[t] and not selected[t-1])
+	if((t<tSearchMax and selected[t]) and (t==0 or not selected[t-1]))
 	  ranges.push_back({t,0});
+	if((t>0 and selected[t-1]) and (t>=tSearchMax or not selected[t]))
+	  ranges.back().end=t-1;
       }
     
     if(ranges.size()==0)
+      {
+	cout<<selected<<endl;
       CRASH("No range found!");
+      }
     
     //Check that ranges make range
     if(ranges.back().end==0)
@@ -412,10 +458,9 @@ public:
   }
   
   //! Merges selection if their distance (from their middle) is smaller than their total size
-  template <bool Verbose=false>
   CompatibilityRangeFinder& mergeSelectionByDistanceSize()
   {
-    return selectByRanges(mergeRangesByDistanceSize<Verbose>(getSelectionRanges()));
+    return selectByRanges(mergeRangesByDistanceSize(getSelectionRanges(),verbose));
   }
   
   //! Plot the selected points
@@ -431,7 +476,7 @@ public:
       plotOffset=y[ranges[0].begin].err()*3;
     
     for(size_t iRange=0;iRange<nRanges;iRange++)
-      plot.write_line([this](double){return plotOffset/(rangePlotCounter+1);},ranges[iRange].begin-0.25,ranges[iRange].end+0.25);
+      plot.write_line([this](double){return plotOffset/(rangePlotCounter+1);},ranges[iRange].begin-0.25,ranges[iRange].end+0.25,plot.get_line_col_no_increment(),2);
     
     rangePlotCounter++;
     

@@ -151,6 +151,100 @@ struct permes_combo_t
   
   //! Plot ff
   permes_combo_t& plotFf();
+  
+  //! X study
+  void babababab()
+  {
+    grace_file_t test("/tmp/o.xmg");
+    const double m=E[0].ave();
+    
+    double thS=0.0;
+    double thT=0.0;
+    
+    for(double x=1e-6;x<=1+1e-6;x+=0.05)
+      {
+	// test.write_line([=](const double& thS){return x-ens.getX(m,thS,thT,th0);},-100,100,1000);
+	
+	class thFinder : public minimizer_fun_t
+	{
+	public:
+	  
+	  const double x;
+	  const perens_t& ens;
+	  const double m;
+	  
+	  double y(const vector<double>& p,const double& th0) const
+	  {
+	    const double& thS=p[0];
+	    const double& thT=p[1];
+	    
+	    return
+	      x-ens.getX(m,thS,thT,th0);
+	  };
+	  
+	  double th0forX(const vector<double>& p) const
+	  {
+	    double a=0;
+	    double b=0;
+	    
+	    while(y(p,a)*y(p,b)>=0)
+	      {
+		//cout<<a<<" "<<b<<"    "<<y(p,a)<<" "<<y(p,b)<<endl;
+		a=-b;
+		b=(b+1e-3)*1.01;
+		
+		if(b>1e3) CRASH("No solution found");
+	      };
+	    
+	    return
+	      Brent_solve([this,&p](const double& x){return y(p,x);},a,b);
+	  };
+	  
+	  //! Constructor
+	  thFinder(const double x,const perens_t& ens,const double m) : x(x),ens(ens),m(m)
+	  {
+	  }
+	  
+	  double operator()(const double& thS,const double& thT,const double& th0) const
+	  {
+	    const double y=sqr(thS)+sqr(thT)+sqr(th0);
+	    
+	    return y;
+	  }
+	  
+	  double operator()(const vector<double> &p) const
+	  {
+	    const double th0=th0forX(p);
+	    //cout<<p[0]<<" "<<p[1]<<" "<<th0<<endl;
+	    return (*this)(p[0],p[1],th0);
+	  }
+	  
+	  double Up() const {return 1;}
+	};
+	
+	thFinder thetas(x,ens,m);
+	
+	minimizer_pars_t pars;
+	pars.add("thS",thS,0.1);
+	pars.add("thT",thT,0.1);
+	
+	minimizer_t min(thetas,pars);
+	
+	const vector<double> minPars=min.minimize();
+	cout<<x<<endl;
+	const double thS=minPars[0];
+	const double thT=minPars[1];
+	const double th0=thetas.th0forX(minPars);
+	cout<<"ThS: "<<thS<<endl;
+	cout<<"ThT: "<<thT<<endl;
+	cout<<"Th0: "<<th0<<endl;
+	cout<<"x: "<<ens.getX(m,thS,thT,th0)<<endl;
+	cout<<"func: "<<thetas(minPars)<<endl;
+	cout<<"x: "<<ens.getX(m,0,0,0)<<endl;
+	cout<<"func: "<<thetas(0.0,0.0,0.0)<<endl;
+      }
+  }
+
 };
 
 #endif
