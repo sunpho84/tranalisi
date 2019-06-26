@@ -11,6 +11,9 @@ struct perens_t
   //! Folder where to find data and create plots
   const std::string dirPath;
   
+  //! Index of beta
+  size_t iBeta;
+  
   //! Spatial size
   int L;
   
@@ -104,10 +107,29 @@ struct perens_t
   //! Lattice version of the decaying momentum
   vector<double> kHatDec;
   
+  //! Turns a char into index of beta
+  static size_t decryptBeta(const char& b)
+  {
+    //! Translation from ABD to ib
+    const map<char,size_t> betaMap({{'A',0},{'B',1},{'D',2}});
+    
+    //! Search the character
+    auto f=betaMap.find(b);
+    if(f==betaMap.end()) CRASH("Unknown %c",b);
+    
+    return f->second;
+  }
+  
   //! Read the input file
   void readInput()
   {
     raw_file_t fin(combine("%s/jacks/input.txt",dirPath.c_str()),"r");
+    
+    const string absPath=absolute_path(dirPath);
+    cout<<"Absolute path: "<<absPath<<endl;
+    
+    const string basePath=basename(absPath);
+    iBeta=decryptBeta(absPath[0]);
     
     L=fin.read<size_t>("L");
     spatVol=L*L*L;

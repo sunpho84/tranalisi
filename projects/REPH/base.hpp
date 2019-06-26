@@ -16,7 +16,7 @@ const char VA_tag[2][2]={"V","A"};
 const char ST_tag[2]={'S','T'};
 
 //! Holds all info for a given physical quark
-using quark_t=tuple<double,vector<size_t>>;
+using quark_t=tuple<double,size_t,vector<size_t>>;
 
 //! List of physical quarks
 //!
@@ -24,7 +24,7 @@ using quark_t=tuple<double,vector<size_t>>;
 //! Each value is a tuple: the first component is the charge, the second is a vector, listing all masses in the data
 map<string,quark_t> quarkList;
 
-//! Holds all info for a given meson: the first entry is the name, the second is the bw quatk, the third is the fw one
+//! Holds all info for a given meson: the first entry is the name, the second is the bw quark, the third is the fw one
 using meson_t=tuple<string,string,string>;
 
 //! List of all known mesons

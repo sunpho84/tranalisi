@@ -345,7 +345,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const char* fitTag,const bool fo
 }
 
 template <typename TV>
-void permes_t<TV>::plotFf(const string& tag)
+void permes_t<TV>::plotFf(const string& tag) const
 {
   const string path=ens.dirPath+"/plots/"+mesTag;
   mkdir(path);

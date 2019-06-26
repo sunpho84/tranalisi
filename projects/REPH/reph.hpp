@@ -6,6 +6,7 @@
 #include <REPH/2pts.hpp>
 #include <REPH/3pts.hpp>
 #include <REPH/base.hpp>
+#include <REPH/interpolate.hpp>
 #include <REPH/perens.hpp>
 
 #endif
