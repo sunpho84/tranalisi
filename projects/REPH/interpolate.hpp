@@ -29,13 +29,10 @@ dbvec_t interpolate(const vector<double>& m1,const vector<double>& m2,const F& f
 template <typename F>
 dbvec_t interpolate2D(const vector<double>& m1,const vector<double>& m2,const F& f,const vector<permes_combo_t<djvec_t>>& data,const boot_init_t& j,const dboot_t& m1phys,const dboot_t& m2phys)
 {
-  //cout<<"2D interpolation, masses "<<m1<<m2<<endl;
-  
   //! Number of combinations
   const index_t indM({{"m1",m1.size()},{"m2",m2.size()}});
   
   const size_t nMcombos=indM.max();
-  cout<<"nMCombos: "<<nMcombos<<endl;
   
   //! Number of elements to be interpolated
   const size_t n=f(data[0]).size();
@@ -81,8 +78,6 @@ dbvec_t interpolate2D(const vector<double>& m1,const vector<double>& m2,const F&
 template <typename F,typename S>
 dbvec_t interpolate1D(const vector<double>& m,const F& f,const vector<S>& data,const boot_init_t& j,const dboot_t& mphys)
 {
-  //cout<<"1D interpolation, masses "<<m<<endl;
-  
   const size_t nM=m.size();
   
   //! Number of elements to be interpolated
@@ -95,7 +90,7 @@ dbvec_t interpolate1D(const vector<double>& m,const F& f,const vector<S>& data,c
   for(size_t i=0;i<n;i++)
     {
       dbvec_t y(nM);
-      //cout<<y<<endl;
+      
       for(size_t iM=0;iM<nM;iM++)
 	y[iM].fill_from_jack(j,f(data[iM])[i]);
       
@@ -111,7 +106,6 @@ dbvec_t interpolate1D(const vector<double>& m,const F& f,const vector<S>& data,c
 template <typename F,typename S>
 dbvec_t interpolate0D(const F& f,const vector<S>& data,const boot_init_t& j)
 {
-  //cout<<"0D interpolation"<<endl;
   return dbvec_t(j,f(data[0]));
 }
 

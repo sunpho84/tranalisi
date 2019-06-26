@@ -76,7 +76,7 @@ void readInput(const string& path)
 }
 
 //! Read and compute ll combination for a given meson
-AllMesCombos computeAllMesCombos(vector<double>& mS,vector<double>& mT,const perens_t& ens,const meson_t& mes)
+AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
 {
   //! Result
   AllMesCombos res;
@@ -99,9 +99,6 @@ AllMesCombos computeAllMesCombos(vector<double>& mS,vector<double>& mT,const per
   const size_t nMt=get<2>(quarkT).size();
   const index_t indMesCombo({{"iMs",nMs},{"iMt",nMt}});
   
-  mS.resize(nMs);
-  mT.resize(nMt);
-  
   const size_t nMesCombos=indMesCombo.max();
   
   //! Setup all meson combos
@@ -115,16 +112,14 @@ AllMesCombos computeAllMesCombos(vector<double>& mS,vector<double>& mT,const per
       
       res.emplace_back(ens,mesName,iMs,iMt,eS,eT);
       
-      mS[c[0]]=ens.mass[iMs];
-      mT[c[1]]=ens.mass[iMt];
+      res[iMesCombo]
+	.fit2pts("selfChosenTint")
+	.prepare3ptsNormalization()
+	.fit3pts("selfChosenTint")
+	.plotFf();
+      
+      cout<<endl;
     }
-  
-  for(size_t iMesCombo=0;iMesCombo<nMesCombos;iMesCombo++)
-    res[iMesCombo]
-      .fit2pts("selfChosenTint")
-      .prepare3ptsNormalization()
-      .fit3pts("selfChosenTint")
-      .plotFf();
   
   return res;
 }
@@ -147,19 +142,40 @@ int main(int narg,char **arg)
   //! Holds ff energy etc for each meson and combination
   AllMes mesCombos(nMes);
   
+  //! Holds the list of quark mass for each quark
+  map<string,vector<double>> am;
+  for(auto& q : quarkList)
+    for(auto& i : get<2>(q.second))
+      am[q.first].push_back(ens.mass[i]);
+  
   for(size_t iMes=0;iMes<nMes;iMes++)
     {
-      const meson_t& mes=mesonList[iMes];
+      const meson_t& mesComposition=mesonList[iMes];
       
-      vector<double> amS,amT;
+      mesCombos[iMes]=computeAllMesCombos(ens,mesComposition);
+    }
+  
+  /////////////////////////////////////////////////////////////////
+  
+  for(size_t iMes=0;iMes<nMes;iMes++)
+    {
+      //! Compositin of the meson
+      const meson_t& mesComposition=mesonList[iMes];
       
-      mesCombos[iMes]=computeAllMesCombos(amS,amT,ens,mes);
+      //! Name of the meson
+      const string& mesName=get<0>(mesComposition);
+      
+      //! S quark name
+      const string& qS=get<1>(mesComposition);
+      
+      //! T quark name
+      const string& qT=get<2>(mesComposition);
       
       //! Index of S quark in the physical list
-      const size_t iMphysS=get<1>(quarkList[get<1>(mes)]);
+      const size_t iMphysS=get<1>(quarkList[qS]);
       
       //! Index of T quark in the physical list
-      const size_t iMphysT=get<1>(quarkList[get<2>(mes)]);
+      const size_t iMphysT=get<1>(quarkList[qT]);
       
       const size_t iult=0;
       
@@ -170,17 +186,14 @@ int main(int narg,char **arg)
       const dboot_t amTbare=lat_par[iult].amBare(iMphysT,iBeta);
       
       cout<<"amSbare: "<<smart_print(amSbare);
-      for(auto& amSi: amS) cout<<" "<<amSi;
+      for(auto& amSi: am[qS]) cout<<" "<<amSi;
       cout<<endl;
       
       cout<<"amTbare: "<<smart_print(amTbare);
-      for(auto& amTi: amT) cout<<" "<<amTi;
+      for(auto& amTi: am[qT]) cout<<" "<<amTi;
       cout<<endl;
       
-      //! Name of the meson_
-      const string& mesName=get<0>(mes);
-      
-      const permes_t<dbvec_t> inte=interpolate(ens,mesName,amS,amT,mesCombos[iMes],jack_index[0][0],amSbare,amTbare);
+      const permes_t<dbvec_t> inte=interpolate(ens,mesName,am[qS],am[qT],mesCombos[iMes],jack_index[0][0],amSbare,amTbare);
       inte.plotFf();
     }
   

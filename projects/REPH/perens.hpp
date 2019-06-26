@@ -129,7 +129,7 @@ struct perens_t
     cout<<"Absolute path: "<<absPath<<endl;
     
     const string basePath=basename(absPath);
-    iBeta=decryptBeta(absPath[0]);
+    iBeta=decryptBeta(basePath[0]);
     
     L=fin.read<size_t>("L");
     spatVol=L*L*L;
