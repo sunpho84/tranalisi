@@ -9,6 +9,7 @@
 
 #include <tranalisi.hpp>
 #include <compatibility.hpp>
+#include <phys_point.hpp>
 
 const char VA_tag[2][2]={"V","A"};
 

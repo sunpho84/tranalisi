@@ -39,9 +39,9 @@ dboot_t read_boot(const raw_file_t &file)
   return out;
 }
 
-void loadInputGlobal()
+void loadUltimateInput(const string& path)
 {
-  raw_file_t file("input_global","r");
+  raw_file_t file(path,"r");
   
   double dum;
   file.expect({"ml","(GeV)"});

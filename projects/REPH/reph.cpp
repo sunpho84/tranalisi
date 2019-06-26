@@ -9,6 +9,9 @@
 
 #include <reph.hpp>
 
+using AllMesCombos=vector<permes_combo_t<>>;
+using AllMes=vector<AllMesCombos>;
+  
 void readQuarkList(raw_file_t& input)
 {
   const size_t nQuarks=input.read<size_t>("NQuarks");
@@ -69,71 +72,91 @@ void readInput(const string& path)
   readMesonList(input);
 }
 
+//! Read and compute ll combination for a given meson
+AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
+{
+  //! Result
+  AllMesCombos res;
+  
+  //! Name of the meson
+  const string& mesName=get<0>(mes);
+  
+  //! Name of spectator quark
+  const quark_t& quarkS=quarkList[get<1>(mes)];
+  
+  //! Name of other quark
+  const quark_t& quarkT=quarkList[get<2>(mes)];
+  
+  //! Charge of the spectator and forward line
+  const double eS=get<0>(quarkS)/3.0;
+  const double eT=get<0>(quarkT)/3.0;
+  
+  //! Loop on all meson combos
+  const size_t nMs=get<1>(quarkS).size();
+  const size_t nMt=get<1>(quarkT).size();
+  const index_t indMesCombo({{"iMs",nMs},{"iMt",nMt}});
+  vector<double> mS(nMs),mT(nMt);
+  
+  const size_t nMesCombos=indMesCombo.max();
+  
+  //! Setup all meson combos
+  for(size_t iMesCombo=0;iMesCombo<nMesCombos;iMesCombo++)
+    {
+      const vector<size_t> c=indMesCombo(iMesCombo);
+      const size_t iMs=get<1>(quarkS)[c[0]];
+      const size_t iMt=get<1>(quarkT)[c[1]];
+      
+      cout<<endl<<" === "<<mesName<<" "<<indMesCombo.descr(iMesCombo)<<" ==="<<endl;
+      
+      res.emplace_back(ens,mesName,iMs,iMt,eS,eT);
+      
+      mS[c[0]]=ens.mass[iMs];
+      mT[c[1]]=ens.mass[iMt];
+    }
+  
+  for(size_t iMesCombo=0;iMesCombo<nMesCombos;iMesCombo++)
+    res[iMesCombo]
+      .fit2pts("selfChosenTint")
+      .prepare3ptsNormalization()
+      .fit3pts("selfChosenTint")
+      .plotFf();
+  
+  return res;
+}
+
 int main(int narg,char **arg)
 {
   readInput("input.txt");
   
+  loadUltimateInput("ultimate_input.txt");
+  
   set_njacks(15);
+  def_nboots=nboots;
   
   perens_t ens(".");
   
   const size_t nMes=mesonList.size();
   
   //! Holds ff energy etc for each meson and combination
-  vector<vector<permes_combo_t<>>> mesCombos(nMes);
+  AllMes mesCombos(nMes);
   
   for(size_t iMes=0;iMes<nMes;iMes++)
     {
       const meson_t& mes=mesonList[iMes];
       
-      const string& mesName=get<0>(mes);
-      cout<<"Meson: "<<mesName<<endl;
+      mesCombos[iMes]=computeAllMesCombos(ens,mes);
       
-      const quark_t& quarkS=quarkList[get<1>(mes)];
-      const quark_t& quarkT=quarkList[get<2>(mes)];
+      // auto t=permes_combo_t<>::getBoot(mesCombos[iMes][0],jack_index[0][0]);
+      // t.plotFf("boot");
       
-      //! Charge of the spectator and forward line
-      const double eS=get<0>(quarkS)/3.0;
-      const double eT=get<0>(quarkT)/3.0;
+      // cout<<"Interpolating"<<endl;
+      // permes_t<> mesInterpolated(ens,combine("mes_%s",mesName.c_str()));
+      // mesInterpolated.interpolate(mS,mT,mesCombos[iMes]);
       
-      //! Loop on all meson combos
-      const size_t nMs=get<1>(quarkS).size();
-      const size_t nMt=get<1>(quarkT).size();
-      const index_t indMesCombo({{"iMs",nMs},{"iMt",nMt}});
-      vector<double> mS(nMs),mT(nMt);
-      
-      const size_t nMesCombos=indMesCombo.max();
-      
-      //! Setup all meson combos
-      for(size_t iMesCombo=0;iMesCombo<nMesCombos;iMesCombo++)
-	{
-	  const vector<size_t> c=indMesCombo(iMesCombo);
-	  const size_t iMs=get<1>(quarkS)[c[0]];
-	  const size_t iMt=get<1>(quarkT)[c[1]];
-	  
-	  cout<<" === "<<mesName<<" "<<indMesCombo.descr(iMesCombo)<<" ==="<<endl;
-	  
-	  mesCombos[iMes].emplace_back(ens,mesName,iMs,iMt,eS,eT);
-	  
-	  mS[c[0]]=ens.mass[iMs];
-	  mT[c[1]]=ens.mass[iMt];
-	}
-      
-      for(size_t iMesCombo=0;iMesCombo<nMesCombos;iMesCombo++)
-	mesCombos[iMes][iMesCombo]
-	  .fit2pts("selfChosenTint")
-	  .prepare3ptsNormalization()
-	  .fit3pts("selfChosenTint")
-	  .plotFf();
-      
-      cout<<"Interpolating"<<endl;
-      permes_t<> mesInterpolated(ens,combine("mes_%s",mesName.c_str()));
-      mesInterpolated.interpolate(mS,mT,mesCombos[iMes]);
-      
-      for(size_t i=0;i<mesInterpolated.ff[0].size();i++)
-	{
-	  cout<<i<<" "<<mesInterpolated.ff[0][i]<<" "<<mesCombos[iMes][0].ff[0][i]<<endl;
-	}
+      // for(size_t i=0;i<mesInterpolated.ff[0].size();i++)
+      // 	{
+      // 	  cout<<i<<" "<<mesInterpolated.ff[0][i]<<" "<<mesCombos[iMes][0].ff[0][i]<<endl;
+      // 	}
     }
   
   /*

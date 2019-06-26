@@ -2,6 +2,7 @@
 #define _PERMES_COMBO_HPP
 
 #include <REPH/perens.hpp>
+#include <REPH/phys_point.hpp>
 
 #include <set>
 
@@ -58,6 +59,19 @@ struct permes_t
 	return interpolate2D(m1,m2,f,data);
 	break;
       }
+  }
+  
+  //! Return a bootstrap version
+  static permes_t<dbvec_t> getBoot(const permes_t<djvec_t>& in,const boot_init_t& jack_of_boot)
+  {
+    permes_t<dbvec_t> out(in.ens,in.mesTag);
+    
+    out.E=bvec_from_jvec(jack_of_boot,in.E);
+    out.X=bvec_from_jvec(jack_of_boot,in.X);
+    for(int i=0;i<2;i++)
+      out.ff[i]=bvec_from_jvec(jack_of_boot,in.ff[i]);
+    
+    return out;
   }
   
   //! 2 masses interpolation
@@ -170,10 +184,10 @@ struct permes_t
   }
   
   //! Form factors for V and A
-  array<djvec_t,2> ff;
+  array<TV,2> ff;
   
   //! Plot ff
-  void plotFf();
+  void plotFf(const string& tag="");
 };
 
 //! Holds all info for a combination of quarks
@@ -273,9 +287,9 @@ struct permes_combo_t : public permes_t<TV>
   }
   
   //! Plots the form factors
-  permes_combo_t& plotFf()
+  permes_combo_t& plotFf(const string& tag="")
   {
-    static_cast<permes_t<TV>*>(this)->plotFf();
+    static_cast<permes_t<TV>*>(this)->plotFf(tag);
     
     return *this;
   }

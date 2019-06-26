@@ -345,7 +345,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const char* fitTag,const bool fo
 }
 
 template <typename TV>
-void permes_t<TV>::plotFf()
+void permes_t<TV>::plotFf(const string& tag)
 {
   const string path=ens.dirPath+"/plots/"+mesTag;
   mkdir(path);
@@ -355,7 +355,8 @@ void permes_t<TV>::plotFf()
   for(int iVA=0;iVA<2;iVA++)
     {
       using namespace grace;
-      grace_file_t ffPlot(combine("%s/ff_%s.xmg",path.c_str(),VA_tag[iVA]));
+      grace_file_t ffPlot(combine("%s/ff_%s" "%s" ".xmg",path.c_str(),VA_tag[iVA],((tag=="")?tag:("_"+tag)).c_str()));
+      
       ffPlot.set_line_type(grace::line_type_t::STRAIGHT_LINE);
       ffPlot.set_color_scheme({RED,BLUE,GREEN4,VIOLET,ORANGE});
       
