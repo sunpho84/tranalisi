@@ -463,7 +463,7 @@ void perens_t::val_chir_extrap_sigma(perens_t &out) const
 	      {
 		auto xminmax=minmax_element(x.begin(),x.end());
 		double xmax=*xminmax.second*1.1;
-		write_fit_plot(*plot,0,xmax,bind(poly_eval<djvec_t>,coeffs[isigmains],_1),x,y);
+		write_fit_plot(*plot,0,xmax,bind(poly_eval<djvec_t,double>,coeffs[isigmains],_1),x,y);
 		plot->write_ave_err(0,coeffs[isigmains][0].ave_err());
 	      }
 	    

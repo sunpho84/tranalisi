@@ -884,8 +884,8 @@ void perens_t::extrapolate_to_0_p2_internal(const vector<array<size_t,N>> &moms,
       
       //plot
       grace_file_t plot(dir_path+"/plots/extrap_0_p2_"+t.tag+"_"+t.ind.descr(iout)+".xmg");
-      plot.write_polygon(bind(poly_eval<djvec_t>,coeffs,_1),0.0,*max_element(x.begin(),x.end())*1.1);
-      write_fit_plot(plot,xmin,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
+      plot.write_polygon(bind(poly_eval<djvec_t,double>,coeffs,_1),0.0,*max_element(x.begin(),x.end())*1.1);
+      write_fit_plot(plot,xmin,xmax,bind(poly_eval<djvec_t,double>,coeffs,_1),x,y);
       plot.write_ave_err(0.0,coeffs[0].ave_err());
     }
 }

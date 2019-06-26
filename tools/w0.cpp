@@ -117,7 +117,7 @@ djack_t find_w0(const vector<double> &t,const djvec_t &E,const size_t ord=5,cons
   
   //print the fit
   grace_file_t fout("plots/fit.xmg");
-  fout.write_polygon(bind(poly_eval<djvec_t>,coeffs,_1),guess_t_min,guess_t_max);
+  fout.write_polygon(bind(poly_eval<djvec_t,double>,coeffs,_1),guess_t_min,guess_t_max);
   fout.write_line([w0_ref](double x){return w0_ref;},guess_t_min,guess_t_max);
   fout.write_vec_ave_err(t,r.ave_err());
   fout.set_settype(grace::XYDX);

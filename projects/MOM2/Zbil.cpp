@@ -137,7 +137,7 @@ void perens_t::interpolate_Zbil_to_p2ref(perens_t &out) const
 	      "_m"+to_string(comps[0])+"_r"+to_string(comps[1])+
 	      "_m"+to_string(comps[2])+"_r"+to_string(comps[3])+".xmg";
 	    grace_file_t plot(path);
-	    write_fit_plot(plot,p2min,p2max,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
+	    write_fit_plot(plot,p2min,p2max,bind(poly_eval<djvec_t,double>,coeffs,_1),x,y);
 	    plot.write_ave_err(pars::p2ref,out[im_r_im_r_ibil].ave_err());
 	  }
     }
