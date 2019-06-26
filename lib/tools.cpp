@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <cstdarg>
+#include <memory>
 #include <git_hash.hpp>
 #include <signal.h>
 #ifdef HAVE_MALLOC_H
@@ -166,5 +167,30 @@ public:
     cout<<endl;
   }
 };
+
+string exec(const string& cmd)
+{
+  array<char,128> buffer;
+  string result;
+  unique_ptr<FILE,decltype(&pclose)> pipe(popen(cmd.c_str(),"r"), pclose);
+  
+  if(!pipe)
+    CRASH("popen() failed!");
+  
+  while(fgets(buffer.data(),buffer.size(),pipe.get())!=nullptr)
+    result += buffer.data();
+  
+  return result;
+}
+
+string absolute_path(const string& path)
+{
+  return exec("readlink -f "+path);
+}
+
+string basename(const string& path)
+{
+  return exec("basename "+path);
+}
 
 initializer_t initializer;

@@ -208,4 +208,13 @@ void resizeListOfContainers(std::initializer_list<T*> list,Ts&&...ts)
     q->resize(std::forward<Ts>(ts)...);
 };
 
+//! Execute a command and read the output
+string exec(const string& cmd);
+
+//! Gets the absolute path
+string absolute_path(const string& path);
+
+//! Gets the basename
+string basename(const string& path);
+
 #endif
