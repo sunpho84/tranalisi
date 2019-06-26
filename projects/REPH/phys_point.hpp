@@ -15,10 +15,18 @@ const size_t nbeta=3;
 class lat_par_t
 {
 public:
-  dboot_t ml,ms,mc,r0,f0,B0;
+  array<dboot_t,3> m;
+  dboot_t& ml=m[0],&ms=m[1],&mc=m[2];
+  dboot_t r0,f0,B0;
   dbvec_t ainv,Z;
- 
+  
   lat_par_t() : ainv(nbeta),Z(nbeta) {}
+  
+  //! Returns the bare value of the i-th mass
+  dboot_t amBare(const size_t im,const size_t ibeta) const
+  {
+    return m[im]/ainv[ibeta]*Z[ibeta];
+  }
 };
 
 //! number of input analysis
