@@ -907,6 +907,20 @@ meas_vec_of_t<T> plan_fit(const plan_fit_data_t<T>& data)
   return out;
 }
 
+//! evaluate the result of the plan fit: note that the first coordinate is 1 if the parameter fitted is the offset
+template <class TV,class TVX,class TS=typename TV::base_type>
+TS plan_eval(const TV& data,const TVX& x)
+{
+  const size_t nx=x.size();
+  
+  TS out=0.0;
+  
+  for(size_t i=0;i<nx;i++)
+    out+=data[i]*x[i];
+  
+  return out;
+}
+
 #undef EXTERN_FIT
 #undef INIT_TO
 
