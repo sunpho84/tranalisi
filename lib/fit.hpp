@@ -913,7 +913,8 @@ TS plan_eval(const TV& data,const TVX& x)
 {
   const size_t nx=x.size();
   
-  TS out=0.0;
+  TS out;
+  out=0.0;
   
   for(size_t i=0;i<nx;i++)
     out+=data[i]*x[i];
