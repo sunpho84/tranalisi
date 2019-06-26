@@ -8,7 +8,8 @@ std::string kinTag(const size_t iMom1,const size_t iMom2)
   return combine("imom1_%zu_imom2_%zu",iMom1,iMom2);
 }
 
-djvec_t permes_combo_t::load2ptsPP(const size_t iMoms,const size_t iMomt)
+template <typename TV>
+djvec_t permes_combo_t<TV>::load2ptsPP(const size_t iMoms,const size_t iMomt)
 {
   const index_t ind({{"iks",ens.nMass},
 		     {"ikt",ens.nMass},
@@ -22,7 +23,8 @@ djvec_t permes_combo_t::load2ptsPP(const size_t iMoms,const size_t iMomt)
   return read_djvec(combine("%s/jacks/oPPo-ss",ens.dirPath.c_str()),ens.T,i).symmetrized()/ens.spatVol;
 }
 
-djvec_t permes_combo_t::load2ptsAP(const size_t iMoms,const size_t iMomt,const size_t iGamma)
+template <typename TV>
+djvec_t permes_combo_t<TV>::load2ptsAP(const size_t iMoms,const size_t iMomt,const size_t iGamma)
 {
   const index_t ind({{"iks",ens.nMass},
 		     {"ikt",ens.nMass},
@@ -40,7 +42,8 @@ djvec_t permes_combo_t::load2ptsAP(const size_t iMoms,const size_t iMomt,const s
   return sign*read_djvec(combine("%s/jacks/oAmuPo-ss",ens.dirPath.c_str()),ens.T,i).symmetrized(par)/ens.spatVol;
 }
 
-void permes_combo_t::load2pts(const bool forceLoad)
+template <typename TV>
+void permes_combo_t<TV>::load2pts(const bool forceLoad)
 {
   const string dataPath=milledPath()+"/data2pts.dat";
   
@@ -93,7 +96,8 @@ void permes_combo_t::load2pts(const bool forceLoad)
     eEff[iMesKin]=effective_mass(corrPP[iMesKin]);
 }
 
-void permes_combo_t::plotDispRel(const string& mesPlotsPath) const
+template <typename TV>
+void permes_combo_t<TV>::plotDispRel(const string& mesPlotsPath) const
 {
   grace_file_t dispRel(combine("%s/dispRel.xmg",mesPlotsPath.c_str()));
   dispRel.write_vec_ave_err(ens.pMes,E.ave_err());
@@ -106,7 +110,8 @@ void permes_combo_t::plotDispRel(const string& mesPlotsPath) const
   dispRel.write_polygon([M](double x){return cont_en_1D(M,x);},0,ens.pMesMax,grace::VIOLET);
 }
 
-permes_combo_t& permes_combo_t::choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose)
+template <typename TV>
+permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose)
 {
   string tintPath=milledPath()+"/tint2pts.dat";
   
@@ -195,7 +200,8 @@ permes_combo_t& permes_combo_t::choose2ptsTint(const string& mesPlotsPath,const 
   return *this;
 }
 
-void permes_combo_t::computeAxialPseudoCouplings(const string& mesPlotsPath)
+template <typename TV>
+void permes_combo_t<TV>::computeAxialPseudoCouplings(const string& mesPlotsPath)
 {
   string apePath=milledPath()+"/APE.dat";
   
@@ -302,7 +308,8 @@ void permes_combo_t::computeAxialPseudoCouplings(const string& mesPlotsPath)
       file.bin_write(*ape);
 }
 
-permes_combo_t& permes_combo_t::fit2pts(const char* fitTag,const bool forceRechoose)
+template <typename TV>
+permes_combo_t<TV>& permes_combo_t<TV>::fit2pts(const char* fitTag,const bool forceRechoose)
 {
   const string mesPlotsPath=combine("%s/plots/%s/2pts_fit_%s",ens.dirPath.c_str(),mesTag.c_str(),fitTag);
   mkdir(mesPlotsPath);

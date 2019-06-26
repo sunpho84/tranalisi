@@ -6,18 +6,9 @@
 #include <set>
 
 //! Hold all data to draw ff
-template <typename T=void>
+template <typename TV=djvec_t>
 struct permes_t
 {
-  //! CRTP Cast
-  auto& CRTP()
-  {
-    return
-      *static_cast<typename conditional<is_same<T,void>::value,
-					permes_t*,
-					T*>::type>(this);
-  }
-  
   //! Reference ensemble
   const perens_t& ens;
   
@@ -40,10 +31,10 @@ struct permes_t
   }
   
   //! Energy
-  djvec_t E;
+  TV E;
   
   //! Form factor independent variable
-  djvec_t X;
+  TV X;
   
   //! Default counstructor
   permes_t(const perens_t& ens,const string& mesTag) : ens(ens),mesTag(mesTag){}
@@ -182,12 +173,20 @@ struct permes_t
   array<djvec_t,2> ff;
   
   //! Plot ff
-  auto& plotFf();
+  void plotFf();
 };
 
 //! Holds all info for a combination of quarks
-struct permes_combo_t : public permes_t<permes_combo_t>
+template <typename TV=djvec_t>
+struct permes_combo_t : public permes_t<TV>
 {
+  using permes_t<TV>::ens;
+  using permes_t<TV>::ff;
+  using permes_t<TV>::E;
+  using permes_t<TV>::X;
+  using permes_t<TV>::milledPath;
+  using permes_t<TV>::mesTag;
+  
   //! Index of the spectator quark
   const size_t iMs;
   
@@ -272,22 +271,30 @@ struct permes_combo_t : public permes_t<permes_combo_t>
     load2pts(forceLoad);
     load3pts(forceLoad);
   }
+
+  //! Plots the form factors
+  permes_combo_t& plotFf()
+  {
+    static_cast<permes_t<TV>*>(this)->plotFf();
+    
+    return *this;
+  }
   
   //! Constructor
   permes_combo_t(const perens_t& ens,const string& mesName,const size_t& iMs,const size_t& iMt,const double& eS,const double& eT) :
-    permes_t(ens,combine("mes_%s/iMs%zu" "_" "iMt%zu",mesName.c_str(),iMs,iMt)),
+    permes_t<TV>(ens,combine("mes_%s/iMs%zu" "_" "iMt%zu",mesName.c_str(),iMs,iMt)),
     iMs(iMs),
     iMt(iMt),
     eS(eS),
     eT(eT)
   {
-    resizeListOfContainers({&ZP,&ZA,&fP,&fPbare,&E},ens.nMesKin);
+    resizeListOfContainers({&ZP,&ZA,&fP,&fPbare,&this->E},ens.nMesKin);
     resizeListOfContainers({&eEff},ens.nMesKin);
     resizeListOfContainers({&tint2pts},ens.nMesKin);
     
     resizeListOfContainers({&corrA0P,&corrA3P,&corrPP},ens.nMesKin,djvec_t{(size_t)ens.T/2+1});
     
-    resizeListOfContainers({&ff[0],&ff[1]},ens.nDecKin);
+    resizeListOfContainers({&this->ff[0],&this->ff[1]},ens.nDecKin);
     
     for(size_t iVA=0;iVA<2;iVA++)
       for(size_t iST=0;iST<2;iST++)
@@ -296,7 +303,7 @@ struct permes_combo_t : public permes_t<permes_combo_t>
 	  resizeListOfContainers({&tint3pts[iVA][iST]},ens.nDecKin,Range{0,0});
 	}
     
-    resizeListOfContainers({&dEdec,&PKdec,&X},ens.nDecKin);
+    resizeListOfContainers({&dEdec,&PKdec,&this->X},ens.nDecKin);
     
     normaliz.resize(ens.indDecKin.max(),djvec_t{(size_t)ens.T/2+1});
     
@@ -322,7 +329,7 @@ struct permes_combo_t : public permes_t<permes_combo_t>
   void babababab()
   {
     grace_file_t test("/tmp/o.xmg");
-    const double m=E[0].ave();
+    const double m=this->E[0].ave();
     
     double thS=0.0;
     double thT=0.0;
@@ -388,7 +395,7 @@ struct permes_combo_t : public permes_t<permes_combo_t>
 	  double Up() const {return 1;}
 	};
 	
-	thFinder thetas(x,ens,m);
+	thFinder thetas(x,this->ens,m);
 	
 	minimizer_pars_t pars;
 	pars.add("thS",thS,0.1);
@@ -404,9 +411,9 @@ struct permes_combo_t : public permes_t<permes_combo_t>
 	cout<<"ThS: "<<thS<<endl;
 	cout<<"ThT: "<<thT<<endl;
 	cout<<"Th0: "<<th0<<endl;
-	cout<<"x: "<<ens.getX(m,thS,thT,th0)<<endl;
+	cout<<"x: "<<this->ens.getX(m,thS,thT,th0)<<endl;
 	cout<<"func: "<<thetas(minPars)<<endl;
-	cout<<"x: "<<ens.getX(m,0,0,0)<<endl;
+	cout<<"x: "<<this->ens.getX(m,0,0,0)<<endl;
 	cout<<"func: "<<thetas(0.0,0.0,0.0)<<endl;
       }
   }

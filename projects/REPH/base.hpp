@@ -20,16 +20,16 @@ using quark_t=tuple<double,vector<size_t>>;
 //!
 //! Each entry in the map is connected to a physical quark (Up, Down, etc)
 //! Each value is a tuple: the first component is the charge, the second is a vector, listing all masses in the data
-map<string,quark_t> quarks;
+map<string,quark_t> quarkList;
 
-//! Holds all info for a given meson
-using meson_t=pair<string,string>;
+//! Holds all info for a given meson: the first entry is the name, the second is the bw quatk, the third is the fw one
+using meson_t=tuple<string,string,string>;
 
 //! List of all known mesons
 //!
-//! Each entry in the map is connected to a physical meson (Pi+, D, etc)
+//! Each entry is connected to a physical meson (Pi+, D, etc)
 //! Each value is a pair of strings, pointing to the physical quark
-map<string,meson_t> mesons;
+vector<meson_t> mesonList;
 
 /////////////////////////////////////////////////////////////////
 

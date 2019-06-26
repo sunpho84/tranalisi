@@ -3,7 +3,8 @@
 
 #include <REPH/permes_combo.hpp>
 
-djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0)
+template <typename TV>
+djvec_t permes_combo_t<TV>::load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0)
 {
   const string path=ens.dirPath+"/plots/"+mesTag+"/3pts_corr/";
   mkdir(path);
@@ -55,7 +56,8 @@ djvec_t permes_combo_t::load3pts(const size_t iVA,const size_t iMs,const size_t 
   return corr;
 }
 
-void permes_combo_t::load3pts(const bool forceLoad)
+template <typename TV>
+void permes_combo_t<TV>::load3pts(const bool forceLoad)
 {
   cout<<"Loading 3pts correlators"<<endl;
   
@@ -95,7 +97,8 @@ void permes_combo_t::load3pts(const bool forceLoad)
     file.bin_write(corrPX);
 }
 
-permes_combo_t& permes_combo_t::prepare3ptsNormalization()
+template <typename TV>
+permes_combo_t<TV>& permes_combo_t<TV>::prepare3ptsNormalization()
 {
   cout<<"Preparing 3pts normalization"<<endl;
   
@@ -122,7 +125,8 @@ permes_combo_t& permes_combo_t::prepare3ptsNormalization()
   return *this;
 }
 
-permes_combo_t& permes_combo_t::choose3ptsTint(const string& mesPlotsPath,const bool forceRechoose)
+template <typename TV>
+permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPath,const bool forceRechoose)
 {
   string tintPath=milledPath()+"/tint3pts.dat";
   
@@ -293,7 +297,8 @@ permes_combo_t& permes_combo_t::choose3ptsTint(const string& mesPlotsPath,const 
   return *this;
 }
 
-permes_combo_t& permes_combo_t::fit3pts(const char* fitTag,const bool forceRechoose)
+template <typename TV>
+permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const char* fitTag,const bool forceRechoose)
 {
   const std::string mesPlotsPath=ens.dirPath+"/plots/"+mesTag+"/3pts_"+fitTag;
   if(not dir_exists(mesPlotsPath))
@@ -339,9 +344,10 @@ permes_combo_t& permes_combo_t::fit3pts(const char* fitTag,const bool forceRecho
   return *this;
 }
 
-template <typename T> auto& permes_t<T>::plotFf()
+template <typename TV>
+void permes_t<TV>::plotFf()
 {
-  const string path=ens.dirPath+"/plots/"+CRTP().mesTag;
+  const string path=ens.dirPath+"/plots/"+mesTag;
   mkdir(path);
   
   cout<<"Plotting ff"<<endl;
@@ -369,8 +375,6 @@ template <typename T> auto& permes_t<T>::plotFf()
 	    ffPlot.new_data_set();
 	  }
     }
-  
-  return CRTP();
 }
 
 #endif
