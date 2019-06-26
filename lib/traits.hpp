@@ -34,7 +34,7 @@ public:
 template <class T> class vector_traits : public false_vector_traits<T> {};
 
 //! traits for array
-template <class TS,int N> class vector_traits<array<TS,N>> : public true_vector_traits<TS> {};
+template <class TS,size_t N> class vector_traits<array<TS,N>> : public true_vector_traits<TS> {};
 
 //! traits for valarray
 template <class TS> class vector_traits<valarray<TS>> : public true_vector_traits<TS> {};
