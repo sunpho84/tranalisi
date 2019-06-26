@@ -402,7 +402,7 @@ void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,
 //! prepare a plot with a polynomial
 template <class TV,class T=typename TV::base_type>
 void write_poly_fit_plot(const string &path,double xmin,double xmax,const TV &res,const vector<double> &x,const TV &y)
-{write_fit_plot(path,xmin,xmax,bind(poly_eval<TV>,res,_1),x,y);}
+{write_fit_plot(path,xmin,xmax,bind(poly_eval<TV,double>,res,_1),x,y);}
 template <class TV,class T=typename TV::base_type> void write_poly_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
 {write_poly_fit_plot(path,xmin,xmax,c,vector_up_to<double>(y.size()),y);}
 
