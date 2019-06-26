@@ -83,6 +83,7 @@ int main(int narg,char **arg)
       const size_t nMs=get<1>(quarkS).size();
       const size_t nMt=get<1>(quarkT).size();
       const index_t indMesCombo({{"iMs",nMs},{"iMt",nMt}});
+      vector<double> mS(nMs),mT(nMt);
       
       //! Holds the 2pts info for each meson combination
       vector<permes_combo_t> mesCombos;
@@ -94,17 +95,29 @@ int main(int narg,char **arg)
 	  const vector<size_t> c=indMesCombo(iMesCombo);
 	  const size_t iMs=get<1>(quarkS)[c[0]];
 	  const size_t iMt=get<1>(quarkT)[c[1]];
+	  
+	  cout<<" === "<<mesName<<" "<<indMesCombo.descr(iMesCombo)<<" ==="<<endl;
+	  
 	  mesCombos.emplace_back(ens,mesName,iMs,iMt,eS,eT);
+	  
+	  mS[c[0]]=ens.mass[iMs];
+	  mT[c[1]]=ens.mass[iMt];
 	}
       
       for(size_t iMesCombo=0;iMesCombo<nMesCombos;iMesCombo++)
+	mesCombos[iMesCombo]
+	  .fit2pts("selfChosenTint")
+	  .prepare3ptsNormalization()
+	  .fit3pts("selfChosenTint")
+	  .plotFf();
+      
+      cout<<"Interpolating"<<endl;
+      permes_t<> mesInterpolated(ens,combine("mes_%s",mesName.c_str()));
+      mesInterpolated.interpolate(mS,mT,mesCombos);
+      
+      for(size_t i=0;i<mesInterpolated.ff[0].size();i++)
 	{
-	  mesCombos[iMesCombo]
-	    .fit2pts("fixed_tfit")
-	    .prepare3ptsNormalization()
-	    .chooseTint()
-	    .fit3pts("tfixed_tfit")
-	    .plotFf();
+	  cout<<i<<" "<<mesInterpolated.ff[0][i]<<" "<<mesCombos[0].ff[0][i]<<endl;
 	}
     }
   
@@ -130,7 +143,7 @@ int main(int narg,char **arg)
     - | | | |
     - | loop on all systematics so far
     - | | loop on all 8 analysis
-    - | | | interpolate to physical meson_corrs
+    - | | | * interpolate to physical meson_corrs
     - | | | fit all ensembles with a multilinear function
    */
   

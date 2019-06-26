@@ -194,7 +194,7 @@ public:
     
     verifyRange();
     
-    if(verbose) cout<<"Selection range: "<<Range{tSearchMin,tSearchMax}<<endl;
+    if(verbose) cout<<"Search range: "<<Range{tSearchMin,tSearchMax}<<endl;
     
     return *this;
   }
@@ -320,10 +320,7 @@ public:
   CompatibilityRangeFinder& selectAllPointCompatibleWithinNSigma(const double nSig)
   {
     for(size_t t=tSearchMin;t<tSearchMax;t++)
-      {
-	cout<<t<<" "<<selected[t]<<" "<<signif[t]<<" "<<nSig<<endl;
-	selected[t]=selected[t] or (signif[t]<=nSig);
-      }
+      selected[t]=selected[t] or (signif[t]<=nSig);
     
     return *this;
   }
