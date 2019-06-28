@@ -37,7 +37,6 @@ struct permes_t
   //! Form factor independent variable
   TV X;
   
-  //! Default counstructor
   permes_t(const perens_t& ens,const string& mesTag) : ens(ens),mesTag(mesTag){}
   
   //! Form factors for V and A

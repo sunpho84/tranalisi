@@ -41,7 +41,7 @@ djvec_t permes_combo_t<TV>::load3pts(const size_t iVA,const size_t iMs,const siz
     for(size_t iGamma=1;iGamma<=2;iGamma++)
       {
 	const size_t i=ind({iMs,iMt,iMoms,iMomt,iMom0,iPol,iGamma,iReIm});
-	const djvec_t contr=read_djvec(combine("jacks/o%smuGPo-gs",VA_tag[iVA]),T,i);
+	const djvec_t contr=read_djvec(combine("%s/jacks/o%smuGPo-gs",ens.dirPath.c_str(),VA_tag[iVA]),T,i);
 	corr+=contr*s[iVA][iPol][iGamma-1];
 	
 	contr.ave_err().write(combine("%s/o%smuGPo-gs_%s_pol_%zu_gamma_%zu.xmg",path.c_str(),VA_tag[iVA],ens.decKinTag(iMoms,iMomt,iMom0).c_str(),iPol,iGamma));
