@@ -139,6 +139,9 @@ void checkIntRange(const vector<double>& amBare,const dboot_t& target)
       const double& amMax=*amMinMax.second;
       const double range=amMax-amMin;
       
+      size_t nNonSatisfying=0;
+      double maxExcess=0;
+      
       for(size_t iboot=0;iboot<nboots;iboot++)
 	{
 	  const double thisBoot=target[iboot];
@@ -153,23 +156,20 @@ void checkIntRange(const vector<double>& amBare,const dboot_t& target)
 	  satisfied&=thisSatisfied;
 	  if(not thisSatisfied)
 	    {
-	      cout<<"Boot "<<iboot<<" not satisfied "<<thisBoot<<", extrapolating ";
-	      double eccess=0;
-	      if(not below)
-		{
-		  cout<<"below";
-		  eccess=amMin-thisBoot;
-		}
-	      if(not above)
-		{
-		  cout<<"above ";
-		  eccess=thisBoot-amMax;
-		}
-	      cout<<" of "<<eccess/range*100<<"% "<<endl;
+	      nNonSatisfying++;
+	      
+	      const double excess=
+		(not below)?
+		(amMin-thisBoot)
+		:
+		(thisBoot-amMax);
+	      
+	      maxExcess=max(maxExcess,excess);
 	    }
 	}
       
-      cout<<"Interpolation satisfied: "<<satisfied<<endl;
+      if(nNonSatisfying)
+	cout<<"WARNING, interpolation not satisfied in: "<<nNonSatisfying*100/nboots<<"% of the bootstraps, max extrapolation: "<<maxExcess*100/range<<"%"<<endl<<endl;
     }
 }
 
