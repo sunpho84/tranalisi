@@ -180,7 +180,7 @@ permes_t<dbvec_t>interpolate(const AllMesCombos& mesCombos,const meson_t& mesCom
   const size_t& iBeta=ens.iBeta;
   
   //! Name of the meson
-  const string& mesName=get<0>(mesComposition);
+  const string& mesName=get<0>(mesComposition)+"/interp/"+to_string(inputAn);
   
   //! S quark name
   const string& qS=get<1>(mesComposition);
@@ -241,10 +241,11 @@ int main(int narg,char **arg)
       //! Holds ff energy etc for each meson and combination
       AllMesCombos mesCombos=computeAllMesCombos(ens,mesComposition);
       
-      const size_t inputAn=0;
-      const permes_t<dbvec_t> inte=interpolate(mesCombos,mesComposition,ens,am,inputAn);
-      
-      inte.plotFf();
+      for(size_t inputAn=0;inputAn<ninput_an;inputAn++)
+	{
+	  const permes_t<dbvec_t> inte=interpolate(mesCombos,mesComposition,ens,am,inputAn);
+	  inte.plotFf();
+	}
     }
   
   /*
