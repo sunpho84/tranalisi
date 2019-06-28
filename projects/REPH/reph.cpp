@@ -215,6 +215,22 @@ permes_t<dbvec_t>interpolate(const AllMesCombos& mesCombos,const meson_t& mesCom
   return interpolate(ens,mesName,am[qS],am[qT],mesCombos,jack_index[inputAn][ens.iUlt],amSbare,amTbare);
 }
 
+//! Perform a loop over ensemble, putting a proper header
+template <typename F>
+void mesonLoop(const F& f)
+{
+  const size_t nMes=mesonList.size();
+  
+  for(size_t iMes=0;iMes<nMes;iMes++)
+    {
+      const meson_t& mesComposition=mesonList[iMes];
+      cout<<endl<<"//// Meson: "<<get<0>(mesComposition)<<" ////"<<endl;
+      
+      f(mesComposition);
+    }
+}
+
+//! Perform a loop over ensemble, putting a proper header
 template <typename F>
 void ensembleLoop(const vector<perens_t>& ens,const F& f)
 {
@@ -236,41 +252,39 @@ int main(int narg,char **arg)
   set_njacks(15);
   def_nboots=nboots;
   
-  const vector<perens_t> ens{string{"A80.24"},string{"D20.48"}};
+  const vector<perens_t> ens{string{"A30.32"},string{"A80.24"},string{"D20.48"}};
   
-  const size_t nMes=mesonList.size();
+  // const size_t nMes=mesonList.size();
   
-  for(size_t iMes=0;iMes<nMes;iMes++)
-    {
-      const meson_t& mesComposition=mesonList[iMes];
-      cout<<endl<<"//// Meson: "<<get<0>(mesComposition)<<" ////"<<endl;
-      
-      //! Holds ff energy etc for each meson and combination, for each ensemble
-      vector<AllMesCombos> mesCombos;
-      ensembleLoop(ens,[&](const perens_t& e,size_t){mesCombos.push_back(computeAllMesCombos(e,mesComposition));});
-      
-      for(size_t inputAn=0;inputAn<ninput_an;inputAn++)
-	{
-	  cout<<endl<<"//// Input analysis: "<<inputAn<<" ////"<<endl<<endl;
-	  
-	  vector<permes_t<dbvec_t>> inte;
-	  
-	  ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
-			   {
-			     //! Holds the list of quark mass for each quark
-			     map<string,vector<double>> am;
-			     for(auto& q : quarkList)
-			       for(auto& i : get<2>(q.second))
-				 am[q.first].push_back(e.mass[i]);
+  mesonLoop([&](const meson_t& mesComposition)
+	    {
+	      //! Holds ff energy etc for each meson and combination, for each ensemble
+	      vector<AllMesCombos> mesCombos;
+	      ensembleLoop(ens,[&](const perens_t& e,size_t){mesCombos.push_back(computeAllMesCombos(e,mesComposition));});
 	      
-			     inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn));
-			     inte.back().plotFf();
-			   });
-	    
-	}
-    }
+	      // Loop over analysis
+	      for(size_t inputAn=0;inputAn<ninput_an;inputAn++)
+		{
+		  cout<<endl<<"//// Input analysis: "<<inputAn<<" ////"<<endl<<endl;
+		  
+		  vector<permes_t<dbvec_t>> inte;
+		  
+		  ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+				   {
+				     //! Holds the list of quark mass for each quark
+				     map<string,vector<double>> am;
+				     for(auto& q : quarkList)
+				       for(auto& i : get<2>(q.second))
+					 am[q.first].push_back(e.mass[i]);
+				     
+				     inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn));
+				     inte.back().plotFf();
+				   });
+		  
+		}
+	    });
   
-  /*
+    /*
     - * loop on all physical mesons
     - | loop on all ensembles
     - | | * read the input
