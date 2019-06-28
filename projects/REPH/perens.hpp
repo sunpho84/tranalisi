@@ -5,6 +5,8 @@
 
 #include <REPH/base.hpp>
 
+#include <regex>
+
 //! Incapsulate all info and operations
 struct perens_t
 {
@@ -13,6 +15,9 @@ struct perens_t
   
   //! Index of beta
   size_t iBeta;
+  
+  //! Index of the ultimate analysis
+  size_t iUlt;
   
   //! Spatial size
   int L;
@@ -120,6 +125,24 @@ struct perens_t
     return f->second;
   }
   
+  //! Gets the "ultimate" index
+  static size_t decryptUlt(const string& name)
+  {
+    //! List of known ultimate input
+    static array<string,15> ultMap{"A30.32","A40.32","A50.32","A40.24","A60.24","A80.24","A100.24","B25.32","B35.32","B55.32","B75.32","B85.24","D15.48","D20.48","D30.48"};
+    
+    //! Search the position of name
+    const auto pos=find_if(ultMap.begin(),ultMap.end(),[&name](const string& ult)
+						       {
+							 return regex_match(name,regex("(.*)("+ult+")([^]*)") );
+						       });
+    
+    if(pos!=ultMap.end())
+      return distance(ultMap.begin(),pos);
+    else
+      return 0;
+  }
+  
   //! Read the input file
   void readInput()
   {
@@ -130,6 +153,9 @@ struct perens_t
     
     const string basePath=basename(absPath);
     iBeta=decryptBeta(basePath[0]);
+    
+    iUlt=decryptUlt(basePath);
+    cout<<"Ultimate analysis position: "<<iUlt<<endl;
     
     L=fin.read<size_t>("L");
     spatVol=L*L*L;

@@ -9,8 +9,11 @@
 
 #include <reph.hpp>
 
+//! All combinations of a physical meson
 using AllMesCombos=vector<permes_combo_t<>>;
-using AllMes=vector<AllMesCombos>;
+
+//! All ensembles of a physical meson
+using AllMesEns=vector<permes_t<dbvec_t>>;
 
 void readQuarkList(raw_file_t& input)
 {
@@ -124,6 +127,94 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
   return res;
 }
 
+//! Check if the range is satisified
+void checkIntRange(const vector<double>& amBare,const dboot_t& target)
+{
+  if(amBare.size()!=1)
+    {
+      bool satisfied=true;
+      
+      const auto& amMinMax=minmax_element(amBare.begin(),amBare.end());
+      const double& amMin=*amMinMax.first;
+      const double& amMax=*amMinMax.second;
+      const double range=amMax-amMin;
+      
+      for(size_t iboot=0;iboot<nboots;iboot++)
+	{
+	  const double thisBoot=target[iboot];
+	  bool below=false,above=false;
+	  for(const double& am : amBare)
+	    {
+	      if(am<thisBoot) below=true;
+	      if(am>thisBoot) above=true;
+	    }
+	  const bool thisSatisfied=above and below;
+	  
+	  satisfied&=thisSatisfied;
+	  if(not thisSatisfied)
+	    {
+	      cout<<"Boot "<<iboot<<" not satisfied "<<thisBoot<<", extrapolating ";
+	      double eccess=0;
+	      if(not below)
+		{
+		  cout<<"below";
+		  eccess=amMin-thisBoot;
+		}
+	      if(not above)
+		{
+		  cout<<"above ";
+		  eccess=thisBoot-amMax;
+		}
+	      cout<<" of "<<eccess/range*100<<"% "<<endl;
+	    }
+	}
+      
+      cout<<"Interpolation satisfied: "<<satisfied<<endl;
+    }
+}
+
+//! Frontend to interpolate in mass
+permes_t<dbvec_t>interpolate(const AllMesCombos& mesCombos,const meson_t& mesComposition,const perens_t& ens,map<string,vector<double>>& am,const size_t& inputAn)
+{
+  //! Index of beta
+  const size_t& iBeta=ens.iBeta;
+  
+  //! Name of the meson
+  const string& mesName=get<0>(mesComposition);
+  
+  //! S quark name
+  const string& qS=get<1>(mesComposition);
+  
+  //! T quark name
+  const string& qT=get<2>(mesComposition);
+  
+  //! Index of S quark in the physical list
+  const size_t iMphysS=get<1>(quarkList[qS]);
+  
+  //! Index of T quark in the physical list
+  const size_t iMphysT=get<1>(quarkList[qT]);
+  
+  //! Bare mass of S quark
+  const dboot_t amSbare=lat_par[inputAn].amBare(iMphysS,iBeta);
+  
+  //! Bare mass of T quark
+  const dboot_t amTbare=lat_par[inputAn].amBare(iMphysT,iBeta);
+  
+  cout<<"amSbare: "<<smart_print(amSbare);
+  for(auto& amSi : am[qS])
+    cout<<" "<<amSi;
+  cout<<endl;
+  checkIntRange(am[qS],amSbare);
+  
+  cout<<"amTbare: "<<smart_print(amTbare);
+  for(auto& amTi: am[qT])
+    cout<<" "<<amTi;
+  cout<<endl;
+  checkIntRange(am[qT],amTbare);
+  
+  return interpolate(ens,mesName,am[qS],am[qT],mesCombos,jack_index[inputAn][ens.iUlt],amSbare,amTbare);
+}
+
 int main(int narg,char **arg)
 {
   readInput("input.txt");
@@ -134,13 +225,8 @@ int main(int narg,char **arg)
   def_nboots=nboots;
   
   perens_t ens(".");
-  const size_t& iBeta=ens.iBeta;
-  cout<<"Beta: "<<iBeta<<endl;
   
   const size_t nMes=mesonList.size();
-  
-  //! Holds ff energy etc for each meson and combination
-  AllMes mesCombos(nMes);
   
   //! Holds the list of quark mass for each quark
   map<string,vector<double>> am;
@@ -152,48 +238,12 @@ int main(int narg,char **arg)
     {
       const meson_t& mesComposition=mesonList[iMes];
       
-      mesCombos[iMes]=computeAllMesCombos(ens,mesComposition);
-    }
-  
-  /////////////////////////////////////////////////////////////////
-  
-  for(size_t iMes=0;iMes<nMes;iMes++)
-    {
-      //! Compositin of the meson
-      const meson_t& mesComposition=mesonList[iMes];
+      //! Holds ff energy etc for each meson and combination
+      AllMesCombos mesCombos=computeAllMesCombos(ens,mesComposition);
       
-      //! Name of the meson
-      const string& mesName=get<0>(mesComposition);
+      const size_t inputAn=0;
+      const permes_t<dbvec_t> inte=interpolate(mesCombos,mesComposition,ens,am,inputAn);
       
-      //! S quark name
-      const string& qS=get<1>(mesComposition);
-      
-      //! T quark name
-      const string& qT=get<2>(mesComposition);
-      
-      //! Index of S quark in the physical list
-      const size_t iMphysS=get<1>(quarkList[qS]);
-      
-      //! Index of T quark in the physical list
-      const size_t iMphysT=get<1>(quarkList[qT]);
-      
-      const size_t iult=0;
-      
-      //! Bare mass of S quark
-      const dboot_t amSbare=lat_par[iult].amBare(iMphysS,iBeta);
-      
-      //! Bare mass of T quark
-      const dboot_t amTbare=lat_par[iult].amBare(iMphysT,iBeta);
-      
-      cout<<"amSbare: "<<smart_print(amSbare);
-      for(auto& amSi: am[qS]) cout<<" "<<amSi;
-      cout<<endl;
-      
-      cout<<"amTbare: "<<smart_print(amTbare);
-      for(auto& amTi: am[qT]) cout<<" "<<amTi;
-      cout<<endl;
-      
-      const permes_t<dbvec_t> inte=interpolate(ens,mesName,am[qS],am[qT],mesCombos[iMes],jack_index[0][0],amSbare,amTbare);
       inte.plotFf();
     }
   
