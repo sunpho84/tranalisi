@@ -15,6 +15,26 @@ using AllMesCombos=vector<permes_combo_t<>>;
 //! All ensembles of a physical meson
 using AllMesEns=vector<permes_t<dbvec_t>>;
 
+//! Reads the list of ensembles to be used
+vector<perens_t> readEnsList()
+{
+  //! List returned
+  vector<perens_t> output;
+  
+  //! Input file
+  raw_file_t input("analysis.txt","r");
+  
+  //! Total number of ensembles
+  const size_t nEns=input.read<size_t>("NEns");
+  output.reserve(nEns);
+  
+  for(size_t iEns=0;iEns<nEns;iEns++)
+    output.emplace_back(input.read<string>());
+    
+  return output;
+}
+
+//! Reads the list of quarks
 void readQuarkList(raw_file_t& input)
 {
   const size_t nQuarks=input.read<size_t>("NQuarks");
@@ -49,6 +69,7 @@ void readQuarkList(raw_file_t& input)
     }
 }
 
+//! Reads the list of mesons
 void readMesonList(raw_file_t& input)
 {
   const size_t nMesons=input.read<size_t>("NMesons");
@@ -252,7 +273,7 @@ int main(int narg,char **arg)
   set_njacks(15);
   def_nboots=nboots;
   
-  const vector<perens_t> ens{string{"A30.32"},string{"A80.24"},string{"D20.48"}};
+  const vector<perens_t> ens=readEnsList();
   
   // const size_t nMes=mesonList.size();
   
@@ -286,7 +307,7 @@ int main(int narg,char **arg)
   
     /*
     - * loop on all physical mesons
-    - | loop on all ensembles
+    - | * loop on all ensembles
     - | | * read the input
     - | | * loop on all meson combo
     - | | | * read 2pts correlators
