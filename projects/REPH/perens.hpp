@@ -231,7 +231,7 @@ vector<perens_t> readEnsList()
   vector<perens_t> output;
   
   //! Input file
-  raw_file_t input("analysis.txt","r");
+  raw_file_t input("ensemble_list.txt","r");
   
   //! Total number of ensembles
   const size_t nEns=input.read<size_t>("NEns");

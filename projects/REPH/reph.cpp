@@ -65,8 +65,8 @@ void readMesonList(raw_file_t& input)
     }
 }
 
-//! Reads the input file
-void readInput(const string& path)
+//! Reads the physics file
+void readPhysics(const string& path)
 {
   //! Input file
   raw_file_t input(path,"r");
@@ -167,7 +167,7 @@ void ultimateAnalysisLoop(const F& f)
 
 int main(int narg,char **arg)
 {
-  readInput("input.txt");
+  readPhysics("physics.txt");
   
   loadUltimateInput("ultimate_input.txt");
   
@@ -198,6 +198,8 @@ int main(int narg,char **arg)
 							inte.back().plotFf();
 						      });
 				     
+				     //fit
+				     
 				   });
 	    });
   
@@ -222,7 +224,7 @@ int main(int narg,char **arg)
     - | | | | | | *fit 3pts
     - | | | |
     - | loop on all systematics so far
-    - | | loop on all 8 analysis
+    - | | * loop on all 8 analysis
     - | | | * interpolate to physical meson_corrs
     - | | | fit all ensembles with a multilinear function
    */
