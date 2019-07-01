@@ -171,6 +171,7 @@ int main(int narg,char **arg)
   
   loadUltimateInput("ultimate_input.txt");
   
+  //set_printlevel(3);
   set_njacks(15);
   def_nboots=nboots;
   
@@ -190,16 +191,31 @@ int main(int narg,char **arg)
 				     //! Interpolated data for each ensemble
 				     vector<permes_t<dbvec_t>> inte;
 				     
+				     //fit
+				     boot_fit_t fit;
+				     dboot_t offset,slopeX;
+				     const size_t iOffset=fit.add_fit_par(offset,"Offset",0.0,0.1);
+				     const size_t iSlopeX=fit.add_fit_par(slopeX,"SlopeX",0.0,0.1);
+				     
 				     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 						      {
 							const map<string,vector<double>> am=getMassList(e);
 							
 							inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn));
 							inte.back().plotFf();
+							
+							for(size_t iDecKin=0;iDecKin<e.nDecKin;iDecKin++)
+							  if(e.considerDec[iDecKin])
+							    fit.add_point(inte.back().ff[0][iDecKin]
+									  ,[&inte,iOffset,iSlopeX,iDecKin](const vector<double>& p,int iboot)
+									   {
+									     return p[iOffset]+p[iSlopeX]*inte.back().X[iDecKin][iboot];
+									   });
 						      });
 				     
-				     //fit
-				     
+				     fit.fit();
+				     cout<<"Offset: "<<offset.ave_err()<<endl;
+				     cout<<"SlopeX: "<<slopeX.ave_err()<<endl;
 				   });
 	    });
   

@@ -248,7 +248,7 @@ map<string,vector<double>> getMassList(const perens_t& e)
 {
   //! Result
   map<string,vector<double>> am;
-
+  
   for(auto& q : quarkList)
     for(auto& i : get<2>(q.second))
       am[q.first].push_back(e.mass[i]);
