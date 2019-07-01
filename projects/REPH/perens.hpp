@@ -224,4 +224,36 @@ struct perens_t
   }
 };
 
+//! Reads the list of ensembles to be used
+vector<perens_t> readEnsList()
+{
+  //! List returned
+  vector<perens_t> output;
+  
+  //! Input file
+  raw_file_t input("analysis.txt","r");
+  
+  //! Total number of ensembles
+  const size_t nEns=input.read<size_t>("NEns");
+  output.reserve(nEns);
+  
+  for(size_t iEns=0;iEns<nEns;iEns++)
+    output.emplace_back(input.read<string>());
+    
+  return output;
+}
+
+//! Gets the list of quark mass for each quark
+map<string,vector<double>> getMassList(const perens_t& e)
+{
+  //! Result
+  map<string,vector<double>> am;
+
+  for(auto& q : quarkList)
+    for(auto& i : get<2>(q.second))
+      am[q.first].push_back(e.mass[i]);
+  
+  return am;
+}
+
 #endif

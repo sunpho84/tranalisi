@@ -6,6 +6,7 @@
 template <typename TV>
 djvec_t permes_combo_t<TV>::load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0)
 {
+  //! Main path
   const string path=ens.dirPath+"/plots/"+mesTag+"/3pts_corr/";
   mkdir(path);
   
@@ -14,9 +15,11 @@ djvec_t permes_combo_t<TV>::load3pts(const size_t iVA,const size_t iMs,const siz
   const size_t& nMass=ens.nMass;
   const size_t& nMoms=ens.nMoms;
   
+  //! Sign of the contribution
   const double s[2][2][2]={{{-1,+1},{-1,-1}},
 			   {{-1,-1},{+1,-1}}};
   
+  //! Output correlator
   djvec_t corr(T);
   corr=0.0;
   
@@ -64,8 +67,10 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
   //! Coefficient to combine the two insertions
   const double coeff[2]={+1.0,-1.0};
   
+  //! Path where to store data
   const string dataPath=milledPath()+"/data3pts.dat";
   
+  //! Load or not the compacted data
   const bool loadCompact=file_exists(dataPath) and not forceLoad;
   
   if(not loadCompact)

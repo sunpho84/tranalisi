@@ -303,4 +303,7 @@ struct permes_combo_t : public permes_t<TV>
 
 };
 
+//! All combinations of a physical meson
+using AllMesCombos=vector<permes_combo_t<>>;
+
 #endif

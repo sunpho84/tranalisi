@@ -9,31 +9,6 @@
 
 #include <reph.hpp>
 
-//! All combinations of a physical meson
-using AllMesCombos=vector<permes_combo_t<>>;
-
-//! All ensembles of a physical meson
-using AllMesEns=vector<permes_t<dbvec_t>>;
-
-//! Reads the list of ensembles to be used
-vector<perens_t> readEnsList()
-{
-  //! List returned
-  vector<perens_t> output;
-  
-  //! Input file
-  raw_file_t input("analysis.txt","r");
-  
-  //! Total number of ensembles
-  const size_t nEns=input.read<size_t>("NEns");
-  output.reserve(nEns);
-  
-  for(size_t iEns=0;iEns<nEns;iEns++)
-    output.emplace_back(input.read<string>());
-    
-  return output;
-}
-
 //! Reads the list of quarks
 void readQuarkList(raw_file_t& input)
 {
@@ -90,8 +65,10 @@ void readMesonList(raw_file_t& input)
     }
 }
 
+//! Reads the input file
 void readInput(const string& path)
 {
+  //! Input file
   raw_file_t input(path,"r");
   
   readQuarkList(input);
@@ -99,7 +76,7 @@ void readInput(const string& path)
   readMesonList(input);
 }
 
-//! Read and compute ll combination for a given meson
+//! Reads and compute ll combination for a given meson
 AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
 {
   //! Result
@@ -148,94 +125,6 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
   return res;
 }
 
-//! Check if the range is satisified
-void checkIntRange(const vector<double>& amBare,const dboot_t& target)
-{
-  if(amBare.size()!=1)
-    {
-      bool satisfied=true;
-      
-      const auto& amMinMax=minmax_element(amBare.begin(),amBare.end());
-      const double& amMin=*amMinMax.first;
-      const double& amMax=*amMinMax.second;
-      const double range=amMax-amMin;
-      
-      size_t nNonSatisfying=0;
-      double maxExcess=0;
-      
-      for(size_t iboot=0;iboot<nboots;iboot++)
-	{
-	  const double thisBoot=target[iboot];
-	  bool below=false,above=false;
-	  for(const double& am : amBare)
-	    {
-	      if(am<thisBoot) below=true;
-	      if(am>thisBoot) above=true;
-	    }
-	  const bool thisSatisfied=above and below;
-	  
-	  satisfied&=thisSatisfied;
-	  if(not thisSatisfied)
-	    {
-	      nNonSatisfying++;
-	      
-	      const double excess=
-		(not below)?
-		(amMin-thisBoot)
-		:
-		(thisBoot-amMax);
-	      
-	      maxExcess=max(maxExcess,excess);
-	    }
-	}
-      
-      if(nNonSatisfying)
-	cout<<"WARNING, interpolation not satisfied in: "<<nNonSatisfying*100/nboots<<"% of the bootstraps, max extrapolation: "<<maxExcess*100/range<<"%"<<endl<<endl;
-    }
-}
-
-//! Frontend to interpolate in mass
-permes_t<dbvec_t>interpolate(const AllMesCombos& mesCombos,const meson_t& mesComposition,const perens_t& ens,map<string,vector<double>>& am,const size_t& inputAn)
-{
-  //! Index of beta
-  const size_t& iBeta=ens.iBeta;
-  
-  //! Name of the meson
-  const string& mesName=get<0>(mesComposition)+"/interp/"+to_string(inputAn);
-  
-  //! S quark name
-  const string& qS=get<1>(mesComposition);
-  
-  //! T quark name
-  const string& qT=get<2>(mesComposition);
-  
-  //! Index of S quark in the physical list
-  const size_t iMphysS=get<1>(quarkList[qS]);
-  
-  //! Index of T quark in the physical list
-  const size_t iMphysT=get<1>(quarkList[qT]);
-  
-  //! Bare mass of S quark
-  const dboot_t amSbare=lat_par[inputAn].amBare(iMphysS,iBeta);
-  
-  //! Bare mass of T quark
-  const dboot_t amTbare=lat_par[inputAn].amBare(iMphysT,iBeta);
-  
-  cout<<"amSbare: "<<smart_print(amSbare);
-  for(auto& amSi : am[qS])
-    cout<<" "<<amSi;
-  cout<<endl;
-  checkIntRange(am[qS],amSbare);
-  
-  cout<<"amTbare: "<<smart_print(amTbare);
-  for(auto& amTi: am[qT])
-    cout<<" "<<amTi;
-  cout<<endl;
-  checkIntRange(am[qT],amTbare);
-  
-  return interpolate(ens,mesName,am[qS],am[qT],mesCombos,jack_index[inputAn][ens.iUlt],amSbare,amTbare);
-}
-
 //! Perform a loop over ensemble, putting a proper header
 template <typename F>
 void mesonLoop(const F& f)
@@ -264,6 +153,18 @@ void ensembleLoop(const vector<perens_t>& ens,const F& f)
     }
 }
 
+//! Perform a loop over ultimate analysis
+template <typename F>
+void ultimateAnalysisLoop(const F& f)
+{
+  for(size_t inputAn=0;inputAn<ninput_an;inputAn++)
+    {
+      cout<<endl<<"//// Input analysis: "<<inputAn<<" ////"<<endl<<endl;
+      
+      f(inputAn);
+    }
+}
+
 int main(int narg,char **arg)
 {
   readInput("input.txt");
@@ -284,25 +185,20 @@ int main(int narg,char **arg)
 	      ensembleLoop(ens,[&](const perens_t& e,size_t){mesCombos.push_back(computeAllMesCombos(e,mesComposition));});
 	      
 	      // Loop over analysis
-	      for(size_t inputAn=0;inputAn<ninput_an;inputAn++)
-		{
-		  cout<<endl<<"//// Input analysis: "<<inputAn<<" ////"<<endl<<endl;
-		  
-		  vector<permes_t<dbvec_t>> inte;
-		  
-		  ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+	      ultimateAnalysisLoop([&](const size_t& inputAn)
 				   {
-				     //! Holds the list of quark mass for each quark
-				     map<string,vector<double>> am;
-				     for(auto& q : quarkList)
-				       for(auto& i : get<2>(q.second))
-					 am[q.first].push_back(e.mass[i]);
+				     //! Interpolated data for each ensemble
+				     vector<permes_t<dbvec_t>> inte;
 				     
-				     inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn));
-				     inte.back().plotFf();
+				     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+						      {
+							const map<string,vector<double>> am=getMassList(e);
+							
+							inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn));
+							inte.back().plotFf();
+						      });
+				     
 				   });
-		  
-		}
 	    });
   
     /*
