@@ -165,6 +165,15 @@ void ultimateAnalysisLoop(const F& f)
     }
 }
 
+//! Perform a loop over decay kinematic
+template <typename F>
+void decKinLoop(const perens_t& e,const F& f)
+{
+  for(size_t iDecKin=0;iDecKin<e.nDecKin;iDecKin++)
+    if(e.considerDec[iDecKin])
+      f(iDecKin);
+}
+
 int main(int narg,char **arg)
 {
   readPhysics("physics.txt");
@@ -191,6 +200,14 @@ int main(int narg,char **arg)
 				     //! Interpolated data for each ensemble
 				     vector<permes_t<dbvec_t>> inte;
 				     
+				     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+						      {
+							const map<string,vector<double>> am=getMassList(e);
+							
+							inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn));
+							inte.back().plotFf();
+						      });
+				     
 				     //fit
 				     boot_fit_t fit;
 				     dboot_t offset,slopeX;
@@ -199,23 +216,36 @@ int main(int narg,char **arg)
 				     
 				     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 						      {
-							const map<string,vector<double>> am=getMassList(e);
-							
-							inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn));
-							inte.back().plotFf();
-							
-							for(size_t iDecKin=0;iDecKin<e.nDecKin;iDecKin++)
-							  if(e.considerDec[iDecKin])
-							    fit.add_point(inte.back().ff[0][iDecKin]
-									  ,[&inte,iOffset,iSlopeX,iDecKin](const vector<double>& p,int iboot)
+							decKinLoop(e,[&,iens](const size_t iDecKin)
+								      {
+									fit.add_point(inte[iens].ff[0][iDecKin]
+										      ,[=,&inte](const vector<double>& p,int iboot)
 									   {
-									     return p[iOffset]+p[iSlopeX]*inte.back().X[iDecKin][iboot];
+									     return p[iOffset]+p[iSlopeX]*inte[iens].X[iDecKin][iboot];
 									   });
+								      });
 						      });
 				     
 				     fit.fit();
+				     
 				     cout<<"Offset: "<<offset.ave_err()<<endl;
 				     cout<<"SlopeX: "<<slopeX.ave_err()<<endl;
+				     
+				     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+						      {
+							const string dirPath=e.dirPath+"/plots/"+inte[iens].mesTag;
+							mkdir(dirPath);
+							
+							grace_file_t plot(dirPath+"/ffFit.xmg");
+							plot.set_no_line();
+							
+							decKinLoop(e,[&,iens](const size_t iDecKin)
+								      {
+									plot.write_ave_err(inte[iens].X[iDecKin].ave_err(),inte[iens].ff[0][iDecKin].ave_err());
+								      });
+							
+							plot.write_polygon([&](const double x) -> dboot_t{return offset+slopeX*x;},0,1);
+						      });
 				   });
 	    });
   
@@ -242,7 +272,7 @@ int main(int narg,char **arg)
     - | loop on all systematics so far
     - | | * loop on all 8 analysis
     - | | | * interpolate to physical meson_corrs
-    - | | | fit all ensembles with a multilinear function
+    - | | | * fit all ensembles with a multilinear function
    */
   
   return 0;
