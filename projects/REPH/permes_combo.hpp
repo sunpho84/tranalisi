@@ -10,6 +10,9 @@
 template <typename TV=djvec_t>
 struct permes_t
 {
+  //! Scalar type
+  using T=remove_reference_t<decltype(TV{}[0])>;
+  
   //! Reference ensemble
   const perens_t& ens;
   
@@ -36,6 +39,12 @@ struct permes_t
   
   //! Form factor independent variable
   TV X;
+  
+  //! Maximal X
+  T xMax() const
+  {
+    return *max_element(X.begin(),X.end());
+  }
   
   permes_t(const perens_t& ens,const string& mesTag) : ens(ens),mesTag(mesTag){}
   

@@ -143,7 +143,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
 	  //! Initial value of enlarging factor
 	  double nSigEnl=2.0;
 	  
-	  const auto receipt=[&comp,&nSigEnl](const bool verb=false)
+	  const auto recipe=[&comp,&nSigEnl](const bool verb=false)
 			     {
 			       double nSigSel=1;
 			       comp
@@ -161,7 +161,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
 				 .extendRightWithCompatiblePoints(nSigEnl);
 			     };
 	  
-	  receipt();
+	  recipe();
 	  
 	  //! Minimal length
 	  const size_t lengthMin=ens.T/6;
@@ -171,10 +171,12 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
 	  
 	  //! If needed to redo, verbose
 	  if(checkReDo())
-	    receipt(true);
+	    recipe(true);
 	  
 	  // Extend
-	  while(checkReDo())
+	  int nReDo=4;
+	  
+	  while(checkReDo() and nReDo>0)
 	    {
 	      nSigEnl+=1.0;
 	      
@@ -186,7 +188,11 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
 		.plotSelected()
 		.selectLargestRange()
 		.plotSelected();
+	      
+	      nReDo--;
 	    }
+	  if(nReDo<=0)
+	    cout<<"WARNING, unable to satisfy the check!"<<endl;
 	  
 	  const Range& fitRange=tint2pts[iMesKin]=comp.getSelectionRange(0);
 	  

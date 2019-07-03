@@ -174,6 +174,23 @@ void decKinLoop(const perens_t& e,const F& f)
       f(iDecKin);
 }
 
+size_t iOffset;
+size_t iSlopeX;
+size_t iOffsetA2;
+size_t iSlopeXA2;
+
+//! Ansatz fit
+template <typename TV>
+auto ansatz(const TV& p,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+{
+  using T=std::remove_reference_t<decltype(p[0])>;
+  
+  const T offset=p[iOffset]+a2*p[iOffsetA2];
+  const T slopeX=p[iSlopeX]+a2*p[iSlopeXA2];
+  
+  return offset+slopeX*x;
+}
+
 int main(int narg,char **arg)
 {
   readPhysics("physics.txt");
@@ -211,17 +228,27 @@ int main(int narg,char **arg)
 				     //fit
 				     boot_fit_t fit;
 				     dboot_t offset,slopeX;
-				     const size_t iOffset=fit.add_fit_par(offset,"Offset",0.0,0.1);
-				     const size_t iSlopeX=fit.add_fit_par(slopeX,"SlopeX",0.0,0.1);
+				     dboot_t offsetA2,slopeXA2;
+				     iOffset=fit.add_fit_par(offset,"Offset",0.0,0.1);
+				     iSlopeX=fit.add_fit_par(slopeX,"SlopeX",0.0,0.1);
+				     iOffsetA2=fit.add_fit_par(offsetA2,"OffsetA2",0.0,0.1);
+				     iSlopeXA2=fit.add_fit_par(slopeXA2,"SlopeXA2",0.0,0.1);
 				     
 				     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 						      {
+#warning manca z
+							
 							decKinLoop(e,[&,iens](const size_t iDecKin)
 								      {
 									fit.add_point(inte[iens].ff[0][iDecKin]
 										      ,[=,&inte](const vector<double>& p,int iboot)
 									   {
-									     return p[iOffset]+p[iSlopeX]*inte[iens].X[iDecKin][iboot];
+									     const size_t iBeta=e.iBeta;
+									     const double aInv=lat_par[inputAn].ainv[iBeta][iboot];
+									     const double a2=1/sqr(aInv);
+									     const double x=inte[iens].X[iDecKin][iboot];
+									     
+									     return ansatz(p,a2,x);
 									   });
 								      });
 						      });
@@ -230,6 +257,13 @@ int main(int narg,char **arg)
 				     
 				     cout<<"Offset: "<<offset.ave_err()<<endl;
 				     cout<<"SlopeX: "<<slopeX.ave_err()<<endl;
+				     
+				     //! Copy of pars in a vector
+				     dbvec_t pFit(4);
+				     pFit[iOffset]=offset;
+				     pFit[iSlopeX]=slopeX;
+				     pFit[iOffsetA2]=offsetA2;
+				     pFit[iSlopeXA2]=slopeXA2;
 				     
 				     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 						      {
@@ -244,7 +278,13 @@ int main(int narg,char **arg)
 									plot.write_ave_err(inte[iens].X[iDecKin].ave_err(),inte[iens].ff[0][iDecKin].ave_err());
 								      });
 							
-							plot.write_polygon([&](const double x) -> dboot_t{return offset+slopeX*x;},0,1);
+							const size_t& iBeta=e.iBeta;
+							const dboot_t aInv=lat_par[inputAn].ainv[iBeta];
+							const double a2=((dboot_t)(1/sqr(aInv))).ave();
+							const double xMax=inte[iens].xMax().ave();
+							
+							plot.write_polygon([&](const double x) -> dboot_t{return ansatz(pFit,a2,x);},0,xMax);
+							plot.write_polygon([&](const double x) -> dboot_t{return ansatz(pFit,0,x);},0,xMax);
 						      });
 				   });
 	    });
