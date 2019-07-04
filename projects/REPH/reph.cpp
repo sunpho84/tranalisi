@@ -119,6 +119,8 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
 	.fit3pts("selfChosenTint")
 	.plotFf();
       
+      res[iMesCombo].printKin();
+      
       cout<<endl;
     }
   

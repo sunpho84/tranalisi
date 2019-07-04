@@ -4,7 +4,7 @@
 #include <REPH/permes_combo.hpp>
 
 template <typename TV>
-djvec_t permes_combo_t<TV>::load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0)
+djvec_t permes_combo_t<TV>::load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0,const char* extraTag)
 {
   //! Main path
   const string path=ens.dirPath+"/plots/"+mesTag+"/3pts_corr/";
@@ -38,23 +38,25 @@ djvec_t permes_combo_t<TV>::load3pts(const size_t iVA,const size_t iMs,const siz
 			 {"momt",nMoms},
 			 {"mom0",nMoms}});
   
+  //! Real part for Axial, Imaginary for vector
   const size_t iReIm=(iVA==0)?1:0;
+  
+  //! Negative parity for axial, positive for vector
   const int par=(iVA==0)?-1:+1;
+  
   for(size_t iPol=0;iPol<2;iPol++)
     for(size_t iGamma=1;iGamma<=2;iGamma++)
       {
 	const size_t i=ind({iMs,iMt,iMoms,iMomt,iMom0,iPol,iGamma,iReIm});
-	const djvec_t contr=read_djvec(combine("%s/jacks/o%smuGPo-gs",ens.dirPath.c_str(),VA_tag[iVA]),T,i);
+	const djvec_t contr=-read_djvec(combine("%s/jacks/o%smuGPo-gs",ens.dirPath.c_str(),VA_tag[iVA]),T,i)/((double)L*L*L);
 	corr+=contr*s[iVA][iPol][iGamma-1];
 	
-	contr.ave_err().write(combine("%s/o%smuGPo-gs_%s_pol_%zu_gamma_%zu.xmg",path.c_str(),VA_tag[iVA],ens.decKinTag(iMoms,iMomt,iMom0).c_str(),iPol,iGamma));
+	contr.ave_err().write(combine("%s/o%smuGPo-gs_%s_pol_%zu_gamma_%zu_%s.xmg",path.c_str(),VA_tag[iVA],ens.decKinTag(iMoms,iMomt,iMom0).c_str(),iPol,iGamma,extraTag));
       }
-  corr/=2*sqrt(2);
-  
-  corr/=-((double)L*L*L);
+  corr/=4;
   
   corr.symmetrize(par);
-  corr.ave_err().write(combine("%s/o%smuGPo-gs_%s.xmg",path.c_str(),VA_tag[iVA],ens.decKinTag(iMoms,iMomt,iMom0).c_str()));
+  corr.ave_err().write(combine("%s/o%smuGPo-gs_%s_%s.xmg",path.c_str(),VA_tag[iVA],ens.decKinTag(iMoms,iMomt,iMom0).c_str(),extraTag));
   
   return corr;
 }
@@ -85,9 +87,9 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
 	    for(int iVA=0;iVA<2;iVA++)
 	      {
 		corrPX[iVA][insOnT][iDecKin]=
-		  load3pts(iVA,iMs,iMt,c[0],c[1],c[2])*eT;
+		  load3pts(iVA,iMs,iMt,c[0],c[1],c[2],"insOnS")*eT;
 		corrPX[iVA][insOnS][iDecKin]=coeff[iVA]*
-		  load3pts(iVA,iMt,iMs,c[0],c[1],c[2])*eS;
+		  load3pts(iVA,iMt,iMs,c[0],c[1],c[2],"insInT")*eS;
 	      }
 	  }
     }
@@ -332,14 +334,23 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const char* fitTag,const bool fo
 		{
 		  const Range& tint=tint3pts[iVA][iST][iDecKin];
 		  const djvec_t y=corrPX[iVA][iST][iDecKin]*normaliz[iDecKin];
+		  
 		  H+=constant_fit(y,tint.begin,tint.end
 				  ,combine("%s/c%s_insOn%c_%s.xmg",mesPlotsPath.c_str(),VA_tag[iVA],ST_tag[iST],ens.decKinTag(iDecKin).c_str()));
 		}
 	      
+	      const double eps=1/sqrt(2.0);
+	      
 	      if(iVA==1)
-		ff[iVA][iDecKin]=(H-fPbare[iMesKin]*(eT-eS))/PKdec[iDecKin];
+		{
+		  const djack_t& M=E[0];
+		  const djack_t& PK=PKdec[iDecKin];
+		  const djack_t div=fPbare[0]*(eT-eS);
+		  
+		  ff[iVA][iDecKin]=M*(H/eps-div)/PK;
+		}
 	      else
-		ff[iVA][iDecKin]=H*E[iMesKin]/(ens.Eg[iDecKin]*ens.pMes[iMesKin]-E[iMesKin]*ens.kHatDec[iDecKin]);
+		ff[iVA][iDecKin]=H/eps*E[iMesKin]/(ens.Eg[iDecKin]*ens.pMes[iMesKin]-E[iMesKin]*ens.kHatDec[iDecKin]);
 	    }
       
       cout<<"Storing form factors"<<endl;

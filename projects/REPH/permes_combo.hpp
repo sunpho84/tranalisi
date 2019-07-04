@@ -142,7 +142,7 @@ struct permes_combo_t : public permes_t<TV>
   djvec_t load2ptsAP(const size_t iMoms,const size_t iMomt,const size_t iGamma);
   
   //! Load the three points correlation functions
-  djvec_t load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0);
+  djvec_t load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0,const char* extraTag);
   
   //! Computes the axial couplings
   void computeAxialPseudoCouplings(const string& mesPlotsPath);
@@ -162,6 +162,36 @@ struct permes_combo_t : public permes_t<TV>
     
     load2pts(forceLoad);
     load3pts(forceLoad);
+  }
+  
+  //! Print all kinematics info
+  void printKin() const
+  {
+    const string path=ens.dirPath+"/plots/"+mesTag+"/kinematics.txt";
+    ofstream out(path);
+    if(not out.good())
+      CRASH("Unable to create output %s",path.c_str());
+	
+    for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
+      if(ens.considerDec[iDecKin])
+	{
+	  out<<ens.indDecKin.descr(iDecKin)<<endl;
+	  out<<" X: "<<X[iDecKin].ave_err()<<endl;
+	  out<<" PK: "<<PKdec[iDecKin].ave_err()<<endl;
+	  out<<" EgT: "<<ens.EgT(iDecKin)<<endl;
+	  out<<endl;
+	}
+    
+    for(size_t iMesKin=0;iMesKin<ens.nMesKin;iMesKin++)
+      {
+	out<<ens.indMesKin.descr(iMesKin)<<endl;
+	out<<" E: "<<E[iMesKin].ave_err()<<endl;
+	out<<" fP: "<<fP[iMesKin].ave_err()<<endl;
+	out<<" fPbare: "<<fPbare[iMesKin].ave_err()<<endl;
+	out<<" ZP: "<<ZP[iMesKin].ave_err()<<endl;
+	out<<" ZA: "<<ZA[iMesKin].ave_err()<<endl;
+	out<<endl;
+      }
   }
   
   //! Plots the form factors

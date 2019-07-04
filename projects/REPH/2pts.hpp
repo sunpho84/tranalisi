@@ -296,9 +296,6 @@ void permes_combo_t<TV>::computeAxialPseudoCouplings(const string& mesPlotsPath)
 	  
 	  ZAPlot.write_ave_err(E[iMesKin].ave(),ZA[iMesKin].ave_err());
 	  ZPPlot.write_ave_err(E[iMesKin].ave(),ZP[iMesKin].ave_err());
-	  
-	  fP[iMesKin]=ZP[iMesKin]*(ens.mass[iMs]+ens.mass[iMt])/sqr(E[iMesKin]);
-	  fPbare[iMesKin]=ZA[iMesKin];
 	}
     }
   
@@ -312,6 +309,12 @@ void permes_combo_t<TV>::computeAxialPseudoCouplings(const string& mesPlotsPath)
       file.bin_read(*ape);
     else
       file.bin_write(*ape);
+  
+  for(size_t iMesKin=0;iMesKin<ens.indMesKin.max();iMesKin++)
+    {
+      fP[iMesKin]=ZP[iMesKin]*(ens.mass[iMs]+ens.mass[iMt])/sqr(E[iMesKin]);
+      fPbare[iMesKin]=ZA[iMesKin];
+    }
 }
 
 template <typename TV>
