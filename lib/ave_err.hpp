@@ -76,6 +76,8 @@ ave_err_t range_ave_stddev(const V &v,int size=-1)
 class vec_ave_err_t : public vector<ave_err_t>
 {
 public:
+  vec_ave_err_t() {}
+  
   explicit vec_ave_err_t(size_t in) : vector<ave_err_t>(in) {}
   
   //! write to a grace file

@@ -760,7 +760,7 @@ TV poly_fit(const vector<double> &x,const TV &y,int d,double xmin=-1e300,double 
   // cout<<x<<endl;
   // cout<<y.ave_err()<<endl;
   
-  vector <double> Al(2*d+1,0.0);
+  vector<double> Al(2*d+1,0.0);
   TV c(d+1);
   c=0.0;
   
