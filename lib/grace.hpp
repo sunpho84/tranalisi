@@ -100,6 +100,8 @@ class grace_file_t : private ofstream
   
 public:
   
+  using ofstream::flush;
+  
   size_t cur_col; //!< current color for set (auto-incremented)
   grace::color_t get_col_no_increment();
   
