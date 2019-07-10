@@ -33,4 +33,12 @@ using meson_t=tuple<string,string,string>;
 //! Each value is a pair of strings, pointing to the physical quark
 vector<meson_t> mesonList;
 
+//! renormalization constants taken from 1403.4504, table 20 pag. 56, first all M1, then M2
+const vector<ave_err_t> Zp_ae({{{0.529,0.007},{0.509,0.004},{0.516,0.002},{0.574,0.004},{0.546,0.002},{0.545,0.002}}});
+const vector<ave_err_t> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004},{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
+const vector<ave_err_t> Zv_ae({{{0.587,0.004},{0.603,0.003},{0.655,0.003},{0.608,0.003},{0.614,0.002},{0.657,0.002}}});
+const vector<ave_err_t> Zt_ae({{{0.711,0.005},{0.724,0.004},{0.774,0.004},{0.700,0.003},{0.711,0.002},{0.767,0.002}}});
+
+dbvec_t Za(2*nbeta),Zp(2*nbeta),Zv(2*nbeta),Zt(2*nbeta);
+
 #endif

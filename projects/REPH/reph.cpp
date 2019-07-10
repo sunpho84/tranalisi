@@ -208,6 +208,17 @@ int main(int narg,char **arg)
   set_njacks(15);
   def_nboots=nboots;
   
+  // Initialize the renormalization constants
+  for(auto& q : vector<tuple<const vector<ave_err_t>*,dbvec_t*,int>>{{&Za_ae,&Za,221533},{&Zv_ae,&Zv,854312},{&Zp_ae,&Zp,235346},{&Zt_ae,&Zt,6342423}})
+    {
+      const vector<ave_err_t>& zae=*get<0>(q);
+      dbvec_t& z=*get<1>(q);
+      const size_t& seed=get<2>(q);
+      
+      for(size_t i=0;i<2*nbeta;i++)
+	z[i].fill_gauss(zae[i],seed*2*nbeta+i);
+    }
+  
   const vector<perens_t> ens=readEnsList();
   
   // const size_t nMes=mesonList.size();
@@ -221,6 +232,8 @@ int main(int narg,char **arg)
 	      // Loop over analysis
 	      ultimateAnalysisLoop([&](const size_t& inputAn)
 				   {
+				     const size_t iM12=inputAn/4;
+				     
 				     //! Interpolated data for each ensemble
 				     vector<permes_t<dbvec_t>> inte;
 				     
@@ -233,70 +246,76 @@ int main(int narg,char **arg)
 						      });
 				     
 				     //fit
-				     boot_fit_t fit;
-				     dboot_t offset,slopeX;
-				     dboot_t offsetA2,slopeXA2;
-				     iOffset=fit.add_fit_par(offset,"Offset",0.0,0.1);
-				     iSlopeX=fit.add_fit_par(slopeX,"SlopeX",0.0,0.1);
-				     iOffsetA2=fit.add_fit_par(offsetA2,"OffsetA2",0.0,0.1);
-				     iSlopeXA2=fit.add_fit_par(slopeXA2,"SlopeXA2",0.0,0.1);
-				     
-				     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
-						      {
-#warning manca z
-							
-							decKinLoop(e,[&,iens](const size_t iDecKin)
-								      {
-									fit.add_point(inte[iens].ff[0][iDecKin]
-										      ,[=,&inte](const vector<double>& p,int iboot)
-									   {
-									     const size_t iBeta=e.iBeta;
-									     const double aInv=lat_par[inputAn].ainv[iBeta][iboot];
-									     const double a2=1/sqr(aInv);
-									     const double x=inte[iens].X[iDecKin][iboot];
-									     
-									     return ansatz(p,a2,x);
-									   });
-								      });
-						      });
-				     
-				     fit.fit();
-				     
-				     cout<<"Offset: "<<offset.ave_err()<<endl;
-				     cout<<"SlopeX: "<<slopeX.ave_err()<<endl;
-				     
-				     //! Copy of pars in a vector
-				     dbvec_t pFit(4);
-				     pFit[iOffset]=offset;
-				     pFit[iSlopeX]=slopeX;
-				     pFit[iOffsetA2]=offsetA2;
-				     pFit[iSlopeXA2]=slopeXA2;
-				     
-				     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
-						      {
-							const string dirPath=e.dirPath+"/plots/"+inte[iens].mesTag;
-							mkdir(dirPath);
-							
-							grace_file_t plot(dirPath+"/ffFit.xmg");
-							plot.set_no_line();
-							
-							decKinLoop(e,[&,iens](const size_t iDecKin)
-								      {
-									plot.write_ave_err(inte[iens].X[iDecKin].ave_err(),inte[iens].ff[0][iDecKin].ave_err());
-								      });
-							
-							const size_t& iBeta=e.iBeta;
-							const dboot_t aInv=lat_par[inputAn].ainv[iBeta];
-							const double a2=((dboot_t)(1/sqr(aInv))).ave();
-							const double xMax=inte[iens].xMax().ave();
-							
-							plot.write_polygon([&](const double x) -> dboot_t{return ansatz(pFit,a2,x);},0,xMax);
-							plot.write_polygon([&](const double x) -> dboot_t{return ansatz(pFit,0,x);},0,xMax);
-						      });
+				     for(int iVA=0;iVA<2;iVA++)
+				       {
+					 cout<<"Fitting "<<VA_tag[iVA]<<endl;
+					 
+					 boot_fit_t fit;
+					 dboot_t offset,slopeX;
+					 dboot_t offsetA2,slopeXA2;
+					 iOffset=fit.add_fit_par(offset,"Offset",0.0,0.1);
+					 iSlopeX=fit.add_fit_par(slopeX,"SlopeX",0.0,0.1);
+					 iOffsetA2=fit.add_fit_par(offsetA2,"OffsetA2",0.0,0.1);
+					 iSlopeXA2=fit.add_fit_par(slopeXA2,"SlopeXA2",0.0,0.1);
+					 
+					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+							  {
+							    const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
+							    cout<<e.dirPath<<" "<<z.ave_err()<<endl;
+							    
+							    decKinLoop(e,[&,iens](const size_t iDecKin)
+									 {
+									   fit.add_point(inte[iens].ff[iVA][iDecKin]*z
+											 ,[=,&inte](const vector<double>& p,int iboot)
+											  {
+											    const size_t iBeta=e.iBeta;
+											    const double aInv=lat_par[inputAn].ainv[iBeta][iboot];
+											    const double a2=1/sqr(aInv);
+											    const double x=inte[iens].X[iDecKin][iboot];
+											    
+											    return ansatz(p,a2,x);
+											  });
+									 });
+							  });
+					 
+					 fit.fit();
+					 
+					 cout<<"Offset: "<<offset.ave_err()<<endl;
+					 cout<<"SlopeX: "<<slopeX.ave_err()<<endl;
+					 
+					 //! Copy of pars in a vector
+					 dbvec_t pFit(4);
+					 pFit[iOffset]=offset;
+					 pFit[iSlopeX]=slopeX;
+					 pFit[iOffsetA2]=offsetA2;
+					 pFit[iSlopeXA2]=slopeXA2;
+					 
+					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+							  {
+							    const string dirPath=e.dirPath+"/plots/"+inte[iens].mesTag;
+							    mkdir(dirPath);
+							    
+							    grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+"_Fit.xmg");
+							    plot.set_no_line();
+							    
+							    decKinLoop(e,[&,iens](const size_t iDecKin)
+									 {
+									   plot.write_ave_err(inte[iens].X[iDecKin].ave_err(),inte[iens].ff[iVA][iDecKin].ave_err());
+									 });
+							    
+							    const size_t& iBeta=e.iBeta;
+							    const dboot_t aInv=lat_par[inputAn].ainv[iBeta];
+							    const double a2=((dboot_t)(1/sqr(aInv))).ave();
+							    const double xMax=inte[iens].xMax().ave();
+							    
+							    plot.write_polygon([&](const double x) -> dboot_t{return ansatz(pFit,a2,x);},0,xMax);
+							    plot.write_polygon([&](const double x) -> dboot_t{return ansatz(pFit,0,x);},0,xMax);
+							  });
+				       }
 				   });
-	    });
+		});
   
-    /*
+  /*
     - * loop on all physical mesons
     - | * loop on all ensembles
     - | | * read the input
