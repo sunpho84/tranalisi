@@ -43,7 +43,17 @@ struct permes_t
   //! Maximal X
   T xMax() const
   {
-    return *max_element(X.begin(),X.end());
+    T m;
+    bool isFirst=true;
+    for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
+      if(ens.considerDec[iDecKin])
+	if(isFirst or m.ave()<X[iDecKin].ave())
+	  {
+	    isFirst=false;
+	    m=X[iDecKin];
+	  }
+    
+    return m;
   }
   
   permes_t(const perens_t& ens,const string& mesTag) : ens(ens),mesTag(mesTag){}

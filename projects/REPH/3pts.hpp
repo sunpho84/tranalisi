@@ -141,7 +141,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::prepare3ptsNormalization(const bool useA
       {
 	const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
 	const djack_t& EnNum=E[iMesKin];
-	const djack_t EnAna=latt_en_1D(mass,ens.pMes[iMesKin]);
+	const djack_t EnAna=latt_en_1D(mass,ens.pMes[iMesKin]);;
 	const djack_t& Energy=useAnalytic?EnAna:EnNum;
 	const double& Eg=ens.Eg[iDecKin];
 	const double EgT=ens.EgT(iDecKin);

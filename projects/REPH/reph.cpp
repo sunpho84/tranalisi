@@ -48,7 +48,7 @@ void readQuarkList(raw_file_t& input)
 void readMesonList(raw_file_t& input)
 {
   const size_t nMesons=input.read<size_t>("NMesons");
-  for(auto& q : {"Name","Bw","Fw"})
+  for(auto& q : {"Name","Bw","Fw","Mass"})
     input.expect(q);
   
   for(size_t iMeson=0;iMeson<nMesons;iMeson++)
@@ -56,12 +56,13 @@ void readMesonList(raw_file_t& input)
       const string name=input.read<string>();
       const string quark1=input.read<string>();
       const string quark2=input.read<string>();
+      const double mass=input.read<double>();
       
       for(const auto& q : {quark1,quark2})
 	if(quarkList.find(q)==quarkList.end())
 	  CRASH("Unable to find quark %s",q.c_str());
       
-      mesonList.push_back({name,quark1,quark2});
+      mesonList.push_back({name,quark1,quark2,mass});
     }
 }
 
@@ -181,21 +182,32 @@ void decKinLoop(const perens_t& e,const F& f)
       f(iDecKin);
 }
 
-size_t iOffset;
-size_t iSlopeX;
-size_t iOffsetA2;
-size_t iSlopeXA2;
+//! Ansatz fit for fA
+template <typename TV>
+auto ansatzA(const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+{
+  //using T=std::remove_reference_t<decltype(p[0])>;
+  
+  return M*(p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2);
+}
+
+//! Ansatz fit for fV
+template <typename TV>
+auto ansatzV(const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+{
+  //using T=std::remove_reference_t<decltype(p[0])>;
+  
+  return M*(p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2);
+}
 
 //! Ansatz fit
 template <typename TV>
-auto ansatz(const TV& p,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+auto ansatz(const size_t iVA,const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
-  using T=std::remove_reference_t<decltype(p[0])>;
-  
-  const T offset=p[iOffset]+a2*p[iOffsetA2];
-  const T slopeX=p[iSlopeX]+a2*p[iSlopeXA2];
-  
-  return offset+slopeX*x;
+  if(iVA==0)
+    return ansatzV(p,M,a2,x);
+  else
+    return ansatzA(p,M,a2,x);
 }
 
 int main(int narg,char **arg)
@@ -225,6 +237,8 @@ int main(int narg,char **arg)
   
   mesonLoop([&](const meson_t& mesComposition)
 	    {
+	      const double& mPhys=get<3>(mesComposition);
+	      
 	      //! Holds ff energy etc for each meson and combination, for each ensemble
 	      vector<AllMesCombos> mesCombos;
 	      ensembleLoop(ens,[&](const perens_t& e,size_t){mesCombos.push_back(computeAllMesCombos(e,mesComposition));});
@@ -250,18 +264,16 @@ int main(int narg,char **arg)
 				       {
 					 cout<<"Fitting "<<VA_tag[iVA]<<endl;
 					 
+					 dbvec_t pFit(4);
 					 boot_fit_t fit;
-					 dboot_t offset,slopeX;
-					 dboot_t offsetA2,slopeXA2;
-					 iOffset=fit.add_fit_par(offset,"Offset",0.0,0.1);
-					 iSlopeX=fit.add_fit_par(slopeX,"SlopeX",0.0,0.1);
-					 iOffsetA2=fit.add_fit_par(offsetA2,"OffsetA2",0.0,0.1);
-					 iSlopeXA2=fit.add_fit_par(slopeXA2,"SlopeXA2",0.0,0.1);
+					 for(size_t i=0;i<4;i++)
+					   fit.add_fit_par(pFit[i],combine("p[%zu]",i),0.0,0.1);
 					 
 					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 							  {
 							    const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
 							    cout<<e.dirPath<<" "<<z.ave_err()<<endl;
+							    cout<<"Mass: "<<((dboot_t)(inte[iens].E[0]*lat_par[inputAn].ainv[e.iBeta])).ave()<<endl;
 							    
 							    decKinLoop(e,[&,iens](const size_t iDecKin)
 									 {
@@ -273,22 +285,14 @@ int main(int narg,char **arg)
 											    const double a2=1/sqr(aInv);
 											    const double x=inte[iens].X[iDecKin][iboot];
 											    
-											    return ansatz(p,a2,x);
+											    const double M=inte[iens].E[0][iboot]*aInv;
+											    
+											    return ansatz(iVA,p,M,a2,x);
 											  });
 									 });
 							  });
 					 
 					 fit.fit();
-					 
-					 cout<<"Offset: "<<offset.ave_err()<<endl;
-					 cout<<"SlopeX: "<<slopeX.ave_err()<<endl;
-					 
-					 //! Copy of pars in a vector
-					 dbvec_t pFit(4);
-					 pFit[iOffset]=offset;
-					 pFit[iSlopeX]=slopeX;
-					 pFit[iOffsetA2]=offsetA2;
-					 pFit[iSlopeXA2]=slopeXA2;
 					 
 					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 							  {
@@ -306,11 +310,14 @@ int main(int narg,char **arg)
 							    const size_t& iBeta=e.iBeta;
 							    const dboot_t aInv=lat_par[inputAn].ainv[iBeta];
 							    const double a2=((dboot_t)(1/sqr(aInv))).ave();
-							    const double xMax=inte[iens].xMax().ave();
+							    const double M=((dboot_t)(inte[iens].E[0]*aInv)).ave();
+							    const double xMax=inte[iens].xMax()[0];
 							    
-							    plot.write_polygon([&](const double x) -> dboot_t{return ansatz(pFit,a2,x);},0,xMax);
-							    plot.write_polygon([&](const double x) -> dboot_t{return ansatz(pFit,0,x);},0,xMax);
+							    plot.write_polygon([&](const double x) -> dboot_t{return ansatzA(pFit,M,a2,x);},0,xMax);
+							    plot.write_polygon([&](const double x) -> dboot_t{return ansatzA(pFit,mPhys,0,x);},0,xMax);
 							  });
+					 
+					 cout<<"f: "<<ansatzA(pFit,mPhys,0.0,0.0).ave_err()<<endl;
 				       }
 				   });
 		});

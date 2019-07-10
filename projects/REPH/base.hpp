@@ -25,7 +25,7 @@ using quark_t=tuple<double,size_t,vector<size_t>>;
 map<string,quark_t> quarkList;
 
 //! Holds all info for a given meson: the first entry is the name, the second is the bw quark, the third is the fw one
-using meson_t=tuple<string,string,string>;
+using meson_t=tuple<string,string,string,double>;
 
 //! List of all known mesons
 //!
