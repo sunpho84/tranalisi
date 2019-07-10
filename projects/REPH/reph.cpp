@@ -113,13 +113,18 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
       
       res.emplace_back(ens,mesName,iMs,iMt,eS,eT);
       
-      res[iMesCombo]
-	.fit2pts("selfChosenTint")
-	.prepare3ptsNormalization()
-	.fit3pts("selfChosenTint")
-	.plotFf();
-      
-      res[iMesCombo].printKin();
+      for(size_t useCommonRange=0;useCommonRange<2;useCommonRange++)
+	{
+	  const char tag[2][20]={"selfChosenTint","commonFitRange"};
+	  
+	  res[iMesCombo]
+	    .fit2pts("selfChosenTint")
+	    .prepare3ptsNormalization()
+	    .fit3pts(useCommonRange,tag[useCommonRange])
+	    .plotFf(tag[useCommonRange]);
+	  
+	  res[iMesCombo].printKin();
+	}
       
       cout<<endl;
     }

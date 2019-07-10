@@ -182,6 +182,7 @@ public:
       {
 	plot.open(path);
 	plot.write_vec_ave_err(aveErr);
+	plot.flush();
       }
     
     return *this;
@@ -343,6 +344,22 @@ public:
       selected[t--]=true;
     
     return *this;
+  }
+  
+  //! Deselect leftermost point
+  CompatibilityRangeFinder& deSelectLeftermostPoints(size_t nDesel)
+  {
+    if(verbose) cout<<"Deselecting "<<nDesel<<" points"<<endl;
+    
+    for(size_t t=tSearchMin;t<tSearchMax and nDesel!=0;t++)
+      if(selected[t])
+	{
+	  selected[t]=false;
+	  nDesel--;
+	}
+    
+    return
+      *this;
   }
   
   //! Remove from the selection points with too large error

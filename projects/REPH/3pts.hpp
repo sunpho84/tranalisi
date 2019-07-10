@@ -4,12 +4,8 @@
 #include <REPH/permes_combo.hpp>
 
 template <typename TV>
-djvec_t permes_combo_t<TV>::load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0,const char* extraTag)
+djvec_t permes_combo_t<TV>::load3pts(const string& plotDirPath,const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0,const char* extraTag)
 {
-  //! Main path
-  const string path=ens.dirPath+"/plots/"+mesTag+"/3pts_corr/";
-  mkdir(path);
-  
   const size_t& T=ens.T;
   const size_t& L=ens.L;
   const size_t& nMass=ens.nMass;
@@ -47,16 +43,20 @@ djvec_t permes_combo_t<TV>::load3pts(const size_t iVA,const size_t iMs,const siz
   for(size_t iPol=0;iPol<2;iPol++)
     for(size_t iGamma=1;iGamma<=2;iGamma++)
       {
+	const string path=combine("%s/jacks/o%smuGPo-gs",ens.dirPath.c_str(),VA_tag[iVA]);
 	const size_t i=ind({iMs,iMt,iMoms,iMomt,iMom0,iPol,iGamma,iReIm});
-	const djvec_t contr=-read_djvec(combine("%s/jacks/o%smuGPo-gs",ens.dirPath.c_str(),VA_tag[iVA]),T,i)/((double)L*L*L);
+	
+	const djvec_t contr=-ens.loadCorr(path,i,"3")/((double)L*L*L);
 	corr+=contr*s[iVA][iPol][iGamma-1];
 	
-	contr.ave_err().write(combine("%s/o%smuGPo-gs_%s_pol_%zu_gamma_%zu_%s.xmg",path.c_str(),VA_tag[iVA],ens.decKinTag(iMoms,iMomt,iMom0).c_str(),iPol,iGamma,extraTag));
+	grace_file_t plot(combine("%s/o%smuGPo-gs_%s_pol_%zu_gamma_%zu_%s.xmg",plotDirPath.c_str(),VA_tag[iVA],ens.decKinTag(iMoms,iMomt,iMom0).c_str(),iPol,iGamma,extraTag));
+	plot.set_title(combine("Ind %zu",i));
+	plot.write_vec_ave_err(contr.ave_err());
       }
   corr/=4;
   
   corr.symmetrize(par);
-  corr.ave_err().write(combine("%s/o%smuGPo-gs_%s_%s.xmg",path.c_str(),VA_tag[iVA],ens.decKinTag(iMoms,iMomt,iMom0).c_str(),extraTag));
+  corr.ave_err().write(combine("%s/o%smuGPo-gs_%s_%s.xmg",plotDirPath.c_str(),VA_tag[iVA],ens.decKinTag(iMoms,iMomt,iMom0).c_str(),extraTag));
   
   return corr;
 }
@@ -77,6 +77,11 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
   
   if(not loadCompact)
     {
+      //! Main path
+      const string plotDirPath=ens.dirPath+"/plots/"+mesTag+"/3pts_corr/";
+      if(not dir_exists(plotDirPath))
+	mkdir(plotDirPath);
+      
       cout<<"Loading 3pts correlators from scratch"<<endl;
       
       for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
@@ -87,12 +92,27 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
 	    for(int iVA=0;iVA<2;iVA++)
 	      {
 		corrPX[iVA][insOnT][iDecKin]=
-		  load3pts(iVA,iMs,iMt,c[0],c[1],c[2],"insOnS")*eT;
+		  load3pts(plotDirPath,iVA,iMs,iMt,c[0],c[1],c[2],"insOnT")*eT;
 		corrPX[iVA][insOnS][iDecKin]=coeff[iVA]*
-		  load3pts(iVA,iMt,iMs,c[0],c[1],c[2],"insInT")*eS;
+		  load3pts(plotDirPath,iVA,iMt,iMs,c[0],c[1],c[2],"insOnS")*eS;
 	      }
 	  }
-    }
+      
+      for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+	if(ens.considerDec[iDecKin] and ens.hasSymmDec[iDecKin])
+	  for(int iVA=0;iVA<2;iVA++)
+	    for(int insOnST=0;insOnST<2;insOnST++)
+	      {
+		const djvec_t& a=corrPX[iVA][insOnST][iDecKin];
+		const djvec_t& b=corrPX[iVA][insOnST][ens.symmOfDec[iDecKin]];
+		const djvec_t& r=a/b;
+		
+		const vector<size_t> c=ens.indDecKin(iDecKin);
+		
+		const string pathR=combine("%s/o%smuGPo-gs_%s_insOn%s_rat_with_symm.xmg",plotDirPath.c_str(),VA_tag[iVA],ens.decKinTag(c[0],c[1],c[2]).c_str(),insOnST?"T":"S");
+		r.ave_err().write(pathR);
+	      }
+	  }
   
   cout<<(loadCompact?"Loading":"Storing")<<" compacted 3pts"<<endl;
   
@@ -105,29 +125,50 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
 }
 
 template <typename TV>
-permes_combo_t<TV>& permes_combo_t<TV>::prepare3ptsNormalization()
+permes_combo_t<TV>& permes_combo_t<TV>::prepare3ptsNormalization(const bool useAnalytic)
 {
+  //! Main path
+  const string plotDirPath=ens.dirPath+"/plots/"+mesTag+"/3pts_normalization/";
+  if(not dir_exists(plotDirPath))
+    mkdir(plotDirPath);
+  
   cout<<"Preparing 3pts normalization"<<endl;
   
+  const djack_t& mass=E[0];
+  
   for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
-    {
-      const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
-      const double& Eg=ens.Eg[iDecKin];
-      const double EgT=ens.EgT(iDecKin);
-      
-      dEdec[iDecKin]=E[iMesKin]-Eg;
-      PKdec[iDecKin]=E[iMesKin]*Eg-ens.pMes[iMesKin]*ens.kHatDec[iDecKin];
-      X[iDecKin]=2*PKdec[iDecKin]/sqr(E[iMesKin]);
-      
-      for(int t=0;t<=(int)ens.T/2;t++)
-	{
-	  const djack_t &A=E[iMesKin];
-	  //const djack_t &B=Eeff[iMes][std::min(std::min(t,T-t),T/2-1)];
-	  const djack_t &W=A;
-	  //cout<<t<<" "<<smart_print(A.ave_err())<<" "<<smart_print(B.ave_err())<<endl;
-	  normaliz[iDecKin][t]=4*W*EgT/(ZP[iMesKin]*exp(-t*W-(ens.T/2-t)*Eg));
-	}
-    }
+    if(ens.considerDec[iDecKin])
+      {
+	const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
+	const djack_t& EnNum=E[iMesKin];
+	const djack_t EnAna=latt_en_1D(mass,ens.pMes[iMesKin]);
+	const djack_t& Energy=useAnalytic?EnAna:EnNum;
+	const double& Eg=ens.Eg[iDecKin];
+	const double EgT=ens.EgT(iDecKin);
+	
+	dEdec[iDecKin]=Energy-Eg;
+	PKdec[iDecKin]=Energy*Eg-ens.pMes[iMesKin]*ens.kHatDec[iDecKin];
+	X[iDecKin]=2*PKdec[iDecKin]/sqr(Energy);
+	
+	for(int t=0;t<=(int)ens.T/2;t++)
+	  {
+	    const djack_t& A=Energy;
+	    //const djack_t& A=E[iMesKin];
+	    //const djack_t &B=Eeff[iMes][std::min(std::min(t,T-t),T/2-1)];
+	    const djack_t& W=A;
+	    const djack_t& Z=ZP[0];
+	    //const djack_t& Z=ZP[iMesKin];
+	    //cout<<t<<" "<<smart_print(A.ave_err())<<" "<<smart_print(B.ave_err())<<endl;
+	    
+	    normaliz[iDecKin][t]=4*W*EgT/(Z*exp(-t*W-(ens.T/2-t)*Eg));
+	    // cout<<"  "<<ens.indDecKin.descr(iDecKin)<<"W: "<<W.ave_err()<<", Eg: "<<Eg<<", Zp: "<<Z.ave_err()<<", n["<<t<<"]: "<<normaliz[iDecKin][t].ave_err()<<endl;
+	  }
+	
+	const string normPath=combine("%s/%s.xmg",plotDirPath.c_str(),ens.decKinTag(iDecKin).c_str());
+	grace_file_t plot(normPath);
+	plot.set_title(combine("Ind %zu",iDecKin));
+	plot.write_vec_ave_err(normaliz[iDecKin].ave_err());
+      }
   
   return *this;
 }
@@ -155,21 +196,23 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
       for(size_t iVA=0;iVA<2;iVA++)
 	for(size_t iST=0;iST<2;iST++)
 	  {
-	    for(size_t i3ptsKin=0;i3ptsKin<ens.indDecKin.max();i3ptsKin++)
-	      if(ens.considerDec[i3ptsKin])
+	    grace_file_t fitTxt(rangeDir+"/range_"+VA_tag[iVA]+"_"+ST_tag[iST]+".txt");
+	    
+	    for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+	      if(ens.considerDec[iDecKin])
 		{
-		  // grace_file_t _outrange(combine("%s/_c%s_%s.xmg",path.c_str(),VA_tag[iVA],ens.decKinTag(i3ptsKin).c_str()));
+		  // grace_file_t _outrange(combine("%s/_c%s_%s.xmg",path.c_str(),VA_tag[iVA],ens.decKinTag(iDecKin).c_str()));
 		  
 		  //! Three points effective mass
-		  const djvec_t& c=corrPX[iVA][iST][i3ptsKin];
+		  const djvec_t& c=corrPX[iVA][iST][iDecKin];
 		  djvec_t y=c;
 		  for(size_t t=0;t<y.size();t++)
-		    y[t]/=exp(-dEdec[i3ptsKin]*t);
+		    y[t]/=exp(-dEdec[iDecKin]*t);
 		  y=forward_derivative(y);
 		  
 		  const djvec_t eff=effective_mass(c,T/2,0);
 		  
-		  const string outRangePath=combine("%s/c%s_insOn%c_%s.xmg",rangeDir.c_str(),VA_tag[iVA],ST_tag[iST],ens.decKinTag(i3ptsKin).c_str());
+		  const string outRangePath=combine("%s/c%s_insOn%c_%s.xmg",rangeDir.c_str(),VA_tag[iVA],ST_tag[iST],ens.decKinTag(iDecKin).c_str());
 		  cout<<outRangePath<<endl;
 		  
 		  CompatibilityRangeFinder<> comp(y,outRangePath);
@@ -177,7 +220,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 		  //! Initial value of enlarging factor
 		  double nSigEnl=2.0;
 		  
-		  const auto receipt=[T=ens.T,&comp,&nSigEnl](const bool verb=false)
+		  const auto recipe=[T=ens.T,&comp,&nSigEnl](const bool verb=false)
 				     {
 				       double nSigSel=1;
 				       comp
@@ -193,7 +236,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 					 .plotSelected();
 				     };
 		  
-		  receipt();
+		  recipe(false);
 		  
 		  //! Minimal length
 		  const size_t lengthMin=3;
@@ -205,16 +248,20 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 		      
 		      cout<<"WARNING, compatibility range too short, "<<comp.getSelectionRange(0)<<" when at least "<<lengthMin<<" needed, enlarging of "<<nSigEnl<<endl;
 		      
-		      receipt(true);
+		      recipe(true);
 		    }
 		  
-		  const Range& fitRange=tint3pts[iVA][iST][i3ptsKin]=comp.getSelectionRange(0);
+		  const Range& fitRange=tint3pts[iVA][iST][iDecKin]=comp.getSelectionRange(0);
 		  
-		  cout<<i3ptsKin<<" "<<ens.indDecKin.descr(i3ptsKin)<<": range "<<fitRange<<endl;
+		  cout<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<": range "<<fitRange<<endl;
 		  
-		  cout<<"Storing chosen 3pts intervals"<<endl;
-		  raw_file_t(tintPath,"w").bin_write(tint3pts);
-		  
+		  const size_t &b=fitRange.begin,&e=fitRange.end;
+		  fitTxt.write_ave_err(iDecKin,{(b+e)/2.0,(e-b)/2.0});
+		}
+	    
+	    cout<<"Storing chosen 3pts intervals"<<endl;
+	    raw_file_t(tintPath,"w").bin_write(tint3pts);
+	    
 		  /////////////////////////////////////////////////////////////////
 		  
 		  // vector<double> a(y.size()),e(y.size());
@@ -290,14 +337,13 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 		  // 	tMaxBest=T/4+D/2;
 		  //   }
 		  
-		  // cout<<"Best: "<<ens.indDecKin.descr(i3ptsKin)<<" ["<<tMinBest<<":"<<tMaxBest<<"] "<<pMax<<" within ["<<firstComp<<":"<<lastComp<<"]"<<endl;
+		  // cout<<"Best: "<<ens.indDecKin.descr(iDecKin)<<" ["<<tMinBest<<":"<<tMaxBest<<"] "<<pMax<<" within ["<<firstComp<<":"<<lastComp<<"]"<<endl;
 		  // outrange.write_line([](double){return 0;},tMinBest-0.5,tMaxBest+0.5);
 		  
 		  // tMax=tMaxBest;
 		  // tMin=tMinBest;
 		  
 		  /////////////////////////////////////////////////////////////////
-		}
 	  }
     }
   
@@ -305,15 +351,48 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 }
 
 template <typename TV>
-permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const char* fitTag,const bool forceRechoose)
+permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTintCommon(const size_t& length)
+{
+  for(size_t iVA=0;iVA<2;iVA++)
+    for(size_t iST=0;iST<2;iST++)
+      {
+	vector<size_t> count(ens.T/2+1);
+	
+	for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+	  if(ens.considerDec[iDecKin])
+	    {
+	      const Range& r=tint3pts[iVA][iST][iDecKin];
+	      for(size_t t=r.begin;t<=r.end;t++)
+		count[t]++;
+	    }
+	
+	size_t tMinBest=0;
+	auto f=[&](const size_t tStart){return accumulate(count.begin()+tStart,count.begin()+tStart+length,0);};
+	for(size_t t=1;t<count.size()-length;t++)
+	  {
+	    if(f(t)>f(tMinBest))
+	      tMinBest=t;
+	  }
+	commonTint3pts[iVA][iST]={tMinBest,tMinBest+length};
+	
+	cout<<"Common fit range for "<<VA_tag[iVA]<<" "<<ST_tag[iST]<<": "<<commonTint3pts[iVA][iST]<<endl;
+      }
+  
+  
+  return *this;
+}
+
+template <typename TV>
+permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const bool& useCommonRange,const char* fitTag,const bool forceRechoose)
 {
   const std::string mesPlotsPath=ens.dirPath+"/plots/"+mesTag+"/3pts_"+fitTag;
   if(not dir_exists(mesPlotsPath))
     mkdir(mesPlotsPath);
   
   choose3ptsTint(mesPlotsPath,forceRechoose);
+  choose3ptsTintCommon();
   
-  string ffPath=milledPath()+"/ff.dat";
+  string ffPath=milledPath()+"/ff_"+fitTag+".dat";
   if(file_exists(ffPath) and not forceRechoose)
     {
       cout<<"Loading stored form factors"<<endl;
@@ -332,8 +411,14 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const char* fitTag,const bool fo
 	      djack_t H=0.0;
 	      for(size_t iST=0;iST<2;iST++)
 		{
-		  const Range& tint=tint3pts[iVA][iST][iDecKin];
+		  const Range& tint=
+		    useCommonRange?
+		    commonTint3pts[iVA][iST]:
+		    tint3pts[iVA][iST][iDecKin];
 		  const djvec_t y=corrPX[iVA][iST][iDecKin]*normaliz[iDecKin];
+		  
+		  corrPX[iVA][iST][iDecKin].ave_err().write(combine("%s/c%s_insOn%c_%s_f1.xmg",mesPlotsPath.c_str(),VA_tag[iVA],ST_tag[iST],ens.decKinTag(iDecKin).c_str()));
+		  normaliz[iDecKin].ave_err().write(combine("%s/c%s_insOn%c_%s_f2.xmg",mesPlotsPath.c_str(),VA_tag[iVA],ST_tag[iST],ens.decKinTag(iDecKin).c_str()));
 		  
 		  H+=constant_fit(y,tint.begin,tint.end
 				  ,combine("%s/c%s_insOn%c_%s.xmg",mesPlotsPath.c_str(),VA_tag[iVA],ST_tag[iST],ens.decKinTag(iDecKin).c_str()));

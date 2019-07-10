@@ -9,16 +9,18 @@ int main(int narg,char **arg)
 {
   //pars
   int T=-1,ext_njacks=-1,iel1=0,iel2=0;
+  string path_out="";
   
   //parse opts
   int c;
-  while((c=getopt(narg,arg,"T:n:a:b::"))!= -1)
+  while((c=getopt(narg,arg,"T:n:a:b:o::"))!= -1)
     switch (c)
       {
       case 'T': T=to_int(optarg); break;
       case 'n': ext_njacks=to_int(optarg); break;
       case 'a': iel1=to_int(optarg); break;
       case 'b': iel2=to_int(optarg); break;
+      case 'o': path_out=optarg; break;
       case '?': exit(0);break;
       default: CRASH("Unknown option -%c",optopt);
       }
@@ -43,7 +45,10 @@ int main(int narg,char **arg)
   const djvec_t data2=read_djvec(path_in2,T,iel2);
   const djvec_t rat=data1/data2;
   
-  cout<<rat.ave_err()<<endl;
+  if(path_out=="")
+    cout<<rat.ave_err()<<endl;
+  else
+    rat.ave_err().write(path_out);
   
   return 0;
 }

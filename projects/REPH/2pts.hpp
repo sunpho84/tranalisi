@@ -20,7 +20,7 @@ djvec_t permes_combo_t<TV>::load2ptsPP(const size_t iMoms,const size_t iMomt)
   
   const size_t i=ind({iMs,iMt,iMoms,iMomt,0,0});
   
-  return read_djvec(combine("%s/jacks/oPPo-ss",ens.dirPath.c_str()),ens.T,i).symmetrized()/ens.spatVol;
+  return ens.loadCorr(combine("%s/jacks/oPPo-ss",ens.dirPath.c_str()),i,"2").symmetrized()/ens.spatVol;
 }
 
 template <typename TV>
@@ -39,7 +39,7 @@ djvec_t permes_combo_t<TV>::load2ptsAP(const size_t iMoms,const size_t iMomt,con
   
   const size_t i=ind({iMs,iMt,iMoms,iMomt,iGamma,iReIm});
   
-  return sign*read_djvec(combine("%s/jacks/oAmuPo-ss",ens.dirPath.c_str()),ens.T,i).symmetrized(par)/ens.spatVol;
+  return sign*ens.loadCorr(combine("%s/jacks/oAmuPo-ss",ens.dirPath.c_str()),i,"2").symmetrized(par)/ens.spatVol;
 }
 
 template <typename TV>
@@ -68,13 +68,24 @@ void permes_combo_t<TV>::load2pts(const bool forceLoad)
 	  
 	  const std::string kinTag=combine("imom1_%zu_imom2_%zu",iMom1,iMom2);
 	  
-	  corrPP[iMesKin]=load2ptsPP(iMom1,iMom2);
+	  const bool loadSymm=false;
+	  
+	  if(loadSymm)
+	    corrPP[iMesKin]=(load2ptsPP(iMom1,iMom2)+load2ptsPP(iMom2,iMom1))/2.0;
+	  else
+	    corrPP[iMesKin]=load2ptsPP(iMom1,iMom2);
 	  corrPP[iMesKin].ave_err().write(combine("%s/PP/%s.xmg",plotsPath.c_str(),kinTag.c_str()));
 	  
-	  corrA0P[iMesKin]=load2ptsAP(iMom1,iMom2,0);
+	  if(loadSymm)
+	    corrA0P[iMesKin]=(load2ptsAP(iMom1,iMom2,0)+load2ptsAP(iMom2,iMom1,0))/2.0;
+	  else
+	    corrA0P[iMesKin]=load2ptsAP(iMom1,iMom2,0);
 	  corrA0P[iMesKin].ave_err().write(combine("%s/A0P/%s.xmg",plotsPath.c_str(),kinTag.c_str()));
 	  
-	  corrA3P[iMesKin]=load2ptsAP(iMom1,iMom2,3);
+	  if(loadSymm)
+	    corrA3P[iMesKin]=(load2ptsAP(iMom1,iMom2,3)-load2ptsAP(iMom2,iMom1,3))/2.0;
+	  else
+	    corrA3P[iMesKin]=load2ptsAP(iMom1,iMom2,3);
 	  corrA3P[iMesKin].ave_err().write(combine("%s/AP3/%s.xmg",plotsPath.c_str(),kinTag.c_str()));
 	}
       
@@ -127,6 +138,8 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
       const string rangeDir=mesPlotsPath+"/range";
       mkdir(rangeDir);
       
+      grace_file_t fitTxt(rangeDir+"/range.txt");
+      
       for(size_t iMesKin=0;iMesKin<ens.indMesKin.max();iMesKin++)
 	{
 	  const vector<size_t> c=ens.indMesKin(iMesKin);
@@ -166,6 +179,13 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
 	  //! Minimal length
 	  const size_t lengthMin=ens.T/6;
 	  
+	  // //! Trim some points if allowed
+	  // const size_t nDesel=2;
+	  // if(comp.getSelectionRange(0).size()>=lengthMin+nDesel)
+	  //   comp
+	  //   .deSelectLeftermostPoints(nDesel)
+	  //   .plotSelected();
+	  
 	  //! Function to check if redo
 	  const auto checkReDo=[&comp,&lengthMin](){return comp.getSelectionRange(0).size()<lengthMin;};
 	  
@@ -197,6 +217,9 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
 	  const Range& fitRange=tint2pts[iMesKin]=comp.getSelectionRange(0);
 	  
 	  cout<<iMesKin<<" "<<ens.indMesKin.descr(iMesKin)<<": range "<<fitRange<<endl;
+	  
+	  const size_t &b=fitRange.begin,&e=fitRange.end;
+	  fitTxt.write_ave_err(iMesKin,{(b+e)/2.0,(e-b)/2.0});
 	}
       
       cout<<"Storing chosen 2pts intervals"<<endl;

@@ -93,6 +93,23 @@ struct perens_t
     return sinh(Eg[iDecKin])*(1-exp(-T*Eg[iDecKin]));
   }
   
+  //! Load a correlation keeping track of it
+  djvec_t loadCorr(const string& path,const size_t i,const char* tag=nullptr) const
+  {
+    if(tag!=nullptr)
+      {
+	const string loadedListPath=dirPath+"/loaded"+tag+"pts.txt";
+	
+	static map<string,raw_file_t> m;
+	if(m.find(loadedListPath)==m.end())
+	  m.emplace(make_pair(loadedListPath,raw_file_t{loadedListPath,"w"}));
+	
+	m[loadedListPath].printf("%s %zu\n",path.c_str(),i);
+      }
+    
+    return read_djvec(path,T,i);
+  }
+  
   //! Find X given a mass and kinematic
   double getX(const double m,const double thS,const double thT,const double th0) const
   {

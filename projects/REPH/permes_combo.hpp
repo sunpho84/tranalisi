@@ -132,6 +132,9 @@ struct permes_combo_t : public permes_t<TV>
   //! Time interval for 3pts fit
   array<array<vector<Range>,2>,2> tint3pts;
   
+  //! Common range for all three points
+  array<array<Range,2>,2> commonTint3pts;
+  
   //! Time interval for 2pts fit
   vector<Range> tint2pts;
   
@@ -142,7 +145,7 @@ struct permes_combo_t : public permes_t<TV>
   djvec_t load2ptsAP(const size_t iMoms,const size_t iMomt,const size_t iGamma);
   
   //! Load the three points correlation functions
-  djvec_t load3pts(const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0,const char* extraTag);
+  djvec_t load3pts(const string& plotDirPath,const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0,const char* extraTag);
   
   //! Computes the axial couplings
   void computeAxialPseudoCouplings(const string& mesPlotsPath);
@@ -233,19 +236,22 @@ struct permes_combo_t : public permes_t<TV>
   }
   
   //! Prepare the 3pts normalization
-  permes_combo_t& prepare3ptsNormalization();
+  permes_combo_t& prepare3ptsNormalization(const bool useAnalytic=true);
   
   //! Perform the 2pts fit
   permes_combo_t& fit2pts(const char* fitTag,const bool forceRechoose=false);
   
-  //! Chosses the time interval for 3pts
+  //! Chooses the time interval for 3pts
   permes_combo_t& choose3ptsTint(const string& mesPlotsPath,const bool forceRechoose=false);
+  
+  //! Chooses a common range for three points
+  permes_combo_t& choose3ptsTintCommon(const size_t& length=4);
   
   //! Chosses the time interval for 2pts
   permes_combo_t& choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose=false);
   
   //! Perform the 3pts fit
-  permes_combo_t& fit3pts(const char* fitTag,const bool forceRechoose=false);
+  permes_combo_t& fit3pts(const bool& useCommonRange,const char* fitTag,const bool forceRechoose=false);
   
   //! X study
   void babababab()
