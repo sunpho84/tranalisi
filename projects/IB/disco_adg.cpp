@@ -18,13 +18,14 @@ int main(int narg,char **arg)
   ifstream file(arg[1]);
   if(not file.good()) CRASH("Unable to open %s",arg[1]);
   
-  vector<double> x;
+  vector<double> x,xsh;
   vec_ave_err_t _y;
   
   double xi,yi,ei;
   while(file>>xi>>yi>>ei)
     {
       x.push_back(xi);
+      xsh.push_back(xi-ms);
       _y.push_back({yi,ei});
     }
   
@@ -32,7 +33,7 @@ int main(int narg,char **arg)
   for(size_t i=0;i<_y.size();i++)
     {
       y[i].fill_gauss(_y[i],i+123124);
-      z[i]=y[i]/sqr(x[i]-ms);
+      z[i]=y[i]/(x[i]-ms);
     }
   
   const auto minMax=minmax_element(x.begin(),x.end());
@@ -40,17 +41,26 @@ int main(int narg,char **arg)
   
   const double min=(narg<5 or (string)arg[4]=="-")?*minMax.first*0.9:strtod(arg[4],NULL);
   const double max=(narg<6 or (string)arg[5]=="-")?*minMax.second*1.1:strtod(arg[5],NULL);
-  const djack_t par=constant_fit(z,0,z.size());
+  const djvec_t pars=poly_fit(xsh,z,1);
+  djvec_t pars_true(3);
+  pars_true[0]=0.0;
+  pars_true[1]=pars[0];
+  pars_true[2]=pars[1];
   
   if(plotPath!="")
     {
       grace_file_t plot(plotPath);
       
       plot.write_vec_ave_err(x,y.ave_err(),grace::BLACK,grace::SQUARE);
-      plot.write_polygon([&par,ms](const double x)->djack_t{return par*sqr(x-ms);},min,max,grace::RED);
+      plot.write_polygon([&pars_true,ms](const double x)->djack_t{return poly_eval(pars_true,x-ms);},min,max,grace::RED);
+      
+      const djvec_t pars_par=poly_fit(x,y,2);
+      
+      plot.write_polygon([&pars_par](const double x)->djack_t{return poly_eval(pars_par,x);},min,max,grace::BLUE);
+      
     }
   
-  cout<<par.ave_err()<<endl;
+  cout<<pars.ave_err()<<endl;
   
   return 0;
 }
