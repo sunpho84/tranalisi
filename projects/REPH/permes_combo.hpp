@@ -61,6 +61,9 @@ struct permes_t
   //! Form factors for V and A
   array<TV,2> ff;
   
+  //! Quality of the point
+  array<vector<size_t>,2> quality;
+  
   //! Plot ff
   void plotFf(const string& tag="") const;
   
@@ -233,6 +236,7 @@ struct permes_combo_t : public permes_t<TV>
     resizeListOfContainers({&corrA0P,&corrA3P,&corrPP},ens.nMesKin,djvec_t{(size_t)ens.T/2+1});
     
     resizeListOfContainers({&this->ff[0],&this->ff[1]},ens.nDecKin);
+    resizeListOfContainers({&this->quality[0],&this->quality[1]},ens.nDecKin,true);
     
     for(size_t iVA=0;iVA<2;iVA++)
       for(size_t iST=0;iST<2;iST++)

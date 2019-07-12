@@ -221,11 +221,12 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 		  
 		  //! Initial value of enlarging factor
 		  double nSigEnl=2.0;
+		  double enlFact=1.8;
 		  
 		  //! Minimal length
 		  const size_t lengthMin=4;
 		  
-		  const auto recipe=[T=ens.T,&comp,&nSigEnl](const bool verb=false)
+		  const auto recipe=[T=ens.T,&comp,&enlFact,&nSigEnl](const bool verb=false)
 				     {
 				       double nSigSel=1;
 				       comp
@@ -233,7 +234,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 					 .setRangeToConsiderByFraction(1.0/5)
 					 .selectClosestCompatiblePointWithinNsigma(T/4,nSigSel)
 					 .plotSelected()
-					 .selectEnlargingError(1.8,nSigEnl)
+					 .selectEnlargingError(enlFact,nSigEnl)
 					 .plotSelected()
 					 .mergeSelectionByDistanceSize()
 					 .plotSelected()
@@ -254,6 +255,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 		  while(comp.getSelectionRange(0).size()<lengthMin)
 		    {
 		      nSigEnl+=1.0;
+		      enlFact*=1.2;
 		      
 		      cout<<"WARNING, compatibility range too short, "<<comp.getSelectionRange(0)<<" when at least "<<lengthMin<<" needed, enlarging of "<<nSigEnl<<endl;
 		      
@@ -405,7 +407,9 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const bool& useCommonRange,const
   if(file_exists(ffPath) and not forceRechoose)
     {
       cout<<"Loading stored form factors"<<endl;
-      raw_file_t(ffPath,"r").bin_read(ff);
+      raw_file_t file(ffPath,"r");
+      file.bin_read(ff);
+      file.bin_read(this->quality);
     }
   else
     {
@@ -420,6 +424,8 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const bool& useCommonRange,const
 	      djack_t H=0.0;
 	      djvec_t yTot(ens.T/2+1);
 	      yTot=0.0;
+	      
+	      this->quality[iVA][iDecKin]=true;
 	      
 	      for(size_t iST=0;iST<2;iST++)
 		{
@@ -447,6 +453,9 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const bool& useCommonRange,const
 		  
 		  const size_t nDof=tint.size()-1;
 		  cout<<"Chi2 "<<plotFile<<": "<<smart_print(ch2)<<" / "<<nDof<<endl;
+		  const double q=ch2.ave()/nDof;
+		  
+		  if(q>2.0) this->quality[iVA][iDecKin]=false;
 		}
 	      
 	      yTot.ave_err().write(combine("%s/c%s_%s.xmg",mesPlotsPath.c_str(),VA_tag[iVA],ens.decKinTag(iDecKin).c_str()));
@@ -466,7 +475,9 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const bool& useCommonRange,const
 	    }
       
       cout<<"Storing form factors"<<endl;
-      raw_file_t(ffPath,"w").bin_write(ff);
+      raw_file_t file(ffPath,"w");
+      file.bin_write(ff);
+      file.bin_write(this->quality);
     }
   
   return *this;
@@ -487,22 +498,26 @@ void permes_t<TV>::plotFf(const string& tag) const
       
       ffPlot.set_line_type(grace::line_type_t::STRAIGHT_LINE);
       ffPlot.set_color_scheme({RED,BLUE,GREEN4,VIOLET,ORANGE});
-      
-      for(size_t iMom1=0;iMom1<ens.nMoms;iMom1++)
-	for(size_t iMom2=0;iMom2<ens.nMoms;iMom2++)
-	  {
-	    for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	      {
-		const vector<size_t> c=ens.indDecKin(iDecKin);
-		
-		if(ens.considerDec[iDecKin] and c[1]==iMom1 && c[2]==iMom2)
-		  {
-		    ffPlot<<"# "<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<"\n";
-		    ffPlot.write_ave_err(X[iDecKin].ave(),ff[iVA][iDecKin].ave_err());
-		  }
-	      }
-	    ffPlot.new_data_set();
-	  }
+
+      for(size_t toC=0;toC<2;toC++)
+	for(size_t iMom1=0;iMom1<ens.nMoms;iMom1++)
+	  for(size_t iMom2=0;iMom2<ens.nMoms;iMom2++)
+	    {
+	      if(toC==0)
+		ffPlot.set_transparency(0.4);
+	      
+	      for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+		{
+		  const vector<size_t> c=ens.indDecKin(iDecKin);
+		  
+		  if(ens.considerDec[iDecKin] and c[1]==iMom1 and c[2]==iMom2 and toC==quality[iVA][iDecKin])
+		    {
+		      ffPlot<<"# "<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<"\n";
+		      ffPlot.write_ave_err(X[iDecKin].ave(),ff[iVA][iDecKin].ave_err());
+		    }
+		}
+	      ffPlot.new_data_set();
+	    }
     }
 }
 

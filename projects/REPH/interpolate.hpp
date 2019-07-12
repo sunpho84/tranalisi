@@ -124,17 +124,25 @@ permes_t<dbvec_t> interpolate(const perens_t& ens,const string& mesName,const ve
   if(not interpLoad)
     {
       cout<<"Interpolating"<<endl;
-
+      
 #define INTERP(A)							\
       out.A=interpolate(m1,m2,[](const auto& D){return D.A;},data,j,m1phys,m2phys)
-  
+      
       INTERP(E);
       INTERP(X);
       INTERP(ff[0]);
       INTERP(ff[1]);
     }
 #undef INTERP
-
+  
+  for(size_t iVA=0;iVA<2;iVA++)
+    {
+      out.quality[iVA].resize(ens.nDecKin,true);
+      for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
+	for(auto& d : data)
+	  out.quality[iVA][iDecKin]&=d.quality[iVA][iDecKin];
+    }
+  
   cout<<(interpLoad?"Reading":"Writing")<<" interpolated data"<<endl;
   //! Input or output file
   raw_file_t file(dataPath,interpLoad?"r":"w");
