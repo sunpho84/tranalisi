@@ -114,20 +114,26 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
       
       res.emplace_back(ens,mesName,iMs,iMt,eS,eT);
       
-      for(size_t useCommonRange=0;useCommonRange<2;useCommonRange++)
-	{
-	  const char tag[2][20]={"selfChosenTint","commonFitRange"};
-	  
-	  res[iMesCombo]
-	    .fit2pts("selfChosenTint")
-	    .prepare3ptsNormalization()
-	    .fit3pts(useCommonRange,tag[useCommonRange])
-	    .plotFf(tag[useCommonRange]);
-	  
-	  res[iMesCombo].printKin();
-	}
+      const char timeDepEnTag[2][20]={"2ptsEn","EffMass"};
+      const char rangeTag[2][20]={"selfChosenTint","commonFitRange"};
       
-      cout<<endl;
+      for(size_t timeDependentEnergy=0;timeDependentEnergy<2;timeDependentEnergy++)
+	for(size_t useCommonRange=0;useCommonRange<2;useCommonRange++)
+	  {
+	    string totTag=combine("%s_%s",rangeTag[useCommonRange],timeDepEnTag[timeDependentEnergy]);
+	    
+	    const bool DO_NOT_USE_ANALYTIC=true;
+	    
+	    res[iMesCombo]
+	      .fit2pts("selfChosenTint")
+	      .prepare3ptsNormalization(DO_NOT_USE_ANALYTIC,timeDependentEnergy)
+	      .fit3pts(useCommonRange,totTag.c_str())
+	      .plotFf(totTag);
+	    
+	    res[iMesCombo].printKin();
+	    
+	    cout<<endl;
+	  }
     }
   
   return res;

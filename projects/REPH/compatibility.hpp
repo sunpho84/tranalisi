@@ -146,6 +146,19 @@ public:
     return Ch2Corr;
   }
   
+  //! Uncorrelated chi2 of the fit performed between tMin and tMax
+  double ch2UncorrFit(const Range& range) const
+  {
+    const size_t d=range.size();
+    if(d==0) CRASH("Null range");
+    
+    double Ch2Uncorr=0;
+    for(size_t t=range.begin;t<=range.end;t++)
+      Ch2Uncorr+=sqr(aveErr[t].ave()/aveErr[t].err());
+    
+    return Ch2Uncorr;
+  }
+  
   //! Check that the range is sensible
   void verifyRange() const
   {

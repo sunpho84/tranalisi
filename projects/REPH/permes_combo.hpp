@@ -116,6 +116,9 @@ struct permes_combo_t : public permes_t<TV>
   //! Effective mass
   vector<djvec_t> eEff;
   
+  //! Effective coupling
+  vector<djvec_t> zEff;
+  
   //! Difference of energies between initial and final state
   djvec_t dEdec;
   
@@ -224,7 +227,7 @@ struct permes_combo_t : public permes_t<TV>
     eT(eT)
   {
     resizeListOfContainers({&ZP,&ZA,&fP,&fPbare,&this->E},ens.nMesKin);
-    resizeListOfContainers({&eEff},ens.nMesKin);
+    resizeListOfContainers({&eEff,&zEff},ens.nMesKin);
     resizeListOfContainers({&tint2pts},ens.nMesKin);
     
     resizeListOfContainers({&corrA0P,&corrA3P,&corrPP},ens.nMesKin,djvec_t{(size_t)ens.T/2+1});
@@ -246,13 +249,13 @@ struct permes_combo_t : public permes_t<TV>
   }
   
   //! Prepare the 3pts normalization
-  permes_combo_t& prepare3ptsNormalization(const bool useAnalytic=true);
+  permes_combo_t& prepare3ptsNormalization(const bool useAnalytic,const bool& timeDependentEnergy);
   
   //! Perform the 2pts fit
   permes_combo_t& fit2pts(const char* fitTag,const bool forceRechoose=false);
   
   //! Chooses the time interval for 3pts
-  permes_combo_t& choose3ptsTint(const string& mesPlotsPath,const bool forceRechoose=false);
+  permes_combo_t& choose3ptsTint(const string& mesPlotsPath,const char* fitTag,const bool forceRechoose=false);
   
   //! Chooses a common range for three points
   permes_combo_t& choose3ptsTintCommon(const size_t& length=4);

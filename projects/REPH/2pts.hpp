@@ -104,7 +104,10 @@ void permes_combo_t<TV>::load2pts(const bool forceLoad)
     }
   
   for(size_t iMesKin=0;iMesKin<ens.indMesKin.max();iMesKin++)
-    eEff[iMesKin]=effective_mass(corrPP[iMesKin]);
+    {
+      eEff[iMesKin]=effective_mass(corrPP[iMesKin]);
+      zEff[iMesKin]=sqrt(effective_squared_coupling(corrPP[iMesKin],eEff[iMesKin],ens.T/2));
+    }
 }
 
 template <typename TV>
