@@ -50,7 +50,8 @@ void grace_file_t::close_cur_set()
       write_prop("errorbar linewidth "+to_string(errorbar_linewidth));
       write_prop("errorbar riser linewidth "+to_string(errorbar_riser_linewidth));
       //transparency
-      (*this)<<"#QTGRACE_ADDITIONAL_PARAMETER: G 0 S "<<iset<<" ALPHA_CHANNELS {"<<transparency<<";"<<transparency<<";255;255;255;255}"<<endl;
+      const unsigned short int& t=transparency;
+      (*this)<<"#QTGRACE_ADDITIONAL_PARAMETER: G 0 S "<<iset<<" ALPHA_CHANNELS {"<<t<<";"<<t<<";"<<t<<";"<<t<<";"<<t<<";"<<t<<"}"<<endl;
       //write legend
       write_prop("legend \""+legend+"\"");
       //point to the next set

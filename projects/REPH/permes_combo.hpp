@@ -140,16 +140,14 @@ struct permes_combo_t : public permes_t<TV>
   //! Z component of axial current
   vector<djvec_t> corrA3P;
   
-  enum{insOnS,insOnT};
-  
-  //! Decay correlators for V and A, with the insertion on S or T
-  array<array<vector<djvec_t>,2>,2> corrPX;
+  //! Decay correlators for V and A
+  array<vector<djvec_t>,2> corrPX;
   
   //! Time interval for 3pts fit
-  array<array<vector<Range>,2>,2> tint3pts;
+  array<vector<Range>,2> tint3pts;
   
   //! Common range for all three points
-  array<array<Range,2>,2> commonTint3pts;
+  array<Range,2> commonTint3pts;
   
   //! Time interval for 2pts fit
   vector<Range> tint2pts;
@@ -239,11 +237,10 @@ struct permes_combo_t : public permes_t<TV>
     resizeListOfContainers({&this->quality[0],&this->quality[1]},ens.nDecKin,true);
     
     for(size_t iVA=0;iVA<2;iVA++)
-      for(size_t iST=0;iST<2;iST++)
-	{
-	  resizeListOfContainers({&corrPX[iVA][iST]},ens.nDecKin,djvec_t{(size_t)ens.T/2+1});
-	  resizeListOfContainers({&tint3pts[iVA][iST]},ens.nDecKin,Range{0,0});
-	}
+      {
+	resizeListOfContainers({&corrPX[iVA]},ens.nDecKin,djvec_t{(size_t)ens.T/2+1});
+	resizeListOfContainers({&tint3pts[iVA]},ens.nDecKin,Range{0,0});
+      }
     
     resizeListOfContainers({&dEdec,&PKdec,&this->X},ens.nDecKin);
     
