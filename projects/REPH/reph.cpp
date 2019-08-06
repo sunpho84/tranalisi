@@ -259,7 +259,7 @@ int main(int narg,char **arg)
 							    {
 							      const map<string,vector<double>> am=getMassList(e);
 							      
-							      inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn));
+							      inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn,totTag));
 							      inte.back().plotFf();
 							    });
 					   
