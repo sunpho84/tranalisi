@@ -362,9 +362,25 @@ public:
   //! Deselect leftermost point
   CompatibilityRangeFinder& deSelectLeftermostPoints(size_t nDesel)
   {
-    if(verbose) cout<<"Deselecting "<<nDesel<<" points"<<endl;
+    if(verbose) cout<<"Deselecting "<<nDesel<<" points on the left"<<endl;
     
     for(size_t t=tSearchMin;t<tSearchMax and nDesel!=0;t++)
+      if(selected[t])
+	{
+	  selected[t]=false;
+	  nDesel--;
+	}
+    
+    return
+      *this;
+  }
+  
+  //! Deselect rightermost point
+  CompatibilityRangeFinder& deSelectRightermostPoints(size_t nDesel)
+  {
+    if(verbose) cout<<"Deselecting "<<nDesel<<" points on the right"<<endl;
+    
+    for(size_t t=tSearchMax;t<tSearchMin and nDesel!=0;t--)
       if(selected[t])
 	{
 	  selected[t]=false;

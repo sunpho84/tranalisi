@@ -250,7 +250,7 @@ struct permes_combo_t : public permes_t<TV>
   }
   
   //! Prepare the 3pts normalization
-  permes_combo_t& prepare3ptsNormalization(const bool useAnalytic,const bool& timeDependentEnergy);
+  permes_combo_t& prepare3ptsNormalization(const bool useAnalytic,const bool& timeDependentEnergy,const string& totTag);
   
   //! Perform the 2pts fit
   permes_combo_t& fit2pts(const char* fitTag,const bool forceRechoose=false);

@@ -124,10 +124,10 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
 }
 
 template <typename TV>
-permes_combo_t<TV>& permes_combo_t<TV>::prepare3ptsNormalization(const bool useAnalytic,const bool& timeDependentEnergy)
+permes_combo_t<TV>& permes_combo_t<TV>::prepare3ptsNormalization(const bool useAnalytic,const bool& timeDependentEnergy,const string& totTag)
 {
   //! Main path
-  const string plotDirPath=ens.dirPath+"/plots/"+mesTag+"/3pts_normalization/";
+  const string plotDirPath=ens.dirPath+"/plots/"+mesTag+"/3pts_normalization_"+totTag+"/";
   if(not dir_exists(plotDirPath))
     mkdir(plotDirPath);
   
@@ -244,6 +244,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 				    if(comp.getSelectionRange(0).size()>=lengthMin+nDesel)
 				      comp
 					.deSelectLeftermostPoints(nDesel)
+					.deSelectRightermostPoints(nDesel)
 					.plotSelected();
 				  };
 		

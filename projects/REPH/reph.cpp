@@ -118,7 +118,7 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes,const si
       
       res[iMesCombo]
 	.fit2pts("selfChosenTint")
-	.prepare3ptsNormalization(DO_NOT_USE_ANALYTIC,timeDependentEnergy)
+	.prepare3ptsNormalization(DO_NOT_USE_ANALYTIC,timeDependentEnergy,totTag)
 	.fit3pts(useCommonRange,totTag.c_str())
 	.plotFf(totTag);
       
@@ -236,6 +236,8 @@ int main(int narg,char **arg)
 	    {
 	      const double& mPhys=get<3>(mesComposition);
 	      
+	      
+	      
 	      for(size_t timeDependentEnergy=0;timeDependentEnergy<2;timeDependentEnergy++)
 		for(size_t useCommonRange=0;useCommonRange<2;useCommonRange++)
 		  {
@@ -315,11 +317,11 @@ int main(int narg,char **arg)
 								  const double M=((dboot_t)(inte[iens].E[0]*aInv)).ave();
 								  const double xMax=inte[iens].xMax()[0];
 								  
-								  plot.write_polygon([&](const double x) -> dboot_t{return ansatzA(pFit,M,a2,x);},0,xMax);
-								  plot.write_polygon([&](const double x) -> dboot_t{return ansatzA(pFit,mPhys,0,x);},0,xMax);
+								  plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,M,a2,x);},0,xMax);
+								  plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,0,x);},0,xMax);
 								});
 					       
-					       cout<<"f: "<<ansatzA(pFit,mPhys,0.0,0.0).ave_err()<<endl;
+					       cout<<"f: "<<ansatz(iVA,pFit,mPhys,0.0,0.0).ave_err()<<endl;
 					     }
 					 });
 		  }
