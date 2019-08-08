@@ -236,7 +236,12 @@ int main(int narg,char **arg)
 	    {
 	      const double& mPhys=get<3>(mesComposition);
 	      
+	      const index_t indSyst({{"tDepEn",2},{"comRang",2},{"inputAn",ninput_an}});
 	      
+	      const size_t nFitPars=4;
+	      array<vector<dbvec_t>,2> storePars;
+	      for(size_t iVA=0;iVA<2;iVA++)
+		storePars[iVA]=vector<dbvec_t>(indSyst.max(),dbvec_t(nFitPars));
 	      
 	      for(size_t timeDependentEnergy=0;timeDependentEnergy<2;timeDependentEnergy++)
 		for(size_t useCommonRange=0;useCommonRange<2;useCommonRange++)
@@ -250,6 +255,7 @@ int main(int narg,char **arg)
 		    // Loop over analysis
 		    ultimateAnalysisLoop([&](const size_t& inputAn)
 					 {
+					   /// Method 1 or 2
 					   const size_t iM12=inputAn/4;
 					   
 					   //! Interpolated data for each ensemble
@@ -264,13 +270,13 @@ int main(int narg,char **arg)
 							    });
 					   
 					   //fit
-					   for(int iVA=0;iVA<2;iVA++)
+					   for(size_t iVA=0;iVA<2;iVA++)
 					     {
 					       cout<<"Fitting "<<VA_tag[iVA]<<endl;
 					       
-					       dbvec_t pFit(4);
+					       dbvec_t pFit(nFitPars);
 					       boot_fit_t fit;
-					       for(size_t i=0;i<4;i++)
+					       for(size_t i=0;i<nFitPars;i++)
 						 fit.add_fit_par(pFit[i],combine("p[%zu]",i),0.0,0.1);
 					       
 					       ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
@@ -300,8 +306,7 @@ int main(int narg,char **arg)
 					       
 					       ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 								{
-								  const string dirPath=e.dirPath+"/plots/"+inte[iens].mesTag+"_"+totTag;
-								  mkdir(dirPath);
+								  const string dirPath=e.dirPath+"/plots/"+inte[iens].mesTag;
 								  
 								  grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+"_"+totTag+"_Fit.xmg");
 								  plot.set_no_line();
@@ -321,12 +326,50 @@ int main(int narg,char **arg)
 								  plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,0,x);},0,xMax);
 								});
 					       
-					       cout<<"f: "<<ansatz(iVA,pFit,mPhys,0.0,0.0).ave_err()<<endl;
+					       const dboot_t cph=ansatz(iVA,pFit,mPhys,0.0,0.0);
+					       cout<<"f: "<<cph.ave_err()<<endl;
+					       
+					       //! Store for future uses
+					       storePars[iVA][indSyst({useCommonRange,timeDependentEnergy,inputAn})]=pFit;
 					     }
 					 });
 		  }
+	      
+	      /////////////////////////////////////////////////////////////////
+	      
+	      // Total systematics analysis
+	      
+	      //! Directory
+	      const string dirPath="plots/"+get<0>(mesComposition);
+	      mkdir(dirPath);
+	      
+	      for(size_t iVA=0;iVA<2;iVA++)
+		{
+		  grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+".xmg");
+		  plot.set_no_line();
+		  
+		  const double xMax=1.0;
+		  const vector<double> x=vector_up_to(xMax,0.0,0.05);
+		  vec_ave_err_t y(x.size());
+		  
+		  for(size_t i=0;i<x.size();i++)
+		    {
+		      dbvec_t temp(indSyst.max());
+		      for(size_t iSyst=0;iSyst<indSyst.max();iSyst++)
+			temp[iSyst]=ansatz(iVA,storePars[iVA][iSyst],mPhys,0.0,x[i]);
+		      
+		      const syst_t s=perform_analysis(temp,indSyst);
+		      
+		      y[i].ave()=s.ave;
+		      y[i].err()=s.tot;
+		    }
+		  
+		  plot.write_polygon(x,y);
+		}
+	      
+	      // plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,0,x);},0,xMax);
+	      //perform_analysis(fTest,iTest,"ciccio");
 	    });
-    
   /*
     - * loop on all physical mesons
     - | * loop on all ensembles
