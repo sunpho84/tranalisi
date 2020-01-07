@@ -215,6 +215,11 @@ struct perens_t
     resizeListOfContainers({&symmOfDec,&iMesKinOfDecKin},indDecKin.max(),-1);
     resizeListOfContainers({&Eg,&kDec,&kHatDec},indDecKin.max());
     
+    ofstream kinematics(dirPath+"/kinematics.txt");
+    kinematics.precision(6);
+    kinematics<<std::fixed;
+    kinematics<<"Moms\tMomt\tMom0\tk\t\tp"<<endl;
+    
     for(size_t iDecKin=0;iDecKin<indDecKin.max();iDecKin++)
       {
      	const vector<size_t> cDec=indDecKin(iDecKin);
@@ -229,6 +234,10 @@ struct perens_t
 	
     	Eg[iDecKin]=2*asinh(fabs(kHatDec[iDecKin])/2);
 	iMesKinOfDecKin[iDecKin]=indMesKin({iMoms,iMom0});
+	
+	const vector<size_t> c=indMesKin(iMesKinOfDecKin[iDecKin]);
+	double pMes=2*M_PI*(moms[c[1]][2]-moms[c[0]][2])/L;
+	kinematics<<iMoms<<"\t"<<iMomt<<"\t"<<iMom0<<"\t"<<kDec[iDecKin]<<"\t"<<pMes<<endl;
       }
   }
   

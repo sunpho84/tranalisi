@@ -161,7 +161,9 @@ permes_combo_t<TV>& permes_combo_t<TV>::prepare3ptsNormalization(const bool useA
 	    const djack_t& Z=useAnalytic?ZP[0]:ZP[iMesKin];
 	    //const djack_t& Z=ZP[iMesKin];
 	    //cout<<t<<" "<<smart_print(A.ave_err())<<" "<<smart_print(B.ave_err())<<endl;
-	    normaliz[iDecKin][t]=4*Energy*EgT/(Z*exp(-t*W-(ens.T/2-t)*Eg));
+	    normaliz[iDecKin][t]=2*Energy/(Z*exp(-t*W-(ens.T/2-t)*Eg));
+	    if(oldNormalization)
+	      normaliz[iDecKin][t]*=2*EgT;
 	    // cout<<"  "<<ens.indDecKin.descr(iDecKin)<<"W: "<<W.ave_err()<<", Eg: "<<Eg<<", Zp: "<<Z.ave_err()<<", n["<<t<<"]: "<<normaliz[iDecKin][t].ave_err()<<endl;
 	  }
 	
@@ -403,9 +405,10 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const bool& useCommonRange,const
   string ffPath=milledPath()+"/ff_"+fitTag+".dat";
   if(file_exists(ffPath) and not forceRechoose)
     {
-      cout<<"Loading stored form factors"<<endl;
+      cout<<"Loading stored form factors and mel"<<endl;
       raw_file_t file(ffPath,"r");
       file.bin_read(ff);
+      file.bin_read(mel);
       file.bin_read(this->quality);
     }
   else
@@ -447,21 +450,24 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const bool& useCommonRange,const
 	      
 	      const double eps=1/sqrt(2.0);
 	      
+	      mel[iVA][iDecKin]=H/eps;
+	      
 	      if(iVA==1)
 		{
 		  const djack_t& M=E[0];
 		  const djack_t& PK=PKdec[iDecKin];
 		  const djack_t div=fPbare[0]*(eT-eS);
 		  
-		  ff[iVA][iDecKin]=M*(H/eps-div)/PK;
+		  ff[iVA][iDecKin]=M*(mel[iVA][iDecKin]-div)/PK;
 		}
 	      else
-		ff[iVA][iDecKin]=H/eps*E[iMesKin]/(ens.Eg[iDecKin]*ens.pMes[iMesKin]-E[iMesKin]*ens.kHatDec[iDecKin]);
+		ff[iVA][iDecKin]=mel[iVA][iDecKin]*E[iMesKin]/(ens.Eg[iDecKin]*ens.pMes[iMesKin]-E[iMesKin]*ens.kHatDec[iDecKin]);
 	    }
       
-      cout<<"Storing form factors"<<endl;
+      cout<<"Storing matrix element and ff"<<endl;
       raw_file_t file(ffPath,"w");
       file.bin_write(ff);
+      file.bin_write(mel);
       file.bin_write(this->quality);
     }
   
