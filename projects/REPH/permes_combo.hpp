@@ -58,6 +58,12 @@ struct permes_t
   
   permes_t(const perens_t& ens,const string& mesTag) : ens(ens),mesTag(mesTag){}
   
+  //! Matrix elements for V and A
+  array<TV,2> mel;
+  
+  //! Matrix elements as extracted from ratio of correlators
+  array<TV,2> melRat;
+  
   //! Form factors for V and A
   array<TV,2> ff;
   
@@ -75,7 +81,11 @@ struct permes_t
     out.E=bvec_from_jvec(jack_of_boot,in.E);
     out.X=bvec_from_jvec(jack_of_boot,in.X);
     for(int i=0;i<2;i++)
-      out.ff[i]=bvec_from_jvec(jack_of_boot,in.ff[i]);
+      {
+	out.ff[i]=bvec_from_jvec(jack_of_boot,in.ff[i]);
+	out.mel[i]=bvec_from_jvec(jack_of_boot,in.mel[i]);
+	out.melRat[i]=bvec_from_jvec(jack_of_boot,in.melRat[i]);
+      }
     
     return out;
   }
@@ -87,6 +97,8 @@ struct permes_combo_t : public permes_t<TV>
 {
   using permes_t<TV>::ens;
   using permes_t<TV>::ff;
+  using permes_t<TV>::mel;
+  using permes_t<TV>::melRat;
   using permes_t<TV>::E;
   using permes_t<TV>::X;
   using permes_t<TV>::milledPath;
@@ -192,12 +204,19 @@ struct permes_combo_t : public permes_t<TV>
     for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
       if(ens.considerDec[iDecKin])
 	{
+	  const int iMesKin=ens.iMesKinOfDecKin[iDecKin];
+	  
 	  out<<ens.indDecKin.descr(iDecKin)<<endl;
 	  out<<" X: "<<X[iDecKin].ave_err()<<endl;
+	  out<<" Pmes_z: "<<ens.pMes[iMesKin]<<endl;
+	  out<<" Khat_z: "<<ens.kHatDec[iDecKin]<<endl;
 	  out<<" PK: "<<PKdec[iDecKin].ave_err()<<endl;
+	  out<<" Eg: "<<ens.Eg[iDecKin]<<endl;
 	  out<<" EgT: "<<ens.EgT(iDecKin)<<endl;
 	  out<<endl;
 	}
+    
+    out<<"/////////////////////////////////////////////////////////////////"<<endl;
     
     for(size_t iMesKin=0;iMesKin<ens.nMesKin;iMesKin++)
       {
@@ -233,7 +252,7 @@ struct permes_combo_t : public permes_t<TV>
     
     resizeListOfContainers({&corrA0P,&corrA3P,&corrPP},ens.nMesKin,djvec_t{(size_t)ens.T/2+1});
     
-    resizeListOfContainers({&this->ff[0],&this->ff[1]},ens.nDecKin);
+    resizeListOfContainers({&this->ff[0],&this->ff[1],&this->mel[0],&this->mel[1],&this->melRat[0],&this->melRat[1]},ens.nDecKin);
     resizeListOfContainers({&this->quality[0],&this->quality[1]},ens.nDecKin,true);
     
     for(size_t iVA=0;iVA<2;iVA++)
@@ -263,6 +282,9 @@ struct permes_combo_t : public permes_t<TV>
   
   //! Chosses the time interval for 2pts
   permes_combo_t& choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose=false);
+  
+  //! Gets the correlation ratio
+  TV getCorrRat(const int iVA,const size_t iDecKin);
   
   //! Perform the 3pts fit
   permes_combo_t& fit3pts(const bool& useCommonRange,const char* fitTag,const bool forceRechoose=false);

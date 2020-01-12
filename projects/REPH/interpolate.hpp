@@ -126,12 +126,15 @@ permes_t<dbvec_t> interpolate(const perens_t& ens,const string& mesName,const ve
       cout<<"Interpolating"<<endl;
       
 #define INTERP(A)							\
-      out.A=interpolate(m1,m2,[](const auto& D){return D.A;},data,j,m1phys,m2phys)
+      out.A=interpolate(m1,m2,[=](const auto& D){return D.A;},data,j,m1phys,m2phys)
       
       INTERP(E);
       INTERP(X);
-      INTERP(ff[0]);
-      INTERP(ff[1]);
+      for(int i=0;i<2;i++)
+	{
+	  INTERP(ff[i]);
+	  INTERP(mel[i]);
+	}
     }
 #undef INTERP
   
@@ -147,7 +150,7 @@ permes_t<dbvec_t> interpolate(const perens_t& ens,const string& mesName,const ve
   //! Input or output file
   raw_file_t file(dataPath,interpLoad?"r":"w");
   
-  for(auto& q: {&out.E,&out.X,&out.ff[0],&out.ff[1]})
+  for(auto& q: {&out.E,&out.X,&out.ff[0],&out.ff[1],&out.mel[0],&out.mel[1]})
     {
       if(interpLoad)
 	{
