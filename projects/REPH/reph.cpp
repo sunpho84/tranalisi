@@ -185,8 +185,6 @@ void decKinLoop(const perens_t& e,const F& f)
 template <typename TV>
 auto ansatzA(const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
-  //using T=std::remove_reference_t<decltype(p[0])>;
-  
   return M*(p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2)+p[4]*a2/x;
 }
 
@@ -194,8 +192,6 @@ auto ansatzA(const TV& p,const double M,const double a2,const double x) -> std::
 template <typename TV>
 auto ansatzV(const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
-  //using T=std::remove_reference_t<decltype(p[0])>;
-  
   return M*(p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2)+p[4]*a2/x;
 }
 
@@ -231,8 +227,6 @@ int main(int narg,char **arg)
     }
   
   const vector<perens_t> ens=readEnsList();
-  
-  // const size_t nMes=mesonList.size();
   
   mesonLoop([&](const meson_t& mesComposition)
 	    {
