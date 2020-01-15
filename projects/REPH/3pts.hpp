@@ -265,51 +265,82 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 	}
     }
   
-  const int tmin=2;
-  const int tmax=ens.T/2-2;
+  const int tmin=1;
+  const int tmax=ens.T/2-3;
+  
+  const size_t nFitPars=10;
+  djvec_t pFit(nFitPars);
+  jack_fit_t fit;
+  //Z1
+  fit.add_fit_par(pFit[0],"p[0]",1e-2,0.1);
+  fit.add_fit_par(pFit[1],"p[1]",0,0.1);
+  //M1
+  fit.add_fit_par_limits(pFit[2],"p[2]",0.7,0.1,0.1,2);
+  fit.add_fit_par(pFit[3],"p[3]",0,0.1);
+  //Z2
+  fit.add_fit_par(pFit[4],"p[4]",-0.4,0.1);
+  fit.add_fit_par(pFit[5],"p[5]",0,0.1);
+  //M2
+  fit.add_fit_par(pFit[6],"p[6]",0.4,0.1);
+  fit.add_fit_par(pFit[7],"p[7]",0,0.1);
+  //C
+  fit.add_fit_par(pFit[8],"p[8]",0,0.1);
+  fit.add_fit_par(pFit[9],"p[9]",0,0.1);
+  
+  // for(int i=0;i<10;i++)
+  //   fit.fix_par(i);
   
   for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
     {
       const vector<size_t> c=ens.indDecKin(iDecKin);
       if(c[1]!=c[2])
 	{
-	  const size_t nFitPars=5;
-	  djvec_t pFit(nFitPars);
-	  jack_fit_t fit;
-	  for(size_t i=0;i<nFitPars;i++)
-	    {
-	      if(i==1 or i==3) fit.add_fit_par_limits(pFit[i],combine("p[%zu]",i),0,0.1,0,1);
-	      else             fit.add_fit_par(pFit[i],combine("p[%zu]",i),0,0.1);
-	      
-	      if(i==0 or i==1) fit.fix_par(i);
-	    }
-	  
 	  const djvec_t r=getCorrRat(1,iDecKin)/X[iDecKin];
 	  
 	  for(int t=tmin;t<tmax;t++)
 	    fit.add_point(r[t],[=](const vector<double>& p,int ijack)->double
 			       {
+				 const double x=X[iDecKin][ijack];
 				 return
-				   p[0]*exp(-p[1]*t)+
-				   p[2]*exp(-p[3]*(ens.T/2-t))+
-				   p[4];
+				   (p[0]+p[1]*x)/x*exp(-(p[2]+p[3]*x)*t)+
+				   (p[4]+p[5]*x)/x*exp(-(p[6]+p[7]*x)*(ens.T/2-t))+
+				   p[8]+p[9]*x;
 			       });
+	}
+    }
+  
+  fit.fit();
 	  
-	  fit.fit();
-	  
+  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+    {
+      const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
+      
+      const vector<size_t> c=ens.indDecKin(iDecKin);
+      if(c[1]!=c[2])
+	{
 	  const string outRangePath=combine("%s/d%s_%s.xmg",rangeDir.c_str(),VA_tag[1],ens.decKinTag(iDecKin).c_str());
 	  const vector<size_t> c=ens.indDecKin(iDecKin);
 	  
+	  const djvec_t r=getCorrRat(1,iDecKin)/X[iDecKin];
 	  grace_file_t plot(outRangePath);
+	  plot.set_title(combine("x: %lg, p: %lg, k: %lg",X[iDecKin].ave(),ens.pMes[iMesKin],ens.kHatDec[iMesKin]));
+	  
 	  plot.write_vec_ave_err(r.ave_err());
 	  
-	  plot.write_polygon([=](const double x) -> djack_t
+	  plot.write_polygon([=](const double t) -> djack_t
 			     {
-			       return pFit[0]*exp(-pFit[1]*x)+pFit[2]*exp(-pFit[3]*(ens.T/2-x))+pFit[4];
+			       const djvec_t& p=pFit;
+			       const djack_t& x=X[iDecKin];
+			       
+			       return
+				 (p[0]+p[1]*x)/x*exp(-(p[2]+p[3]*x)*t)+
+				 (p[4]+p[5]*x)/x*exp(-(p[6]+p[7]*x)*(ens.T/2-t))+
+				 p[8]+p[9]*x;
 			     },tmin,tmax);
-	  for(size_t i=0;i<5;i++) cout<<"par"<<i<<" "<<X[iDecKin]<<" "<<pFit[i].ave_err()<<endl;
 	}
     }
+  
+  cout<<pFit.ave_err()<<endl;
   
   CRASH("");
   
