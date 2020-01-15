@@ -120,7 +120,7 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes,const si
       
       res[iMesCombo]
 	.fit2pts("selfChosenTint")
-	.prepare3ptsNormalization(USE_ANALYTIC,timeDependentEnergy,totTag)
+	.prepareKinematics(USE_ANALYTIC)
 	.fit3pts(useCommonRange,totTag.c_str())
 	.plotFf(totTag);
       

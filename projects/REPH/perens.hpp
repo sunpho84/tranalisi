@@ -224,7 +224,7 @@ struct perens_t
       {
      	const vector<size_t> cDec=indDecKin(iDecKin);
 	const size_t iMoms=cDec[0],iMomt=cDec[1],iMom0=cDec[2];
-	considerDec[iDecKin]=(iMomt!=iMom0) or (oldNormalization==0);
+	considerDec[iDecKin]=(iMomt!=iMom0);
 	hasSymmDec[iDecKin]=(iMoms==iMom0);
 	if(hasSymmDec[iDecKin])
 	  symmOfDec[iDecKin]=indDecKin({iMomt,iMoms,iMomt});

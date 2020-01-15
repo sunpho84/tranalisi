@@ -46,23 +46,22 @@ struct permes_t
     T m;
     bool isFirst=true;
     for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
-      if(ens.considerDec[iDecKin])
-	if(isFirst or m.ave()<X[iDecKin].ave())
-	  {
-	    isFirst=false;
-	    m=X[iDecKin];
-	  }
+      if(isFirst or m.ave()<X[iDecKin].ave())
+	{
+	  isFirst=false;
+	  m=X[iDecKin];
+	}
     
     return m;
   }
   
   permes_t(const perens_t& ens,const string& mesTag) : ens(ens),mesTag(mesTag){}
   
-  //! Matrix elements for V and A
-  array<TV,2> mel;
+  // //! Matrix elements for V and A
+  // array<TV,2> mel;
   
-  //! Matrix elements as extracted from ratio of correlators
-  array<TV,2> melRat;
+  // //! Matrix elements as extracted from ratio of correlators
+  // array<TV,2> melRat;
   
   //! Form factors for V and A
   array<TV,2> ff;
@@ -83,8 +82,8 @@ struct permes_t
     for(int i=0;i<2;i++)
       {
 	out.ff[i]=bvec_from_jvec(jack_of_boot,in.ff[i]);
-	out.mel[i]=bvec_from_jvec(jack_of_boot,in.mel[i]);
-	out.melRat[i]=bvec_from_jvec(jack_of_boot,in.melRat[i]);
+	// out.mel[i]=bvec_from_jvec(jack_of_boot,in.mel[i]);
+	// out.melRat[i]=bvec_from_jvec(jack_of_boot,in.melRat[i]);
       }
     
     return out;
@@ -97,8 +96,8 @@ struct permes_combo_t : public permes_t<TV>
 {
   using permes_t<TV>::ens;
   using permes_t<TV>::ff;
-  using permes_t<TV>::mel;
-  using permes_t<TV>::melRat;
+  // using permes_t<TV>::mel;
+  // using permes_t<TV>::melRat;
   using permes_t<TV>::E;
   using permes_t<TV>::X;
   using permes_t<TV>::milledPath;
@@ -140,8 +139,8 @@ struct permes_combo_t : public permes_t<TV>
   //! Quadrimomentum product
   djvec_t PKdec;
   
-  //! Normalization to be used for 3pts
-  vector<djvec_t> normaliz;
+  // //! Normalization to be used for 3pts
+  // vector<djvec_t> normaliz;
   
   //! Pseudoscalar correlation function
   vector<djvec_t> corrPP;
@@ -202,19 +201,18 @@ struct permes_combo_t : public permes_t<TV>
       CRASH("Unable to create output %s",path.c_str());
 	
     for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
-      if(ens.considerDec[iDecKin])
-	{
-	  const int iMesKin=ens.iMesKinOfDecKin[iDecKin];
-	  
-	  out<<ens.indDecKin.descr(iDecKin)<<endl;
-	  out<<" X: "<<X[iDecKin].ave_err()<<endl;
-	  out<<" Pmes_z: "<<ens.pMes[iMesKin]<<endl;
-	  out<<" Khat_z: "<<ens.kHatDec[iDecKin]<<endl;
-	  out<<" PK: "<<PKdec[iDecKin].ave_err()<<endl;
-	  out<<" Eg: "<<ens.Eg[iDecKin]<<endl;
-	  out<<" EgT: "<<ens.EgT(iDecKin)<<endl;
-	  out<<endl;
-	}
+      {
+	const int iMesKin=ens.iMesKinOfDecKin[iDecKin];
+	
+	out<<ens.indDecKin.descr(iDecKin)<<endl;
+	out<<" X: "<<X[iDecKin].ave_err()<<endl;
+	out<<" Pmes_z: "<<ens.pMes[iMesKin]<<endl;
+	out<<" Khat_z: "<<ens.kHatDec[iDecKin]<<endl;
+	out<<" PK: "<<PKdec[iDecKin].ave_err()<<endl;
+	out<<" Eg: "<<ens.Eg[iDecKin]<<endl;
+	out<<" EgT: "<<ens.EgT(iDecKin)<<endl;
+	out<<endl;
+      }
     
     out<<"/////////////////////////////////////////////////////////////////"<<endl;
     
@@ -252,7 +250,8 @@ struct permes_combo_t : public permes_t<TV>
     
     resizeListOfContainers({&corrA0P,&corrA3P,&corrPP},ens.nMesKin,djvec_t{(size_t)ens.T/2+1});
     
-    resizeListOfContainers({&this->ff[0],&this->ff[1],&this->mel[0],&this->mel[1],&this->melRat[0],&this->melRat[1]},ens.nDecKin);
+    resizeListOfContainers({&this->ff[0],&this->ff[1]// ,&this->mel[0],&this->mel[1],&this->melRat[0],&this->melRat[1]
+      },ens.nDecKin);
     resizeListOfContainers({&this->quality[0],&this->quality[1]},ens.nDecKin,true);
     
     for(size_t iVA=0;iVA<2;iVA++)
@@ -263,13 +262,13 @@ struct permes_combo_t : public permes_t<TV>
     
     resizeListOfContainers({&dEdec,&PKdec,&this->X},ens.nDecKin);
     
-    normaliz.resize(ens.indDecKin.max(),djvec_t{(size_t)ens.T/2+1});
+    // normaliz.resize(ens.indDecKin.max(),djvec_t{(size_t)ens.T/2+1});
     
     load();
   }
   
   //! Prepare the 3pts normalization
-  permes_combo_t& prepare3ptsNormalization(const bool useAnalytic,const bool& timeDependentEnergy,const string& totTag);
+  permes_combo_t& prepareKinematics(const bool useAnalytic);
   
   //! Perform the 2pts fit
   permes_combo_t& fit2pts(const char* fitTag,const bool forceRechoose=false);
