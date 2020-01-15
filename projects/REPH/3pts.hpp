@@ -169,6 +169,10 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
   //! Path of the 3pts time interval file
   string tintPath=milledPath()+"/tint3pts_"+fitTag+".dat";
   
+  //! Directory path of the range search
+  const string rangeDir=ens.dirPath+"/plots/"+mesTag+"/3pts_range_"+fitTag+"/";
+  mkdir(rangeDir);
+  
   if(file_exists(tintPath) and not forceRechoose)
     {
       cout<<"Loading stored 3pts intervals"<<endl;
@@ -177,10 +181,6 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
   else
     {
       cout<<"Choosing tint from scratch"<<endl;
-      
-      //! Directory path of the range search
-      const string rangeDir=ens.dirPath+"/plots/"+mesTag+"/3pts_range_"+fitTag+"/";
-      mkdir(rangeDir);
       
       for(size_t iVA=0;iVA<2;iVA++)
 	{
@@ -194,7 +194,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 	      
 	      Range fitRange;
 	      if(r[0].err()==0)
-		fitRange={(size_t)((int)ens.T/4-1),(size_t)((int)(ens.T/2)+1)};
+		fitRange={(size_t)((int)ens.T/4-1),(size_t)((int)(ens.T/4)+1)};
 	      else
 		{
 		  //! Path where to store the range search
@@ -216,7 +216,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 				      double nSigSel=1;
 				      comp
 					.setVerbose(verb)
-					.setRangeToConsiderByFraction(1.0/5)
+					.setRangeToConsiderByFraction(1.0/8)
 					.selectClosestCompatiblePointWithinNsigma(T/4,nSigSel)
 					.plotSelected()
 					.selectEnlargingError(enlFact,nSigEnl)
@@ -264,6 +264,54 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 	  raw_file_t(tintPath,"w").bin_write(tint3pts);
 	}
     }
+  
+  const int tmin=2;
+  const int tmax=ens.T/2-2;
+  
+  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+    {
+      const vector<size_t> c=ens.indDecKin(iDecKin);
+      if(c[1]!=c[2])
+	{
+	  const size_t nFitPars=5;
+	  djvec_t pFit(nFitPars);
+	  jack_fit_t fit;
+	  for(size_t i=0;i<nFitPars;i++)
+	    {
+	      if(i==1 or i==3) fit.add_fit_par_limits(pFit[i],combine("p[%zu]",i),0,0.1,0,1);
+	      else             fit.add_fit_par(pFit[i],combine("p[%zu]",i),0,0.1);
+	      
+	      if(i==0 or i==1) fit.fix_par(i);
+	    }
+	  
+	  const djvec_t r=getCorrRat(1,iDecKin)/X[iDecKin];
+	  
+	  for(int t=tmin;t<tmax;t++)
+	    fit.add_point(r[t],[=](const vector<double>& p,int ijack)->double
+			       {
+				 return
+				   p[0]*exp(-p[1]*t)+
+				   p[2]*exp(-p[3]*(ens.T/2-t))+
+				   p[4];
+			       });
+	  
+	  fit.fit();
+	  
+	  const string outRangePath=combine("%s/d%s_%s.xmg",rangeDir.c_str(),VA_tag[1],ens.decKinTag(iDecKin).c_str());
+	  const vector<size_t> c=ens.indDecKin(iDecKin);
+	  
+	  grace_file_t plot(outRangePath);
+	  plot.write_vec_ave_err(r.ave_err());
+	  
+	  plot.write_polygon([=](const double x) -> djack_t
+			     {
+			       return pFit[0]*exp(-pFit[1]*x)+pFit[2]*exp(-pFit[3]*(ens.T/2-x))+pFit[4];
+			     },tmin,tmax);
+	  for(size_t i=0;i<5;i++) cout<<"par"<<i<<" "<<X[iDecKin]<<" "<<pFit[i].ave_err()<<endl;
+	}
+    }
+  
+  CRASH("");
   
   return *this;
 }
@@ -389,29 +437,31 @@ void permes_t<TV>::plotFf(const string& tag) const
       
       for(auto& fy : list)
 	{
-	  auto& f=*get<0>(fy);
+	  grace_file_t& f=*get<0>(fy);
 	  auto& y=*get<1>(fy);
 	  
 	  f.set_line_type(grace::line_type_t::STRAIGHT_LINE);
 	  f.set_color_scheme({RED,BLUE,GREEN4,VIOLET,ORANGE});
 	  
-	  for(size_t toC=0;toC<2;toC++)
+	  //for(size_t toC=0;toC<2;toC++)
 	    for(size_t iMom1=0;iMom1<ens.nMoms;iMom1++)
 	      for(size_t iMom2=0;iMom2<ens.nMoms;iMom2++)
 		{
-		  if(toC==0)
-		    f.set_transparency(0.4);
+		  // if(toC==0)
+		  //   f.set_transparency(0.4);
 		  
 		  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
 		    {
 		      const vector<size_t> c=ens.indDecKin(iDecKin);
 		      
-		      if(ens.considerDec[iDecKin] and c[0]==iMom1 and c[2]==iMom2 and toC==quality[iVA][iDecKin])
+		      if(ens.considerDec[iDecKin] and c[0]==iMom1 and c[2]==iMom2 // and toC==quality[iVA][iDecKin]
+			 )
 			{
 			  f<<"# "<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<"\n";
 			  f.write_ave_err(X[iDecKin].ave(),y[iVA][iDecKin].ave_err());
 			}
 		    }
+		  f.set_comment(combine("iMoms=%zu, iMom0=%zu",iMom1,iMom2));
 		  f.new_data_set();
 		}
 	}
