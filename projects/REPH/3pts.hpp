@@ -273,18 +273,25 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
       const vector<size_t> c=ens.indDecKin(iDecKin);
       if(c[1]!=c[2])
 	{
+	  const djvec_t r=getCorrRat(1,iDecKin)/X[iDecKin];
+	  
 	  const size_t nFitPars=5;
 	  djvec_t pFit(nFitPars);
 	  jack_fit_t fit;
-	  for(size_t i=0;i<nFitPars;i++)
-	    {
-	      if(i==1 or i==3) fit.add_fit_par_limits(pFit[i],combine("p[%zu]",i),0,0.1,0,1);
-	      else             fit.add_fit_par(pFit[i],combine("p[%zu]",i),0,0.1);
-	      
-	      if(i==0 or i==1) fit.fix_par(i);
-	    }
+	  fit.add_fit_par(pFit[0],"p[0]",1.26e-1,0.1);
+	  fit.add_fit_par_limits(pFit[1],"p[1]",7e-1,0.1, 0.15,4);
+	  fit.add_fit_par(pFit[2],"p[2]",-9e-1,0.1);
+	  fit.add_fit_par_limits(pFit[3],"p[3]",3e-1,0.1, 0.15,4);
+	  fit.add_fit_par(pFit[4],"p[4]",r[ens.T/4].ave(),0.1);
 	  
-	  const djvec_t r=getCorrRat(1,iDecKin)/X[iDecKin];
+	  // for(size_t i=0;i<nFitPars;i++)
+	  //   {
+	      
+	  //     if(i==1 or i==3) 
+	  //     else             fit.add_fit_par(pFit[i],combine("p[%zu]",i),0,0.1);
+	      
+	  //     //if(i==0 or i==1) fit.fix_par(i);
+	  //   }
 	  
 	  for(int t=tmin;t<tmax;t++)
 	    fit.add_point(r[t],[=](const vector<double>& p,int ijack)->double
@@ -298,15 +305,42 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 	  fit.fit();
 	  
 	  const string outRangePath=combine("%s/d%s_%s.xmg",rangeDir.c_str(),VA_tag[1],ens.decKinTag(iDecKin).c_str());
-	  const vector<size_t> c=ens.indDecKin(iDecKin);
-	  
 	  grace_file_t plot(outRangePath);
+	  
 	  plot.write_vec_ave_err(r.ave_err());
 	  
 	  plot.write_polygon([=](const double x) -> djack_t
 			     {
-			       return pFit[0]*exp(-pFit[1]*x)+pFit[2]*exp(-pFit[3]*(ens.T/2-x))+pFit[4];
+			       return
+				 pFit[0]*exp(-pFit[1]*x)+
+				 pFit[2]*exp(-pFit[3]*(ens.T/2-x))+
+				 pFit[4];
 			     },tmin,tmax);
+	  
+	  plot.write_constant_band(tmin,tmax,pFit[4]);
+	  
+	  {
+	    const string outRangePath=combine("%s/e%s_%s.xmg",rangeDir.c_str(),VA_tag[1],ens.decKinTag(iDecKin).c_str());
+	    
+	    grace_file_t plot(outRangePath);
+	    plot.write_vec_ave_err(r.ave_err());
+	    
+	    plot.write_polygon([=](const double x) -> djack_t
+			     {
+			       return
+				 1/(pFit[0]*exp(-pFit[1]*x)+
+				    pFit[2]*exp(-pFit[3]*(ens.T/2-x)));
+			     },tmin,tmax);
+	  
+	    plot.write_polygon([=](const double x) -> djack_t
+			     {
+			       return
+				 1/(abs(pFit[0]*exp(-pFit[1]*x))+
+				    abs(pFit[2]*exp(-pFit[3]*(ens.T/2-x))));
+			     },tmin,tmax);
+	    
+	  }
+	  
 	  for(size_t i=0;i<5;i++) cout<<"par"<<i<<" "<<X[iDecKin]<<" "<<pFit[i].ave_err()<<endl;
 	}
     }
