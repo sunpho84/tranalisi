@@ -5,10 +5,11 @@
 #include <gevp.hpp>
 
 #include <Eigen/Dense>
+#include <unsupported/Eigen/MatrixFunctions>
 
 using namespace Eigen;
 
-vector<djvec_t> gevp(const vector<djvec_t> &d,const size_t t0)
+tuple<vector<djvec_t>,vector<djvec_t>,vector<djvec_t>> gevp(const vector<djvec_t> &d,const size_t t0)
 {
   //Check correlators and get the time extent
   if(d.size()==0) CRASH("Needs at least 1 correlator");
@@ -24,6 +25,8 @@ vector<djvec_t> gevp(const vector<djvec_t> &d,const size_t t0)
   
   //Output
   vector<djvec_t> l(n,djvec_t(T));
+  vector<djvec_t> recastEigvec(n*n,djvec_t(T));
+  vector<djvec_t> origEigvec(n*n,djvec_t(T));
   
   for(size_t ijack=0;ijack<=njacks;ijack++)
     {
@@ -45,8 +48,17 @@ vector<djvec_t> gevp(const vector<djvec_t> &d,const size_t t0)
 	  ges.compute(a,b);
 	  for(size_t i=0;i<n;i++)
 	    l[i][t][ijack]=ges.eigenvalues()(i).real();
+	  
+	  auto vEig=(b.inverse().sqrt()*ges.eigenvectors()).eval();
+	  
+	  for(size_t i=0;i<n;i++)
+	    for(size_t j=0;j<n;j++)
+	      {
+		recastEigvec[i*n+j][t][ijack]=ges.eigenvectors()(i,j).real();
+		origEigvec[i*n+j][t][ijack]=vEig(i,j).real();
+	      }
 	}
     }
   
-  return l;
+  return {l,recastEigvec,origEigvec};
 }
