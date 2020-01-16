@@ -10,11 +10,11 @@ AM_YFLAGS = -d -p `basename $* | sed 's,y$$,,'`_
 AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
 LDADD=$(top_builddir)/lib/libtran.a
 
+include REPH/Makefile.am
 include BARYONS/Makefile.am
 #include FPIEM/Makefile.am
 include IB/Makefile.am
 #include PLNG/Makefile.am
-include REPH/Makefile.am
 include MOM2/Makefile.am
 #include SMETEST/Makefile.am
 #include SPIPOLLO/Makefile.am

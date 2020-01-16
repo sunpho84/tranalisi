@@ -266,7 +266,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
     }
   
   const int tmin=1;
-  const int tmax=ens.T/2-3;
+  const int tmax=ens.T/2-5;
   
   const size_t nFitPars=10;
   djvec_t pFit(nFitPars);
@@ -275,13 +275,13 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
   fit.add_fit_par(pFit[0],"p[0]",1e-2,0.1);
   fit.add_fit_par(pFit[1],"p[1]",0,0.1);
   //M1
-  fit.add_fit_par_limits(pFit[2],"p[2]",0.7,0.1,0.1,2);
+  fit.add_fit_par_limits(pFit[2],"p[2]",0.7,0.1,0.1,4);
   fit.add_fit_par(pFit[3],"p[3]",0,0.1);
   //Z2
   fit.add_fit_par(pFit[4],"p[4]",-0.4,0.1);
   fit.add_fit_par(pFit[5],"p[5]",0,0.1);
   //M2
-  fit.add_fit_par(pFit[6],"p[6]",0.4,0.1);
+  fit.add_fit_par_limits(pFit[6],"p[6]",0.7,0.1,0.1,4);
   fit.add_fit_par(pFit[7],"p[7]",0,0.1);
   //C
   fit.add_fit_par(pFit[8],"p[8]",0,0.1);
@@ -289,20 +289,40 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
   
   // for(int i=0;i<10;i++)
   //   fit.fix_par(i);
-  
+
+  size_t nDo=0;
   for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
     {
       const vector<size_t> c=ens.indDecKin(iDecKin);
       if(c[1]!=c[2])
+	nDo++;
+    }
+  
+  raw_file_t test(combine("%s/exc_study.dat",rangeDir.c_str()),"w");
+  test.bin_write(nDo);
+  test.bin_write(ens.T/2);
+  
+  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+    {
+      const vector<size_t> c=ens.indDecKin(iDecKin);
+      
+      if(c[1]!=c[2])
 	{
+	  const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
+	  
 	  const djvec_t r=getCorrRat(1,iDecKin)/X[iDecKin];
+	  test.bin_write(r);
+	  test.bin_write(X[iDecKin]);
+	  test.bin_write(ens.pMes[iMesKin]);
+	  test.bin_write(ens.Eg[iDecKin]);
+	  test.bin_write(ens.kHatDec[iMesKin]);
 	  
 	  for(int t=tmin;t<tmax;t++)
 	    fit.add_point(r[t],[=](const vector<double>& p,int ijack)->double
 			       {
 				 const double x=X[iDecKin][ijack];
 				 return
-				   (p[0]+p[1]*x)/x*exp(-(p[2]+p[3]*x)*t)+
+				   (p[0]+p[1]*x)*exp(-(p[2]+p[3]*x)*t)+
 				   (p[4]+p[5]*x)/x*exp(-(p[6]+p[7]*x)*(ens.T/2-t))+
 				   p[8]+p[9]*x;
 			       });
@@ -310,7 +330,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
     }
   
   fit.fit();
-	  
+  
   for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
     {
       const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
@@ -333,7 +353,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 			       const djack_t& x=X[iDecKin];
 			       
 			       return
-				 (p[0]+p[1]*x)/x*exp(-(p[2]+p[3]*x)*t)+
+				 (p[0]+p[1]*x)*exp(-(p[2]+p[3]*x)*t)+
 				 (p[4]+p[5]*x)/x*exp(-(p[6]+p[7]*x)*(ens.T/2-t))+
 				 p[8]+p[9]*x;
 			     },tmin,tmax);
