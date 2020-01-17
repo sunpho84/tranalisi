@@ -78,10 +78,10 @@ djvec_t single_fit(const vector<djvec_t>& guesses,const string dir="single")
       const int tmin=1;
       const int tmax=TH-2;
       
-      djack_t e;
-      e.fill_gauss(0,20,23423);
-      fit.add_point(e,[](const vector<double>& p,int ijack){return 1/p[1];});
-      fit.add_point(e,[](const vector<double>& p,int ijack){return 1/p[3];});
+      // djack_t e;
+      // e.fill_gauss(0,20,23423);
+      // fit.add_point(e,[](const vector<double>& p,int ijack){return 1/p[1];});
+      // fit.add_point(e,[](const vector<double>& p,int ijack){return 1/p[3];});
       
       for(int t=tmin;t<tmax;t++)
 	fit.add_point(d[i].r[t],[=](const vector<double>& p,int ijack)
@@ -105,7 +105,7 @@ djvec_t single_fit(const vector<djvec_t>& guesses,const string dir="single")
       
       const djack_t& ch2=get<0>(status[i]);
       const size_t& nDof=get<1>(status[i]);
-      skip[i]=(ch2.ave()/nDof>1.5 // or fabs(p[1].ave()-min1)<1e-2
+      skip[i]=(ch2.ave()/nDof>3 // or fabs(p[1].ave()-min1)<1e-2
 	       );
       if(skip[i])
 	nSkip++;
@@ -178,15 +178,15 @@ djvec_t single_fit(const vector<djvec_t>& guesses,const string dir="single")
 
 template <typename TV,
 	  typename T=std::remove_reference_t<decltype((*(TV*)nullptr)[0])>>
-TV get_ansatz_par_all(const TV& p,const T& x,const double& Eg,const double& p2,const double& k)
+TV get_ansatz_par_all(const TV& p,const T& x,const double& Eg,const double& pi,const double& k)
 {
   TV pp(5);
   
-  pp[0]=p[0]+p[1]*Eg+p[2]*k+p[3]*p2;
-  pp[1]=p[4]+p[5]*Eg+p[6]*k+p[7]*p2;
-  pp[2]=(p[8]+p[9]*Eg+p[10]*k+p[11]*p2)/x;
-  pp[3]=p[12]+p[13]*Eg+p[14]*k+p[15]*p2;
-  pp[4]=p[16]+p[17]*Eg+p[18]*k+p[19]*p2;
+  pp[0]=p[0]+p[1]*Eg+p[2]*x+p[3]*pi*pi; //dipende da Eg e k
+  pp[1]=p[4]+p[5]*Eg+p[6]*x+p[7]*pi; // dipende da k e pi
+  pp[2]=(p[8]+p[9]*Eg+p[10]*x+p[11]*pi*pi)/x; // non dipende da nulla
+  pp[3]=p[12]+p[13]*Eg+p[14]*x+p[15]*pi*pi;
+  pp[4]=p[16]+p[17]*Eg+p[18]*x+p[19]*pi*pi;
   
   return pp;
 }
@@ -201,44 +201,42 @@ T all_ansatz(const TV& p,const T& x,const double& Eg,const double& p2,const doub
     single_ansatz(pp,t);
 }
 
-djvec_t all_fit(const djvec_t& in)
+djvec_t all_fit(const djvec_t& in,const string dir="all")
 {
-  const string dir="all";
-  
   const size_t nFitPars=5*4;
   djvec_t pFit(nFitPars);
   jack_fit_t fit;
   //Z1
   fit.add_fit_par(pFit[0],"p[0]",in[0].ave_err());
-  fit.add_fit_par(pFit[1],"p[1]",0,0.1);
-  fit.add_fit_par(pFit[2],"p[2]",0,0.1);
-  fit.add_fit_par(pFit[3],"p[3]",0,0.1);
+  fit.add_fit_par(pFit[1],"p[1]",0.2,0.1);//fit.fix_par(1);
+  fit.add_fit_par(pFit[2],"p[2]",0,0.1);fit.fix_par(2);
+  fit.add_fit_par(pFit[3],"p[3]",0,0.1);fit.fix_par(3);
   //M1
   fit.add_fit_par_limits(pFit[4],"p[4]",in[2].ave_err(),0.1,4);
-  fit.add_fit_par(pFit[5],"p[5]",0,0.1);
-  fit.add_fit_par(pFit[6],"p[6]",0,0.1);
-  fit.add_fit_par(pFit[7],"p[7]",0,0.1);
+  fit.add_fit_par(pFit[5],"p[5]",0.0,0.1);fit.fix_par(5);
+  fit.add_fit_par(pFit[6],"p[6]",0,0.1);//fit.fix_par(6);
+  fit.add_fit_par(pFit[7],"p[7]",0,0.1);fit.fix_par(7);
   //Z2
   fit.add_fit_par(pFit[8],"p[8]",in[4].ave_err());
-  fit.add_fit_par(pFit[9],"p[9]",0,0.1);
-  fit.add_fit_par(pFit[10],"p[10]",0,0.1);
-  fit.add_fit_par(pFit[11],"p[11]",0,0.1);
+  fit.add_fit_par(pFit[9],"p[9]",0,0.1);fit.fix_par(9);
+  fit.add_fit_par(pFit[10],"p[10]",0,0.1);//fit.fix_par(10);
+  fit.add_fit_par(pFit[11],"p[11]",0,0.1);fit.fix_par(11);
   //M2
   fit.add_fit_par_limits(pFit[12],"p[12]",in[6].ave_err(),0.1,4);
-  fit.add_fit_par(pFit[13],"p[13]",0,0.1);
-  fit.add_fit_par(pFit[14],"p[14]",0,0.1);
-  fit.add_fit_par(pFit[15],"p[15]",0,0.1);
+  fit.add_fit_par(pFit[13],"p[13]",-1,0.1);fit.fix_par(13);
+  fit.add_fit_par(pFit[14],"p[14]",0,0.1);//fit.fix_par(14);
+  fit.add_fit_par(pFit[15],"p[15]",0,0.1);fit.fix_par(15);
   //C
   fit.add_fit_par(pFit[16],"p[16]",in[8].ave_err());
-  fit.add_fit_par(pFit[17],"p[17]",0,0.1);
-  fit.add_fit_par(pFit[18],"p[18]",0,0.1);
-  fit.add_fit_par(pFit[19],"p[19]",0,0.1);
+  fit.add_fit_par(pFit[17],"p[17]",0,0.1);fit.fix_par(17);
+  fit.add_fit_par(pFit[18],"p[18]",0,0.1);//fit.fix_par(18);
+  fit.add_fit_par(pFit[19],"p[19]",0,0.1);fit.fix_par(19);
   
   // for(size_t i=0;i<nFitPars;i++)
   //   fit.fix_par(i);
   
   const int tmin=1;
-  const int tmax=TH-1;
+  const int tmax=TH-2;
   
   for(size_t i=0;i<n;i++)
     {
