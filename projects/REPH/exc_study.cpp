@@ -118,9 +118,9 @@ djvec_t single_fit(const vector<djvec_t>& guesses,const string dir="single")
       const djack_t o=t[4];
       t[4]=0.0;
       
-      plot.write_polygon([=](const double x) -> djack_t
+      plot.write_line([=](const double x) -> double
 			 {
-			   return abs(single_ansatz(t,x)/o);
+			   return abs(single_ansatz(t,x)).significativity();
 			 },tmin,tmax);
 	  }
     }
