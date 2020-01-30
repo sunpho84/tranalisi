@@ -124,7 +124,15 @@ class minimizer_t
   TMinuit minu;
   minimizer_t();
   
- public:
+  bool _status{false};
+  
+public:
+  
+  bool status() const
+  {
+    return _status;
+  }
+  
   //construct from migrad
   minimizer_t(const minimizer_fun_t &fun,const minimizer_pars_t &pars) : fun(fun)
   {
@@ -157,6 +165,7 @@ class minimizer_t
     int npars=minu.GetNumPars();
     vector<double> pars(npars);
     minu.Migrad();
+    _status=(minu.GetStatus()==0);
     double dum;
     for(int it=0;it<npars;it++)
       minu.GetParameter(it,pars[it],dum);
@@ -233,7 +242,15 @@ class minimizer_t
   size_t npars;
   minimizer_t();
   
+  bool _status{true};
+  
  public:
+  
+  bool status() const
+  {
+    return _status;
+  }
+  
   //construct from migrad
   minimizer_t(const minimizer_fun_t &fun,const minimizer_pars_t &pars) : migrad(fun,pars.pars),npars(pars.size()) {}
   
@@ -243,7 +260,9 @@ class minimizer_t
     //call minimizer
     ROOT::Minuit2::FunctionMinimum min=migrad();
     ROOT::Minuit2::MnUserParameterState par_state=min.UserState();
-    if(!min.IsValid())
+    _status=min.IsValid();
+    
+    if(not _status)
       {
 	cerr<<"WARNING! Minimization failed"<<endl;
 	cerr<<"Has accurate cov: "<<min.HasAccurateCovar()<<endl;
