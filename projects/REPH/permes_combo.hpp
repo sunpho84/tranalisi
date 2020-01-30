@@ -199,6 +199,19 @@ struct permes_combo_t : public permes_t<TV>
 	out<<endl;
       }
     
+    const string symmPath=ens.dirPath+"/plots/"+mesTag+"/symmetrics.txt";
+    ofstream outSymm(symmPath);
+    if(not outSymm.good())
+      CRASH("Unable to create output %s",symmPath.c_str());
+	
+    for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
+      if(ens.hasSymmDec[iDecKin])// and ens.symmOfDec[iDecKin]>(int)iDecKin)
+	{
+	  const vector<size_t> cDec=ens.indDecKin(iDecKin);
+	  const size_t iMoms=cDec[0],iMomt=cDec[1],iMom0=cDec[2];
+	  outSymm<<" "<<X[iDecKin].ave()<<" "<<iDecKin<<" "<<iMoms<<" "<<iMomt<<" "<<iMom0<<"  "<<ens.symmOfDec[iDecKin]<<endl;
+	}
+    
     out<<"/////////////////////////////////////////////////////////////////"<<endl;
     
     for(size_t iMesKin=0;iMesKin<ens.nMesKin;iMesKin++)

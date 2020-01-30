@@ -11,6 +11,9 @@
 #include <compatibility.hpp>
 #include <phys_point.hpp>
 
+const bool ONLY_SYMMETRIC=true;
+const bool AVERAGE_SYMMETRIC=true;
+
 const char VA_tag[2][2]={"V","A"};
 
 //! Time dependent normalization

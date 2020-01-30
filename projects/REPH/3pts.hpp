@@ -109,23 +109,37 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
 		load3pts(plotDirPath,iVA,iMs,iMt,c[0],c[1],c[2],"insOnT")*eT;
 	      corrPX[iVA][iDecKin]+=coeff[iVA]*
 		load3pts(plotDirPath,iVA,iMt,iMs,c[0],c[1],c[2],"insOnS")*eS;
+	      
+	      corrPX[iVA][iDecKin].ave_err().write(combine("%s/o%smuGPo-gs_%s.xmg",plotDirPath.c_str(),VA_tag[iVA],ens.decKinTag(c[0],c[1],c[2]).c_str()));
 	    }
 	}
       
-      // Plot ratio with symmetric
-      // for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-      // 	if(ens.considerDec[iDecKin] and ens.hasSymmDec[iDecKin])
-      // 	  for(int iVA=0;iVA<2;iVA++)
-      // 	    {
-      // 	      const djvec_t& a=corrPX[iVA][iDecKin];
-      // 	      const djvec_t& b=corrPX[iVA][ens.symmOfDec[iDecKin]];
-      // 	      const djvec_t& r=a/b;
-	      
-      // 	      const vector<size_t> c=ens.indDecKin(iDecKin);
-	      
-      // 	      const string pathR=combine("%s/o%smuGPo-gs_%s_rat_with_symm.xmg",plotDirPath.c_str(),VA_tag[iVA],ens.decKinTag(c[0],c[1],c[2]).c_str());
-      // 	      r.ave_err().write(pathR);
-      // 	    }
+      //Plot ratio with symmetric
+      if(AVERAGE_SYMMETRIC)
+	{
+	  cout<<"AVERAGING SYMMETRIC"<<endl;
+	  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+	    if(ens.considerDec[iDecKin] and ens.hasSymmDec[iDecKin])
+	      for(int iVA=0;iVA<2;iVA++)
+		{
+		  djvec_t& a=corrPX[iVA][iDecKin];
+		  djvec_t& b=corrPX[iVA][ens.symmOfDec[iDecKin]];
+		  
+		  cout<<"AVE "<<ens.symmOfDec[iDecKin]<<" "<<iDecKin<<endl;
+		  cout<<a[0].ave_err()<<" "<<b[0].ave_err()<<endl;
+		  
+		  if(iVA==0) b=-(a=(a-b)/2);
+		  else      b=a=(a+b)/2;
+		  
+		  cout<<a[0].ave_err()<<" "<<b[0].ave_err()<<endl;
+		  // const djvec_t& r=a/b;
+		  
+		  // const vector<size_t> c=ens.indDecKin(iDecKin);
+		  
+		  // const string pathR=combine("%s/o%smuGPo-gs_%s_rat_with_symm.xmg",plotDirPath.c_str(),VA_tag[iVA],ens.decKinTag(c[0],c[1],c[2]).c_str());
+		  // r.ave_err().write(pathR);
+      	    }
+	}
     }
   
   cout<<(loadCompact?"Loading":"Storing")<<" compacted 3pts"<<endl;
@@ -315,7 +329,8 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
 	  test.bin_write(X[iDecKin]);
 	  test.bin_write(ens.pMes[iMesKin]);
 	  test.bin_write(ens.Eg[iDecKin]);
-	  test.bin_write(ens.kHatDec[iMesKin]);
+	  test.bin_write(ens.kHatDec[iDecKin]);
+	  for(int i=0;i<3;i++) test.bin_write(c[i]);
 	  
 	  for(int t=tmin;t<tmax;t++)
 	    fit.add_point(r[t],[=](const vector<double>& p,int ijack)->double
@@ -362,7 +377,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPat
   
   cout<<pFit.ave_err()<<endl;
   
-  CRASH("");
+  // CRASH("");
   
   return *this;
 }
@@ -433,7 +448,8 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const bool& useCommonRange,const
       
       for(int iVA=0;iVA<2;iVA++)
 	for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	  {
+	  if(ens.considerDec[iDecKin])
+	    {
 	    const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
 	    
 	    if(oldNormalization)
@@ -450,13 +466,21 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const bool& useCommonRange,const
 	    
 	    const TV r=getCorrRat(iVA,iDecKin);
 	    
-	    const djack_t m=constant_fit(r,tint.begin,tint.end,plotFile);
-	    
 	    if(iVA==0)
-	      ff[iVA][iDecKin]=m*E[iMesKin]/(ens.Eg[iDecKin]*ens.pMes[iMesKin]-E[iMesKin]*ens.kHatDec[iDecKin]);
+	      {
+		const djack_t m=constant_fit(r,tint.begin,tint.end,plotFile);
+		ff[iVA][iDecKin]=m*E[iMesKin]/(ens.Eg[iDecKin]*ens.pMes[iMesKin]-E[iMesKin]*ens.kHatDec[iDecKin]);
+	      }
 	    else
-	      ff[iVA][iDecKin]=m/X[iDecKin];
-	    
+	      {
+		const djvec_t y=r/X[iDecKin];
+		const djack_t m=constant_fit(y,tint.begin,tint.end);
+		
+		grace_file_t f(plotFile);
+		write_fit_plot(f,tint.begin,tint.end,[&m](double x){return m;},vector_up_to<double>(y.size()),y);
+		f.set_title(combine("X=%lg",X[iDecKin].ave()));
+		ff[iVA][iDecKin]=m;
+	      }
 	    // //! Put back fpi
 	    // const djack_t fpi=fP[0]*(eT-eS);
 	    // ff[iVA][iDecKin]*=fpi;
@@ -495,24 +519,32 @@ void permes_t<TV>::plotFf(const string& tag) const
 	  f.set_color_scheme({RED,BLUE,GREEN4,VIOLET,ORANGE});
 	  
 	  //for(size_t toC=0;toC<2;toC++)
-	    for(size_t iMom1=0;iMom1<ens.nMoms;iMom1++)
-	      for(size_t iMom2=0;iMom2<ens.nMoms;iMom2++)
+	    for(size_t iMoms=0;iMoms<ens.nMoms;iMoms++)
+	      for(size_t iMom0=0;iMom0<ens.nMoms;iMom0++)
 		{
 		  // if(toC==0)
 		  //   f.set_transparency(0.4);
 		  
-		  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+		  for(size_t _iDecKin=0;_iDecKin<ens.indDecKin.max();_iDecKin++)
 		    {
-		      const vector<size_t> c=ens.indDecKin(iDecKin);
+		      size_t iDecKin=_iDecKin;
+		      bool cons=ens.considerDec[_iDecKin];
+		      const int possSymm=ens.symmOfDec[_iDecKin];
+		      if(not cons and ens.hasSymmDec[_iDecKin] and ens.considerDec[possSymm])
+			{
+			  iDecKin=possSymm;
+			  cons=true;
+			}
+		      const vector<size_t> c=ens.indDecKin(_iDecKin);
 		      
-		      if(ens.considerDec[iDecKin] and c[0]==iMom1 and c[2]==iMom2 // and toC==quality[iVA][iDecKin]
+		      if(cons and c[0]==iMoms and c[2]==iMom0 // and toC==quality[iVA][iDecKin]
 			 )
 			{
 			  f<<"# "<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<"\n";
 			  f.write_ave_err(X[iDecKin].ave(),y[iVA][iDecKin].ave_err());
 			}
 		    }
-		  f.set_comment(combine("iMoms=%zu, iMom0=%zu",iMom1,iMom2));
+		  f.set_comment(combine("iMoms=%zu, iMom0=%zu",iMoms,iMom0));
 		  f.new_data_set();
 		}
 	}

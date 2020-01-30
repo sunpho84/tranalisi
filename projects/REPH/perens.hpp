@@ -216,6 +216,7 @@ struct perens_t
     resizeListOfContainers({&Eg,&kDec,&kHatDec},indDecKin.max());
     
     ofstream kinematics(dirPath+"/kinematics.txt");
+    ofstream symmetrics(dirPath+"/symmetrics.txt");
     kinematics.precision(6);
     kinematics<<std::fixed;
     kinematics<<"Moms\tMomt\tMom0\tk\t\tp"<<endl;
@@ -225,9 +226,19 @@ struct perens_t
      	const vector<size_t> cDec=indDecKin(iDecKin);
 	const size_t iMoms=cDec[0],iMomt=cDec[1],iMom0=cDec[2];
 	considerDec[iDecKin]=(iMomt!=iMom0);
-	hasSymmDec[iDecKin]=(iMoms==iMom0);
+	
+	const size_t possSymm=indDecKin({iMomt,iMoms,iMomt});
+	hasSymmDec[iDecKin]=(iMoms==iMom0) and (possSymm!=iDecKin);
 	if(hasSymmDec[iDecKin])
-	  symmOfDec[iDecKin]=indDecKin({iMomt,iMoms,iMomt});
+	  symmOfDec[iDecKin]=possSymm;
+	
+	if((not hasSymmDec[iDecKin]) or (AVERAGE_SYMMETRIC and (size_t)symmOfDec[iDecKin]<iDecKin))
+	  {
+	    if(ONLY_SYMMETRIC)
+	      considerDec[iDecKin]=false;
+	  }
+	else
+	  symmetrics<<iDecKin<<" "<<symmOfDec[iDecKin]<<endl;
 	
 	kDec[iDecKin]=2*M_PI*(moms[iMom0][2]-moms[iMomt][2])/L;
 	kHatDec[iDecKin]=2*sin(kDec[iDecKin]/2);
