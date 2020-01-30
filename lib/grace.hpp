@@ -58,6 +58,7 @@ class grace_file_t : private ofstream
   
   size_t iset; //!< set id
   string legend; //! legend of the set
+  string comment; //! legend of the set
   
   grace::settype_t settype; //!< set type
   grace::symbol_t symbol; //!< symbol
@@ -212,6 +213,9 @@ public:
   
   //! set the legend of current set
   void set_legend(const string &ext_legend);
+  
+  //! set the comment of current set
+  void set_comment(const string &ext_comment);
   
   //! shift iset
   void shift_iset(size_t how_many=1);
