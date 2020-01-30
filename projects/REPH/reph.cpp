@@ -80,7 +80,7 @@ void readPhysics(const string& path)
 }
 
 //! Reads and compute ll combination for a given meson
-AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes,const size_t& timeDependentEnergy,const size_t& useCommonRange,const string& totTag)
+AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes,const size_t& useCommonRange,const string& totTag)
 {
   //! Result
   AllMesCombos res;
@@ -232,111 +232,110 @@ int main(int narg,char **arg)
 	    {
 	      const double& mPhys=get<3>(mesComposition);
 	      
-	      const index_t indSyst({{"tDepEn",2},{"comRang",2},{"inputAn",ninput_an}});
+	      const index_t indSyst({{"comRang",2},{"inputAn",ninput_an}});
 	      
 	      const size_t nFitPars=5;
 	      array<vector<dbvec_t>,2> storePars;
 	      for(size_t iVA=0;iVA<2;iVA++)
 		storePars[iVA]=vector<dbvec_t>(indSyst.max(),dbvec_t(nFitPars));
 	      
-	      for(size_t timeDependentEnergy=0;timeDependentEnergy<2;timeDependentEnergy++)
-		for(size_t useCommonRange=0;useCommonRange<2;useCommonRange++)
-		  {
-		    string totTag=combine("%s_%s",rangeTag[useCommonRange],timeDepEnTag[timeDependentEnergy]);
-		    
-		    //! Holds ff energy etc for each meson and combination, for each ensemble
-		    vector<AllMesCombos> mesCombos;
-		    ensembleLoop(ens,[&](const perens_t& e,size_t){mesCombos.push_back(computeAllMesCombos(e,mesComposition,timeDependentEnergy,useCommonRange,totTag));});
-		    
-		    // Loop over analysis
-		    ultimateAnalysisLoop([&](const size_t& inputAn)
-					 {
-					   /// Method 1 or 2
-					   const size_t iM12=inputAn/4;
-					   
-					   //! Interpolated data for each ensemble
-					   vector<permes_t<dbvec_t>> inte;
-					   
-					   ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
-							    {
-							      const map<string,vector<double>> am=getMassList(e);
-							      
-							      inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn,totTag));
-							      inte.back().plotFf();
-							    });
-					   
-					   //fit
-					   for(size_t iVA=0;iVA<2;iVA++)
-					     {
-					       cout<<"Fitting "<<VA_tag[iVA]<<endl;
-					       
-					       dbvec_t pFit(nFitPars);
-					       boot_fit_t fit;
-					       for(size_t i=0;i<nFitPars;i++)
-						 fit.add_fit_par(pFit[i],combine("p[%zu]",i),0.0,0.1);
-					       
-					       ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
-								{
-								  const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
-								  cout<<e.dirPath<<" "<<z.ave_err()<<endl;
-								  cout<<"Mass: "<<((dboot_t)(inte[iens].E[0]*lat_par[inputAn].ainv[e.iBeta])).ave()<<endl;
-								  
-								  decKinLoop(e,[&,iens](const size_t iDecKin)
-									       {
-										 fit.add_point(inte[iens].ff[iVA][iDecKin]*z
-											       ,[=,&inte](const vector<double>& p,int iboot)
-												{
-												  const size_t iBeta=e.iBeta;
-												  const double aInv=lat_par[inputAn].ainv[iBeta][iboot];
-												  const double a2=1/sqr(aInv);
-												  const double x=inte[iens].X[iDecKin][iboot];
-												  
-												  const double M=inte[iens].E[0][iboot]*aInv;
-												  
-												  return ansatz(iVA,p,M,a2,x);
-												});
-									       });
-								});
-					       
-					       fit.fit();
-					       
-					       const double xMin=1e-3;
-					       
-					       ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
-								{
-								  const string dirPath=e.dirPath+"/plots/"+inte[iens].mesTag;
-								  
-								  const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
-								  
-								  grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+"_"+totTag+"_Fit.xmg");
-								  plot.set_no_line();
-								  
-								  decKinLoop(e,[&,iens](const size_t iDecKin)
-									       {
-										 const ave_err_t X=inte[iens].X[iDecKin].ave_err();
-										 const dboot_t Y=(X.ave()*inte[iens].ff[iVA][iDecKin]*z);
-										 
-										 plot.write_ave_err(X,Y.ave_err());
-									       });
-								  
-								  const size_t& iBeta=e.iBeta;
-								  const dboot_t aInv=lat_par[inputAn].ainv[iBeta];
-								  const double a2=((dboot_t)(1/sqr(aInv))).ave();
-								  const double M=((dboot_t)(inte[iens].E[0]*aInv)).ave();
-								  const double xMax=inte[iens].xMax()[0];
-								  
-								  plot.write_polygon([&](const double x) -> dboot_t{return x*ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
-								  plot.write_polygon([&](const double x) -> dboot_t{return x*ansatz(iVA,pFit,mPhys,0,x);},xMin,xMax);
-								});
-					       
-					       const dboot_t cph=ansatz(iVA,pFit,mPhys,0.0,xMin);
-					       cout<<"f: "<<cph.ave_err()<<endl;
-					       
-					       //! Store for future uses
-					       storePars[iVA][indSyst({useCommonRange,timeDependentEnergy,inputAn})]=pFit;
-					     }
-					 });
-		  }
+	      for(size_t useCommonRange=0;useCommonRange<2;useCommonRange++)
+		{
+		  string totTag=combine("%s",rangeTag[useCommonRange]);
+		  
+		  //! Holds ff energy etc for each meson and combination, for each ensemble
+		  vector<AllMesCombos> mesCombos;
+		  ensembleLoop(ens,[&](const perens_t& e,size_t){mesCombos.push_back(computeAllMesCombos(e,mesComposition,useCommonRange,totTag));});
+		  
+		  // Loop over analysis
+		  ultimateAnalysisLoop([&](const size_t& inputAn)
+				       {
+					 /// Method 1 or 2
+					 const size_t iM12=inputAn/4;
+					 
+					 //! Interpolated data for each ensemble
+					 vector<permes_t<dbvec_t>> inte;
+					 
+					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+							  {
+							    const map<string,vector<double>> am=getMassList(e);
+							    
+							    inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn,totTag));
+							    inte.back().plotFf();
+							  });
+					 
+					 //fit
+					 for(size_t iVA=0;iVA<2;iVA++)
+					   {
+					     cout<<"Fitting "<<VA_tag[iVA]<<endl;
+					     
+					     dbvec_t pFit(nFitPars);
+					     boot_fit_t fit;
+					     for(size_t i=0;i<nFitPars;i++)
+					       fit.add_fit_par(pFit[i],combine("p[%zu]",i),0.0,0.1);
+					     
+					     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+							      {
+								const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
+								cout<<e.dirPath<<" "<<z.ave_err()<<endl;
+								cout<<"Mass: "<<((dboot_t)(inte[iens].E[0]*lat_par[inputAn].ainv[e.iBeta])).ave()<<endl;
+								
+								decKinLoop(e,[&,iens](const size_t iDecKin)
+									     {
+									       fit.add_point(inte[iens].ff[iVA][iDecKin]*z
+											     ,[=,&inte](const vector<double>& p,int iboot)
+											      {
+												const size_t iBeta=e.iBeta;
+												const double aInv=lat_par[inputAn].ainv[iBeta][iboot];
+												const double a2=1/sqr(aInv);
+												const double x=inte[iens].X[iDecKin][iboot];
+												
+												const double M=inte[iens].E[0][iboot]*aInv;
+												
+												return ansatz(iVA,p,M,a2,x);
+											      });
+									     });
+							      });
+					     
+					     fit.fit();
+					     
+					     const double xMin=1e-3;
+					     
+					     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+							      {
+								const string dirPath=e.dirPath+"/plots/"+inte[iens].mesTag;
+								
+								const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
+								
+								grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+"_"+totTag+"_Fit.xmg");
+								plot.set_no_line();
+								
+								decKinLoop(e,[&,iens](const size_t iDecKin)
+									     {
+									       const ave_err_t X=inte[iens].X[iDecKin].ave_err();
+									       const dboot_t Y=(X.ave()*inte[iens].ff[iVA][iDecKin]*z);
+									       
+									       plot.write_ave_err(X,Y.ave_err());
+									     });
+								
+								const size_t& iBeta=e.iBeta;
+								const dboot_t aInv=lat_par[inputAn].ainv[iBeta];
+								const double a2=((dboot_t)(1/sqr(aInv))).ave();
+								const double M=((dboot_t)(inte[iens].E[0]*aInv)).ave();
+								const double xMax=inte[iens].xMax()[0];
+								
+								plot.write_polygon([&](const double x) -> dboot_t{return x*ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
+								plot.write_polygon([&](const double x) -> dboot_t{return x*ansatz(iVA,pFit,mPhys,0,x);},xMin,xMax);
+							      });
+					     
+					     const dboot_t cph=ansatz(iVA,pFit,mPhys,0.0,xMin);
+					     cout<<"f: "<<cph.ave_err()<<endl;
+					     
+					     //! Store for future uses
+					     storePars[iVA][indSyst({useCommonRange,inputAn})]=pFit;
+					   }
+				       });
+		}
 	      
 	      /////////////////////////////////////////////////////////////////
 	      

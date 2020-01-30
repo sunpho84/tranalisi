@@ -16,9 +16,6 @@ const bool AVERAGE_SYMMETRIC=true;
 
 const char VA_tag[2][2]={"V","A"};
 
-//! Time dependent normalization
-const char timeDepEnTag[2][20]={"2ptsEn","EffMass"};
-
 //! Tag for the range to be used
 const char rangeTag[2][20]={"selfChosenTint","commonFitRange"};
 
