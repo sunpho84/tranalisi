@@ -45,4 +45,38 @@ const vector<ave_err_t> Zt_ae({{{0.711,0.005},{0.724,0.004},{0.774,0.004},{0.700
 
 dbvec_t Za(2*nbeta),Zp(2*nbeta),Zv(2*nbeta),Zt(2*nbeta);
 
+map<string,size_t> mesMap,ensMap;
+vector<Range> tint3pts;
+index_t tint3ptsIdx;
+
+inline size_t iEnsOfName(const string name)
+{
+  auto it=ensMap.find(name);
+  if(it==ensMap.end())
+    CRASH("Unknown ensemble %s",name.c_str());
+  
+  return it->second;
+}
+
+inline size_t iMesOfName(const string name)
+{
+  auto it=mesMap.find(name);
+  if(it==mesMap.end())
+    CRASH("Unknown meson %s",name.c_str());
+  
+  return it->second;
+}
+
+inline Range getTint3pts(const string ens,const string mes,const size_t iVA)
+{
+  string baseMes;
+  for(size_t i=0;i<mes.length() and mes[i]!='/';i++)
+    baseMes+=mes[i];
+  
+  const size_t iEns=iEnsOfName(ens);
+  const size_t iMes=iMesOfName(baseMes);
+  
+  return tint3pts[tint3ptsIdx({iEns,iMes,iVA})];
+}
+
 #endif

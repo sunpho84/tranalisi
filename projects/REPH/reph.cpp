@@ -1,5 +1,81 @@
 #include <tranalisi.hpp>
 
+#include <base.hpp>
+
+void read3ptsTint()
+{
+  raw_file_t input("tints.txt","r");
+  input.expect("Ens");
+  
+  auto getToken=[](char *token,char *line,int& pos)
+		{
+		  // Discard blank chars
+		  while(line[pos]==' ' or line[pos]=='\t')
+		    pos++;
+		  
+		  size_t rc=sscanf(line+pos,"%s",token);
+		  
+		  // Advance
+		  if(rc==1)
+		    pos+=strlen(token);
+		  
+		  return rc;
+		};
+  
+  char line[1024];
+  input.get_line(line);
+  
+  int rc,pos=0;
+  size_t iMes=0;
+  do
+    {
+      // Read
+      char token[1024];
+      rc=getToken(token,line,pos);
+      
+      // Advance
+      if(rc==1)
+	mesMap[token]=iMes++;
+    }
+  while(rc==1);
+  
+  cout<<"Known mesons: "<<endl;
+  for(auto& it : mesMap)
+    cout<<it.first<<endl;
+  
+  size_t iEns=0;
+  while(input.get_line(line))
+    {
+      int rc;
+      pos=0;
+      
+      char token[1024];
+      rc=getToken(token,line,pos);
+      if(rc==1)
+	{
+	  ensMap[token]=iEns++;
+	  
+	  for(size_t i=0;i<mesMap.size();i++)
+	    for(int iVA=0;iVA<2;iVA++)
+	      {
+		size_t o[2];
+		for(int mM=0;mM<2;mM++)
+		  {
+		    if(getToken(token,line,pos)!=1) CRASH("Parsing %s",line);
+		    if(sscanf(token,"%zu",&o[mM])!=1) CRASH("Parsing %s",token);
+		  }
+		tint3pts.push_back({o[0],o[1]});
+	      }
+	}
+    }
+  
+  cout<<"Known ensembles: "<<endl;
+  for(auto& it : ensMap)
+    cout<<it.first<<endl;
+  
+  tint3ptsIdx.set_ranges({{"Ens",ensMap.size()},{"Mes",mesMap.size()},{"VA",2}});
+}
+
 //               ~~~~~~~~~~~~~~~~~~~~~~~~~~ T/2
 //               }                           |
 //     --- -> Q0 --- X --- -> Qt ---         |
@@ -61,6 +137,9 @@ void readMesonList(raw_file_t& input)
       for(const auto& q : {quark1,quark2})
 	if(quarkList.find(q)==quarkList.end())
 	  CRASH("Unable to find quark %s",q.c_str());
+      
+      if(mesMap.find(name)==mesMap.end())
+	CRASH("Unable to find meson %s",name.c_str());
       
       mesonList.push_back({name,quark1,quark2,mass});
     }
@@ -207,6 +286,8 @@ auto ansatz(const size_t iVA,const TV& p,const double M,const double a2,const do
 
 int main(int narg,char **arg)
 {
+  read3ptsTint();
+  
   readPhysics("physics.txt");
   
   loadUltimateInput("ultimate_input.txt");

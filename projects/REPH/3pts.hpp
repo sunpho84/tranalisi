@@ -98,28 +98,30 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
       cout<<"Loading 3pts correlators from scratch"<<endl;
       
       for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	{
-	  //! Components of the decay
-	  const vector<size_t> c=ens.indDecKin(iDecKin);
-	  
-	  // Load fixing signs and charges
-	  for(int iVA=0;iVA<2;iVA++)
-	    {
-	      corrPX[iVA][iDecKin]=
-		load3pts(plotDirPath,iVA,iMs,iMt,c[0],c[1],c[2],"insOnT")*eT;
-	      corrPX[iVA][iDecKin]+=coeff[iVA]*
-		load3pts(plotDirPath,iVA,iMt,iMs,c[0],c[1],c[2],"insOnS")*eS;
-	      
-	      corrPX[iVA][iDecKin].ave_err().write(combine("%s/o%smuGPo-gs_%s.xmg",plotDirPath.c_str(),VA_tag[iVA],ens.decKinTag(c[0],c[1],c[2]).c_str()));
-	    }
-	}
+	// if(ens.considerDec[iDecKin] or ens.iDecSmallestKin[iDecKin]==(int)iDecKin)
+	  {
+	    //! Components of the decay
+	    const vector<size_t> c=ens.indDecKin(iDecKin);
+	    
+	    // Load fixing signs and charges
+	    for(int iVA=0;iVA<2;iVA++)
+	      {
+		corrPX[iVA][iDecKin]=
+		  load3pts(plotDirPath,iVA,iMs,iMt,c[0],c[1],c[2],"insOnT")*eT;
+		corrPX[iVA][iDecKin]+=coeff[iVA]*
+		  load3pts(plotDirPath,iVA,iMt,iMs,c[0],c[1],c[2],"insOnS")*eS;
+		
+		corrPX[iVA][iDecKin].ave_err().write(combine("%s/o%smuGPo-gs_%s.xmg",plotDirPath.c_str(),VA_tag[iVA],ens.decKinTag(c[0],c[1],c[2]).c_str()));
+	      }
+	  }
       
       //Plot ratio with symmetric
       if(AVERAGE_SYMMETRIC)
 	{
 	  cout<<"AVERAGING SYMMETRIC"<<endl;
 	  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	    if(ens.considerDec[iDecKin] and ens.hasSymmDec[iDecKin])
+	    if(// (ens.considerDec[iDecKin] or ens.iDecSmallestKin[iDecKin]==(int)iDecKin) and
+	       ens.hasSymmDec[iDecKin])
 	      for(int iVA=0;iVA<2;iVA++)
 		{
 		  djvec_t& a=corrPX[iVA][iDecKin];
@@ -414,12 +416,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::prepareKinematics(const bool useAnalytic
 template <typename TV>
 TV permes_combo_t<TV>::getCorrRat(const int iVA,const size_t iDecKin)
 {
-  const vector<size_t> c=ens.indDecKin(iDecKin);
-  vector<size_t> c0=c;
-  c0[1]=c0[2];
-  const auto iDecSmallestKin=ens.indDecKin(c0);
-  
-  TV r=(corrPX[iVA][iDecKin]-corrPX[iVA][iDecSmallestKin])/corrPX[1][iDecSmallestKin];
+  TV r=(corrPX[iVA][iDecKin]-corrPX[iVA][ens.iDecSmallestKin[iDecKin]])/corrPX[1][ens.iDecSmallestKin[iDecKin]];
   
   return r;
 }
@@ -440,7 +437,6 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts()
       cout<<"Loading stored form factors and mel"<<endl;
       raw_file_t file(ffPath,"r");
       file.bin_read(ff);
-      file.bin_read(this->quality);
     }
   else
     {
@@ -455,9 +451,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts()
 	    if(oldNormalization)
 	      CRASH("NOT POSSIBLE ANY MORE");
 	    
-	    this->quality[iVA][iDecKin]=true;
-	    
-	    const Range tint={10,12};
+	    const Range tint=getTint3pts(ens.dirPath,mesTag,iVA);
 	    //commonTint3pts[iVA]:
 	    
 	    const string plotFile=combine("%s/melRat_c%s_%s.xmg",mesPlotsPath.c_str(),VA_tag[iVA],ens.decKinTag(iDecKin).c_str());
@@ -487,7 +481,6 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts()
       cout<<"Storing matrix element and ff"<<endl;
       raw_file_t file(ffPath,"w");
       file.bin_write(ff);
-      file.bin_write(this->quality);
     }
   
   return *this;
@@ -513,38 +506,12 @@ void permes_t<TV>::plotFf(const string& tag) const
 	  grace_file_t& f=*get<0>(fy);
 	  auto& y=*get<1>(fy);
 	  
-	  f.set_line_type(grace::line_type_t::STRAIGHT_LINE);
-	  f.set_color_scheme({RED,BLUE,GREEN4,VIOLET,ORANGE});
-	  
-	  //for(size_t toC=0;toC<2;toC++)
-	    for(size_t iMoms=0;iMoms<ens.nMoms;iMoms++)
-	      for(size_t iMom0=0;iMom0<ens.nMoms;iMom0++)
-		{
-		  // if(toC==0)
-		  //   f.set_transparency(0.4);
-		  
-		  for(size_t _iDecKin=0;_iDecKin<ens.indDecKin.max();_iDecKin++)
-		    {
-		      size_t iDecKin=_iDecKin;
-		      bool cons=ens.considerDec[_iDecKin];
-		      const int possSymm=ens.symmOfDec[_iDecKin];
-		      if(not cons and ens.hasSymmDec[_iDecKin] and ens.considerDec[possSymm])
-			{
-			  iDecKin=possSymm;
-			  cons=true;
-			}
-		      const vector<size_t> c=ens.indDecKin(_iDecKin);
-		      
-		      if(cons and c[0]==iMoms and c[2]==iMom0 // and toC==quality[iVA][iDecKin]
-			 )
-			{
-			  f<<"# "<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<"\n";
-			  f.write_ave_err(X[iDecKin].ave(),y[iVA][iDecKin].ave_err());
-			}
-		    }
-		  f.set_comment(combine("iMoms=%zu, iMom0=%zu",iMoms,iMom0));
-		  f.new_data_set();
-		}
+	  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+	    if(ens.considerDec[iDecKin])
+	      {
+		f<<"# "<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<"\n";
+		f.write_ave_err(X[iDecKin].ave(),y[iVA][iDecKin].ave_err());
+	      }
 	}
     }
 }

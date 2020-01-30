@@ -81,6 +81,9 @@ struct perens_t
   //! Symmetric of the decay
   vector<int> symmOfDec;
   
+  //! Smallest transferred momentum
+  vector<int> iDecSmallestKin;
+  
   //! Index of meson kinematic of the decay
   vector<int> iMesKinOfDecKin;
   
@@ -209,10 +212,11 @@ struct perens_t
 	pMes[iKin]=2*M_PI*(moms[c[1]][2]-moms[c[0]][2])/L;
 	
 	pMesMax=std::max(pMesMax,fabs(pMes[iKin]));
+	
       }
     
     resizeListOfContainers({&considerDec,&hasSymmDec},indDecKin.max());
-    resizeListOfContainers({&symmOfDec,&iMesKinOfDecKin},indDecKin.max(),-1);
+    resizeListOfContainers({&symmOfDec,&iMesKinOfDecKin,&iDecSmallestKin},indDecKin.max(),-1);
     resizeListOfContainers({&Eg,&kDec,&kHatDec},indDecKin.max());
     
     ofstream kinematics(dirPath+"/kinematics.txt");
@@ -226,6 +230,10 @@ struct perens_t
      	const vector<size_t> cDec=indDecKin(iDecKin);
 	const size_t iMoms=cDec[0],iMomt=cDec[1],iMom0=cDec[2];
 	considerDec[iDecKin]=(iMomt!=iMom0);
+	
+	vector<size_t> c0=cDec;
+	c0[1]=c0[2];
+	iDecSmallestKin[iDecKin]=indDecKin(c0);
 	
 	const size_t possSymm=indDecKin({iMomt,iMoms,iMomt});
 	hasSymmDec[iDecKin]=(iMoms==iMom0) and (possSymm!=iDecKin);
@@ -275,7 +283,12 @@ vector<perens_t> readEnsList()
   output.reserve(nEns);
   
   for(size_t iEns=0;iEns<nEns;iEns++)
-    output.emplace_back(input.read<string>());
+    {
+      const string name=input.read<string>();
+      if(ensMap.find(name)==ensMap.end())
+	CRASH("Unable to find ensemble %s",name.c_str());
+      output.emplace_back(name);
+    }
     
   return output;
 }
