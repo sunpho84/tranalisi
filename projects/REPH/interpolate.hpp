@@ -212,13 +212,13 @@ void checkIntExtr(const vector<double>& amBare,const dboot_t& target)
 }
 
 //! Frontend to interpolate in mass
-permes_t<dbvec_t>interpolate(const AllMesCombos& mesCombos,const meson_t& mesComposition,const perens_t& ens,const map<string,vector<double>>& am,const size_t& inputAn,const string& totTag)
+permes_t<dbvec_t>interpolate(const AllMesCombos& mesCombos,const meson_t& mesComposition,const perens_t& ens,const map<string,vector<double>>& am,const size_t& inputAn)
 {
   //! Index of beta
   const size_t& iBeta=ens.iBeta;
   
   //! Name of the meson
-  const string& mesName=get<0>(mesComposition)+"/interp/"+to_string(inputAn)+"_"+totTag;
+  const string& mesName=get<0>(mesComposition)+"/interp/"+to_string(inputAn);
   
   //! S quark name
   const string& qS=get<1>(mesComposition);

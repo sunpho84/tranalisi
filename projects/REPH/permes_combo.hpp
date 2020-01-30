@@ -139,8 +139,8 @@ struct permes_combo_t : public permes_t<TV>
   //! Decay correlators for V and A
   array<vector<djvec_t>,2> corrPX;
   
-  //! Time interval for 3pts fit
-  array<vector<Range>,2> tint3pts;
+  // //! Time interval for 3pts fit
+  // array<vector<Range>,2> tint3pts;
   
   //! Common range for all three points
   array<Range,2> commonTint3pts;
@@ -254,7 +254,7 @@ struct permes_combo_t : public permes_t<TV>
     for(size_t iVA=0;iVA<2;iVA++)
       {
 	resizeListOfContainers({&corrPX[iVA]},ens.nDecKin,djvec_t{(size_t)ens.T/2+1});
-	resizeListOfContainers({&tint3pts[iVA]},ens.nDecKin,Range{0,0});
+	// resizeListOfContainers({&tint3pts[iVA]},ens.nDecKin,Range{0,0});
       }
     
     resizeListOfContainers({&dEdec,&PKdec,&this->X},ens.nDecKin);
@@ -268,11 +268,11 @@ struct permes_combo_t : public permes_t<TV>
   //! Perform the 2pts fit
   permes_combo_t& fit2pts(const char* fitTag,const bool forceRechoose=false);
   
-  //! Chooses the time interval for 3pts
-  permes_combo_t& choose3ptsTint(const string& mesPlotsPath,const char* fitTag,const bool forceRechoose=false);
+  // //! Chooses the time interval for 3pts
+  // permes_combo_t& choose3ptsTint(const string& mesPlotsPath,const char* fitTag,const bool forceRechoose=false);
   
-  //! Chooses a common range for three points
-  permes_combo_t& choose3ptsTintCommon(const size_t& length=4);
+  // //! Chooses a common range for three points
+  // permes_combo_t& choose3ptsTintCommon(const size_t& length=4);
   
   //! Chosses the time interval for 2pts
   permes_combo_t& choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose=false);
@@ -281,7 +281,7 @@ struct permes_combo_t : public permes_t<TV>
   TV getCorrRat(const int iVA,const size_t iDecKin);
   
   //! Perform the 3pts fit
-  permes_combo_t& fit3pts(const bool& useCommonRange,const char* fitTag,const bool forceRechoose=false);
+  permes_combo_t& fit3pts();
   
   //! X study
   void babababab()

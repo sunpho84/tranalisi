@@ -16,9 +16,6 @@ const bool AVERAGE_SYMMETRIC=true;
 
 const char VA_tag[2][2]={"V","A"};
 
-//! Tag for the range to be used
-const char rangeTag[2][20]={"selfChosenTint","commonFitRange"};
-
 //! Holds all info for a given physical quark
 using quark_t=tuple<double,size_t,vector<size_t>>;
 
