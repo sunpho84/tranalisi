@@ -264,14 +264,15 @@ void decKinLoop(const perens_t& e,const F& f)
 template <typename TV>
 auto ansatzA(const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
-  return M*(p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2)+p[4]*a2/x;
+  //return p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2;
+  return (p[0]+p[2]*a2)/(1-(p[1]+p[3]*a2)*M*M*(1-x));
 }
 
 //! Ansatz fit for fV
 template <typename TV>
 auto ansatzV(const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
-  return M*(p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2)+p[4]*a2/x;
+  return p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2;
 }
 
 //! Ansatz fit
@@ -315,7 +316,7 @@ int main(int narg,char **arg)
 	      
 	      const index_t indSyst({{"inputAn",ninput_an}});
 	      
-	      const size_t nFitPars=5;
+	      const size_t nFitPars=4;
 	      array<vector<dbvec_t>,2> storePars;
 	      for(size_t iVA=0;iVA<2;iVA++)
 		storePars[iVA]=vector<dbvec_t>(indSyst.max(),dbvec_t(nFitPars));
@@ -328,7 +329,7 @@ int main(int narg,char **arg)
 	      ultimateAnalysisLoop([&](const size_t& inputAn)
 				   {
 				     /// Method 1 or 2
-				     const size_t iM12=inputAn/4;
+				     //const size_t iM12=inputAn/4;
 				     
 				     //! Interpolated data for each ensemble
 				     vector<permes_t<dbvec_t>> inte;
@@ -352,6 +353,8 @@ int main(int narg,char **arg)
 					 boot_fit_t fit;
 					 for(size_t i=0;i<nFitPars;i++)
 					   fit.add_fit_par(pFit[i],combine("p[%zu]",i),0.0,0.1);
+					 
+					 fit.fix_par(1);
 					 
 					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 							  {
@@ -377,35 +380,70 @@ int main(int narg,char **arg)
 							  });
 					 
 					 fit.fit();
-					 
+					 cout<<"Fit pars\n"<<pFit.ave_err()<<endl;
 					 const double xMin=1e-3;
+					 double maxXMax=0;
 					 
+					 const string fitDirPath="plots/"+get<0>(mesComposition)+"/"+to_string(inputAn);
+					 grace_file_t fitPlot(fitDirPath+"/ff_"+VA_tag[iVA]+"_Fit.xmg");
+					 grace_file_t sliceA2Plot(fitDirPath+"/ff_"+VA_tag[iVA]+"_funA2_Fit.xmg");
+					 for(auto& p : {&fitPlot,&sliceA2Plot}) p->set_no_line();
+					 
+					 vector<grace::color_t> colors{grace::color_t::RED,grace::color_t::BLACK,grace::color_t::GREEN4};
+					 
+					 const double targetX=0.75;
 					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 							  {
-							    const string dirPath=e.dirPath+"/plots/"+inte[iens].mesTag;
+							    const size_t& iBeta=e.iBeta;
+							    const string ensDirPath=e.dirPath+"/plots/"+inte[iens].mesTag;
 							    
-							    const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
+							    // const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
 							    
-							    grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+"_Fit.xmg");
-							    plot.set_no_line();
+							    grace_file_t ensPlot(ensDirPath+"/ff_"+VA_tag[iVA]+"_Fit.xmg");
+							    for(auto& p : {&fitPlot,&sliceA2Plot})
+							      {
+								p->new_data_set();
+								p->set_comment(ensDirPath);
+							      }
+							    
+							    for(auto& p : {&ensPlot,&fitPlot,&sliceA2Plot})
+							      {
+								p->set_no_line();
+								p->set_all_colors(colors[iBeta]);
+							      }
+							    
+							    double closestX=0;
+							    dboot_t closestY;
 							    
 							    decKinLoop(e,[&,iens](const size_t iDecKin)
 									 {
 									   const ave_err_t X=inte[iens].X[iDecKin].ave_err();
 									   const dboot_t Y=inte[iens].ff[iVA][iDecKin];
 									   
-									   plot.write_ave_err(X,Y.ave_err());
+									   if(closestX==0 or fabs(closestX-targetX)>fabs(X.ave()-targetX))
+									     {
+									       closestX=X.ave();
+									       closestY=Y;
+									     }
+									   
+									   for(auto& p : {&ensPlot,&fitPlot})
+									     p->write_ave_err(X,Y.ave_err());
 									 });
 							    
-							    const size_t& iBeta=e.iBeta;
 							    const dboot_t aInv=lat_par[inputAn].ainv[iBeta];
 							    const double a2=((dboot_t)(1/sqr(aInv))).ave();
 							    const double M=((dboot_t)(inte[iens].E[0]*aInv)).ave();
 							    const double xMax=inte[iens].xMax()[0];
+							    maxXMax=max(maxXMax,xMax);
 							    
-							    plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
-							    plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,0,x);},xMin,xMax);
+							    ensPlot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
+							    fitPlot.write_line([&](const double x){return ansatz(iVA,pFit,M,a2,x).ave();},xMin,xMax,colors[iBeta]);
+							    
+							    sliceA2Plot.write_ave_err(a2+M/get<3>(mesComposition)/100,closestY.ave_err());
 							  });
+					 
+					 fitPlot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,0,x);},xMin,maxXMax,grace::color_t::VIOLET);
+					 sliceA2Plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,x,targetX);},1e-3,0.3,grace::color_t::VIOLET);
 					 
 					 const dboot_t cph=ansatz(iVA,pFit,mPhys,0.0,xMin);
 					 cout<<"f: "<<cph.ave_err()<<endl;
