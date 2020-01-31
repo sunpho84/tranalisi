@@ -435,7 +435,6 @@ int main(int narg,char **arg)
 							    const double a2=((dboot_t)(1/sqr(aInv))).ave();
 							    const double M=((dboot_t)(inte[iens].E[0]*aInv)).ave();
 							    const double xMax=inte[iens].xMax()[0];
-							    cout<<"MAXXMAX "<<maxXMax<<endl;
 							    maxXMax=max(maxXMax,xMax);
 							    
 							    ensPlot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
