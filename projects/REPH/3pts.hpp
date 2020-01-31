@@ -98,7 +98,7 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
       cout<<"Loading 3pts correlators from scratch"<<endl;
       
       for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	// if(ens.considerDec[iDecKin] or ens.iDecSmallestKin[iDecKin]==(int)iDecKin)
+	if(ens.considerDec[iDecKin] or ens.hasSymmDec[iDecKin] or ens.iDecSmallestKin[iDecKin]==(int)iDecKin)
 	  {
 	    //! Components of the decay
 	    const vector<size_t> c=ens.indDecKin(iDecKin);
@@ -120,8 +120,7 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
 	{
 	  cout<<"AVERAGING SYMMETRIC"<<endl;
 	  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	    if(// (ens.considerDec[iDecKin] or ens.iDecSmallestKin[iDecKin]==(int)iDecKin) and
-	       ens.hasSymmDec[iDecKin])
+	    if((ens.considerDec[iDecKin] or ens.iDecSmallestKin[iDecKin]==(int)iDecKin) and ens.hasSymmDec[iDecKin])
 	      for(int iVA=0;iVA<2;iVA++)
 		{
 		  djvec_t& a=corrPX[iVA][iDecKin];
@@ -428,9 +427,6 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts()
   if(not dir_exists(mesPlotsPath))
     mkdir(mesPlotsPath);
   
-  // choose3ptsTint(mesPlotsPath,fitTag,forceRechoose);
-  // choose3ptsTintCommon();
-  
   string ffPath=milledPath()+"/ff.dat";
   if(file_exists(ffPath))
     {
@@ -443,40 +439,47 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts()
       cout<<"Fitting 3pts correlators"<<endl;
       
       for(int iVA=0;iVA<2;iVA++)
-	for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	  if(ens.considerDec[iDecKin])
-	    {
-	    const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
-	    
-	    if(oldNormalization)
-	      CRASH("NOT POSSIBLE ANY MORE");
-	    
-	    const Range tint=getTint3pts(ens.dirPath,mesTag,iVA);
-	    //commonTint3pts[iVA]:
-	    
-	    const string plotFile=combine("%s/melRat_c%s_%s.xmg",mesPlotsPath.c_str(),VA_tag[iVA],ens.decKinTag(iDecKin).c_str());
-	    
-	    const TV r=getCorrRat(iVA,iDecKin);
-	    
-	    if(iVA==0)
+	{
+	  grace_file_t chooseTint(combine("%s/chooseTints_%s.xmg",mesPlotsPath.c_str(),VA_tag[iVA]));
+	  size_t iCorrPlot=0;
+	  
+	  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+	    if(ens.considerDec[iDecKin])
 	      {
-		const djack_t m=constant_fit(r,tint.begin,tint.end,plotFile);
-		ff[iVA][iDecKin]=m*E[iMesKin]/(ens.Eg[iDecKin]*ens.pMes[iMesKin]-E[iMesKin]*ens.kHatDec[iDecKin]);
-	      }
-	    else
-	      {
-		const djvec_t y=r/X[iDecKin];
+		const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
+		
+		if(oldNormalization)
+		  CRASH("NOT POSSIBLE ANY MORE");
+		
+		const Range tint=getTint3pts(ens.dirPath,mesTag,iVA);
+		
+		const string plotFile=combine("%s/melRat_c%s_%s.xmg",mesPlotsPath.c_str(),VA_tag[iVA],ens.decKinTag(iDecKin).c_str());
+		
+		const djack_t fpi=fP[0]*(eT-eS);
+		
+		const TV r=getCorrRat(iVA,iDecKin);
+		
+		djack_t n;
+		if(iVA==0)
+		  n=fpi*E[0]/(ens.Eg[iDecKin]*ens.pMes[iMesKin]-E[iMesKin]*ens.kHatDec[iDecKin]);
+		else
+		  n=2*fpi/(E[0]*X[iDecKin]);
+		
+		const djvec_t y=r*n;
 		const djack_t m=constant_fit(y,tint.begin,tint.end);
 		
 		grace_file_t f(plotFile);
 		write_fit_plot(f,tint.begin,tint.end,[&m](double x){return m;},vector_up_to<double>(y.size()),y);
+		write_fit_plot(chooseTint,tint.begin,tint.end,[&m](double x){return m;},vector_up_to<double>(y.size()-2,1+iCorrPlot/10.0),y.subset(1,y.size()-2));
+		chooseTint.set_no_line();
+		
 		f.set_title(combine("X=%lg",X[iDecKin].ave()));
+		
 		ff[iVA][iDecKin]=m;
+		
+		iCorrPlot++;
 	      }
-	    // //! Put back fpi
-	    // const djack_t fpi=fP[0]*(eT-eS);
-	    // ff[iVA][iDecKin]*=fpi;
-	  }
+	}
       
       cout<<"Storing matrix element and ff"<<endl;
       raw_file_t file(ffPath,"w");
@@ -514,6 +517,18 @@ void permes_t<TV>::plotFf(const string& tag) const
 	      }
 	}
     }
+}
+
+template <typename TV>
+void permes_t<TV>::correctFf(const meson_t& mes,const size_t input_an)
+{
+  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+    if(ens.considerDec[iDecKin])
+      {
+	const size_t ib=ens.iBeta;
+	const double& physMesMass=get<3>(mes);
+	ff[1][iDecKin]*=physMesMass/(E[0]*lat_par[input_an].ainv[ib]);
+      }
 }
 
 #endif

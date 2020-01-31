@@ -228,13 +228,13 @@ void mesonLoop(const F& f)
 
 //! Perform a loop over ensemble, putting a proper header
 template <typename F>
-void ensembleLoop(const vector<perens_t>& ens,const F& f)
+void ensembleLoop(const vector<perens_t>& ens,const F& f,const bool& verbose=false)
 {
   const size_t& nens=ens.size();
   
   for(size_t iens=0;iens<nens;iens++)
     {
-      cout<<endl<<"**** "<<ens[iens].dirPath<<" ****"<<endl<<endl;
+      if(verbose) cout<<endl<<"**** "<<ens[iens].dirPath<<" ****"<<endl<<endl;
       f(ens[iens],iens);
     }
 }
@@ -338,6 +338,8 @@ int main(int narg,char **arg)
 							const map<string,vector<double>> am=getMassList(e);
 							
 							inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn));
+							
+							inte.back().correctFf(mesComposition,inputAn);
 							inte.back().plotFf();
 						      });
 				     
@@ -353,13 +355,13 @@ int main(int narg,char **arg)
 					 
 					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 							  {
-							    const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
-							    cout<<e.dirPath<<" "<<z.ave_err()<<endl;
-							    cout<<"Mass: "<<((dboot_t)(inte[iens].E[0]*lat_par[inputAn].ainv[e.iBeta])).ave()<<endl;
+							    // const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
+							    // cout<<e.dirPath<<" "<<z.ave_err()<<endl;
+							    // cout<<"Mass: "<<((dboot_t)(inte[iens].E[0]*lat_par[inputAn].ainv[e.iBeta])).ave()<<endl;
 							    
 							    decKinLoop(e,[&,iens](const size_t iDecKin)
 									 {
-									   fit.add_point(inte[iens].ff[iVA][iDecKin]*z
+									   fit.add_point(inte[iens].ff[iVA][iDecKin]// *z
 											 ,[=,&inte](const vector<double>& p,int iboot)
 											  {
 											    const size_t iBeta=e.iBeta;
@@ -390,7 +392,7 @@ int main(int narg,char **arg)
 							    decKinLoop(e,[&,iens](const size_t iDecKin)
 									 {
 									   const ave_err_t X=inte[iens].X[iDecKin].ave_err();
-									   const dboot_t Y=(X.ave()*inte[iens].ff[iVA][iDecKin]*z);
+									   const dboot_t Y=inte[iens].ff[iVA][iDecKin];
 									   
 									   plot.write_ave_err(X,Y.ave_err());
 									 });
@@ -401,8 +403,8 @@ int main(int narg,char **arg)
 							    const double M=((dboot_t)(inte[iens].E[0]*aInv)).ave();
 							    const double xMax=inte[iens].xMax()[0];
 							    
-							    plot.write_polygon([&](const double x) -> dboot_t{return x*ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
-							    plot.write_polygon([&](const double x) -> dboot_t{return x*ansatz(iVA,pFit,mPhys,0,x);},xMin,xMax);
+							    plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
+							    plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,0,x);},xMin,xMax);
 							  });
 					 
 					 const dboot_t cph=ansatz(iVA,pFit,mPhys,0.0,xMin);

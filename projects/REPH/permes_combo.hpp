@@ -63,6 +63,9 @@ struct permes_t
   //! Plot ff
   void plotFf(const string& tag="") const;
   
+  //! Correct the ff
+  void correctFf(const meson_t& mes,const size_t input_an);
+  
   //! Return a bootstrap version
   static permes_t<dbvec_t> getBoot(const permes_t<djvec_t>& in,const boot_init_t& jack_of_boot)
   {
