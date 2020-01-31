@@ -46,10 +46,14 @@ struct permes_t
     T m;
     bool isFirst=true;
     for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
-      if(isFirst or m.ave()<X[iDecKin].ave())
+      if(ens.considerDec[iDecKin])
 	{
-	  isFirst=false;
-	  m=X[iDecKin];
+	  cout<<" MAX "<<iDecKin<<" "<<X[iDecKin].ave_err()<<endl;
+	  if(isFirst or m.ave()<X[iDecKin].ave())
+	    {
+	      isFirst=false;
+	      m=X[iDecKin];
+	    }
 	}
     
     return m;

@@ -385,6 +385,7 @@ int main(int narg,char **arg)
 					 double maxXMax=0;
 					 
 					 const string fitDirPath="plots/"+get<0>(mesComposition)+"/"+to_string(inputAn);
+					 mkdir(fitDirPath);
 					 grace_file_t fitPlot(fitDirPath+"/ff_"+VA_tag[iVA]+"_Fit.xmg");
 					 grace_file_t sliceA2Plot(fitDirPath+"/ff_"+VA_tag[iVA]+"_funA2_Fit.xmg");
 					 for(auto& p : {&fitPlot,&sliceA2Plot}) p->set_no_line();
@@ -434,6 +435,7 @@ int main(int narg,char **arg)
 							    const double a2=((dboot_t)(1/sqr(aInv))).ave();
 							    const double M=((dboot_t)(inte[iens].E[0]*aInv)).ave();
 							    const double xMax=inte[iens].xMax()[0];
+							    cout<<"MAXXMAX "<<maxXMax<<endl;
 							    maxXMax=max(maxXMax,xMax);
 							    
 							    ensPlot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
