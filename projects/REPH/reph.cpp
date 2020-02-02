@@ -143,6 +143,10 @@ void readMesonList(raw_file_t& input)
       
       mesonList.push_back({name,quark1,quark2,mass});
     }
+  
+  const string& firstMeson=get<0>(mesonList[0]);
+  if(firstMeson!="Pi+")
+    CRASH("First meson in the list is %s, must be Pi+",firstMeson.c_str());
 }
 
 //! Reads the physics file
@@ -262,10 +266,10 @@ void decKinLoop(const perens_t& e,const F& f)
 
 //! Ansatz fit for fA
 template <typename TV>
-auto ansatzA(const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+auto ansatzA(const TV& p,const double MPi,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
   //return p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2;
-  return (p[0]+p[2]*a2)/(1-(p[1]+p[3]*a2)*M*M*(1-x));
+  return (p[0]+p[2]*a2)/(1-(p[1]+p[3]*a2)*MPi*MPi*(1-x));
 }
 
 //! Ansatz fit for fV
@@ -310,6 +314,10 @@ int main(int narg,char **arg)
   
   const vector<perens_t> ens=readEnsList();
   
+  const index_t ensInputInd({{"Ens",ens.size()},{"Input",ninput_an}});
+  
+  dbvec_t MPi(ensInputInd.max());
+  
   mesonLoop([&](const meson_t& mesComposition)
 	    {
 	      const double& mPhys=get<3>(mesComposition);
@@ -342,6 +350,12 @@ int main(int narg,char **arg)
 							
 							inte.back().correctFf(mesComposition,inputAn);
 							inte.back().plotFf();
+							
+							if(get<0>(mesComposition)=="Pi+")
+							  {
+							    const dboot_t aInv=lat_par[inputAn].ainv[ens[iens].iBeta];
+							    MPi[ensInputInd({iens,inputAn})]=inte[iens].E[0]*aInv;
+							  }
 						      });
 				     
 				     //fit
@@ -355,6 +369,7 @@ int main(int narg,char **arg)
 					   fit.add_fit_par(pFit[i],combine("p[%zu]",i),0.0,0.1);
 					 
 					 fit.fix_par(1);
+					 fit.fix_par(3);
 					 
 					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 							  {
@@ -372,7 +387,7 @@ int main(int narg,char **arg)
 											    const double a2=1/sqr(aInv);
 											    const double x=inte[iens].X[iDecKin][iboot];
 											    
-											    const double M=inte[iens].E[0][iboot]*aInv;
+											    const double M=MPi[ensInputInd({iens,inputAn})][iboot];
 											    
 											    return ansatz(iVA,p,M,a2,x);
 											  });
@@ -388,9 +403,10 @@ int main(int narg,char **arg)
 					 mkdir(fitDirPath);
 					 grace_file_t fitPlot(fitDirPath+"/ff_"+VA_tag[iVA]+"_Fit.xmg");
 					 grace_file_t sliceA2Plot(fitDirPath+"/ff_"+VA_tag[iVA]+"_funA2_Fit.xmg");
+					 grace_file_t sliceMpiPlot(fitDirPath+"/ff_"+VA_tag[iVA]+"_funMpi_Fit.xmg");
 					 for(auto& p : {&fitPlot,&sliceA2Plot}) p->set_no_line();
 					 
-					 vector<grace::color_t> colors{grace::color_t::RED,grace::color_t::BLACK,grace::color_t::GREEN4};
+					 vector<grace::color_t> colors{grace::color_t::RED,grace::color_t::ORANGE,grace::color_t::GREEN4};
 					 
 					 const double targetX=0.75;
 					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
@@ -401,13 +417,13 @@ int main(int narg,char **arg)
 							    // const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
 							    
 							    grace_file_t ensPlot(ensDirPath+"/ff_"+VA_tag[iVA]+"_Fit.xmg");
-							    for(auto& p : {&fitPlot,&sliceA2Plot})
+							    for(auto& p : {&fitPlot,&sliceA2Plot,&sliceMpiPlot})
 							      {
 								p->new_data_set();
 								p->set_comment(ensDirPath);
 							      }
 							    
-							    for(auto& p : {&ensPlot,&fitPlot,&sliceA2Plot})
+							    for(auto& p : {&ensPlot,&fitPlot,&sliceA2Plot,&sliceMpiPlot})
 							      {
 								p->set_no_line();
 								p->set_all_colors(colors[iBeta]);
@@ -440,11 +456,21 @@ int main(int narg,char **arg)
 							    ensPlot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
 							    fitPlot.write_line([&](const double x){return ansatz(iVA,pFit,M,a2,x).ave();},xMin,xMax,colors[iBeta]);
 							    
+							    sliceMpiPlot.write_ave_err(M,closestY.ave_err());
 							    sliceA2Plot.write_ave_err(a2+M/get<3>(mesComposition)/100,closestY.ave_err());
 							  });
 					 
 					 fitPlot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,0,x);},xMin,maxXMax,grace::color_t::VIOLET);
 					 sliceA2Plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,x,targetX);},1e-3,0.3,grace::color_t::VIOLET);
+					 
+					 for(size_t ib=0;ib<3;ib++)
+					   {
+					     const dboot_t aInv=lat_par[inputAn].ainv[ib];
+					     const double a2=((dboot_t)(1/sqr(aInv))).ave();
+					     sliceMpiPlot.write_line([&](const double x){return ansatz(iVA,pFit,x,a2,targetX).ave();},1e-3,0.5,colors[ib]);
+					   }
+					 //cont
+					 sliceMpiPlot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,x,0,targetX);},1e-3,0.5,grace::color_t::VIOLET);
 					 
 					 const dboot_t cph=ansatz(iVA,pFit,mPhys,0.0,xMin);
 					 cout<<"f: "<<cph.ave_err()<<endl;
