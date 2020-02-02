@@ -368,7 +368,7 @@ int main(int narg,char **arg)
 					 for(size_t i=0;i<nFitPars;i++)
 					   fit.add_fit_par(pFit[i],combine("p[%zu]",i),0.0,0.1);
 					 
-					 fit.fix_par(1);
+					 // fit.fix_par(1);
 					 fit.fix_par(3);
 					 
 					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
@@ -449,7 +449,8 @@ int main(int narg,char **arg)
 							    
 							    const dboot_t aInv=lat_par[inputAn].ainv[iBeta];
 							    const double a2=((dboot_t)(1/sqr(aInv))).ave();
-							    const double M=((dboot_t)(inte[iens].E[0]*aInv)).ave();
+							    
+							    const double M=MPi[ensInputInd({iens,inputAn})].ave();
 							    const double xMax=inte[iens].xMax()[0];
 							    maxXMax=max(maxXMax,xMax);
 							    
