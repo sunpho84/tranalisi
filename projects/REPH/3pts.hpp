@@ -527,7 +527,12 @@ void permes_t<TV>::correctFf(const meson_t& mes,const size_t input_an)
       {
 	const size_t ib=ens.iBeta;
 	const double& physMesMass=get<3>(mes);
-	ff[1][iDecKin]*=physMesMass/(E[0]*lat_par[input_an].ainv[ib]);
+	const double fPhys=0.1304;
+	const T ainv=lat_par[input_an].ainv[ib];
+	const T M=E[0]*ainv;
+	const T f=fP[0]*(eT-eS);
+	cout<<" fpi: "<<f.ave_err()<<endl;
+	ff[1][iDecKin]*=physMesMass/M;// *fPhys/f;
       }
 }
 

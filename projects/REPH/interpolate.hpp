@@ -113,7 +113,7 @@ dbvec_t interpolate0D(const F& f,const vector<S>& data,const boot_init_t& j)
 permes_t<dbvec_t> interpolate(const perens_t& ens,const string& mesName,const vector<double>& m1,const vector<double>& m2,const vector<permes_combo_t<djvec_t> >& data,const boot_init_t& j,const dboot_t& m1phys,const dboot_t& m2phys,const bool&forceInterp=false)
 {
   //! Output
-  permes_t<dbvec_t> out(ens,mesName);
+  permes_t<dbvec_t> out(ens,mesName,data[0].eS,data[1].eT);
   
   //! Path where to store or load
   const string dataPath=out.milledPath()+"/interp.dat";
@@ -130,6 +130,7 @@ permes_t<dbvec_t> interpolate(const perens_t& ens,const string& mesName,const ve
       
       INTERP(E);
       INTERP(X);
+      INTERP(fP);
       for(int i=0;i<2;i++)
 	INTERP(ff[i]);
     }
@@ -139,7 +140,7 @@ permes_t<dbvec_t> interpolate(const perens_t& ens,const string& mesName,const ve
   //! Input or output file
   raw_file_t file(dataPath,interpLoad?"r":"w");
   
-  for(auto& q: {&out.E,&out.X,&out.ff[0],&out.ff[1]})
+  for(auto& q: {&out.E,&out.X,&out.ff[0],&out.ff[1],&out.fP})
     {
       if(interpLoad)
 	{

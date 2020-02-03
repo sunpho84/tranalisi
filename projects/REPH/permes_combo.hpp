@@ -37,6 +37,15 @@ struct permes_t
   //! Energy
   TV E;
   
+  //! Decay constant
+  TV fP;
+  
+  //! Charge of the spectator quark
+  const double eS;
+  
+  //! Charge of the forward line quark
+  const double eT;
+  
   //! Form factor independent variable
   TV X;
   
@@ -56,7 +65,7 @@ struct permes_t
     return m;
   }
   
-  permes_t(const perens_t& ens,const string& mesTag) : ens(ens),mesTag(mesTag){}
+  permes_t(const perens_t& ens,const string& mesTag,const double& eS,const double& eT) : ens(ens),mesTag(mesTag),eS(eS),eT(eT){}
   
   //! Form factors for V and A
   array<TV,2> ff;
@@ -70,9 +79,10 @@ struct permes_t
   //! Return a bootstrap version
   static permes_t<dbvec_t> getBoot(const permes_t<djvec_t>& in,const boot_init_t& jack_of_boot)
   {
-    permes_t<dbvec_t> out(in.ens,in.mesTag);
+    permes_t<dbvec_t> out(in.ens,in.mesTag,in.eS,in.eT);
     
     out.E=bvec_from_jvec(jack_of_boot,in.E);
+    out.fP=bvec_from_jvec(jack_of_boot,in.fP);
     out.X=bvec_from_jvec(jack_of_boot,in.X);
     for(int i=0;i<2;i++)
       out.ff[i]=bvec_from_jvec(jack_of_boot,in.ff[i]);
@@ -88,6 +98,9 @@ struct permes_combo_t : public permes_t<TV>
   using permes_t<TV>::ens;
   using permes_t<TV>::ff;
   using permes_t<TV>::E;
+  using permes_t<TV>::fP;
+  using permes_t<TV>::eS;
+  using permes_t<TV>::eT;
   using permes_t<TV>::X;
   using permes_t<TV>::milledPath;
   using permes_t<TV>::mesTag;
@@ -98,20 +111,11 @@ struct permes_combo_t : public permes_t<TV>
   //! Index of the forward line quark
   const size_t iMt;
   
-  //! Charge of the spectator quark
-  const double eS;
-  
-  //! Charge of the forward line quark
-  const double eT;
-  
   //! Pseudoscalar coupling
   djvec_t ZP;
   
   //! Axial coupling
   djvec_t ZA;
-  
-  //! Decay constant taken from Pseudoscalar current
-  djvec_t fP;
   
   //! Decay constant taken from Axial current
   djvec_t fPbare;
@@ -237,13 +241,11 @@ struct permes_combo_t : public permes_t<TV>
   
   //! Constructor
   permes_combo_t(const perens_t& ens,const string& mesName,const size_t& iMs,const size_t& iMt,const double& eS,const double& eT) :
-    permes_t<TV>(ens,combine("%s/iMs%zu" "_" "iMt%zu",mesName.c_str(),iMs,iMt)),
+    permes_t<TV>(ens,combine("%s/iMs%zu" "_" "iMt%zu",mesName.c_str(),iMs,iMt),eS,eT),
     iMs(iMs),
-    iMt(iMt),
-    eS(eS),
-    eT(eT)
+    iMt(iMt)
   {
-    resizeListOfContainers({&ZP,&ZA,&fP,&fPbare,&this->E},ens.nMesKin);
+    resizeListOfContainers({&ZP,&ZA,&fP,&fPbare,&E,&fP},ens.nMesKin);
     resizeListOfContainers({&eEff,&zEff},ens.nMesKin);
     resizeListOfContainers({&tint2pts},ens.nMesKin);
     
