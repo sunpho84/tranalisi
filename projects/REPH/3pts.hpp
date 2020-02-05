@@ -77,7 +77,7 @@ djvec_t permes_combo_t<TV>::load3pts(const string& plotDirPath,const size_t iVA,
 template <typename TV>
 void permes_combo_t<TV>::load3pts(const bool forceLoad)
 {
-  cout<<"Loading 3pts correlators"<<endl;
+  //cout<<"Loading 3pts correlators"<<endl;
   
   //! Coefficient to combine the two insertions
   const double coeff[2]={+1.0,-1.0};
@@ -95,7 +95,7 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
       if(not dir_exists(plotDirPath))
 	mkdir(plotDirPath);
       
-      cout<<"Loading 3pts correlators from scratch"<<endl;
+      //cout<<"Loading 3pts correlators from scratch"<<endl;
       
       for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
 	if(ens.considerDec[iDecKin] or ens.hasSymmDec[iDecKin] or ens.iDecSmallestKin[iDecKin]==(int)iDecKin)
@@ -118,7 +118,7 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
       //Plot ratio with symmetric
       if(AVERAGE_SYMMETRIC)
 	{
-	  cout<<"AVERAGING SYMMETRIC"<<endl;
+	  // cout<<"AVERAGING SYMMETRIC"<<endl;
 	  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
 	    if((ens.considerDec[iDecKin] or ens.iDecSmallestKin[iDecKin]==(int)iDecKin) and ens.hasSymmDec[iDecKin])
 	      for(int iVA=0;iVA<2;iVA++)
@@ -126,13 +126,13 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
 		  djvec_t& a=corrPX[iVA][iDecKin];
 		  djvec_t& b=corrPX[iVA][ens.symmOfDec[iDecKin]];
 		  
-		  cout<<"AVE "<<ens.symmOfDec[iDecKin]<<" "<<iDecKin<<endl;
-		  cout<<a[0].ave_err()<<" "<<b[0].ave_err()<<endl;
+		  // cout<<"AVE "<<ens.symmOfDec[iDecKin]<<" "<<iDecKin<<endl;
+		  // cout<<a[0].ave_err()<<" "<<b[0].ave_err()<<endl;
 		  
 		  if(iVA==0) b=-(a=(a-b)/2);
 		  else      b=a=(a+b)/2;
 		  
-		  cout<<a[0].ave_err()<<" "<<b[0].ave_err()<<endl;
+		  // cout<<a[0].ave_err()<<" "<<b[0].ave_err()<<endl;
 		  // const djvec_t& r=a/b;
 		  
 		  // const vector<size_t> c=ens.indDecKin(iDecKin);
@@ -143,7 +143,7 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
 	}
     }
   
-  cout<<(loadCompact?"Loading":"Storing")<<" compacted 3pts"<<endl;
+  //cout<<(loadCompact?"Loading":"Storing")<<" compacted 3pts"<<endl;
   
   //! File where to load or store
   raw_file_t file(dataPath,(loadCompact?"r":"w"));
@@ -157,7 +157,7 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
 template <typename TV>
 permes_combo_t<TV>& permes_combo_t<TV>::prepareKinematics(const bool useAnalytic)
 {
-  cout<<"Preparing 3pts kinematics"<<endl;
+  // cout<<"Preparing 3pts kinematics"<<endl;
   
   const djack_t& mass=E[0];
   
@@ -430,13 +430,13 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts()
   string ffPath=milledPath()+"/ff.dat";
   if(file_exists(ffPath))
     {
-      cout<<"Loading stored form factors and mel"<<endl;
+      //cout<<"Loading stored form factors and mel"<<endl;
       raw_file_t file(ffPath,"r");
       file.bin_read(ff);
     }
   else
     {
-      cout<<"Fitting 3pts correlators"<<endl;
+      //cout<<"Fitting 3pts correlators"<<endl;
       
       for(int iVA=0;iVA<2;iVA++)
 	{
@@ -456,7 +456,6 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts()
 		const string plotFile=combine("%s/melRat_c%s_%s.xmg",mesPlotsPath.c_str(),VA_tag[iVA],ens.decKinTag(iDecKin).c_str());
 		
 		const djack_t fpi=fP[0]*(eT-eS);
-		
 		const TV r=getCorrRat(iVA,iDecKin);
 		
 		djack_t n;
@@ -466,22 +465,32 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts()
 		  n=2*fpi/(E[0]*X[iDecKin]);
 		
 		const djvec_t y=r*n;
+		djvec_t yplot=r*n;
+		for(auto& yi : yplot)
+		  if(yi.ave()<0) yi*=1e-5;
 		const djack_t m=constant_fit(y,tint.begin,tint.end);
 		
 		grace_file_t f(plotFile);
-		write_fit_plot(f,tint.begin,tint.end,[&m](double x){return m;},vector_up_to<double>(y.size()),y);
-		write_fit_plot(chooseTint,tint.begin,tint.end,[&m](double x){return m;},vector_up_to<double>(y.size()-2,1+iCorrPlot/10.0),y.subset(1,y.size()-2));
+		f.write_polygon([&m](double x){return m;},tint.begin,tint.end,grace::color_t::YELLOW);
+		f.write_vec_ave_err(vector_up_to<double>(y.size()),yplot.ave_err(),grace::RED,grace::DIAMOND);
+	       
+		chooseTint.set_comment(ens.decKinTag(iDecKin));
+		write_fit_plot(chooseTint,tint.begin,tint.end,[&m](double x){return m;},vector_up_to<double>(y.size()-2,1+iCorrPlot/10.0),yplot.subset(1,y.size()-2));
 		chooseTint.set_no_line();
 		
-		f.set_title(combine("X=%lg",X[iDecKin].ave()));
+		f<<
+		  "#QTGRACE_ADDITIONAL_PARAMETER: TITLE_SHIFT G 0 0.27224 -0.20686\n"
+		  "#QTGRACE_ADDITIONAL_PARAMETER: SUBTITLE_SHIFT G 0 0.256163 -0.232583\n";
 		
+		f.set_title(combine("X=%lg",X[iDecKin].ave()));
+		f.set_subtitle(ens.dirPath);
 		ff[iVA][iDecKin]=m;
 		
 		iCorrPlot++;
 	      }
 	}
       
-      cout<<"Storing matrix element and ff"<<endl;
+      //cout<<"Storing matrix element and ff"<<endl;
       raw_file_t file(ffPath,"w");
       file.bin_write(ff);
     }
@@ -495,7 +504,7 @@ void permes_t<TV>::plotFf(const string& tag) const
   const string path=ens.dirPath+"/plots/"+mesTag;
   mkdir(path);
   
-  cout<<"Plotting ff"<<endl;
+  // cout<<"Plotting ff"<<endl;
   
   for(int iVA=0;iVA<2;iVA++)
     {
@@ -522,18 +531,25 @@ void permes_t<TV>::plotFf(const string& tag) const
 template <typename TV>
 void permes_t<TV>::correctFf(const meson_t& mes,const size_t input_an)
 {
-  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-    if(ens.considerDec[iDecKin])
-      {
-	const size_t ib=ens.iBeta;
-	const double& physMesMass=get<3>(mes);
-	const double fPhys=0.1304;
-	const T ainv=lat_par[input_an].ainv[ib];
-	const T M=E[0]*ainv;
-	const T f=fP[0]*(eT-eS);
-	cout<<" fpi: "<<f.ave_err()<<endl;
-	ff[1][iDecKin]*=physMesMass/M;// *fPhys/f;
-      }
+  using T=typename TV::base_type;
+  
+  const size_t ib=ens.iBeta;
+  const double& physMesMass=get<3>(mes);
+  const T ainv=lat_par[input_an].ainv[ib];
+  const T M=E[0]*ainv;
+  
+  const size_t imethod=input_an/4;
+  const size_t iZ=ib+3*imethod;
+  
+  const T massCorrection=physMesMass/M;
+  const T Zcorrection=Za[iZ]/Zv[iZ];
+  //cout<<"ZCorrection "<<ib<<" "<<Zcorrection.ave_err()<<endl;
+  
+  for(int iVA=0;iVA<2;iVA++)
+    ff[iVA]*=
+      massCorrection;
+  
+  ff[0]*=Zcorrection;
 }
 
 #endif

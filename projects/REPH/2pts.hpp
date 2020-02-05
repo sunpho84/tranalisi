@@ -49,7 +49,7 @@ void permes_combo_t<TV>::load2pts(const bool forceLoad)
   
   if(forceLoad or not file_exists(dataPath))
     {
-      cout<<"Loading 2pts correlators from scratch"<<endl;
+      //cout<<"Loading 2pts correlators from scratch"<<endl;
       
       const string plotsPath=combine("%s/plots/%s/2pts_corr/",ens.dirPath.c_str(),mesTag.c_str());
       
@@ -89,14 +89,14 @@ void permes_combo_t<TV>::load2pts(const bool forceLoad)
 	  corrA3P[iMesKin].ave_err().write(combine("%s/AP3/%s.xmg",plotsPath.c_str(),kinTag.c_str()));
 	}
       
-      cout<<"Storing compacted 2pts"<<endl;
+      //cout<<"Storing compacted 2pts"<<endl;
       raw_file_t dataFile(dataPath,"w");
       for(auto& c : {&corrPP,&corrA0P,&corrA3P})
 	dataFile.bin_write(*c);
     }
   else
     {
-      cout<<"Loading compacted 2pts"<<endl;
+      //cout<<"Loading compacted 2pts"<<endl;
       
       raw_file_t dataFile(dataPath,"r");
       for(auto& c : {&corrPP,&corrA0P,&corrA3P})
@@ -131,12 +131,12 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
   
   if(file_exists(tintPath) and not forceRechoose)
     {
-      cout<<"Loading stored 2pts intervals"<<endl;
+      //cout<<"Loading stored 2pts intervals"<<endl;
       raw_file_t(tintPath,"r").bin_read(tint2pts);
     }
   else
     {
-      cout<<"Choosing tint from scratch"<<endl;
+      //cout<<"Choosing tint from scratch"<<endl;
       
       const string rangeDir=mesPlotsPath+"/range";
       mkdir(rangeDir);
@@ -150,7 +150,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
 	  const size_t iMom2=c[1];
 	  
 	  const string rangePath=combine("%s/%s.xmg",rangeDir.c_str(),kinTag(iMom1,iMom2).c_str());
-	  cout<<rangePath<<endl;
+	  //cout<<rangePath<<endl;
 	  
 	  const djvec_t temp=smooth(forward_derivative(effective_mass(corrPP[iMesKin])),3);
 	  
@@ -194,7 +194,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
 	  
 	  //! If needed to redo, verbose
 	  if(checkReDo())
-	    recipe(true);
+	    recipe(false);
 	  
 	  // Extend
 	  int nReDo=4;
@@ -203,7 +203,7 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
 	    {
 	      nSigEnl+=1.0;
 	      
-	      cout<<"WARNING, compatibility range too short, "<<comp.getSelectionRange(0)<<" when at least "<<lengthMin<<" needed, enlarging right of "<<nSigEnl<<endl;
+	      //cout<<"WARNING, compatibility range too short, "<<comp.getSelectionRange(0)<<" when at least "<<lengthMin<<" needed, enlarging right of "<<nSigEnl<<endl;
 	      
 	      comp
 		.setRangeToConsiderByFraction(0.0)
@@ -219,13 +219,13 @@ permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPat
 	  
 	  const Range& fitRange=tint2pts[iMesKin]=comp.getSelectionRange(0);
 	  
-	  cout<<iMesKin<<" "<<ens.indMesKin.descr(iMesKin)<<": range "<<fitRange<<endl;
+	  //cout<<iMesKin<<" "<<ens.indMesKin.descr(iMesKin)<<": range "<<fitRange<<endl;
 	  
 	  const size_t &b=fitRange.begin,&e=fitRange.end;
 	  fitTxt.write_ave_err(iMesKin,{(b+e)/2.0,(e-b)/2.0});
 	}
       
-      cout<<"Storing chosen 2pts intervals"<<endl;
+      //cout<<"Storing chosen 2pts intervals"<<endl;
       raw_file_t(tintPath,"w").bin_write(tint2pts);
     }
   
@@ -326,7 +326,7 @@ void permes_combo_t<TV>::computeAxialPseudoCouplings(const string& mesPlotsPath)
     }
   
   
-  cout<<(load?"Loading":"Storing")<<" Axial and Pseudoscalar coupling and Energies"<<endl;
+  //cout<<(load?"Loading":"Storing")<<" Axial and Pseudoscalar coupling and Energies"<<endl;
   
   raw_file_t file(apePath,(load?"r":"w"));
   

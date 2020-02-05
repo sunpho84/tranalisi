@@ -195,7 +195,7 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
       const size_t iMs=get<2>(quarkS)[c[0]];
       const size_t iMt=get<2>(quarkT)[c[1]];
       
-      cout<<endl<<" === "<<mesName<<" "<<indMesCombo.descr(iMesCombo)<<" ==="<<endl;
+      //cout<<endl<<" === "<<mesName<<" "<<indMesCombo.descr(iMesCombo)<<" ==="<<endl;
       
       res.emplace_back(ens,mesName,iMs,iMt,eS,eT);
       
@@ -209,7 +209,7 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
       
       res[iMesCombo].printKin();
       
-      cout<<endl;
+      //cout<<endl;
     }
   
   return res;
@@ -266,27 +266,50 @@ void decKinLoop(const perens_t& e,const F& f)
 
 //! Ansatz fit for fA
 template <typename TV>
-auto ansatzA(const TV& p,const double MPi,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+auto chirAnsatzA(const TV& p,const double MPi,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
-  //return p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2;
   return (p[0]+p[2]*a2)/(1-(p[1]+p[3]*a2)*MPi*MPi*(1-x));
 }
 
 //! Ansatz fit for fV
 template <typename TV>
-auto ansatzV(const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+auto chirAnsatzV(const TV& p,const double MPi,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
-  return p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2;
+  return (p[0]+p[2]*a2)/(1-(p[1]+p[3]*a2)*MPi*MPi*(1-x));
 }
 
 //! Ansatz fit
 template <typename TV>
-auto ansatz(const size_t iVA,const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+auto chirAnsatz(const size_t iVA,const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
   if(iVA==0)
-    return ansatzV(p,M,a2,x);
+    return chirAnsatzV(p,M,a2,x);
   else
-    return ansatzA(p,M,a2,x);
+    return chirAnsatzA(p,M,a2,x);
+}
+
+//! Ansatz fit for fA
+template <typename TV>
+auto linearAnsatzA(const TV& p,const double MPi,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+{
+  return p[0]+p[1]*MPi+p[2]*x+p[3]*a2;
+}
+
+//! Ansatz fit for fV
+template <typename TV>
+auto linearAnsatzV(const TV& p,const double MPi,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+{
+  return p[0]+p[1]*MPi+p[2]*x+p[3]*a2;
+}
+
+//! Ansatz fit
+template <typename TV>
+auto linearAnsatz(const size_t iVA,const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+{
+  if(iVA==0)
+    return linearAnsatzV(p,M,a2,x);
+  else
+    return linearAnsatzA(p,M,a2,x);
 }
 
 int main(int narg,char **arg)
@@ -320,7 +343,7 @@ int main(int narg,char **arg)
   
   mesonLoop([&](const meson_t& mesComposition)
 	    {
-	      const double& mPhys=get<3>(mesComposition);
+	      // const double& mPhys=get<3>(mesComposition);
 	      
 	      const index_t indSyst({{"inputAn",ninput_an}});
 	      
@@ -332,6 +355,17 @@ int main(int narg,char **arg)
 	      //! Holds ff energy etc for each meson and combination, for each ensemble
 	      vector<AllMesCombos> mesCombos;
 	      ensembleLoop(ens,[&](const perens_t& e,size_t){mesCombos.push_back(computeAllMesCombos(e,mesComposition));});
+	      
+	      const bool heavy=(get<0>(mesComposition)[0]=='D');
+
+	      auto dbvec_ansatz=chirAnsatz<dbvec_t>;
+	      auto double_ansatz=chirAnsatz<vector<double>>;
+	      
+	      if(heavy)
+		{
+		  dbvec_ansatz=linearAnsatz<dbvec_t>;
+		  double_ansatz=linearAnsatz<vector<double>>;
+		}
 	      
 	      // Loop over analysis
 	      ultimateAnalysisLoop([&](const size_t& inputAn)
@@ -364,12 +398,13 @@ int main(int narg,char **arg)
 					 cout<<"Fitting "<<VA_tag[iVA]<<endl;
 					 
 					 dbvec_t pFit(nFitPars);
+					 const double guess[nFitPars]={0.046,-0.07,-0.1,-0.19};
 					 boot_fit_t fit;
 					 for(size_t i=0;i<nFitPars;i++)
-					   fit.add_fit_par(pFit[i],combine("p[%zu]",i),0.0,0.1);
+					   fit.add_fit_par(pFit[i],combine("p[%zu]",i),guess[i],0.05);
 					 
 					 // fit.fix_par(1);
-					 fit.fix_par(3);
+					 if(not heavy) fit.fix_par(3);
 					 
 					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 							  {
@@ -389,7 +424,7 @@ int main(int narg,char **arg)
 											    
 											    const double M=MPi[ensInputInd({iens,inputAn})][iboot];
 											    
-											    return ansatz(iVA,p,M,a2,x);
+											    return double_ansatz(iVA,p,M,a2,x);
 											  });
 									 });
 							  });
@@ -454,26 +489,30 @@ int main(int narg,char **arg)
 							    const double xMax=inte[iens].xMax()[0];
 							    maxXMax=max(maxXMax,xMax);
 							    
-							    ensPlot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
-							    fitPlot.write_line([&](const double x){return ansatz(iVA,pFit,M,a2,x).ave();},xMin,xMax,colors[iBeta]);
+							    ensPlot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
+							    fitPlot.write_line([&](const double x){return dbvec_ansatz(iVA,pFit,M,a2,x).ave();},xMin,xMax,colors[iBeta]);
 							    
 							    sliceMpiPlot.write_ave_err(M,closestY.ave_err());
 							    sliceA2Plot.write_ave_err(a2+M/get<3>(mesComposition)/100,closestY.ave_err());
 							  });
 					 
-					 fitPlot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,0,x);},xMin,maxXMax,grace::color_t::VIOLET);
-					 sliceA2Plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,x,targetX);},1e-3,0.3,grace::color_t::VIOLET);
+					 const double mPiPhys=0.135;
+					 
+					 fitPlot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,mPiPhys,0,x);},xMin,maxXMax,grace::color_t::VIOLET);
+					 sliceA2Plot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,mPiPhys,x,targetX);},1e-3,0.3,grace::color_t::VIOLET);
+					 
+					 sliceMpiPlot.write_ave_err(mPiPhys,dbvec_ansatz(iVA,pFit,mPiPhys,0,targetX).ave_err());
 					 
 					 for(size_t ib=0;ib<3;ib++)
 					   {
 					     const dboot_t aInv=lat_par[inputAn].ainv[ib];
 					     const double a2=((dboot_t)(1/sqr(aInv))).ave();
-					     sliceMpiPlot.write_line([&](const double x){return ansatz(iVA,pFit,x,a2,targetX).ave();},1e-3,0.5,colors[ib]);
+					     sliceMpiPlot.write_line([&](const double x){return dbvec_ansatz(iVA,pFit,x,a2,targetX).ave();},1e-3,0.5,colors[ib]);
 					   }
 					 //cont
-					 sliceMpiPlot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,x,0,targetX);},1e-3,0.5,grace::color_t::VIOLET);
+					 sliceMpiPlot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,x,0,targetX);},1e-3,0.5,grace::color_t::VIOLET);
 					 
-					 const dboot_t cph=ansatz(iVA,pFit,mPhys,0.0,xMin);
+					 const dboot_t cph=dbvec_ansatz(iVA,pFit,mPiPhys,0.0,xMin);
 					 cout<<"f: "<<cph.ave_err()<<endl;
 					 
 					 //! Store for future uses
@@ -485,35 +524,35 @@ int main(int narg,char **arg)
 	      
 	      // Total systematics analysis
 	      
-	      //! Directory
-	      const string dirPath="plots/"+get<0>(mesComposition);
-	      mkdir(dirPath);
+	      // //! Directory
+	      // const string dirPath="plots/"+get<0>(mesComposition);
+	      // mkdir(dirPath);
 	      
-	      for(size_t iVA=0;iVA<2;iVA++)
-		{
-		  grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+".xmg");
-		  plot.set_no_line();
+	      // for(size_t iVA=0;iVA<2;iVA++)
+	      // 	{
+	      // 	  grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+".xmg");
+	      // 	  plot.set_no_line();
 		  
-		  const double xMax=1.0;
-		  const vector<double> x=vector_up_to(xMax,0.0,0.05);
-		  vec_ave_err_t y(x.size());
+	      // 	  const double xMax=1.0;
+	      // 	  const vector<double> x=vector_up_to(xMax,0.0,0.05);
+	      // 	  vec_ave_err_t y(x.size());
 		  
-		  for(size_t i=0;i<x.size();i++)
-		    {
-		      dbvec_t temp(indSyst.max());
-		      for(size_t iSyst=0;iSyst<indSyst.max();iSyst++)
-			temp[iSyst]=ansatz(iVA,storePars[iVA][iSyst],mPhys,0.0,x[i]);
+	      // 	  for(size_t i=0;i<x.size();i++)
+	      // 	    {
+	      // 	      dbvec_t temp(indSyst.max());
+	      // 	      for(size_t iSyst=0;iSyst<indSyst.max();iSyst++)
+	      // 		temp[iSyst]=dbvec_ansatz(iVA,storePars[iVA][iSyst],mPhys,0.0,x[i]);
 		      
-		      const syst_t s=perform_analysis(temp,indSyst);
+	      // 	      const syst_t s=perform_analysis(temp,indSyst);
 		      
-		      y[i].ave()=s.ave;
-		      y[i].err()=s.tot;
-		    }
+	      // 	      y[i].ave()=s.ave;
+	      // 	      y[i].err()=s.tot;
+	      // 	    }
 		  
-		  plot.write_polygon(x,y);
-		}
+	      // 	  plot.write_polygon(x,y);
+	      // 	}
 	      
-	      // plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,0,x);},0,xMax);
+	      // // plot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,mPhys,0,x);},0,xMax);
 	      //perform_analysis(fTest,iTest,"ciccio");
 	    });
   
