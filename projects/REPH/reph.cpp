@@ -2,6 +2,9 @@
 
 #include <base.hpp>
 
+/// Physical pion mass
+const double mPiPhys=0.135;
+
 void read3ptsTint()
 {
   raw_file_t input("tints.txt","r");
@@ -249,7 +252,7 @@ void ultimateAnalysisLoop(const F& f)
 {
   for(size_t inputAn=0;inputAn<ninput_an;inputAn++)
     {
-      cout<<endl<<"//// Input analysis: "<<inputAn<<" ////"<<endl<<endl;
+      //cout<<endl<<"//// Input analysis: "<<inputAn<<" ////"<<endl<<endl;
       
       f(inputAn);
     }
@@ -343,11 +346,14 @@ int main(int narg,char **arg)
   
   mesonLoop([&](const meson_t& mesComposition)
 	    {
+	      const string& mesName=get<0>(mesComposition);
 	      // const double& mPhys=get<3>(mesComposition);
 	      
 	      const index_t indSyst({{"inputAn",ninput_an}});
 	      
 	      const size_t nFitPars=4;
+	      array<dbvec_t,2> storeCh2;
+	      array<size_t,2> storeNDof;
 	      array<vector<dbvec_t>,2> storePars;
 	      for(size_t iVA=0;iVA<2;iVA++)
 		storePars[iVA]=vector<dbvec_t>(indSyst.max(),dbvec_t(nFitPars));
@@ -356,8 +362,8 @@ int main(int narg,char **arg)
 	      vector<AllMesCombos> mesCombos;
 	      ensembleLoop(ens,[&](const perens_t& e,size_t){mesCombos.push_back(computeAllMesCombos(e,mesComposition));});
 	      
-	      const bool heavy=(get<0>(mesComposition)[0]=='D');
-
+	      const bool heavy=(mesName[0]=='D');
+	      
 	      auto dbvec_ansatz=chirAnsatz<dbvec_t>;
 	      auto double_ansatz=chirAnsatz<vector<double>>;
 	      
@@ -368,6 +374,7 @@ int main(int narg,char **arg)
 		}
 	      
 	      // Loop over analysis
+	      
 	      ultimateAnalysisLoop([&](const size_t& inputAn)
 				   {
 				     /// Method 1 or 2
@@ -385,7 +392,7 @@ int main(int narg,char **arg)
 							inte.back().correctFf(mesComposition,inputAn);
 							inte.back().plotFf();
 							
-							if(get<0>(mesComposition)=="Pi+")
+							if(mesName=="Pi+")
 							  {
 							    const dboot_t aInv=lat_par[inputAn].ainv[ens[iens].iBeta];
 							    MPi[ensInputInd({iens,inputAn})]=inte[iens].E[0]*aInv;
@@ -395,7 +402,7 @@ int main(int narg,char **arg)
 				     //fit
 				     for(size_t iVA=0;iVA<2;iVA++)
 				       {
-					 cout<<"Fitting "<<VA_tag[iVA]<<endl;
+					 //cout<<"Fitting "<<VA_tag[iVA]<<endl;
 					 
 					 dbvec_t pFit(nFitPars);
 					 const double guess[nFitPars]={0.046,-0.07,-0.1,-0.19};
@@ -408,13 +415,9 @@ int main(int narg,char **arg)
 					 
 					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 							  {
-							    // const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
-							    // cout<<e.dirPath<<" "<<z.ave_err()<<endl;
-							    // cout<<"Mass: "<<((dboot_t)(inte[iens].E[0]*lat_par[inputAn].ainv[e.iBeta])).ave()<<endl;
-							    
 							    decKinLoop(e,[&,iens](const size_t iDecKin)
 									 {
-									   fit.add_point(inte[iens].ff[iVA][iDecKin]// *z
+									   fit.add_point(inte[iens].ff[iVA][iDecKin]
 											 ,[=,&inte](const vector<double>& p,int iboot)
 											  {
 											    const size_t iBeta=e.iBeta;
@@ -429,12 +432,13 @@ int main(int narg,char **arg)
 									 });
 							  });
 					 
-					 fit.fit();
-					 cout<<"Fit pars\n"<<pFit.ave_err()<<endl;
+					 auto status=fit.fit();
+					 
+					 //cout<<"Fit pars\n"<<pFit.ave_err()<<endl;
 					 const double xMin=1e-3;
 					 double maxXMax=0;
 					 
-					 const string fitDirPath="plots/"+get<0>(mesComposition)+"/"+to_string(inputAn);
+					 const string fitDirPath="plots/"+mesName+"/"+to_string(inputAn);
 					 mkdir(fitDirPath);
 					 grace_file_t fitPlot(fitDirPath+"/ff_"+VA_tag[iVA]+"_Fit.xmg");
 					 grace_file_t sliceA2Plot(fitDirPath+"/ff_"+VA_tag[iVA]+"_funA2_Fit.xmg");
@@ -496,13 +500,12 @@ int main(int narg,char **arg)
 							    sliceA2Plot.write_ave_err(a2+M/get<3>(mesComposition)/100,closestY.ave_err());
 							  });
 					 
-					 const double mPiPhys=0.135;
-					 
 					 fitPlot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,mPiPhys,0,x);},xMin,maxXMax,grace::color_t::VIOLET);
 					 sliceA2Plot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,mPiPhys,x,targetX);},1e-3,0.3,grace::color_t::VIOLET);
 					 
 					 sliceMpiPlot.write_ave_err(mPiPhys,dbvec_ansatz(iVA,pFit,mPiPhys,0,targetX).ave_err());
 					 
+					 //f as a function of mpi
 					 for(size_t ib=0;ib<3;ib++)
 					   {
 					     const dboot_t aInv=lat_par[inputAn].ainv[ib];
@@ -512,11 +515,13 @@ int main(int narg,char **arg)
 					 //cont
 					 sliceMpiPlot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,x,0,targetX);},1e-3,0.5,grace::color_t::VIOLET);
 					 
-					 const dboot_t cph=dbvec_ansatz(iVA,pFit,mPiPhys,0.0,xMin);
-					 cout<<"f: "<<cph.ave_err()<<endl;
+					 /// Index of the systematic study
+					 const size_t iSyst=indSyst(vector<size_t>{inputAn});
 					 
 					 //! Store for future uses
-					 storePars[iVA][indSyst(vector<size_t>{inputAn})]=pFit;
+					 storePars[iVA][iSyst]=pFit;
+					 storeCh2[iVA][iSyst]=get<0>(status);
+					 storeNDof[iVA]=get<1>(status);
 				       }
 				   });
 	      
@@ -524,33 +529,37 @@ int main(int narg,char **arg)
 	      
 	      // Total systematics analysis
 	      
-	      // //! Directory
-	      // const string dirPath="plots/"+get<0>(mesComposition);
-	      // mkdir(dirPath);
+	      //! Directory
+	      const string dirPath="plots/"+mesName;
+	      mkdir(dirPath);
 	      
-	      // for(size_t iVA=0;iVA<2;iVA++)
-	      // 	{
-	      // 	  grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+".xmg");
-	      // 	  plot.set_no_line();
+	      for(size_t iVA=0;iVA<2;iVA++)
+	      	{
+	      	  grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+".xmg");
+	      	  plot.set_no_line();
 		  
-	      // 	  const double xMax=1.0;
-	      // 	  const vector<double> x=vector_up_to(xMax,0.0,0.05);
-	      // 	  vec_ave_err_t y(x.size());
+	      	  const double xMax=1.0;
+	      	  const vector<double> x=vector_up_to(xMax,0.0,0.05);
+	      	  vec_ave_err_t y(x.size());
 		  
-	      // 	  for(size_t i=0;i<x.size();i++)
-	      // 	    {
-	      // 	      dbvec_t temp(indSyst.max());
-	      // 	      for(size_t iSyst=0;iSyst<indSyst.max();iSyst++)
-	      // 		temp[iSyst]=dbvec_ansatz(iVA,storePars[iVA][iSyst],mPhys,0.0,x[i]);
+	      	  for(size_t i=0;i<x.size();i++)
+	      	    {
+	      	      dbvec_t temp(indSyst.max());
+	      	      for(size_t iSyst=0;iSyst<indSyst.max();iSyst++)
+	      		temp[iSyst]=dbvec_ansatz(iVA,storePars[iVA][iSyst],mPiPhys,0.0,x[i]);
 		      
-	      // 	      const syst_t s=perform_analysis(temp,indSyst);
+	      	      const syst_t s=perform_analysis(temp,indSyst);
 		      
-	      // 	      y[i].ave()=s.ave;
-	      // 	      y[i].err()=s.tot;
-	      // 	    }
+	      	      y[i].ave()=s.ave;
+	      	      y[i].err()=s.tot;
+	      	    }
 		  
-	      // 	  plot.write_polygon(x,y);
-	      // 	}
+	      	  plot.write_polygon(x,y);
+		  
+		  const syst_t ch2=perform_analysis(storeCh2[iVA],indSyst);
+		  
+		  cout<<mesName<<", ff"<<VA_tag[iVA]<<"(0): "<<smart_print(y[0])<<" , ch2: "<<smart_print({ch2.ave,ch2.tot})<<"/"<<storeNDof[iVA]<<endl;
+		}
 	      
 	      // // plot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,mPhys,0,x);},0,xMax);
 	      //perform_analysis(fTest,iTest,"ciccio");
