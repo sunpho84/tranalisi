@@ -136,7 +136,7 @@ grace_file_t::grace_file_t(const string &path) :
   line_color_scheme(grace::default_line_color_scheme),
   symbol_scheme(grace::default_symbol_scheme),
   iset(0),
-  settype(grace::XY),
+  settype(grace::XYDX),
   xaxis_min(0),
   xaxis_max(1),
   yaxis_min(0),
