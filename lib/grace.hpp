@@ -346,7 +346,7 @@ public:
     for(size_t i=0;i<data.size();i++)
       if(!std::isnan(data[i].err()))
 	(*this)<<x[i]<<" "<<data[i]<<endl;
-    close_cur_set();
+    set_need_close_set();
   }
   
   void write_vec_ave_err(const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym);
