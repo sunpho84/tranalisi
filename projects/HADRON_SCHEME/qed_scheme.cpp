@@ -47,9 +47,11 @@ int main()
   const djvec_t P5P5_QQ=load_mes("P5P5_QQ",P5P5,"F",l,"F",RE,+1,EVN);
   const djvec_t P5P5_0Q=load_mes("P5P5_0Q",P5P5,"0",l,"QED",RE,+1,EVN);
   const djvec_t P5P5_Q0=load_mes("P5P5_Q0",P5P5,"QED",l,"0",RE,+1,EVN);
+  const djvec_t P5P5_Q=P5P5_Q0+P5P5_0Q+P5P5_QQ;
   
-  const djvec_t P5P5_0P=load_mes("P5P5_0P",P5P5,"0",l,"PSE",IM,+1,EVN);
-  const djvec_t P5P5_P0=load_mes("P5P5_P0",P5P5,"PSE",l,"0",IM,-1,EVN);
+  const djvec_t P5P5_0P=load_mes("P5P5_0P",P5P5,"0",l,"PSE",IM,-1,EVN);
+  const djvec_t P5P5_P0=load_mes("P5P5_P0",P5P5,"PSE",l,"0",IM,+1,EVN);
+  const djvec_t P5P5_P=P5P5_P0+P5P5_0P;
   
   const djvec_t P5P5_0S=load_mes("P5P5_0S",P5P5,"0",l,"MASS",RE,+1,EVN);
   const djvec_t P5P5_S0=load_mes("P5P5_S0",P5P5,"MASS",l,"0",RE,-1,EVN);
@@ -59,19 +61,22 @@ int main()
   const djvec_t V0P5_QQ=load_mes("V0P5_QQ",V0P5,"F",l,"F",IM,+1,ODD);
   const djvec_t V0P5_0Q=load_mes("V0P5_0Q",V0P5,"0",l,"QED",IM,+1,ODD);
   const djvec_t V0P5_Q0=load_mes("V0P5_Q0",V0P5,"QED",l,"0",IM,+1,ODD);
+  const djvec_t V0P5_Q=V0P5_Q0+V0P5_0Q+V0P5_QQ;
   
   const djvec_t V0P5_0S=load_mes("V0P5_0S",V0P5,"0",l,"MASS",IM,+1,ODD);
   const djvec_t V0P5_S0=load_mes("V0P5_S0",V0P5,"MASS",l,"0",IM,+1,ODD);
 
   const djvec_t V0P5_0P=load_mes("V0P5_0P",V0P5,"0",l,"PSE",RE,+1,ODD);
   const djvec_t V0P5_P0=load_mes("V0P5_P0",V0P5,"PSE",l,"0",RE,-1,ODD);
+  const djvec_t V0P5_P=V0P5_P0+V0P5_0P;
   
   const djvec_t mcr_corr=forward_derivative(V0P5_00)/P5P5_00;
-  const djvec_t dmcr_corr_P=forward_derivative(V0P5_0P)/P5P5_00-P5P5_0P*mcr_corr;
-  const djvec_t dmcr_corr_Q=forward_derivative(V0P5_0Q)/P5P5_00-P5P5_0Q*mcr_corr;
-  const djvec_t dP_corr=V0P5_0Q/V0P5_0P;
+  const djvec_t dmcr_corr_P=forward_derivative(V0P5_P)/P5P5_00-P5P5_P*forward_derivative(V0P5_00)/sqr(P5P5_00);
+  const djvec_t dmcr_corr_Q=forward_derivative(V0P5_Q)/P5P5_00-P5P5_Q*forward_derivative(V0P5_00)/sqr(P5P5_00);
+  const djvec_t dP_corr=forward_derivative(V0P5_Q)/forward_derivative(V0P5_P);
   const djvec_t dP_full_corr=dmcr_corr_Q/dmcr_corr_P;
   
+  const djack_t mcr=constant_fit(mcr_corr,10,15,"plots/mcr_corr.xmg");
   const djack_t dP=constant_fit(dP_corr,10,15,"plots/dP_corr.xmg");
   const djack_t dP_full=constant_fit(dP_full_corr,10,15,"plots/dP_full_corr.xmg");
   
