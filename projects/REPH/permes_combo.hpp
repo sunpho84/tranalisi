@@ -148,10 +148,10 @@ struct permes_combo_t : public permes_t<TV>
   // array<vector<Range>,2> tint3pts;
   
   //! Common range for all three points
-  array<Range,2> commonTint3pts;
+  // array<Range,2> commonTint3pts;
   
   //! Time interval for 2pts fit
-  vector<Range> tint2pts;
+  // vector<Range> tint2pts;
   
   //! Load the PP correlation function
   djvec_t load2ptsPP(const size_t iMoms,const size_t iMomt);
@@ -268,7 +268,7 @@ struct permes_combo_t : public permes_t<TV>
   permes_combo_t& prepareKinematics(const bool useAnalytic);
   
   //! Perform the 2pts fit
-  permes_combo_t& fit2pts(const char* fitTag,const bool forceRechoose=false);
+  permes_combo_t& fit2pts();
   
   // //! Chooses the time interval for 3pts
   // permes_combo_t& choose3ptsTint(const string& mesPlotsPath,const char* fitTag,const bool forceRechoose=false);
@@ -276,8 +276,8 @@ struct permes_combo_t : public permes_t<TV>
   // //! Chooses a common range for three points
   // permes_combo_t& choose3ptsTintCommon(const size_t& length=4);
   
-  //! Chosses the time interval for 2pts
-  permes_combo_t& choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose=false);
+  // //! Chosses the time interval for 2pts
+  // permes_combo_t& choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose=false);
   
   //! Gets the correlation ratio
   TV getCorrRat(const int iVA,const size_t iDecKin);

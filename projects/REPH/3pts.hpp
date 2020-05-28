@@ -466,8 +466,24 @@ permes_combo_t<TV>& permes_combo_t<TV>::fit3pts()
 		
 		const djvec_t y=r*n;
 		djvec_t yplot=r*n;
-		for(auto& yi : yplot)
-		  if(yi.ave()<0) yi*=1e-5;
+		
+		double maxY=0;
+		double maxError=0;
+		for(size_t t=tint.begin;t<tint.end;t++)
+		  {
+		    const djack_t& yi=yplot[t];
+		    maxError=max(maxError,y[t].err());
+		    maxY=max(maxY,fabs(yi.ave()));
+		  }
+		
+		for(size_t t=0;t<y.size();t++)
+		  if(t<tint.begin or t>tint.end)
+		    {
+		      djack_t& yi=yplot[t];
+		      if(fabs(yi.ave())>4*maxY or yi.err()>4*maxError)
+			yi*=1e-5;
+		    }
+		
 		const djack_t m=constant_fit(y,tint.begin,tint.end);
 		
 		grace_file_t f(plotFile);

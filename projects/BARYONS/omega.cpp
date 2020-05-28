@@ -51,21 +51,26 @@ int main()
       const djvec_t boh_55=dir_55-2.0*exc_55;
       
       const djvec_t ii=dir_ii-2*exc_ii;
-      const djvec_t ij=dir_ij-2*exc_ij;
+      const djvec_t ij=dir_ij-2*exc_ij;   //exc nucleon
+      const djvec_t ii_bis=dir_ii-exc_ii;
+      const djvec_t ij_bis=dir_ij-exc_ij;   //nucleon?
       ii.ave_err().write("plots/ii.xmg");
       ij.ave_err().write("plots/ij.xmg");
       // const djvec_t s05=sA-sB;
       // const djvec_t s15=sA+0.5*sB;
       // const djvec_t n05=nA-nB;
       // const djvec_t n15=nA+0.5*nB;
+      const djvec_t nuc_bis=ii_bis-ij_bis;
       const djvec_t nuc_alt=ii-ij;
       const djvec_t omega=ii+0.5*ij;
       sig0_55.ave_err().write("plots/corr_sig_55.xmg");
       nuc_55.ave_err().write("plots/corr_nuc_55.xmg");
+      nuc_alt.ave_err().write("plots/corr_nuc_bis.xmg");
       nuc_alt.ave_err().write("plots/corr_nuc_alt.xmg");
       omega.ave_err().write("plots/corr_omega.xmg");
       constant_fit(effective_mass(sig0_55,T/2,-1),tMin,tMax,"plots/sig_55.xmg");
       constant_fit(effective_mass(nuc_55,T/2,-1),tMin,tMax,"plots/nuc_55.xmg");
+      constant_fit(effective_mass(nuc_bis,T/2,-1),tMin,tMax,"plots/nuc_bis.xmg");
       constant_fit(effective_mass(nuc_alt,T/2,-1),tMin,tMax,"plots/nuc_alt.xmg");
       
       const djack_t aMomega=constant_fit(effective_mass(omega,T/2,-1),tMin,tMax,"plots/omega.xmg");

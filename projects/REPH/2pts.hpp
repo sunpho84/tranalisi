@@ -124,113 +124,113 @@ void permes_combo_t<TV>::plotDispRel(const string& mesPlotsPath) const
   dispRel.write_polygon([M](double x){return cont_en_1D(M,x);},0,ens.pMesMax,grace::VIOLET);
 }
 
-template <typename TV>
-permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose)
-{
-  string tintPath=milledPath()+"/tint2pts.dat";
+// template <typename TV>
+// permes_combo_t<TV>& permes_combo_t<TV>::choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose)
+// {
+//   string tintPath=milledPath()+"/tint2pts.dat";
   
-  if(file_exists(tintPath) and not forceRechoose)
-    {
-      //cout<<"Loading stored 2pts intervals"<<endl;
-      raw_file_t(tintPath,"r").bin_read(tint2pts);
-    }
-  else
-    {
-      //cout<<"Choosing tint from scratch"<<endl;
+//   if(file_exists(tintPath) and not forceRechoose)
+//     {
+//       //cout<<"Loading stored 2pts intervals"<<endl;
+//       raw_file_t(tintPath,"r").bin_read(tint2pts);
+//     }
+//   else
+//     {
+//       //cout<<"Choosing tint from scratch"<<endl;
       
-      const string rangeDir=mesPlotsPath+"/range";
-      mkdir(rangeDir);
+//       const string rangeDir=mesPlotsPath+"/range";
+//       mkdir(rangeDir);
       
-      grace_file_t fitTxt(rangeDir+"/range.txt");
+//       grace_file_t fitTxt(rangeDir+"/range.txt");
       
-      for(size_t iMesKin=0;iMesKin<ens.indMesKin.max();iMesKin++)
-	{
-	  const vector<size_t> c=ens.indMesKin(iMesKin);
-	  const size_t iMom1=c[0];
-	  const size_t iMom2=c[1];
+//       for(size_t iMesKin=0;iMesKin<ens.indMesKin.max();iMesKin++)
+// 	{
+// 	  const vector<size_t> c=ens.indMesKin(iMesKin);
+// 	  const size_t iMom1=c[0];
+// 	  const size_t iMom2=c[1];
 	  
-	  const string rangePath=combine("%s/%s.xmg",rangeDir.c_str(),kinTag(iMom1,iMom2).c_str());
-	  //cout<<rangePath<<endl;
+// 	  const string rangePath=combine("%s/%s.xmg",rangeDir.c_str(),kinTag(iMom1,iMom2).c_str());
+// 	  //cout<<rangePath<<endl;
 	  
-	  const djvec_t temp=smooth(forward_derivative(effective_mass(corrPP[iMesKin])),3);
+// 	  const djvec_t temp=smooth(forward_derivative(effective_mass(corrPP[iMesKin])),3);
 	  
-	  CompatibilityRangeFinder<> comp(temp,rangePath);
+// 	  CompatibilityRangeFinder<> comp(temp,rangePath);
 	  
-	  //! Initial value of enlarging factor
-	  double nSigEnl=2.0;
+// 	  //! Initial value of enlarging factor
+// 	  double nSigEnl=2.0;
 	  
-	  const auto recipe=[&comp,&nSigEnl](const bool verb=false)
-			     {
-			       double nSigSel=1;
-			       comp
-				 .setVerbose(verb)
-				 .setRangeToConsiderByFraction(1.0/12)
-				 .selectClosestCompatiblePointWithinNsigma(0,nSigSel)
-				 .plotSelected()
-				 .selectEnlargingError(2,nSigEnl)
-				 .plotSelected()
-				 .mergeSelectionByDistanceSize()
-				 .plotSelected()
-				 .selectLargestRange()
-				 .plotSelected()
-				 .setRangeToConsiderByFraction(0.0)
-				 .extendRightWithCompatiblePoints(nSigEnl);
-			     };
+// 	  const auto recipe=[&comp,&nSigEnl](const bool verb=false)
+// 			     {
+// 			       double nSigSel=1;
+// 			       comp
+// 				 .setVerbose(verb)
+// 				 .setRangeToConsiderByFraction(1.0/12)
+// 				 .selectClosestCompatiblePointWithinNsigma(0,nSigSel)
+// 				 .plotSelected()
+// 				 .selectEnlargingError(2,nSigEnl)
+// 				 .plotSelected()
+// 				 .mergeSelectionByDistanceSize()
+// 				 .plotSelected()
+// 				 .selectLargestRange()
+// 				 .plotSelected()
+// 				 .setRangeToConsiderByFraction(0.0)
+// 				 .extendRightWithCompatiblePoints(nSigEnl);
+// 			     };
 	  
-	  recipe();
+// 	  recipe();
 	  
-	  //! Minimal length
-	  const size_t lengthMin=ens.T/6;
+// 	  //! Minimal length
+// 	  const size_t lengthMin=ens.T/6;
 	  
-	  // //! Trim some points if allowed
-	  // const size_t nDesel=2;
-	  // if(comp.getSelectionRange(0).size()>=lengthMin+nDesel)
-	  //   comp
-	  //   .deSelectLeftermostPoints(nDesel)
-	  //   .plotSelected();
+// 	  // //! Trim some points if allowed
+// 	  // const size_t nDesel=2;
+// 	  // if(comp.getSelectionRange(0).size()>=lengthMin+nDesel)
+// 	  //   comp
+// 	  //   .deSelectLeftermostPoints(nDesel)
+// 	  //   .plotSelected();
 	  
-	  //! Function to check if redo
-	  const auto checkReDo=[&comp,&lengthMin](){return comp.getSelectionRange(0).size()<lengthMin;};
+// 	  //! Function to check if redo
+// 	  const auto checkReDo=[&comp,&lengthMin](){return comp.getSelectionRange(0).size()<lengthMin;};
 	  
-	  //! If needed to redo, verbose
-	  if(checkReDo())
-	    recipe(false);
+// 	  //! If needed to redo, verbose
+// 	  if(checkReDo())
+// 	    recipe(false);
 	  
-	  // Extend
-	  int nReDo=4;
+// 	  // Extend
+// 	  int nReDo=4;
 	  
-	  while(checkReDo() and nReDo>0)
-	    {
-	      nSigEnl+=1.0;
+// 	  while(checkReDo() and nReDo>0)
+// 	    {
+// 	      nSigEnl+=1.0;
 	      
-	      //cout<<"WARNING, compatibility range too short, "<<comp.getSelectionRange(0)<<" when at least "<<lengthMin<<" needed, enlarging right of "<<nSigEnl<<endl;
+// 	      //cout<<"WARNING, compatibility range too short, "<<comp.getSelectionRange(0)<<" when at least "<<lengthMin<<" needed, enlarging right of "<<nSigEnl<<endl;
 	      
-	      comp
-		.setRangeToConsiderByFraction(0.0)
-		.extendRightWithCompatiblePoints(nSigEnl)
-		.plotSelected()
-		.selectLargestRange()
-		.plotSelected();
+// 	      comp
+// 		.setRangeToConsiderByFraction(0.0)
+// 		.extendRightWithCompatiblePoints(nSigEnl)
+// 		.plotSelected()
+// 		.selectLargestRange()
+// 		.plotSelected();
 	      
-	      nReDo--;
-	    }
-	  if(nReDo<=0)
-	    cout<<"WARNING, unable to satisfy the check!"<<endl;
+// 	      nReDo--;
+// 	    }
+// 	  if(nReDo<=0)
+// 	    cout<<"WARNING, unable to satisfy the check!"<<endl;
 	  
-	  const Range& fitRange=tint2pts[iMesKin]=comp.getSelectionRange(0);
+// 	  const Range& fitRange=tint2pts[iMesKin]=comp.getSelectionRange(0);
 	  
-	  //cout<<iMesKin<<" "<<ens.indMesKin.descr(iMesKin)<<": range "<<fitRange<<endl;
+// 	  //cout<<iMesKin<<" "<<ens.indMesKin.descr(iMesKin)<<": range "<<fitRange<<endl;
 	  
-	  const size_t &b=fitRange.begin,&e=fitRange.end;
-	  fitTxt.write_ave_err(iMesKin,{(b+e)/2.0,(e-b)/2.0});
-	}
+// 	  const size_t &b=fitRange.begin,&e=fitRange.end;
+// 	  fitTxt.write_ave_err(iMesKin,{(b+e)/2.0,(e-b)/2.0});
+// 	}
       
-      //cout<<"Storing chosen 2pts intervals"<<endl;
-      raw_file_t(tintPath,"w").bin_write(tint2pts);
-    }
+//       //cout<<"Storing chosen 2pts intervals"<<endl;
+//       raw_file_t(tintPath,"w").bin_write(tint2pts);
+//     }
   
-  return *this;
-}
+//   return *this;
+// }
 
 template <typename TV>
 void permes_combo_t<TV>::computeAxialPseudoCouplings(const string& mesPlotsPath)
@@ -259,7 +259,8 @@ void permes_combo_t<TV>::computeAxialPseudoCouplings(const string& mesPlotsPath)
 	  const size_t iMom1=c[0];
 	  const size_t iMom2=c[1];
 	  
-	  const Range& tint=tint2pts[iMesKin];
+	  const Range tint=getTint2pts(ens.dirPath,mesTag);
+	  
 	  const size_t tMin=tint.begin;
 	  const size_t tMax=tint.end+1;
 	  
@@ -316,7 +317,41 @@ void permes_combo_t<TV>::computeAxialPseudoCouplings(const string& mesPlotsPath)
 	    }
 	  else
 	    {
-	      two_pts_SL_fit(ZP[iMesKin],ZA[iMesKin],E[iMesKin],corrA0P[iMesKin],corrPP[iMesKin],T/2,tMin,tMax-1,combine("%s/CPP_A0P_fit/%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),-1,+1);
+	      djvec_t A0P=corrA0P[iMesKin],PP=corrPP[iMesKin];
+	      array<djvec_t*,2> l={&A0P,&PP};
+	      
+	      for(int i=0;i<2;i++)
+		{
+		  auto& y=*l[i];
+		  djvec_t eff=effective_mass(y,T/2,(i==0)?-1:1);
+		  
+		  double maxY=0;
+		  double maxError=0;
+		  for(size_t t=tint.begin;t<tint.end;t++)
+		    {
+		      const djack_t& ei=eff[t];
+		      maxError=max(maxError,ei.err());
+		      maxY=max(maxY,fabs(ei.ave()));
+		    }
+		  
+		  for(size_t t=0;t<eff.size();t++)
+		    if(t<tint.begin or t>tint.end)
+		      {
+			djack_t& yi=y[t];
+			const djack_t& ei=eff[t];
+			cout<<ei.ave_err()<<" "<<maxY+2*maxError<<endl;
+			if(fabs(ei.ave())>maxY+2*maxError or ei.err()>4*maxError)
+			  {
+			    cout<<" censoring "<<t<<endl;
+			    yi=0;
+			  }
+		    }
+		  
+		  cout<<maxY+2*maxError<<endl;
+		  cout<<y.ave_err()<<endl;
+		}
+	      
+	      two_pts_SL_fit(ZP[iMesKin],ZA[iMesKin],E[iMesKin],A0P,PP,T/2,tMin,tMax-1,combine("%s/CPP_A0P_fit/%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),-1,+1);
 	      ZA[iMesKin]/=E[iMesKin];
 	    }
 	  
@@ -344,12 +379,12 @@ void permes_combo_t<TV>::computeAxialPseudoCouplings(const string& mesPlotsPath)
 }
 
 template <typename TV>
-permes_combo_t<TV>& permes_combo_t<TV>::fit2pts(const char* fitTag,const bool forceRechoose)
+permes_combo_t<TV>& permes_combo_t<TV>::fit2pts()
 {
-  const string mesPlotsPath=combine("%s/plots/%s/2pts_fit_%s",ens.dirPath.c_str(),mesTag.c_str(),fitTag);
+  const string mesPlotsPath=combine("%s/plots/%s/2pts_fit",ens.dirPath.c_str(),mesTag.c_str());
   mkdir(mesPlotsPath);
   
-  choose2ptsTint(mesPlotsPath,forceRechoose);
+  //choose2ptsTint(mesPlotsPath,forceRechoose);
   
   computeAxialPseudoCouplings(mesPlotsPath);
   plotDispRel(mesPlotsPath);

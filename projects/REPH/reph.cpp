@@ -5,6 +5,15 @@
 /// Physical pion mass
 const double mPiPhys=0.135;
 
+//               ~~~~~~~~~~~~~~~~~~~~~~~~~~ T/2
+//               }                           |
+//     --- -> Q0 --- X --- -> Qt ---         |
+//    /                             \        |
+//   /                               \       |
+// P ---------- <- QS -------------V-A (t)
+
+#include <reph.hpp>
+
 void read3ptsTint()
 {
   raw_file_t input("tints.txt","r");
@@ -59,16 +68,26 @@ void read3ptsTint()
 	  ensMap[token]=iEns++;
 	  
 	  for(size_t i=0;i<mesMap.size();i++)
-	    for(int iVA=0;iVA<2;iVA++)
-	      {
-		size_t o[2];
-		for(int mM=0;mM<2;mM++)
-		  {
-		    if(getToken(token,line,pos)!=1) CRASH("Parsing %s",line);
-		    if(sscanf(token,"%zu",&o[mM])!=1) CRASH("Parsing %s",token);
-		  }
-		tint3pts.push_back({o[0],o[1]});
-	      }
+	    {
+	      auto readTints=
+		[&](vector<Range>& r)
+		{
+		  array<size_t,2> o;
+		  
+		  for(int mM=0;mM<2;mM++)
+		    {
+		      if(getToken(token,line,pos)!=1) CRASH("Parsing %s",line);
+		      if(sscanf(token,"%zu",&o[mM])!=1) CRASH("Parsing %s",token);
+		    }
+		  
+		  r.push_back({o[0],o[1]});
+		};
+	      
+	      readTints(tint2pts);
+	      
+	      for(int iVA=0;iVA<2;iVA++)
+		readTints(tint3pts);
+	    }
 	}
     }
   
@@ -76,17 +95,9 @@ void read3ptsTint()
   for(auto& it : ensMap)
     cout<<it.first<<endl;
   
+  tint2ptsIdx.set_ranges({{"Ens",ensMap.size()},{"Mes",mesMap.size()}});
   tint3ptsIdx.set_ranges({{"Ens",ensMap.size()},{"Mes",mesMap.size()},{"VA",2}});
 }
-
-//               ~~~~~~~~~~~~~~~~~~~~~~~~~~ T/2
-//               }                           |
-//     --- -> Q0 --- X --- -> Qt ---         |
-//    /                             \        |
-//   /                               \       |
-// P ---------- <- QS -------------V-A (t)
-
-#include <reph.hpp>
 
 //! Reads the list of quarks
 void readQuarkList(raw_file_t& input)
@@ -205,7 +216,7 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
       const bool USE_ANALYTIC=true;
       
       res[iMesCombo]
-	.fit2pts("selfChosenTint")
+	.fit2pts()
 	.prepareKinematics(USE_ANALYTIC)
 	.fit3pts()
 	.plotFf();
@@ -356,13 +367,16 @@ int main(int narg,char **arg)
 	      array<size_t,2> storeNDof;
 	      array<vector<dbvec_t>,2> storePars;
 	      for(size_t iVA=0;iVA<2;iVA++)
-		storePars[iVA]=vector<dbvec_t>(indSyst.max(),dbvec_t(nFitPars));
+		{
+		  storePars[iVA]=vector<dbvec_t>(indSyst.max(),dbvec_t(nFitPars));
+		  storeCh2[iVA]=dbvec_t(indSyst.max());
+		}
 	      
 	      //! Holds ff energy etc for each meson and combination, for each ensemble
 	      vector<AllMesCombos> mesCombos;
 	      ensembleLoop(ens,[&](const perens_t& e,size_t){mesCombos.push_back(computeAllMesCombos(e,mesComposition));});
 	      
-	      const bool heavy=(mesName[0]=='D');
+	      const bool heavy=(mesName[0]!='P');
 	      
 	      auto dbvec_ansatz=chirAnsatz<dbvec_t>;
 	      auto double_ansatz=chirAnsatz<vector<double>>;
@@ -447,7 +461,8 @@ int main(int narg,char **arg)
 					 
 					 vector<grace::color_t> colors{grace::color_t::RED,grace::color_t::ORANGE,grace::color_t::GREEN4};
 					 
-					 const double targetX=0.75;
+					 map<string,double> targetXlist={{"Pi+",0.75},{"K+",0.75},{"D+",0.3},{"Ds",0.3}};
+					 const double& targetX=targetXlist[mesName];
 					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
 							  {
 							    const size_t& iBeta=e.iBeta;
