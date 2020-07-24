@@ -43,7 +43,7 @@ public:
     size_t out=0,cur_length;
     do
       {
-	cur_length=this->read(nlines).size();
+	cur_length=this->read(nlines,false).size();
 	out+=cur_length;
       }
     while(cur_length);
@@ -63,7 +63,7 @@ public:
   {raw_file_t::open(path,"r");}
   
   //! read
-  vector<double> read(size_t nlines=1)
+  vector<double> read(size_t nlines=1,bool verbosity=VERBOSE)
   {
     //returned obj
     vector<double> data(cols.size()*nlines);
@@ -112,7 +112,7 @@ public:
     //invalidate failed reading
     if(iline<nlines)
       {
-	cout<<"Read "<<iline<<" lines instead of "<<nlines<<" in file "<<get_path()<<endl;
+	if(verbosity==VERBOSE) cout<<"Read "<<iline<<" lines instead of "<<nlines<<" in file "<<get_path()<<endl;
 	data.clear();
       }
     

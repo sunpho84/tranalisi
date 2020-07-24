@@ -364,10 +364,13 @@ void compute_basic_slopes()
   fclose(pFile);
   
   //load everything
+  ofstream deltam_cr_tab("deltam_cr_tab.txt");
+  
   for(size_t iens=0;iens<nens_used;iens++)
     {
       ens_pars_t &ens=ens_pars[iens];
       deltam_cr[iens]=compute_deltam_cr(ens,ilight,iPi);
+      deltam_cr_tab<<ens.path<<" "<<deltam_cr[iens].ave_err()<<endl;
       size_t T=ens.T,TH=T/2;
       
       for(size_t iQED_mes=0;iQED_mes<nQED_mes;iQED_mes++)
@@ -587,6 +590,9 @@ void compute_adml_bare()
 
   FILE* ppFile;
 
+  ofstream adml_bare_tab("adml_bare.txt");
+  
+  
   ppFile=fopen("MK.dat","w+");
   fclose(ppFile);
   
@@ -626,7 +632,7 @@ void compute_adml_bare()
 	  dboot_t QCD_dM2K_over_adm;
 	  QCD_dM2K_over_adm=dboot_t(bi,(jDM_MASS[ind_ens_Kminus]-jDM_MASS[ind_ens_K0bar])*2*jaM[ind_ens_K])/sqr(a);
 	  adml_bare[ind]=QCD_dM2K/QCD_dM2K_over_adm;
-
+	  adml_bare_tab<<ens.path<<" "<<adml_bare[ind].ave_err()<<endl;
 	  for(size_t iboot=0;iboot<adml_bare[ind].size();iboot++)
 	    {
 	      pFile=fopen("adml_bare.dat","a+");

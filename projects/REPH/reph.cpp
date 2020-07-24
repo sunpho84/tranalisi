@@ -1,5 +1,10 @@
 #include <tranalisi.hpp>
 
+#include <base.hpp>
+
+/// Physical pion mass
+const double mPiPhys=0.135;
+
 //               ~~~~~~~~~~~~~~~~~~~~~~~~~~ T/2
 //               }                           |
 //     --- -> Q0 --- X --- -> Qt ---         |
@@ -8,6 +13,91 @@
 // P ---------- <- QS -------------V-A (t)
 
 #include <reph.hpp>
+
+void read3ptsTint()
+{
+  raw_file_t input("tints.txt","r");
+  input.expect("Ens");
+  
+  auto getToken=[](char *token,char *line,int& pos)
+		{
+		  // Discard blank chars
+		  while(line[pos]==' ' or line[pos]=='\t')
+		    pos++;
+		  
+		  size_t rc=sscanf(line+pos,"%s",token);
+		  
+		  // Advance
+		  if(rc==1)
+		    pos+=strlen(token);
+		  
+		  return rc;
+		};
+  
+  char line[1024];
+  input.get_line(line);
+  
+  int rc,pos=0;
+  size_t iMes=0;
+  do
+    {
+      // Read
+      char token[1024];
+      rc=getToken(token,line,pos);
+      
+      // Advance
+      if(rc==1)
+	mesMap[token]=iMes++;
+    }
+  while(rc==1);
+  
+  cout<<"Known mesons: "<<endl;
+  for(auto& it : mesMap)
+    cout<<it.first<<endl;
+  
+  size_t iEns=0;
+  while(input.get_line(line))
+    {
+      int rc;
+      pos=0;
+      
+      char token[1024];
+      rc=getToken(token,line,pos);
+      if(rc==1)
+	{
+	  ensMap[token]=iEns++;
+	  
+	  for(size_t i=0;i<mesMap.size();i++)
+	    {
+	      auto readTints=
+		[&](vector<Range>& r)
+		{
+		  array<size_t,2> o;
+		  
+		  for(int mM=0;mM<2;mM++)
+		    {
+		      if(getToken(token,line,pos)!=1) CRASH("Parsing %s",line);
+		      if(sscanf(token,"%zu",&o[mM])!=1) CRASH("Parsing %s",token);
+		    }
+		  
+		  r.push_back({o[0],o[1]});
+		};
+	      
+	      readTints(tint2pts);
+	      
+	      for(int iVA=0;iVA<2;iVA++)
+		readTints(tint3pts);
+	    }
+	}
+    }
+  
+  cout<<"Known ensembles: "<<endl;
+  for(auto& it : ensMap)
+    cout<<it.first<<endl;
+  
+  tint2ptsIdx.set_ranges({{"Ens",ensMap.size()},{"Mes",mesMap.size()}});
+  tint3ptsIdx.set_ranges({{"Ens",ensMap.size()},{"Mes",mesMap.size()},{"VA",2}});
+}
 
 //! Reads the list of quarks
 void readQuarkList(raw_file_t& input)
@@ -62,8 +152,15 @@ void readMesonList(raw_file_t& input)
 	if(quarkList.find(q)==quarkList.end())
 	  CRASH("Unable to find quark %s",q.c_str());
       
+      if(mesMap.find(name)==mesMap.end())
+	CRASH("Unable to find meson %s",name.c_str());
+      
       mesonList.push_back({name,quark1,quark2,mass});
     }
+  
+  const string& firstMeson=get<0>(mesonList[0]);
+  if(firstMeson!="Pi+")
+    CRASH("First meson in the list is %s, must be Pi+",firstMeson.c_str());
 }
 
 //! Reads the physics file
@@ -72,13 +169,15 @@ void readPhysics(const string& path)
   //! Input file
   raw_file_t input(path,"r");
   
+  oldNormalization=input.read<int>("OldNormalization");
+  
   readQuarkList(input);
   
   readMesonList(input);
 }
 
 //! Reads and compute ll combination for a given meson
-AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes,const size_t& timeDependentEnergy,const size_t& useCommonRange,const string& totTag)
+AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
 {
   //! Result
   AllMesCombos res;
@@ -110,21 +209,21 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes,const si
       const size_t iMs=get<2>(quarkS)[c[0]];
       const size_t iMt=get<2>(quarkT)[c[1]];
       
-      cout<<endl<<" === "<<mesName<<" "<<indMesCombo.descr(iMesCombo)<<" ==="<<endl;
+      //cout<<endl<<" === "<<mesName<<" "<<indMesCombo.descr(iMesCombo)<<" ==="<<endl;
       
       res.emplace_back(ens,mesName,iMs,iMt,eS,eT);
       
-      const bool DO_NOT_USE_ANALYTIC=true;
+      const bool USE_ANALYTIC=true;
       
       res[iMesCombo]
-	.fit2pts("selfChosenTint")
-	.prepare3ptsNormalization(DO_NOT_USE_ANALYTIC,timeDependentEnergy,totTag)
-	.fit3pts(useCommonRange,totTag.c_str())
-	.plotFf(totTag);
+	.fit2pts()
+	.prepareKinematics(USE_ANALYTIC)
+	.fit3pts()
+	.plotFf();
       
       res[iMesCombo].printKin();
       
-      cout<<endl;
+      //cout<<endl;
     }
   
   return res;
@@ -147,13 +246,13 @@ void mesonLoop(const F& f)
 
 //! Perform a loop over ensemble, putting a proper header
 template <typename F>
-void ensembleLoop(const vector<perens_t>& ens,const F& f)
+void ensembleLoop(const vector<perens_t>& ens,const F& f,const bool& verbose=false)
 {
   const size_t& nens=ens.size();
   
   for(size_t iens=0;iens<nens;iens++)
     {
-      cout<<endl<<"**** "<<ens[iens].dirPath<<" ****"<<endl<<endl;
+      if(verbose) cout<<endl<<"**** "<<ens[iens].dirPath<<" ****"<<endl<<endl;
       f(ens[iens],iens);
     }
 }
@@ -164,7 +263,7 @@ void ultimateAnalysisLoop(const F& f)
 {
   for(size_t inputAn=0;inputAn<ninput_an;inputAn++)
     {
-      cout<<endl<<"//// Input analysis: "<<inputAn<<" ////"<<endl<<endl;
+      //cout<<endl<<"//// Input analysis: "<<inputAn<<" ////"<<endl<<endl;
       
       f(inputAn);
     }
@@ -181,34 +280,56 @@ void decKinLoop(const perens_t& e,const F& f)
 
 //! Ansatz fit for fA
 template <typename TV>
-auto ansatzA(const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+auto chirAnsatzA(const TV& p,const double MPi,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
-  //using T=std::remove_reference_t<decltype(p[0])>;
-  
-  return M*(p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2);
+  return (p[0]+p[2]*a2)/(1-(p[1]+p[3]*a2)*MPi*MPi*(1-x));
 }
 
 //! Ansatz fit for fV
 template <typename TV>
-auto ansatzV(const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+auto chirAnsatzV(const TV& p,const double MPi,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
-  //using T=std::remove_reference_t<decltype(p[0])>;
-  
-  return M*(p[0]+p[1]*M*M+p[2]*M*M*x+p[3]*a2);
+  return (p[0]+p[2]*a2)/(1-(p[1]+p[3]*a2)*MPi*MPi*(1-x));
 }
 
 //! Ansatz fit
 template <typename TV>
-auto ansatz(const size_t iVA,const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+auto chirAnsatz(const size_t iVA,const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
 {
   if(iVA==0)
-    return ansatzV(p,M,a2,x);
+    return chirAnsatzV(p,M,a2,x);
   else
-    return ansatzA(p,M,a2,x);
+    return chirAnsatzA(p,M,a2,x);
+}
+
+//! Ansatz fit for fA
+template <typename TV>
+auto linearAnsatzA(const TV& p,const double MPi,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+{
+  return p[0]+p[1]*MPi+p[2]*x+p[3]*a2;
+}
+
+//! Ansatz fit for fV
+template <typename TV>
+auto linearAnsatzV(const TV& p,const double MPi,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+{
+  return p[0]+p[1]*MPi+p[2]*x+p[3]*a2;
+}
+
+//! Ansatz fit
+template <typename TV>
+auto linearAnsatz(const size_t iVA,const TV& p,const double M,const double a2,const double x) -> std::remove_reference_t<decltype(p[0])>
+{
+  if(iVA==0)
+    return linearAnsatzV(p,M,a2,x);
+  else
+    return linearAnsatzA(p,M,a2,x);
 }
 
 int main(int narg,char **arg)
 {
+  read3ptsTint();
+  
   readPhysics("physics.txt");
   
   loadUltimateInput("ultimate_input.txt");
@@ -230,146 +351,235 @@ int main(int narg,char **arg)
   
   const vector<perens_t> ens=readEnsList();
   
-  // const size_t nMes=mesonList.size();
+  const index_t ensInputInd({{"Ens",ens.size()},{"Input",ninput_an}});
+  
+  dbvec_t MPi(ensInputInd.max());
   
   mesonLoop([&](const meson_t& mesComposition)
 	    {
-	      const double& mPhys=get<3>(mesComposition);
+	      const string& mesName=get<0>(mesComposition);
+	      // const double& mPhys=get<3>(mesComposition);
 	      
-	      const index_t indSyst({{"tDepEn",2},{"comRang",2},{"inputAn",ninput_an}});
+	      const index_t indSyst({{"inputAn",ninput_an}});
 	      
 	      const size_t nFitPars=4;
+	      array<dbvec_t,2> storeCh2;
+	      array<size_t,2> storeNDof;
 	      array<vector<dbvec_t>,2> storePars;
 	      for(size_t iVA=0;iVA<2;iVA++)
-		storePars[iVA]=vector<dbvec_t>(indSyst.max(),dbvec_t(nFitPars));
+		{
+		  storePars[iVA]=vector<dbvec_t>(indSyst.max(),dbvec_t(nFitPars));
+		  storeCh2[iVA]=dbvec_t(indSyst.max());
+		}
 	      
-	      for(size_t timeDependentEnergy=0;timeDependentEnergy<2;timeDependentEnergy++)
-		for(size_t useCommonRange=0;useCommonRange<2;useCommonRange++)
-		  {
-		    string totTag=combine("%s_%s",rangeTag[useCommonRange],timeDepEnTag[timeDependentEnergy]);
-		    
-		    //! Holds ff energy etc for each meson and combination, for each ensemble
-		    vector<AllMesCombos> mesCombos;
-		    ensembleLoop(ens,[&](const perens_t& e,size_t){mesCombos.push_back(computeAllMesCombos(e,mesComposition,timeDependentEnergy,useCommonRange,totTag));});
-		    
-		    // Loop over analysis
-		    ultimateAnalysisLoop([&](const size_t& inputAn)
-					 {
-					   /// Method 1 or 2
-					   const size_t iM12=inputAn/4;
-					   
-					   //! Interpolated data for each ensemble
-					   vector<permes_t<dbvec_t>> inte;
-					   
-					   ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
-							    {
-							      const map<string,vector<double>> am=getMassList(e);
-							      
-							      inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn,totTag));
-							      inte.back().plotFf();
-							    });
-					   
-					   //fit
-					   for(size_t iVA=0;iVA<2;iVA++)
-					     {
-					       cout<<"Fitting "<<VA_tag[iVA]<<endl;
-					       
-					       dbvec_t pFit(nFitPars);
-					       boot_fit_t fit;
-					       for(size_t i=0;i<nFitPars;i++)
-						 fit.add_fit_par(pFit[i],combine("p[%zu]",i),0.0,0.1);
-					       
-					       ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
-								{
-								  const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
-								  cout<<e.dirPath<<" "<<z.ave_err()<<endl;
-								  cout<<"Mass: "<<((dboot_t)(inte[iens].E[0]*lat_par[inputAn].ainv[e.iBeta])).ave()<<endl;
-								  
-								  decKinLoop(e,[&,iens](const size_t iDecKin)
-									       {
-										 fit.add_point(inte[iens].ff[iVA][iDecKin]*z
-											       ,[=,&inte](const vector<double>& p,int iboot)
-												{
-												  const size_t iBeta=e.iBeta;
-												  const double aInv=lat_par[inputAn].ainv[iBeta][iboot];
-												  const double a2=1/sqr(aInv);
-												  const double x=inte[iens].X[iDecKin][iboot];
-												  
-												  const double M=inte[iens].E[0][iboot]*aInv;
-												  
-												  return ansatz(iVA,p,M,a2,x);
-												});
-									       });
-								});
-					       
-					       fit.fit();
-					       
-					       ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
-								{
-								  const string dirPath=e.dirPath+"/plots/"+inte[iens].mesTag;
-								  
-								  grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+"_"+totTag+"_Fit.xmg");
-								  plot.set_no_line();
-								  
-								  decKinLoop(e,[&,iens](const size_t iDecKin)
-									       {
-										 plot.write_ave_err(inte[iens].X[iDecKin].ave_err(),inte[iens].ff[iVA][iDecKin].ave_err());
-									       });
-								  
-								  const size_t& iBeta=e.iBeta;
-								  const dboot_t aInv=lat_par[inputAn].ainv[iBeta];
-								  const double a2=((dboot_t)(1/sqr(aInv))).ave();
-								  const double M=((dboot_t)(inte[iens].E[0]*aInv)).ave();
-								  const double xMax=inte[iens].xMax()[0];
-								  
-								  plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,M,a2,x);},0,xMax);
-								  plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,0,x);},0,xMax);
-								});
-					       
-					       const dboot_t cph=ansatz(iVA,pFit,mPhys,0.0,0.0);
-					       cout<<"f: "<<cph.ave_err()<<endl;
-					       
-					       //! Store for future uses
-					       storePars[iVA][indSyst({useCommonRange,timeDependentEnergy,inputAn})]=pFit;
-					     }
-					 });
-		  }
+	      //! Holds ff energy etc for each meson and combination, for each ensemble
+	      vector<AllMesCombos> mesCombos;
+	      ensembleLoop(ens,[&](const perens_t& e,size_t){mesCombos.push_back(computeAllMesCombos(e,mesComposition));});
+	      
+	      const bool heavy=(mesName[0]!='P');
+	      
+	      auto dbvec_ansatz=chirAnsatz<dbvec_t>;
+	      auto double_ansatz=chirAnsatz<vector<double>>;
+	      
+	      if(heavy)
+		{
+		  dbvec_ansatz=linearAnsatz<dbvec_t>;
+		  double_ansatz=linearAnsatz<vector<double>>;
+		}
+	      
+	      // Loop over analysis
+	      
+	      ultimateAnalysisLoop([&](const size_t& inputAn)
+				   {
+				     /// Method 1 or 2
+				     //const size_t iM12=inputAn/4;
+				     
+				     //! Interpolated data for each ensemble
+				     vector<permes_t<dbvec_t>> inte;
+				     
+				     ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+						      {
+							const map<string,vector<double>> am=getMassList(e);
+							
+							inte.emplace_back(interpolate(mesCombos[iens],mesComposition,e,am,inputAn));
+							
+							inte.back().correctFf(mesComposition,inputAn);
+							inte.back().plotFf();
+							
+							if(mesName=="Pi+")
+							  {
+							    const dboot_t aInv=lat_par[inputAn].ainv[ens[iens].iBeta];
+							    MPi[ensInputInd({iens,inputAn})]=inte[iens].E[0]*aInv;
+							  }
+						      });
+				     
+				     //fit
+				     for(size_t iVA=0;iVA<2;iVA++)
+				       {
+					 //cout<<"Fitting "<<VA_tag[iVA]<<endl;
+					 
+					 dbvec_t pFit(nFitPars);
+					 const double guess[nFitPars]={0.046,-0.07,-0.1,-0.19};
+					 boot_fit_t fit;
+					 for(size_t i=0;i<nFitPars;i++)
+					   fit.add_fit_par(pFit[i],combine("p[%zu]",i),guess[i],0.05);
+					 
+					 // fit.fix_par(1);
+					 if(not heavy) fit.fix_par(3);
+					 
+					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+							  {
+							    decKinLoop(e,[&,iens](const size_t iDecKin)
+									 {
+									   fit.add_point(inte[iens].ff[iVA][iDecKin]
+											 ,[=,&inte](const vector<double>& p,int iboot)
+											  {
+											    const size_t iBeta=e.iBeta;
+											    const double aInv=lat_par[inputAn].ainv[iBeta][iboot];
+											    const double a2=1/sqr(aInv);
+											    const double x=inte[iens].X[iDecKin][iboot];
+											    
+											    const double M=MPi[ensInputInd({iens,inputAn})][iboot];
+											    
+											    return double_ansatz(iVA,p,M,a2,x);
+											  });
+									 });
+							  });
+					 
+					 auto status=fit.fit();
+					 
+					 //cout<<"Fit pars\n"<<pFit.ave_err()<<endl;
+					 const double xMin=1e-3;
+					 double maxXMax=0;
+					 
+					 const string fitDirPath="plots/"+mesName+"/"+to_string(inputAn);
+					 mkdir(fitDirPath);
+					 grace_file_t fitPlot(fitDirPath+"/ff_"+VA_tag[iVA]+"_Fit.xmg");
+					 grace_file_t sliceA2Plot(fitDirPath+"/ff_"+VA_tag[iVA]+"_funA2_Fit.xmg");
+					 grace_file_t sliceMpiPlot(fitDirPath+"/ff_"+VA_tag[iVA]+"_funMpi_Fit.xmg");
+					 for(auto& p : {&fitPlot,&sliceA2Plot}) p->set_no_line();
+					 
+					 vector<grace::color_t> colors{grace::color_t::RED,grace::color_t::ORANGE,grace::color_t::GREEN4};
+					 
+					 map<string,double> targetXlist={{"Pi+",0.75},{"K+",0.75},{"D+",0.3},{"Ds",0.3}};
+					 const double& targetX=targetXlist[mesName];
+					 ensembleLoop(ens,[&](const perens_t& e,const size_t& iens)
+							  {
+							    const size_t& iBeta=e.iBeta;
+							    const string ensDirPath=e.dirPath+"/plots/"+inte[iens].mesTag;
+							    
+							    // const dboot_t z=((iVA==0)?Za:Zv)[iM12*nbeta+e.iBeta];
+							    
+							    grace_file_t ensPlot(ensDirPath+"/ff_"+VA_tag[iVA]+"_Fit.xmg");
+							    for(auto& p : {&fitPlot,&sliceA2Plot,&sliceMpiPlot})
+							      {
+								p->new_data_set();
+								p->set_comment(ensDirPath);
+							      }
+							    
+							    for(auto& p : {&ensPlot,&fitPlot,&sliceA2Plot,&sliceMpiPlot})
+							      {
+								p->set_no_line();
+								p->set_all_colors(colors[iBeta]);
+							      }
+							    
+							    double closestX=0;
+							    dboot_t closestY;
+							    
+							    decKinLoop(e,[&,iens](const size_t iDecKin)
+									 {
+									   const ave_err_t X=inte[iens].X[iDecKin].ave_err();
+									   const dboot_t Y=inte[iens].ff[iVA][iDecKin];
+									   
+									   if(closestX==0 or fabs(closestX-targetX)>fabs(X.ave()-targetX))
+									     {
+									       closestX=X.ave();
+									       closestY=Y;
+									     }
+									   
+									   for(auto& p : {&ensPlot,&fitPlot})
+									     p->write_ave_err(X,Y.ave_err());
+									 });
+							    
+							    const dboot_t aInv=lat_par[inputAn].ainv[iBeta];
+							    const double a2=((dboot_t)(1/sqr(aInv))).ave();
+							    
+							    const double M=MPi[ensInputInd({iens,inputAn})].ave();
+							    const double xMax=inte[iens].xMax()[0];
+							    maxXMax=max(maxXMax,xMax);
+							    
+							    ensPlot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,M,a2,x);},xMin,xMax);
+							    fitPlot.write_line([&](const double x){return dbvec_ansatz(iVA,pFit,M,a2,x).ave();},xMin,xMax,colors[iBeta]);
+							    
+							    sliceMpiPlot.write_ave_err(M,closestY.ave_err());
+							    sliceA2Plot.write_ave_err(a2+M/get<3>(mesComposition)/100,closestY.ave_err());
+							  });
+					 
+					 fitPlot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,mPiPhys,0,x);},xMin,maxXMax,grace::color_t::VIOLET);
+					 sliceA2Plot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,mPiPhys,x,targetX);},1e-3,0.3,grace::color_t::VIOLET);
+					 
+					 sliceMpiPlot.write_ave_err(mPiPhys,dbvec_ansatz(iVA,pFit,mPiPhys,0,targetX).ave_err());
+					 
+					 //f as a function of mpi
+					 for(size_t ib=0;ib<3;ib++)
+					   {
+					     const dboot_t aInv=lat_par[inputAn].ainv[ib];
+					     const double a2=((dboot_t)(1/sqr(aInv))).ave();
+					     sliceMpiPlot.write_line([&](const double x){return dbvec_ansatz(iVA,pFit,x,a2,targetX).ave();},1e-3,0.5,colors[ib]);
+					   }
+					 //cont
+					 sliceMpiPlot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,x,0,targetX);},1e-3,0.5,grace::color_t::VIOLET);
+					 
+					 /// Index of the systematic study
+					 const size_t iSyst=indSyst(vector<size_t>{inputAn});
+					 
+					 //! Store for future uses
+					 storePars[iVA][iSyst]=pFit;
+					 storeCh2[iVA][iSyst]=get<0>(status);
+					 storeNDof[iVA]=get<1>(status);
+				       }
+				   });
 	      
 	      /////////////////////////////////////////////////////////////////
 	      
 	      // Total systematics analysis
 	      
 	      //! Directory
-	      const string dirPath="plots/"+get<0>(mesComposition);
+	      const string dirPath="plots/"+mesName;
 	      mkdir(dirPath);
 	      
 	      for(size_t iVA=0;iVA<2;iVA++)
-		{
-		  grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+".xmg");
-		  plot.set_no_line();
+	      	{
+	      	  grace_file_t plot(dirPath+"/ff_"+VA_tag[iVA]+".xmg");
+	      	  plot.set_no_line();
 		  
-		  const double xMax=1.0;
-		  const vector<double> x=vector_up_to(xMax,0.0,0.05);
-		  vec_ave_err_t y(x.size());
+	      	  const double xMax=1.0;
+	      	  const vector<double> x=vector_up_to(xMax,0.0,0.05);
+	      	  vec_ave_err_t y(x.size());
 		  
-		  for(size_t i=0;i<x.size();i++)
-		    {
-		      dbvec_t temp(indSyst.max());
-		      for(size_t iSyst=0;iSyst<indSyst.max();iSyst++)
-			temp[iSyst]=ansatz(iVA,storePars[iVA][iSyst],mPhys,0.0,x[i]);
+	      	  for(size_t i=0;i<x.size();i++)
+	      	    {
+	      	      dbvec_t temp(indSyst.max());
+	      	      for(size_t iSyst=0;iSyst<indSyst.max();iSyst++)
+	      		temp[iSyst]=dbvec_ansatz(iVA,storePars[iVA][iSyst],mPiPhys,0.0,x[i]);
 		      
-		      const syst_t s=perform_analysis(temp,indSyst);
+	      	      const syst_t s=perform_analysis(temp,indSyst);
 		      
-		      y[i].ave()=s.ave;
-		      y[i].err()=s.tot;
-		    }
+	      	      y[i].ave()=s.ave;
+	      	      y[i].err()=s.tot;
+	      	    }
 		  
-		  plot.write_polygon(x,y);
+	      	  plot.write_polygon(x,y);
+		  
+		  const syst_t ch2=perform_analysis(storeCh2[iVA],indSyst);
+		  
+		  cout<<mesName<<", ff"<<VA_tag[iVA]<<"(0): "<<smart_print(y[0])<<" , ch2: "<<smart_print({ch2.ave,ch2.tot})<<"/"<<storeNDof[iVA]<<endl;
 		}
 	      
-	      // plot.write_polygon([&](const double x) -> dboot_t{return ansatz(iVA,pFit,mPhys,0,x);},0,xMax);
+	      // // plot.write_polygon([&](const double x) -> dboot_t{return dbvec_ansatz(iVA,pFit,mPhys,0,x);},0,xMax);
 	      //perform_analysis(fTest,iTest,"ciccio");
 	    });
+  
   /*
     - * loop on all physical mesons
     - | * loop on all ensembles

@@ -37,6 +37,15 @@ struct permes_t
   //! Energy
   TV E;
   
+  //! Decay constant
+  TV fP;
+  
+  //! Charge of the spectator quark
+  const double eS;
+  
+  //! Charge of the forward line quark
+  const double eT;
+  
   //! Form factor independent variable
   TV X;
   
@@ -56,23 +65,24 @@ struct permes_t
     return m;
   }
   
-  permes_t(const perens_t& ens,const string& mesTag) : ens(ens),mesTag(mesTag){}
+  permes_t(const perens_t& ens,const string& mesTag,const double& eS,const double& eT) : ens(ens),mesTag(mesTag),eS(eS),eT(eT){}
   
   //! Form factors for V and A
   array<TV,2> ff;
   
-  //! Quality of the point
-  array<vector<size_t>,2> quality;
-  
   //! Plot ff
   void plotFf(const string& tag="") const;
+  
+  //! Correct the ff
+  void correctFf(const meson_t& mes,const size_t input_an);
   
   //! Return a bootstrap version
   static permes_t<dbvec_t> getBoot(const permes_t<djvec_t>& in,const boot_init_t& jack_of_boot)
   {
-    permes_t<dbvec_t> out(in.ens,in.mesTag);
+    permes_t<dbvec_t> out(in.ens,in.mesTag,in.eS,in.eT);
     
     out.E=bvec_from_jvec(jack_of_boot,in.E);
+    out.fP=bvec_from_jvec(jack_of_boot,in.fP);
     out.X=bvec_from_jvec(jack_of_boot,in.X);
     for(int i=0;i<2;i++)
       out.ff[i]=bvec_from_jvec(jack_of_boot,in.ff[i]);
@@ -88,6 +98,9 @@ struct permes_combo_t : public permes_t<TV>
   using permes_t<TV>::ens;
   using permes_t<TV>::ff;
   using permes_t<TV>::E;
+  using permes_t<TV>::fP;
+  using permes_t<TV>::eS;
+  using permes_t<TV>::eT;
   using permes_t<TV>::X;
   using permes_t<TV>::milledPath;
   using permes_t<TV>::mesTag;
@@ -98,20 +111,11 @@ struct permes_combo_t : public permes_t<TV>
   //! Index of the forward line quark
   const size_t iMt;
   
-  //! Charge of the spectator quark
-  const double eS;
-  
-  //! Charge of the forward line quark
-  const double eT;
-  
   //! Pseudoscalar coupling
   djvec_t ZP;
   
   //! Axial coupling
   djvec_t ZA;
-  
-  //! Decay constant taken from Pseudoscalar current
-  djvec_t fP;
   
   //! Decay constant taken from Axial current
   djvec_t fPbare;
@@ -128,9 +132,6 @@ struct permes_combo_t : public permes_t<TV>
   //! Quadrimomentum product
   djvec_t PKdec;
   
-  //! Normalization to be used for 3pts
-  vector<djvec_t> normaliz;
-  
   //! Pseudoscalar correlation function
   vector<djvec_t> corrPP;
   
@@ -143,14 +144,14 @@ struct permes_combo_t : public permes_t<TV>
   //! Decay correlators for V and A
   array<vector<djvec_t>,2> corrPX;
   
-  //! Time interval for 3pts fit
-  array<vector<Range>,2> tint3pts;
+  // //! Time interval for 3pts fit
+  // array<vector<Range>,2> tint3pts;
   
   //! Common range for all three points
-  array<Range,2> commonTint3pts;
+  // array<Range,2> commonTint3pts;
   
   //! Time interval for 2pts fit
-  vector<Range> tint2pts;
+  // vector<Range> tint2pts;
   
   //! Load the PP correlation function
   djvec_t load2ptsPP(const size_t iMoms,const size_t iMomt);
@@ -190,14 +191,33 @@ struct permes_combo_t : public permes_t<TV>
       CRASH("Unable to create output %s",path.c_str());
 	
     for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
-      if(ens.considerDec[iDecKin])
+      {
+	const int iMesKin=ens.iMesKinOfDecKin[iDecKin];
+	
+	out<<ens.indDecKin.descr(iDecKin)<<endl;
+	out<<" X: "<<X[iDecKin].ave_err()<<endl;
+	out<<" Pmes_z: "<<ens.pMes[iMesKin]<<endl;
+	out<<" Khat_z: "<<ens.kHatDec[iDecKin]<<endl;
+	out<<" PK: "<<PKdec[iDecKin].ave_err()<<endl;
+	out<<" Eg: "<<ens.Eg[iDecKin]<<endl;
+	out<<" EgT: "<<ens.EgT(iDecKin)<<endl;
+	out<<endl;
+      }
+    
+    const string symmPath=ens.dirPath+"/plots/"+mesTag+"/symmetrics.txt";
+    ofstream outSymm(symmPath);
+    if(not outSymm.good())
+      CRASH("Unable to create output %s",symmPath.c_str());
+	
+    for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
+      if(ens.hasSymmDec[iDecKin])// and ens.symmOfDec[iDecKin]>(int)iDecKin)
 	{
-	  out<<ens.indDecKin.descr(iDecKin)<<endl;
-	  out<<" X: "<<X[iDecKin].ave_err()<<endl;
-	  out<<" PK: "<<PKdec[iDecKin].ave_err()<<endl;
-	  out<<" EgT: "<<ens.EgT(iDecKin)<<endl;
-	  out<<endl;
+	  const vector<size_t> cDec=ens.indDecKin(iDecKin);
+	  const size_t iMoms=cDec[0],iMomt=cDec[1],iMom0=cDec[2];
+	  outSymm<<" "<<X[iDecKin].ave()<<" "<<iDecKin<<" "<<iMoms<<" "<<iMomt<<" "<<iMom0<<"  "<<ens.symmOfDec[iDecKin]<<endl;
 	}
+    
+    out<<"/////////////////////////////////////////////////////////////////"<<endl;
     
     for(size_t iMesKin=0;iMesKin<ens.nMesKin;iMesKin++)
       {
@@ -221,51 +241,49 @@ struct permes_combo_t : public permes_t<TV>
   
   //! Constructor
   permes_combo_t(const perens_t& ens,const string& mesName,const size_t& iMs,const size_t& iMt,const double& eS,const double& eT) :
-    permes_t<TV>(ens,combine("%s/iMs%zu" "_" "iMt%zu",mesName.c_str(),iMs,iMt)),
+    permes_t<TV>(ens,combine("%s/iMs%zu" "_" "iMt%zu",mesName.c_str(),iMs,iMt),eS,eT),
     iMs(iMs),
-    iMt(iMt),
-    eS(eS),
-    eT(eT)
+    iMt(iMt)
   {
-    resizeListOfContainers({&ZP,&ZA,&fP,&fPbare,&this->E},ens.nMesKin);
+    resizeListOfContainers({&ZP,&ZA,&fP,&fPbare,&E,&fP},ens.nMesKin);
     resizeListOfContainers({&eEff,&zEff},ens.nMesKin);
     resizeListOfContainers({&tint2pts},ens.nMesKin);
     
     resizeListOfContainers({&corrA0P,&corrA3P,&corrPP},ens.nMesKin,djvec_t{(size_t)ens.T/2+1});
     
     resizeListOfContainers({&this->ff[0],&this->ff[1]},ens.nDecKin);
-    resizeListOfContainers({&this->quality[0],&this->quality[1]},ens.nDecKin,true);
     
     for(size_t iVA=0;iVA<2;iVA++)
       {
 	resizeListOfContainers({&corrPX[iVA]},ens.nDecKin,djvec_t{(size_t)ens.T/2+1});
-	resizeListOfContainers({&tint3pts[iVA]},ens.nDecKin,Range{0,0});
+	// resizeListOfContainers({&tint3pts[iVA]},ens.nDecKin,Range{0,0});
       }
     
     resizeListOfContainers({&dEdec,&PKdec,&this->X},ens.nDecKin);
-    
-    normaliz.resize(ens.indDecKin.max(),djvec_t{(size_t)ens.T/2+1});
     
     load();
   }
   
   //! Prepare the 3pts normalization
-  permes_combo_t& prepare3ptsNormalization(const bool useAnalytic,const bool& timeDependentEnergy,const string& totTag);
+  permes_combo_t& prepareKinematics(const bool useAnalytic);
   
   //! Perform the 2pts fit
-  permes_combo_t& fit2pts(const char* fitTag,const bool forceRechoose=false);
+  permes_combo_t& fit2pts();
   
-  //! Chooses the time interval for 3pts
-  permes_combo_t& choose3ptsTint(const string& mesPlotsPath,const char* fitTag,const bool forceRechoose=false);
+  // //! Chooses the time interval for 3pts
+  // permes_combo_t& choose3ptsTint(const string& mesPlotsPath,const char* fitTag,const bool forceRechoose=false);
   
-  //! Chooses a common range for three points
-  permes_combo_t& choose3ptsTintCommon(const size_t& length=4);
+  // //! Chooses a common range for three points
+  // permes_combo_t& choose3ptsTintCommon(const size_t& length=4);
   
-  //! Chosses the time interval for 2pts
-  permes_combo_t& choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose=false);
+  // //! Chosses the time interval for 2pts
+  // permes_combo_t& choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose=false);
+  
+  //! Gets the correlation ratio
+  TV getCorrRat(const int iVA,const size_t iDecKin);
   
   //! Perform the 3pts fit
-  permes_combo_t& fit3pts(const bool& useCommonRange,const char* fitTag,const bool forceRechoose=false);
+  permes_combo_t& fit3pts();
   
   //! X study
   void babababab()
@@ -278,8 +296,6 @@ struct permes_combo_t : public permes_t<TV>
     
     for(double x=1e-6;x<=1+1e-6;x+=0.05)
       {
-	// test.write_line([=](const double& thS){return x-ens.getX(m,thS,thT,th0);},-100,100,1000);
-	
 	class thFinder : public minimizer_fun_t
 	{
 	public:
@@ -304,7 +320,6 @@ struct permes_combo_t : public permes_t<TV>
 	    
 	    while(y(p,a)*y(p,b)>=0)
 	      {
-		//cout<<a<<" "<<b<<"    "<<y(p,a)<<" "<<y(p,b)<<endl;
 		a=-b;
 		b=(b+1e-3)*1.01;
 		
@@ -330,7 +345,6 @@ struct permes_combo_t : public permes_t<TV>
 	  double operator()(const vector<double> &p) const
 	  {
 	    const double th0=th0forX(p);
-	    //cout<<p[0]<<" "<<p[1]<<" "<<th0<<endl;
 	    return (*this)(p[0],p[1],th0);
 	  }
 	  
@@ -359,7 +373,6 @@ struct permes_combo_t : public permes_t<TV>
 	cout<<"func: "<<thetas(0.0,0.0,0.0)<<endl;
       }
   }
-
 };
 
 //! All combinations of a physical meson

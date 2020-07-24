@@ -13,7 +13,8 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
   
   //get the list of existing files
   size_t clust_size=trim_to_njacks_multiple(id_list);
-  cout<<"Clust size: "<<clust_size<<endl;
+  
+  if(verbosity==VERBOSE) cout<<"Clust size: "<<clust_size<<endl;
   
   //open all files
   vector<obs_file_t> files;
@@ -24,7 +25,7 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
   if(files.size()==0) length=0;
   else length=files[0].length(nlines);
   
-  if(verbosity) cout<<"Total length (in multiple of nlines="<<nlines<<"): "<<length<<endl;
+  if(verbosity==VERBOSE) cout<<"Total length (in multiple of nlines="<<nlines<<"): "<<length<<endl;
   
   //check that the length is a multiple of ncols*nlines
   size_t block_nentr=nlines*cols.size();
@@ -32,10 +33,10 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
   if(length!=nblocks*block_nentr) CRASH("Total length is not a multiple of ncols*nlines=%zu",block_nentr);
   
   //! output
-  cout<<"Allocating data"<<endl;
+  if(verbosity==VERBOSE) cout<<"Allocating data"<<endl;
   djvec_t data(length);
   
-  cout<<"Starting to read"<<endl;
+  if(verbosity==VERBOSE)cout<<"Starting to read"<<endl;
 #pragma omp parallel for
   for(size_t ijack=0;ijack<njacks;ijack++)
     {
@@ -47,16 +48,17 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
       
       for(size_t ifile=beg_file;ifile<end_file;ifile++)
 	{
+	  if(verbosity)
 #ifdef USE_OMP
-	  printf("Thread %d/%d reading file %zu/%zu\n",omp_get_thread_num(),omp_get_num_threads(),ifile,files.size());
+	    printf("Thread %d/%d reading file %zu/%zu\n",omp_get_thread_num(),omp_get_num_threads(),ifile,files.size());
 #else
-	  printf("Reading file %zu/%zu\n",ifile,files.size());
+	    printf("Reading file %zu/%zu\n",ifile,files.size());
 #endif
 	  
 	  //read all blocks
 	  for(size_t iblock=0;iblock<nblocks;iblock++)
 	    {
-	      vector<double> temp=files[ifile].read(nlines);
+	      vector<double> temp=files[ifile].read(nlines,false);
 	      if(temp.size()!=block_nentr) CRASH("Error reading file %zu, iblock %zu",ifile,iblock);
 	      
 	      //copy
