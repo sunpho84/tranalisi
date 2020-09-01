@@ -1,7 +1,9 @@
 #include <tranalisi.hpp>
 
-const int L=24;
+const int L=8;
 const int ndim=4;
+
+index_t index3pts;
 
 struct flavour_t
 {
@@ -122,11 +124,6 @@ void readHeader(raw_file_t& fin)
     }
 }
 
-int index3pts(int icorr,int icomb,int isl,int mu,int alpha,int ire)
-{
-  return ire+2*(alpha+ndim*(mu+ndim*(isl+f.nqsml*(icomb+f.ncomb*icorr))));
-}
-
 /// three pts
 vector<djvec_t> readData()
 {
@@ -134,7 +131,9 @@ vector<djvec_t> readData()
   readHeader(fin);
   
   const int ncorrs=2;
-  vector<djvec_t> out(index3pts(ncorrs,0,0,0,0,0),djvec_t(f.tmax));
+  index3pts.set_ranges({{"corr",ncorrs},{"comb",f.ncomb},{"sl",f.nqsml},{"mu",ndim},{"alpha",ndim},{"ri",2}});
+  
+  vector<djvec_t> out(index3pts.max(),djvec_t(f.tmax));
   
   data_t data;
   data.size=2*ndim*ndim*f.tmax*f.ncomb*f.nqsml;
@@ -155,19 +154,19 @@ vector<djvec_t> readData()
       const int iclust=ic/clustSize;
       
       //HA,HV
-      for(int icorr=0;icorr<ncorrs;icorr++)
+      for(size_t icorr=0;icorr<ncorrs;icorr++)
 	{
 	  fin.bin_read(corr);
 	  
-	  for(int icomb=0;icomb<f.ncomb;icomb++)
-	    for(int isl=0;isl<f.nqsml;isl++)
-	      for(int mu=0;mu<ndim;mu++)
-		for(int alpha=0;alpha<ndim;alpha++)
-		  for(int t=0;t<f.tmax;t++)
-		    for(int ire=0;ire<2;ire++)
+	  for(size_t icomb=0;icomb<(size_t)f.ncomb;icomb++)
+	    for(size_t isl=0;isl<(size_t)f.nqsml;isl++)
+	      for(size_t mu=0;mu<ndim;mu++)
+		for(size_t alpha=0;alpha<ndim;alpha++)
+		  for(size_t t=0;t<(size_t)f.tmax;t++)
+		    for(size_t ire=0;ire<2;ire++)
 		      {
 			const int iin=ire+2*(t+f.tmax*(alpha+ndim*(mu+ndim*(isl+f.nqsml*icomb))));
-			const int iout=index3pts(icorr,icomb,isl,mu,alpha,ire);
+			const int iout=index3pts({icorr,icomb,isl,mu,alpha,ire});
 			
 			out[iout][t][iclust]+=corr[iin];
 		      }
@@ -238,7 +237,7 @@ vector<djvec_t> readData2()
 
 int main()
 {
-  set_njacks(20);
+  set_njacks(2);
   
   const auto threePts=readData();
   const auto twoPts=readData2();
@@ -247,24 +246,38 @@ int main()
   
   enum{PP,PA0,PA1,PA2,PA3};
   const int is=0,il=1; //index to be fetched from inv list
-  const djack_t mP=constant_fit(effective_mass(twoPts[index2pts(PP,is,il,0,0)].symmetrized()),10,16,"plots/PP_ll.xmg");
+  const int tmin=6,tmax=8;
+  const djack_t mP=constant_fit(effective_mass(twoPts[index2pts(PP,is,il,0,0)].symmetrized()),tmin,tmax,"plots/PP_ll.xmg");
   
   constexpr int eps[4][4]={{0,0,0,0},
 			   {0,-1,-1,0},
 			   {0,+1,-1,0},
 			   {0,0,0,0}};
   
+  
   enum{HA,HV};
   const int isl=0;
-  auto load3pts=[&eps,&threePts](int icomb) -> djvec_t
+  
+  const double eG=Eg(1);
+  cout<<"Eg: "<<eG<<endl;
+  
+  // djvec_t dt(f.tmax/2+1);
+  // for(int t=0;t<=f.tmax/2;t++)
+  //   dt[t]=exp(-eG*t);
+    
+  djvec_t dt(f.tmax);
+  for(int t=0;t<f.tmax;t++)
+    dt[t]=exp(-eG*((t<(f.tmax/2))?t:(f.tmax/2-t)));
+    
+  auto load3pts=[&eps,&threePts](size_t icomb) -> djvec_t
 		{
-		  int ire=0;
+		  size_t ire=0;
 		  
-		  auto load3ptsPol=[&eps,&threePts,&icomb,&ire](int alpha,int r) -> djvec_t// r and alpha go from 1 to 2
+		  auto load3ptsPol=[&eps,&threePts,&icomb,&ire](size_t alpha,size_t r) -> djvec_t// r and alpha go from 1 to 2
 				   {
-				     auto t=[&threePts,&icomb,&alpha,&ire](int mu)
+				     auto t=[&threePts,&icomb,&alpha,&ire](size_t mu)
 					    {
-					      int i=index3pts(HA,icomb,isl,mu,alpha,ire);
+					      size_t i=index3pts({HA,icomb,isl,mu,alpha,ire});
 					      
 					      return threePts[i];
 					    };
@@ -277,18 +290,27 @@ int main()
 		    for(int r=1;r<=2;r++)
 		      res+=load3ptsPol(alpha,r)/eps[r][alpha];
 		  
-		  return res.symmetrized();
+		  return res;//.symmetrized();
 		};
   
-  const double eG=Eg(1);
   const djvec_t t0=load3pts(0);
   const djvec_t t1=load3pts(1);
   t1.ave_err().write("plots/t1.xmg");
-
-  cout<<"Eg: "<<eG<<endl;
+  
+  for(size_t icombo=0;icombo<2;icombo++)
+    for(size_t isl=0;isl<1;isl++)
+      for(size_t mu=0;mu<ndim;mu++)
+	for(size_t alpha=0;alpha<ndim;alpha++)
+	for(size_t ri=0;ri<2;ri++)
+	  {
+	    const size_t i=index3pts({HA,icombo,isl,mu,alpha,ri});
+	    auto b=threePts[i];
+	    b.ave_err().write(combine("plots/naz/HA_%s.xmg",index3pts.escaped_descr(i).c_str()));
+	  }
+  dt.ave_err().write("plots/naz/dt.xmg");
+  
   djvec_t r=t1/t0;
-  for(int t=0;t<=f.tmax/2;t++)
-    r[t]*=exp(-eG*t);
+  r*=dt;
   
   const djack_t xG=2*eG/mP;
   cout<<"Xg: "<<smart_print(xG)<<endl;
