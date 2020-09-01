@@ -129,9 +129,9 @@ int main()
 	
 	daMpi_plot.new_data_set();
 	daMpi_plot.set_all_colors(colors[ibeta]);
+	daMpi_plot.set_line_style(without_with_FVE?grace::CONTINUOUS_LINE:grace::DASHED_LINE);
 	
-	if(without_with_FVE==0)
-	  daMpi_plot.set_transparency(0.5);
+	daMpi_plot.set_transparency(without_with_FVE?1:0.5);
 	
 	for(auto& ens : ensList)
 	  if(ens.ibeta==ibeta)
