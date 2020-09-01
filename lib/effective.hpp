@@ -64,19 +64,19 @@ TV effective_squared_coupling(const TV &data,const TV &M,size_t TH,int par=1,int
 
 //! return the effective slope of a whole vector
 template <class TV>
-TV effective_slope(const TV &data,const TV &M,size_t TH,int par=1,int dt=1)
+TV effective_slope(const TV &ratio,const TV &M,size_t TH,int par=1,int dt=1)
 {
   double ddt=(double)dt;
   //check data size
-  if(data.size()==0) CRASH("Empty data vector");
+  if(ratio.size()==0) CRASH("Empty data vector");
   
   //! output data
-  TV out(data.size()-dt);
+  TV out(ratio.size()-dt);
   
   //effective slope
-  for(size_t t=0;t<data.size()-dt;t++)
-    for(size_t i=0;i<data[0].size();i++)
-      out[t][i]=(data[t+dt][i]-data[t][i])
+  for(size_t t=0;t<ratio.size()-dt;t++)
+    for(size_t i=0;i<ratio[0].size();i++)
+      out[t][i]=(ratio[t+dt][i]-ratio[t][i])
 	/two_pts_corr_with_ins_ratio_diff_tdep(M[t][i],TH,(double)t,ddt,par);
   
   return out;
