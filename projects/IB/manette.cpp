@@ -106,6 +106,7 @@ djvec_t load_bubble(const char *path)
   return -out.symmetrized(1);
 }
 
+
 int main()
 {
   set_njacks(nconfs);

@@ -16,7 +16,10 @@ bin_PROGRAMS+= \
 	$(top_builddir)/bin/nucleon \
 	$(top_builddir)/bin/reno \
 	$(top_builddir)/bin/reno_old \
-	$(top_builddir)/bin/zs_fr_zp
+	$(top_builddir)/bin/zs_fr_zp \
+	$(top_builddir)/bin/ultimate
+
+__top_builddir__bin_ultimate_SOURCES=%D%/ultimate.cpp %D%/common.cpp
 
 #	$(top_builddir)/bin/test_antonino
 
