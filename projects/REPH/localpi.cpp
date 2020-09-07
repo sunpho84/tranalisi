@@ -3,6 +3,7 @@
 #include <phys_point.hpp>
 
 constexpr double kappa=2.837297;
+const double M2PiPhys=sqr(0.139);
 
 map<char,size_t> ibeta_of_id{{'A',0},{'B',1},{'D',2}};
 
@@ -99,7 +100,7 @@ struct perens_t
   {
     return x[iboot];
   }
-
+  
   template <typename T>
   static const T& g(const T& x)
   {
@@ -171,12 +172,12 @@ vector<perens_t> readEnsList()
 template <typename T,
 	  typename TA,
 	  typename TL>
-T FVEansatz(const T& p,const T& p2,const TA& a2,const double m2,const TL& L)
+T FVEansatz(const T& p,const T& p2,const T& p3,const TA& a2,const double m2,const TL& L)
 {
-  return (p*sqrt(m2)+p2*a2)/(L*L*L);
+  return (4.0*M_PI*alpha_em/3.0*(p+p3*(m2-M2PiPhys))+p2*a2)*sqrt(m2)/(L*L*L);
 }
 
-size_t iC,iCa,iA1,if0,iD,iDm,iFVEnonUniv,iFVEnonUniv2,ia[nbeta];
+size_t iC,iCa,iA1,if0,iD,iDm,iFVEnonUniv,iFVEnonUniv2,iFVEnonUniv3,ia[nbeta];
 
 template <typename T,
 	  typename TA,
@@ -186,7 +187,7 @@ T ansatz(const vector<T>& p,const double& m2,const TA& a,const TL& L)
   const TA a2=a*a;
   const T& C0=p[iC];
   const T& Ca=p[iCa];
-  const T& C=C0+a2*Ca;
+  const T C=C0+a2*Ca;
   const T& A1=p[iA1];
   const T& f0=p[if0];
   const T& D=p[iD];
@@ -195,9 +196,9 @@ T ansatz(const vector<T>& p,const double& m2,const TA& a,const TL& L)
   const T Q=4*C/pow(f0,4);
   const T W=m2/sqr((T)(4*M_PI*f0));
   
-  T uncorrected=e2*sqr(f0)*(Q-(3+4*Q)*W*log(W)*includeLog)+A1*m2+(D+Dm*m2)*a2;
+  T uncorrected=e2*sqr(f0)*(Q-(3+4*Q)*W*log(W)*includeLog)+A1*m2*alpha_em/(4*M_PI)+(D+Dm*m2)*a2;
   
-  return uncorrected+FVEansatz(p[iFVEnonUniv],p[iFVEnonUniv2],a2,m2,L);
+  return uncorrected+FVEansatz(p[iFVEnonUniv],p[iFVEnonUniv2],p[iFVEnonUniv3],a2,m2,L);
 }
 
 int main()
@@ -247,31 +248,37 @@ int main()
 	<<smart_print(ens.daMPiFitted)<<endl;
     }
   
+      // for(size_t iens=2;iens<6;iens++)
+      // 	ensList[iens].aMPiFitted=ensList[1].aMPiFitted;
+      
   const size_t nUlt=1;
   for(size_t iult=0;iult<nUlt;iult++)
     {
       for(auto& ens : ensList)
 	ens.convertToBoot(iult);
       
-      const size_t nFitPars=11;
+      const size_t nFitPars=12;
       vector<dboot_t> pFit(nFitPars);
-      vector<string> pname{"C","Ca","A1","f0","D","Dm","FVEnonUniv","FVEnonUniv2","ainv0","ainv1","ainv2","ainv3"};
+      vector<string> pname{"C","Ca","A1","f0","D","Dm","FVEnonUniv","FVEnonUniv2","FVEnonUniv3","ainv0","ainv1","ainv2","ainv3"};
       boot_fit_t fit;
       
-      iC=fit.add_fit_par(pFit[0],pname[0],3.07766e-05,1e-6);
+      iC=fit.add_fit_par(pFit[0],pname[0],4e-05,1e-6);
       iCa=fit.add_fit_par(pFit[1],pname[1],0,1e-6);
-      iA1=fit.add_fit_par(pFit[2],pname[2],-0.2e-3,1e-6);
+      iA1=fit.add_fit_par(pFit[2],pname[2],-2.8,0.2);
       if0=fit.add_self_fitted_point(pFit[3],pname[3],lat_par[iult].f0,-1);
-      iD=fit.add_fit_par(pFit[4],pname[4],2.6e-3,1e-9);
-      iDm=fit.add_fit_par(pFit[5],pname[5],0.025,0.001);
-      iFVEnonUniv=fit.add_fit_par(pFit[6],pname[6],0.94,1e-6);
-      iFVEnonUniv2=fit.add_fit_par(pFit[7],pname[7],0,1e-6);
+      iD=fit.add_fit_par(pFit[4],pname[4],0.0,1e-5);
+      iDm=fit.add_fit_par(pFit[5],pname[5],0.0,0.001);
+      iFVEnonUniv=fit.add_fit_par(pFit[6],pname[6],11,1);
+      iFVEnonUniv2=fit.add_fit_par(pFit[7],pname[7],0,0.1);
+      iFVEnonUniv3=fit.add_fit_par(pFit[8],pname[8],0,0.1);
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	ia[ibeta]=fit.add_self_fitted_point(pFit[8+ibeta],pname[8+ibeta],lat_par[iult].ainv[ibeta],-1);
+	ia[ibeta]=fit.add_self_fitted_point(pFit[9+ibeta],pname[9+ibeta],lat_par[iult].ainv[ibeta],-1);
       
-      //fit.fix_par(iCa);
-      //fit.fix_par(iA1);
-      fit.fix_par(iFVEnonUniv2);
+      fit.fix_par(iCa);
+      //fit.fix_par(iD);
+      //fit.fix_par(iDm);
+      fit.fix_par(iFVEnonUniv);
+      //fit.fix_par(iFVEnonUniv2);
       
       for(auto& ens : ensList)
 	fit.add_point([=]
@@ -365,7 +372,7 @@ int main()
 		  const vector<dboot_t> y=
 		    {data.dM2,
 		     data.dM2UnivCorrected,
-		     data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],sqr(pFit[ia[ibeta]]),x.ave(),data.L)};
+		     data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],pFit[iFVEnonUniv3],1/sqr(pFit[ia[ibeta]]),x.ave(),data.L)};
 		  
 		  dM2pi_plot.write_ave_err(x.ave(),y[FVEswitch].ave_err());
 		  da2M2pi_plot.write_ave_err(x.ave(),((dboot_t)(y[FVEswitch]/sqr((dboot_t)(pFit[ia[ibeta]]/lat_par[iult].ainv[ibeta].ave())))).ave_err());
@@ -378,10 +385,11 @@ int main()
       dboot_t a0;
       a0=0.0;
       
-      const double M2PiPhys=sqr(0.139);
-      dboot_t dM2PiPhys=ansatz(pFit,M2PiPhys,a0,Linf);
-      cout<<"dM2PiPhys: "<<smart_print(dM2PiPhys)<<endl;
       const double dM2PiPDG=1261.2e-6;
+      const dboot_t dM2PiPhys=ansatz(pFit,M2PiPhys,a0,Linf);
+      cout<<"dM2PiPhys: "<<smart_print(dM2PiPhys)<<endl;
+      const dboot_t dM2PiDiff=dM2PiPhys-dM2PiPDG;
+      cout<<"diff with phys: "<<smart_print(dM2PiDiff)<<endl;
       const ave_err_t dM2PiPublished(1137e-6,63e-6);
       
       vector<grace_file_t*> plots{&dM2pi_plot,&da2M2pi_plot};
@@ -429,7 +437,7 @@ int main()
 		if(FSEflag>0)
 		  y+=FVEuniv(ens.Lfra,ens.aMPiFitted);
 		if(FSEflag>1)
-		  y-=FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],sqr(pFit[ia[0]].ave()),sqr(data.M.ave()),data.L)/sqr(data.ainv);
+		  y-=FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],pFit[iFVEnonUniv3],1/sqr(pFit[ia[0]].ave()),sqr(data.M.ave()),data.L)/sqr(data.ainv);
 	    
 	    A40slice.write_ave_err(pow(ens.Lfra,-3),y.ave_err());
 	  }
@@ -472,7 +480,7 @@ int main()
 	  auto ainv=pFit[ia[ibeta]];
 	  auto data=slice[ibeta]->getToFit(ainv);
 	  
-	  dboot_t y=data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],0.0,sqr(data.M.ave()),data.L);
+	  dboot_t y=data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],pFit[iFVEnonUniv3],1e10,sqr(data.M.ave()),data.L);
 	  daMpi_a2_plot.write_ave_err(sqr(1/ainv.ave()),y.ave_err());
 	}
     }
