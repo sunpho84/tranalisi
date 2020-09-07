@@ -6,6 +6,9 @@ constexpr double kappa=2.837297;
 
 map<char,size_t> ibeta_of_id{{'A',0},{'B',1},{'D',2}};
 
+static constexpr int propagateLatErr=0;
+static constexpr int includeLog=1;
+
 template <size_t B>
 auto parseName(const string& name)
 {
@@ -81,6 +84,8 @@ struct perens_t
     T dM2;
     
     T dM2UnivCorrected;
+    
+    T daM2UnivCorrected;
   };
   
   // template <typename T,
@@ -119,6 +124,7 @@ struct perens_t
     out.FVE=FVEuniv(g(out.L,oth...),g(out.M,oth...));
     out.dM2=out.dM*2*out.M;
     out.dM2UnivCorrected=out.dM2+out.FVE;
+    out.daM2UnivCorrected=out.dM2UnivCorrected/ainv/ainv;
     
     return out;
   }
@@ -163,28 +169,35 @@ vector<perens_t> readEnsList()
 }
 
 template <typename T,
+	  typename TA,
 	  typename TL>
-T FVEansatz(const T& p,const double m2,const TL& L)
+T FVEansatz(const T& p,const T& p2,const TA& a2,const double m2,const TL& L)
 {
-  return p*sqrt(m2)/(L*L*L);
+  return (p*sqrt(m2)+p2*a2)/(L*L*L);
 }
 
-size_t iC,iA1,if0,iD,iFVEnonUniv,ia[nbeta];
+size_t iC,iCa,iA1,if0,iD,iDm,iFVEnonUniv,iFVEnonUniv2,ia[nbeta];
 
-template <typename T>
-T ansatz(const vector<T>& p,const double& m2,const T& a,const T& L)
+template <typename T,
+	  typename TA,
+	  typename TL>
+T ansatz(const vector<T>& p,const double& m2,const TA& a,const TL& L)
 {
-  const T& C=p[iC];
+  const TA a2=a*a;
+  const T& C0=p[iC];
+  const T& Ca=p[iCa];
+  const T& C=C0+a2*Ca;
   const T& A1=p[iA1];
   const T& f0=p[if0];
   const T& D=p[iD];
+  const T& Dm=p[iDm];
   
-  T Q=4*C/pow(f0,4);
-  T W=m2/sqr((T)(4*M_PI*f0));
+  const T Q=4*C/pow(f0,4);
+  const T W=m2/sqr((T)(4*M_PI*f0));
   
-  T uncorrected=e2*sqr(f0)*(Q-(3+4*Q)*W*log(W))+A1*m2+D*sqr(a);
+  T uncorrected=e2*sqr(f0)*(Q-(3+4*Q)*W*log(W)*includeLog)+A1*m2+(D+Dm*m2)*a2;
   
-  return uncorrected+FVEansatz(p[iFVEnonUniv],m2,L);
+  return uncorrected+FVEansatz(p[iFVEnonUniv],p[iFVEnonUniv2],a2,m2,L);
 }
 
 int main()
@@ -234,21 +247,31 @@ int main()
 	<<smart_print(ens.daMPiFitted)<<endl;
     }
   
-  for(size_t iult=0;iult<8;iult++)
+  const size_t nUlt=1;
+  for(size_t iult=0;iult<nUlt;iult++)
     {
       for(auto& ens : ensList)
 	ens.convertToBoot(iult);
       
-      const size_t nFitPars=8;
+      const size_t nFitPars=11;
       vector<dboot_t> pFit(nFitPars);
+      vector<string> pname{"C","Ca","A1","f0","D","Dm","FVEnonUniv","FVEnonUniv2","ainv0","ainv1","ainv2","ainv3"};
       boot_fit_t fit;
-      iC=fit.add_fit_par(pFit[0],"C",3.2e-5,0.05);
-      iA1=fit.add_fit_par(pFit[1],"A1",-7.1e-4,0.05);
-      if0=fit.add_self_fitted_point(pFit[2],"f0",lat_par[iult].f0,-1);
-      iD=fit.add_fit_par(pFit[3],"D",2.6e-3,0.05);
-      iFVEnonUniv=fit.add_fit_par(pFit[4],"DVEnonUniv",0.94,0.05);
+      
+      iC=fit.add_fit_par(pFit[0],pname[0],3.07766e-05,1e-6);
+      iCa=fit.add_fit_par(pFit[1],pname[1],0,1e-6);
+      iA1=fit.add_fit_par(pFit[2],pname[2],-0.2e-3,1e-6);
+      if0=fit.add_self_fitted_point(pFit[3],pname[3],lat_par[iult].f0,-1);
+      iD=fit.add_fit_par(pFit[4],pname[4],2.6e-3,1e-9);
+      iDm=fit.add_fit_par(pFit[5],pname[5],0.025,0.001);
+      iFVEnonUniv=fit.add_fit_par(pFit[6],pname[6],0.94,1e-6);
+      iFVEnonUniv2=fit.add_fit_par(pFit[7],pname[7],0,1e-6);
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	ia[ibeta]=fit.add_self_fitted_point(pFit[5+ibeta],"a"+to_string(ibeta),lat_par[iult].ainv[ibeta],-1);
+	ia[ibeta]=fit.add_self_fitted_point(pFit[8+ibeta],pname[8+ibeta],lat_par[iult].ainv[ibeta],-1);
+      
+      //fit.fix_par(iCa);
+      //fit.fix_par(iA1);
+      fit.fix_par(iFVEnonUniv2);
       
       for(auto& ens : ensList)
 	fit.add_point([=]
@@ -271,40 +294,68 @@ int main()
 			
 			return ansatz(p,x,a,L);
 		      },
-		      ens.getToFit(lat_par[iult].ainv[ens.ibeta]).dM2UnivCorrected.err());
+		      propagateLatErr?
+		      ens.getToFit(lat_par[iult].ainv[ens.ibeta]).dM2UnivCorrected.err():
+		      ens.getToFit(lat_par[iult].ainv[ens.ibeta]).daM2UnivCorrected.err()*sqr(lat_par[iult].ainv[ens.ibeta].ave()));
+      // ens.getToFit(lat_par[iult].ainv[ens.ibeta]).dM2UnivCorrected.err());
       
-      auto status=fit.fit();
+      // for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+      // 	fit.fix_par(ia[ibeta]);
+      // auto status=fit.fit();
+	  
+      for(int iit=0;iit<2;iit++)
+      	{
+	  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	    if(iit==0)
+	      fit.fix_par(ia[ibeta]);
+	    else
+	      fit.unfix_par(ia[ibeta]);
+	  
+	  auto status=fit.fit();
+	}
       
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
 	{
-	  dboot_t& afit=pFit[ia[ibeta]];
-	  dboot_t& aold=lat_par[iult].ainv[ibeta];
+	  dboot_t& ainv_fit=pFit[ia[ibeta]];
+	  dboot_t& ainv_old=lat_par[iult].ainv[ibeta];
 	  
-	  dboot_t adiff=afit-aold;
+	  dboot_t ainv_diff=ainv_fit-ainv_old;
+	  dboot_t ainv_sum=ainv_fit+ainv_old;
 	  
-	  cout<<"Significativity beta "<<ibeta<<": "<<adiff.ave_err().significativity()<<endl;
+	  cout<<"Significativity beta "<<ibeta<<": "<<
+	    ainv_diff.err()/ainv_sum.ave()<<endl;
 	}
+      
+      cout<<"Parameters:"<<endl;
+      for(size_t ipar=0;ipar<nFitPars;ipar++)
+	cout<<pname[ipar]<<" "<<pFit[ipar].ave_err()<<endl;
       
       /////////////////////////////////////////////////////////////////
       
       const string ult_plot_dir="plots/"+to_string(iult);
       mkdir(ult_plot_dir);
-      grace_file_t daMpi_plot(ult_plot_dir+"/daMpi.xmg");
+      grace_file_t dM2pi_plot(ult_plot_dir+"/dM2pi.xmg");
+      grace_file_t da2M2pi_plot(ult_plot_dir+"/da2M2pi.xmg");
       
-      daMpi_plot.set_settype(grace::XYDY);
-      daMpi_plot.set_xaxis_label("M\\s\\x\\p\\0\\N\\S2\\N (GeV\\S-1\\N)");
-      daMpi_plot.set_yaxis_label("2\\xd\\0M\\s\\x\\p\\0\\N M\\s\\x\\p\\0\\N (GeV\\S-2\\N)");
+      for(auto p : {&dM2pi_plot,&da2M2pi_plot})
+	{
+	  p->set_settype(grace::XYDY);
+	  p->set_xaxis_label("M\\s\\x\\p\\0\\N\\S2\\N (GeV\\S-1\\N)");
+	  p->set_yaxis_label("2\\xd\\0M\\s\\x\\p\\0\\N M\\s\\x\\p\\0\\N (GeV\\S-2\\N)");
+	}
       vector<grace::color_t> colors{grace::color_t::BLACK,grace::color_t::RED,grace::color_t::BLUE};
       
       const grace::line_style_t lineStyle[3]={grace::DASHED_LINE,grace::SHORT_DASHED_LINE,grace::CONTINUOUS_LINE};
       for(size_t FVEswitch=0;FVEswitch<3;FVEswitch++)
 	for(size_t ibeta=0;ibeta<nbeta;ibeta++)
 	  {
-	    daMpi_plot.new_data_set();
-	    daMpi_plot.set_all_colors(colors[ibeta]);
-	    daMpi_plot.set_line_style(lineStyle[FVEswitch]);
-	    
-	    daMpi_plot.set_transparency(0.33+0.33*FVEswitch);
+	    for(auto p : {&dM2pi_plot,&da2M2pi_plot})
+	      {
+		p->new_data_set();
+		p->set_all_colors(colors[ibeta]);
+		p->set_line_style(lineStyle[FVEswitch]);
+		p->set_transparency(0.33+0.33*FVEswitch);
+	      }
 	    
 	    for(auto& ens : ensList)
 	      if(ens.ibeta==ibeta)
@@ -314,9 +365,10 @@ int main()
 		  const vector<dboot_t> y=
 		    {data.dM2,
 		     data.dM2UnivCorrected,
-		     data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],x.ave(),data.L)};
+		     data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],sqr(pFit[ia[ibeta]]),x.ave(),data.L)};
 		  
-		  daMpi_plot.write_ave_err(x.ave(),y[FVEswitch].ave_err());
+		  dM2pi_plot.write_ave_err(x.ave(),y[FVEswitch].ave_err());
+		  da2M2pi_plot.write_ave_err(x.ave(),((dboot_t)(y[FVEswitch]/sqr((dboot_t)(pFit[ia[ibeta]]/lat_par[iult].ainv[ibeta].ave())))).ave_err());
 		}
 	  }
       
@@ -326,30 +378,41 @@ int main()
       dboot_t a0;
       a0=0.0;
       
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	daMpi_plot.write_polygon([&pFit,&Linf,ibeta,iult]
-				 (const double& x) -> dboot_t
-				 {
-				   const dboot_t a=1/lat_par[iult].ainv[ibeta];
-				   
-				   return ansatz(pFit,x,a,Linf);
-				 },1e-3,0.25,colors[ibeta]);
-      
-      daMpi_plot.write_polygon([&pFit,&a0,&Linf]
-			       (const double& x) -> dboot_t
-			       {
-				 return ansatz(pFit,x,a0,Linf);
-			       },1e-3,0.25,grace::YELLOW);
-      
       const double M2PiPhys=sqr(0.139);
       dboot_t dM2PiPhys=ansatz(pFit,M2PiPhys,a0,Linf);
       cout<<"dM2PiPhys: "<<smart_print(dM2PiPhys)<<endl;
       const double dM2PiPDG=1261.2e-6;
       const ave_err_t dM2PiPublished(1137e-6,63e-6);
       
-      daMpi_plot.write_ave_err(M2PiPhys,dM2PiPhys.ave_err());
-      daMpi_plot.write_ave_err(M2PiPhys,dM2PiPublished);
-      daMpi_plot.write_line([&dM2PiPDG](const double x){return dM2PiPDG;},1e-3,0.25,grace::GREEN4,2);
+      vector<grace_file_t*> plots{&dM2pi_plot,&da2M2pi_plot};
+      size_t plot_pow[2]={0,2};
+      for(size_t iplot=0;iplot<2;iplot++)
+	{
+	  auto& p=*plots[iplot];
+	  
+	  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	    p.write_polygon([&pFit,&Linf,ibeta,iplot,plot_pow,iult]
+					(const double& x) -> dboot_t
+					{
+					  const dboot_t a=1/pFit[ia[ibeta]];
+					  
+					  return ansatz(pFit,x,a,Linf)*pow(a*lat_par[iult].ainv[ibeta].ave(),plot_pow[iplot]);
+					},1e-3,0.25,colors[ibeta]);
+	  
+	  p.write_polygon([&pFit,&a0,&Linf]
+			   (const double& x) -> dboot_t
+			   {
+			     return ansatz(pFit,x,a0,Linf);
+			   },1e-3,0.25,grace::YELLOW);
+	  
+	  p.set_symbol_fill_pattern(grace::FILLED_SYMBOL);
+	  p.write_ave_err(M2PiPhys,dM2PiPhys.ave_err());
+	  
+	  p.new_data_set();
+	  p.write_ave_err(M2PiPhys,dM2PiPublished);
+	  
+	  p.write_line([&dM2PiPDG](const double x){return dM2PiPDG;},1e-3,0.25,grace::GREEN4,2);
+	}
       
       grace_file_t A40slice(ult_plot_dir+"/A40slice.xmg");
       
@@ -366,10 +429,51 @@ int main()
 		if(FSEflag>0)
 		  y+=FVEuniv(ens.Lfra,ens.aMPiFitted);
 		if(FSEflag>1)
-		  y-=FVEansatz(pFit[3],sqr(data.M.ave()),data.L)/sqr(data.ainv);
+		  y-=FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],sqr(pFit[ia[0]].ave()),sqr(data.M.ave()),data.L)/sqr(data.ainv);
 	    
 	    A40slice.write_ave_err(pow(ens.Lfra,-3),y.ave_err());
 	  }
+	}
+      
+      const double slice_mass=0.28;
+      std::vector<perens_t*> slice(nbeta);
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	{
+	  double closest_mass=0;
+	  perens_t* ref_ens=nullptr;
+	  
+	  for(auto& ens : ensList)
+	    if(ens.ibeta==ibeta)
+	      {
+		const auto data=ens.getToFit(pFit[ia[ibeta]]);
+		if(fabs(data.M.ave()-slice_mass)<fabs(closest_mass-slice_mass))
+		  {
+		    closest_mass=data.M.ave();
+		    ref_ens=&ens;
+		  }
+	      }
+	  
+	  if(ref_ens==nullptr)
+	    CRASH("Not sliced");
+	  
+	  slice[ibeta]=ref_ens;
+	  cout<<ref_ens->name<<endl;
+	}
+      
+      grace_file_t daMpi_a2_plot(ult_plot_dir+"/daMpi_a2.xmg");
+      daMpi_a2_plot.write_polygon([&pFit,&Linf,slice_mass]
+				  (const double& x) -> dboot_t
+				  {
+				    return ansatz(pFit,slice_mass,x,Linf);
+				  },1e-3,0.25,grace::YELLOW);
+      
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	{
+	  auto ainv=pFit[ia[ibeta]];
+	  auto data=slice[ibeta]->getToFit(ainv);
+	  
+	  dboot_t y=data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],0.0,sqr(data.M.ave()),data.L);
+	  daMpi_a2_plot.write_ave_err(sqr(1/ainv.ave()),y.ave_err());
 	}
     }
   
