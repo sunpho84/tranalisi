@@ -696,6 +696,9 @@ public:
   //! fix a single parameter
   void fix_par(size_t ipar) {pars.fix(ipar);}
   
+  //! unfix a single parameter
+  void unfix_par(size_t ipar) {pars.unfix(ipar);}
+  
   //! fix a single parameter to a given value
   void fix_par_to(size_t ipar,double val) {pars.fix_to(ipar,val);}
 };

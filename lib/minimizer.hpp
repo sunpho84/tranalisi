@@ -233,6 +233,11 @@ public:
     for(size_t i=0;i<size();i++) if(not pars.Parameter(i).IsFixed()) n++;
     return n;
   }
+  
+  //! unfix a parameter
+  void unfix(int ipar)
+  {pars.Release(ipar);}
+  
 };
 
 //! wrapper against minimization class
@@ -252,13 +257,13 @@ class minimizer_t
   }
   
   //construct from migrad
-  minimizer_t(const minimizer_fun_t &fun,const minimizer_pars_t &pars) : migrad(fun,pars.pars),npars(pars.size()) {}
+  minimizer_t(const minimizer_fun_t &fun,const minimizer_pars_t &pars) : migrad(fun,pars.pars,2),npars(pars.size()) {}
   
   //! minimizer
   vector<double> minimize()
   {
     //call minimizer
-    ROOT::Minuit2::FunctionMinimum min=migrad();
+    ROOT::Minuit2::FunctionMinimum min=migrad(10000,1e-6);
     ROOT::Minuit2::MnUserParameterState par_state=min.UserState();
     _status=min.IsValid();
     
