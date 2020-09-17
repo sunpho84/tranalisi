@@ -546,7 +546,7 @@ public:
 	  double e=data[ix].err;
 	  double contr=sqr((n-t)/e);
 	  ch2+=contr;
-	  //if(fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	  if(fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
 	}
      
      if(fit_debug)

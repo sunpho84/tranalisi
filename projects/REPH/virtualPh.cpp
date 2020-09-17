@@ -1,6 +1,6 @@
 #include <tranalisi.hpp>
 
-const int L=8;
+const int L=24;
 const int ndim=4;
 
 index_t index3pts;
@@ -168,6 +168,9 @@ vector<djvec_t> readData()
 			const int iin=ire+2*(t+f.tmax*(alpha+ndim*(mu+ndim*(isl+f.nqsml*icomb))));
 			const int iout=index3pts({icorr,icomb,isl,mu,alpha,ire});
 			
+			if(icorr==0 and icomb==0 and isl==0 and mu==0 and alpha==0 and ire==0)
+			  cout<<"t "<<t<<" "<<corr[iin]<<endl;
+			
 			out[iout][t][iclust]+=corr[iin];
 		      }
 	}
@@ -237,7 +240,7 @@ vector<djvec_t> readData2()
 
 int main()
 {
-  set_njacks(2);
+  set_njacks(10);
   
   const auto threePts=readData();
   const auto twoPts=readData2();
@@ -247,7 +250,9 @@ int main()
   enum{PP,PA0,PA1,PA2,PA3};
   const int is=0,il=1; //index to be fetched from inv list
   const int tmin=6,tmax=8;
-  const djack_t mP=constant_fit(effective_mass(twoPts[index2pts(PP,is,il,0,0)].symmetrized()),tmin,tmax,"plots/PP_ll.xmg");
+  djvec_t mP(f.nqsml);
+  for(size_t isl=0;isl<(size_t)f.nqsml;isl++)
+    mP[isl]=constant_fit(effective_mass(twoPts[index2pts(PP,is,il,isl,0)].symmetrized()),tmin,tmax,combine("plots/PP_ll_sm%zu.xmg",isl));
   
   constexpr int eps[4][4]={{0,0,0,0},
 			   {0,-1,-1,0},
@@ -256,7 +261,6 @@ int main()
   
   
   enum{HA,HV};
-  const int isl=0;
   
   const double eG=Eg(1);
   cout<<"Eg: "<<eG<<endl;
@@ -269,33 +273,44 @@ int main()
   for(int t=0;t<f.tmax;t++)
     dt[t]=exp(-eG*((t<(f.tmax/2))?t:(f.tmax/2-t)));
     
-  auto load3pts=[&eps,&threePts](size_t icomb) -> djvec_t
-		{
-		  size_t ire=0;
-		  
-		  auto load3ptsPol=[&eps,&threePts,&icomb,&ire](size_t alpha,size_t r) -> djvec_t// r and alpha go from 1 to 2
-				   {
-				     auto t=[&threePts,&icomb,&alpha,&ire](size_t mu)
-					    {
-					      size_t i=index3pts({HA,icomb,isl,mu,alpha,ire});
-					      
-					      return threePts[i];
-					    };
-				     
-				     return t(1)*eps[r][1]+t(2)*eps[r][2];
-				   };
-		  
-		  djvec_t res(f.tmax);
-		  for(int alpha=1;alpha<=2;alpha++)
-		    for(int r=1;r<=2;r++)
-		      res+=load3ptsPol(alpha,r)/eps[r][alpha];
-		  
-		  return res;//.symmetrized();
-		};
-  
-  const djvec_t t0=load3pts(0);
-  const djvec_t t1=load3pts(1);
-  t1.ave_err().write("plots/t1.xmg");
+  for(size_t isl=0;isl<(size_t)f.nqsml;isl++)
+    {
+      auto load3pts=[&isl,&eps,&threePts](size_t icomb) -> djvec_t
+		    {
+		      size_t ire=0;
+		      
+		      /// Charges a given polarization r, and weak current alpha
+		      auto load3ptsPol=[&isl,&eps,&threePts,&icomb,&ire](size_t alpha,size_t r) -> djvec_t// r and alpha go from 1 to 2
+				       {
+					 auto t=[&isl,&threePts,&icomb,&alpha,&ire](size_t mu)
+						{
+						  size_t i=index3pts({HA,icomb,isl,mu,alpha,ire});
+						  
+						  return threePts[i];
+						};
+					 
+					 return t(1)*eps[r][1]+t(2)*eps[r][2];
+				       };
+		      
+		      djvec_t res(f.tmax);
+		      for(int alpha=1;alpha<=2;alpha++)
+			for(int r=1;r<=2;r++)
+			  res+=load3ptsPol(alpha,r)/eps[r][alpha];
+		      
+		      return res;//.symmetrized();
+		    };
+      
+      const djvec_t t0=load3pts(0);
+      const djvec_t t1=load3pts(1);
+      t1.ave_err().write("plots/t1.xmg");
+      
+      djvec_t r=t1/t0;
+      r*=dt;
+      
+      // const djack_t xG=2*eG/mP;
+      // cout<<"Xg: "<<smart_print(xG)<<endl;
+      r.symmetrized().ave_err().write(combine("plots/threePts_sml%zu.xmg",isl));
+    }
   
   for(size_t icombo=0;icombo<2;icombo++)
     for(size_t isl=0;isl<1;isl++)
@@ -308,13 +323,6 @@ int main()
 	    b.ave_err().write(combine("plots/naz/HA_%s.xmg",index3pts.escaped_descr(i).c_str()));
 	  }
   dt.ave_err().write("plots/naz/dt.xmg");
-  
-  djvec_t r=t1/t0;
-  r*=dt;
-  
-  const djack_t xG=2*eG/mP;
-  cout<<"Xg: "<<smart_print(xG)<<endl;
-  r.ave_err().write("plots/threePts.xmg");
   
   return 0;
 }

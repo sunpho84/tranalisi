@@ -6,9 +6,11 @@ constexpr double kappa=2.837297;
 const double M2PiPhys=sqr(0.139);
 
 map<char,size_t> ibeta_of_id{{'A',0},{'B',1},{'D',2}};
+bool isLoc;
 
 static constexpr int propagateLatErr=0;
 static constexpr int includeLog=1;
+static constexpr int includeHands=0;
 
 template <size_t B>
 auto parseName(const string& name)
@@ -61,6 +63,8 @@ struct perens_t
   
   djack_t daMPiFitted;
   
+  djack_t daMPiFittedHandcuffs;
+  
   /////////////////////////////////////////////////////////////////
   
   boot_init_t bi;
@@ -69,9 +73,15 @@ struct perens_t
   
   dboot_t daM;
   
+  dboot_t daMHandcuffs;
+  
   template <typename T>
   struct ToFit
   {
+    T Zv;
+    
+    T Za;
+    
     T ainv;
     
     T M;
@@ -114,14 +124,24 @@ struct perens_t
   
   template <typename T,
 	    typename...Oth>
-  ToFit<T> getToFit(const T& ainv,Oth&&...oth) const
+  ToFit<T> getToFit(const T& ainv,const T& Zv,const T& Za,
+		    Oth&&...oth) const
   {
     ToFit<T> out;
     
     out.ainv=ainv;
+    out.Zv=Zv;
     out.M=g(aM,oth...)*ainv;
     out.L=g((double)Lfra,oth...)/ainv;
-    out.dM=g(e2*daM/2,oth...)*ainv;
+    if(isLoc)
+      {
+	out.dM=g(e2*daM/2,oth...)*sqr(Zv)*ainv;
+	if(includeHands)
+	  out.dM+=g(e2*daMHandcuffs/2,oth...)*sqr(Za)*ainv;
+      }
+    else
+      out.dM=g(e2*daM/2,oth...)*ainv;
+    
     out.FVE=FVEuniv(g(out.L,oth...),g(out.M,oth...));
     out.dM2=out.dM*2*out.M;
     out.dM2UnivCorrected=out.dM2+out.FVE;
@@ -135,6 +155,7 @@ struct perens_t
     bi=jack_index[iult][0];
     aM=dboot_t(bi,aMPiFitted);
     daM=dboot_t(bi,daMPiFitted);
+    daMHandcuffs=dboot_t(bi,daMPiFittedHandcuffs);
   }
   
   perens_t(const string& name,const size_t& T,const size_t& tmin,const size_t& tmax) :
@@ -155,6 +176,8 @@ vector<perens_t> readEnsList()
   //! Total number of ensembles
   const size_t nEns=input.read<size_t>("NEns");
   output.reserve(nEns);
+  
+  isLoc=input.read<size_t>("Local");
   
   for(size_t iEns=0;iEns<nEns;iEns++)
     {
@@ -177,7 +200,9 @@ T FVEansatz(const T& p,const T& p2,const T& p3,const TA& a2,const double m2,cons
   return (4.0*M_PI*alpha_em/3.0*(p+p3*(m2-M2PiPhys))+p2*a2)*sqrt(m2)/(L*L*L);
 }
 
-size_t iC,iCa,iA1,if0,iD,iDm,iFVEnonUniv,iFVEnonUniv2,iFVEnonUniv3,ia[nbeta];
+const vector<vector<ave_err_t>> Zv_ae({{{0.587,0.004},{0.603,0.003},{0.655,0.003}},{{0.608,0.003},{0.614,0.002},{0.657,0.002}}});
+const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
+size_t iC,iCa,iA1,if0,iD,iDm,iFVEnonUniv,iFVEnonUniv2,iFVEnonUniv3,ia[nbeta],izv[nbeta],iza[nbeta];
 
 template <typename T,
 	  typename TA,
@@ -217,10 +242,8 @@ int main()
       
       auto read=
 	[&dir,&T]
-	(const string& suff)
+	(const string& corr)
 	{
-	  const string corr="mes_contr_"+suff;
-	  
 	  const djvec_t out=read_djvec(dir+"/jacks/"+corr,T).symmetrized();
 	  
 	  out.ave_err().write(dir+"/plots/"+corr+".xmg");
@@ -228,11 +251,14 @@ int main()
 	  return out;
 	};
       
-      const djvec_t P5P5_00=read("00");
-      const djvec_t P5P5_LL=read("LL");
+      const djvec_t P5P5_00=read("mes_contr_00");
+      const djvec_t P5P5_LL=read("mes_contr_LL");
+      const djvec_t handcuffs=includeHands?read("handcuffs"):(P5P5_LL*0.0);
       const djvec_t ratio_LL=P5P5_LL/P5P5_00;
+      const djvec_t ratio_handcuffs=handcuffs/P5P5_00;
       const djvec_t eff_mass=effective_mass(P5P5_00);
-      const djvec_t eff_slope=effective_slope(ratio_LL,eff_mass,T/2);
+      const djvec_t eff_slope_LL=effective_slope(ratio_LL,eff_mass,T/2);
+      const djvec_t eff_slope_handcuffs=effective_slope(ratio_handcuffs,eff_mass,T/2);
       
       auto fit=
 	[&ens,&dir]
@@ -242,68 +268,107 @@ int main()
 	};
       
       ens.aMPiFitted=fit(eff_mass,"eff_mass");
-      ens.daMPiFitted=fit(eff_slope,"eff_slope");
+      ens.daMPiFitted=fit(eff_slope_LL,"eff_slope_LL");
+      ens.daMPiFittedHandcuffs=fit(eff_slope_handcuffs,"eff_slope_handcuffs");
       
-      cout<<ens.name<<" "<<smart_print(ens.aMPiFitted)<<" "
-	<<smart_print(ens.daMPiFitted)<<endl;
+      cout<<ens.name<<" "<<smart_print(ens.aMPiFitted)
+	  <<" "<<smart_print(ens.daMPiFitted);
+      if(includeHands)
+	cout<<" "<<smart_print(ens.daMPiFittedHandcuffs);
+      cout<<endl;
     }
   
-      // for(size_t iens=2;iens<6;iens++)
-      // 	ensList[iens].aMPiFitted=ensList[1].aMPiFitted;
-      
+  // for(size_t iens=2;iens<6;iens++)
+  // 	ensList[iens].aMPiFitted=ensList[1].aMPiFitted;
+  
+  //fit_debug=true;
   const size_t nUlt=1;
   for(size_t iult=0;iult<nUlt;iult++)
     {
+      const size_t imethod=iult/4;
+      
+      dbvec_t Zv(nbeta);
+      dbvec_t Za(nbeta);
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	{
+	  Zv[ibeta].fill_gauss(Zv_ae[imethod][ibeta],234212+ibeta);
+	  Za[ibeta].fill_gauss(Za_ae[imethod][ibeta],342342+ibeta);
+	}
+      
       for(auto& ens : ensList)
 	ens.convertToBoot(iult);
       
-      const size_t nFitPars=12;
+      const size_t nFitPars=9+3*nbeta;
       vector<dboot_t> pFit(nFitPars);
-      vector<string> pname{"C","Ca","A1","f0","D","Dm","FVEnonUniv","FVEnonUniv2","FVEnonUniv3","ainv0","ainv1","ainv2","ainv3"};
+      vector<string> pname{"C","Ca","A1","f0","D","Dm","FVEnonUniv","FVEnonUniv2","FVEnonUniv3","ainv0","ainv1","ainv2","Zv0","Zv1","Zv2","Za0","Za1","Za2"};
       boot_fit_t fit;
+      
+      const double A1Guess=isLoc?-3.5:-5.7;
+      const double FVEnonUniv2Guess=isLoc?1.40479:1.8;
+      const double FVEnonUniv3Guess=isLoc?72.5:46.0;
       
       iC=fit.add_fit_par(pFit[0],pname[0],4e-05,1e-6);
       iCa=fit.add_fit_par(pFit[1],pname[1],0,1e-6);
-      iA1=fit.add_fit_par(pFit[2],pname[2],-2.8,0.2);
+      iA1=fit.add_fit_par(pFit[2],pname[2],A1Guess,0.2);
       if0=fit.add_self_fitted_point(pFit[3],pname[3],lat_par[iult].f0,-1);
       iD=fit.add_fit_par(pFit[4],pname[4],0.0,1e-5);
       iDm=fit.add_fit_par(pFit[5],pname[5],0.0,0.001);
       iFVEnonUniv=fit.add_fit_par(pFit[6],pname[6],11,1);
-      iFVEnonUniv2=fit.add_fit_par(pFit[7],pname[7],0,0.1);
-      iFVEnonUniv3=fit.add_fit_par(pFit[8],pname[8],0,0.1);
+      iFVEnonUniv2=fit.add_fit_par(pFit[7],pname[7],FVEnonUniv2Guess,0.1);
+      iFVEnonUniv3=fit.add_fit_par(pFit[8],pname[8],FVEnonUniv3Guess,0.1);
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
 	ia[ibeta]=fit.add_self_fitted_point(pFit[9+ibeta],pname[9+ibeta],lat_par[iult].ainv[ibeta],-1);
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	izv[ibeta]=fit.add_self_fitted_point(pFit[12+ibeta],pname[12+ibeta],Zv[ibeta],-1);
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	iza[ibeta]=fit.add_self_fitted_point(pFit[15+ibeta],pname[15+ibeta],Za[ibeta],-1);
       
       fit.fix_par(iCa);
-      //fit.fix_par(iD);
-      //fit.fix_par(iDm);
       fit.fix_par(iFVEnonUniv);
       //fit.fix_par(iFVEnonUniv2);
       
+      if(isLoc)
+	{
+	  fit.fix_par(iD);
+	  fit.fix_par(iDm);
+	}
+      
       for(auto& ens : ensList)
-	fit.add_point([=]
-		      (const vector<double>& p,int iboot)
-		      {
-			const size_t i=ia[ens.ibeta];
-			const auto data=ens.getToFit(p[i],iboot);
-			
-			return data.dM2UnivCorrected;
-		      },
-		      [=]
-		      (const vector<double>& p,int iboot)
-		      {
-			auto data=ens.getToFit(p[ia[ens.ibeta]],iboot);
-			
-			const double ainv=data.ainv;
-			const double a=1/ainv;
-			const double L=data.L;
-			const double x=sqr(data.M);
-			
-			return ansatz(p,x,a,L);
-		      },
-		      propagateLatErr?
-		      ens.getToFit(lat_par[iult].ainv[ens.ibeta]).dM2UnivCorrected.err():
-		      ens.getToFit(lat_par[iult].ainv[ens.ibeta]).daM2UnivCorrected.err()*sqr(lat_par[iult].ainv[ens.ibeta].ave()));
+	{
+	  double err;
+	  if(propagateLatErr)
+	    err=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]).dM2UnivCorrected.err();
+	  else
+	    {
+	      err=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]).daM2UnivCorrected.err();
+	      err*=sqr(lat_par[iult].ainv[ens.ibeta].ave());
+	      
+	      if(isLoc)
+		err*=sqr(Zv[ens.ibeta].ave());
+	    }
+	  
+	  
+	  fit.add_point([=]
+			(const vector<double>& p,int iboot)
+			{
+			  const auto data=ens.getToFit(p[ia[ens.ibeta]],p[izv[ens.ibeta]],p[iza[ens.ibeta]],iboot);
+			  return data.dM2UnivCorrected;
+			},
+			[=]
+			(const vector<double>& p,int iboot)
+			{
+			  auto data=ens.getToFit(p[ia[ens.ibeta]],p[izv[ens.ibeta]],p[iza[ens.ibeta]],iboot);
+			  
+			  const double& ainv=data.ainv;
+			  const double a=1/ainv;
+			  const double& L=data.L;
+			  const double x=sqr(data.M);
+			  
+			  return ansatz(p,x,a,L);
+			},
+			err);
+	}
+      
       // ens.getToFit(lat_par[iult].ainv[ens.ibeta]).dM2UnivCorrected.err());
       
       // for(size_t ibeta=0;ibeta<nbeta;ibeta++)
@@ -313,12 +378,28 @@ int main()
       for(int iit=0;iit<2;iit++)
       	{
 	  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	    if(iit==0)
-	      fit.fix_par(ia[ibeta]);
-	    else
-	      fit.unfix_par(ia[ibeta]);
+	    {
+	      if(iit==0)
+		fit.fix_par(ia[ibeta]);
+	      else
+		fit.unfix_par(ia[ibeta]);
+	      
+	      if(isLoc)
+		{
+		  if(iit==0)
+		    {
+		      fit.fix_par(izv[ibeta]);
+		      fit.fix_par(iza[ibeta]);
+		    }
+		  else
+		    {
+		      fit.unfix_par(izv[ibeta]);
+		      fit.unfix_par(iza[ibeta]);
+		    }
+		}
+	    }
 	  
-	  auto status=fit.fit();
+	    auto status=fit.fit();
 	}
       
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
@@ -329,9 +410,23 @@ int main()
 	  dboot_t ainv_diff=ainv_fit-ainv_old;
 	  dboot_t ainv_sum=ainv_fit+ainv_old;
 	  
-	  cout<<"Significativity beta "<<ibeta<<": "<<
+	  cout<<"Significativity ainv beta "<<ibeta<<": "<<
 	    ainv_diff.err()/ainv_sum.ave()<<endl;
 	}
+      
+      for(auto& l : {make_tuple(izv,Zv),make_tuple(iza,Za)})
+	for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	  {
+	    auto i{get<0>(l)};
+	    auto Z{get<1>(l)};
+	    dboot_t& z_fit=pFit[i[ibeta]];
+	  
+	    dboot_t z_diff=z_fit-Z[ibeta];
+	    dboot_t z_sum=z_fit+Z[ibeta];
+	    
+	    cout<<"Significativity z beta "<<ibeta<<": "<<
+	      z_diff.err()/z_sum.ave()<<endl;
+	  }
       
       cout<<"Parameters:"<<endl;
       for(size_t ipar=0;ipar<nFitPars;ipar++)
@@ -343,8 +438,10 @@ int main()
       mkdir(ult_plot_dir);
       grace_file_t dM2pi_plot(ult_plot_dir+"/dM2pi.xmg");
       grace_file_t da2M2pi_plot(ult_plot_dir+"/da2M2pi.xmg");
+      grace_file_t daMpiHandcuffs_plot(ult_plot_dir+"/daMpiHandcuffs.xmg");
       
-      for(auto p : {&dM2pi_plot,&da2M2pi_plot})
+      for(auto p : {&dM2pi_plot,&da2M2pi_plot,
+		      &daMpiHandcuffs_plot})
 	{
 	  p->set_settype(grace::XYDY);
 	  p->set_xaxis_label("M\\s\\x\\p\\0\\N\\S2\\N (GeV\\S-1\\N)");
@@ -356,7 +453,7 @@ int main()
       for(size_t FVEswitch=0;FVEswitch<3;FVEswitch++)
 	for(size_t ibeta=0;ibeta<nbeta;ibeta++)
 	  {
-	    for(auto p : {&dM2pi_plot,&da2M2pi_plot})
+	    for(auto p : {&dM2pi_plot,&da2M2pi_plot,&daMpiHandcuffs_plot})
 	      {
 		p->new_data_set();
 		p->set_all_colors(colors[ibeta]);
@@ -367,16 +464,20 @@ int main()
 	    for(auto& ens : ensList)
 	      if(ens.ibeta==ibeta)
 		{
-		  const auto data=ens.getToFit(pFit[ia[ibeta]]);
+		  const auto data=ens.getToFit(pFit[ia[ibeta]],pFit[izv[ibeta]],pFit[iza[ibeta]]);
 		  const dboot_t x=sqr(data.M);
 		  const vector<dboot_t> y=
 		    {data.dM2,
 		     data.dM2UnivCorrected,
 		     data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],pFit[iFVEnonUniv3],1/sqr(pFit[ia[ibeta]]),x.ave(),data.L)};
 		  
+		  if(FVEswitch==0)
+		    daMpiHandcuffs_plot.write_ave_err(x.ave(),((djack_t)(ens.daMPiFittedHandcuffs*data.ainv.ave())).ave_err());
+		  
 		  dM2pi_plot.write_ave_err(x.ave(),y[FVEswitch].ave_err());
 		  da2M2pi_plot.write_ave_err(x.ave(),((dboot_t)(y[FVEswitch]/sqr((dboot_t)(pFit[ia[ibeta]]/lat_par[iult].ainv[ibeta].ave())))).ave_err());
 		}
+	    
 	  }
       
       dboot_t Linf;
@@ -398,14 +499,15 @@ int main()
 	{
 	  auto& p=*plots[iplot];
 	  
-	  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	    p.write_polygon([&pFit,&Linf,ibeta,iplot,plot_pow,iult]
-					(const double& x) -> dboot_t
-					{
-					  const dboot_t a=1/pFit[ia[ibeta]];
-					  
-					  return ansatz(pFit,x,a,Linf)*pow(a*lat_par[iult].ainv[ibeta].ave(),plot_pow[iplot]);
-					},1e-3,0.25,colors[ibeta]);
+	  if(not isLoc)
+	    for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	      p.write_polygon([&pFit,&Linf,ibeta,iplot,plot_pow,iult]
+			      (const double& x) -> dboot_t
+			      {
+				const dboot_t a=1/pFit[ia[ibeta]];
+				
+				return ansatz(pFit,x,a,Linf)*pow(a*lat_par[iult].ainv[ibeta].ave(),plot_pow[iplot]);
+			      },1e-3,0.25,colors[ibeta]);
 	  
 	  p.write_polygon([&pFit,&a0,&Linf]
 			   (const double& x) -> dboot_t
@@ -423,15 +525,34 @@ int main()
 	}
       
       grace_file_t A40slice(ult_plot_dir+"/A40slice.xmg");
+      grace_file_t A40handcuffsSlice(ult_plot_dir+"/A40handcuffsSlice.xmg");
+      grace_file_t A40Mslice(ult_plot_dir+"/A40Mslice.xmg");
+      
+      for(auto& ens: ensList)
+	if(ens.am==0.0040)
+	  A40Mslice.write_ave_err(1.0/ens.Lfra,ens.aM.ave_err());
+      
+      /// handcuffs
+      for(auto& ens: ensList)
+	if(ens.am==0.0040)
+	  A40handcuffsSlice.write_ave_err(1.0/ens.Lfra,ens.daMPiFitted.ave_err());
+      A40handcuffsSlice.set_legend("exchange");
+      A40handcuffsSlice.new_data_set(grace::GREEN4,grace::DIAMOND);
+      for(auto& ens: ensList)
+	if(ens.am==0.0040)
+	  A40handcuffsSlice.write_ave_err(1.0/ens.Lfra,ens.daMPiFittedHandcuffs.ave_err());
+      A40handcuffsSlice.set_legend("handcuffs");
+      A40handcuffsSlice.new_data_set();
       
       for(int FSEflag=0;FSEflag<3;FSEflag++)
 	{
 	  A40slice.new_data_set();
 	  A40slice.set_transparency(0.33+0.33*FSEflag);
+	  
 	  for(auto& ens: ensList)
 	    if(ens.am==0.0040)
 	      {
-		const auto data=ens.getToFit(pFit[ia[0]]);
+		const auto data=ens.getToFit(pFit[ia[0]],pFit[izv[0]],pFit[iza[0]]);
 		
 		djack_t y=e2*ens.daMPiFitted*2*ens.aMPiFitted/2;
 		if(FSEflag>0)
@@ -453,7 +574,7 @@ int main()
 	  for(auto& ens : ensList)
 	    if(ens.ibeta==ibeta)
 	      {
-		const auto data=ens.getToFit(pFit[ia[ibeta]]);
+		const auto data=ens.getToFit(pFit[ia[ibeta]],pFit[izv[ibeta]],pFit[iza[ibeta]]);
 		if(fabs(data.M.ave()-slice_mass)<fabs(closest_mass-slice_mass))
 		  {
 		    closest_mass=data.M.ave();
@@ -477,10 +598,12 @@ int main()
       
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
 	{
-	  auto ainv=pFit[ia[ibeta]];
-	  auto data=slice[ibeta]->getToFit(ainv);
+	  const auto& ainv=pFit[ia[ibeta]];
+	  const auto& zv=pFit[izv[ibeta]];
+	  const auto& za=pFit[iza[ibeta]];
+	  const auto data=slice[ibeta]->getToFit(ainv,zv,za);
 	  
-	  dboot_t y=data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],pFit[iFVEnonUniv3],1e10,sqr(data.M.ave()),data.L);
+	  const dboot_t y=data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],pFit[iFVEnonUniv3],1e10,sqr(data.M.ave()),data.L);
 	  daMpi_a2_plot.write_ave_err(sqr(1/ainv.ave()),y.ave_err());
 	}
     }
