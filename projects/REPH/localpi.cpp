@@ -195,14 +195,14 @@ vector<perens_t> readEnsList()
 template <typename T,
 	  typename TA,
 	  typename TL>
-T FVEansatz(const T& p,const T& p2,const T& p3,const TA& a2,const double m2,const TL& L)
+T FVEansatz(const T& r2,const T& r2a2,const T& r2mpi,const TA& a2,const double m2,const TL& L)
 {
-  return (4.0*M_PI*alpha_em/3.0*(p+p3*(m2-M2PiPhys))+p2*a2)*sqrt(m2)/(L*L*L);
+  return (4.0*M_PI*alpha_em/3.0*(r2+r2mpi*(m2-M2PiPhys))+r2a2*a2)*sqrt(m2)/(L*L*L);
 }
 
 const vector<vector<ave_err_t>> Zv_ae({{{0.587,0.004},{0.603,0.003},{0.655,0.003}},{{0.608,0.003},{0.614,0.002},{0.657,0.002}}});
 const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
-size_t iC,iCa,iA1,if0,iD,iDm,iFVEnonUniv,iFVEnonUniv2,iFVEnonUniv3,ia[nbeta],izv[nbeta],iza[nbeta];
+size_t iC,iCa,iA1,if0,iD,iDm,iQshift,iR2,iR2a2,iR2Mpi,ia[nbeta],izv[nbeta],iza[nbeta];
 
 template <typename T,
 	  typename TA,
@@ -217,13 +217,14 @@ T ansatz(const vector<T>& p,const double& m2,const TA& a,const TL& L)
   const T& f0=p[if0];
   const T& D=p[iD];
   const T& Dm=p[iDm];
+  const T& Qshift=p[iQshift];
   
   const T Q=4*C/pow(f0,4);
   const T W=m2/sqr((T)(4*M_PI*f0));
   
-  T uncorrected=e2*sqr(f0)*(Q-(3+4*Q)*W*log(W)*includeLog)+A1*m2*alpha_em/(4*M_PI)+(D+Dm*m2)*a2;
+  T uncorrected=e2*sqr(f0)*(Q+Qshift-(3+4*Q)*W*log(W)*includeLog)+A1*m2*alpha_em/(4*M_PI)+(D+Dm*m2)*a2;
   
-  return uncorrected+FVEansatz(p[iFVEnonUniv],p[iFVEnonUniv2],p[iFVEnonUniv3],a2,m2,L);
+  return uncorrected+FVEansatz(p[iR2],p[iR2a2],p[iR2Mpi],a2,m2,L);
 }
 
 int main()
@@ -298,14 +299,15 @@ int main()
       for(auto& ens : ensList)
 	ens.convertToBoot(iult);
       
-      const size_t nFitPars=9+3*nbeta;
+      const size_t nFitPars=10+3*nbeta;
       vector<dboot_t> pFit(nFitPars);
-      vector<string> pname{"C","Ca","A1","f0","D","Dm","FVEnonUniv","FVEnonUniv2","FVEnonUniv3","ainv0","ainv1","ainv2","Zv0","Zv1","Zv2","Za0","Za1","Za2"};
+      vector<string> pname{"C","Ca","A1","f0","D","Dm","Qshift","R2","R2a2","R2Mpi","ainv0","ainv1","ainv2","Zv0","Zv1","Zv2","Za0","Za1","Za2"};
       boot_fit_t fit;
       
       const double A1Guess=isLoc?-3.5:-5.7;
-      const double FVEnonUniv2Guess=isLoc?1.40479:1.8;
-      const double FVEnonUniv3Guess=isLoc?72.5:46.0;
+      const double R2Guess=11;
+      const double R2a2Guess=isLoc?1.40479:1.8;
+      const double R2MpiGuess=isLoc?72.5:46.0;
       
       iC=fit.add_fit_par(pFit[0],pname[0],4e-05,1e-6);
       iCa=fit.add_fit_par(pFit[1],pname[1],0,1e-6);
@@ -313,20 +315,22 @@ int main()
       if0=fit.add_self_fitted_point(pFit[3],pname[3],lat_par[iult].f0,-1);
       iD=fit.add_fit_par(pFit[4],pname[4],0.0,1e-5);
       iDm=fit.add_fit_par(pFit[5],pname[5],0.0,0.001);
-      iFVEnonUniv=fit.add_fit_par(pFit[6],pname[6],11,1);
-      iFVEnonUniv2=fit.add_fit_par(pFit[7],pname[7],FVEnonUniv2Guess,0.1);
-      iFVEnonUniv3=fit.add_fit_par(pFit[8],pname[8],FVEnonUniv3Guess,0.1);
+      iQshift=fit.add_fit_par(pFit[6],pname[6],0.0,0.001);
+      iR2=fit.add_fit_par(pFit[7],pname[7],R2Guess,1);
+      iR2a2=fit.add_fit_par(pFit[8],pname[8],R2a2Guess,0.1);
+      iR2Mpi=fit.add_fit_par(pFit[9],pname[9],R2MpiGuess,0.1);
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	ia[ibeta]=fit.add_self_fitted_point(pFit[9+ibeta],pname[9+ibeta],lat_par[iult].ainv[ibeta],-1);
+	ia[ibeta]=fit.add_self_fitted_point(pFit[10+ibeta],pname[10+ibeta],lat_par[iult].ainv[ibeta],-1);
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	izv[ibeta]=fit.add_self_fitted_point(pFit[12+ibeta],pname[12+ibeta],Zv[ibeta],-1);
+	izv[ibeta]=fit.add_self_fitted_point(pFit[13+ibeta],pname[13+ibeta],Zv[ibeta],-1);
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	iza[ibeta]=fit.add_self_fitted_point(pFit[15+ibeta],pname[15+ibeta],Za[ibeta],-1);
+	iza[ibeta]=fit.add_self_fitted_point(pFit[16+ibeta],pname[16+ibeta],Za[ibeta],-1);
       
       fit.fix_par(iCa);
-      fit.fix_par(iFVEnonUniv);
+      fit.fix_par(iR2);
       //fit.fix_par(iFVEnonUniv2);
       
+      fit.fix_par(iQshift);
       if(isLoc)
 	{
 	  fit.fix_par(iD);
@@ -469,7 +473,7 @@ int main()
 		  const vector<dboot_t> y=
 		    {data.dM2,
 		     data.dM2UnivCorrected,
-		     data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],pFit[iFVEnonUniv3],1/sqr(pFit[ia[ibeta]]),x.ave(),data.L)};
+		     data.dM2UnivCorrected-FVEansatz(pFit[iR2],pFit[iR2a2],pFit[iR2Mpi],1/sqr(pFit[ia[ibeta]]),x.ave(),data.L)};
 		  
 		  if(FVEswitch==0)
 		    daMpiHandcuffs_plot.write_ave_err(x.ave(),((djack_t)(ens.daMPiFittedHandcuffs*data.ainv.ave())).ave_err());
@@ -558,7 +562,7 @@ int main()
 		if(FSEflag>0)
 		  y+=FVEuniv(ens.Lfra,ens.aMPiFitted);
 		if(FSEflag>1)
-		  y-=FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],pFit[iFVEnonUniv3],1/sqr(pFit[ia[0]].ave()),sqr(data.M.ave()),data.L)/sqr(data.ainv);
+		  y-=FVEansatz(pFit[iR2],pFit[iR2a2],pFit[iR2Mpi],1/sqr(pFit[ia[0]].ave()),sqr(data.M.ave()),data.L)/sqr(data.ainv);
 	    
 	    A40slice.write_ave_err(pow(ens.Lfra,-3),y.ave_err());
 	  }
@@ -603,7 +607,7 @@ int main()
 	  const auto& za=pFit[iza[ibeta]];
 	  const auto data=slice[ibeta]->getToFit(ainv,zv,za);
 	  
-	  const dboot_t y=data.dM2UnivCorrected-FVEansatz(pFit[iFVEnonUniv],pFit[iFVEnonUniv2],pFit[iFVEnonUniv3],1e10,sqr(data.M.ave()),data.L);
+	  const dboot_t y=data.dM2UnivCorrected-FVEansatz(pFit[iR2],pFit[iR2a2],pFit[iR2Mpi],1e10,sqr(data.M.ave()),data.L);
 	  daMpi_a2_plot.write_ave_err(sqr(1/ainv.ave()),y.ave_err());
 	}
     }
