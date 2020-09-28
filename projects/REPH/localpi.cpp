@@ -97,9 +97,11 @@ struct perens_t
     
     T dM2;
     
+    T da2M2;
+    
     T dM2UnivCorrected;
     
-    T daM2UnivCorrected;
+    T da2M2UnivCorrected;
   };
   
   // template <typename T,
@@ -147,8 +149,9 @@ struct perens_t
     
     out.FVE=FVEuniv(g(out.L,oth...),g(out.M,oth...));
     out.dM2=out.dM*2*out.M;
+    out.da2M2=out.dM2/ainv/ainv;
     out.dM2UnivCorrected=out.dM2+out.FVE;
-    out.daM2UnivCorrected=out.dM2UnivCorrected/ainv/ainv;
+    out.da2M2UnivCorrected=out.dM2UnivCorrected/ainv/ainv;
     
     return out;
   }
@@ -377,11 +380,11 @@ int main()
 	{
 	  double err;
 	  if(propagateLatErr)
-	    err=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]).dM2UnivCorrected.err();
+	    err=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]).dM2.err();
 	  else
 	    {
 	      const auto data=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]);
-	      err=data.daM2UnivCorrected.err();
+	      err=data.da2M2.err();
 	      err*=sqr(lat_par[iult].ainv[ens.ibeta].ave());
 	      
 	      dboot_t y=data.dM/data.ainv*2;
@@ -395,7 +398,7 @@ int main()
 			(const vector<double>& p,int iboot)
 			{
 			  const auto data=ens.getToFit(p[ia[ens.ibeta]],p[izv[ens.ibeta]],p[iza[ens.ibeta]],iboot);
-			  return data.dM2UnivCorrected;
+			  return data.dM2;
 			},
 			[=]
 			(const vector<double>& p,int iboot)
@@ -408,7 +411,7 @@ int main()
 			  const double& L=data.L;
 			  const double x=sqr(data.M);
 			  
-			  return ansatz(p,x,a,L);
+			  return ansatz(p,x,a,L)-FVEuniv(L,data.M);
 			},
 			err);
 	}
