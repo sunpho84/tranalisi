@@ -5,6 +5,7 @@
 constexpr double kappa=2.837297;
 const double M2PiPhys=sqr(0.139);
 
+string beta_of_ibeta[3]={"1.90","1.95","2.10"};
 map<char,size_t> ibeta_of_id{{'A',0},{'B',1},{'D',2}};
 bool isLoc;
 
@@ -74,6 +75,8 @@ struct perens_t
   dboot_t daM;
   
   dboot_t daMHandcuffs;
+  
+   bool in{false};
   
   template <typename T>
   struct ToFit
@@ -152,9 +155,13 @@ struct perens_t
   
   void convertToBoot(const size_t iult)
   {
-    bi=jack_index[iult][0];
+    if(not in)
+      bi.fill(234213423);
+    in=true;
     aM=dboot_t(bi,aMPiFitted);
+    cout<<"am errs: "<<aM.err()<<" "<<aMPiFitted.err()<<endl;
     daM=dboot_t(bi,daMPiFitted);
+    cout<<"dam errs: "<<daM.err()<<" "<<daMPiFitted.err()<<endl;
     daMHandcuffs=dboot_t(bi,daMPiFittedHandcuffs);
   }
   
@@ -177,6 +184,8 @@ vector<perens_t> readEnsList()
   const size_t nEns=input.read<size_t>("NEns");
   output.reserve(nEns);
   
+  set_njacks(input.read<size_t>("NJacks"));
+  
   isLoc=input.read<size_t>("Local");
   
   for(size_t iEns=0;iEns<nEns;iEns++)
@@ -197,12 +206,12 @@ template <typename T,
 	  typename TL>
 T FVEansatz(const T& r2,const T& r2a2,const T& r2mpi,const TA& a2,const double m2,const TL& L)
 {
-  return (4.0*M_PI*alpha_em/3.0*(r2+r2mpi*(m2-M2PiPhys))+r2a2*a2)*sqrt(m2)/(L*L*L);
+  return 4.0*M_PI*alpha_em/3.0*(r2*(1+r2mpi*(m2-M2PiPhys)+r2a2*a2))*sqrt(m2)/(L*L*L);
 }
 
 const vector<vector<ave_err_t>> Zv_ae({{{0.587,0.004},{0.603,0.003},{0.655,0.003}},{{0.608,0.003},{0.614,0.002},{0.657,0.002}}});
 const vector<vector<ave_err_t>> Za_ae({{{0.731,0.008},{0.737,0.005},{0.762,0.004}},{{0.703,0.002},{0.714,0.002},{0.752,0.002}}});
-size_t iC,iCa,iA1,if0,iD,iDm,iQshift,iR2,iR2a2,iR2Mpi,ia[nbeta],izv[nbeta],iza[nbeta];
+size_t iCurv,iCurvA2,iA1,if0,iD,iDm,iOffset,iR2,iR2a2,iR2Mpi,ia[nbeta],izv[nbeta],iza[nbeta];
 
 template <typename T,
 	  typename TA,
@@ -210,29 +219,31 @@ template <typename T,
 T ansatz(const vector<T>& p,const double& m2,const TA& a,const TL& L)
 {
   const TA a2=a*a;
-  const T& C0=p[iC];
-  const T& Ca=p[iCa];
-  const T C=C0+a2*Ca;
+  const T& Curv0=p[iCurv];
+  const T& CurvA2=p[iCurvA2];
+  const T Curv=Curv0+a2*CurvA2;
   const T& A1=p[iA1];
   const T& f0=p[if0];
   const T& D=p[iD];
   const T& Dm=p[iDm];
-  const T& Qshift=p[iQshift];
+  const T& Offset=p[iOffset];
   
-  const T Q=4*C/pow(f0,4);
+  const T Q=4*Offset/pow(f0,4);
   const T W=m2/sqr((T)(4*M_PI*f0));
   
-  T uncorrected=e2*sqr(f0)*(Q+Qshift-(3+4*Q)*W*log(W)*includeLog)+A1*m2*alpha_em/(4*M_PI)+(D+Dm*m2)*a2;
+  const T uncorrected=e2*sqr(f0)*(Q-Curv*W*log(W)*includeLog)+A1*m2*alpha_em/(4*M_PI)+(D+Dm*m2)*a2;
+  const T correction=FVEansatz(p[iR2],p[iR2a2],p[iR2Mpi],a2,m2,L);
   
-  return uncorrected+FVEansatz(p[iR2],p[iR2a2],p[iR2Mpi],a2,m2,L);
+  if(fit_debug)
+    cout<<" {   "<<a2<<" "<<m2<<" "<<L<<" "<<uncorrected<<" "<<correction<<"   } "<<endl;
+  return uncorrected+correction;
 }
 
 int main()
 {
-  set_njacks(15);
-  loadUltimateInput("ultimate_input.txt");
-  
   auto ensList=readEnsList();
+  
+  loadUltimateInput("ultimate_input.txt");
   
   for(auto& ens : ensList)
     {
@@ -273,7 +284,7 @@ int main()
       ens.daMPiFittedHandcuffs=fit(eff_slope_handcuffs,"eff_slope_handcuffs");
       
       cout<<ens.name<<" "<<smart_print(ens.aMPiFitted)
-	  <<" "<<smart_print(ens.daMPiFitted);
+	  <<" "<<smart_print(ens.daMPiFitted)<<" "<<smart_print((djack_t)(2*(ens.aMPiFitted*ens.daMPiFitted)));
       if(includeHands)
 	cout<<" "<<smart_print(ens.daMPiFittedHandcuffs);
       cout<<endl;
@@ -282,7 +293,6 @@ int main()
   // for(size_t iens=2;iens<6;iens++)
   // 	ensList[iens].aMPiFitted=ensList[1].aMPiFitted;
   
-  //fit_debug=true;
   const size_t nUlt=1;
   for(size_t iult=0;iult<nUlt;iult++)
     {
@@ -299,41 +309,67 @@ int main()
       for(auto& ens : ensList)
 	ens.convertToBoot(iult);
       
-      const size_t nFitPars=10+3*nbeta;
+      const size_t nFitPars=10+(1+isLoc*(1+includeHands))*nbeta;
       vector<dboot_t> pFit(nFitPars);
-      vector<string> pname{"C","Ca","A1","f0","D","Dm","Qshift","R2","R2a2","R2Mpi","ainv0","ainv1","ainv2","Zv0","Zv1","Zv2","Za0","Za1","Za2"};
+      vector<string> pname{"Curv","CurvA2","A1","f0","D","Dm","Offset","R2","R2a2","R2Mpi","ainv0","ainv1","ainv2","Zv0","Zv1","Zv2","Za0","Za1","Za2"};
       boot_fit_t fit;
       
-      const double A1Guess=isLoc?-3.5:-5.7;
-      const double R2Guess=11;
-      const double R2a2Guess=isLoc?1.40479:1.8;
-      const double R2MpiGuess=isLoc?72.5:46.0;
+      const double A1Guess=isLoc?-2e-2:-5.7;
+      const double R2Guess=sqr(0.672/0.197);
+      const double R2a2Guess=isLoc?1.40479:2.5;
+      const double R2MpiGuess=isLoc?72.5:0.0;
       
-      iC=fit.add_fit_par(pFit[0],pname[0],4e-05,1e-6);
-      iCa=fit.add_fit_par(pFit[1],pname[1],0,1e-6);
-      iA1=fit.add_fit_par(pFit[2],pname[2],A1Guess,0.2);
+      iCurv=fit.add_fit_par(pFit[0],pname[0],3.7,0.7);
+      iCurvA2=fit.add_fit_par(pFit[1],pname[1],0,1e-6);
+      iA1=fit.add_fit_par(pFit[2],pname[2],A1Guess,2e-2);
       if0=fit.add_self_fitted_point(pFit[3],pname[3],lat_par[iult].f0,-1);
-      iD=fit.add_fit_par(pFit[4],pname[4],0.0,1e-5);
+      iD=fit.add_fit_par(pFit[4],pname[4],2e-3,1e-5);
       iDm=fit.add_fit_par(pFit[5],pname[5],0.0,0.001);
-      iQshift=fit.add_fit_par(pFit[6],pname[6],0.0,0.001);
+      iOffset=fit.add_fit_par(pFit[6],pname[6],1e-5,0.001);
       iR2=fit.add_fit_par(pFit[7],pname[7],R2Guess,1);
       iR2a2=fit.add_fit_par(pFit[8],pname[8],R2a2Guess,0.1);
       iR2Mpi=fit.add_fit_par(pFit[9],pname[9],R2MpiGuess,0.1);
+      
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
 	ia[ibeta]=fit.add_self_fitted_point(pFit[10+ibeta],pname[10+ibeta],lat_par[iult].ainv[ibeta],-1);
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	izv[ibeta]=fit.add_self_fitted_point(pFit[13+ibeta],pname[13+ibeta],Zv[ibeta],-1);
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	iza[ibeta]=fit.add_self_fitted_point(pFit[16+ibeta],pname[16+ibeta],Za[ibeta],-1);
+
+      if(isLoc)
+	{
+	  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	    izv[ibeta]=fit.add_self_fitted_point(pFit[13+ibeta],pname[13+ibeta],Zv[ibeta],-1);
+	  if(includeHands)
+	    for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	      iza[ibeta]=fit.add_self_fitted_point(pFit[16+ibeta],pname[16+ibeta],Za[ibeta],-1);
+	}
       
-      fit.fix_par(iCa);
+      ofstream data_out("data_out.txt");
+      data_out.precision(16);
+      auto pr=[&data_out](const string descr,const dboot_t a)
+	      {
+		data_out<<descr<<"\t"<<a[0]<<"\t"<<a.err()<<endl;
+	      };
+      
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	pr("ainv["+beta_of_ibeta[ibeta]+"]",lat_par[iult].ainv[ibeta]);
+      pr("f0",lat_par[iult].f0);
+      data_out<<
+	"---------------------------\n"
+	" Ensemble 	 pion_mass 	 DM^2 	        DM^2_err\n";
+      
+      fit.fix_par(iCurvA2);
       fit.fix_par(iR2);
-      //fit.fix_par(iFVEnonUniv2);
+      fit.fix_par(iR2Mpi);
+      //fit.fix_par(iR2a2);
       
-      fit.fix_par(iQshift);
+      //fit.fix_par(iOffset);
       if(isLoc)
 	{
 	  fit.fix_par(iD);
+	  fit.fix_par(iDm);
+	}
+      else
+	{
+	  //fit.fix_par(iD);
 	  fit.fix_par(iDm);
 	}
       
@@ -344,13 +380,16 @@ int main()
 	    err=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]).dM2UnivCorrected.err();
 	  else
 	    {
-	      err=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]).daM2UnivCorrected.err();
+	      const auto data=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]);
+	      err=data.daM2UnivCorrected.err();
 	      err*=sqr(lat_par[iult].ainv[ens.ibeta].ave());
+	      
+	      dboot_t y=data.dM/data.ainv*2;
+	      pr(ens.name,y);
 	      
 	      if(isLoc)
 		err*=sqr(Zv[ens.ibeta].ave());
 	    }
-	  
 	  
 	  fit.add_point([=]
 			(const vector<double>& p,int iboot)
@@ -361,6 +400,7 @@ int main()
 			[=]
 			(const vector<double>& p,int iboot)
 			{
+			  //fit_debug=(iboot==nboots-1);
 			  auto data=ens.getToFit(p[ia[ens.ibeta]],p[izv[ens.ibeta]],p[iza[ens.ibeta]],iboot);
 			  
 			  const double& ainv=data.ainv;
@@ -378,7 +418,7 @@ int main()
       // for(size_t ibeta=0;ibeta<nbeta;ibeta++)
       // 	fit.fix_par(ia[ibeta]);
       // auto status=fit.fit();
-	  
+      
       for(int iit=0;iit<2;iit++)
       	{
 	  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
@@ -403,34 +443,130 @@ int main()
 		}
 	    }
 	  
-	    auto status=fit.fit();
+	  auto status=fit.fit();
 	}
+      
+      /////////////////////////////////////////////////////////////////
+      
+      const size_t iboot_to_print=63;
+      double chi2;
+      chi2=0.0;
+      auto add_pr_ch2=[&chi2](const dboot_t& teo,const dboot_t& num)
+		   {
+		     const double c=(teo[iboot_to_print]-num[iboot_to_print])/num.err();
+		     const double r=sqr(c);
+		     chi2+=r;
+		     //cout<<"  "<<teo<<" "<<num<<"     "<<r.ave_err()<<"     "<<chi2.ave_err()<<endl;
+		   };
+      add_pr_ch2(pFit[3],lat_par[iult].f0);
+      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	add_pr_ch2(pFit[10+ibeta],lat_par[iult].ainv[ibeta]);
+      
+      ofstream file_out("parsandchi2.txt");
+      file_out.precision(16);
+      
+#define PR(A) file_out<<#A<<": "<<A<<endl
+      
+      /// Fit pars and external inputs
+      PR(pFit[ia[0]][iboot_to_print]);
+      PR(pFit[ia[1]][iboot_to_print]);
+      PR(pFit[ia[2]][iboot_to_print]);
+      const double Curv0=pFit[iCurv][iboot_to_print];PR(Curv0);
+      const double CurvA2=pFit[iCurvA2][iboot_to_print];PR(CurvA2);
+      const double A1=pFit[iA1][iboot_to_print];PR(A1);
+      const double f0=pFit[if0][iboot_to_print];PR(f0);
+      const double D=pFit[iD][iboot_to_print];PR(D);
+      const double Dm=pFit[iDm][iboot_to_print];PR(Dm);
+      const double Offset=pFit[iOffset][iboot_to_print];PR(Offset);
+      const double r2=pFit[iR2][iboot_to_print];PR(r2);
+      const double r2m2=pFit[iR2Mpi][iboot_to_print];PR(r2m2);
+      const double r2a2=pFit[iR2a2][iboot_to_print];PR(r2a2);
+      
+      file_out<<"# ===="<<endl;
+      for(auto& ens : ensList)
+	{
+	  file_out<<"# Ens "<<ens.name<<" "<<ens.ibeta<<endl;
+	  double err;
+	  {
+	    const dboot_t ainv=lat_par[iult].ainv[ens.ibeta];
+	    const dboot_t M=ens.aM*ainv;
+	    const dboot_t L=ens.Lfra/ainv;
+	    const dboot_t dM=e2*ens.daM/2*ainv;
+	    cout<<dM[iboot_to_print]<<endl;
+	    const dboot_t FVE=alpha_em*kappa/sqr(L)*(2+M*L);
+	    const dboot_t dM2=dM*2*M;
+	    const dboot_t dM2UnivCorrected=dM2+FVE;
+	    const dboot_t daM2UnivCorrected=dM2UnivCorrected/ainv/ainv;
+	    err=daM2UnivCorrected.err()*sqr(ainv.ave());
+	  }
+	  file_out<<"error: "<<err<<endl;
+	  
+	  const double ainv=pFit[ia[ens.ibeta]][iboot_to_print];
+	  const double aM=ens.aM[iboot_to_print];PR(aM);
+	  const size_t Lfra=ens.Lfra;file_out<<"Lfra: "<<Lfra<<endl;
+	  const double daM=ens.daM[iboot_to_print];PR(daM);
+	  
+	  ///////////////////////
+	  
+	  const double M=aM*ainv;
+	  const double L=Lfra/ainv;
+	  const double dM=e2*daM/2*ainv;
+	  const double FVE=alpha_em*kappa/sqr(L)*(2+M*L);
+	  const double dM2=dM*2*M;
+	  const double dM2UnivCorrected=dM2+FVE;
+	  
+	  const double a=1/ainv;
+	  const double a2=a*a;
+	  const double Curv=Curv0+a2*CurvA2;
+	  const double m2=sqr(M);
+	  
+	  const double Q=4*Offset/pow(f0,4);
+	  const double W=m2/sqr(4*M_PI*f0);
+	  
+	  const double uncorrected=e2*sqr(f0)*(Q-Curv*W*log(W)*includeLog)+A1*m2*alpha_em/(4*M_PI)+(D+Dm*m2)*a2;
+	  const double correction=4.0*M_PI*alpha_em/3.0*(r2*(1+r2m2*(m2-M2PiPhys)+r2a2*a2))*sqrt(m2)/(L*L*L);
+	  
+	  const double num=dM2UnivCorrected;
+	  const double teo=uncorrected+correction;
+	  const double r=(teo-num)/err;
+	  const double c=sqr(r);
+	  file_out<<"numerical_value: "<<num<<endl;
+	  file_out<<"ansatz: "<<teo<<endl;
+	  file_out<<"contribution: "<<c<<endl;
+	  file_out<<"== =="<<endl;
+	  chi2+=c;
+	}
+      file_out<<"chi2["<<iboot_to_print<<"]: "<<chi2<<endl;
+      
+      fit_debug=false;
+      /////////////////////////////////////////////////////////////////
       
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
 	{
-	  dboot_t& ainv_fit=pFit[ia[ibeta]];
-	  dboot_t& ainv_old=lat_par[iult].ainv[ibeta];
+	  const dboot_t& ainv_fit=pFit[ia[ibeta]];
+	  const dboot_t& ainv_old=lat_par[iult].ainv[ibeta];
 	  
-	  dboot_t ainv_diff=ainv_fit-ainv_old;
-	  dboot_t ainv_sum=ainv_fit+ainv_old;
+	  const double ainv_diff=ainv_fit.ave()-ainv_old.ave();
+	  const dboot_t ainv_sum=ainv_fit+ainv_old;
 	  
 	  cout<<"Significativity ainv beta "<<ibeta<<": "<<
-	    ainv_diff.err()/ainv_sum.ave()<<endl;
+	    ainv_diff/ainv_sum.err()<<endl;
 	}
       
-      for(auto& l : {make_tuple(izv,Zv),make_tuple(iza,Za)})
-	for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	  {
-	    auto i{get<0>(l)};
-	    auto Z{get<1>(l)};
-	    dboot_t& z_fit=pFit[i[ibeta]];
-	  
-	    dboot_t z_diff=z_fit-Z[ibeta];
-	    dboot_t z_sum=z_fit+Z[ibeta];
-	    
-	    cout<<"Significativity z beta "<<ibeta<<": "<<
-	      z_diff.err()/z_sum.ave()<<endl;
-	  }
+      if(isLoc and includeHands)
+	for(auto& l : {make_tuple(izv,Zv),make_tuple(iza,Za)})
+	  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
+	    {
+	      auto i{get<0>(l)};
+	      auto Z{get<1>(l)};
+	      const dboot_t& z_fit=pFit[i[ibeta]];
+	      
+	      const double z_diff=z_fit.ave()-Z[ibeta].ave();
+	      const dboot_t z_sum=z_fit+Z[ibeta];
+	      
+	      cout<<"Significativity z beta "<<ibeta<<": "<<
+		z_diff/z_sum.err()<<endl;
+	    }
       
       cout<<"Parameters:"<<endl;
       for(size_t ipar=0;ipar<nFitPars;ipar++)

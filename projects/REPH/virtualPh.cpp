@@ -240,7 +240,7 @@ vector<djvec_t> readData2()
 
 int main()
 {
-  set_njacks(10);
+  set_njacks(2);
   
   const auto threePts=readData();
   const auto twoPts=readData2();
