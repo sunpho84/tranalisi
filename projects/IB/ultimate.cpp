@@ -11,6 +11,7 @@ int  main(int narg,char **arg)
   init_common_IB("/home/francesco/QCD/LAVORI/IB_MES_NF211/one_source/ultimate_input.txt");
   
   ofstream out(arg[1]);
+  out.precision(16);
   out<<endl<<"# ml,B0,f0,ainv[0],ainv[1],ainv[2],Z[0],Z[1],Z[2]"<<endl<<endl;
   
   for(size_t input_an_id=0;input_an_id<ninput_an;input_an_id++)
