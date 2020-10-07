@@ -1,6 +1,7 @@
 #include <tranalisi.hpp>
 
-#include <phys_point.hpp>
+constexpr int nbeta=3;
+const int nboots=100;
 
 constexpr double kappa=2.837297;
 const double M2PiPhys=sqr(0.139);
@@ -60,23 +61,13 @@ struct perens_t
   
   const size_t ibeta;
   
-  djack_t aMPiFitted;
-  
-  djack_t daMPiFitted;
-  
-  djack_t daMPiFittedHandcuffs;
-  
   /////////////////////////////////////////////////////////////////
-  
-  boot_init_t bi;
   
   dboot_t aM;
   
   dboot_t daM;
   
   dboot_t daMHandcuffs;
-  
-   bool in{false};
   
   template <typename T>
   struct ToFit
@@ -156,18 +147,6 @@ struct perens_t
     return out;
   }
   
-  void convertToBoot(const size_t iult)
-  {
-    if(not in)
-      bi.fill(234213423);
-    in=true;
-    aM=dboot_t(bi,aMPiFitted);
-    cout<<"am errs: "<<aM.err()<<" "<<aMPiFitted.err()<<endl;
-    daM=dboot_t(bi,daMPiFitted);
-    cout<<"dam errs: "<<daM.err()<<" "<<daMPiFitted.err()<<endl;
-    daMHandcuffs=dboot_t(bi,daMPiFittedHandcuffs);
-  }
-  
   perens_t(const string& name,const size_t& T,const size_t& tmin,const size_t& tmax) :
     name(name),am(parseName<1>(name)),T(T),Lfra(parseName<0>(name)),tmin(tmin),tmax(tmax),ibeta(ibeta_of_id[name[0]])
   {
@@ -242,63 +221,104 @@ T ansatz(const vector<T>& p,const double& m2,const TA& a,const TL& L)
   return uncorrected+correction;
 }
 
+void demangle_ultimate_input(dboot_t& f0_prior,dbvec_t& ainv_prior,raw_file_t& ultimate_remangled,const size_t iult)
+{
+  ultimate_remangled.skip_line(9);
+  double f0ave=ultimate_remangled.read<double>();
+  double ainv0ave=ultimate_remangled.read<double>();
+  double ainv1ave=ultimate_remangled.read<double>();
+  double ainv2ave=ultimate_remangled.read<double>();
+  ultimate_remangled.skip_line(6);
+  
+  double covmatr[81];
+  for(int i=0;i<81;i++)
+    covmatr[i]=ultimate_remangled.read<double>();
+  vector<double> mean_ult={f0ave,ainv0ave,ainv1ave,ainv2ave};
+  vector<double> sigma_ult(16);
+  for(int i=0;i<4;i++)
+    for(int j=0;j<4;j++)
+      sigma_ult[i+4*j]=covmatr[(i+2)+9*(j+2)];
+  gen_t gen(23423+iult);
+  
+  for(size_t iboot=0;iboot<nboots;iboot++)
+    {
+      vector<double> res=multivariate(mean_ult,sigma_ult,gen);
+      f0_prior[iboot]=res[0];
+      ainv_prior[0][iboot]=res[1];
+      ainv_prior[1][iboot]=res[2];
+      ainv_prior[2][iboot]=res[3];
+    }
+  f0_prior[nboots]=f0ave;
+  ainv_prior[0][nboots]=ainv0ave;
+  ainv_prior[1][nboots]=ainv1ave;
+  ainv_prior[2][nboots]=ainv2ave;
+}
+
 int main()
 {
+  build_boots_from_jacks=false;
+  def_nboots=nboots;
+  
   auto ensList=readEnsList();
   
-  loadUltimateInput("ultimate_input.txt");
-  
-  for(auto& ens : ensList)
+  for(size_t iens=0;iens<ensList.size();iens++)
     {
+      perens_t& ens=ensList[iens];
+      
       mkdir(ens.name+"/plots");
       
       const string& dir=ens.name;
       const size_t& T=ens.T;
       
       auto read=
-	[&dir,&T]
+	[&dir,&T,&iens]
 	(const string& corr)
 	{
-	  const djvec_t out=read_djvec(dir+"/jacks/"+corr,T).symmetrized();
+	  const djvec_t j=read_djvec(dir+"/jacks/"+corr,T).symmetrized();
+	  const dbvec_t out=bvec_from_jvec(iens+21230,j);
 	  
 	  out.ave_err().write(dir+"/plots/"+corr+".xmg");
 	  
 	  return out;
 	};
       
-      const djvec_t P5P5_00=read("mes_contr_00");
-      const djvec_t P5P5_LL=read("mes_contr_LL");
-      const djvec_t handcuffs=includeHands?read("handcuffs"):(P5P5_LL*0.0);
-      const djvec_t ratio_LL=P5P5_LL/P5P5_00;
-      const djvec_t ratio_handcuffs=handcuffs/P5P5_00;
-      const djvec_t eff_mass=effective_mass(P5P5_00);
-      const djvec_t eff_slope_LL=effective_slope(ratio_LL,eff_mass,T/2);
-      const djvec_t eff_slope_handcuffs=effective_slope(ratio_handcuffs,eff_mass,T/2);
+      const dbvec_t P5P5_00=read("mes_contr_00");
+      const dbvec_t P5P5_LL=read("mes_contr_LL");
+      const dbvec_t handcuffs=includeHands?read("handcuffs"):(P5P5_LL*0.0);
+      const dbvec_t ratio_LL=P5P5_LL/P5P5_00;
+      const dbvec_t ratio_handcuffs=handcuffs/P5P5_00;
+      const dbvec_t eff_mass=effective_mass(P5P5_00);
+      const dbvec_t eff_slope_LL=effective_slope(ratio_LL,eff_mass,T/2);
+      const dbvec_t eff_slope_handcuffs=effective_slope(ratio_handcuffs,eff_mass,T/2);
       
       auto fit=
 	[&ens,&dir]
-	(const djvec_t& vec,const string& corr)
+	(const dbvec_t& vec,const string& corr)
 	{
 	  return constant_fit(vec,ens.tmin,ens.tmax,dir+"/plots/"+corr+".xmg");
 	};
       
-      ens.aMPiFitted=fit(eff_mass,"eff_mass");
-      ens.daMPiFitted=fit(eff_slope_LL,"eff_slope_LL");
-      ens.daMPiFittedHandcuffs=fit(eff_slope_handcuffs,"eff_slope_handcuffs");
+      ens.aM=fit(eff_mass,"eff_mass");
+      ens.daM=fit(eff_slope_LL,"eff_slope_LL");
+      ens.daMHandcuffs=fit(eff_slope_handcuffs,"eff_slope_handcuffs");
       
-      cout<<ens.name<<" "<<smart_print(ens.aMPiFitted)
-	  <<" "<<smart_print(ens.daMPiFitted)<<" "<<smart_print((djack_t)(2*(ens.aMPiFitted*ens.daMPiFitted)));
+      cout<<ens.name<<" "<<smart_print(ens.aM)
+	  <<" "<<smart_print(ens.daM)<<" "<<smart_print((dboot_t)(2*(ens.aM*ens.daM)));
       if(includeHands)
-	cout<<" "<<smart_print(ens.daMPiFittedHandcuffs);
+	cout<<" "<<smart_print(ens.daMHandcuffs);
       cout<<endl;
     }
   
-  // for(size_t iens=2;iens<6;iens++)
-  // 	ensList[iens].aMPiFitted=ensList[1].aMPiFitted;
+  raw_file_t ultimate_remangled("ultimate_remangled.txt","r");
   
-  const size_t nUlt=2;
+  const size_t nUlt=8;
   for(size_t iult=0;iult<nUlt;iult++)
     {
+      dbvec_t ainv_prior(nbeta);
+      dboot_t f0_prior;
+      
+      demangle_ultimate_input(f0_prior,ainv_prior,ultimate_remangled,iult);
+      
       const size_t imethod=iult/4;
       
       dbvec_t Zv(nbeta);
@@ -309,33 +329,30 @@ int main()
 	  Za[ibeta].fill_gauss(Za_ae[imethod][ibeta],342342+ibeta);
 	}
       
-      for(auto& ens : ensList)
-	ens.convertToBoot(iult);
-      
       const size_t nFitPars=10+(1+isLoc*(1+includeHands))*nbeta;
       vector<dboot_t> pFit(nFitPars);
       vector<string> pname{"Curv","CurvA2","A1","f0","D","Dm","Offset","R2","R2a2","R2Mpi","ainv0","ainv1","ainv2","Zv0","Zv1","Zv2","Za0","Za1","Za2"};
       boot_fit_t fit;
       
-      const double A1Guess=isLoc?-2e-2:-5.7;
+      const double A1Guess=isLoc?-2e-2:4.9;
       const double R2Guess=sqr(0.672/0.197);
-      const double R2a2Guess=isLoc?1.40479:2.5;
+      const double R2a2Guess=isLoc?1.40479:7;
       const double R2MpiGuess=isLoc?72.5:0.0;
       
-      iCurv=fit.add_fit_par(pFit[0],pname[0],3.7,0.7);
+      iCurv=fit.add_fit_par(pFit[0],pname[0],2.5,0.4);
       iCurvA2=fit.add_fit_par(pFit[1],pname[1],0,1e-6);
       iA1=fit.add_fit_par(pFit[2],pname[2],A1Guess,2e-2);
-      if0=fit.add_self_fitted_point(pFit[3],pname[3],lat_par[iult].f0,-1);
+      if0=fit.add_fit_par(pFit[3],pname[3],f0_prior.ave(),-1);
       iD=fit.add_fit_par(pFit[4],pname[4],2e-3,1e-5);
       iDm=fit.add_fit_par(pFit[5],pname[5],0.0,0.001);
-      iOffset=fit.add_fit_par(pFit[6],pname[6],1e-5,0.001);
+      iOffset=fit.add_fit_par(pFit[6],pname[6],4e-5,0.001);
       iR2=fit.add_fit_par(pFit[7],pname[7],R2Guess,1);
       iR2a2=fit.add_fit_par(pFit[8],pname[8],R2a2Guess,0.1);
       iR2Mpi=fit.add_fit_par(pFit[9],pname[9],R2MpiGuess,0.1);
       
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	ia[ibeta]=fit.add_self_fitted_point(pFit[10+ibeta],pname[10+ibeta],lat_par[iult].ainv[ibeta],-1);
-
+	ia[ibeta]=fit.add_self_fitted_point(pFit[10+ibeta],pname[10+ibeta],ainv_prior[ibeta],-1);
+      
       if(isLoc)
 	{
 	  for(size_t ibeta=0;ibeta<nbeta;ibeta++)
@@ -353,13 +370,14 @@ int main()
 	      };
       
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	pr("ainv["+beta_of_ibeta[ibeta]+"]",lat_par[iult].ainv[ibeta]);
-      pr("f0",lat_par[iult].f0);
+	pr("ainv["+beta_of_ibeta[ibeta]+"]",ainv_prior[ibeta]);
+      pr("f0",f0_prior);
       data_out<<
 	"---------------------------\n"
 	" Ensemble 	 pion_mass 	 DM^2 	        DM^2_err\n";
       
       fit.fix_par(iCurvA2);
+      fit.fix_par(if0);
       fit.fix_par(iR2);
       fit.fix_par(iR2Mpi);
       //fit.fix_par(iR2a2);
@@ -380,10 +398,10 @@ int main()
 	{
 	  double err;
 	  if(propagateLatErr)
-	    err=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]).da2M2.err();
+	    err=ens.getToFit(ainv_prior[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]).da2M2.err();
 	  else
 	    {
-	      const auto data=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]);
+	      const auto data=ens.getToFit(ainv_prior[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]);
 	      err=data.da2M2.err();
 	      
 	      dboot_t y=data.dM/data.ainv*2;
@@ -415,7 +433,7 @@ int main()
 			err);
 	}
       
-      // ens.getToFit(lat_par[iult].ainv[ens.ibeta]).dM2UnivCorrected.err());
+      // ens.getToFit(ainv[ens.ibeta]).dM2UnivCorrected.err());
       
       // for(size_t ibeta=0;ibeta<nbeta;ibeta++)
       // 	fit.fix_par(ia[ibeta]);
@@ -454,105 +472,10 @@ int main()
       
       /////////////////////////////////////////////////////////////////
       
-      const size_t iboot_to_print=63;
-      double chi2;
-      chi2=0.0;
-      auto add_pr_ch2=[&chi2](const dboot_t& teo,const dboot_t& num)
-		   {
-		     const double c=(teo[iboot_to_print]-num[iboot_to_print])/num.err();
-		     const double r=sqr(c);
-		     chi2+=r;
-		     //cout<<"  "<<teo<<" "<<num<<"     "<<r.ave_err()<<"     "<<chi2.ave_err()<<endl;
-		   };
-      add_pr_ch2(pFit[3],lat_par[iult].f0);
-      for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	add_pr_ch2(pFit[10+ibeta],lat_par[iult].ainv[ibeta]);
-      
-      ofstream file_out("parsandchi2.txt");
-      file_out.precision(16);
-      
-#define PR(A) file_out<<#A<<": "<<A<<endl
-      
-      /// Fit pars and external inputs
-      PR(pFit[ia[0]][iboot_to_print]);
-      PR(pFit[ia[1]][iboot_to_print]);
-      PR(pFit[ia[2]][iboot_to_print]);
-      const double Curv0=pFit[iCurv][iboot_to_print];PR(Curv0);
-      const double CurvA2=pFit[iCurvA2][iboot_to_print];PR(CurvA2);
-      const double A1=pFit[iA1][iboot_to_print];PR(A1);
-      const double f0=pFit[if0][iboot_to_print];PR(f0);
-      const double D=pFit[iD][iboot_to_print];PR(D);
-      const double Dm=pFit[iDm][iboot_to_print];PR(Dm);
-      const double Offset=pFit[iOffset][iboot_to_print];PR(Offset);
-      const double r2=pFit[iR2][iboot_to_print];PR(r2);
-      const double r2m2=pFit[iR2Mpi][iboot_to_print];PR(r2m2);
-      const double r2a2=pFit[iR2a2][iboot_to_print];PR(r2a2);
-      
-      file_out<<"# ===="<<endl;
-      for(auto& ens : ensList)
-	{
-	  file_out<<"# Ens "<<ens.name<<" "<<ens.ibeta<<endl;
-	  double err;
-	  {
-	    const dboot_t ainv=lat_par[iult].ainv[ens.ibeta];
-	    const dboot_t M=ens.aM*ainv;
-	    const dboot_t L=ens.Lfra/ainv;
-	    const dboot_t dM=e2*ens.daM/2*ainv;
-	    cout<<dM[iboot_to_print]<<endl;
-	    //const dboot_t FVE=alpha_em*kappa/sqr(L)*(2+M*L);
-	    const dboot_t dM2=dM*2*M;
-	    //const dboot_t dM2UnivCorrected=dM2+FVE;
-	    const dboot_t da2M2=dM2/ainv/ainv;
-	    const djack_t da2M2proerr=e2*ens.daMPiFitted*2*ens.aMPiFitted;
-	    err=da2M2proerr.err();
-	  }
-	  file_out<<"error: "<<err<<endl;
-	  
-	  const double ainv=pFit[ia[ens.ibeta]][iboot_to_print];
-	  const double aM=ens.aM[iboot_to_print];PR(aM);
-	  const size_t Lfra=ens.Lfra;file_out<<"Lfra: "<<Lfra<<endl;
-	  const double daM=ens.daM[iboot_to_print];PR(daM);
-	  
-	  ///////////////////////
-	  
-	  const double M=aM*ainv;
-	  const double L=Lfra/ainv;
-	  const double dM=e2*daM/2*ainv;
-	  const double dM2=dM*2*M;
-	  const double da2M2=dM2/ainv/ainv;
-	  //const double dM2UnivCorrected=dM2+FVE;
-	  
-	  const double a=1/ainv;
-	  const double a2=a*a;
-	  const double Curv=Curv0+a2*CurvA2;
-	  const double m2=sqr(M);
-	  
-	  const double Q=4*Offset/pow(f0,4);
-	  const double W=m2/sqr(4*M_PI*f0);
-	  
-	  const double uncorrected=e2*sqr(f0)*(Q-Curv*W*log(W)*includeLog)+A1*m2*alpha_em/(4*M_PI)+(D+Dm*m2)*a2;
-	  const double univFVE=alpha_em*kappa/sqr(L)*(2+M*L);
-	  const double nonunivFVE=4.0*M_PI*alpha_em/3.0*(r2*(1+r2m2*(m2-M2PiPhys)+r2a2*a2))*sqrt(m2)/(L*L*L);
-	  
-	  const double num=da2M2;
-	  const double teo=(uncorrected-univFVE+nonunivFVE)*a*a;
-	  const double r=(teo-num)/err;
-	  const double c=sqr(r);
-	  file_out<<"numerical_value: "<<num<<endl;
-	  file_out<<"ansatz: "<<teo<<endl;
-	  file_out<<"contribution: "<<c<<endl;
-	  file_out<<"== =="<<endl;
-	  chi2+=c;
-	}
-      file_out<<"chi2["<<iboot_to_print<<"]: "<<chi2<<" ori fit: "<<chi2fit[iboot_to_print]<<endl;
-      
-      fit_debug=false;
-      /////////////////////////////////////////////////////////////////
-      
       for(size_t ibeta=0;ibeta<nbeta;ibeta++)
 	{
 	  const dboot_t& ainv_fit=pFit[ia[ibeta]];
-	  const dboot_t& ainv_old=lat_par[iult].ainv[ibeta];
+	  const dboot_t& ainv_old=ainv_prior[ibeta];
 	  
 	  const double ainv_diff=ainv_fit.ave()-ainv_old.ave();
 	  const dboot_t ainv_sum=ainv_fit+ainv_old;
@@ -620,10 +543,10 @@ int main()
 		     data.dM2UnivCorrected-FVEansatz(pFit[iR2],pFit[iR2a2],pFit[iR2Mpi],1/sqr(pFit[ia[ibeta]]),x.ave(),data.L)};
 		  
 		  if(FVEswitch==0)
-		    daMpiHandcuffs_plot.write_ave_err(x.ave(),((djack_t)(ens.daMPiFittedHandcuffs*data.ainv.ave())).ave_err());
+		    daMpiHandcuffs_plot.write_ave_err(x.ave(),((dboot_t)(ens.daMHandcuffs*data.ainv.ave())).ave_err());
 		  
 		  dM2pi_plot.write_ave_err(x.ave(),y[FVEswitch].ave_err());
-		  da2M2pi_plot.write_ave_err(x.ave(),((dboot_t)(y[FVEswitch]/sqr((dboot_t)(pFit[ia[ibeta]]/lat_par[iult].ainv[ibeta].ave())))).ave_err());
+		  da2M2pi_plot.write_ave_err(x.ave(),((dboot_t)(y[FVEswitch]/sqr((dboot_t)(pFit[ia[ibeta]]/ainv_prior[ibeta].ave())))).ave_err());
 		}
 	    
 	  }
@@ -649,12 +572,12 @@ int main()
 	  
 	  if(not isLoc)
 	    for(size_t ibeta=0;ibeta<nbeta;ibeta++)
-	      p.write_polygon([&pFit,&Linf,ibeta,iplot,plot_pow,iult]
+	      p.write_polygon([&pFit,&Linf,ibeta,iplot,plot_pow,ainv_prior]
 			      (const double& x) -> dboot_t
 			      {
 				const dboot_t a=1/pFit[ia[ibeta]];
 				
-				return ansatz(pFit,x,a,Linf)*pow(a*lat_par[iult].ainv[ibeta].ave(),plot_pow[iplot]);
+				return ansatz(pFit,x,a,Linf)*pow(a*ainv_prior[ibeta].ave(),plot_pow[iplot]);
 			      },1e-3,0.25,colors[ibeta]);
 	  
 	  p.write_polygon([&pFit,&a0,&Linf]
@@ -683,12 +606,12 @@ int main()
       /// handcuffs
       for(auto& ens: ensList)
 	if(ens.am==0.0040)
-	  A40handcuffsSlice.write_ave_err(1.0/ens.Lfra,ens.daMPiFitted.ave_err());
+	  A40handcuffsSlice.write_ave_err(1.0/ens.Lfra,ens.daM.ave_err());
       A40handcuffsSlice.set_legend("exchange");
       A40handcuffsSlice.new_data_set(grace::GREEN4,grace::DIAMOND);
       for(auto& ens: ensList)
 	if(ens.am==0.0040)
-	  A40handcuffsSlice.write_ave_err(1.0/ens.Lfra,ens.daMPiFittedHandcuffs.ave_err());
+	  A40handcuffsSlice.write_ave_err(1.0/ens.Lfra,ens.daMHandcuffs.ave_err());
       A40handcuffsSlice.set_legend("handcuffs");
       A40handcuffsSlice.new_data_set();
       
@@ -702,9 +625,9 @@ int main()
 	      {
 		const auto data=ens.getToFit(pFit[ia[0]],pFit[izv[0]],pFit[iza[0]]);
 		
-		djack_t y=e2*ens.daMPiFitted*2*ens.aMPiFitted/2;
+		dboot_t y=e2*ens.daM*2*ens.aM/2;
 		if(FSEflag>0)
-		  y+=FVEuniv(ens.Lfra,ens.aMPiFitted);
+		  y+=FVEuniv(ens.Lfra,ens.aM);
 		if(FSEflag>1)
 		  y-=FVEansatz(pFit[iR2],pFit[iR2a2],pFit[iR2Mpi],1/sqr(pFit[ia[0]].ave()),sqr(data.M.ave()),data.L)/sqr(data.ainv);
 	    
@@ -734,7 +657,7 @@ int main()
 	    CRASH("Not sliced");
 	  
 	  slice[ibeta]=ref_ens;
-	  cout<<ref_ens->name<<endl;
+	  //cout<<ref_ens->name<<endl;
 	}
       
       grace_file_t daMpi_a2_plot(ult_plot_dir+"/daMpi_a2.xmg");
