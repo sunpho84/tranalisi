@@ -85,8 +85,8 @@ class grace_file_t : private ofstream
   string subtitle; //!< subtitle of the plot
   double title_size; //!< size of the title
   double subtitle_size; //!< size of the subtitle
-  bool xaxis_logscale; //!< Whether or not the x-axis is on log scale
-  bool yaxis_logscale; //!< Whether or not the y-axis is on log scale
+  bool xaxis_logscale{false}; //!< Whether or not the x-axis is on log scale
+  bool yaxis_logscale{false}; //!< Whether or not the y-axis is on log scale
   string xaxis_label; //!< label of the x-axis
   string yaxis_label; //!< lable of the y-axis
   double xaxis_min,xaxis_max; //!< min and max for x-axis
