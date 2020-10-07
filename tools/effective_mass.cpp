@@ -46,7 +46,7 @@ int main(int narg,char **arg)
   
   //write average and error
   grace_file_t out(path_out);
-  out.write_vec_ave_err(effective_mass(data.symmetrized(par),T/2).ave_err(),grace::RED,grace::SQUARE);
+  out.write_vec_ave_err(effective_mass(data.symmetrized(par),T/2,par).ave_err(),grace::RED,grace::SQUARE);
   
   return 0;
 }
