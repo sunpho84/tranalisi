@@ -1,6 +1,6 @@
 #/bin/bash -e
 
-wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.gz -O -|tar xzvf -
+wget https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz -O -|tar xzvf -
 cd eigen*
 mkdir build
 cd build
