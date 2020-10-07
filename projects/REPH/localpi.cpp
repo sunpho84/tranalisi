@@ -296,7 +296,7 @@ int main()
   // for(size_t iens=2;iens<6;iens++)
   // 	ensList[iens].aMPiFitted=ensList[1].aMPiFitted;
   
-  const size_t nUlt=1;
+  const size_t nUlt=2;
   for(size_t iult=0;iult<nUlt;iult++)
     {
       const size_t imethod=iult/4;
@@ -380,12 +380,11 @@ int main()
 	{
 	  double err;
 	  if(propagateLatErr)
-	    err=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]).dM2.err();
+	    err=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]).da2M2.err();
 	  else
 	    {
 	      const auto data=ens.getToFit(lat_par[iult].ainv[ens.ibeta],Zv[ens.ibeta],Za[ens.ibeta]);
 	      err=data.da2M2.err();
-	      err*=sqr(lat_par[iult].ainv[ens.ibeta].ave());
 	      
 	      dboot_t y=data.dM/data.ainv*2;
 	      pr(ens.name,y);
@@ -398,7 +397,7 @@ int main()
 			(const vector<double>& p,int iboot)
 			{
 			  const auto data=ens.getToFit(p[ia[ens.ibeta]],p[izv[ens.ibeta]],p[iza[ens.ibeta]],iboot);
-			  return data.dM2;
+			  return data.da2M2;
 			},
 			[=]
 			(const vector<double>& p,int iboot)
@@ -411,7 +410,7 @@ int main()
 			  const double& L=data.L;
 			  const double x=sqr(data.M);
 			  
-			  return ansatz(p,x,a,L)-FVEuniv(L,data.M);
+			  return (ansatz(p,x,a,L)-FVEuniv(L,data.M))*a*a;
 			},
 			err);
 	}
@@ -421,6 +420,8 @@ int main()
       // for(size_t ibeta=0;ibeta<nbeta;ibeta++)
       // 	fit.fix_par(ia[ibeta]);
       // auto status=fit.fit();
+      
+      decltype(fit.fit()) status;
       
       for(int iit=0;iit<2;iit++)
       	{
@@ -446,8 +447,10 @@ int main()
 		}
 	    }
 	  
-	  auto status=fit.fit();
+	  status=fit.fit();
 	}
+      
+      const dboot_t chi2fit=std::get<0>(status);
       
       /////////////////////////////////////////////////////////////////
       
@@ -496,11 +499,12 @@ int main()
 	    const dboot_t L=ens.Lfra/ainv;
 	    const dboot_t dM=e2*ens.daM/2*ainv;
 	    cout<<dM[iboot_to_print]<<endl;
-	    const dboot_t FVE=alpha_em*kappa/sqr(L)*(2+M*L);
+	    //const dboot_t FVE=alpha_em*kappa/sqr(L)*(2+M*L);
 	    const dboot_t dM2=dM*2*M;
-	    const dboot_t dM2UnivCorrected=dM2+FVE;
-	    const dboot_t daM2UnivCorrected=dM2UnivCorrected/ainv/ainv;
-	    err=daM2UnivCorrected.err()*sqr(ainv.ave());
+	    //const dboot_t dM2UnivCorrected=dM2+FVE;
+	    const dboot_t da2M2=dM2/ainv/ainv;
+	    const djack_t da2M2proerr=e2*ens.daMPiFitted*2*ens.aMPiFitted;
+	    err=da2M2proerr.err();
 	  }
 	  file_out<<"error: "<<err<<endl;
 	  
@@ -514,9 +518,9 @@ int main()
 	  const double M=aM*ainv;
 	  const double L=Lfra/ainv;
 	  const double dM=e2*daM/2*ainv;
-	  const double FVE=alpha_em*kappa/sqr(L)*(2+M*L);
 	  const double dM2=dM*2*M;
-	  const double dM2UnivCorrected=dM2+FVE;
+	  const double da2M2=dM2/ainv/ainv;
+	  //const double dM2UnivCorrected=dM2+FVE;
 	  
 	  const double a=1/ainv;
 	  const double a2=a*a;
@@ -527,10 +531,11 @@ int main()
 	  const double W=m2/sqr(4*M_PI*f0);
 	  
 	  const double uncorrected=e2*sqr(f0)*(Q-Curv*W*log(W)*includeLog)+A1*m2*alpha_em/(4*M_PI)+(D+Dm*m2)*a2;
-	  const double correction=4.0*M_PI*alpha_em/3.0*(r2*(1+r2m2*(m2-M2PiPhys)+r2a2*a2))*sqrt(m2)/(L*L*L);
+	  const double univFVE=alpha_em*kappa/sqr(L)*(2+M*L);
+	  const double nonunivFVE=4.0*M_PI*alpha_em/3.0*(r2*(1+r2m2*(m2-M2PiPhys)+r2a2*a2))*sqrt(m2)/(L*L*L);
 	  
-	  const double num=dM2UnivCorrected;
-	  const double teo=uncorrected+correction;
+	  const double num=da2M2;
+	  const double teo=(uncorrected-univFVE+nonunivFVE)*a*a;
 	  const double r=(teo-num)/err;
 	  const double c=sqr(r);
 	  file_out<<"numerical_value: "<<num<<endl;
@@ -539,7 +544,7 @@ int main()
 	  file_out<<"== =="<<endl;
 	  chi2+=c;
 	}
-      file_out<<"chi2["<<iboot_to_print<<"]: "<<chi2<<endl;
+      file_out<<"chi2["<<iboot_to_print<<"]: "<<chi2<<" ori fit: "<<chi2fit[iboot_to_print]<<endl;
       
       fit_debug=false;
       /////////////////////////////////////////////////////////////////
