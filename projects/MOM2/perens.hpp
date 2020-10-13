@@ -623,8 +623,22 @@ struct perens_t
   //! returns the evolution from p2 to 1/a2
   double evolve_QED_mixed_alpha(const double& a2p2,const double gamma) const
   {
-    return
-      evol::alphas<4>(a2p2*sqr(ainv))/pow(4*M_PI,3.0)*log(a2p2)*gamma*0.5;
+    const double p2=a2p2*sqr(ainv);
+    
+    const double al0=evol::alphas<4>(p2)/(4.0*M_PI);
+    const double gamma_q_s0=0.0; //landau gauge
+    const double gamma_q_se1=gamma;
+    const double gamma_q_e0=2.0;
+    const double UQED2_q=0.5*gamma_q_se1*log(p2)/pow(4.0*M_PI,2.0) +
+      0.25*pow(log(p2),2.0)*gamma_q_e0*gamma_q_s0/pow(4.0*M_PI,2.0);
+    const double UQCD_q=1.0/evol::evolution_Zq_to_RIp(evol::NF4,/*ord*/3,ainv,p2);
+    const double UQCDinv_q = 1.0/UQCD_q;
+    const double UQED1_q = 0.5*gamma_q_e0*log(p2)/pow(4.0*M_PI,2.0);
+
+    return al0*UQCDinv_q*UQED2_q + UQCDinv_q*UQED1_q - UQED1_q;
+    
+    // return
+    //   evol::alphas<4>(a2p2*sqr(ainv))/pow(4*M_PI,3.0)*log(a2p2)*gamma*0.5;
   }
   
   //! evolve QED Zq, considering only the mixed evolver (QCD/QED)

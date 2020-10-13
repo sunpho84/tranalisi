@@ -45,6 +45,7 @@ vector<perens_t::task_t> perens_t::get_Zq_tasks(const vector<const perens_t*>& e
 void perens_t::evolve_QED_Zq_mixed_to_1_ov_a(perens_t& out) const
 {
   cout<<"Evolving Zq"<<endl;
+  
   for(size_t im_r_ilinmom=0;im_r_ilinmom<im_r_ilinmom_ind.max();im_r_ilinmom++)
     {
       const vector<size_t> im_r_ilinmom_comps=im_r_ilinmom_ind(im_r_ilinmom);
@@ -52,6 +53,8 @@ void perens_t::evolve_QED_Zq_mixed_to_1_ov_a(perens_t& out) const
       const double a2p2=all_moms[linmoms[ilinmom][0]].p(L).norm2();
       
       const double gamma=-8.0;
+      
+      cout<<"evolve_QED_mixed_alpha(a2p2,gamma): "<<evolve_QED_mixed_alpha(a2p2,gamma)<<" "<<a2p2<<" "<<gamma<<endl;
       
       out.Zq_QED_rel[im_r_ilinmom]=
 	Zq_QED_rel[im_r_ilinmom]+
