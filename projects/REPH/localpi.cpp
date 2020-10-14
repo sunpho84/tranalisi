@@ -210,7 +210,7 @@ T ansatz(const vector<T>& p,const double& m2,const TA& a,const TL& L)
   const T& Dm=p[iDm];
   const T& Offset=p[iOffset];
   
-  const T Q=4*Offset/pow(f0,4);
+  const T Q=4*Offset/pow(f0,4.0);
   const T W=m2/sqr((T)(4*M_PI*f0));
   
   const T uncorrected=e2*sqr(f0)*(Q-Curv*W*log(W)*includeLog)+A1*m2*alpha_em/(4*M_PI)+(D+Dm*m2)*a2;
@@ -565,7 +565,7 @@ int main()
       const ave_err_t dM2PiPublished(1137e-6,63e-6);
       
       vector<grace_file_t*> plots{&dM2pi_plot,&da2M2pi_plot};
-      size_t plot_pow[2]={0,2};
+      const double plot_pow[2]={0.0,2.0};
       for(size_t iplot=0;iplot<2;iplot++)
 	{
 	  auto& p=*plots[iplot];
@@ -631,7 +631,7 @@ int main()
 		if(FSEflag>1)
 		  y-=FVEansatz(pFit[iR2],pFit[iR2a2],pFit[iR2Mpi],1/sqr(pFit[ia[0]].ave()),sqr(data.M.ave()),data.L)/sqr(data.ainv);
 	    
-	    A40slice.write_ave_err(pow(ens.Lfra,-3),y.ave_err());
+	    A40slice.write_ave_err(pow(ens.Lfra,-3.0),y.ave_err());
 	  }
 	}
       
