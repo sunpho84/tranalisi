@@ -150,7 +150,7 @@ constexpr double C();
   template<int Iz,int Nf,int Ord=3>
   double evolution_to_RIp(double ainv,double mu_2)
   {
-    double mu2[2]={mu_2,1.0}; //convert to scale 1/a2 in units of a2, that is 1
+    double mu2[2]={mu_2,sqr(ainv)};
     double cmu2[2];
     
     for(size_t i=0;i<2;i++)

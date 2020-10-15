@@ -54,7 +54,9 @@ void perens_t::evolve_QED_Zq_mixed_to_1_ov_a(perens_t& out) const
       
       const double gamma=-8.0;
       
-      cout<<"evolve_QED_mixed_alpha(a2p2,gamma): "<<evolve_QED_mixed_alpha(a2p2,gamma)<<" "<<a2p2<<" "<<gamma<<endl;
+      // CRASH("0.00428368 %lg  3.22561 %lg",evolve_QED_mixed_alpha(0.00428368,gamma),
+      // 	    evolve_QED_mixed_alpha(3.22561,gamma));
+      // cout<<"evolve_QED_mixed_alpha(a2p2,gamma): "<<evolve_QED_mixed_alpha(a2p2,gamma)<<" "<<a2p2<<" "<<gamma<<endl;
       
       out.Zq_QED_rel[im_r_ilinmom]=
 	Zq_QED_rel[im_r_ilinmom]+
