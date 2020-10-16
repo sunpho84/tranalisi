@@ -546,7 +546,7 @@ public:
 	  double e=data[ix].err;
 	  double contr=sqr((n-t)/e);
 	  ch2+=contr;
-	  //if(fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	  if(fit_debug) cout<<contr<<" = [("<<n<<"-f("<<ix<<")="<<t<<")/"<<e<<"]^2]"<<endl;
 	}
      
      if(fit_debug)
@@ -656,7 +656,7 @@ public:
   }
   
   //! perform the fit
-  void fit(bool cov_flag=false,double eps=0)
+  auto fit(bool cov_flag=false,double eps=0)
   {
     size_t npars=pars.size();
     size_t nfree_pars=pars.nfree_pars();
@@ -665,10 +665,12 @@ public:
     if(cov_flag) distr_fit_FCN.add_cov(pro_cov,cov_block_label,eps);
     
     //define minimizator
+    const size_t nd=out_pars[0]->size();
+    vector<bool> status(nd);
     minimizer_t minimizer(distr_fit_FCN,pars);
     
     TS ch2;
-    for(idistr=0;idistr<out_pars[0]->size();idistr++)
+    for(idistr=0;idistr<nd;idistr++)
       {
 	// distr_fit_debug=false;
 	// if(idistr==out_pars[0]->size()-1) distr_fit_debug=true;
@@ -680,15 +682,22 @@ public:
 	ch2[idistr]=minimizer.eval(pars);
 	
 	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[idistr]=pars[ipar];
+	status[idistr]=minimizer.status();
 	// distr_fit_debug=false;
     }
     
     //write ch2
-    cout<<"Ch2: "<<ch2.ave_err()<<" / "<<data.size()-nfree_pars<<endl;
+    const size_t nDof=data.size()-nfree_pars;
+    cout<<"Ch2: "<<ch2.ave_err()<<" / "<<nDof<<endl;
+    
+    return make_tuple(ch2,nDof,status);
   }
   
   //! fix a single parameter
   void fix_par(size_t ipar) {pars.fix(ipar);}
+  
+  //! unfix a single parameter
+  void unfix_par(size_t ipar) {pars.unfix(ipar);}
   
   //! fix a single parameter to a given value
   void fix_par_to(size_t ipar,double val) {pars.fix_to(ipar,val);}

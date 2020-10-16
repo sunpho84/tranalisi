@@ -279,10 +279,17 @@ perens_t& perens_t::compute_sigmas()
 		  //trace with pslash
 		  out=0.0;
 		  for(size_t mu=0;mu<NDIM;mu++)
-		    if(fabs(ptilde[mu])>1e-10)
+		    if(pars::compute_sigma1_through_division)
+		      {
+			if(fabs(ptilde[mu])>1e-10)
+			  out+=
+			    (prop_inv*quaGamma[igmu[mu]]).trace().imag()/
+			    (12.0*ptilde[mu]*V*all_moms[mom].Np());
+		      }
+		    else
 		      out+=
-			(prop_inv*quaGamma[igmu[mu]]).trace().imag()/
-			(12.0*ptilde[mu]*V*all_moms[mom].Np());
+			(prop_inv*quaGamma[igmu[mu]]*ptilde[mu]).trace().imag()/
+			(12.0*V*ptilde.norm2());
 		  break;
 		case SIGMA2:
 		  //trace with identity

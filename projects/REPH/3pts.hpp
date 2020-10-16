@@ -77,7 +77,7 @@ djvec_t permes_combo_t<TV>::load3pts(const string& plotDirPath,const size_t iVA,
 template <typename TV>
 void permes_combo_t<TV>::load3pts(const bool forceLoad)
 {
-  cout<<"Loading 3pts correlators"<<endl;
+  //cout<<"Loading 3pts correlators"<<endl;
   
   //! Coefficient to combine the two insertions
   const double coeff[2]={+1.0,-1.0};
@@ -95,40 +95,55 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
       if(not dir_exists(plotDirPath))
 	mkdir(plotDirPath);
       
-      cout<<"Loading 3pts correlators from scratch"<<endl;
+      //cout<<"Loading 3pts correlators from scratch"<<endl;
       
       for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	{
-	  //! Components of the decay
-	  const vector<size_t> c=ens.indDecKin(iDecKin);
-	  
-	  // Load fixing signs and charges
-	  for(int iVA=0;iVA<2;iVA++)
-	    {
-	      corrPX[iVA][iDecKin]=
-		load3pts(plotDirPath,iVA,iMs,iMt,c[0],c[1],c[2],"insOnT")*eT;
-	      corrPX[iVA][iDecKin]+=coeff[iVA]*
-		load3pts(plotDirPath,iVA,iMt,iMs,c[0],c[1],c[2],"insOnS")*eS;
-	    }
-	}
+	if(ens.considerDec[iDecKin] or ens.hasSymmDec[iDecKin] or ens.iDecSmallestKin[iDecKin]==(int)iDecKin)
+	  {
+	    //! Components of the decay
+	    const vector<size_t> c=ens.indDecKin(iDecKin);
+	    
+	    // Load fixing signs and charges
+	    for(int iVA=0;iVA<2;iVA++)
+	      {
+		corrPX[iVA][iDecKin]=
+		  load3pts(plotDirPath,iVA,iMs,iMt,c[0],c[1],c[2],"insOnT")*eT;
+		corrPX[iVA][iDecKin]+=coeff[iVA]*
+		  load3pts(plotDirPath,iVA,iMt,iMs,c[0],c[1],c[2],"insOnS")*eS;
+		
+		corrPX[iVA][iDecKin].ave_err().write(combine("%s/o%smuGPo-gs_%s.xmg",plotDirPath.c_str(),VA_tag[iVA],ens.decKinTag(c[0],c[1],c[2]).c_str()));
+	      }
+	  }
       
-      // Plot ratio with symmetric
-      // for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-      // 	if(ens.considerDec[iDecKin] and ens.hasSymmDec[iDecKin])
-      // 	  for(int iVA=0;iVA<2;iVA++)
-      // 	    {
-      // 	      const djvec_t& a=corrPX[iVA][iDecKin];
-      // 	      const djvec_t& b=corrPX[iVA][ens.symmOfDec[iDecKin]];
-      // 	      const djvec_t& r=a/b;
-	      
-      // 	      const vector<size_t> c=ens.indDecKin(iDecKin);
-	      
-      // 	      const string pathR=combine("%s/o%smuGPo-gs_%s_rat_with_symm.xmg",plotDirPath.c_str(),VA_tag[iVA],ens.decKinTag(c[0],c[1],c[2]).c_str());
-      // 	      r.ave_err().write(pathR);
-      // 	    }
+      //Plot ratio with symmetric
+      if(AVERAGE_SYMMETRIC)
+	{
+	  // cout<<"AVERAGING SYMMETRIC"<<endl;
+	  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+	    if((ens.considerDec[iDecKin] or ens.iDecSmallestKin[iDecKin]==(int)iDecKin) and ens.hasSymmDec[iDecKin])
+	      for(int iVA=0;iVA<2;iVA++)
+		{
+		  djvec_t& a=corrPX[iVA][iDecKin];
+		  djvec_t& b=corrPX[iVA][ens.symmOfDec[iDecKin]];
+		  
+		  // cout<<"AVE "<<ens.symmOfDec[iDecKin]<<" "<<iDecKin<<endl;
+		  // cout<<a[0].ave_err()<<" "<<b[0].ave_err()<<endl;
+		  
+		  if(iVA==0) b=-(a=(a-b)/2);
+		  else      b=a=(a+b)/2;
+		  
+		  // cout<<a[0].ave_err()<<" "<<b[0].ave_err()<<endl;
+		  // const djvec_t& r=a/b;
+		  
+		  // const vector<size_t> c=ens.indDecKin(iDecKin);
+		  
+		  // const string pathR=combine("%s/o%smuGPo-gs_%s_rat_with_symm.xmg",plotDirPath.c_str(),VA_tag[iVA],ens.decKinTag(c[0],c[1],c[2]).c_str());
+		  // r.ave_err().write(pathR);
+      	    }
+	}
     }
   
-  cout<<(loadCompact?"Loading":"Storing")<<" compacted 3pts"<<endl;
+  //cout<<(loadCompact?"Loading":"Storing")<<" compacted 3pts"<<endl;
   
   //! File where to load or store
   raw_file_t file(dataPath,(loadCompact?"r":"w"));
@@ -142,7 +157,7 @@ void permes_combo_t<TV>::load3pts(const bool forceLoad)
 template <typename TV>
 permes_combo_t<TV>& permes_combo_t<TV>::prepareKinematics(const bool useAnalytic)
 {
-  cout<<"Preparing 3pts kinematics"<<endl;
+  // cout<<"Preparing 3pts kinematics"<<endl;
   
   const djack_t& mass=E[0];
   
@@ -163,210 +178,337 @@ permes_combo_t<TV>& permes_combo_t<TV>::prepareKinematics(const bool useAnalytic
   return *this;
 }
 
-template <typename TV>
-permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPath,const char* fitTag,const bool forceRechoose)
-{
-  //! Path of the 3pts time interval file
-  string tintPath=milledPath()+"/tint3pts_"+fitTag+".dat";
+// template <typename TV>
+// permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTint(const string& mesPlotsPath,const char* fitTag,const bool forceRechoose)
+// {
+//   //! Path of the 3pts time interval file
+//   string tintPath=milledPath()+"/tint3pts_"+fitTag+".dat";
   
-  if(file_exists(tintPath) and not forceRechoose)
-    {
-      cout<<"Loading stored 3pts intervals"<<endl;
-      raw_file_t(tintPath,"r").bin_read(tint3pts);
-    }
-  else
-    {
-      cout<<"Choosing tint from scratch"<<endl;
+//   //! Directory path of the range search
+//   const string rangeDir=ens.dirPath+"/plots/"+mesTag+"/3pts_range_"+fitTag+"/";
+//   mkdir(rangeDir);
+  
+//   if(file_exists(tintPath) and not forceRechoose)
+//     {
+//       cout<<"Loading stored 3pts intervals"<<endl;
+//       raw_file_t(tintPath,"r").bin_read(tint3pts);
+//     }
+//   else
+//     {
+//       cout<<"Choosing tint from scratch"<<endl;
       
-      //! Directory path of the range search
-      const string rangeDir=ens.dirPath+"/plots/"+mesTag+"/3pts_range_"+fitTag+"/";
-      mkdir(rangeDir);
-      
-      for(size_t iVA=0;iVA<2;iVA++)
-	{
-	  //! Path of the fit range file
-	  grace_file_t fitTxt(rangeDir+"/range_"+VA_tag[iVA]+".txt");
+//       for(size_t iVA=0;iVA<2;iVA++)
+// 	{
+// 	  //! Path of the fit range file
+// 	  grace_file_t fitTxt(rangeDir+"/range_"+VA_tag[iVA]+".txt");
 	  
-	  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	    {
-	      //! Three points ratio derivative
-	      const djvec_t r=forward_derivative(getCorrRat(iVA,iDecKin));
+// 	  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+// 	    {
+// 	      //! Three points ratio derivative
+// 	      const djvec_t r=forward_derivative(getCorrRat(iVA,iDecKin));
 	      
-	      Range fitRange;
-	      if(r[0].err()==0)
-		fitRange={(size_t)((int)ens.T/4-1),(size_t)((int)(ens.T/2)+1)};
-	      else
-		{
-		  //! Path where to store the range search
-		  const string outRangePath=combine("%s/c%s_%s.xmg",rangeDir.c_str(),VA_tag[iVA],ens.decKinTag(iDecKin).c_str());
-		  cout<<outRangePath<<endl;
+// 	      Range fitRange;
+// 	      if(r[0].err()==0)
+// 		fitRange={(size_t)((int)ens.T/4-1),(size_t)((int)(ens.T/4)+1)};
+// 	      else
+// 		{
+// 		  //! Path where to store the range search
+// 		  const string outRangePath=combine("%s/c%s_%s.xmg",rangeDir.c_str(),VA_tag[iVA],ens.decKinTag(iDecKin).c_str());
+// 		  cout<<outRangePath<<endl;
 		  
-		  //! Range finder
-		  CompatibilityRangeFinder<> comp(r,outRangePath);
+// 		  //! Range finder
+// 		  CompatibilityRangeFinder<> comp(r,outRangePath);
 		  
-		  //! Initial value of enlarging factor
-		  double nSigEnl=2.0;
-		  double enlFact=1.8;
+// 		  //! Initial value of enlarging factor
+// 		  double nSigEnl=2.0;
+// 		  double enlFact=1.8;
 		  
-		  //! Minimal length
-		  const size_t lengthMin=4;
+// 		  //! Minimal length
+// 		  const size_t lengthMin=4;
 		  
-		  const auto recipe=[T=ens.T,&comp,&enlFact,&nSigEnl](const bool verb=false)
-				    {
-				      double nSigSel=1;
-				      comp
-					.setVerbose(verb)
-					.setRangeToConsiderByFraction(1.0/5)
-					.selectClosestCompatiblePointWithinNsigma(T/4,nSigSel)
-					.plotSelected()
-					.selectEnlargingError(enlFact,nSigEnl)
-					.plotSelected()
-					.mergeSelectionByDistanceSize()
-					.plotSelected()
-					.selectLargestRange()
-					.plotSelected();
+// 		  const auto recipe=[T=ens.T,&comp,&enlFact,&nSigEnl](const bool verb=false)
+// 				    {
+// 				      double nSigSel=1;
+// 				      comp
+// 					.setVerbose(verb)
+// 					.setRangeToConsiderByFraction(1.0/8)
+// 					.selectClosestCompatiblePointWithinNsigma(T/4,nSigSel)
+// 					.plotSelected()
+// 					.selectEnlargingError(enlFact,nSigEnl)
+// 					.plotSelected()
+// 					.mergeSelectionByDistanceSize()
+// 					.plotSelected()
+// 					.selectLargestRange()
+// 					.plotSelected();
 				      
-				      //! Trim some points if allowed
-				      const size_t nDesel=2;
-				      if(comp.getSelectionRange(0).size()>=lengthMin+nDesel)
-					comp
-					  .deSelectLeftermostPoints(nDesel)
-					  .deSelectRightermostPoints(nDesel)
-					  .plotSelected();
-				    };
+// 				      //! Trim some points if allowed
+// 				      const size_t nDesel=2;
+// 				      if(comp.getSelectionRange(0).size()>=lengthMin+nDesel)
+// 					comp
+// 					  .deSelectLeftermostPoints(nDesel)
+// 					  .deSelectRightermostPoints(nDesel)
+// 					  .plotSelected();
+// 				    };
 		  
-		  recipe();
+// 		  recipe();
 		  
-		  // Extend
-		  while(comp.getSelectionRange(0).size()<lengthMin)
-		    {
-		      nSigEnl+=1.0;
-		      enlFact*=1.2;
+// 		  // Extend
+// 		  while(comp.getSelectionRange(0).size()<lengthMin)
+// 		    {
+// 		      nSigEnl+=1.0;
+// 		      enlFact*=1.2;
 		      
-		      cout<<"WARNING, compatibility range too short, "<<comp.getSelectionRange(0)<<" when at least "<<lengthMin<<" needed, enlarging of "<<nSigEnl<<endl;
+// 		      cout<<"WARNING, compatibility range too short, "<<comp.getSelectionRange(0)<<" when at least "<<lengthMin<<" needed, enlarging of "<<nSigEnl<<endl;
 		      
-		      recipe(true);
-		    }
+// 		      recipe(true);
+// 		    }
 		  
-		  //! Store the obtained fit range
-		  fitRange=comp.getSelectionRange(0);
-		}
+// 		  //! Store the obtained fit range
+// 		  fitRange=comp.getSelectionRange(0);
+// 		}
 	      
-	      tint3pts[iVA][iDecKin]=fitRange;
+// 	      tint3pts[iVA][iDecKin]=fitRange;
 	      
-	      cout<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<": range "<<fitRange<<endl;
+// 	      cout<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<": range "<<fitRange<<endl;
 	      
-	      const size_t &b=fitRange.begin,&e=fitRange.end;
-	      fitTxt.write_ave_err(iDecKin,{(b+e)/2.0,(e-b)/2.0});
-	    }
+// 	      const size_t &b=fitRange.begin,&e=fitRange.end;
+// 	      fitTxt.write_ave_err(iDecKin,{(b+e)/2.0,(e-b)/2.0});
+// 	    }
 	  
-	  cout<<"Storing chosen 3pts intervals"<<endl;
-	  raw_file_t(tintPath,"w").bin_write(tint3pts);
-	}
-    }
+// 	  cout<<"Storing chosen 3pts intervals"<<endl;
+// 	  raw_file_t(tintPath,"w").bin_write(tint3pts);
+// 	}
+//     }
   
-  return *this;
-}
+//   const int tmin=1;
+//   const int tmax=ens.T/2-5;
+  
+//   const size_t nFitPars=10;
+//   djvec_t pFit(nFitPars);
+//   jack_fit_t fit;
+//   //Z1
+//   fit.add_fit_par(pFit[0],"p[0]",1e-2,0.1);
+//   fit.add_fit_par(pFit[1],"p[1]",0,0.1);
+//   //M1
+//   fit.add_fit_par_limits(pFit[2],"p[2]",0.7,0.1,0.1,4);
+//   fit.add_fit_par(pFit[3],"p[3]",0,0.1);
+//   //Z2
+//   fit.add_fit_par(pFit[4],"p[4]",-0.4,0.1);
+//   fit.add_fit_par(pFit[5],"p[5]",0,0.1);
+//   //M2
+//   fit.add_fit_par_limits(pFit[6],"p[6]",0.7,0.1,0.1,4);
+//   fit.add_fit_par(pFit[7],"p[7]",0,0.1);
+//   //C
+//   fit.add_fit_par(pFit[8],"p[8]",0,0.1);
+//   fit.add_fit_par(pFit[9],"p[9]",0,0.1);
+  
+//   // for(int i=0;i<10;i++)
+//   //   fit.fix_par(i);
 
-template <typename TV>
-permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTintCommon(const size_t& length)
-{
-  for(size_t iVA=0;iVA<2;iVA++)
-    {
-      vector<size_t> count(ens.T/2+1);
-      
-      for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	{
-	  const Range& r=tint3pts[iVA][iDecKin];
-	  for(size_t t=r.begin;t<r.end;t++)
-	    count[t]++;
-	}
-      
-      size_t tMinBest=0;
-      auto f=[&](const size_t tStart){return accumulate(count.begin()+tStart,count.begin()+tStart+length,0);};
-      for(size_t t=1;t<count.size()-length;t++)
-	{
-	  if(f(t)>f(tMinBest))
-	    tMinBest=t;
-	}
-      commonTint3pts[iVA]={tMinBest,tMinBest+length};
-      
-      cout<<"Common fit range for "<<VA_tag[iVA]<<": "<<commonTint3pts[iVA]<<endl;
-    }
+//   size_t nDo=0;
+//   for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+//     {
+//       const vector<size_t> c=ens.indDecKin(iDecKin);
+//       if(c[1]!=c[2])
+// 	nDo++;
+//     }
   
-  return *this;
-}
+//   raw_file_t test(combine("%s/exc_study.dat",rangeDir.c_str()),"w");
+//   test.bin_write(nDo);
+//   test.bin_write(ens.T/2);
+  
+//   for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+//     {
+//       const vector<size_t> c=ens.indDecKin(iDecKin);
+      
+//       if(c[1]!=c[2])
+// 	{
+// 	  const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
+	  
+// 	  const djvec_t r=getCorrRat(1,iDecKin)/X[iDecKin];
+// 	  test.bin_write(r);
+// 	  test.bin_write(X[iDecKin]);
+// 	  test.bin_write(ens.pMes[iMesKin]);
+// 	  test.bin_write(ens.Eg[iDecKin]);
+// 	  test.bin_write(ens.kHatDec[iDecKin]);
+// 	  for(int i=0;i<3;i++) test.bin_write(c[i]);
+	  
+// 	  for(int t=tmin;t<tmax;t++)
+// 	    fit.add_point(r[t],[=](const vector<double>& p,int ijack)->double
+// 			       {
+// 				 const double x=X[iDecKin][ijack];
+// 				 return
+// 				   (p[0]+p[1]*x)*exp(-(p[2]+p[3]*x)*t)+
+// 				   (p[4]+p[5]*x)/x*exp(-(p[6]+p[7]*x)*(ens.T/2-t))+
+// 				   p[8]+p[9]*x;
+// 			       });
+// 	}
+//     }
+  
+//   fit.fit();
+  
+//   for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+//     {
+//       const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
+      
+//       const vector<size_t> c=ens.indDecKin(iDecKin);
+//       if(c[1]!=c[2])
+// 	{
+// 	  const string outRangePath=combine("%s/d%s_%s.xmg",rangeDir.c_str(),VA_tag[1],ens.decKinTag(iDecKin).c_str());
+// 	  const vector<size_t> c=ens.indDecKin(iDecKin);
+	  
+// 	  const djvec_t r=getCorrRat(1,iDecKin)/X[iDecKin];
+// 	  grace_file_t plot(outRangePath);
+// 	  plot.set_title(combine("x: %lg, p: %lg, k: %lg",X[iDecKin].ave(),ens.pMes[iMesKin],ens.kHatDec[iMesKin]));
+	  
+// 	  plot.write_vec_ave_err(r.ave_err());
+	  
+// 	  plot.write_polygon([=](const double t) -> djack_t
+// 			     {
+// 			       const djvec_t& p=pFit;
+// 			       const djack_t& x=X[iDecKin];
+			       
+// 			       return
+// 				 (p[0]+p[1]*x)*exp(-(p[2]+p[3]*x)*t)+
+// 				 (p[4]+p[5]*x)/x*exp(-(p[6]+p[7]*x)*(ens.T/2-t))+
+// 				 p[8]+p[9]*x;
+// 			     },tmin,tmax);
+// 	}
+//     }
+  
+//   cout<<pFit.ave_err()<<endl;
+  
+//   // CRASH("");
+  
+//   return *this;
+// }
+
+// template <typename TV>
+// permes_combo_t<TV>& permes_combo_t<TV>::choose3ptsTintCommon(const size_t& length)
+// {
+//   for(size_t iVA=0;iVA<2;iVA++)
+//     {
+//       vector<size_t> count(ens.T/2+1);
+      
+//       for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+// 	{
+// 	  const Range& r=tint3pts[iVA][iDecKin];
+// 	  for(size_t t=r.begin;t<r.end;t++)
+// 	    count[t]++;
+// 	}
+      
+//       size_t tMinBest=0;
+//       auto f=[&](const size_t tStart){return accumulate(count.begin()+tStart,count.begin()+tStart+length,0);};
+//       for(size_t t=1;t<count.size()-length;t++)
+// 	{
+// 	  if(f(t)>f(tMinBest))
+// 	    tMinBest=t;
+// 	}
+//       commonTint3pts[iVA]={tMinBest,tMinBest+length};
+      
+//       cout<<"Common fit range for "<<VA_tag[iVA]<<": "<<commonTint3pts[iVA]<<endl;
+//     }
+  
+//   return *this;
+// }
 
 template <typename TV>
 TV permes_combo_t<TV>::getCorrRat(const int iVA,const size_t iDecKin)
 {
-  const vector<size_t> c=ens.indDecKin(iDecKin);
-  vector<size_t> c0=c;
-  c0[1]=c0[2];
-  const auto iDecSmallestKin=ens.indDecKin(c0);
-  
-  TV r=(corrPX[iVA][iDecKin]-corrPX[iVA][iDecSmallestKin])/corrPX[1][iDecSmallestKin];
+  TV r=(corrPX[iVA][iDecKin]-corrPX[iVA][ens.iDecSmallestKin[iDecKin]])/corrPX[1][ens.iDecSmallestKin[iDecKin]];
   
   return r;
 }
 
 template <typename TV>
-permes_combo_t<TV>& permes_combo_t<TV>::fit3pts(const bool& useCommonRange,const char* fitTag,const bool forceRechoose)
+permes_combo_t<TV>& permes_combo_t<TV>::fit3pts()
 {
-  const std::string mesPlotsPath=ens.dirPath+"/plots/"+mesTag+"/3pts_"+fitTag;
+  const std::string mesPlotsPath=ens.dirPath+"/plots/"+mesTag+"/3pts";
   if(not dir_exists(mesPlotsPath))
     mkdir(mesPlotsPath);
   
-  choose3ptsTint(mesPlotsPath,fitTag,forceRechoose);
-  choose3ptsTintCommon();
-  
-  string ffPath=milledPath()+"/ff_"+fitTag+".dat";
-  if(file_exists(ffPath) and not forceRechoose)
+  string ffPath=milledPath()+"/ff.dat";
+  if(file_exists(ffPath))
     {
-      cout<<"Loading stored form factors and mel"<<endl;
+      //cout<<"Loading stored form factors and mel"<<endl;
       raw_file_t file(ffPath,"r");
       file.bin_read(ff);
-      file.bin_read(this->quality);
     }
   else
     {
-      cout<<"Fitting 3pts correlators"<<endl;
+      //cout<<"Fitting 3pts correlators"<<endl;
       
       for(int iVA=0;iVA<2;iVA++)
-	for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-	  {
-	    const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
-	    
-	    if(oldNormalization)
-	      CRASH("NOT POSSIBLE ANY MORE");
-	    
-	    this->quality[iVA][iDecKin]=true;
-	    
-	    const Range& tint=
-	      useCommonRange?
-	      commonTint3pts[iVA]:
-	      tint3pts[iVA][iDecKin];
-	    
-	    const string plotFile=combine("%s/melRat_c%s_%s.xmg",mesPlotsPath.c_str(),VA_tag[iVA],ens.decKinTag(iDecKin).c_str());
-	    
-	    const TV r=getCorrRat(iVA,iDecKin);
-	    
-	    const djack_t m=constant_fit(r,tint.begin,tint.end,plotFile);
-	    
-	    if(iVA==0)
-	      ff[iVA][iDecKin]=m*E[iMesKin]/(ens.Eg[iDecKin]*ens.pMes[iMesKin]-E[iMesKin]*ens.kHatDec[iDecKin]);
-	    else
-	      ff[iVA][iDecKin]=m/X[iDecKin];
-	    
-	    // //! Put back fpi
-	    // const djack_t fpi=fP[0]*(eT-eS);
-	    // ff[iVA][iDecKin]*=fpi;
-	  }
+	{
+	  grace_file_t chooseTint(combine("%s/chooseTints_%s.xmg",mesPlotsPath.c_str(),VA_tag[iVA]));
+	  size_t iCorrPlot=0;
+	  
+	  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+	    if(ens.considerDec[iDecKin])
+	      {
+		const size_t iMesKin=ens.iMesKinOfDecKin[iDecKin];
+		
+		if(oldNormalization)
+		  CRASH("NOT POSSIBLE ANY MORE");
+		
+		const Range tint=getTint3pts(ens.dirPath,mesTag,iVA);
+		
+		const string plotFile=combine("%s/melRat_c%s_%s.xmg",mesPlotsPath.c_str(),VA_tag[iVA],ens.decKinTag(iDecKin).c_str());
+		
+		const djack_t fpi=fP[0]*(eT-eS);
+		const TV r=getCorrRat(iVA,iDecKin);
+		
+		djack_t n;
+		if(iVA==0)
+		  n=fpi*E[0]/(ens.Eg[iDecKin]*ens.pMes[iMesKin]-E[iMesKin]*ens.kHatDec[iDecKin]);
+		else
+		  n=2*fpi/(E[0]*X[iDecKin]);
+		
+		const djvec_t y=r*n;
+		djvec_t yplot=r*n;
+		
+		double maxY=0;
+		double maxError=0;
+		for(size_t t=tint.begin;t<tint.end;t++)
+		  {
+		    const djack_t& yi=yplot[t];
+		    maxError=max(maxError,y[t].err());
+		    maxY=max(maxY,fabs(yi.ave()));
+		  }
+		
+		for(size_t t=0;t<y.size();t++)
+		  if(t<tint.begin or t>tint.end)
+		    {
+		      djack_t& yi=yplot[t];
+		      if(fabs(yi.ave())>4*maxY or yi.err()>4*maxError)
+			yi*=1e-5;
+		    }
+		
+		const djack_t m=constant_fit(y,tint.begin,tint.end);
+		
+		grace_file_t f(plotFile);
+		f.write_polygon([&m](double x){return m;},tint.begin,tint.end,grace::color_t::YELLOW);
+		f.write_vec_ave_err(vector_up_to<double>(y.size()),yplot.ave_err(),grace::RED,grace::DIAMOND);
+	       
+		chooseTint.set_comment(ens.decKinTag(iDecKin));
+		write_fit_plot(chooseTint,tint.begin,tint.end,[&m](double x){return m;},vector_up_to<double>(y.size()-2,1+iCorrPlot/10.0),yplot.subset(1,y.size()-2));
+		chooseTint.set_no_line();
+		
+		f<<
+		  "#QTGRACE_ADDITIONAL_PARAMETER: TITLE_SHIFT G 0 0.27224 -0.20686\n"
+		  "#QTGRACE_ADDITIONAL_PARAMETER: SUBTITLE_SHIFT G 0 0.256163 -0.232583\n";
+		
+		f.set_title(combine("X=%lg",X[iDecKin].ave()));
+		f.set_subtitle(ens.dirPath);
+		ff[iVA][iDecKin]=m;
+		
+		iCorrPlot++;
+	      }
+	}
       
-      cout<<"Storing matrix element and ff"<<endl;
+      //cout<<"Storing matrix element and ff"<<endl;
       raw_file_t file(ffPath,"w");
       file.bin_write(ff);
-      file.bin_write(this->quality);
     }
   
   return *this;
@@ -378,7 +520,7 @@ void permes_t<TV>::plotFf(const string& tag) const
   const string path=ens.dirPath+"/plots/"+mesTag;
   mkdir(path);
   
-  cout<<"Plotting ff"<<endl;
+  // cout<<"Plotting ff"<<endl;
   
   for(int iVA=0;iVA<2;iVA++)
     {
@@ -389,33 +531,41 @@ void permes_t<TV>::plotFf(const string& tag) const
       
       for(auto& fy : list)
 	{
-	  auto& f=*get<0>(fy);
+	  grace_file_t& f=*get<0>(fy);
 	  auto& y=*get<1>(fy);
 	  
-	  f.set_line_type(grace::line_type_t::STRAIGHT_LINE);
-	  f.set_color_scheme({RED,BLUE,GREEN4,VIOLET,ORANGE});
-	  
-	  for(size_t toC=0;toC<2;toC++)
-	    for(size_t iMom1=0;iMom1<ens.nMoms;iMom1++)
-	      for(size_t iMom2=0;iMom2<ens.nMoms;iMom2++)
-		{
-		  if(toC==0)
-		    f.set_transparency(0.4);
-		  
-		  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
-		    {
-		      const vector<size_t> c=ens.indDecKin(iDecKin);
-		      
-		      if(ens.considerDec[iDecKin] and c[0]==iMom1 and c[2]==iMom2 and toC==quality[iVA][iDecKin])
-			{
-			  f<<"# "<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<"\n";
-			  f.write_ave_err(X[iDecKin].ave(),y[iVA][iDecKin].ave_err());
-			}
-		    }
-		  f.new_data_set();
-		}
+	  for(size_t iDecKin=0;iDecKin<ens.indDecKin.max();iDecKin++)
+	    if(ens.considerDec[iDecKin])
+	      {
+		f<<"# "<<iDecKin<<" "<<ens.indDecKin.descr(iDecKin)<<"\n";
+		f.write_ave_err(X[iDecKin].ave(),y[iVA][iDecKin].ave_err());
+	      }
 	}
     }
+}
+
+template <typename TV>
+void permes_t<TV>::correctFf(const meson_t& mes,const size_t input_an)
+{
+  using T=typename TV::base_type;
+  
+  const size_t ib=ens.iBeta;
+  const double& physMesMass=get<3>(mes);
+  const T ainv=lat_par[input_an].ainv[ib];
+  const T M=E[0]*ainv;
+  
+  const size_t imethod=input_an/4;
+  const size_t iZ=ib+3*imethod;
+  
+  const T massCorrection=physMesMass/M;
+  const T Zcorrection=Za[iZ]/Zv[iZ];
+  //cout<<"ZCorrection "<<ib<<" "<<Zcorrection.ave_err()<<endl;
+  
+  for(int iVA=0;iVA<2;iVA++)
+    ff[iVA]*=
+      massCorrection;
+  
+  ff[0]*=Zcorrection;
 }
 
 #endif

@@ -58,6 +58,7 @@ class grace_file_t : private ofstream
   
   size_t iset; //!< set id
   string legend; //! legend of the set
+  string comment; //! legend of the set
   
   grace::settype_t settype; //!< set type
   grace::symbol_t symbol; //!< symbol
@@ -84,8 +85,8 @@ class grace_file_t : private ofstream
   string subtitle; //!< subtitle of the plot
   double title_size; //!< size of the title
   double subtitle_size; //!< size of the subtitle
-  bool xaxis_logscale; //!< Whether or not the x-axis is on log scale
-  bool yaxis_logscale; //!< Whether or not the y-axis is on log scale
+  bool xaxis_logscale{false}; //!< Whether or not the x-axis is on log scale
+  bool yaxis_logscale{false}; //!< Whether or not the y-axis is on log scale
   string xaxis_label; //!< label of the x-axis
   string yaxis_label; //!< lable of the y-axis
   double xaxis_min,xaxis_max; //!< min and max for x-axis
@@ -212,6 +213,9 @@ public:
   
   //! set the legend of current set
   void set_legend(const string &ext_legend);
+  
+  //! set the comment of current set
+  void set_comment(const string &ext_comment);
   
   //! shift iset
   void shift_iset(size_t how_many=1);
@@ -342,7 +346,7 @@ public:
     for(size_t i=0;i<data.size();i++)
       if(!std::isnan(data[i].err()))
 	(*this)<<x[i]<<" "<<data[i]<<endl;
-    close_cur_set();
+    set_need_close_set();
   }
   
   void write_vec_ave_err(const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym);

@@ -1,56 +1,57 @@
 #include <tranalisi.hpp>
 
-int main()
+size_t T,TH;
+size_t L,spatVol;
+
+int main(int narg,char **arg)
 {
-  set_njacks(40);
+  raw_file_t input("input","r");
   
-  const int n=100000;
-  double se1=0,s2e1=0,se2=0,s2e2=0,see2=0,ssk=0,s2sk=0;
-  for(int i=0;i<n;i++)
-    {
-      djack_t t;
-      t.fill_gauss(1.3, 0.64, 23144+i);
-      
-      const double e1=t.err()*njacks/(njacks-1.0);
-      const pair<double,double> e2ee2=err_with_err(t);
-      
-      const pair<double,double> sk=skewness(t);
-      ssk+=sk.first;
-      s2sk+=sqr(sk.first);
-      
-      const double e2=e2ee2.first;
-      
-      const double ee2=e2ee2.second;
-      see2+=ee2;
-      
-      // cerr<<" "<<e1<<endl;
-      se1+=e1;
-      se2+=e2;
-      
-      s2e1+=e1*e1;
-      s2e2+=e2*e2;
-    }
-  se1/=n;
-  se2/=n;
-  s2e1/=n;
-  s2e2/=n;
-  see2/=n;
-  ssk/=n;
-  s2sk/=n;
+  L=input.read<size_t>("L");
+  T=input.read<size_t>("T");
+  njacks=input.read<size_t>("NJacks");
+  const size_t tMin=input.read<size_t>("TMin");
+  const size_t tMax=input.read<size_t>("TMax");
+  const double extraNorm=input.read<double>("ExtraNorm");
   
-  s2e1=sqrt((s2e1-se1*se1)*n/(n-1));
-  s2e2=sqrt((s2e2-se2*se2)*n/(n-1));
-  s2sk=sqrt((s2sk-ssk*ssk)*n/(n-1));
+  TH=T/2;
+  spatVol=L*L*L;
   
-  cout<<se1<<" "<<s2e1<<endl;
-  cout<<se2<<" "<<s2e2<<endl;
-  cout<<see2<<endl;
-  cout<<ssk<<" "<<s2sk<<endl;
+  const djvec_t P5P5=read_djvec("jacks/P5P5",T).symmetrized();
+  P5P5.ave_err().write("plots/P5P5.xmg");
   
-  djack_t t;
-  t.fill_gauss(1.3, 0.64, 23144);
-  const auto ae=err_with_err(t);
-  cout<<ae.first<<" "<<ae.second<<endl;
+  const djvec_t exchange=read_djvec("jacks/exchange",T).symmetrized();
+  exchange.ave_err().write("plots/exchange.xmg");
+  const djvec_t exchangeRatio=exchange/P5P5;
+  exchangeRatio.ave_err().write("plots/exchangeRatio.xmg");
+  
+  const djvec_t handcuffs=read_djvec("jacks/handcuffs",T).symmetrized()*extraNorm;
+  handcuffs.ave_err().write("plots/handcuffs.xmg");
+  const djvec_t handcuffsRatio=handcuffs/P5P5;
+  handcuffsRatio.ave_err().write("plots/handcuffsRatio.xmg");
+  
+  const djvec_t effMass=effective_mass(P5P5);
+  const djack_t M=constant_fit(effMass,tMin,tMax,"plots/P5P5Eff.xmg");
+  cout<<"M: "<<smart_print(M)<<endl;
+  
+  const djvec_t effSlopeExchange=effective_slope(exchangeRatio,effMass,TH);
+  const djack_t dMExchange=constant_fit(effSlopeExchange,tMin,tMax,"plots/exchangeRat.xmg");
+  
+  cout<<"Exc: "<<// smart_print
+    (dMExchange.ave_err())<<endl;
+  
+  const djvec_t effSlopeHandcuffs=effective_slope(handcuffsRatio,effMass,TH);
+  const djack_t dMHandcuffs=constant_fit(effSlopeHandcuffs,tMin,tMax,"plots/handcuffsRat.xmg");
+  
+  cout<<"Hands: "<<// smart_print
+    (dMHandcuffs.ave_err())<<endl;
+  
+  const djack_t dMRat=dMHandcuffs/dMExchange;
+  cout<<smart_print(dMRat)<<endl;
+  
+  const djack_t dMTot=dMHandcuffs+dMExchange;
+  cout<<"Tot: "<<// smart_print
+    (dMTot.ave_err())<<endl;
   
   return 0;
 }

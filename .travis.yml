@@ -40,7 +40,7 @@ script:
   - bash config/install_eigen.sh
   - mkdir build
   - cd build
-  - ../configure --with-Eigen=$HOME/include/eigen3 CPPFLAGS="-Wall -O0 -g -Wno-missing-braces"
+  - ../configure --with-Eigen=$HOME/include/eigen3 CPPFLAGS="-Wall -O0 -g -Wno-missing-braces"||cat config.log
   - make
 
 # Generate and deploy documentation

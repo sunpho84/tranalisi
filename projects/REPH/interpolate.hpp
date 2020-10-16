@@ -113,7 +113,7 @@ dbvec_t interpolate0D(const F& f,const vector<S>& data,const boot_init_t& j)
 permes_t<dbvec_t> interpolate(const perens_t& ens,const string& mesName,const vector<double>& m1,const vector<double>& m2,const vector<permes_combo_t<djvec_t> >& data,const boot_init_t& j,const dboot_t& m1phys,const dboot_t& m2phys,const bool&forceInterp=false)
 {
   //! Output
-  permes_t<dbvec_t> out(ens,mesName);
+  permes_t<dbvec_t> out(ens,mesName,data[0].eS,data[0].eT);
   
   //! Path where to store or load
   const string dataPath=out.milledPath()+"/interp.dat";
@@ -123,31 +123,24 @@ permes_t<dbvec_t> interpolate(const perens_t& ens,const string& mesName,const ve
   
   if(not interpLoad)
     {
-      cout<<"Interpolating"<<endl;
+      //cout<<"Interpolating"<<endl;
       
 #define INTERP(A)							\
       out.A=interpolate(m1,m2,[=](const auto& D){return D.A;},data,j,m1phys,m2phys)
       
       INTERP(E);
       INTERP(X);
+      INTERP(fP);
       for(int i=0;i<2;i++)
 	INTERP(ff[i]);
     }
 #undef INTERP
   
-  for(size_t iVA=0;iVA<2;iVA++)
-    {
-      out.quality[iVA].resize(ens.nDecKin,true);
-      for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
-	for(auto& d : data)
-	  out.quality[iVA][iDecKin]&=d.quality[iVA][iDecKin];
-    }
-  
-  cout<<(interpLoad?"Reading":"Writing")<<" interpolated data"<<endl;
+  //cout<<(interpLoad?"Reading":"Writing")<<" interpolated data"<<endl;
   //! Input or output file
   raw_file_t file(dataPath,interpLoad?"r":"w");
   
-  for(auto& q: {&out.E,&out.X,&out.ff[0],&out.ff[1]})
+  for(auto& q: {&out.E,&out.X,&out.ff[0],&out.ff[1],&out.fP})
     {
       if(interpLoad)
 	{
@@ -175,7 +168,7 @@ void checkIntExtr(const vector<double>& amBare,const dboot_t& target)
       const auto& amMinMax=minmax_element(amBare.begin(),amBare.end());
       const double& amMin=*amMinMax.first;
       const double& amMax=*amMinMax.second;
-      const double range=amMax-amMin;
+      // const double range=amMax-amMin;
       
       size_t nExtrapolating=0;
       double maxExcess=0;
@@ -206,19 +199,19 @@ void checkIntExtr(const vector<double>& amBare,const dboot_t& target)
 	    }
 	}
       
-      if(nExtrapolating)
-	cout<<"WARNING, extrapolating in: "<<nExtrapolating*100/nboots<<"% of the bootstraps, max extrapolation: "<<maxExcess*100/range<<"%"<<endl<<endl;
+      // if(nExtrapolating)
+      // 	cout<<"WARNING, extrapolating in: "<<nExtrapolating*100/nboots<<"% of the bootstraps, max extrapolation: "<<maxExcess*100/range<<"%"<<endl<<endl;
     }
 }
 
 //! Frontend to interpolate in mass
-permes_t<dbvec_t>interpolate(const AllMesCombos& mesCombos,const meson_t& mesComposition,const perens_t& ens,const map<string,vector<double>>& am,const size_t& inputAn,const string& totTag)
+permes_t<dbvec_t>interpolate(const AllMesCombos& mesCombos,const meson_t& mesComposition,const perens_t& ens,const map<string,vector<double>>& am,const size_t& inputAn)
 {
   //! Index of beta
   const size_t& iBeta=ens.iBeta;
   
   //! Name of the meson
-  const string& mesName=get<0>(mesComposition)+"/interp/"+to_string(inputAn)+"_"+totTag;
+  const string& mesName=get<0>(mesComposition)+"/interp/"+to_string(inputAn);
   
   //! S quark name
   const string& qS=get<1>(mesComposition);
@@ -240,14 +233,14 @@ permes_t<dbvec_t>interpolate(const AllMesCombos& mesCombos,const meson_t& mesCom
   
   for(auto& i : {make_tuple("S",qS,amSbare),make_tuple("T",qT,amTbare)})
     {
-      const auto& tag=get<0>(i);
+      // const auto& tag=get<0>(i);
       const vector<double> amList=am.at(get<1>(i));
       const dboot_t& amBare=get<2>(i);
       
-      cout<<"am"<<tag<<"bare: "<<smart_print(amBare);
-      for(auto& ami : amList)
-	cout<<" "<<ami;
-      cout<<endl;
+      // cout<<"am"<<tag<<"bare: "<<smart_print(amBare);
+      // for(auto& ami : amList)
+      // 	cout<<" "<<ami;
+      // cout<<endl;
       checkIntExtr(amList,amBare);
     }
   

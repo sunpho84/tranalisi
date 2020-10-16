@@ -53,7 +53,9 @@ void grace_file_t::close_cur_set()
       const unsigned short int& t=transparency;
       (*this)<<"#QTGRACE_ADDITIONAL_PARAMETER: G 0 S "<<iset<<" ALPHA_CHANNELS {"<<t<<";"<<t<<";"<<t<<";"<<t<<";"<<t<<";"<<t<<"}"<<endl;
       //write legend
-      write_prop("legend \""+legend+"\"");
+      if(legend!="") write_prop("legend \""+legend+"\"");
+      //write comment
+      if(comment!="") write_prop("comment \""+comment+"\"");
       //point to the next set
       (*this)<<"&"<<endl;
       shift_iset();
@@ -134,7 +136,7 @@ grace_file_t::grace_file_t(const string &path) :
   line_color_scheme(grace::default_line_color_scheme),
   symbol_scheme(grace::default_symbol_scheme),
   iset(0),
-  settype(grace::XY),
+  settype(grace::XYDX),
   xaxis_min(0),
   xaxis_max(1),
   yaxis_min(0),
@@ -266,6 +268,11 @@ void grace_file_t::set_legend(const string &ext_legend)
   legend=ext_legend;
 }
 
+void grace_file_t::set_comment(const string &ext_comment)
+{
+  comment=ext_comment;
+}
+
 void grace_file_t::shift_iset(size_t how_many)
 {
   iset+=how_many;
@@ -276,6 +283,7 @@ void grace_file_t::new_data_set(grace::color_t col,grace::symbol_t sym)
   close_cur_set();
   
   set_legend("");
+  set_comment("");
   set_settype(grace::XYDY);
   set_all_colors(col);
   set_symbol(sym);

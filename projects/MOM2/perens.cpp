@@ -4,6 +4,42 @@
 #include <MOM2/sigma.hpp>
 #include <MOM2/pr_meslep.hpp>
 
+perens_t perens_t::evolve_QED_Zmixed_to_1_ov_a() const
+{
+  perens_t out=*this;
+  
+  evolve_QED_Zq_mixed_to_1_ov_a(out);
+  evolve_QED_Zbil_mixed_to_1_ov_a(out);
+  evolve_QED_Zmeslep_mixed_to_1_ov_a(out);
+  
+  return out;
+}
+
+double perens_t::evolve_QED_mixed_alpha(const double& a2p2,const double gamma) const
+{
+  const double p2=a2p2*sqr(ainv);
+  
+  const double al0=evol::alphas<4>(p2)/(4.0*M_PI);
+  const double gamma_q_s0=0.0; //landau gauge
+  const double gamma_q_se1=gamma;
+  const double gamma_q_e0=2.0;
+  const double UQED2_q=
+    0.5*gamma_q_se1*log(a2p2)/pow(4.0*M_PI,2.0)+
+    0.25*pow(log(a2p2),2.0)*gamma_q_e0*gamma_q_s0/pow(4.0*M_PI,2.0);
+  const double UQCD_q=1.0/evol::evolution_Zq_to_RIp(evol::NF4,/*ord*/3,ainv,p2);
+  const double UQCDinv_q = 1.0/UQCD_q;
+  const double UQED1_q=0.5*gamma_q_e0*log(a2p2)/pow(4.0*M_PI,2.0);
+  
+  const double a=al0*UQCDinv_q*UQED2_q + UQCDinv_q*UQED1_q - UQED1_q;
+  
+  // return
+  const double b=   evol::alphas<4>(p2)/pow(4*M_PI,3.0)*log(a2p2)*gamma*0.5;
+  
+  cout<<"a: "<<a<<" b: "<<b<<", (a2p2: "<<a2p2<<", ainv: "<<ainv<<" "<<gamma<<")"<<endl;
+  
+  return a;
+}
+
 perens_t& perens_t::read_pars(const string &name)
 {
   dir_path=name;

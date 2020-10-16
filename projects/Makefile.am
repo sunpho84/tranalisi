@@ -4,17 +4,19 @@ bin_PROGRAMS=
 BUILT_SOURCES=
 CLEANFILES=
 
+YACC=bison
 AM_LFLAGS = -s -P`basename $* | sed 's,l$$,,'`_ -olex.yy.c
 AM_YFLAGS = -d -p `basename $* | sed 's,y$$,,'`_
 
 AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
 LDADD=$(top_builddir)/lib/libtran.a
 
+include REPH/Makefile.am
+include IB/Makefile.am
+include HADRON_SCHEME/Makefile.am
 include BARYONS/Makefile.am
 #include FPIEM/Makefile.am
-include IB/Makefile.am
 #include PLNG/Makefile.am
-include REPH/Makefile.am
 include MOM2/Makefile.am
 #include SMETEST/Makefile.am
 #include SPIPOLLO/Makefile.am

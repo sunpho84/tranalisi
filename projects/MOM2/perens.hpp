@@ -621,11 +621,7 @@ struct perens_t
   perens_t match_to_W_reg() const;
   
   //! returns the evolution from p2 to 1/a2
-  double evolve_QED_mixed_alpha(const double& a2p2,const double gamma) const
-  {
-    return
-      evol::alphas<4>(a2p2*sqr(ainv))/pow(4*M_PI,3.0)*log(a2p2)*gamma*0.5;
-  }
+  double evolve_QED_mixed_alpha(const double& a2p2,const double gamma) const;
   
   //! evolve QED Zq, considering only the mixed evolver (QCD/QED)
   void evolve_QED_Zq_mixed_to_1_ov_a(perens_t& out) const;
@@ -637,16 +633,7 @@ struct perens_t
   void evolve_QED_Zmeslep_mixed_to_1_ov_a(perens_t& out) const;
   
   //! evolve QED Z, considering only the mixed evolver (QCD/QED)
-  perens_t evolve_QED_Zmixed_to_1_ov_a() const
-  {
-    perens_t out=*this;
-    
-    evolve_QED_Zq_mixed_to_1_ov_a(out);
-    evolve_QED_Zbil_mixed_to_1_ov_a(out);
-    evolve_QED_Zmeslep_mixed_to_1_ov_a(out);
-    
-    return out;
-  }
+  perens_t evolve_QED_Zmixed_to_1_ov_a() const;
   
   /////////////////////////////////////////////////////////////////
   
