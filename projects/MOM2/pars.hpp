@@ -55,6 +55,8 @@ namespace pars
   EXTERN_PARS gaz::type_t act INIT_PARS_TO({gaz::PLAQ});
   //! extrapolation method
   EXTERN_PARS chir_extr::type_t chir_extr_method INIT_PARS_TO({chir_extr::MQUARK});
+  //! compute sigma1 through division or nor
+  EXTERN_PARS bool compute_sigma1_through_division INIT_PARS_TO({false});
   //! compute ri Zq
   EXTERN_PARS size_t compute_RI INIT_PARS_TO({0});
   //! compute bilinear vertex

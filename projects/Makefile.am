@@ -4,6 +4,7 @@ bin_PROGRAMS=
 BUILT_SOURCES=
 CLEANFILES=
 
+YACC=bison
 AM_LFLAGS = -s -P`basename $* | sed 's,l$$,,'`_ -olex.yy.c
 AM_YFLAGS = -d -p `basename $* | sed 's,y$$,,'`_
 
