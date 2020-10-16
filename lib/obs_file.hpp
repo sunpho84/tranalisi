@@ -28,7 +28,7 @@ public:
   //! set the view on columns
   void set_col_view(const vector<size_t> &ext_cols)
   {
-    if(cols.size()>=ntot_cols) CRASH("Col=%zu >= NtotCol=%zu",cols.size(),ntot_cols);
+    if(cols.size()>ntot_cols) CRASH("Col=%zu >= NtotCol=%zu",cols.size(),ntot_cols);
     cols=ext_cols;
   }
   
