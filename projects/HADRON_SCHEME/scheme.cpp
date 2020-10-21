@@ -22,6 +22,7 @@ const double MKaonBarExp=sqrt((sqr(MKaonPlusExp)+sqr(MKaonZeroExp))/2);
 const double MEtaExp=sqrt(2*sqr(MKaonBarExp)-sqr(MPionZeroExp));
 const double MOmegaExp=1.672;
 const double MProtonExp=0.938;
+const double W0Exp=0.7936;
 const double ratioAExp=sqr(MEtaExp/MOmegaExp);
 const double ratioBExp=sqr(MPionZeroExp/MOmegaExp);
 
@@ -180,7 +181,16 @@ struct perens_t
   /// Load w0/a2
   perens_t& loadW0fra2()
   {
-    w0fra2.bin_read(W0FrA2Dir+"/"+name+"/w0_fr_a2.dat");
+    static int progressive=12423;
+    
+    //w0fra2.bin_read(W0FrA2Dir+"/"+name+"/w0_fr_a2.dat");
+    
+    double ave,err;
+    ifstream w0fra2_file(W0FrA2Dir+"/"+name+"/w0_fr_a2.txt");
+    w0fra2_file>>ave>>err;
+    w0fra2.fill_gauss(ave, err, progressive++);
+    
+    cout<<"W0/a2: "<<w0fra2.ave_err()<<endl;
     
     return *this;
   }
@@ -415,8 +425,8 @@ int main()
   W0FrA2Dir=analysis.read<string>("W0FrA2Dir");
   const size_t ext_njacks=analysis.read<size_t>("NJacks");
   set_njacks(ext_njacks);
-  const size_t nensTot=analysis.read<size_t>("NEns");
-  vector<size_t> nensPerBeta(nb,0);
+  const size_t nEnsTot=analysis.read<size_t>("NEns");
+  vector<size_t> nEnsPerBeta(nb,0);
   
   new_section("PREAMBLE");
   
@@ -424,7 +434,7 @@ int main()
   cout<<"MKBarExp: "<<MKaonBarExp<<" GeV"<<endl;
   cout<<"MEtaExp: "<<MEtaExp<<" GeV"<<endl;
   
-  for(size_t iens=0;iens<nensTot;iens++)
+  for(size_t iens=0;iens<nEnsTot;iens++)
     {
       /// Name of the ensemble
       const string name=analysis.read<string>();
@@ -446,7 +456,7 @@ int main()
 	fitMasses().
 	printMasses();
       
-      nensPerBeta[ens.ib]++;
+      nEnsPerBeta[ens.ib]++;
     }
   
   new_section("0.0040 analysis");
@@ -461,6 +471,7 @@ int main()
     }
   cout<<"N. of ensembles 0.0040: "<<ens40.size()<<endl;
   
+  analysis_Ldep("w0",ens40,1.0,[](perens_t& ens)->djack_t&{return ens.w0fra2;});
   analysis_Ldep("pion",ens40,1.5,[](perens_t& ens)->djack_t&{return ens.amPion;});
   analysis_Ldep("nucleon",ens40,1.0,[](perens_t& ens)->djack_t&{return ens.amNucleon;});
   for(size_t iq=1;iq<ensList[ens40.front()].nq;iq++)
@@ -482,8 +493,8 @@ int main()
 		    };
   
   /// Interpolated ratioB to ams_phys for each ensemble
-  djvec_t ratioBPerEns(nensTot);
-  for(size_t iens=0;iens<nensTot;iens++)
+  djvec_t ratioBPerEns(nEnsTot);
+  for(size_t iens=0;iens<nEnsTot;iens++)
     {
       const perens_t& ens=ensList[iens];
       
@@ -495,17 +506,18 @@ int main()
   new_section("ams global fit for each beta");
   
   jack_fit_t ams_combo_fit;
-  djvec_t ams_combo_pars(nb+1);
+  djvec_t ams_combo_pars(nb+2);
   for(size_t i=0;i<nb;i++)
     ams_combo_fit.add_fit_par(ams_combo_pars[i],string("P")+to_string(i),0.01,0.001);
   ams_combo_fit.add_fit_par(ams_combo_pars[nb],"slope",0.1,0.1);
+  ams_combo_fit.add_fit_par(ams_combo_pars[nb+1],"slope_a2",0.0,0.1);
   
-  for(size_t iens=0;iens<nensTot;iens++)
+  for(size_t iens=0;iens<nEnsTot;iens++)
     {
       const perens_t& ens=ensList[iens];
-      ams_combo_fit.add_point(ens.amsPhys,[ib=ens.ib,&r=ratioBPerEns[iens]](const vector<double>& p,const size_t ijack)->double
+      ams_combo_fit.add_point(ens.amsPhys,[ib=ens.ib,&r=ratioBPerEns[iens],&w0fra2=ens.w0fra2](const vector<double>& p,const size_t ijack)->double
   				      {
-					return p[ib]*(1+p[nb]*r[ijack]);
+					return p[ib]*(1+(p[nb]+p[nb+1]/w0fra2[ijack])*r[ijack]);
   				      });
     }
   ams_combo_fit.fit();
@@ -518,7 +530,7 @@ int main()
     {
       plot_ams.write_polygon([&ams_combo_pars,ib](const double& x)->djack_t{return ams_combo_pars[ib]*(1+ams_combo_pars[nb]*x);},0,0.060);
       plot_ams.set_no_line();
-      for(size_t _iens=0;_iens<nensTot;_iens++)
+      for(size_t _iens=0;_iens<nEnsTot;_iens++)
 	{
 	  const perens_t& ens=ensList[_iens];
 	  
@@ -536,7 +548,7 @@ int main()
   //djvec_t amsPhysPerBeta(nb);
   for(size_t ib=0;ib<nb;ib++)
     {
-      const size_t& nens=nensPerBeta[ib];
+      const size_t& nens=nEnsPerBeta[ib];
       
       cout<<"/////////////////////////////////////////////////////////////////"<<endl;
       cout<<"Beta "<<ib<<endl;
@@ -555,7 +567,7 @@ int main()
 	  djvec_t amPionPerEns(nens),amNucleonPerEns(nens);
 	  djvec_t amsPhysPerEns(nens),ratioBPerEnsSlice(nens);
 	  size_t iens=0,v=6;
-	  for(size_t _iens=0;_iens<nensTot;_iens++)
+	  for(size_t _iens=0;_iens<nEnsTot;_iens++)
 	    {
 	      const perens_t& ens=ensList[_iens];
 	      
@@ -598,7 +610,7 @@ int main()
 	  
 	  iens=0;
 	  djvec_t amOmegaPerEns(nens);
-	  for(size_t _iens=0;_iens<nensTot;_iens++)
+	  for(size_t _iens=0;_iens<nEnsTot;_iens++)
 	    {
 	      const perens_t& ens=ensList[_iens];
 	      
@@ -659,7 +671,7 @@ int main()
       plot_ms_ren.set_all_colors(plot_ms_ren_colors[ib]);
       plot_ms_ren.set_legend("\\xb\\0="+beta_tag[ib]);
      
-      for(size_t _iens=0;_iens<nensTot;_iens++)
+      for(size_t _iens=0;_iens<nEnsTot;_iens++)
 	{
 	  const perens_t& ens=ensList[_iens];
 	  
@@ -686,60 +698,67 @@ int main()
   
   plot_ms_ren.write_ave_err(ratioBExp,msRenPars[0].ave_err());
   
-  plan_fit_data_t<djack_t> contChirFitData;
-  djvec_t mNucleonPerEns(nensTot);
-  for(size_t iens=0;iens<nensTot;iens++)
-    {
-      const perens_t& ens=ensList[iens];
-      const size_t ib=ens.ib;
-      
-      vector<double> x(3);
-      x[0]=1.0;
-      x[1]=ratioBPerEns[iens].ave();
-      x[2]=sqr(a[ens.ib].ave());
-      
-      mNucleonPerEns[iens]=ens.amNucleon/a[ib];
-      contChirFitData.push_back(make_tuple(x,mNucleonPerEns[iens]));
-    }
+  auto contChirFit=[nEnsTot,nEnsPerBeta,&ratioBPerEns,&a](auto getQ,const string& quantityName,const double& QExp)
+		   {
+		     
+		     plan_fit_data_t<djack_t> contChirFitData;
+		     djvec_t QPerEns(nEnsTot);
+		     for(size_t iens=0;iens<nEnsTot;iens++)
+		       {
+			 const perens_t& ens=ensList[iens];
+			 
+			 vector<double> x(3);
+			 x[0]=1.0;
+			 x[1]=ratioBPerEns[iens].ave();
+			 x[2]=sqr(a[ens.ib].ave());
+			 
+			 QPerEns[iens]=getQ(ens);
+			 contChirFitData.push_back(make_tuple(x,QPerEns[iens]));
+		       }
+		     
+		     const auto coeffs=plan_fit(contChirFitData);
+		     const vector<double> contChirPoint{1.0,ratioBExp,0.0};
+		     const djack_t Qphys=plan_eval(coeffs,contChirPoint);
+		     
+		     djack_t chi2;
+		     chi2=0;
+		     for(const auto& p : contChirFitData)
+		       {
+			 const vector<double>& x=std::get<0>(p);
+			 const djack_t& y=std::get<1>(p);
+			 const djack_t f=plan_eval(coeffs,x);
+			 const double err=y.err();
+			 const djack_t a=(y-f)/err;
+			 chi2+=sqr(a);
+		       }
+		     
+		     cout<<quantityName<<": "<<smart_print(Qphys)<<" GeV^XXX "<<", chi2: "<<chi2.ave_err()<<" / "<<contChirFitData.size()-coeffs.size()+1<<endl;
+		     
+		     grace_file_t plotQFit("plots/"+quantityName+".xmg");
+		     vector<grace::color_t> colors{grace::TURQUOISE,grace::RED,grace::GREEN4,grace::ORANGE,grace::VIOLET,grace::BLACK};
+		     for(size_t ib=0;ib<nb;ib++)
+		       if(nEnsPerBeta[ib]>1)
+			 {
+			   plotQFit.write_polygon([&coeffs,&a,&ib](const double& x){return plan_eval(coeffs,vector<double>{1.0,x,sqr(a[ib].ave())});},0.0,0.065,colors[ib]);
+			   
+			   plotQFit.set_all_colors(colors[ib]);
+			   plotQFit.set_no_line();
+			   for(size_t _iens=0;_iens<nEnsTot;_iens++)
+			     if(ensList[_iens].ib==ib)
+			       plotQFit.write_ave_err(ratioBPerEns[_iens].ave(),QPerEns[_iens].ave_err());
+			   plotQFit.new_data_set();
+			 }
+		     plotQFit.write_ave_err(ratioBExp,Qphys.ave_err());
+		     plotQFit.set_all_colors(colors[nb]);
+		     plotQFit.write_polygon([&coeffs](const double& x){return plan_eval(coeffs,vector<double>{1.0,x,0.0});},0.0,0.065,colors[nb]);
+		     
+		     plotQFit.write_ave_err(ratioBExp,{QExp,0.0});
+		     plotQFit.set_all_colors(colors[nb+1]);
+		   };
   
-  const auto coeffs=plan_fit(contChirFitData);
-  const vector<double> contChirPoint{1.0,ratioBExp,0.0};
-  const djack_t MN=plan_eval(coeffs,contChirPoint);
+  contChirFit([&a](const perens_t& ens)->djack_t{return ens.amNucleon/a[ens.ib];},"MN",MProtonExp);
   
-  djack_t chi2;
-  chi2=0;
-  for(const auto& p : contChirFitData)
-    {
-      const vector<double>& x=std::get<0>(p);
-      const djack_t& y=std::get<1>(p);
-      const djack_t f=plan_eval(coeffs,x);
-      const double err=y.err();
-      const djack_t a=(y-f)/err;
-      chi2+=sqr(a);
-    }
-  
-  cout<<"MNucleon: "<<smart_print(MN)<<" GeV "<<", chi2: "<<chi2.ave_err()<<" / "<<contChirFitData.size()-coeffs.size()+1<<endl;
-  
-  grace_file_t plotMNucleonFit("plots/MN.xmg");
-  vector<grace::color_t> colors{grace::TURQUOISE,grace::RED,grace::GREEN4,grace::ORANGE,grace::VIOLET,grace::BLACK};
-  for(size_t ib=0;ib<nb;ib++)
-    if(nensPerBeta[ib]>1)
-      {
-	plotMNucleonFit.write_polygon([&coeffs,&a,&ib](const double& x){return plan_eval(coeffs,vector<double>{1.0,x,sqr(a[ib].ave())});},0.0,0.065,colors[ib]);
-	
-	plotMNucleonFit.set_all_colors(colors[ib]);
-	plotMNucleonFit.set_no_line();
-	for(size_t _iens=0;_iens<nensTot;_iens++)
-	  if(ensList[_iens].ib==ib)
-	    plotMNucleonFit.write_ave_err(ratioBPerEns[_iens].ave(),mNucleonPerEns[_iens].ave_err());
-	plotMNucleonFit.new_data_set();
-      }
-  plotMNucleonFit.write_ave_err(ratioBExp,MN.ave_err());
-  plotMNucleonFit.set_all_colors(colors[nb]);
-  plotMNucleonFit.write_polygon([&coeffs](const double& x){return plan_eval(coeffs,vector<double>{1.0,x,0.0});},0.0,0.065,colors[nb]);
-  
-  plotMNucleonFit.write_ave_err(ratioBExp,{MProtonExp,0.0});
-  plotMNucleonFit.set_all_colors(colors[nb+1]);
+  contChirFit([&a](const perens_t& ens)->djack_t{return ens.w0fra2*sqr(a[ens.ib]);},"W0",W0Exp);
   
   // /// Compute MN, MOmega and M^2Pi/ml
   // djvec_t amlFrMsPerEns(nens);
