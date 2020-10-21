@@ -2,7 +2,15 @@
 
 #include <set>
 
+string W0FrA2Dir;
+
+void new_section(const string section)
+{
+  cout<<"///////////////////////////////// "<<section<<" ////////////////////////////////"<<endl;
+}
+
 const size_t nb=3;
+const string beta_tag[nb]={"1.90","1.95","2.10"};
 
 /// List of ml ordered by ib
 map<size_t,set<double>> amlList;
@@ -123,6 +131,8 @@ struct perens_t
     return read_djvec(combine("%s/jacks/mes_contr_P5P5_SM_q%zu__SM_q%zu",name.c_str(),iq1,iq2),T).symmetrized();
   }
   
+  djack_t w0fra2;
+  
   djvec_t cPion,ePion;
   djack_t amPion;
   
@@ -146,7 +156,11 @@ struct perens_t
   /// Load the correlators
   perens_t& loadCorrs()
   {
+    /// Name of the dir where to put the plots
+    const string dir=name+"/plots/corrs";
+    
     cPion=load_meson(0,0);
+    cPion.ave_err().write(dir+"/pion.xmg");
     cNucleon=load_nucleon(0);
     
     for(auto& c : {&cKaon,&cOmega})
@@ -155,8 +169,18 @@ struct perens_t
     for(size_t iq=0;iq<nq;iq++)
       {
 	cOmega[iq]=load_omega(iq);
+	cOmega[iq].ave_err().write(combine("%s/omega_%zu.xmg",dir.c_str(),iq));
 	cKaon[iq]=load_meson(0,iq);
+	cKaon[iq].ave_err().write(combine("%s/kaon_%zu.xmg",dir.c_str(),iq));
       }
+    
+    return *this;
+  }
+  
+  /// Load w0/a2
+  perens_t& loadW0fra2()
+  {
+    w0fra2.bin_read(W0FrA2Dir+"/"+name+"/w0_fr_a2.dat");
     
     return *this;
   }
@@ -165,7 +189,6 @@ struct perens_t
   perens_t& effectiveMasses()
   {
     ePion=effective_mass(cPion);
-    cPion.ave_err().write(name+"/plots/pion_corr.xmg");
     eNucleon=effective_mass(cNucleon,TH,0);
     
     for(auto& c : {&eKaon,&eOmega})
@@ -175,8 +198,6 @@ struct perens_t
       {
 	eOmega[iq]=effective_mass(cOmega[iq],TH,0);
 	eKaon[iq]=effective_mass(cKaon[iq]);
-	cOmega[iq].ave_err().write(name+combine("/plots/omega_corr_%zu.xmg",iq));
-      	cKaon[iq].ave_err().write(name+combine("/plots/kaon_corr_%zu.xmg",iq));
       }
     
     return *this;
@@ -185,40 +206,61 @@ struct perens_t
   /// Fit the effective masses
   perens_t& fitMasses()
   {
-    amPion=constant_fit(ePion,tminPion,tmaxPion,name+"/plots/pion.xmg");
-    amNucleon=constant_fit(eNucleon,tminNucleon,tmaxNucleon,name+"/plots/nucleon.xmg");
+    /// Dir where to put plots
+    const string dir=name+"/plots/effMass";
     
-    for(auto& c : {&amKaon,&amOmega,&amEtaSS,&ratioA,&ratioB})
+    amPion=constant_fit(ePion,tminPion,tmaxPion,dir+"/pion.xmg");
+    amNucleon=constant_fit(eNucleon,tminNucleon,tmaxNucleon,dir+"/nucleon.xmg");
+    
+    for(auto& c : {&amKaon,&amOmega})
       c->resize(nq);
     
     for(size_t iq=0;iq<nq;iq++)
       {
-	amOmega[iq]=constant_fit(eOmega[iq],tminOmega,tmaxOmega,name+combine("/plots/omega_%zu.xmg",iq));
-	amKaon[iq]=constant_fit(eKaon[iq],tminKaon,tmaxKaon,name+combine("/plots/kaon_%zu.xmg",iq));
-	amEtaSS[iq]=sqrt(2*sqr(amKaon[iq])-sqr(amPion));
-	ratioA[iq]=sqr((djack_t)(amEtaSS[iq]/amOmega[iq]));
-	ratioB[iq]=sqr((djack_t(amPion/amOmega[iq])));
+	amOmega[iq]=constant_fit(eOmega[iq],tminOmega,tmaxOmega,combine("%s/omega_%zu.xmg",dir.c_str(),iq));
+	amKaon[iq]=constant_fit(eKaon[iq],tminKaon,tmaxKaon,combine("%s/kaon_%zu.xmg",dir.c_str(),iq));
       }
     
     return *this;
   }
   
   /// Print fitted masses
-  void printMasses()
+  perens_t& printMasses()
   {
-    cout<<"aMNuc: "<<amNucleon.ave_err()<<endl;
-    for(size_t iq=0;iq<nq;iq++)
-      {
-	cout<<"MK: "<<amKaon[iq].ave_err()<<endl;
-	cout<<"MEtaSS: "<<amEtaSS[iq].ave_err()<<endl;
-	cout<<"MOmega: "<<amOmega[iq].ave_err()<<endl;
-      }
+    cout<<"amPion: "<<amPion<<endl;
+    cout<<"amNucleon: "<<amNucleon<<endl;
+    
+    auto print=[this](const string& name,const djvec_t& val)
+	       {
+		 cout<<name<<":"<<endl;
+		 for(size_t iq=1;iq<nq;iq++)
+		   cout<<" "<<iq<<": "<<val[iq]<<endl;
+	       };
+    print("amOmega",amOmega);
+    print("amKaon",amKaon);
+    
+    return *this;
   }
   
+  /// Set the ratios
+  perens_t& setRatios()
+  {
+    for(auto& c : {&amEtaSS,&ratioA,&ratioB})
+      c->resize(nq);
+    
+    for(size_t iq=0;iq<nq;iq++)
+      {
+	amEtaSS[iq]=sqrt(2*sqr(amKaon[iq])-sqr(amPion));
+    	ratioA[iq]=sqr((djack_t)(amEtaSS[iq]/amOmega[iq]));
+	ratioB[iq]=sqr((djack_t(amPion/amOmega[iq])));
+      }
+    
+    return *this;
+  }
   /// Computes ams phys
   perens_t& getAmsPhys()
   {
-    grace_file_t ratioAPlot(name+"/plots/ratioA.xmg");
+    grace_file_t ratioAPlot(name+"/plots/ratios/A.xmg");
     
     for(size_t iq=1;iq<nq;iq++)
       ratioAPlot.write_ave_err(amq[iq],ratioA[iq].ave_err());
@@ -229,17 +271,17 @@ struct perens_t
     const djack_t amsQuad=parab_solve(ratioAPars,ratioAExp,false);
     cout<<"ams(quad): "<<amsQuad.ave_err()<<endl;
     
-    /// Fit the ratioA at all ms with a first order polynomial
-    const djvec_t ratioALin3Pars=poly_fit(amq,ratioA,1,amq[1]*0.9);
-    ratioAPlot.write_polygon([ratioALin3Pars](const double x){return poly_eval(ratioALin3Pars,x);},amq[1]*0.9,amq[nq-1]*1.1,grace::VIOLET);
-    const djack_t amsLin3=-(ratioALin3Pars[0]-ratioAExp)/ratioALin3Pars[1];
-    cout<<"ams(lin3): "<<amsLin3.ave_err()<<endl;
+    // /// Fit the ratioA at all ms with a first order polynomial
+    // const djvec_t ratioALin3Pars=poly_fit(amq,ratioA,1,amq[1]*0.9);
+    // ratioAPlot.write_polygon([ratioALin3Pars](const double x){return poly_eval(ratioALin3Pars,x);},amq[1]*0.9,amq[nq-1]*1.1,grace::VIOLET);
+    // const djack_t amsLin3=-(ratioALin3Pars[0]-ratioAExp)/ratioALin3Pars[1];
+    // cout<<"ams(lin3): "<<amsLin3.ave_err()<<endl;
     
-    /// Fit the ratioA at all ms with a first order polynomial
-    const djvec_t ratioALin2Pars=poly_fit(amq,ratioA,1,amq[2]*0.9);
-    ratioAPlot.write_polygon([ratioALin2Pars](const double x){return poly_eval(ratioALin2Pars,x);},amq[2]*0.9,amq[nq-1]*1.1,grace::VIOLET);
-    const djack_t amsLin2=-(ratioALin2Pars[0]-ratioAExp)/ratioALin2Pars[1];
-    cout<<"ams(lin2): "<<amsLin2.ave_err()<<endl;
+    // /// Fit the ratioA at all ms with a first order polynomial
+    // const djvec_t ratioALin2Pars=poly_fit(amq,ratioA,1,amq[2]*0.9);
+    // ratioAPlot.write_polygon([ratioALin2Pars](const double x){return poly_eval(ratioALin2Pars,x);},amq[2]*0.9,amq[nq-1]*1.1,grace::VIOLET);
+    // const djack_t amsLin2=-(ratioALin2Pars[0]-ratioAExp)/ratioALin2Pars[1];
+    // cout<<"ams(lin2): "<<amsLin2.ave_err()<<endl;
     
     amsPhys=amsQuad;
     
@@ -248,6 +290,8 @@ struct perens_t
     return *this;
   }
 };
+
+vector<perens_t> ensList;
 
 double fitEvalX(const double& t)
 {
@@ -283,101 +327,153 @@ djack_t fitAndEval(const string& path,const vector<double>& x,const djvec_t& y,c
   return out;
 }
 
+template <typename W,
+	  typename F,
+	  typename A>
+W FSEcorr(const W& w0m2Pi,const F& volDep,const A& arg,const double& power)
+{
+  return 1+w0m2Pi*volDep*exp(-arg)/pow(arg,power);
+}
+
+template <typename W,
+	  typename F,
+	  typename A>
+W ansatz_Ldep(const W& w0m2Pi,const F& infVol,const F& volDep,const A& arg,const double& power)
+{
+  return infVol*FSEcorr(w0m2Pi,volDep,arg,power);
+}
+
+template <typename F>
+void analysis_Ldep(const string& name,const vector<size_t>& ens40,const double& power,F getY)
+{
+  new_section("Studying "+name+" FSE");
+  
+  const size_t n40=ens40.size();
+  
+  vector<double> x(n40),plot_x(n40);
+  djvec_t y(n40);
+  jack_fit_t fit;
+  djack_t infVol,volDep;
+  const size_t iInfVol=fit.add_fit_par(infVol,"InfVol",0.141,0.001);
+  const size_t iVolDep=fit.add_fit_par(volDep,"VolDep",3.96,0.001);
+  
+  for(size_t iens40=0;iens40<ens40.size();iens40++)
+    {
+      const size_t iens=ens40[iens40];
+      perens_t& ens=ensList[iens];
+      const djack_t& amPion=ens.amPion;
+      const size_t Lfra=ens.L;
+      const djack_t w0fra2=ens.w0fra2;
+      const djack_t arg=Lfra*amPion;
+      const djack_t w0m2Pi=w0fra2*sqr(amPion);
+      
+      x[iens40]=exp(-arg.ave());
+      y[iens40]=getY(ens);
+      
+      fit.add_point(y[iens40],[&power,w0m2Pi,arg,&iInfVol,&iVolDep](const vector<double>& p,const size_t ijack)
+			      {
+				return ansatz_Ldep(w0m2Pi[ijack],p[iInfVol],p[iVolDep],arg[ijack],power);
+			      });
+    }
+  
+  const auto status=fit.fit();
+  // cout<<infVol.ave_err()<<endl;
+  // cout<<volDep.ave_err()<<endl;
+
+  const djack_t w0m2Pi_A40=ensList[ens40[0]].w0fra2*sqr(ensList[ens40[0]].amPion);
+  grace_file_t plot("plots/ens40/"+name+".xmg");
+  plot.write_vec_ave_err(x,y.ave_err());
+  plot.write_polygon([&volDep,&infVol,&w0m2Pi_A40,power](const double& x)->djack_t
+		     {
+		       const double arg=-log(x);
+		       
+		       return ansatz_Ldep(w0m2Pi_A40,infVol,volDep,arg,power);
+		     },1e-3,0.1,grace::RED);
+  
+  for(auto& ens : ensList)
+    {
+      const djack_t& amPion=ens.amPion;
+      const size_t Lfra=ens.L;
+      const djack_t w0fra2=ens.w0fra2;
+      const djack_t arg=Lfra*amPion;
+      const djack_t w0m2Pi=w0fra2*sqr(amPion);
+	
+      const djack_t corr=FSEcorr(w0m2Pi,volDep,arg,power),corrpercent=(corr-1)*100;
+      djack_t& y=getY(ens);
+      
+      cout<<ens.name<<"\t"<<y.ave_err()<<"\t"<<corrpercent.ave_err()<<" % ";
+      
+      y/=corr;
+      
+      cout<<"\t"<<y.ave_err()<<endl;
+    }
+}
+
 int main()
 {
   input_file_t analysis("analysis.txt");
+  W0FrA2Dir=analysis.read<string>("W0FrA2Dir");
   const size_t ext_njacks=analysis.read<size_t>("NJacks");
   set_njacks(ext_njacks);
   const size_t nensTot=analysis.read<size_t>("NEns");
   vector<size_t> nensPerBeta(nb,0);
   
-  cout<<"MKBar: "<<MKaonBarExp<<" GeV"<<endl;
-  cout<<"MEtaExp: "<<MEtaExp<<" GeV"<<endl;
+  new_section("PREAMBLE");
   
-  vector<perens_t> ensList;
+  cout<<"List of exprimental quantities"<<endl;
+  cout<<"MKBarExp: "<<MKaonBarExp<<" GeV"<<endl;
+  cout<<"MEtaExp: "<<MEtaExp<<" GeV"<<endl;
   
   for(size_t iens=0;iens<nensTot;iens++)
     {
+      /// Name of the ensemble
       const string name=analysis.read<string>();
-      cout<<name<<endl;
+      
+      new_section("Working on ensemble: "+name);
       
       ensList.emplace_back(name);
       
-      /// Gets last added ensemble
+      /// Last added ensemble
       perens_t& ens=ensList.back();
       
       // Add ml
       amlList[ens.ib].insert(ens.amq[0]);
       
       ens.
+	loadW0fra2().
 	loadCorrs().
 	effectiveMasses().
 	fitMasses().
-	getAmsPhys();
+	printMasses();
       
       nensPerBeta[ens.ib]++;
     }
   
+  new_section("0.0040 analysis");
+  
   // Count ensembles of 0.0040
-  size_t n40=0;
+  vector<size_t> ens40;
+  for(size_t iens=0;iens<ensList.size();iens++)
+    {
+      const perens_t& ens=ensList[iens];
+      if(ens.ib==0 and ens.amq[0]==0.0040)
+	ens40.push_back(iens);
+    }
+  cout<<"N. of ensembles 0.0040: "<<ens40.size()<<endl;
+  
+  analysis_Ldep("pion",ens40,1.5,[](perens_t& ens)->djack_t&{return ens.amPion;});
+  analysis_Ldep("nucleon",ens40,1.0,[](perens_t& ens)->djack_t&{return ens.amNucleon;});
+  for(size_t iq=1;iq<ensList[ens40.front()].nq;iq++)
+    {
+      analysis_Ldep("kaon"+to_string(iq),ens40,1.5,[iq](perens_t& ens)->djack_t&{return ens.amKaon[iq];});
+      analysis_Ldep("omega"+to_string(iq),ens40,1.0,[iq](perens_t& ens)->djack_t&{return ens.amOmega[iq];});
+    }
+  
+  new_section("ams for each ensemble");
   for(auto& ens : ensList)
-    if(ens.ib==0 and ens.amq[0]==0.0040)
-      n40++;
-  cout<<"Nensembles 0.0040: "<<n40<<endl;
-  
-  // Takes the 0.0040 slice
-  vector<double> x40(n40);
-  djvec_t MPi40(n40);
-  djvec_t MN40(n40);
-  jack_fit_t MPi40fit,MN40fit;
-  djack_t MPi40InfVol,MPi40VolDep;
-  djack_t MN40InfVol,MN40VolDep;
-  MPi40fit.add_fit_par(MPi40InfVol,"MPi40InfVol",0.14,0.001);
-  MPi40fit.add_fit_par(MPi40VolDep,"MPi40VolDep",0.014,0.001);
-  MN40fit.add_fit_par(MN40InfVol,"MN40InfVol",0.14,0.001);
-  MN40fit.add_fit_par(MN40VolDep,"MN40VolDep",0.014,0.001);
-  n40=0;
-  for(auto& ens : ensList)
-    if(ens.ib==0 and ens.amq[0]==0.0040)
-      {
-  	const djack_t& MPi=ens.amPion;
-  	const djack_t& MN=ens.amNucleon;
-  	MPi40[n40]=MPi;
-  	MN40[n40]=MN;
-  	x40[n40]=exp(-1.0*ens.L*MPi.ave());
-  	n40++;
-	
-  	MPi40fit.add_point(ens.amPion,[L=ens.L,M=MPi](const vector<double>& p,const size_t ijack)
-  				      {
-  					const double m=M[ijack];
-  					const double x=L*m;
-  					return p[0]*(1+p[1]*sqr(m)/pow(x,1.5)*exp(-x));
-  				      });
-  	MN40fit.add_point(ens.amNucleon,[L=ens.L,MN,MPi](const vector<double>& p,const size_t ijack)
-  				      {
-  					return p[0]*(1+p[1]*sqr(MPi[ijack])/(MN[ijack]*L)*exp(-MPi[ijack]*L));
-  				      });
-      }
-  
-  auto statusPi40=MPi40fit.fit();
-  auto statusN40=MN40fit.fit();
-  cout<<MN40InfVol.ave_err()<<endl;
-  cout<<MN40VolDep.ave_err()<<endl;
-  grace_file_t plotPi40("plots/MPi_40.xmg");
-  grace_file_t plotN40("plots/MN_40.xmg");
-  plotPi40.write_vec_ave_err(x40,MPi40.ave_err());
-  plotN40.write_vec_ave_err(x40,MN40.ave_err());
-  plotPi40.write_polygon([&c=MPi40VolDep,&m=MPi40InfVol](const double& x)->djack_t{return m*(1+c*sqr(m)/pow(-log(x),1.5)*x);},1e-3,0.1,grace::RED);
-  plotN40.write_polygon([&c=MN40VolDep,&mn=MN40InfVol,&mpi=MPi40InfVol](const double& x)->djack_t{return mn*(1+c*sqr(mpi)/(-log(x)*mn/mpi)*x);},1e-3,0.1,grace::RED);
-  
-  // for(auto& ens : ensList)
-  //   if(ens.ib==0)
-  //     {
-  // 	const djack_t M=ens.amPion;
-  // 	const djack_t x=ens.L*M;
-  //       djack_t f=VolDep*sqr(M)/pow(x,1.5)*exp(-x);
-  // 	cout<<ens.name<<" "<<f.ave_err()<<endl;
-  //     }
+    ens.
+      setRatios().
+      getAmsPhys();
   
   /// Function to interpolate
   auto interpolates=[](const string& name,const djvec_t data,const perens_t& ens,const djack_t& x)
@@ -385,6 +481,7 @@ int main()
 		      return fitAndEval(ens.name+"/plots/"+name+".xmg",ens.amq,data,2,ens.amq[1]*0.9,ens.amq[3]*1.1,x);
 		    };
   
+  /// Interpolated ratioB to ams_phys for each ensemble
   djvec_t ratioBPerEns(nensTot);
   for(size_t iens=0;iens<nensTot;iens++)
     {
@@ -393,7 +490,9 @@ int main()
       ratioBPerEns[iens]=interpolates("ratioB",ens.ratioB,ens,ens.amsPhys);
     }
   
-  ///////////////////// Determine ams ensemble per ensemble
+  ///////////////////// Determine ams beta per beta
+  
+  new_section("ams global fit for each beta");
   
   jack_fit_t ams_combo_fit;
   djvec_t ams_combo_pars(nb+1);
@@ -412,6 +511,7 @@ int main()
   ams_combo_fit.fit();
   cout<<"ams_combo_fit_pars: "<<endl<<ams_combo_pars.ave_err()<<endl;
   
+  /// Plot ams and determine ams phys for each beta
   grace_file_t plot_ams("plots/ams_phys.xmg");
   djvec_t amsPhysPerBeta(nb);
   for(size_t ib=0;ib<nb;ib++)
@@ -547,6 +647,45 @@ int main()
   const djvec_t msRenPars=poly_fit(a2,msRenPerEns,1,0,0.3,"plots/msRen.xmg");
   cout<<"ms: "<<smart_print(msRenPars[0])<<endl;
   
+  //////////// repeat the plot of chiral extrapolation, in physical units
+  grace_file_t plot_ms_ren("plots/ms_ren.xmg");
+  vector<grace::color_t> plot_ms_ren_colors{grace::TURQUOISE,grace::RED,grace::GREEN4,grace::ORANGE,grace::VIOLET,grace::BLACK};
+  for(size_t ib=0;ib<nb;ib++)
+    {
+      plot_ms_ren.write_polygon([&ams_combo_pars,ib,&a,&Zp](const double& x)->djack_t{return ams_combo_pars[ib]/a[ib]/Zp[ib]*(1+ams_combo_pars[nb]*x);},0,0.060,plot_ms_ren_colors[ib]);
+      
+      plot_ms_ren.new_data_set();
+      plot_ms_ren.set_no_line();
+      plot_ms_ren.set_all_colors(plot_ms_ren_colors[ib]);
+      plot_ms_ren.set_legend("\\xb\\0="+beta_tag[ib]);
+     
+      for(size_t _iens=0;_iens<nensTot;_iens++)
+	{
+	  const perens_t& ens=ensList[_iens];
+	  
+	  if(ens.ib==ib)
+	    {
+	      const djack_t ms_phys_ren=ens.amsPhys/a[ib]/Zp[ib];
+	      plot_ms_ren.write_ave_err(ratioBPerEns[_iens].ave(),ms_phys_ren.ave_err());
+	    }
+	}
+      
+      plot_ms_ren.new_data_set();
+      plot_ms_ren.set_no_line();
+      plot_ms_ren.set_all_colors(plot_ms_ren_colors[nb]);
+      if(ib==nb-1) plot_ms_ren.set_legend("Chiral Point for each beta");
+      
+      const djack_t ms_renPerBeta_ib=amsPhysPerBeta[ib]/a[ib]/Zp[ib];
+      plot_ms_ren.write_ave_err(ratioBExp,ms_renPerBeta_ib.ave_err());
+      plot_ms_ren.new_data_set();
+    }
+  
+  plot_ms_ren.set_no_line();
+  plot_ms_ren.set_all_colors(plot_ms_ren_colors[nb+1]);
+  plot_ms_ren.set_legend("Chiral continuum limit");
+  
+  plot_ms_ren.write_ave_err(ratioBExp,msRenPars[0].ave_err());
+  
   plan_fit_data_t<djack_t> contChirFitData;
   djvec_t mNucleonPerEns(nensTot);
   for(size_t iens=0;iens<nensTot;iens++)
@@ -567,7 +706,19 @@ int main()
   const vector<double> contChirPoint{1.0,ratioBExp,0.0};
   const djack_t MN=plan_eval(coeffs,contChirPoint);
   
-  cout<<"MNucleon: "<<smart_print(MN)<<" GeV"<<endl;
+  djack_t chi2;
+  chi2=0;
+  for(const auto& p : contChirFitData)
+    {
+      const vector<double>& x=std::get<0>(p);
+      const djack_t& y=std::get<1>(p);
+      const djack_t f=plan_eval(coeffs,x);
+      const double err=y.err();
+      const djack_t a=(y-f)/err;
+      chi2+=sqr(a);
+    }
+  
+  cout<<"MNucleon: "<<smart_print(MN)<<" GeV "<<", chi2: "<<chi2.ave_err()<<" / "<<contChirFitData.size()-coeffs.size()+1<<endl;
   
   grace_file_t plotMNucleonFit("plots/MN.xmg");
   vector<grace::color_t> colors{grace::TURQUOISE,grace::RED,grace::GREEN4,grace::ORANGE,grace::VIOLET,grace::BLACK};
