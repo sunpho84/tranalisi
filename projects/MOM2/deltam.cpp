@@ -34,7 +34,7 @@ void perens_t::compute_deltam_from_prop()
   const size_t mom_probe=linmoms.size()/8;
   const size_t iprobe=im_r_ilinmom_isigmaproj_isigmains_ind({0,0,mom_probe,sigma::SIGMA2,sigma::TM});
   cout<<"Probe sigma: "<<sigma[iprobe].ave_err()<<endl;
-  const bool both=(sigma[iprobe].significativity()>4);
+  const bool both=(fabs(sigma[iprobe].ave())>1e-10);
   if(not both) cout<<"Determining only Critical correction"<<endl;
   
   for(size_t im=0;im<nm;im++)
@@ -57,22 +57,21 @@ void perens_t::compute_deltam_from_prop()
 	    //ascissa
 	    x[ilinmom]=all_moms[linmoms[ilinmom][0]].p(L).norm2();
 	    
-	    auto get_sigma=[&](sigma::proj proj,sigma::ins ins) -> djack_t
-	      {
-		return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,ins})];
-	      };
+	    auto sigma2=sigma_ins_getter(im,r,ilinmom,sigma::SIGMA2);
+	    auto sigma3=sigma_ins_getter(im,r,ilinmom,sigma::SIGMA3);
 	    
 	    //elements to solve the system:
 	    //
 	    // b x + c y - a = 0
 	    // e x + f y - d = 0
 	    using namespace sigma;
-	    const djack_t& a=get_sigma(SIGMA2,PH);
-	    const djack_t& b=get_sigma(SIGMA2,TM);
-	    const djack_t& c=get_sigma(SIGMA2,CR);
-	    const djack_t& d=get_sigma(SIGMA3,PH);
-	    const djack_t& e=get_sigma(SIGMA3,TM);
-	    const djack_t& f=get_sigma(SIGMA3,CR);
+	    
+	    const djack_t& a=sigma2(PH);
+	    const djack_t& b=sigma2(TM);
+	    const djack_t& c=sigma2(CR);
+	    const djack_t& d=sigma3(PH);
+	    const djack_t& e=sigma3(TM);
+	    const djack_t& f=sigma3(CR);
 	    
 	    //non singular case_of
 	    if(both)
@@ -85,9 +84,6 @@ void perens_t::compute_deltam_from_prop()
 	      {
 		deltam_tm_ct_corr[ilinmom]=0.0;
 		deltam_cr_ct_corr[ilinmom]=-a/c;
-		const djack_t t=
-		  sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,SIGMA2,CR})];
-		cout<<ilinmom<<" "<<a.ave_err()<<" "<<c.ave_err()<<" "<<t.ave_err()<<endl;
 	      }
 	  }
 	
