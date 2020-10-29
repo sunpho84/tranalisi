@@ -85,7 +85,9 @@ void perens_t::compute_deltam_from_prop()
 	      {
 		deltam_tm_ct_corr[ilinmom]=0.0;
 		deltam_cr_ct_corr[ilinmom]=-a/c;
-		cout<<ilinmom<<" "<<a.ave_err()<<" "<<c.ave_err()<<endl;
+		const djack_t t=
+		  sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,SIGMA2,CR})];
+		cout<<ilinmom<<" "<<a.ave_err()<<" "<<c.ave_err()<<" "<<t.ave_err()<<endl;
 	      }
 	  }
 	

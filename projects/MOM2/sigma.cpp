@@ -295,7 +295,6 @@ perens_t& perens_t::compute_sigmas()
 		case SIGMA2:
 		  //trace with identity
 		  out=(prop_inv*quaGamma[0]).trace().real()/(12.0*V);
-		  cout<<out<<endl;
 		  break;
 		case SIGMA3:
 		  //trace with gamma5
