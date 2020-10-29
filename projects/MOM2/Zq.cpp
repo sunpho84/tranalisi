@@ -51,16 +51,22 @@ void perens_t::evolve_QED_Zq_mixed_to_1_ov_a(perens_t& out) const
       const vector<size_t> im_r_ilinmom_comps=im_r_ilinmom_ind(im_r_ilinmom);
       const size_t ilinmom=im_r_ilinmom_comps[2];
       const double a2p2=all_moms[linmoms[ilinmom][0]].p(L).norm2();
-      
-      const double gamma=-8.0;
+      const double p2=a2p2*sqr(ainv);
       
       // CRASH("0.00428368 %lg  3.22561 %lg",evolve_QED_mixed_alpha(0.00428368,gamma),
       // 	    evolve_QED_mixed_alpha(3.22561,gamma));
       // cout<<"evolve_QED_mixed_alpha(a2p2,gamma): "<<evolve_QED_mixed_alpha(a2p2,gamma)<<" "<<a2p2<<" "<<gamma<<endl;
       
+      const double gamma_s0=0.0; /* in the Landau gauge the one-loop strong an. dim. is zero */
+      const double gamma_e0=2.0;
+      const double gamma_se1=-8.0;
+      
+      const double evolution_to_RI=evol::evolution_Zq_to_RIp(evol::NF4,/*ord*/3,ainv,p2);
+      cout<<"AAA "<<ainv<<" "<<a2p2<<" "<<evolution_to_RI<<endl;
+      
       out.Zq_QED_rel[im_r_ilinmom]=
 	Zq_QED_rel[im_r_ilinmom]+
-	evolve_QED_mixed_alpha(a2p2,gamma);
+	evolve_QED_mixed_alpha(a2p2,gamma_s0,gamma_se1,gamma_e0,evolution_to_RI);
     }
 }
 

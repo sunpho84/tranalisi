@@ -37,12 +37,17 @@ void perens_t::evolve_QED_Zbil_mixed_to_1_ov_a(perens_t& out) const
       const size_t ibil=im_r_im_r_ibil_ibilmom_comps[4];
       const size_t ibil_mom=im_r_im_r_ibil_ibilmom_comps[5];
       const double a2p2=all_moms[bilmoms[ibil_mom][0]].p(L).norm2();
+      const double p2=a2p2*sqr(ainv);
       
-      const double gamma[5]={-8.0,0.0,-8.0,0.0,-152.0/3};
+      //const double gamma[5]={-8.0,0.0,-8.0,0.0,-152.0/3};
+      
+      const double gamma_s0[nbil]  ={-6.0*CF,0.0,-6.0*CF,0.0,+2.0*CF};
+      const double gamma_e0[nbil]  ={-6.0,   0.0,-6.0,   0.0,+2.0};
+      const double gamma_se1[nbil] ={-8.0,   0.0,-8.0,   0.0,-152.0/3.0};
       
       out.Zbil_QED_rel[im_r_im_r_ibil_ibilmom]=
 	Zbil_QED_rel[im_r_im_r_ibil_ibilmom]+
-	evolve_QED_mixed_alpha(a2p2,gamma[ibil]);
+	evolve_QED_mixed_alpha(a2p2,gamma_s0[ibil],gamma_se1[ibil],gamma_e0[ibil],evol::evolution_Zbil_to_RIp(ibil_t_list[ibil],evol::NF4,/*ord*/3,ainv,p2));
     }
 }
 

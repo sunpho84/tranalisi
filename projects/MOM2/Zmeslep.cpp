@@ -29,23 +29,131 @@ vector<perens_t::task_t> perens_t::get_Zmeslep_tasks(const vector<const perens_t
   return Zmeslep_tasks;
 }
 
+using O4f_t=Matrix<double,5,5>;
+
+O4f_t evaluate_Carrasco_4f(const double a2p2)
+{
+    double LL=log(a2p2);
+    
+    O4f_t ZQED;
+    /* The factor 1/(16*Pi^2) is included */
+    ZQED << -0.0242556 + 0.0158314*LL, 0.00339251, 0.0101775, -0.0203551, -0.00508877,
+            +0.00339251, -0.0486754 + 0.00949886*LL, -0.0203551, 0.0101775, -0.00254439,
+            +0.00254439, -0.00508877, -0.0308496 - 0.00105543*LL, -0.00678503, 0.0,
+            -0.00508877, 0.00254439, -0.00678503, -0.0308496 - 0.00105543*LL, 0.00203498 + 0.000527714*LL,
+            -0.0610652, -0.0305326, 0.0, 0.0976791 + 0.0253303*LL, -0.0383375 + 0.0172387*LL;
+    
+    return ZQED;
+}
+
 void perens_t::evolve_QED_Zmeslep_mixed_to_1_ov_a(perens_t& out) const
 {
   cout<<"Evolving Zmeslep"<<endl;
   
-  for(size_t im_r_im_r_iop_iproj_imeslepmom=0;im_r_im_r_iop_iproj_imeslepmom<im_r_im_r_iop_iproj_imeslepmom_ind.max();im_r_im_r_iop_iproj_imeslepmom++)
+  const double gamma_se1[5][5]=
+    {{+4.0,+0.0,+0.0,+0.0,+0.0},
+     {+0.0,-4.0,+0.0,+0.0,+0.0},
+     {+0.0,+0.0,+484.0/9.0,+0.0,+0.0},
+     {+0.0,+0.0,+0.0,+412.0/9.0,-38.0/9.0},
+     {+0.0,+0.0,+0.0,-928.0/9.0,-428.0/27.0}};
+  /* including the lepton */
+  //    double gamma_e0[5][5] = {
+  //        {-4.0,+0.0,+0.0,+0.0,+0.0},
+  //        {+0.0,-2.0,+0.0,+0.0,+0.0},
+  //        {+0.0,+0.0,+4.0/3.0,+0.0,+0.0},
+  //        {+0.0,+0.0,+0.0,+4.0/3.0,-1.0/6.0},
+  //        {+0.0,+0.0,+0.0,-8.0,-40.0/9.0}};
+  /* without the lepton contribution */
+  const double gamma_e0[5][5]=
+    {{-5.0,+0.0,+0.0,+0.0,+0.0},
+     {+0.0,-3.0,+0.0,+0.0,+0.0},
+     {+0.0,+0.0,+1.0/3.0,+0.0,+0.0},
+     {+0.0,+0.0,+0.0,+1.0/3.0,-1.0/6.0},
+     {+0.0,+0.0,+0.0,-8.0,-49.0/9.0}};
+  
+  const double gamma_s0[5]={0.0,0.0,-6.0*CF,-6.0*CF,+2.0*CF};
+    
+    for(size_t imeslep_mom=0;imeslep_mom<meslepmoms().size();imeslep_mom++)
     {
-      const vector<size_t> im_r_im_r_iop_iproj_imeslepmom_comps=im_r_im_r_iop_iproj_imeslepmom_ind(im_r_im_r_iop_iproj_imeslepmom);
-      const size_t iop=im_r_im_r_iop_iproj_imeslepmom_comps[4];
-      const size_t iproj=im_r_im_r_iop_iproj_imeslepmom_comps[5];
-      const size_t imeslep_mom=im_r_im_r_iop_iproj_imeslepmom_comps[6];
       const double a2p2=all_moms[meslepmoms()[imeslep_mom][0]].p(L).norm2();
+      const double p2=a2p2*sqr(ainv);
       
-      const double gamma[5]={+4.0,-4.0,0.0,0.0,0.0};
+      O4f_t UQCD(O4f_t::Zero());
       
-      out.Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom]=
-	Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom]+
-	(iop==iproj)*evolve_QED_mixed_alpha(a2p2,gamma[iop]);
+      UQCD(0,0)=1.0;
+      UQCD(1,1)=1.0;
+      UQCD(2,2)=1.0/evol::evolution_Zbil_to_RIp(ibil_t::iP,evol::NF4,/*ord*/3,ainv,p2);
+      UQCD(3,3)=UQCD(2,2);
+      UQCD(4,4)=1.0/evol::evolution_Zbil_to_RIp(ibil_t::iT,evol::NF4,/*ord*/3,ainv,p2);
+      
+      const O4f_t UQCDinv=UQCD.inverse();
+      
+      const O4f_t ZQEDan=evaluate_Carrasco_4f(a2p2);
+      
+      const double al0=evol::alphas<4>(p2)/(4.0*M_PI);
+      
+      for(size_t ijack=0;ijack<=njacks;ijack++)
+	for(size_t im_1=0;im_1<out.nm;im_1++)
+	  for(size_t r_1=0;r_1<out.nr;r_1++)
+	    for(size_t im_2=0;im_2<out.nm;im_2++)
+	      for(size_t r_2=0;r_2<out.nr;r_2++)
+		{
+		  O4f_t ZQCD(O4f_t::Zero());
+		  O4f_t UQED1(O4f_t::Zero()),UQED2(O4f_t::Zero());
+		  O4f_t eta(O4f_t::Zero());
+		  
+		  for(size_t iop1=0;iop1<nbil;iop1++)
+		    for(size_t iop2=0;iop2<nbil;iop2++)
+		      {
+			const size_t im_r_im_r_iop_iproj_imeslepmom=im_r_im_r_iop_iproj_imeslepmom_ind({im_1,r_1,im_2,r_2,iop1,iop2,imeslep_mom});
+			ZQCD(iop1,iop2)=Zmeslep[im_r_im_r_iop_iproj_imeslepmom][ijack];
+			eta(iop1,iop2)=Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom][ijack];
+			
+			UQED1(iop1,iop2)=0.5*gamma_e0[iop1][iop2]*log(a2p2)/pow(4.0*M_PI,2.0);
+			UQED2(iop1,iop2)=0.5*gamma_se1[iop1][iop2]*log(a2p2)/pow(4.0*M_PI,2.0) +
+			  0.125*pow(log(a2p2),2.0)*gamma_e0[iop1][iop2]*(gamma_s0[iop1]+gamma_s0[iop2])/pow(4.0*M_PI,2.0);
+		      }
+		  
+		  if(pars::meslep_QCD_on_the_left)
+		    {
+		      const O4f_t ZQCDinv=ZQCD.inverse();
+		      
+		      const O4f_t
+			A=ZQCDinv*UQCDinv*UQED2*ZQCD,
+			B=ZQCDinv*UQCDinv*UQED1*ZQCD;
+		      
+		      for(size_t iop1=0;iop1<nbil;iop1++)
+			for(size_t iop2=0;iop2<nbil;iop2++)
+			  {
+			    const size_t im_r_im_r_iop_iproj_imeslepmom=
+			      im_r_im_r_iop_iproj_imeslepmom_ind({im_1,r_1,im_2,r_2,iop1,iop2,imeslep_mom});
+			    
+			    out.Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom][ijack]=
+			      eta(iop1,iop2)+al0*A(iop1,iop2)+B(iop1,iop2)
+			      -UQED1(iop1,iop2);
+			  }
+		    }
+		  else
+		    {
+		      const O4f_t
+			A=UQCD*eta*UQCDinv,
+			B=UQED2*UQCDinv,
+			C=UQCD*ZQEDan*UQCDinv,
+			D=UQED1*UQCDinv;
+		      
+		      // eta_NEW_4f
+		      for(size_t iop1=0;iop1<nbil;iop1++)
+			for(size_t iop2=0;iop2<nbil;iop2++)
+			  {
+			    const size_t im_r_im_r_iop_iproj_imeslepmom=
+			      im_r_im_r_iop_iproj_imeslepmom_ind({im_1,r_1,im_2,r_2,iop1,iop2,imeslep_mom});
+			    
+			    out.Zmeslep_QED_rel[im_r_im_r_iop_iproj_imeslepmom][ijack]=
+			      A(iop1,iop2)+al0*B(iop1,iop2)+C(iop1,iop2)+
+			      D(iop1,iop2)-ZQEDan(iop1,iop2)-UQED1(iop1,iop2);
+			  }
+		    }
+		}
     }
 }
 

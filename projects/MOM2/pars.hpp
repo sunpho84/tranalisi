@@ -12,6 +12,9 @@
 
 #include <MOM2/types.hpp>
 
+const int Nc=3;
+const double CF=(Nc*Nc-1.0)/(2.0*Nc);
+
 namespace gaz
 {
   enum type_t{PLAQ,TLSYM,IWA};

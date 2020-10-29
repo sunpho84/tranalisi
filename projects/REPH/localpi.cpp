@@ -299,6 +299,11 @@ int main()
 	};
       
       ens.aM=fit(eff_mass,"eff_mass");
+      const dboot_t Z2=fit(effective_squared_coupling(P5P5_00,eff_mass,ens.T/2),"Z2");
+      const dboot_t f=2.0*sqrt(Z2)*ens.am/sqr(ens.aM);
+      ofstream out_f(ens.name+"/f.txt");
+      out_f<<f.ave_err()<<endl;
+      
       ens.daM=fit(eff_slope_LL,"eff_slope_LL");
       ens.daMHandcuffs=fit(eff_slope_handcuffs,"eff_slope_handcuffs");
       
