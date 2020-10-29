@@ -162,6 +162,7 @@ vector<perens_t::task_t> perens_t::get_sigma_tasks(const vector<const perens_t*>
 
 perens_t& perens_t::compute_sigmas()
 {
+  cout<<"Computing sigmas"<<endl;
   //! list of all combination of transformations to be applied
   vector<pair<size_t,size_t>> map;
   
