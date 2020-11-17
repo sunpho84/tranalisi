@@ -336,7 +336,7 @@ struct perens_t
     const djvec_t ratioSPars=poly_fit(amq,ratioS,2,amq[1]*0.9);
     ratioSPlot.write_polygon([ratioSPars](const double x){return poly_eval(ratioSPars,x);},amq[1]*0.9,amq[nq-1]*1.1,grace::GREEN4);
     const djack_t amsQuad=parab_solve(ratioSPars,ratioSExp,false);
-    cout<<"ams(quad): "<<amsQuad.ave_err()<<endl;
+    cout<<"ams(quad) "<<name<<": "<<amsQuad.ave_err()<<endl;
     
     // /// Fit the ratioS at all ms with a first order polynomial
     // const djvec_t ratioSLin3Pars=poly_fit(amq,ratioS,1,amq[1]*0.9);
@@ -662,6 +662,7 @@ int main()
 	    {
 	      jack_fit_t combo_fit;
 	      djvec_t combo_pars(nb+3);
+	      //djvec_t combo_pars(nb*2);
 	      for(size_t i=0;i<nb;i++)
 		combo_fit.add_fit_par(combo_pars[i],string("P")+to_string(i),1,0.01);
 	      combo_fit.add_fit_par(combo_pars[nb],"slope",0.1,0.01);
@@ -669,6 +670,10 @@ int main()
 	      combo_fit.add_fit_par(combo_pars[nb+2],"curvature",0.0,0.01);
 	      if(not WithCurvature)
 		combo_fit.fix_par(nb+2);
+		// {
+		//   combo_fit.add_fit_par(combo_pars[2*i+0],string("P")+to_string(i),1,0.01);
+		//   combo_fit.add_fit_par(combo_pars[2*i+1],string("Q")+to_string(i),1,0.01);
+		// }
 	      
 	      for(size_t iens=0;iens<nEnsTot;iens++)
 		{
@@ -681,6 +686,7 @@ int main()
 					       const double slope=slope_a0+slope_a2/sqr(w0_fr_a[ijack]);
 					       
 					       return p[ib]*(1+r[ijack]*slope+r[ijack]*r[ijack]*curvature);
+					       //return p[2*ib+0]+p[2*ib+1]*r[ijack];
 					     });
 		}
 	      combo_fit.fit();
@@ -700,6 +706,7 @@ int main()
 		    CRASH("No ensembleLoop found for beta %zu",ib);
 		  
 		  plot.write_polygon([&combo_pars,last_of_this_beta,ib](const double& x)->djack_t
+		  //plot.write_polygon([&combo_pars,ib](const double& x)->djack_t
 					 {
 					   const djack_t& slope_a0=combo_pars[nb];
 					   const djack_t& slope_a2=combo_pars[nb+1];
@@ -707,6 +714,7 @@ int main()
 					   const djack_t slope=slope_a0+slope_a2/sqr(last_of_this_beta->w0_fr_a);
 					   
 					   return combo_pars[ib]*(1+x*slope+x*x*curvature);
+					   //return combo_pars[2*ib+0]+combo_pars[2*ib+1]*x;
 					 },0,0.060,colors[ib]);
 		  plot.new_data_set();
 		  plot.set_no_line();
@@ -723,6 +731,7 @@ int main()
 		    }
 		  
 		  physPerBeta[ib]=combo_pars[ib]*(1+ratioLExp*combo_pars[nb]+ratioLExp*ratioLExp*combo_pars[nb+2]);
+		  //physPerBeta[ib]=combo_pars[2*ib+0]+ratioLExp*combo_pars[2*ib+1];
 		  plot.write_ave_err(ratioLExp,physPerBeta[ib].ave_err());
 		  cout<<Qname<<"["<<ib<<"] "<<physPerBeta[ib].ave_err()<<endl;
 		}
