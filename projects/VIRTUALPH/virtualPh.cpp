@@ -356,7 +356,7 @@ djvec_t load3ptsHA(const size_t icomb,const size_t isl)
   const djvec_t a11=load3pts(HA,icomb,isl,1,1);
   const djvec_t a22=load3pts(HA,icomb,isl,2,2);
   
-  return (a11+a22)/2.0;
+  return (a11+a22);
 }
 
 djvec_t load3ptsHV(const size_t icomb,const size_t isl)
@@ -364,12 +364,12 @@ djvec_t load3ptsHV(const size_t icomb,const size_t isl)
   const djvec_t a12=load3pts(HV,icomb,isl,1,2);
   const djvec_t a21=load3pts(HV,icomb,isl,2,1);
   
-  return (a21-a12)/2;
+  return (a21-a12);
 }
 
 int main()
 {
-  set_njacks(15);
+  set_njacks(1);
   
   threePts=readData();
   const auto twoPts=readData2();
@@ -378,7 +378,7 @@ int main()
   
   enum{PP,PA0,PA1,PA2,PA3};
   const int is=0,il=1; //index to be fetched from inv list
-  const int tmin=20,tmax=25;
+  const int tmin=15,tmax=28;
   djvec_t mP(f.nqsml),ZP(f.nqsml);
   for(size_t isl=0;isl<(size_t)f.nqsml;isl++)
     {
@@ -390,6 +390,7 @@ int main()
       if(isl==0) ZP[isl]=sqrt(Z);
       else ZP[isl]=Z/ZP[0];
       cout<<"mP["<<isl<<"]: "<<mP[isl].ave_err()<<endl;
+      cout<<"Z["<<isl<<"]: "<<ZP[isl].ave_err()<<endl;
     }
   
   djvec_t norm[2];
@@ -397,19 +398,19 @@ int main()
     {
       norm[isl]=djvec_t(T/2+1);
       for(int it=0;it<=T/2;it++)
-	norm[isl][it]=ZP[isl]*exp(-mP[isl]*it)/(2*mP[isl]);
+	norm[isl][it]=ZP[isl]*exp(-mP[isl]*it)/(4*mP[isl]*mP[isl]);//the second M is in some
     }
   
-  for(size_t i=0;i<index3pts.max();i++)
-    {
-      const size_t isl=index3pts(i)[2];
+  // for(size_t i=0;i<index3pts.max();i++)
+  //   {
+  //     const size_t isl=index3pts(i)[2];
       
-      threePts[i].ave_err().write(combine("plots/threeptsRaw/%s.xmg",index3pts.descr(i).c_str()));
-      const djvec_t tsymm=threePts[i].symmetrized(+1)/norm[isl];
-      const djvec_t tasymm=threePts[i].symmetrized(-1)/norm[isl];
-      tasymm.ave_err().write(combine("plots/threeptsRaw/antisymm_%s.xmg",index3pts.descr(i).c_str()));
-      tsymm.ave_err().write(combine("plots/threeptsRaw/symm_%s.xmg",index3pts.descr(i).c_str()));
-    }
+  //     threePts[i].ave_err().write(combine("plots/threeptsRaw/%s.xmg",index3pts.descr(i).c_str()));
+  //     const djvec_t tsymm=threePts[i].symmetrized(+1)/norm[isl];
+  //     const djvec_t tasymm=threePts[i].symmetrized(-1)/norm[isl];
+  //     tasymm.ave_err().write(combine("plots/threeptsRaw/antisymm_%s.xmg",index3pts.descr(i).c_str()));
+  //     tsymm.ave_err().write(combine("plots/threeptsRaw/symm_%s.xmg",index3pts.descr(i).c_str()));
+  //   }
   
   // for(size_t hAV=0;hAV<2;hAV++)
   //   for(size_t icomb=0;icomb<(size_t)f.ncomb;icomb++)
@@ -478,7 +479,7 @@ int main()
   grace_file_t rV_plot("plots/rV.xmg");
   grace_file_t rVbis_plot("plots/rVbis.xmg");
   
-  for(size_t isl=1;isl<(size_t)f.nqsml;isl++)
+  for(size_t isl=0;isl<(size_t)f.nqsml;isl++)
     {
       const double eT=+2.0/3;
       const double eS=-1.0/3;
@@ -574,15 +575,17 @@ int main()
       // // cout<<"Xg: "<<smart_print(xG)<<endl;
       // r.ave_err().write(combine("plots/threePts_sml%zu.xmg",isl));
       
-      // for(auto& p : {&a0_plot,&a0_insS_plot,&a0_insT_plot,
-      // 		       &a1_plot,&a1_insS_plot,&a1_insT_plot,
-      // 		       &a0_plot,&a0_insS_plot,&a0_insT_plot,
-      // 		       &v1_plot,&v1_insS_plot,&v1_insT_plot,
-      // 		       &rA_plot})
-      // 	{
-      // 	  p->set_legend((isl==0)?"NOT SMEARED":"SMEARED");
-      // 	  p->set_all_colors((isl==0)?grace::RED:grace::BLUE);
-      // 	}
+      for(auto& p : {  &a0_plot,&a0_insS_plot,&a0_insT_plot,
+      		       &a1_plot,&a1_insS_plot,&a1_insT_plot,
+      		       &a10_plot,&a10_insS_plot,&a10_insT_plot,
+      		       &v0_plot,&v0_insS_plot,&v0_insT_plot,
+      		       &v1_plot,&v1_insS_plot,&v1_insT_plot,
+      		       &v10_plot,&v10_insS_plot,&v10_insT_plot,
+      		       &rA_plot})
+      	{
+      	  p->set_legend((isl==0)?"NOT SMEARED":"SMEARED");
+      	  p->set_all_colors((isl==0)?grace::RED:grace::BLUE);
+      	}
     }
   
   // for(size_t icombo=0;icombo<(size_t)f.ncomb;icombo++)

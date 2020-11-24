@@ -17,11 +17,3 @@ __top_builddir__bin_reph_SOURCES= \
 
 __top_builddir__bin_reph_convert_SOURCES= \
 	%D%/reph_convert.cpp
-
-#######################################
-
-bin_PROGRAMS+= \
-        $(top_builddir)/bin/virtualPh
-
-__top_builddir__bin_virtualPh_SOURCES= \
-	%D%/virtualPh.cpp
