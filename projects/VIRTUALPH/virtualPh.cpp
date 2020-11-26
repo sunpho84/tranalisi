@@ -44,6 +44,12 @@ int main()
   //   twoPts[index2pts(PP,is,il,1/*with*/,0)].symmetrized()/twoPts[index2pts(PP,is,il,0/*without*/,0)].symmetrized();
   // with_without_sme_ratio.ave_err().write("plots/with_without_PP.xmg");
   
+  cout<<"m1: "<<ens.mu1<<" , q1: "<<q1<<endl;
+  cout<<"m2: "<<ens.mu2<<" , q2: "<<q2<<endl;
+  
+  const djack_t aFp=(ens.mu1+ens.mu2)*ens.ZPloc/sqr(ens.mP);
+  cout<<"a*fP: "<<aFp.ave_err()<<endl;
+  
   auto g=[&ens](const size_t iAV,const size_t iX) -> djvec_t
 	 {
 	   return
@@ -62,10 +68,17 @@ int main()
       const djvec_t RA=g(HA,iX)/g(HA,0)-1.0;
       const djvec_t RV=g(HV,iX)/g(HA,0);
       
+      for(size_t iIns=0;iIns<2;iIns++)
+	for(size_t iAV=0;iAV<2;iAV++)
+	  {
+	    const djvec_t e=ens.c3[ens.iC3({iIns,iAV,iX})]/ens.norm;
+	    const djack_t y=constant_fit(e,18,23,combine("plots/%s_ins%zu_x%zu.xmg",((iIns==HA)?"A":"V"),iAV,iX));
+	  }
+      
       Rtot[HA][iX]=constant_fit(RA,18,23,combine("plots/A%zu.xmg",iX));
       Rtot[HV][iX]=constant_fit(RV,18,23,combine("plots/V%zu.xmg",iX));
       
-      fA[iX]=Rtot[HA][iX]/ens.xG[iX];
+      fA[iX]=aFp*Rtot[HA][iX]/ens.xG[iX];
       fV[iX]=Rtot[HV][iX]/ens.kZ[iX];
     }
   
