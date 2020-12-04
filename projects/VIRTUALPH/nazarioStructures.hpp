@@ -320,7 +320,7 @@ struct nazarioReader
 	out[it]/=exp(arg);
       }
     
-    return out.symmetrized((hAV==0)?+1:-1);
+    return out.symmetrized((hAV==HV)?-1:+1);
   }
   
   /// Momentum of the photon for a given combination of theta
