@@ -1,5 +1,13 @@
 ACLOCAL_AMFLAGS=-I m4
 
+%D%/git_info.hpp: $(top_srcdir)/.git/HEAD $(top_srcdir)/.git/index $(top_srcdir)/config/get_git_info.sh Makefile
+	@echo "Reading git version"
+	@$(top_srcdir)/config/get_git_info.sh $(top_srcdir) > $@
+$(top_srcdir)/.git/HEAD:
+$(top_srcdir)/.git/index:
+
+
+BUILT_SOURCES=%D%/git_info.hpp
 lib_LIBRARIES=libtran.a
 
 libtran_a_SOURCES= \
@@ -19,3 +27,6 @@ libtran_a_SOURCES= \
 	solve.cpp \
 	systematics.cpp \
 	tools.cpp
+
+include_HEADERS= \
+	%D%/git_info.hpp
