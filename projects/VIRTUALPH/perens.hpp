@@ -5,7 +5,8 @@
 
 #include "nazarioStructures.hpp"
 
-constexpr size_t SMEARED=0;
+size_t useSmeared;
+const string compile_time=__TIME__;
 
 /// Holds all data for a given ensemble
 struct perens_t
@@ -78,6 +79,15 @@ struct perens_t
   void readIngredients()
   {
     raw_file_t ingredientsFile(ingredientsPath,"r");
+    string read_compile_time;
+    ingredientsFile.bin_read(read_compile_time);
+    if(read_compile_time!=compile_time)
+      CRASH("Read compile time \"%s\" not agreeing with current one \"%s\"",read_compile_time.c_str(),compile_time.c_str());
+    
+    size_t read_nJacks;
+    ingredientsFile.bin_read(read_nJacks);
+    if(read_nJacks!=njacks)
+      CRASH("Read njacks %zu not agreeing with current one %zu",read_nJacks,njacks);
     
     ingredientsFile.bin_read(T);
     
@@ -107,6 +117,10 @@ struct perens_t
   void writeIngredients()
   {
     raw_file_t ingredientsFile(ingredientsPath,"w");
+    
+    ingredientsFile.bin_write(compile_time);
+    
+    ingredientsFile.bin_write(njacks);
     
     ingredientsFile.bin_write(T);
     
@@ -185,20 +199,20 @@ struct perens_t
 	
 	for(size_t iIns=0;iIns<2;iIns++)
 	  {
-	    const djvec_t a11=n.get3pts(HA,iComb[iIns],SMEARED,1,1);
-	    const djvec_t a22=n.get3pts(HA,iComb[iIns],SMEARED,2,2);
+	    const djvec_t a11=n.get3pts(HA,iComb[iIns],useSmeared,1,1);
+	    const djvec_t a22=n.get3pts(HA,iComb[iIns],useSmeared,2,2);
 	    
 	    c3[iC3({iIns,HA,iX})]=(a11+a22);
-	    c3[iC3({iIns,HA,iX})].ave_err().write(combine("plots/temp_a_iX%zu_iIns%zu.xmg",iX,iIns));
+	    // c3[iC3({iIns,HA,iX})].ave_err().write(combine("plots/temp_a_iX%zu_iIns%zu.xmg",iX,iIns));
 	    
-	    const djvec_t v12=n.get3pts(HV,iComb[iIns],SMEARED,1,2);
-	    const djvec_t v21=n.get3pts(HV,iComb[iIns],SMEARED,2,1);
+	    const djvec_t v12=n.get3pts(HV,iComb[iIns],useSmeared,1,2);
+	    const djvec_t v21=n.get3pts(HV,iComb[iIns],useSmeared,2,1);
 	    
 	    // v12.ave_err().write(combine("plots/temp_v12_icorr1_iX%zu_iIns%zu.xmg",iX,iIns));
 	    // v21.ave_err().write(combine("plots/temp_v21_icorr1_iX%zu_iIns%zu.xmg",iX,iIns));
 	    
 	    c3[iC3({iIns,HV,iX})]=-(v21-v12);
-	    c3[iC3({iIns,HV,iX})].ave_err().write(combine("plots/temp_v_iX%zu_iIns%zu.xmg",iX,iIns));
+	    // c3[iC3({iIns,HV,iX})].ave_err().write(combine("plots/temp_v_iX%zu_iIns%zu.xmg",iX,iIns));
 	  }
       }
   }
@@ -226,7 +240,7 @@ struct perens_t
       {
 	const djvec_t& c=c2[iSmeLev];
 	
-	c.ave_err().write(combine("plots/raw_PP_ll_sm%zu.xmg",iSmeLev));
+	// c.ave_err().write(combine("plots/raw_PP_ll_sm%zu.xmg",iSmeLev));
 	
 	two_pts_fit(Z2[iSmeLev],M[iSmeLev],c,T/2,tmin,tmax,combine("plots/PP_ll_sm%zu.xmg",iSmeLev));
       }

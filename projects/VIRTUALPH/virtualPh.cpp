@@ -6,7 +6,16 @@ constexpr int q1=2,q2=-1;
 
 int main()
 {
-  set_njacks(15);
+  raw_file_t input("analysis.txt","r");
+  
+  set_njacks(input.read<size_t>("NJacks"));
+  
+  useSmeared=input.read<size_t>("Smeared");
+  const size_t subtract=input.read<size_t>("Subtract");
+  const size_t tMinA=input.read<size_t>("TIntsA");
+  const size_t tMaxA=input.read<size_t>();
+  const size_t tMinV=input.read<size_t>("TIntsV");
+  const size_t tMaxV=input.read<size_t>();
   
   perens_t ens;
   
@@ -35,24 +44,30 @@ int main()
       cout<<"X["<<iX<<"]: "<<ens.xG[iX].ave_err()<<" , Eg: "<<ens.eG[iX]<<endl;
       
       const djvec_t RA=g(HA,iX)/g(HA,0)-1.0;
-      const djvec_t RV=(g(HV,iX)-g(HV,0))/g(HA,0);
+      const djvec_t RV=(g(HV,iX)-g(HV,0)*subtract)/g(HA,0);
       
-      g(HA,iX).ave_err().write(combine("plots/Arec_x%zu.xmg",iX));
-      g(HV,iX).ave_err().write(combine("plots/Vrec_x%zu.xmg",iX));
+      g(HA,iX).ave_err().write(combine("plots/C_A_x%zu.xmg",iX));
+      g(HV,iX).ave_err().write(combine("plots/C_V_x%zu.xmg",iX));
       
-      for(size_t iIns=0;iIns<2;iIns++)
-	ens.c3[ens.iC3({iIns,HV,iX})].ave_err().write(combine("plots/Vrec_x%zu_ins%zu.xmg",iX,iIns));
+      // for(size_t iIns=0;iIns<2;iIns++)
+      // 	ens.c3[ens.iC3({iIns,HV,iX})].ave_err().write(combine("plots/Vrec_x%zu_ins%zu.xmg",iX,iIns));
       
       djack_t y[2][2];
       for(size_t iIns=0;iIns<2;iIns++)
 	for(size_t iAV=0;iAV<2;iAV++)
 	  {
 	    const djvec_t e=ens.c3[ens.iC3({iIns,iAV,iX})]/ens.norm;
-	    y[iIns][iAV]=constant_fit(e,10,15,combine("plots/%s_ins%zu_x%zu.xmg",((iAV==HA)?"A":"V"),iIns,iX));
+	    y[iIns][iAV]=constant_fit(e,16,20,combine("plots/H_%s_ins%zu_x%zu.xmg",((iAV==HA)?"A":"V"),iIns,iX));
 	  }
       
-      Rtot[HA][iX]=constant_fit(RA,16,20,combine("plots/A%zu.xmg",iX));
-      Rtot[HV][iX]=constant_fit(RV,18,23,combine("plots/V%zu.xmg",iX));
+      for(size_t iAV=0;iAV<2;iAV++)
+	{
+	  const djvec_t e=g(HA,iX)/ens.norm;
+	  constant_fit(e,16,20,combine("plots/H_%s_x%zu.xmg",((iAV==HA)?"A":"V"),iX));
+	}
+      
+      Rtot[HA][iX]=constant_fit(RA,tMinA,tMaxA,combine("plots/R_A_x%zu.xmg",iX));
+      Rtot[HV][iX]=constant_fit(RV,tMinV,tMaxV,combine("plots/R_V_x%zu.xmg",iX));
       
       fA[iX]=2*aFp*Rtot[HA][iX]/(ens.mP*ens.xG[iX]);
       fV[iX]=aFp*Rtot[HV][iX]/ens.kZ[iX];
