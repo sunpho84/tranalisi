@@ -96,6 +96,8 @@ struct data2_t
 /// Structure to read Nazario data
 struct nazarioReader
 {
+  const string path;
+  
   int tmax;
   int x0;
   int stype;
@@ -200,7 +202,7 @@ struct nazarioReader
   /// Read three pts
   vector<djvec_t> readData()
   {
-    raw_file_t fin("data/conf.virtualph.dat","r");
+    raw_file_t fin(path+"/data/conf.virtualph.dat","r");
     readHeader(fin);
     
     const int ncorrs=2;
@@ -261,7 +263,7 @@ struct nazarioReader
   /// Read two points
   vector<djvec_t> readData2()
   {
-    raw_file_t fin("data/conf.virtualph.dat2","r");
+    raw_file_t fin(path+"/data/conf.virtualph.dat2","r");
     readHeader(fin);
     
     const int ncorrs=5;
@@ -351,7 +353,7 @@ struct nazarioReader
     return 2*asinh(fabs(kHatDec)/2);
   }
   
-  nazarioReader(const size_t L) : L(L)
+  nazarioReader(const string path,const size_t L) : path(path),L(L)
   {
     threePts=readData();
     twoPts=readData2();

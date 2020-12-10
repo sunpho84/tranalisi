@@ -3,6 +3,8 @@
 
 #include <tranalisi.hpp>
 
+#include "global.hpp"
+
 #include "nazarioStructures.hpp"
 
 size_t useSmeared;
@@ -11,9 +13,17 @@ const string compile_time=__TIME__;
 /// Holds all data for a given ensemble
 struct perens_t
 {
+  /// Name of the enesemble
+  const string name;
+  
+  /// Returns the string needed for the plots path
+  const string plotsPath;
+  
+  /// Name of ingredients file
   static constexpr char ingredientsPath[]="ingredients.dat";
   
-  static constexpr size_t nSmeLev=2;
+  /// Number of smearing levels
+  size_t nSmLev;
   
   /// Temporal size
   size_t T;
@@ -27,11 +37,8 @@ struct perens_t
   /// Mass
   djack_t mP;
   
-  /// Coupling of the local operator
-  djack_t ZPloc;
-  
-  /// Coupling pf the smeared operator
-  djack_t ZPsme;
+  /// Coupling of the operator
+  vector<djack_t> ZP;
   
   /// Three points
   vector<djvec_t> c3;
@@ -39,14 +46,20 @@ struct perens_t
   /// Index to access three point functions
   index_t iC3;
   
-  /// Number of different kinetic conditions
-  size_t nX;
-  
   /// Value of k
   vector<double> kZ;
   
   /// Value of E
   vector<double> eG;
+  
+  /// Minimal and maximal ranges for PP
+  size_t tMinPP,tMaxPP;
+  
+  /// Minimal and maximal ranges for A
+  vector<size_t> tMinA,tMaxA;
+  
+  /// Minimal and maximal range for V
+  vector<size_t> tMinV,tMaxV;
   
   /// Compute EgT
   double EgT(const size_t iX) const
@@ -61,10 +74,10 @@ struct perens_t
   djvec_t norm;
   
   /// Inserted, forward mass
-  const double mu1;
+  double mu1;
   
   /// Spectator, backward
-  const double mu2;
+  double mu2;
   
   /// Enumberates the 2pts type
   enum{PP,PA0,PA1,PA2,PA3};
@@ -76,23 +89,28 @@ struct perens_t
     iC3.set_ranges({{"Ins",2},{"AV",2},{"X",nX}});
   }
   
+  /// Read ingredients
   void readIngredients()
   {
-    raw_file_t ingredientsFile(ingredientsPath,"r");
-    string read_compile_time;
-    ingredientsFile.bin_read(read_compile_time);
+    raw_file_t ingredientsFile(name+"/"+ingredientsPath,"r");
+    const string read_compile_time=ingredientsFile.bin_read<string>();
     if(read_compile_time!=compile_time)
       CRASH("Read compile time \"%s\" not agreeing with current one \"%s\"",read_compile_time.c_str(),compile_time.c_str());
     
-    size_t read_nJacks;
-    ingredientsFile.bin_read(read_nJacks);
+    const size_t read_nJacks=ingredientsFile.bin_read<size_t>();
     if(read_nJacks!=njacks)
       CRASH("Read njacks %zu not agreeing with current one %zu",read_nJacks,njacks);
     
-    ingredientsFile.bin_read(T);
+    const size_t read_useSmeared=ingredientsFile.bin_read<size_t>();
+    if(useSmeared!=read_useSmeared)
+      CRASH("Read useSmeared %zu not agreeing with current one %zu",read_useSmeared,useSmeared);
     
-    for(size_t iSmeLev=0;iSmeLev<2;iSmeLev++)
-      c2[iSmeLev]=djvec_t(T/2+1);
+    ingredientsFile.bin_read(T);
+    ingredientsFile.bin_read(nSmLev);
+    cout<<nSmLev<<endl;
+    
+    c2.resize(nSmLev,djvec_t(T/2+1));
+    ZP.resize(nSmLev);
     
     ingredientsFile.bin_read(c2);
     
@@ -116,13 +134,17 @@ struct perens_t
   
   void writeIngredients()
   {
-    raw_file_t ingredientsFile(ingredientsPath,"w");
+    raw_file_t ingredientsFile(name+"/"+ingredientsPath,"w");
     
     ingredientsFile.bin_write(compile_time);
     
     ingredientsFile.bin_write(njacks);
     
+    ingredientsFile.bin_write(useSmeared);
+    
     ingredientsFile.bin_write(T);
+    
+    ingredientsFile.bin_write(nSmLev);
     
     ingredientsFile.bin_write(c2);
     
@@ -139,9 +161,12 @@ struct perens_t
   void readRaw()
   {
     /// Initialize the reaer
-    nazarioReader n(L);
+    nazarioReader n(name,L);
     
     T=n.tmax;
+    nSmLev=n.nqsml;
+    ZP.resize(nSmLev);
+    c2.resize(nSmLev);
     
     // for(size_t icorr=0;icorr<2;icorr++)
     //   for(size_t icomb=0;icomb<(size_t)n.ncomb;icomb++)
@@ -155,13 +180,13 @@ struct perens_t
     // 	    const djvec_t c=-(a+b)/sqrt(2);
     // 	    const djvec_t d=(a-b)/sqrt(2);
 	    
-    // 	    // a.ave_err().write(combine("plots/temp_icorr%zu_icomb%zu_mu%zu_alpha%zu_for_pol.xmg",icorr,icomb,1,alpha));
-    // 	    // b.ave_err().write(combine("plots/temp_icorr%zu_icomb%zu_mu%zu_alpha%zu_for_pol.xmg",icorr,icomb,2,alpha));
-    // 	    c.ave_err().write(combine("plots/temp_icorr%zu_icomb%zu_alpha%zu_pol1.xmg",icorr,icomb,alpha));
-    // 	    d.ave_err().write(combine("plots/temp_icorr%zu_icomb%zu_alpha%zu_pol2.xmg",icorr,icomb,alpha));
+    // 	    // a.ave_err().write(combine(plotsPath+"temp_icorr%zu_icomb%zu_mu%zu_alpha%zu_for_pol.xmg",icorr,icomb,1,alpha));
+    // 	    // b.ave_err().write(combine(plotsPath+"temp_icorr%zu_icomb%zu_mu%zu_alpha%zu_for_pol.xmg",icorr,icomb,2,alpha));
+    // 	    c.ave_err().write(combine(plotsPath+"temp_icorr%zu_icomb%zu_alpha%zu_pol1.xmg",icorr,icomb,alpha));
+    // 	    d.ave_err().write(combine(plotsPath+"temp_icorr%zu_icomb%zu_alpha%zu_pol2.xmg",icorr,icomb,alpha));
     // 	  }
     
-    for(size_t iSmeLev=0;iSmeLev<nSmeLev;iSmeLev++)
+    for(size_t iSmeLev=0;iSmeLev<nSmLev;iSmeLev++)
       c2[iSmeLev]=n.twoPts[iSmeLev].symmetrized();
     
     /// Pairs of combinations which corresponds to a given X
@@ -178,8 +203,10 @@ struct perens_t
 	  combOfX.push_back({iComb,iOppComb});
       }
     
-    nX=combOfX.size();
-    cout<<"Number of X: "<<nX<<endl;
+    /// Number of nX computed
+    const size_t computedNx=combOfX.size();
+    if(computedNx!=nX)
+      CRASH("Expected %zu nX, obtained %zu",nX,computedNx);
     
     // for(size_t iIndepComb=0;iIndepComb<nIndepCombo;iIndepComb++)
     //   cout<<iIndepComb<<" "<<combOfIndepComb[iIndepComb].first<<" "<<combOfIndepComb[iIndepComb].second<<endl;
@@ -203,24 +230,23 @@ struct perens_t
 	    const djvec_t a22=n.get3pts(HA,iComb[iIns],useSmeared,2,2);
 	    
 	    c3[iC3({iIns,HA,iX})]=(a11+a22);
-	    // c3[iC3({iIns,HA,iX})].ave_err().write(combine("plots/temp_a_iX%zu_iIns%zu.xmg",iX,iIns));
+	    // c3[iC3({iIns,HA,iX})].ave_err().write(combine(plotsPath+"temp_a_iX%zu_iIns%zu.xmg",iX,iIns));
 	    
 	    const djvec_t v12=n.get3pts(HV,iComb[iIns],useSmeared,1,2);
 	    const djvec_t v21=n.get3pts(HV,iComb[iIns],useSmeared,2,1);
 	    
-	    // v12.ave_err().write(combine("plots/temp_v12_icorr1_iX%zu_iIns%zu.xmg",iX,iIns));
-	    // v21.ave_err().write(combine("plots/temp_v21_icorr1_iX%zu_iIns%zu.xmg",iX,iIns));
+	    // v12.ave_err().write(combine(plotsPath+"temp_v12_icorr1_iX%zu_iIns%zu.xmg",iX,iIns));
+	    // v21.ave_err().write(combine(plotsPath+"temp_v21_icorr1_iX%zu_iIns%zu.xmg",iX,iIns));
 	    
 	    c3[iC3({iIns,HV,iX})]=-(v21-v12);
-	    // c3[iC3({iIns,HV,iX})].ave_err().write(combine("plots/temp_v_iX%zu_iIns%zu.xmg",iX,iIns));
+	    // c3[iC3({iIns,HV,iX})].ave_err().write(combine(plotsPath+"temp_v_iX%zu_iIns%zu.xmg",iX,iIns));
 	  }
       }
   }
   
-  void read()
+  /// Read the ingredients or compute from raw
+  void readOrComputeIngredients()
   {
-    c2.resize(2);
-    
     if(file_exists(ingredientsPath))
       readIngredients();
     else
@@ -230,40 +256,73 @@ struct perens_t
       }
   }
   
+  /// Read all parameters
+  void readPars()
+  {
+    raw_file_t input(name+"/pars.txt","r");
+    
+    L=input.read<size_t>("L");
+    mu1=input.read<double>("mu1");
+    mu2=input.read<double>("mu2");
+    
+    input.expect("TIntsPP");
+    tMinPP=input.read<size_t>();
+    tMaxPP=input.read<size_t>();
+    
+    input.expect("TIntsA");
+    tMinA.resize(nX);
+    tMaxA.resize(nX);
+    for(size_t iX=0;iX<nX;iX++)
+      {
+	input.expect(combine("%zu",iX).c_str());
+	tMinA[iX]=input.read<size_t>();
+	tMaxA[iX]=input.read<size_t>();
+      }
+    
+    input.expect("TIntsV");
+    tMinV.resize(nX);
+    tMaxV.resize(nX);
+    for(size_t iX=0;iX<nX;iX++)
+      {
+	input.expect(combine("%zu",iX).c_str());
+	tMinV[iX]=input.read<size_t>();
+	tMaxV[iX]=input.read<size_t>();
+      }
+  }
+  
   /// Fit PP correlation functions
   void fitPP()
   {
-    const size_t tmin=14,tmax=27; //hack
-    
-    djvec_t M(2),Z2(2);
-    for(size_t iSmeLev=0;iSmeLev<2;iSmeLev++)
+    djvec_t M(nSmLev),Z2(nSmLev);
+    for(size_t iSmeLev=0;iSmeLev<nSmLev;iSmeLev++)
       {
 	const djvec_t& c=c2[iSmeLev];
 	
-	// c.ave_err().write(combine("plots/raw_PP_ll_sm%zu.xmg",iSmeLev));
+	// c.ave_err().write(combine(plotsPath+"raw_PP_ll_sm%zu.xmg",iSmeLev));
 	
-	two_pts_fit(Z2[iSmeLev],M[iSmeLev],c,T/2,tmin,tmax,combine("plots/PP_ll_sm%zu.xmg",iSmeLev));
+	two_pts_fit(Z2[iSmeLev],M[iSmeLev],c,T/2,tMinPP,tMaxPP,plotsPath+combine("PP_ll_sm%zu.xmg",iSmeLev));
       }
     
-    mP=M[1];
-    ZPloc=sqrt(Z2[0]);
-    ZPsme=Z2[1]/ZPloc;
+    mP=M[0];
+    ZP[0]=sqrt(Z2[0]);
+    for(size_t iSmLev=0;iSmLev<nSmLev;iSmLev++)
+      ZP[iSmLev]=Z2[iSmLev]/ZP[0];
     
     cout<<"mP: "<<mP.ave_err()<<endl;
-    cout<<"Z: "<<ZPloc.ave_err()<<endl;
+    cout<<"Z: "<<ZP[0].ave_err()<<endl;
   }
   
-  perens_t() : mu1(0.27903),mu2(0.02363) //hack
+  perens_t(const string name) : name(name),plotsPath(name+"/plots/")
   {
-    L=32; //hack
+    readPars();
     
-    read();
+    readOrComputeIngredients();
     
     fitPP();
     
     norm=djvec_t(T/2+1);
     for(size_t it=0;it<=T/2;it++)
-      norm[it]=ZPsme*exp(-mP*it)/(4*mP*mP);
+      norm[it]=ZP[useSmeared]*exp(-mP*it)/(4*mP*mP);
     
     xG.resize(nX);
     
