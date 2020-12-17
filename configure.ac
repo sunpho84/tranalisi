@@ -42,7 +42,7 @@ AC_LANG([C++])
 AC_PROG_YACC
 AM_PROG_LEX
 
-AX_CXX_COMPILE_STDCXX(14,noext,mandatory)
+AX_CXX_COMPILE_STDCXX(17,noext,mandatory)
 AX_CXXFLAGS_WARN_ALL
 
 #check openmp
