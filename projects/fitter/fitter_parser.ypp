@@ -1,10 +1,10 @@
 %define api.pure
- //%locations
+%locations
 %defines
 %define parse.lac full
 %define parse.error verbose
 %parse-param {void *v}
-//%lex-param {void *scanner}
+%lex-param {void *scanner}
 
 %{
 
@@ -21,16 +21,16 @@
 
   const int debug_parser=0;
 
-  /* /// opaque flex object */
-  /* extern void *scanner; */
-  
-/*   int fitter_parser_lex(); */
-/* #define fitter_parser_lex fitter_tokenizer_parse */
+  int fitter_tokenizer_lex(YYSTYPE *lvalp,YYLTYPE *llocp,void *scanner);
+#define fitter_parser_lex fitter_tokenizer_lex
 
-  /* void fitter_parser_error(YYLTYPE *locp,void *v,const char *err) */
-  /* { */
-  /*     CRASH("exception at line %d columns [%d-%d] %s",locp->first_line,locp->first_column,locp->last_column,err); */
-  /* } */
+/// opaque flex object
+extern void *scanner;
+  
+  void fitter_parser_error(YYLTYPE *locp,void *v,const char *err)
+  {
+      CRASH("exception at line %d columns [%d-%d] %s",locp->first_line,locp->first_column,locp->last_column,err);
+  }
   
 %}
 

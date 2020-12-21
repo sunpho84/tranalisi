@@ -3,6 +3,7 @@
 %option noyywrap
 %option reentrant
 %option bison-bridge
+%option bison-locations
 
  /* define status to avoid c++ comment */
 %x COMMENT
@@ -35,10 +36,11 @@ using namespace std;
 
 #define DEBUG_PRINTF(...) if(debug_lexer) printf(__VA_ARGS__)
 
-/* #define YY_INPUT(buf,result,max_size)					\ */
-/*    {									\ */
-/*        scan::lex(buf,result,max_size);					\ */
-/*    } */
+void fitter_lex_internal(char* buf,int &result,int max_size);
+#define YY_INPUT(buf,result,max_size)					\
+    {									\
+	fitter_lex_internal(buf,result,max_size);			\
+   }
 
  /* handle locations */
 #define YY_USER_ACTION yylloc->first_line=yylloc->last_line=yylineno; \
@@ -48,6 +50,7 @@ using namespace std;
 #include "fitter_parser.hpp"
    
    const int debug_lexer=1;
+   void *scanner;
 %}
 
 %%
@@ -67,29 +70,14 @@ using namespace std;
 
 %%
 
-//initializator
-/* driver_t::driver_t(const string &path) : */
-/*                        fin(path) */
-/* { */
-/*     using namespace glb; */
-/*     if(not fin.good()) CRASH("Opening %s",path.c_str()); */
-/*     init_scanner(); */
-/* } */
-
 //initialize the scanner
-/* void scan::init_scanner() */
-/* { */
-/*     yylex_init(&scan::scanner); */
-/* } */
+void init_scanner()
+{
+    yylex_init(&scanner);
+}
 
 //destroy the scanner
-/* void scan::destroy_scanner() */
-/* { */
-/*     yylex_destroy(scan::scanner); */
-/* } */
-
-//parse everything
-/* void parse() */
-/* { */
-/*     parser_parse(nullptr); */
-/* } */
+void destroy_scanner()
+{
+    yylex_destroy(scanner);
+}
