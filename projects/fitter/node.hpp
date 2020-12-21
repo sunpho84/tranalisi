@@ -1,11 +1,48 @@
 #ifndef _NODE_HPP
 #define _NODE_HPP
 
+#include <vector>
+
+using namespace std;
+
+extern vector<double> pars;
+
 /// Generic node
 struct node_t
 {
   /// Virtual evaluator
   virtual double eval() const = 0;
+  
+  /// Virtual destructor
+  virtual ~node_t() = 0;
+};
+
+/// Virtual destructor
+inline node_t::~node_t()
+{
+}
+
+/// Parameter
+struct parameter_node_t : public node_t
+{
+  /// Reference in the par list
+  const int id;
+  
+  /// Creates taking the id
+  parameter_node_t(int id) : id(id)
+  {
+  }
+  
+  /// Destruct
+  ~parameter_node_t()
+  {
+  }
+  
+  /// Evaluate
+  double eval() const
+  {
+    return pars[id];
+  }
 };
 
 /// Real number
@@ -16,6 +53,11 @@ struct real_node_t : public node_t
   
   /// Creates taking the value
   real_node_t(double val) : val(val)
+  {
+  }
+  
+  /// Destruct
+  ~real_node_t()
   {
   }
   
@@ -40,6 +82,12 @@ struct uexp_node_t : public node_t
   {
   }
   
+  /// Destruct subnodes
+  ~uexp_node_t()
+  {
+    delete arg;
+  }
+  
   /// Evaluate
   double eval() const
   {
@@ -62,6 +110,13 @@ struct bexp_node_t : public node_t
   /// Creates taking the function and the argument
   bexp_node_t(double (*fun)(const double,const double),const node_t* arg1,const node_t* arg2) : fun(fun),arg1(arg1),arg2(arg2)
   {
+  }
+  
+  /// Destruct subnodes
+  ~bexp_node_t()
+  {
+    delete arg1;
+    delete arg2;
   }
   
   /// Evaluate

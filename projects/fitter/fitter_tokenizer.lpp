@@ -55,15 +55,39 @@ void fitter_lex_internal(char* buf,int &result,int max_size);
 
 %%
 
+{SPACE}+                                      ;
+
 \(                                  return '(';
 \)                                  return ')';
 \[                                  return '[';
 \]                                  return ']';
 {DOT}                               return '.';
 
+\*                                  return '*';
+\/                                  return '/';
+\+                                  return '+';
+\-                                  return '-';
+\^                                  return '^';
+
+sin                                 return TK_SIN;
+cos                                 return TK_COS;
+tan                                 return TK_TAN;
+sinh                                return TK_SINH;
+cosh                                return TK_COSH;
+tanh                                return TK_TANH;
+asin                                return TK_ASIN;
+acos                                return TK_ACOS;
+atan                                return TK_ATAN;
+asinh                               return TK_ASINH;
+acosh                               return TK_ACOSH;
+atanh                               return TK_ATANH;
+exp                                 return TK_EXP;
+log                                 return TK_LOG;
+sqrt                                return TK_SQRT;
+
  /* recognizing number */
-{SCI_DOUBLE}|{DOUBLE} DEBUG_PRINTF("Found Double: %s\n",yytext);sscanf(yytext,"%lg",&yylval->real_val);return TK_REAL_VAL;
-{INT} DEBUG_PRINTF("Found Integer: %s\n",yytext);sscanf(yytext,"%d",&yylval->int_val);return TK_INT_VAL;
+{SCI_DOUBLE}|{DOUBLE} sscanf(yytext,"%lg",&yylval->real_val);DEBUG_PRINTF("Found Double: %s, parsed as %lg\n",yytext,yylval->real_val);return TK_REAL_VAL;
+{INT} sscanf(yytext,"%d",&yylval->int_val);DEBUG_PRINTF("Found Integer: %s, parsed as: %d\n",yytext,yylval->int_val);return TK_INT_VAL;
 
  /* crash if finds unexpected word or unrecognized char */
 {ANY} printf("Found invalid character \'%c\'\n",yytext[0]);return TK_INVALID_CHAR;

@@ -2,12 +2,19 @@
  #include "config.hpp"
 #endif
 
+double uminus(const double a)
+{
+  return -a;
+}
+
+/////////////////////////////////////////////////////////////////
+
 double sum(const double a,const double b)
 {
   return a+b;
 }
 
-double diff(const double a,const double b)
+double difference(const double a,const double b)
 {
   return a-b;
 }
