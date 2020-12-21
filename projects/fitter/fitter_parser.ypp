@@ -1,0 +1,63 @@
+%define api.pure
+ //%locations
+%defines
+%define parse.lac full
+%define parse.error verbose
+%parse-param {void *v}
+//%lex-param {void *scanner}
+
+%{
+
+#define YYDEBUG 1
+
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+#include <tranalisi.hpp>
+
+#include "fitter/node.hpp"
+#include "fitter/fitter_parser.hpp"
+
+  const int debug_parser=0;
+
+  /* /// opaque flex object */
+  /* extern void *scanner; */
+  
+/*   int fitter_parser_lex(); */
+/* #define fitter_parser_lex fitter_tokenizer_parse */
+
+  /* void fitter_parser_error(YYLTYPE *locp,void *v,const char *err) */
+  /* { */
+  /*     CRASH("exception at line %d columns [%d-%d] %s",locp->first_line,locp->first_column,locp->last_column,err); */
+  /* } */
+  
+%}
+
+/// union used to catch all symbols
+%union
+{
+    node_t* node;
+    int int_val;
+    double real_val;
+}
+
+%token <real_val> TK_REAL_VAL
+%token <int_val> TK_INT_VAL
+
+%token TK_EXP
+%token TK_INVALID_CHAR
+
+%type <node> node_rule
+%type <node> real_rule
+
+%%
+
+node_rule: real_rule
+         | node_rule '*' node_rule
+;
+
+real_rule: TK_REAL_VAL {$$=new real_node_t($1);}
+         | TK_INT_VAL {$$=new real_node_t($1);}
+;
+

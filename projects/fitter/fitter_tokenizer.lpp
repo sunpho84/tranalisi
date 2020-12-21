@@ -1,0 +1,95 @@
+%option case-insensitive
+%option nounput
+%option noyywrap
+%option reentrant
+%option bison-bridge
+
+ /* define status to avoid c++ comment */
+%x COMMENT
+
+ /* raw definitions */
+DIGIT [0-9]
+SPACE [[:blank:]]
+SIGN \+|\-
+ANY .
+DOT \.
+
+ /* more complicated */
+DOUBLE {SIGN}?({DIGIT}*{DOT}{DIGIT}+)|({DIGIT}+{DOT}{DIGIT}*)
+INT {DIGIT}*
+MANTISSA e({SIGN}?{INT})
+SCI_DOUBLE ({DOUBLE}|{INT}){MANTISSA}
+
+/* header of tokenizer */
+%{
+
+#include <cstdio>
+#include <cstring>
+#include <fstream>
+
+#include <tranalisi.hpp>
+
+#include <fitter/node.hpp>
+
+using namespace std;
+
+#define DEBUG_PRINTF(...) if(debug_lexer) printf(__VA_ARGS__)
+
+/* #define YY_INPUT(buf,result,max_size)					\ */
+/*    {									\ */
+/*        scan::lex(buf,result,max_size);					\ */
+/*    } */
+
+ /* handle locations */
+#define YY_USER_ACTION yylloc->first_line=yylloc->last_line=yylineno; \
+    yylloc->first_column=yycolumn;yylloc->last_column=yycolumn+yyleng-1; \
+    yycolumn+=yyleng;
+
+#include "fitter_parser.hpp"
+   
+   const int debug_lexer=1;
+%}
+
+%%
+
+\(                                  return '(';
+\)                                  return ')';
+\[                                  return '[';
+\]                                  return ']';
+{DOT}                               return '.';
+
+ /* recognizing number */
+{SCI_DOUBLE}|{DOUBLE} DEBUG_PRINTF("Found Double: %s\n",yytext);sscanf(yytext,"%lg",&yylval->real_val);return TK_REAL_VAL;
+{INT} DEBUG_PRINTF("Found Integer: %s\n",yytext);sscanf(yytext,"%d",&yylval->int_val);return TK_INT_VAL;
+
+ /* crash if finds unexpected word or unrecognized char */
+{ANY} printf("Found invalid character \'%c\'\n",yytext[0]);return TK_INVALID_CHAR;
+
+%%
+
+//initializator
+/* driver_t::driver_t(const string &path) : */
+/*                        fin(path) */
+/* { */
+/*     using namespace glb; */
+/*     if(not fin.good()) CRASH("Opening %s",path.c_str()); */
+/*     init_scanner(); */
+/* } */
+
+//initialize the scanner
+/* void scan::init_scanner() */
+/* { */
+/*     yylex_init(&scan::scanner); */
+/* } */
+
+//destroy the scanner
+/* void scan::destroy_scanner() */
+/* { */
+/*     yylex_destroy(scan::scanner); */
+/* } */
+
+//parse everything
+/* void parse() */
+/* { */
+/*     parser_parse(nullptr); */
+/* } */
