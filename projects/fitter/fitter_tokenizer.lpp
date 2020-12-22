@@ -36,10 +36,14 @@ using namespace std;
 
 #define DEBUG_PRINTF(...) if(debug_lexer) printf(__VA_ARGS__)
 
-void fitter_lex_internal(char* buf,int &result,int max_size);
+namespace formulaParser
+{
+    void lex(char* buf,int &result,int max_size);
+}
+
 #define YY_INPUT(buf,result,max_size)					\
     {									\
-	fitter_lex_internal(buf,result,max_size);			\
+	formulaParser::lex(buf,result,max_size);			\
    }
 
  /* handle locations */
@@ -56,6 +60,8 @@ void fitter_lex_internal(char* buf,int &result,int max_size);
 %%
 
 {SPACE}+                                      ;
+
+x                                   return 'x';
 
 \(                                  return '(';
 \)                                  return ')';

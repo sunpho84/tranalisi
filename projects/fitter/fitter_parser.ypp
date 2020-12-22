@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <math.h>
 
 #include <tranalisi.hpp>
@@ -33,6 +34,55 @@ extern void *scanner;
       CRASH("exception at line %d columns [%d-%d] %s",locp->first_line,locp->first_column,locp->last_column,err);
   }
   
+namespace formulaParser
+{
+  /// Index of the char to parse
+  int iChar;
+  
+  /// String to be parsed
+  string inputString;
+  
+  /// Set the string to be parsed
+  void setString(const string& in)
+  {
+      cout<<"Setting formula string: "<<in<<endl;
+      
+      iChar=0;
+      inputString=in;
+  }
+  
+  /// Lexer
+  void lex(char* buf,int &result,int max_size)
+  {
+    result=(inputString[iChar]!='\0');
+    *buf=inputString[iChar++];
+  }
+  
+  /// OutputFormula
+  node_t* outputFormula;
+}
+
+void init_scanner();
+
+void destroy_scanner();
+
+/// Parse a certain formula
+node_t* parseFormula(const string& formulaString)
+{
+  using namespace formulaParser;
+  
+  init_scanner();
+  
+  setString(formulaString);
+  
+  fitter_parser_parse(nullptr);
+  
+  destroy_scanner();
+  
+  cout<<"Parsed as: "<<outputFormula<<endl;
+  
+  return outputFormula;
+}
 %}
 
 /// union used to catch all symbols
@@ -66,7 +116,7 @@ extern void *scanner;
 
 %token TK_INVALID_CHAR
 
-%type <node> node_rule real_rule parameter_rule
+%type <node> node_rule real_rule parameter_rule variable_rule
 
 %left '-' '+'
 %left '*' '/'
@@ -75,37 +125,41 @@ extern void *scanner;
 
 %%
 
-formula: node_rule {cout<<"Eval: "<<$1->eval()<<endl;delete $1;}
+formula: node_rule {formulaParser::outputFormula=$1;}
        ;
 
 node_rule: real_rule
  	 | parameter_rule
-         | node_rule '+' node_rule {$$=new bexp_node_t(sum,$1,$3);}
-         | node_rule '-' node_rule {$$=new bexp_node_t(difference,$1,$3);}
-         | node_rule '*' node_rule {$$=new bexp_node_t(product,$1,$3);}
-         | node_rule '/' node_rule {$$=new bexp_node_t(division,$1,$3);}
-         | '-' node_rule  %prec NEG {$$=new uexp_node_t(uminus,$2);}
+ 	 | variable_rule
+         | node_rule '+' node_rule {$$=new bexp_node_t(sum,"(%s+%s)",$1,$3);}
+         | node_rule '-' node_rule {$$=new bexp_node_t(difference,"(%s-%s)",$1,$3);}
+         | node_rule '*' node_rule {$$=new bexp_node_t(product,"(%s*%s)",$1,$3);}
+         | node_rule '/' node_rule {$$=new bexp_node_t(division,"(%s/%s)",$1,$3);}
+         | '-' node_rule  %prec NEG {$$=new uexp_node_t(uminus,"(-%s)",$2);}
          | '+' node_rule  %prec NEG {$$=$2;}
-         | node_rule '^' node_rule {$$=new bexp_node_t(pow,$1,$3);}
-         | TK_SIN '(' node_rule ')' {$$=new uexp_node_t(sin,$3);}
-         | TK_COS '(' node_rule ')' {$$=new uexp_node_t(cos,$3);}
-         | TK_TAN '(' node_rule ')' {$$=new uexp_node_t(tan,$3);}
-         | TK_SINH '(' node_rule ')' {$$=new uexp_node_t(sinh,$3);}
-         | TK_COSH '(' node_rule ')' {$$=new uexp_node_t(cosh,$3);}
-         | TK_TANH '(' node_rule ')' {$$=new uexp_node_t(tanh,$3);}
-         | TK_ASIN '(' node_rule ')' {$$=new uexp_node_t(asin,$3);}
-         | TK_ACOS '(' node_rule ')' {$$=new uexp_node_t(acos,$3);}
-         | TK_ATAN '(' node_rule ')' {$$=new uexp_node_t(atan,$3);}
-         | TK_ASINH '(' node_rule ')' {$$=new uexp_node_t(asinh,$3);}
-         | TK_ACOSH '(' node_rule ')' {$$=new uexp_node_t(acosh,$3);}
-         | TK_ATANH '(' node_rule ')' {$$=new uexp_node_t(atanh,$3);}
-         | TK_EXP '(' node_rule ')' {$$=new uexp_node_t(exp,$3);}
-         | TK_LOG '(' node_rule ')' {$$=new uexp_node_t(log,$3);}
-         | TK_SQRT '(' node_rule ')' {$$=new uexp_node_t(sqrt,$3);}
+         | node_rule '^' node_rule {$$=new bexp_node_t(pow,"(%s^%s)",$1,$3);}
+         | TK_SIN '(' node_rule ')' {$$=new uexp_node_t(sin,"sin(%s)",$3);}
+         | TK_COS '(' node_rule ')' {$$=new uexp_node_t(cos,"cos(%s)",$3);}
+         | TK_TAN '(' node_rule ')' {$$=new uexp_node_t(tan,"tan(%s)",$3);}
+         | TK_SINH '(' node_rule ')' {$$=new uexp_node_t(sinh,"sinh(%s)",$3);}
+         | TK_COSH '(' node_rule ')' {$$=new uexp_node_t(cosh,"cosh(%s)",$3);}
+         | TK_TANH '(' node_rule ')' {$$=new uexp_node_t(tanh,"tanh(%s)",$3);}
+         | TK_ASIN '(' node_rule ')' {$$=new uexp_node_t(asin,"asin(%s)",$3);}
+         | TK_ACOS '(' node_rule ')' {$$=new uexp_node_t(acos,"acos(%s)",$3);}
+         | TK_ATAN '(' node_rule ')' {$$=new uexp_node_t(atan,"atan(%s)",$3);}
+         | TK_ASINH '(' node_rule ')' {$$=new uexp_node_t(asinh,"asinh(%s)",$3);}
+         | TK_ACOSH '(' node_rule ')' {$$=new uexp_node_t(acosh,"acosh(%s)",$3);}
+         | TK_ATANH '(' node_rule ')' {$$=new uexp_node_t(atanh,"atanh(%s)",$3);}
+         | TK_EXP '(' node_rule ')' {$$=new uexp_node_t(exp,"exp(%s)",$3);}
+         | TK_LOG '(' node_rule ')' {$$=new uexp_node_t(log,"log(%s)",$3);}
+         | TK_SQRT '(' node_rule ')' {$$=new uexp_node_t(sqrt,"sqrt(%s)",$3);}
 	 | '(' node_rule ')' {$$=$2;}
 	 ;
 
-parameter_rule: '[' TK_INT_VAL ']' {$$=new parameter_node_t($2);if((int)pars.size()<$2+1) pars.resize($2+1);}
+parameter_rule: '[' TK_INT_VAL ']' {$$=new parameter_node_t($2);}
+	;
+
+variable_rule: 'x' {$$=new variable_node_t();}
 	;
 
 real_rule: TK_REAL_VAL {$$=new real_node_t($1);}
