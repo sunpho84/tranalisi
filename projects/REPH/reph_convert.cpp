@@ -13,7 +13,7 @@ int T;
 int nMass;
 int nMoms;
 
-double beta;
+double Beta;
 double kSea;
 double muSea;
 double cSW;
@@ -56,10 +56,10 @@ void convert_file(const char *corr,const bool is2pt,const size_t nGamma)
   mu.resize(nMass);
   moms.resize(nMoms);
   
-  for(auto &t : {&beta,&kSea,&muSea,&cSW})
+  for(auto &t : {&::Beta,&kSea,&muSea,&cSW})
     fin.bin_read(*t);
   
-  printf(" - beta: %lf\n",beta);
+  printf(" - Beta: %lf\n",::Beta);
   printf(" - kappa: %lf\n",kSea);
   printf(" - mu: %lf\n",muSea);
   printf(" - csw: %lf\n",cSW);
