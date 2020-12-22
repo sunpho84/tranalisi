@@ -31,11 +31,21 @@ struct data_fit_t
   const node_t* formula;
   const string filePlot;
   
-  vector<array<double,3>> data;
+  struct data_t
+  {
+    double x;
+    djack_t y;
+    double e;
+  };
   
+  vector<data_t> data;
+  
+  /// Constructor
   data_fit_t(const string& fileData,const double xmin,const double xmax,const string& formulaString,const string& filePlot) :
     fileData(fileData),xmin(xmin),xmax(xmax),formula(parseFormula(formulaString)),filePlot(filePlot)
   {
+    static int seed=2424;
+    
     /// Open the file
     obs_file_t fin(fileData,3,{0,1,2});
     
@@ -47,8 +57,16 @@ struct data_fit_t
       {
 	/// Single line
 	const vector<double> l=fin.read(1);
-	for(size_t i=0;i<3;i++) data[iLine][i]=l[i];
+	  data[iLine].x=l[0];
+	  data[iLine].y.fill_gauss(l[1],l[2],seed++);
+	  data[iLine].e=l[2];
       }
+  }
+  
+  /// Destructor
+  ~data_fit_t()
+  {
+    //delete formula;
   }
 };
 
@@ -102,6 +120,8 @@ void parseArgs(int narg,char** arg)
     guessPars.push_back(strtod(arg[iArg],nullptr));
 }
 
+size_t ijack;
+
 //! perform a simple fit using x, a function and data
 class ch2_t : public minimizer_fun_t
 {
@@ -119,9 +139,9 @@ public:
     for(auto& d : dataFit)
       for(const auto& c : d.data)
 	{
-	  const double& x=c[0];
-	  const double& n=c[1];
-	  const double& e=c[2];
+	  const double& x=c.x;
+	  const double& n=c.y[ijack];
+	  const double& e=c.e;
 	  const double t=d.formula->eval(p,x);
 	  double contr=sqr((n-t)/e);
 	  // cout<<contr<<" = [("<<n<<"-f("<<x<<")="<<t<<")/"<<e<<"]^2]"<<endl;
@@ -139,6 +159,8 @@ public:
 
 int main(int narg,char** arg)
 {
+  set_njacks(100);
+  
   parseArgs(narg,arg);
   
   const size_t nPars=parIds.size();
@@ -151,19 +173,25 @@ int main(int narg,char** arg)
   
   ch2_t ch2;
   
-  minimizer_t minimizer(ch2,fitPars);
+  djvec_t pars(nPars);
+  for(ijack=0;ijack<=njacks;ijack++)
+    {
+      minimizer_t minimizer(ch2,fitPars);
+      vector<double> parsEl=minimizer.minimize();
+      for(size_t iPar=0;iPar<nPars;iPar++)
+	pars[iPar][ijack]=parsEl[iPar];
+    }
   
-  vector<double> pars=minimizer.minimize();
-  cout<<pars<<endl;
+  cout<<pars.ave_err()<<endl;
   
   for(auto& data : dataFit)
     {
       grace_file_t plot(data.filePlot);
       
       for(auto& d : data.data)
-	plot.write_ave_err(d[0],{d[1],d[2]});
+	plot.write_ave_err(d.x,{d.y.ave(),d.e});
       
-      plot.write_line([&data,&pars](const double& x){return data.formula->eval(pars,x);},data.xmin,data.xmax,grace::RED);
+      plot.write_polygon([&](const double& x){return data.formula->jackEval(pars,x);},data.xmin,data.xmax,grace::GREEN4);
     }
   
   return 0;

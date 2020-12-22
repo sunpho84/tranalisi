@@ -24,6 +24,29 @@ struct node_t
   
   /// Get parameters
   virtual set<size_t> getParIds() const = 0;
+  
+  /// Evaluate over the jackknife
+  djack_t jackEval(const djvec_t& pars,const double& x) const
+  {
+    /// Result
+    djack_t y;
+    
+    /// Number of parameters
+    const size_t nPars=pars.size();
+    
+    /// Parameters
+    vector<double> parsEl(nPars);
+    
+    for(size_t ijack=0;ijack<=njacks;ijack++)
+      {
+	for(size_t iPar=0;iPar<nPars;iPar++)
+	  parsEl[iPar]=pars[iPar][ijack];
+	
+	y[ijack]=this->eval(parsEl,x);
+      }
+    
+    return y;
+  }
 };
 
 /// Virtual destructor
