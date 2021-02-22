@@ -138,11 +138,11 @@ T latt_en_1D(const T &m,const double &pi)
 {return 2*asinh((T)sqrt(sqr(sin(pi/2))+sqr((T)sinh(m/2))));}
 
 //! compute the value of the polynomial in the point
-template <class TV,class TS=typename TV::base_type>
-TS poly_eval(const TV &pars,const double &x)
+template <class TV,class TVX,class TS=typename TV::base_type>
+TS poly_eval(const TV &pars,const TVX &x)
 {
   TS t=pars[0];
-  double R=x;
+  TVX R=x;
   for(int ipow=1;ipow<(int)pars.size();ipow++)
     {
       t+=pars[ipow]*R;

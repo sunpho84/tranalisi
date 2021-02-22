@@ -113,11 +113,16 @@ djack_t find_w0(const vector<double> &t,const djvec_t &E,const size_t ord=5,cons
 				 },
 				 guess_t_min,guess_t_max);
   
-  cout<<"Intercept: "<<smart_print(w02_fr_a2.ave_err())<<endl;
+  cout<<"w0/a2: "<<w02_fr_a2.ave_err()<<endl;
+  
+  ofstream out_txt("w0_fr_a2.txt");
+  out_txt<<w02_fr_a2.ave_err()<<endl;
+  
+  w02_fr_a2.bin_write("w0_fr_a2.dat");
   
   //print the fit
   grace_file_t fout("plots/fit.xmg");
-  fout.write_polygon(bind(poly_eval<djvec_t>,coeffs,_1),guess_t_min,guess_t_max);
+  fout.write_polygon(bind(poly_eval<djvec_t,double>,coeffs,_1),guess_t_min,guess_t_max);
   fout.write_line([w0_ref](double x){return w0_ref;},guess_t_min,guess_t_max);
   fout.write_vec_ave_err(t,r.ave_err());
   fout.set_settype(grace::XYDX);

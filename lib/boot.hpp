@@ -28,6 +28,8 @@ EXTERN_BOOT size_t def_nboots INIT_TO(DEF_NBOOTS);
 
 ////////////////////////////////////////////////////// type to initialize a boot_t //////////////////////////////////////////
 
+EXTERN_BOOT bool build_boots_from_jacks INIT_TO(true);
+
 //! class to initialize a boot_t
 class boot_init_t : public vector<size_t>
 {
@@ -112,9 +114,15 @@ public:
   ave_err_t ave_err() const
   {
     ave_err_t ae=range_ave_stddev(*this,nboots());
-    ae.err()*=sqrt(njacks-1);
+    if(build_boots_from_jacks)
+      ae.err()*=sqrt(njacks-1);
     
 #if MEAN_TYPE==DISTR_MEAN
+    if(njacks==1)
+      {
+	ae.ave()=(*this)[nboots()];
+	ae.err()=0.0;
+      }
     //do nothing, the previously computed is already correct
 #elif MEAN_TYPE==PROP_MEAN
     ae.ave()=(*this)[nboots()];
@@ -123,6 +131,18 @@ public:
 #endif
     
     return ae;
+  }
+  
+  //! Return the error with error
+  ave_err_t err_with_err() const
+  {
+    return ::err_with_err(*this,njacks);
+  }
+  
+  //! Return the skewness
+  ave_err_t skewness() const
+  {
+    return ::skewness(*this,njacks);
   }
   
   //! return only the average
@@ -135,16 +155,25 @@ public:
   T significativity() const
   {
     auto ae=ave_err();
-    return fabs(ae.ave()/ae.err());
+    
+    if(ae.err())
+      return fabs(ae.ave()/ae.err());
+    else
+      return 10000;
   }
   
   //! initialize from aver_err_t and a seed
   void fill_gauss(const gauss_filler_t &gf)
   {
     check_njacks_init();
+    
+    double sig=gf.ae.err();
+    if(build_boots_from_jacks)
+      sig/=sqrt(njacks-1);
+    
     gen_t gen(gf.seed);
     for(size_t iboot=0;iboot<nboots();iboot++)
-      (*this)[iboot]=gen.get_gauss(gf.ae.ave(),gf.ae.err()/sqrt(njacks-1));
+      (*this)[iboot]=gen.get_gauss(gf.ae.ave(),sig);
     (*this)[nboots()]=gf.ae.ave();
   }
   
@@ -159,6 +188,9 @@ public:
   //! initialize from a jackknife
   void fill_from_jack(const boot_init_t &iboot_ind,const jack_t<T> &jack)
   {
+    if(not build_boots_from_jacks)
+      CRASH("Bootstrap are not constructed from jacks");
+    
     for(size_t iboot=0;iboot<nboots();iboot++)
       {
 	size_t ind=iboot_ind[iboot];
@@ -166,6 +198,41 @@ public:
 	(*this)[iboot]=jack[ind];
       }
     (*this)[nboots()]=jack[njacks];
+  }
+  
+  //! initialize from clusters
+  void fill_from_jack(const int seed,const jack_t<T> &oth)
+  {
+    if(build_boots_from_jacks)
+      {
+	CRASH("To be implemented");
+      }
+    else
+      {
+	jack_t<T> clusters;
+	
+	clusters[njacks]=oth[njacks];
+	for(size_t ijack=0;ijack<njacks;ijack++)
+	  clusters[ijack]=oth[njacks]*njacks-oth[ijack]*(njacks-1);
+        const double a1=clusters[njacks],a2=clusters.ave();
+	
+	if(fabs(a1)>1e-10 and fabs(a1)/fabs(a2)-1>1.e-10)
+	  CRASH("Invalid clusters! The average clusters does not agree with the average of the clusters");
+	
+	gen_t gen(seed);
+	
+	for(size_t iboot=0;iboot<nboots();iboot++)
+	  {
+	    double& b=(*this)[iboot];
+	    
+	    b=0;
+	    for(size_t ijack=0;ijack<njacks;ijack++)
+	      b+=clusters[gen.get_int(0,njacks)];
+	    b/=njacks;
+	  }
+      }
+    
+    (*this)[nboots()]=oth[njacks];
   }
   
   //! write to a stream

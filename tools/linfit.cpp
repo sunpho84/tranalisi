@@ -7,44 +7,37 @@
 
 int main(int narg,char **arg)
 {
-  if(narg<2) CRASH("Use: %s file",arg[0]);
+  set_njacks(1000);
+  
+  if(narg<2) CRASH("Use: %s file [plot] [min|-] [max|-]",arg[0]);
   
   vector<tuple<double,double,double>> tmp;
   
   ifstream file(arg[1]);
   if(not file.good()) CRASH("Unable to open %s",arg[1]);
   
-  double x,y,ey;
-  while(file>>x>>y>>ey)
-    tmp.push_back(make_tuple(x,y,ey));
+  vector<double> x;
+  vec_ave_err_t _y;
   
-  int d=1;
-  
-  vector <double> Al(2*d+1,0.0);
-  vector<double> c(d+1,0.0);
-  
-  for(int p=0;p<(int)tmp.size();p++)
+  double xi,yi,ei;
+  while(file>>xi>>yi>>ei)
     {
-      //calculate the weight
-      double w=pow(get<2>(tmp[p]),-2);
-      
-      //compute Al and c
-      for(int f=0;f<=2*d;f++)
-	{
-	  Al[f]+=w;
-	  if(f<=d) c[f]+=get<1>(tmp[p])*w;
-	  w*=get<0>(tmp[p]);
-	}
+      x.push_back(xi);
+      _y.push_back({yi,ei});
     }
   
-  vector<double> A((d+1)*(d+1));
-  for(int i=0;i<=d;i++)
-    for(int j=0;j<=d;j++)
-      A[i*(d+1)+j]=Al[i+j];
+  djvec_t y(_y.size());
+  for(size_t i=0;i<_y.size();i++)
+    y[i].fill_gauss(_y[i],i+123124);
   
-  vector<double> res=lin_solve<vector<double>,double>(A,c);
+  const auto minMax=minmax_element(x.begin(),x.end());
+  const string plotPath=(narg<3)?"":arg[2];
   
-  cout<<res[0]<<endl;
+  const double min=(narg<4 or (string)arg[3]=="-")?*minMax.first*0.9:strtod(arg[3],NULL);
+  const double max=(narg<5 or (string)arg[4]=="-")?*minMax.second*1.1:strtod(arg[4],NULL);
+  const djvec_t par=poly_fit(x,y,1,min,max,plotPath);
+  
+  cout<<par.ave_err()<<endl;
   
   return 0;
 }

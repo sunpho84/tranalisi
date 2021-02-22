@@ -1,8 +1,8 @@
-%pure-parser
+%define api.pure
 %locations
 %defines
 %define parse.lac full
-%error-verbose
+%define parse.error verbose
 %parse-param {void *v}
 %lex-param {void *scanner}
 
@@ -64,6 +64,7 @@ using namespace scan;
 %token TK_CHIR_EXTR_METHOD
 %token TK_COMPUTE_BILINEARS
 %token TK_COMPUTE_RI
+%token TK_COMPUTE_SIGMA1_THROUGH_DIVISION
 %token TK_EXTRAPOLATE
 %token TK_EXTRAPOLATE_TO_0_P2_RANGE
 %token TK_FREE_THEORY
@@ -142,6 +143,7 @@ commands:
         | commands set_chir_extr_method
         | commands set_compute_bilinears
         | commands set_compute_RI
+        | commands set_compute_sigma1_through_division
         | commands set_compute_meslep
         | commands set_compute_deltam
         | commands set_compute_meslep_with_charges_one
@@ -244,6 +246,9 @@ set_compute_bilinears: TK_COMPUTE_BILINEARS '=' TK_INTE {pars::compute_bilinears
 ;
 
 set_compute_RI: TK_COMPUTE_RI '=' TK_INTE {pars::compute_RI=$3;}
+;
+
+set_compute_sigma1_through_division: TK_COMPUTE_SIGMA1_THROUGH_DIVISION '=' TK_INTE {pars::compute_sigma1_through_division=$3;}
 ;
 
 set_compute_deltam: TK_COMPUTE_DELTAM '=' TK_FROM_PROP {pars::deltam_method=pars::FROM_PROP;}

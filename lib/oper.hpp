@@ -198,30 +198,37 @@ template <class T> vector<vector<T>> transpose(const vector<vector<T>> &in)
   return out;
 }
 
-//! take the forward derivative
+//! take the forward derivative, repeating last point
 template <class T> T forward_derivative(const T &v)
 {
   const size_t n=v.size();
   T out(n);
-  for(size_t it=0;it<n;it++) out[it]=v[(it+1)%n]-v[it];
+  for(size_t it=0;it<n-1;it++) out[it]=v[it+1]-v[it];
+  out[n-1]=out[n-2];
+  
   return out;
 }
 
-//! take the backward derivative
+//! take the backward derivative, repeating first point
 template <class T> T backward_derivative(const T &v)
 {
   const size_t n=v.size();
   T out(n);
-  for(size_t it=0;it<n;it++) out[it]=v[it]-v[(it-1+n)%n];
+  for(size_t it=1;it<n;it++) out[it]=v[it]-v[it-1];
+  out[0]=out[1];
+  
   return out;
 }
 
-//! take the symmetric derivative
+//! take the symmetric derivative, repeating first and last point
 template <class T> T symmetric_derivative(const T &v)
 {
   const size_t n=v.size();
   T out(n);
-  for(size_t it=0;it<n;it++) out[it]=(v[(it+1)%n]-v[(it-1+n)%n])/2.0;
+  for(size_t it=1;it<n-1;it++) out[it]=(v[it+1]-v[it-1])/2.0;
+  out[0]=out[1];
+  out[n-1]=out[n-2];
+  
   return out;
 }
 
@@ -233,17 +240,21 @@ template <class T> T subset(const T &v,size_t beg,size_t end)
 }
 
 //! Smooth over a range
-template <class T> T smooth(const T &v,const size_t size)
+template <class T> T smooth(const T &v,const int size)
 {
-  const size_t n=v.size();
+  const int n=v.size();
   T out(n);
-  for(size_t it=0;it<n;it++)
-    for(size_t i=0;i<size;i++)
-      {
-	int jt=std::max(std::min((int)it+(int)i-((int)size-1)/2,(int)n-1),0);
+  for(int it=0;it<n;it++)
+    {
+      const int beg=std::max(0,it-size/2);
+      const int end=std::min(n,it-size/2+size);
+      
+      for(int jt=beg;jt<end;jt++)
 	out[it]+=v[jt];
-      }
-  out/=size;
+      
+      out[it]/=end-beg;
+      
+    }
   
   return out;
 }

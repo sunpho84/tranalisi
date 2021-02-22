@@ -97,14 +97,31 @@ public:
     ae.err()*=sqrt(njacks-1);
     
 #if MEAN_TYPE==DISTR_MEAN
+    if(njacks==1)
+      {
+	ae.ave()=(*this)[njacks];
+	ae.err()=0.0;
+      }
     //do nothing, the previously computed is already correct
 #elif MEAN_TYPE==PROP_MEAN
-    ae.ave=(*this)[njacks];
+    ae.ave()=(*this)[njacks];
 #else
      #error Unknown mean propagation
 #endif
     
     return ae;
+  }
+  
+  //! Return the error with the error
+  ave_err_t err_with_err() const
+  {
+    return ::err_with_err(*this,njacks);
+  }
+  
+  //! Return the skewness
+  ave_err_t skewness() const
+  {
+    return ::skewness(*this,njacks);
   }
   
   //! return only the average

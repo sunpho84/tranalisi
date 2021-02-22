@@ -50,9 +50,12 @@ void grace_file_t::close_cur_set()
       write_prop("errorbar linewidth "+to_string(errorbar_linewidth));
       write_prop("errorbar riser linewidth "+to_string(errorbar_riser_linewidth));
       //transparency
-      (*this)<<"#QTGRACE_ADDITIONAL_PARAMETER: G 0 S "<<iset<<" ALPHA_CHANNELS {"<<transparency<<";"<<transparency<<";255;255;255;255}"<<endl;
+      const unsigned short int& t=transparency;
+      (*this)<<"#QTGRACE_ADDITIONAL_PARAMETER: G 0 S "<<iset<<" ALPHA_CHANNELS {"<<t<<";"<<t<<";"<<t<<";"<<t<<";"<<t<<";"<<t<<"}"<<endl;
       //write legend
-      write_prop("legend \""+legend+"\"");
+      if(legend!="") write_prop("legend \""+legend+"\"");
+      //write comment
+      if(comment!="") write_prop("comment \""+comment+"\"");
       //point to the next set
       (*this)<<"&"<<endl;
       shift_iset();
@@ -132,16 +135,16 @@ grace_file_t::grace_file_t(const string &path) :
   color_scheme(grace::default_color_scheme),
   line_color_scheme(grace::default_line_color_scheme),
   symbol_scheme(grace::default_symbol_scheme),
-  cur_col(0),
-  cur_poly_col(0),
-  cur_line_col(0),
-  cur_symbol(0),
   iset(0),
-  settype(grace::XY),
+  settype(grace::XYDX),
   xaxis_min(0),
   xaxis_max(1),
   yaxis_min(0),
-  yaxis_max(1)
+  yaxis_max(1),
+  cur_col(0),
+  cur_poly_col(0),
+  cur_line_col(0),
+  cur_symbol(0)
 {
   if(path!="") this->open(path);
   
@@ -265,6 +268,11 @@ void grace_file_t::set_legend(const string &ext_legend)
   legend=ext_legend;
 }
 
+void grace_file_t::set_comment(const string &ext_comment)
+{
+  comment=ext_comment;
+}
+
 void grace_file_t::shift_iset(size_t how_many)
 {
   iset+=how_many;
@@ -275,8 +283,8 @@ void grace_file_t::new_data_set(grace::color_t col,grace::symbol_t sym)
   close_cur_set();
   
   set_legend("");
+  set_comment("");
   set_settype(grace::XYDY);
-  set_line_style(grace::NO_LINE);
   set_all_colors(col);
   set_symbol(sym);
   

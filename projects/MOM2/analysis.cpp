@@ -197,7 +197,7 @@ void sea_chir_extrap(const string out_name,const vector<string> &ens_list)
 	  if(plot_path!="")
 	    {
 	      grace_file_t plot(plot_path);
-	      write_fit_plot(plot,xmin,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
+	      write_fit_plot(plot,xmin,xmax,bind(poly_eval<djvec_t,double>,coeffs,_1),x,y);
 	      plot.set_title(v.tag+", "+v.ind.descr(icombo));
 	      plot.write_ave_err(0,coeffs[0].ave_err());
 	    }

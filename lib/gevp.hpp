@@ -4,6 +4,6 @@
 #include <meas_vec.hpp>
 
 //! Solves the generalized eigenvalue problem for a matrix d X d of correlators
-vector<djvec_t> gevp(const vector<djvec_t> &d,const size_t t0);
+tuple<vector<djvec_t>,vector<djvec_t>,vector<djvec_t>> gevp(const vector<djvec_t> &d,const size_t t0);
 
 #endif

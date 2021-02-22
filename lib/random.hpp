@@ -63,6 +63,38 @@ public:
   int &seed=second;
 };
 
+inline vector<double> multivariate(const vector<double> &_mean,const vector<double>& _sigma,gen_t& gen)
+{
+  const int n=_mean.size();
+  
+  Eigen::VectorXd mean(n);
+  for(int i=0;i<n;i++) mean(i)=_mean[i];
+  Eigen::MatrixXd sigma(n,n);
+  for(int i=0;i<n;i++)
+    for(int j=0;j<n;j++)
+      sigma(i,j)=_sigma[j+n*i];
+  
+  Eigen::VectorXd x(n);
+  for(int i=0;i<n;i++)
+    x(i)=gen.get_gauss(0,1);
+  
+  const Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigen_solver(sigma);
+  const Eigen::MatrixXd eigenvectors=eigen_solver.eigenvectors().real();
+  
+  const Eigen::MatrixXd eigenvalues=eigen_solver.eigenvalues().real().asDiagonal();
+  
+  const Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(eigenvalues);
+  const Eigen::MatrixXd sqrt_eigenvalues=es.operatorSqrt();
+  const Eigen::MatrixXd Q=eigenvectors*sqrt_eigenvalues;
+  
+  const Eigen::VectorXd temp=Q*x+mean;
+  
+  vector<double> out(n);
+  for(int i=0;i<n;i++) out[i]=temp(i);
+  
+  return out;
+}
+
 //! if we ever needed a global generator...
 //EXTERN_RANDOM gen_t glb_gen;
 

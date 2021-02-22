@@ -10,6 +10,7 @@
 #include <valarray>
 #include <vector>
 
+#include <initializer_list>
 #include <traits.hpp>
 
 using namespace std;
@@ -198,5 +199,22 @@ T series(int n0,int dn,const Fun &fun,T tol)
   
   return out;
 }
+
+//! Resize a list of containers, passed by pointer
+template <typename T,typename...Ts>
+void resizeListOfContainers(std::initializer_list<T*> list,Ts&&...ts)
+{
+  for(auto& q : list)
+    q->resize(std::forward<Ts>(ts)...);
+};
+
+//! Execute a command and read the output
+string exec(const string& cmd);
+
+//! Gets the absolute path
+string absolute_path(const string& path);
+
+//! Gets the basename
+string basename(const string& path);
 
 #endif

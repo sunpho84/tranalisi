@@ -105,6 +105,14 @@ public:
       bin_write(it);
   }
   
+  //! specialization for string
+  inline auto bin_write(const string &out)
+  {
+    bin_write(out.length());
+    for(auto &it : out)
+      bin_write(it);
+  }
+  
   //! binary read, non-vector case
   template <class T>
   auto bin_read(T &out) const -> enable_if_t<is_pod<T>::value>
@@ -120,6 +128,14 @@ public:
   {
     for(size_t ri=0;ri<2;ri++)
       bin_read(((T*)&out)[ri]);
+  }
+  
+  //! binary read, string case
+  inline auto bin_read(string &out)
+  {
+    out.resize(bin_read<size_t>());
+    for(auto& o : out)
+      bin_read(o);
   }
   
   //! specialization for vector

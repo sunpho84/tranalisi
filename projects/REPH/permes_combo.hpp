@@ -2,12 +2,108 @@
 #define _PERMES_COMBO_HPP
 
 #include <REPH/perens.hpp>
+#include <REPH/phys_point.hpp>
 
-//! Holds all info for a combination of quarks
-struct permes_combo_t
+#include <set>
+
+//! Hold all data to draw ff
+template <typename TV=djvec_t>
+struct permes_t
 {
+  //! Scalar type
+  using T=remove_reference_t<decltype(TV{}[0])>;
+  
   //! Reference ensemble
   const perens_t& ens;
+  
+  //! Combination relative to the meson combination
+  const std::string mesTag;
+  
+  //! Build milled path
+  string milledPath() const
+  {
+    const string path=ens.dirPath+"/milledData/"+mesTag;
+    static set<string> createdDir;
+    
+    if(createdDir.find(path)==createdDir.end())
+      {
+	mkdir(path);
+	createdDir.insert(path);
+      }
+    
+    return path;
+  }
+  
+  //! Energy
+  TV E;
+  
+  //! Decay constant
+  TV fP;
+  
+  //! Charge of the spectator quark
+  const double eS;
+  
+  //! Charge of the forward line quark
+  const double eT;
+  
+  //! Form factor independent variable
+  TV X;
+  
+  //! Maximal X
+  T xMax() const
+  {
+    T m;
+    bool isFirst=true;
+    for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
+      if(ens.considerDec[iDecKin])
+	if(isFirst or m.ave()<X[iDecKin].ave())
+	  {
+	    isFirst=false;
+	    m=X[iDecKin];
+	  }
+    
+    return m;
+  }
+  
+  permes_t(const perens_t& ens,const string& mesTag,const double& eS,const double& eT) : ens(ens),mesTag(mesTag),eS(eS),eT(eT){}
+  
+  //! Form factors for V and A
+  array<TV,2> ff;
+  
+  //! Plot ff
+  void plotFf(const string& tag="") const;
+  
+  //! Correct the ff
+  void correctFf(const meson_t& mes,const size_t input_an);
+  
+  //! Return a bootstrap version
+  static permes_t<dbvec_t> getBoot(const permes_t<djvec_t>& in,const boot_init_t& jack_of_boot)
+  {
+    permes_t<dbvec_t> out(in.ens,in.mesTag,in.eS,in.eT);
+    
+    out.E=bvec_from_jvec(jack_of_boot,in.E);
+    out.fP=bvec_from_jvec(jack_of_boot,in.fP);
+    out.X=bvec_from_jvec(jack_of_boot,in.X);
+    for(int i=0;i<2;i++)
+      out.ff[i]=bvec_from_jvec(jack_of_boot,in.ff[i]);
+    
+    return out;
+  }
+};
+
+//! Holds all info for a combination of quarks
+template <typename TV=djvec_t>
+struct permes_combo_t : public permes_t<TV>
+{
+  using permes_t<TV>::ens;
+  using permes_t<TV>::ff;
+  using permes_t<TV>::E;
+  using permes_t<TV>::fP;
+  using permes_t<TV>::eS;
+  using permes_t<TV>::eT;
+  using permes_t<TV>::X;
+  using permes_t<TV>::milledPath;
+  using permes_t<TV>::mesTag;
   
   //! Index of the spectator quark
   const size_t iMs;
@@ -15,35 +111,47 @@ struct permes_combo_t
   //! Index of the forward line quark
   const size_t iMt;
   
-  //! Combination relative to the meson combination
-  const std::string mesComboTag;
-  
-  //! Path where to store mesons plots
-  const std::string mesPlotsPath;
-  
-  //! Charge of the spectator quark
-  const double eS;
-  
-  //! Charge of the forward line quark
-  const size_t eT;
-  
   //! Pseudoscalar coupling
   djvec_t ZP;
   
   //! Axial coupling
   djvec_t ZA;
   
-  //! Decay constant taken from Pseudoscalar current
-  djvec_t fP;
-  
   //! Decay constant taken from Axial current
   djvec_t fPbare;
   
-  //! Energy
-  djvec_t E;
-  
   //! Effective mass
   vector<djvec_t> eEff;
+  
+  //! Effective coupling
+  vector<djvec_t> zEff;
+  
+  //! Difference of energies between initial and final state
+  djvec_t dEdec;
+  
+  //! Quadrimomentum product
+  djvec_t PKdec;
+  
+  //! Pseudoscalar correlation function
+  vector<djvec_t> corrPP;
+  
+  //! T component of axial current
+  vector<djvec_t> corrA0P;
+  
+  //! Z component of axial current
+  vector<djvec_t> corrA3P;
+  
+  //! Decay correlators for V and A
+  array<vector<djvec_t>,2> corrPX;
+  
+  // //! Time interval for 3pts fit
+  // array<vector<Range>,2> tint3pts;
+  
+  //! Common range for all three points
+  // array<Range,2> commonTint3pts;
+  
+  //! Time interval for 2pts fit
+  // vector<Range> tint2pts;
   
   //! Load the PP correlation function
   djvec_t load2ptsPP(const size_t iMoms,const size_t iMomt);
@@ -52,357 +160,222 @@ struct permes_combo_t
   djvec_t load2ptsAP(const size_t iMoms,const size_t iMomt,const size_t iGamma);
   
   //! Load the three points correlation functions
-  djvec_t load3pts(const size_t iVA,const size_t iMoms,const size_t iMomt,const size_t iMom0);
+  djvec_t load3pts(const string& plotDirPath,const size_t iVA,const size_t iMs,const size_t iMt,const size_t iMoms,const size_t iMomt,const size_t iMom0,const char* extraTag);
   
   //! Computes the axial couplings
-  void computeAxialPseudoCouplings();
+  void computeAxialPseudoCouplings(const string& mesPlotsPath);
   
   //! Plot the dispersion relation
-  void plotDispRel() const;
+  void plotDispRel(const string& mesPlotsPath) const;
   
-  // void fuffa()
-  // {
-  //   //set proxies
-  //   const vector<std::array<double,3>>& moms=ens.moms;
-  //   const size_t& nMoms=ens.nMoms;
-  //   const size_t& T=ens.T;
-  //   const size_t& L=ens.L;
+  //! Load all 2pts
+  void load2pts(const bool forceLoad);
+  
+  //! Load all 3pts
+  void load3pts(const bool forceLoad);
+  
+  //! Load all data
+  void load(const bool forceLoad=false)
+  {
     
-    /////////////////////////////////////////////////////////////////
-    
-    // const index_t ind3ptsKin({{"iMoms",nMoms},{"iMomt",nMoms},{"iMom0",nMoms}});
-    
-    // vector<vector<djvec_t>> corr(2,vector<djvec_t>(ind3ptsKin.max(),djvec_t{(size_t)T/2+1}));
-    // vector<djvec_t> normaliz(ind3ptsKin.max(),djvec_t{(size_t)T/2+1});
-    // djvec_t dE(ind3ptsKin.max());
-    // djvec_t PK(ind3ptsKin.max());
-    
-    // vector<bool> consider(ind3ptsKin.max());
-    // vector<bool> hasSymm(ind3ptsKin.max());
-    // vector<int> symmOf(ind3ptsKin.max(),-1);
-    // for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-    //   {
-    // 	const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
-    // 	const size_t iMoms=c3pts[0],iMomt=c3pts[1],iMom0=c3pts[2];
-    // 	consider[i3ptsKin]=(iMomt!=iMom0);
-    // 	hasSymm[i3ptsKin]=(iMoms==iMom0);
-    // 	if(hasSymm[i3ptsKin])
-    // 	  symmOf[i3ptsKin]=ind3ptsKin({iMomt,iMoms,iMomt});
-    //   }
-    
-    // vector<int> iMesOf3ptsKin(ind3ptsKin.max());
-    // vector<double> P(ind3ptsKin.max()),Eg(ind3ptsKin.max()),k(ind3ptsKin.max()),khat(ind3ptsKin.max());
-    // for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-    //   {
-    // 	const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
-    // 	const size_t iMoms=c3pts[0],iMomt=c3pts[1],iMom0=c3pts[2];
-    // 	const size_t iMes=iMesOf3ptsKin[i3ptsKin]=ens.indMesKin({iMoms,iMom0});
-    // 	P[i3ptsKin]=2*M_PI*(moms[iMom0][2]-moms[iMoms][2])/L;
-    // 	k[i3ptsKin]=2*M_PI*(moms[iMom0][2]-moms[iMomt][2])/L;
-    // 	khat[i3ptsKin]=2*sin(k[i3ptsKin]/2);
+    load2pts(forceLoad);
+    load3pts(forceLoad);
+  }
+  
+  //! Print all kinematics info
+  void printKin() const
+  {
+    const string path=ens.dirPath+"/plots/"+mesTag+"/kinematics.txt";
+    ofstream out(path);
+    if(not out.good())
+      CRASH("Unable to create output %s",path.c_str());
 	
-    // 	// const djack_t E=latt_en_1D(M,P);
-    // 	Eg[i3ptsKin]=2*asinh(fabs(khat[i3ptsKin])/2);
-    // 	const double EgT=sinh(Eg[i3ptsKin])*(1-exp(-T*Eg[i3ptsKin]));
-    // 	dE[i3ptsKin]=E[iMes]-Eg[i3ptsKin];
-    // 	PK[i3ptsKin]=E[iMes]*Eg[i3ptsKin]-P[i3ptsKin]*khat[i3ptsKin];
+    for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
+      {
+	const int iMesKin=ens.iMesKinOfDecKin[iDecKin];
 	
-    // 	cout<<iMoms<<" "<<iMomt<<" "<<iMom0<<endl;
-    // 	cout<<" P: "<<P[i3ptsKin]<<endl;
-    // 	cout<<" Pg: "<<k[i3ptsKin]<<endl;
-    // 	cout<<" Pghat: "<<khat[i3ptsKin]<<endl;
-    // 	cout<<" E: "<<E[iMes].ave_err()<<endl;
-    // 	cout<<" Eg: "<<Eg[i3ptsKin]<<endl;
-    // 	cout<<" EgT: "<<EgT<<endl;
-    // 	cout<<" dE: "<<dE[i3ptsKin].ave_err()<<endl;
-	
-    // 	for(int iVA=0;iVA<2;iVA++)
-    // 	  corr[iVA][i3ptsKin]=
-    // 	    load3pts(iVA,iMoms,iMomt,iMom0)*eT+
-    // 	    ((iVA==0)?+1.0:-1.0)*
-    // 	    load3pts(iVA,iMoms,iMomt,iMom0)*eS;
-    // 	// load3pts(iVA,iMs,iMt,iMoms,iMomt,iMom0);
-	
-    // 	for(size_t t=0;t<=T/2;t++)
-    // 	  {
-    // 	    const djack_t &A=E[iMes];
-    // 	    //const djack_t &B=Eeff[iMes][std::min(std::min(t,T-t),T/2-1)];
-    // 	    const djack_t &W=A;
-    // 	    //cout<<t<<" "<<smart_print(A.ave_err())<<" "<<smart_print(B.ave_err())<<endl;
-    // 	    normaliz[i3ptsKin][t]=4*W*EgT/(ZP[iMes]*exp(-t*W-(T/2-t)*Eg[i3ptsKin]));
-    // 	  }
-    //   }
+	out<<ens.indDecKin.descr(iDecKin)<<endl;
+	out<<" X: "<<X[iDecKin].ave_err()<<endl;
+	out<<" Pmes_z: "<<ens.pMes[iMesKin]<<endl;
+	out<<" Khat_z: "<<ens.kHatDec[iDecKin]<<endl;
+	out<<" PK: "<<PKdec[iDecKin].ave_err()<<endl;
+	out<<" Eg: "<<ens.Eg[iDecKin]<<endl;
+	out<<" EgT: "<<ens.EgT(iDecKin)<<endl;
+	out<<endl;
+      }
     
-    // /////////////////////////////////////////////////////////////////
-    
-    // vector<size_t> tMin(ind3ptsKin.max(),0);
-    // vector<size_t> tMax(ind3ptsKin.max(),0);
-    
-    // for(int iVA=0;iVA<2;iVA++)
-    //   {
-    // 	for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-    // 	  if(consider[i3ptsKin])
-    // 	    {
-    // 	      grace_file_t outplot(combine("plots/3pts_%s_range_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
-    // 	      const djvec_t eff=effective_mass(corr[iVA][i3ptsKin],T/2,0);
-    // 	      forward_derivative(eff).ave_err().write(combine("plots/3pts_%s_eff_eff_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
-    // 	      const djvec_t y=eff-dE[i3ptsKin];
-    // 	      outplot.write_vec_ave_err(y.ave_err());
-	      
-    // 	      //compute the compatibility level
-    // 	      vector<double> err(T/2),comp(T/2);
-    // 	      grace_file_t outcomp(combine("plots/3pts_%s_comp_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
-    // 	      for(size_t t=T/12;t<T/2-T/12;t++)
-    // 		{
-    // 		  const djack_t e=eff[t]-dE[i3ptsKin];
-    // 		  if(not isnan(e.err()))
-    // 		    {
-    // 		      err[t]=e.err();
-    // 		      comp[t]=fabs(e.ave()/e.err());
-    // 		      outcomp.write_xy(t,comp[t]);
-    // 		    }
-    // 		}
-	      
-    // 	      if(hasSymm[i3ptsKin])
-    // 		{
-    // 		  const int i3ptsKinSymm=symmOf[i3ptsKin];
-    // 		  cout<<dE[i3ptsKin].ave_err()<<" "<<dE[i3ptsKinSymm].ave_err()<<endl;
-    // 		  grace_file_t out(combine("plots/3pts_%s_symm_rat_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
-    // 		  const djvec_t s=-corr[iVA][i3ptsKin]/corr[iVA][symmOf[i3ptsKin]]-1.0;
-    // 		  out.write_vec_ave_err(s.ave_err());
-    // 		}
-	      
-    // 	      //plot the compatibility level
-    // 	      outcomp.new_data_set();
-    // 	      outcomp.set_all_colors(grace::BLUE);
-    // 	      const double &err_min=*min_element(err.begin()+T/12,err.end()-T/12);
-    // 	      const double &comp_min=*min_element(comp.begin()+T/12,comp.end()-T/12);
-    // 	      cout<<"comp min: "<<comp_min<<endl;
-    // 	      cout<<"err min: "<<err_min<<endl;
-    // 	      for(size_t t=0;t<T/2;t++)
-    // 		outcomp.write_xy(t,err[t]/err_min);
-	      
-    // 	      //! Number of stddev for compatibility
-    // 	      const double nDev=std::max(comp_min*1.1,1.0);
-    // 	      cout<<"nDev: "<<nDev<<endl;
-	      
-    // 	      vector<size_t> cl;
-    // 	      bool incl=false;
-    // 	      for(size_t t=T/12;t<T/2-T/12;t++)
-    // 		{
-    // 		  const djack_t e=eff[t]-dE[i3ptsKin];
-    // 		  const double c=fabs(e.ave()/e.err());
-    // 		  const bool newIncl=(c<nDev);
-		  
-    // 		  if(incl and not newIncl) cl.push_back(t-1);
-    // 		  if((not incl) and newIncl) cl.push_back(t);
-		  
-    // 		  incl=newIncl;
-    // 		}
-	      
-    // 	      if(incl)
-    // 		cl.push_back(T/2-T/12);
-	      
-    // 	      if(cl.size()==0)
-    // 		CRASH("No compatible point for kinematic %s",ind3ptsKin.descr(i3ptsKin).c_str());
-    // 	      else
-    // 		{
-    // 		  cout<<"NRanges: "<<cl.size()/2<<"  ";
-    // 		  for(size_t iCl=0;iCl<cl.size()/2;iCl++)
-    // 		    cout<<"["<<cl[iCl*2]<<";"<<cl[iCl*2+1]<<"] ";
-    // 		  cout<<endl;
-    // 		}
-	      
-    // 	      if(cl.size()%2)
-    // 		CRASH("Size %d of %d should be even",(int)i3ptsKin,(int)cl.size());
-	      
-    // 	      // for(size_t iCl=0;iCl<cl.size()/2;iCl++)
-    // 	      //   outplot.write_line(cl[iCl*2]-0.5,cl[iCl*2+1]+0.5,0.0);
-	      
-    // 	      cout<<"Merging "<<i3ptsKin<<endl;
-    // 	      size_t iCl=0;
-    // 	      int nMerged=0;
-    // 	      do
-    // 		{
-    // 		  while(cl.size()/2>1 and iCl<cl.size()/2)
-    // 		    {
-    // 		      auto begThis=cl.begin()+iCl;
-    // 		      auto endThis=cl.begin()+iCl+1;
-    // 		      auto begNext=cl.begin()+iCl+2;
-    // 		      auto endNext=cl.begin()+iCl+3;
-		      
-    // 		      const size_t gap=((endNext-begNext)+(endThis-begThis))/2;
-		      
-    // 		      if(*(endThis+1)<=(*endThis)+gap)
-    // 			{
-    // 			  cout<<"Merged ["<<*begThis<<";"<<*endThis<<"] with ["<<*begNext<<";"<<*endNext<<"], result";
-    // 			  cl.erase(endThis,begNext+1);
-    // 			  cout<<" ["<<*begThis<<";"<<*endThis<<"]"<<endl;
-			  
-    // 			  nMerged++;
-    // 			}
-    // 		      else
-    // 			{
-    // 			  cout<<"Not merged ["<<*begThis<<";"<<*endThis<<"] with ["<<*begNext<<";"<<*endNext<<"]"<<endl;
-    // 			  iCl+=2;
-    // 			}
-    // 		    }
-    // 		  cout<<"NMerged: "<<nMerged<<endl;
-    // 		  cout<<endl;
-    // 		}
-    // 	      while(nMerged!=0);
-	      
-    // 	      // for(size_t iCl=0;iCl<cl.size()/2;iCl++)
-    // 	      //   outplot.write_constant_band(cl[iCl*2]-0.5,cl[iCl*2+1]+0.5,djack_t(dE[i3ptsKin]-dE[i3ptsKin].err()*3));
-	      
-    // 	      outplot.set_title(to_string(i3ptsKin));
-	      
-    // 	      //select tmin/max taking largest interval
-    // 	      for(size_t iCl=0;iCl<cl.size()/2;iCl++)
-    // 		if(tMax[i3ptsKin]-tMin[i3ptsKin]<cl[iCl*2+1]-cl[iCl*2])
-    // 		  {
-    // 		    tMax[i3ptsKin]=cl[iCl*2+1];
-    // 		    tMin[i3ptsKin]=cl[iCl*2];
-    // 		  }
-	      
-    // 	      cout<<i3ptsKin<<" "<<ind3ptsKin.descr(i3ptsKin)<<": range ["<<tMin[i3ptsKin]<<";"<<tMax[i3ptsKin]<<"]"<<endl;
-	      
-    // 	      /////////////////////////////////////////////////////////////////
-	      
-    // 	      vector<double> a(y.size()),e(y.size());
-    // 	      for(size_t i=0;i<y.size();i++)
-    // 		{
-    // 		  a[i]=y[i].ave();
-    // 		  e[i]=y[i].err();
-    // 		}
-	      
-    // 	      const size_t firstCompDef=T/12;
-    // 	      const size_t lastCompDef=comp.size()-T/12;
-    // 	      size_t firstComp=firstCompDef;
-    // 	      size_t lastComp=lastCompDef;
-	      
-    // 	      //! loop until a decent compatibility range is obtained
-    // 	      double nSig=1.0;
-    // 	      do
-    // 		{
-    // 		  do firstComp++;
-    // 		  while(comp[firstComp]>nSig and firstComp<comp.size());
-		  
-    // 		  do lastComp--;
-    // 		  while(comp[lastComp]>nSig and firstComp>0);
-		  
-    // 		  nSig*=1.1;
-    // 		}
-    // 	      while(lastComp==lastCompDef or firstComp==firstCompDef);
-	      
-    // 	      const size_t D=std::min(5,(int)(lastComp-firstComp));
-    // 	      int tMinBest=0,tMaxBest=0;
-    // 	      double pMax=0;
-	      
-    // 	      for(size_t tMin=firstComp;tMin<lastComp-D;tMin++)
-    // 		for(size_t tMax=tMin+D;tMax<lastComp;tMax++)
-    // 		  {
-    // 		    const size_t d=tMax-tMin+1;
-		    
-    // 		    double Ch2Unc=0;
-		    
-    // 		    for(size_t i=tMin;i<=tMax;i++)
-    // 		      Ch2Unc+=sqr(comp[i]);
-		    
-    // 		    Matrix<double,Dynamic,Dynamic> c(d,d);
-    // 		    for(size_t i=0;i<d;i++)
-    // 		      for(size_t j=0;j<d;j++)
-    // 			c(i,j)=cov(y[i+tMin],y[j+tMin]);
-		    
-    // 		    Matrix<double,Dynamic,Dynamic> cInv=c.inverse();
-    // 		    double Ch2Corr=0;
-    // 		    for(size_t i=0;i<d;i++)
-    // 		      for(size_t j=0;j<d;j++)
-    // 			Ch2Corr+=a[i+tMin]*a[j+tMin]*cInv(i,j);
-		    
-    // 		    //Ch2Corr/=tMax-tMin+1;
-		    
-    // 		    if(Ch2Corr<1000 and Ch2Corr>0)
-    // 		      {
-    // 			const double p=ch2Distr(Ch2Corr,d);
-    // 			cout<<tMin<<" "<<tMax<<" "<<Ch2Corr<<" "<<Ch2Unc<<" "<<p<<endl;
-    // 			if(p>pMax)
-    // 			  {
-    // 			    pMax=p;
-    // 			    tMinBest=tMin;
-    // 			    tMaxBest=tMax;
-    // 			  }
-    // 		      }
-    // 		  }
-	      
-    // 	      if(tMinBest==0 and tMaxBest==0)
-    // 		{
-    // 		  tMinBest=T/4-D/2;
-    // 		  tMaxBest=T/4+D/2;
-    // 		}
-	      
-    // 	      cout<<"Best: "<<ind3ptsKin.descr(i3ptsKin)<<" ["<<tMinBest<<":"<<tMaxBest<<"] "<<pMax<<" within ["<<firstComp<<":"<<lastComp<<"]"<<endl;
-    // 	      outplot.write_line([](double){return 0;},tMinBest-0.5,tMaxBest+0.5);
-	      
-    // 	      tMax[i3ptsKin]=tMaxBest;
-    // 	      tMin[i3ptsKin]=tMinBest;
-	      
-    // 	      /////////////////////////////////////////////////////////////////
-    // 	    }
+    const string symmPath=ens.dirPath+"/plots/"+mesTag+"/symmetrics.txt";
+    ofstream outSymm(symmPath);
+    if(not outSymm.good())
+      CRASH("Unable to create output %s",symmPath.c_str());
 	
-    // 	grace_file_t H_plot(combine("plots/H_%s.xmg",VA_tag[iVA]));
-    // 	grace_file_t ff_plot(combine("plots/ff_%s.xmg",VA_tag[iVA]));
-    // 	ff_plot.set_line_style(grace::NO_LINE);
-	
-    // 	for(size_t i3ptsKin=0;i3ptsKin<ind3ptsKin.max();i3ptsKin++)
-    // 	  if(consider[i3ptsKin] // and hasSymm[i3ptsKin]
-    // 	     )
-    // 	    {
-    // 	      const int iMes=iMesOf3ptsKin[i3ptsKin];
-	      
-    // 	      const vector<size_t> c3pts=ind3ptsKin(i3ptsKin);
-	      
-    // 	      const djvec_t y=corr[iVA][i3ptsKin]*normaliz[i3ptsKin];
-    // 	      const djack_t H=constant_fit(y,// T/4-1+0*
-    // 					   tMin[i3ptsKin],// T/4+1+0*
-    // 					   tMax[i3ptsKin],combine("plots/3pts_%s_fit_%s.xmg",VA_tag[iVA],ind3ptsKin.descr(i3ptsKin).c_str()));
-    // 	      const djack_t x=2*PK[i3ptsKin]/sqr(E[0]);
-    // 	      djack_t f;
-	      
-    // 	      if(iVA==1)
-    // 		f=(H-fPbare[iMes]*(eT-eS))/PK[i3ptsKin];
-    // 	      else
-    // 		f=H*E[0]/(Eg[i3ptsKin]*P[i3ptsKin]-E[iMes]*khat[i3ptsKin]);
-	      
-    // 	      H_plot.write_ave_err(1/PK[i3ptsKin].ave(),H.ave_err());
-    // 	      ff_plot<<"# "<<i3ptsKin<<" "<<ind3ptsKin.descr(i3ptsKin)<<"\n";
-    // 	      ff_plot.write_ave_err(x.ave(),f.ave_err());
-    // 	    }
-    //   }
-  // }
+    for(size_t iDecKin=0;iDecKin<ens.nDecKin;iDecKin++)
+      if(ens.hasSymmDec[iDecKin])// and ens.symmOfDec[iDecKin]>(int)iDecKin)
+	{
+	  const vector<size_t> cDec=ens.indDecKin(iDecKin);
+	  const size_t iMoms=cDec[0],iMomt=cDec[1],iMom0=cDec[2];
+	  outSymm<<" "<<X[iDecKin].ave()<<" "<<iDecKin<<" "<<iMoms<<" "<<iMomt<<" "<<iMom0<<"  "<<ens.symmOfDec[iDecKin]<<endl;
+	}
+    
+    out<<"/////////////////////////////////////////////////////////////////"<<endl;
+    
+    for(size_t iMesKin=0;iMesKin<ens.nMesKin;iMesKin++)
+      {
+	out<<ens.indMesKin.descr(iMesKin)<<endl;
+	out<<" E: "<<E[iMesKin].ave_err()<<endl;
+	out<<" fP: "<<fP[iMesKin].ave_err()<<endl;
+	out<<" fPbare: "<<fPbare[iMesKin].ave_err()<<endl;
+	out<<" ZP: "<<ZP[iMesKin].ave_err()<<endl;
+	out<<" ZA: "<<ZA[iMesKin].ave_err()<<endl;
+	out<<endl;
+      }
+  }
+  
+  //! Plots the form factors
+  permes_combo_t& plotFf(const string& tag="")
+  {
+    static_cast<permes_t<TV>*>(this)->plotFf(tag);
+    
+    return *this;
+  }
   
   //! Constructor
-  permes_combo_t(const perens_t& ens,const size_t& iMs,const size_t& iMt,const double& eS,const double& eT,const std::string tag) :
-    ens(ens),
+  permes_combo_t(const perens_t& ens,const string& mesName,const size_t& iMs,const size_t& iMt,const double& eS,const double& eT) :
+    permes_t<TV>(ens,combine("%s/iMs%zu" "_" "iMt%zu",mesName.c_str(),iMs,iMt),eS,eT),
     iMs(iMs),
-    iMt(iMt),
-    mesComboTag(combine("Mes_iMs%zu" "_" "iMt%zu" "_%s",iMs,iMt,tag.c_str())),
-    mesPlotsPath(combine("%s/plots/%s",ens.dirPath.c_str(),mesComboTag.c_str())),
-    eS(eS),
-    eT(eT)
+    iMt(iMt)
   {
-    mkdir(mesPlotsPath);
+    resizeListOfContainers({&ZP,&ZA,&fP,&fPbare,&E,&fP},ens.nMesKin);
+    resizeListOfContainers({&eEff,&zEff},ens.nMesKin);
+    resizeListOfContainers({&tint2pts},ens.nMesKin);
     
-    ZA.resize(ens.nMesKin);
-    ZP.resize(ens.nMesKin);
-    fP.resize(ens.nMesKin);
-    fPbare.resize(ens.nMesKin);
-    E.resize(ens.nMesKin);
-    eEff.resize(ens.nMesKin);
+    resizeListOfContainers({&corrA0P,&corrA3P,&corrPP},ens.nMesKin,djvec_t{(size_t)ens.T/2+1});
     
-    computeAxialPseudoCouplings();
-    plotDispRel();
+    resizeListOfContainers({&this->ff[0],&this->ff[1]},ens.nDecKin);
+    
+    for(size_t iVA=0;iVA<2;iVA++)
+      {
+	resizeListOfContainers({&corrPX[iVA]},ens.nDecKin,djvec_t{(size_t)ens.T/2+1});
+	// resizeListOfContainers({&tint3pts[iVA]},ens.nDecKin,Range{0,0});
+      }
+    
+    resizeListOfContainers({&dEdec,&PKdec,&this->X},ens.nDecKin);
+    
+    load();
+  }
+  
+  //! Prepare the 3pts normalization
+  permes_combo_t& prepareKinematics(const bool useAnalytic);
+  
+  //! Perform the 2pts fit
+  permes_combo_t& fit2pts();
+  
+  // //! Chooses the time interval for 3pts
+  // permes_combo_t& choose3ptsTint(const string& mesPlotsPath,const char* fitTag,const bool forceRechoose=false);
+  
+  // //! Chooses a common range for three points
+  // permes_combo_t& choose3ptsTintCommon(const size_t& length=4);
+  
+  // //! Chosses the time interval for 2pts
+  // permes_combo_t& choose2ptsTint(const string& mesPlotsPath,const bool forceRechoose=false);
+  
+  //! Gets the correlation ratio
+  TV getCorrRat(const int iVA,const size_t iDecKin);
+  
+  //! Perform the 3pts fit
+  permes_combo_t& fit3pts();
+  
+  //! X study
+  void babababab()
+  {
+    grace_file_t test("/tmp/o.xmg");
+    const double m=this->E[0].ave();
+    
+    double thS=0.0;
+    double thT=0.0;
+    
+    for(double x=1e-6;x<=1+1e-6;x+=0.05)
+      {
+	class thFinder : public minimizer_fun_t
+	{
+	public:
+	  
+	  const double x;
+	  const perens_t& ens;
+	  const double m;
+	  
+	  double y(const vector<double>& p,const double& th0) const
+	  {
+	    const double& thS=p[0];
+	    const double& thT=p[1];
+	    
+	    return
+	      x-ens.getX(m,thS,thT,th0);
+	  };
+	  
+	  double th0forX(const vector<double>& p) const
+	  {
+	    double a=0;
+	    double b=0;
+	    
+	    while(y(p,a)*y(p,b)>=0)
+	      {
+		a=-b;
+		b=(b+1e-3)*1.01;
+		
+		if(b>1e3) CRASH("No solution found");
+	      };
+	    
+	    return
+	      Brent_solve([this,&p](const double& x){return y(p,x);},a,b);
+	  };
+	  
+	  //! Constructor
+	  thFinder(const double x,const perens_t& ens,const double m) : x(x),ens(ens),m(m)
+	  {
+	  }
+	  
+	  double operator()(const double& thS,const double& thT,const double& th0) const
+	  {
+	    const double y=sqr(thS)+sqr(thT)+sqr(th0);
+	    
+	    return y;
+	  }
+	  
+	  double operator()(const vector<double> &p) const
+	  {
+	    const double th0=th0forX(p);
+	    return (*this)(p[0],p[1],th0);
+	  }
+	  
+	  double Up() const {return 1;}
+	};
+	
+	thFinder thetas(x,this->ens,m);
+	
+	minimizer_pars_t pars;
+	pars.add("thS",thS,0.1);
+	pars.add("thT",thT,0.1);
+	
+	minimizer_t min(thetas,pars);
+	
+	const vector<double> minPars=min.minimize();
+	cout<<x<<endl;
+	const double thS=minPars[0];
+	const double thT=minPars[1];
+	const double th0=thetas.th0forX(minPars);
+	cout<<"ThS: "<<thS<<endl;
+	cout<<"ThT: "<<thT<<endl;
+	cout<<"Th0: "<<th0<<endl;
+	cout<<"x: "<<this->ens.getX(m,thS,thT,th0)<<endl;
+	cout<<"func: "<<thetas(minPars)<<endl;
+	cout<<"x: "<<this->ens.getX(m,0,0,0)<<endl;
+	cout<<"func: "<<thetas(0.0,0.0,0.0)<<endl;
+      }
   }
 };
+
+//! All combinations of a physical meson
+using AllMesCombos=vector<permes_combo_t<>>;
 
 #endif

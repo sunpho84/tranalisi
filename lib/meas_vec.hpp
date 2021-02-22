@@ -93,6 +93,22 @@ public:
     return out;
   }
   
+  //! compute error with error
+  vec_ave_err_t err_with_err() const
+  {
+    vec_ave_err_t out(this->size());
+    for(size_t it=0;it<this->size();it++) out[it]=(*this)[it].err_with_err();
+    return out;
+  }
+  
+  //! Return the skewness
+  vec_ave_err_t skewness() const
+  {
+    vec_ave_err_t out(this->size());
+    for(size_t it=0;it<this->size();it++) out[it]=(*this)[it].skewness();
+    return out;
+  }
+  
   //! compute average
   vector<double> ave() const
   {
@@ -274,6 +290,14 @@ template <class T> vmeas_t<boot_t<T>> bvec_from_jvec(const boot_init_t &iboot_in
 {
   vmeas_t<boot_t<T>> out(jvec.size());
   for(size_t it=0;it<jvec.size();it++) out[it].fill_from_jack(iboot_ind,jvec[it]);
+  return out;
+}
+
+//! initialize from a jvec and a seed
+template <class T> vmeas_t<boot_t<T>> bvec_from_jvec(const size_t seed,const vmeas_t<jack_t<T>> &jvec)
+{
+  vmeas_t<boot_t<T>> out(jvec.size());
+  for(size_t it=0;it<jvec.size();it++) out[it].fill_from_jack(seed,jvec[it]);
   return out;
 }
 

@@ -33,14 +33,14 @@ addons:
       - clang
       - libclang1
       - libgsl-dev
-      - libeigen3-dev
 
 script:
   - bash config/bootstrap
   - bash config/install_minuit2.sh
+  - bash config/install_eigen.sh
   - mkdir build
   - cd build
-  - ../configure --with-Eigen=/usr/include/eigen3 CPPFLAGS="-Wall -O0 -g -Wno-missing-braces"
+  - ../configure --with-Eigen=$HOME/include/eigen3 CPPFLAGS="-Wall -O0 -g -Wno-missing-braces"||cat config.log
   - make
 
 # Generate and deploy documentation

@@ -57,22 +57,21 @@ void perens_t::compute_deltam_from_prop()
 	    //ascissa
 	    x[ilinmom]=all_moms[linmoms[ilinmom][0]].p(L).norm2();
 	    
-	    auto get_sigma=[&](sigma::proj proj,sigma::ins ins) -> djack_t
-	      {
-		return sigma[im_r_ilinmom_isigmaproj_isigmains_ind({im,r,ilinmom,proj,ins})];
-	      };
+	    auto sigma2=sigma_ins_getter(im,r,ilinmom,sigma::SIGMA2);
+	    auto sigma3=sigma_ins_getter(im,r,ilinmom,sigma::SIGMA3);
 	    
 	    //elements to solve the system:
 	    //
 	    // b x + c y - a = 0
 	    // e x + f y - d = 0
 	    using namespace sigma;
-	    const djack_t& a=get_sigma(SIGMA2,PH);
-	    const djack_t& b=get_sigma(SIGMA2,TM);
-	    const djack_t& c=get_sigma(SIGMA2,CR);
-	    const djack_t& d=get_sigma(SIGMA3,PH);
-	    const djack_t& e=get_sigma(SIGMA3,TM);
-	    const djack_t& f=get_sigma(SIGMA3,CR);
+	    
+	    const djack_t& a=sigma2(PH);
+	    const djack_t& b=sigma2(TM);
+	    const djack_t& c=sigma2(CR);
+	    const djack_t& d=sigma3(PH);
+	    const djack_t& e=sigma3(TM);
+	    const djack_t& f=sigma3(CR);
 	    
 	    //non singular case_of
 	    if(both)
@@ -441,7 +440,7 @@ void perens_t::val_chir_extrap_deltam(perens_t &out) const
 	  
 	  auto xminmax=minmax_element(x.begin(),x.end());
 	  double xmax=*xminmax.second*1.1;
-	  write_fit_plot(plot,0,xmax,bind(poly_eval<djvec_t>,coeffs,_1),x,y);
+	  write_fit_plot(plot,0,xmax,bind(poly_eval<djvec_t,double>,coeffs,_1),x,y);
 	  plot.write_ave_err(0,coeffs[0].ave_err());
 	  
 	  cout<<tag<<" "<<out.im_r_ind({0,r})<<" "<<&res[out.im_r_ind({0,r})]<<" poss1: "<<&out.deltam_cr[out.im_r_ind({0,r})]<<" poss2: "<<&out.deltam_tm[out.im_r_ind({0,r})]<<endl;

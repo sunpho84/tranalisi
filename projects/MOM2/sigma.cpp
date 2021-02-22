@@ -162,6 +162,7 @@ vector<perens_t::task_t> perens_t::get_sigma_tasks(const vector<const perens_t*>
 
 perens_t& perens_t::compute_sigmas()
 {
+  cout<<"Computing sigmas"<<endl;
   //! list of all combination of transformations to be applied
   vector<pair<size_t,size_t>> map;
   
@@ -279,10 +280,17 @@ perens_t& perens_t::compute_sigmas()
 		  //trace with pslash
 		  out=0.0;
 		  for(size_t mu=0;mu<NDIM;mu++)
-		    if(fabs(ptilde[mu])>1e-10)
+		    if(pars::compute_sigma1_through_division)
+		      {
+			if(fabs(ptilde[mu])>1e-10)
+			  out+=
+			    (prop_inv*quaGamma[igmu[mu]]).trace().imag()/
+			    (12.0*ptilde[mu]*V*all_moms[mom].Np());
+		      }
+		    else
 		      out+=
-			(prop_inv*quaGamma[igmu[mu]]).trace().imag()/
-			(12.0*ptilde[mu]*V*all_moms[mom].Np());
+			(prop_inv*quaGamma[igmu[mu]]*ptilde[mu]).trace().imag()/
+			(12.0*V*ptilde.norm2());
 		  break;
 		case SIGMA2:
 		  //trace with identity
@@ -328,7 +336,7 @@ perens_t& perens_t::compute_sigmas()
 	  for(size_t iproj=0;iproj<sigma::nproj;iproj++)
 	    {
 	      const sigma::proj proj=sigma::proj_list[iproj];
-	      //cout<<"   Computing proj "<<iproj<<"/"<<sigma::nproj<<endl;
+	      //cout<<"   Computing proj "<<proj<<": "<<iproj<<"/"<<sigma::nproj<<endl;
 	      
 	      for(auto m : map)
 		{
@@ -463,7 +471,7 @@ void perens_t::val_chir_extrap_sigma(perens_t &out) const
 	      {
 		auto xminmax=minmax_element(x.begin(),x.end());
 		double xmax=*xminmax.second*1.1;
-		write_fit_plot(*plot,0,xmax,bind(poly_eval<djvec_t>,coeffs[isigmains],_1),x,y);
+		write_fit_plot(*plot,0,xmax,bind(poly_eval<djvec_t,double>,coeffs[isigmains],_1),x,y);
 		plot->write_ave_err(0,coeffs[isigmains][0].ave_err());
 	      }
 	    

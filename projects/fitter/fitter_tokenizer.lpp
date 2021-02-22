@@ -1,0 +1,113 @@
+%option case-insensitive
+%option nounput
+%option noyywrap
+%option reentrant
+%option bison-bridge
+%option bison-locations
+
+ /* define status to avoid c++ comment */
+%x COMMENT
+
+ /* raw definitions */
+DIGIT [0-9]
+SPACE [[:blank:]]
+SIGN \+|\-
+ANY .
+DOT \.
+
+ /* more complicated */
+DOUBLE {SIGN}?({DIGIT}*{DOT}{DIGIT}+)|({DIGIT}+{DOT}{DIGIT}*)
+INT {DIGIT}*
+MANTISSA e({SIGN}?{INT})
+SCI_DOUBLE ({DOUBLE}|{INT}){MANTISSA}
+
+/* header of tokenizer */
+%{
+
+#include <cstdio>
+#include <cstring>
+#include <fstream>
+
+#include <tranalisi.hpp>
+
+#include <fitter/node.hpp>
+
+using namespace std;
+
+#define DEBUG_PRINTF(...) if(debug_lexer) printf(__VA_ARGS__)
+
+namespace formulaParser
+{
+    void lex(char* buf,int &result,int max_size);
+}
+
+#define YY_INPUT(buf,result,max_size)					\
+    {									\
+	formulaParser::lex(buf,result,max_size);			\
+   }
+
+ /* handle locations */
+#define YY_USER_ACTION yylloc->first_line=yylloc->last_line=yylineno; \
+    yylloc->first_column=yycolumn;yylloc->last_column=yycolumn+yyleng-1; \
+    yycolumn+=yyleng;
+
+#include "fitter_parser.hpp"
+   
+   const int debug_lexer=1;
+   void *scanner;
+%}
+
+%%
+
+{SPACE}+                                      ;
+
+x                                   return 'x';
+
+\(                                  return '(';
+\)                                  return ')';
+\[                                  return '[';
+\]                                  return ']';
+{DOT}                               return '.';
+
+\*                                  return '*';
+\/                                  return '/';
+\+                                  return '+';
+\-                                  return '-';
+\^                                  return '^';
+
+sin                                 return TK_SIN;
+cos                                 return TK_COS;
+tan                                 return TK_TAN;
+sinh                                return TK_SINH;
+cosh                                return TK_COSH;
+tanh                                return TK_TANH;
+asin                                return TK_ASIN;
+acos                                return TK_ACOS;
+atan                                return TK_ATAN;
+asinh                               return TK_ASINH;
+acosh                               return TK_ACOSH;
+atanh                               return TK_ATANH;
+exp                                 return TK_EXP;
+log                                 return TK_LOG;
+sqrt                                return TK_SQRT;
+
+ /* recognizing number */
+{SCI_DOUBLE}|{DOUBLE} sscanf(yytext,"%lg",&yylval->real_val);DEBUG_PRINTF("Found Double: %s, parsed as %lg\n",yytext,yylval->real_val);return TK_REAL_VAL;
+{INT} sscanf(yytext,"%d",&yylval->int_val);DEBUG_PRINTF("Found Integer: %s, parsed as: %d\n",yytext,yylval->int_val);return TK_INT_VAL;
+
+ /* crash if finds unexpected word or unrecognized char */
+{ANY} printf("Found invalid character \'%c\'\n",yytext[0]);return TK_INVALID_CHAR;
+
+%%
+
+//initialize the scanner
+void init_scanner()
+{
+    yylex_init(&scanner);
+}
+
+//destroy the scanner
+void destroy_scanner()
+{
+    yylex_destroy(scanner);
+}

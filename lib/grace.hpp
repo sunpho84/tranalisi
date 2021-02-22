@@ -56,20 +56,9 @@ class grace_file_t : private ofstream
     return out;
   }
   
-  size_t cur_col; //!< current color for set (auto-incremented)
-  grace::color_t get_col_no_increment();
-  
-  size_t cur_poly_col; //!< current color for polygon
-  grace::color_t get_poly_col_no_increment();
-  
-  size_t cur_line_col; //!< current color for line
-  grace::color_t get_line_col_no_increment();
-  
-  size_t cur_symbol; //!< current symbol
-  grace::symbol_t get_symbol_no_increment();
-  
   size_t iset; //!< set id
   string legend; //! legend of the set
+  string comment; //! legend of the set
   
   grace::settype_t settype; //!< set type
   grace::symbol_t symbol; //!< symbol
@@ -96,8 +85,8 @@ class grace_file_t : private ofstream
   string subtitle; //!< subtitle of the plot
   double title_size; //!< size of the title
   double subtitle_size; //!< size of the subtitle
-  bool xaxis_logscale; //!< Whether or not the x-axis is on log scale
-  bool yaxis_logscale; //!< Whether or not the y-axis is on log scale
+  bool xaxis_logscale{false}; //!< Whether or not the x-axis is on log scale
+  bool yaxis_logscale{false}; //!< Whether or not the y-axis is on log scale
   string xaxis_label; //!< label of the x-axis
   string yaxis_label; //!< lable of the y-axis
   double xaxis_min,xaxis_max; //!< min and max for x-axis
@@ -111,6 +100,23 @@ class grace_file_t : private ofstream
   void close_cur_set();
   
 public:
+  
+  using ofstream::flush;
+  
+  size_t cur_col; //!< current color for set (auto-incremented)
+  grace::color_t get_col_no_increment();
+  
+  size_t cur_poly_col; //!< current color for polygon
+  grace::color_t get_poly_col_no_increment();
+  
+  size_t cur_line_col; //!< current color for line
+  grace::color_t get_line_col_no_increment();
+  
+  size_t cur_symbol; //!< current symbol
+  grace::symbol_t get_symbol_no_increment();
+  
+  //! Detect if open
+  using ofstream::is_open;
   
   //! direct write
   template <class T>
@@ -208,6 +214,9 @@ public:
   //! set the legend of current set
   void set_legend(const string &ext_legend);
   
+  //! set the comment of current set
+  void set_comment(const string &ext_comment);
+  
   //! shift iset
   void shift_iset(size_t how_many=1);
   
@@ -295,6 +304,7 @@ public:
     this->continuous_line(col);
     
     double x[npoints],y[npoints];
+    
 #pragma omp parallel for
     for(size_t ipoint=0;ipoint<npoints;ipoint++)
       {
@@ -336,7 +346,7 @@ public:
     for(size_t i=0;i<data.size();i++)
       if(!std::isnan(data[i].err()))
 	(*this)<<x[i]<<" "<<data[i]<<endl;
-    close_cur_set();
+    set_need_close_set();
   }
   
   void write_vec_ave_err(const vec_ave_err_t &data,grace::color_t col,grace::symbol_t sym);
@@ -398,7 +408,7 @@ void write_fit_plot(const string &path,double xmin,double xmax,const fun_t &fun,
 //! prepare a plot with a polynomial
 template <class TV,class T=typename TV::base_type>
 void write_poly_fit_plot(const string &path,double xmin,double xmax,const TV &res,const vector<double> &x,const TV &y)
-{write_fit_plot(path,xmin,xmax,bind(poly_eval<TV>,res,_1),x,y);}
+{write_fit_plot(path,xmin,xmax,bind(poly_eval<TV,double>,res,_1),x,y);}
 template <class TV,class T=typename TV::base_type> void write_poly_fit_plot(const string &path,double xmin,double xmax,const T&c,const TV &y)
 {write_poly_fit_plot(path,xmin,xmax,c,vector_up_to<double>(y.size()),y);}
 
