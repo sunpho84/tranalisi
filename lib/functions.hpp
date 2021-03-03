@@ -104,7 +104,7 @@ T two_pts_corr_with_ins_ratio_fun(const T &M,const T &DZ2_fr_Z2,const T &SL,cons
 //! return the time dependence expected from a certain mass, of the difference of the slope at time t+dt and t
 template <class T>
 T two_pts_corr_with_ins_ratio_diff_tdep(const T &M,const double &TH,const double &t,const double &dt,const int &par)
-{return two_pts_corr_with_ins_ratio_fun(M,M*0.0,M*0.0+1.0,TH,t+dt,par)-two_pts_corr_with_ins_ratio_fun(M,M*0.0,M*0.0+1.0,TH,t,par);}
+{return two_pts_corr_with_ins_ratio_fun(M,T(M*0.0),T(M*0.0+1.0),TH,t+dt,par)-two_pts_corr_with_ins_ratio_fun(M,T(M*0.0),T(M*0.0+1.0),TH,t,par);}
 
 //! handle keeping TH and parity and returning the function
 class two_pts_corr_with_ins_fun_t

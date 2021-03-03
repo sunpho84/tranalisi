@@ -1,6 +1,8 @@
 AM_CPPFLAGS+=-I$(top_srcdir)/projects/%D%
 
 bin_PROGRAMS+= \
+	$(top_builddir)/bin/ellesette \
+	$(top_builddir)/bin/ellesette_num \
 	$(top_builddir)/bin/kaon \
 	$(top_builddir)/bin/Kl2_IB \
 	$(top_builddir)/bin/gm2_IB_sc \
@@ -23,6 +25,8 @@ __top_builddir__bin_ultimate_SOURCES=%D%/ultimate.cpp %D%/common.cpp
 
 #	$(top_builddir)/bin/test_antonino
 
+__top_builddir__bin_ellesette_SOURCES=%D%/ellesette.cpp
+__top_builddir__bin_ellesette_num_SOURCES=%D%/ellesette_num.cpp
 __top_builddir__bin_manette_SOURCES=%D%/manette.cpp
 __top_builddir__bin_kaon_SOURCES=%D%/kaon.cpp
 __top_builddir__bin_reno_SOURCES=%D%/reno.cpp
