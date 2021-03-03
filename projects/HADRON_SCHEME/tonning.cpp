@@ -52,8 +52,8 @@ int main(int argc, char** argv)
 								const double V0P5=l[1].imag();
 								const double P5P5_ins_S=2*l[2].real();
 								const double V0P5_ins_S=2*l[3].imag();
-								const double P5P5_ins_P=2*l[4].imag();
-								const double V0P5_ins_P=-2*l[5].real();
+								const double P5P5_ins_P=-2*l[4].imag();
+								const double V0P5_ins_P=2*l[5].real();
 
 								const std::array<double,2> key={kappa,mass};
 
@@ -206,8 +206,8 @@ int main(int argc, char** argv)
 										{
 											const auto& a=d[t+T*iconf];
 											corr[t][iconf-dump] = corr_vec[t+T*iconf];
-											P5P5_ins_S[t][iconf-dump]=a[2];
-											V0P5_ins_S[t][iconf-dump]=a[3];
+											P5P5_ins_S[t][iconf-dump]=-a[2];
+											V0P5_ins_S[t][iconf-dump]=-a[3];
 										}
 								corr.clusterize(1);
 								P5P5_ins_S.clusterize();
@@ -225,7 +225,8 @@ int main(int argc, char** argv)
 								cout<<"mass_pi_tw: "<<mass_pi_tw<<endl;
 								const djvec_t dmcr_dm_corr = forward_derivative(V0P5_ins_S)/P5P5-forward_derivative(V0P5)*P5P5_ins_S/sqr(P5P5);
 								const djack_t dmcr_dm = dmcr_dm_corr[T/4];
-
+								const djack_t dmcr_dk = dmcr_dk_corr[T/4]/(-2*sqr(kappa));
+								
 								const djack_t delta_m_pi = mass_pi_tw - mass_pi_stag;
 								cout<<"delta m_pi: "<<delta_m_pi<<endl<<endl;
 								const djvec_t ratio_P = P5P5_ins_P/P5P5; 
@@ -234,7 +235,7 @@ int main(int argc, char** argv)
 								const djvec_t deff_pi_dk_corr = effective_slope(ratio_P,eff_pi,T/2);
 								const djack_t deff_pi_dk = constant_fit(deff_pi_dk_corr,(T*3)/24,T/2-1,"plot_deff_pi_dk.xmg");
 								const djvec_t deff_pi_dm_corr = effective_slope(ratio_S,eff_pi,T/2);
-								const djack_t deff_pi_dm = constant_fit(deff_pi_dm_corr,(T*3)/24,T/2-1,"plot_deff_pi_dm.xmg");
+								const djack_t deff_pi_dm = constant_fit(deff_pi_dm_corr,(T*3)/24,T/2-1,"plot_deff_pi_dm.xmg")/(-2*sqr(kappa));
 								const djack_t dk = (dmcr_dm*delta_m_pi-deff_pi_dm*mcr)
 									/(dmcr_dk*deff_pi_dm-dmcr_dm*deff_pi_dk);
 
