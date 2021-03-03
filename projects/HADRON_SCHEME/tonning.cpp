@@ -52,8 +52,8 @@ int main(int argc, char** argv)
 								const double V0P5=l[1].imag();
 								const double P5P5_ins_S=2*l[2].real();
 								const double V0P5_ins_S=2*l[3].imag();
-								const double P5P5_ins_P=2*l[4].imag();
-								const double V0P5_ins_P=-2*l[5].real();
+								const double P5P5_ins_P=-2*l[4].imag();
+								const double V0P5_ins_P=2*l[5].real();
 
 								const std::array<double,2> key={kappa,mass};
 
