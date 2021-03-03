@@ -119,8 +119,6 @@ int main(int argc, char** argv)
 		
 		grace_file_t P5P5_ins_P_plot("P5P5_ins_P.xmg");
 		grace_file_t P5P5_ins_S_plot("P5P5_ins_S.xmg");
-		grace_file_t eff_slope_P("slope_P5P5_ins_P.xmg");
-		grace_file_t eff_slope_S("slope_P5P5_ins_S.xmg");
 		grace_file_t mcr_fun_kappa_plot("mcr_fun_kappa.xmg");
 		grace_file_t mpi_fun_kappa_plot("mpi_fun_kappa.xmg");
   
@@ -234,12 +232,9 @@ int main(int argc, char** argv)
 								const djvec_t ratio_S = P5P5_ins_S/P5P5; 
 
 								const djvec_t deff_pi_dk_corr = effective_slope(ratio_P,eff_pi,T/2);
-								const djack_t deff_pi_dk = deff_pi_dk_corr[T/4];
-								eff_slope_P.write_vec_ave_err(deff_pi_dk_corr.ave_err());
+								const djack_t deff_pi_dk = constant_fit(deff_pi_dk_corr,(T*3)/24,T/2-1,"plot_deff_pi_dk.xmg");
 								const djvec_t deff_pi_dm_corr = effective_slope(ratio_S,eff_pi,T/2);
-								const djack_t deff_pi_dm = deff_pi_dm_corr[T/4];
-								eff_slope_S.write_vec_ave_err(deff_pi_dm_corr.ave_err());
-								
+								const djack_t deff_pi_dm = constant_fit(deff_pi_dm_corr,(T*3)/24,T/2-1,"plot_deff_pi_dm.xmg");
 								const djack_t dk = (dmcr_dm*delta_m_pi-deff_pi_dm*mcr)
 									/(dmcr_dk*deff_pi_dm-dmcr_dm*deff_pi_dk);
 
