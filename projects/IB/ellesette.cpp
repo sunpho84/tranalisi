@@ -136,7 +136,8 @@ djvec_t load_bubble(const string TAG,const bool useRe,const bool useIm)
    cout<<"Bubble[1]: "<<bubbleProd[1].ave_err()<<endl;
    cout<<"Bubble[2]: "<<bubbleProd[2].ave_err()<<endl;
    cout<<"Bubble["<<TH-1<<"]: "<<bubbleProd[TH-1].ave_err()<<endl;
-   cout<<"Ave: "<<aveBubbleSub.ave_err()<<" biassed: "<<sqr(aveBubble[IM]/T).ave_err()<<" bias: "<<(aveBubbleSquare/T).ave_err()<<endl;
+   const djack_t bias=sqr(aveBubble[IM]/T)-aveBubbleSub;
+   cout<<"Ave: "<<aveBubbleSub.ave_err()<<" biassed: "<<sqr(aveBubble[IM]/T).ave_err()<<" bias: "<<bias.ave_err()<<endl;
    cout<<"Test: "<<test/n<<endl;
    
    const djack_t y=bubbleProd[2]/aveBubbleSub-1;
@@ -145,7 +146,7 @@ djvec_t load_bubble(const string TAG,const bool useRe,const bool useIm)
    bubbleProd-=
     aveBubbleSub;
    
-   bubbleProd-=(djack_t)bubbleProd[TH];
+   // bubbleProd-=(djack_t)bubbleProd[TH];
    
    
   // djvec_t aveBubbleProd(T);
