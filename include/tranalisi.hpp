@@ -8,7 +8,6 @@
 #include <file.hpp>
 #include <fit.hpp>
 #include <gevp.hpp>
-#include "../lib/git_info.hpp"
 #include <grace.hpp>
 #include <index.hpp>
 #include <jack.hpp>

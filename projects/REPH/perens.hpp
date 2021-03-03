@@ -256,7 +256,13 @@ struct perens_t
 	
 	const vector<size_t> c=indMesKin(iMesKinOfDecKin[iDecKin]);
 	double pMes=2*M_PI*(moms[c[1]][2]-moms[c[0]][2])/L;
-	kinematics<<iMoms<<"\t"<<iMomt<<"\t"<<iMom0<<"\t"<<kDec[iDecKin]<<"\t"<<pMes<<endl;
+	
+	
+    const double en=latt_en_1D(0.94,pMes);
+    const double pk=en*Eg[iDecKin]-pMes*kDec[iDecKin];
+    const double x=2*pk/sqr(en);
+
+	kinematics<<iMoms<<"\t"<<iMomt<<"\t"<<iMom0<<"\t"<<kDec[iDecKin]<<"\t"<<pMes<<"\t"<<x<<endl;
       }
   }
   

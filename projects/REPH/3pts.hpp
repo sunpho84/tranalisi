@@ -561,10 +561,10 @@ void permes_t<TV>::correctFf(const meson_t& mes,const size_t input_an)
   const T Zcorrection=Za[iZ]/Zv[iZ];
   //cout<<"ZCorrection "<<ib<<" "<<Zcorrection.ave_err()<<endl;
   
-  for(int iVA=0;iVA<2;iVA++)
-    ff[iVA]*=
-      massCorrection;
-  
+  // for(int iVA=0;iVA<2;iVA++)
+  //   ff[iVA]*=
+  //     massCorrection;
+  cout<<"AAA "<<std::get<0>(mes)<<" "<<massCorrection<<endl;
   ff[0]*=Zcorrection;
 }
 

@@ -1,6 +1,8 @@
 #ifndef _PERENS_HPP
 #define _PERENS_HPP
 
+#include <filesystem>
+
 #include <tranalisi.hpp>
 
 #include "global.hpp"
@@ -92,7 +94,13 @@ struct perens_t
   /// Read ingredients
   void readIngredients()
   {
-    raw_file_t ingredientsFile(name+"/"+ingredientsPath,"r");
+    const string fullPath=name+"/"+ingredientsPath;
+    
+    if(std::filesystem::last_write_time(fullPath)<std::filesystem::last_write_time(name+"/data/conf.virtualph.dat"))
+      CRASH("ingredients file older than data");
+    
+    raw_file_t ingredientsFile(fullPath,"r");
+    
     const string read_compile_time=ingredientsFile.bin_read<string>();
     if(read_compile_time!=compile_time)
       CRASH("Read compile time \"%s\" not agreeing with current one \"%s\"",read_compile_time.c_str(),compile_time.c_str());
@@ -180,8 +188,8 @@ struct perens_t
     // 	    const djvec_t c=-(a+b)/sqrt(2);
     // 	    const djvec_t d=(a-b)/sqrt(2);
 	    
-    // 	    // a.ave_err().write(combine(plotsPath+"temp_icorr%zu_icomb%zu_mu%zu_alpha%zu_for_pol.xmg",icorr,icomb,1,alpha));
-    // 	    // b.ave_err().write(combine(plotsPath+"temp_icorr%zu_icomb%zu_mu%zu_alpha%zu_for_pol.xmg",icorr,icomb,2,alpha));
+     	    // a.ave_err().write(combine(plotsPath+"temp_icorr%zu_icomb%zu_mu%zu_alpha%zu_for_pol.xmg",icorr,icomb,1,alpha));
+     	    // b.ave_err().write(combine(plotsPath+"temp_icorr%zu_icomb%zu_mu%zu_alpha%zu_for_pol.xmg",icorr,icomb,2,alpha));
     // 	    c.ave_err().write(combine(plotsPath+"temp_icorr%zu_icomb%zu_alpha%zu_pol1.xmg",icorr,icomb,alpha));
     // 	    d.ave_err().write(combine(plotsPath+"temp_icorr%zu_icomb%zu_alpha%zu_pol2.xmg",icorr,icomb,alpha));
     // 	  }
@@ -226,8 +234,15 @@ struct perens_t
 	
 	for(size_t iIns=0;iIns<2;iIns++)
 	  {
-	    const djvec_t a11=n.get3pts(HA,iComb[iIns],useSmeared,1,1);
-	    const djvec_t a22=n.get3pts(HA,iComb[iIns],useSmeared,2,2);
+	    const djvec_t a11=n.get3pts(HA,iComb[iIns],useSmeared,1,1
+					,combine("%stemp_a11_icorr1_iX%zu_iIns%zu.xmg",plotsPath.c_str(),iX,iIns)
+					);
+	    const djvec_t a22=n.get3pts(HA,iComb[iIns],useSmeared,2,2
+					,combine("%stemp_a22_icorr1_iX%zu_iIns%zu.xmg",plotsPath.c_str(),iX,iIns)
+					);
+	    
+	    // a11.ave_err().write(combine("%stemp_a11_icorr1_iX%zu_iIns%zu.xmg",plotsPath.c_str(),iX,iIns));
+	    // a22.ave_err().write(combine("%stemp_a22_icorr1_iX%zu_iIns%zu.xmg",plotsPath.c_str(),iX,iIns));
 	    
 	    c3[iC3({iIns,HA,iX})]=(a11+a22);
 	    // c3[iC3({iIns,HA,iX})].ave_err().write(combine(plotsPath+"temp_a_iX%zu_iIns%zu.xmg",iX,iIns));

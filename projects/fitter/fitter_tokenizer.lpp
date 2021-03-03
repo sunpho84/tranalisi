@@ -10,6 +10,8 @@
 
  /* raw definitions */
 DIGIT [0-9]
+LETTER [a-z]
+ALNUM [a-z0-9_]
 SPACE [[:blank:]]
 SIGN \+|\-
 ANY .

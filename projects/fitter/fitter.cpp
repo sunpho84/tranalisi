@@ -6,6 +6,7 @@
 
 #include <tranalisi.hpp>
 
+#include "data.hpp"
 #include "node.hpp"
 
 #include "fitter/fitter_parser.hpp"
@@ -13,64 +14,15 @@
 
 using namespace std;
 
-node_t* parseFormula(const string& formulaString);
-
 const size_t nArgsPerFile=5;
 
 ///Exit with help message
 void exitWithHelp(const char* execName)
 {
-  CRASH("Use %s fileData xmin xmax formula filePlot [, fileData xmin xmax formula filePlot, ... ] [ -- ansatz ]",execName);
+  CRASH("Use %s fileData xmin xmax formula filePlot [ fileData xmin xmax formula filePlot ... ] [ -- ansatz ]",execName);
 }
 
-/// Data
-struct data_fit_t
-{
-  const string fileData;
-  const double xmin,xmax;
-  const node_t* formula;
-  const string filePlot;
-  
-  struct data_t
-  {
-    double x;
-    djack_t y;
-    double e;
-  };
-  
-  vector<data_t> data;
-  
-  /// Constructor
-  data_fit_t(const string& fileData,const double xmin,const double xmax,const string& formulaString,const string& filePlot) :
-    fileData(fileData),xmin(xmin),xmax(xmax),formula(parseFormula(formulaString)),filePlot(filePlot)
-  {
-    static int seed=2424;
-    
-    /// Open the file
-    obs_file_t fin(fileData,3,{0,1,2});
-    
-    /// Count the lines
-    const size_t nLines=fin.length(1)/3;
-    data.resize(nLines);
-    
-    for(size_t iLine=0;iLine<nLines;iLine++)
-      {
-	/// Single line
-	const vector<double> l=fin.read(1);
-	  data[iLine].x=l[0];
-	  data[iLine].y.fill_gauss(l[1],l[2],seed++);
-	  data[iLine].e=l[2];
-      }
-  }
-  
-  /// Destructor
-  ~data_fit_t()
-  {
-    //delete formula;
-  }
-};
-
-vector<data_fit_t> dataFit;
+vector<data_t> dataFit;
 vector<size_t> parIds;
 map<size_t,size_t> idOfPars;
 vector<double> guessPars;
@@ -136,19 +88,29 @@ public:
   {
     double ch2=0;
     
+    size_t ntot_contr=0;
     for(auto& d : dataFit)
-      for(const auto& c : d.data)
-	{
-	  const double& x=c.x;
-	  const double& n=c.y[ijack];
-	  const double& e=c.e;
-	  const double t=d.formula->eval(p,x);
-	  double contr=sqr((n-t)/e);
-	  // cout<<contr<<" = [("<<n<<"-f("<<x<<")="<<t<<")/"<<e<<"]^2]"<<endl;
-	  if(x>=d.xmin and x<=d.xmax)
-	    ch2+=contr;
-	}
-    
+      {
+	size_t ncontr=0;
+	for(const auto& c : d.points)
+	  {
+	    const double& x=c.x;
+	    const double& n=c.y[ijack];
+	    const double& e=c.e;
+	    const double t=d.formula->eval(p,x);
+	    double contr=sqr((n-t)/e);
+	    // cout<<contr<<" = [("<<n<<"-f("<<x<<")="<<t<<")/"<<e<<"]^2]"<<endl;
+	    if(x>=d.xmin and x<=d.xmax)
+	      {
+		ncontr++;
+		ch2+=contr;
+	      }
+	    // else
+	    //   cout<<"Discarded, "<<x<<" not in range: "<<d.xmin<<" "<<d.xmax<<endl;
+	  }
+	ntot_contr+=ncontr;
+	// cout<<"NContr: "<<ncontr<<endl;
+      }
     // cout<<"ch2: "<<ch2<<endl;
     
     return ch2;
@@ -174,13 +136,17 @@ int main(int narg,char** arg)
   ch2_t ch2;
   
   djvec_t pars(nPars);
+  djack_t ch2min;
   for(ijack=0;ijack<=njacks;ijack++)
     {
       minimizer_t minimizer(ch2,fitPars);
       vector<double> parsEl=minimizer.minimize();
       for(size_t iPar=0;iPar<nPars;iPar++)
 	pars[iPar][ijack]=parsEl[iPar];
+      
+      ch2min[ijack]=ch2(parsEl);
     }
+  cout<<"Ch2: "<<ch2min[njacks]<<endl;
   
   cout<<pars.ave_err()<<endl;
   
@@ -188,7 +154,7 @@ int main(int narg,char** arg)
     {
       grace_file_t plot(data.filePlot);
       
-      for(auto& d : data.data)
+      for(auto& d : data.points)
 	plot.write_ave_err(d.x,{d.y.ave(),d.e});
       
       plot.write_polygon([&](const double& x){return data.formula->jackEval(pars,x);},data.xmin,data.xmax,grace::GREEN4);

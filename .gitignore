@@ -36,3 +36,4 @@ projects/FPIEM/fse_silvano
 /config/ylwrap
 /pull_req.sh
 /projects/REPH/tests.hpp
+/.cache/

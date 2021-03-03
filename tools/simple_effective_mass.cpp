@@ -7,6 +7,8 @@
 
 int main(int narg,char **arg)
 {
+  set_njacks(15);
+  
   //pars
   int T=-1,par=1;
   
@@ -37,15 +39,17 @@ int main(int narg,char **arg)
   //put a warning
   if(path_in=="/dev/stdin") cerr<<"Reading from stdin"<<endl;
   
-  vector<double> data(T);
+  vector<double> ave(T),err(T);
+  djvec_t data(T);
   ifstream file_in(path_in);
   if(!file_in.good()) CRASH("Opening %s to read",path_in.c_str());
-  for(int t=0;t<T;t++) if(!(file_in>>data[t])) CRASH("Reading t=%zu",t);
-  
-  ofstream file_out(path_out);
-  file_out.precision(16);
-  if(!file_out.good()) CRASH("Opening %s to write",path_out.c_str());
-  for(int t=0;t<=T/2;t++) file_out<<t+1<<" "<<effective_mass(data[t],data[t+1],t,T/2,par)<<endl;
+  for(int t=0;t<T;t++)
+    if(!(file_in>>ave[t]>>err[t]))
+      CRASH("Reading t=%zu",t);
+    else
+      data[t].fill_gauss({ave[t],err[t],3224});
+      
+  effective_mass(data.symmetrize(par)).ave_err().write(path_out);
   
   return 0;
 }

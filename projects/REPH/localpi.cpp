@@ -12,7 +12,7 @@ bool isLoc;
 
 static constexpr int propagateLatErr=0;
 static constexpr int includeLog=1;
-static constexpr int includeHands=0;
+static constexpr int includeHands=1;
 
 template <size_t B>
 auto parseName(const string& name)
@@ -256,13 +256,17 @@ void demangle_ultimate_input(dboot_t& f0_prior,dbvec_t& ainv_prior,raw_file_t& u
 
 int main()
 {
-  build_boots_from_jacks=false;
+  //build_boots_from_jacks=false;
   def_nboots=nboots;
   
   auto ensList=readEnsList();
   
+  vector<boot_init_t> iboot_ind(ensList.size());
+  
   for(size_t iens=0;iens<ensList.size();iens++)
     {
+      iboot_ind[iens].fill(iens+21230);
+      
       perens_t& ens=ensList[iens];
       
       mkdir(ens.name+"/plots");
@@ -271,11 +275,11 @@ int main()
       const size_t& T=ens.T;
       
       auto read=
-	[&dir,&T,&iens]
+	[&dir,&T,&iens,&iboot_ind]
 	(const string& corr)
 	{
 	  const djvec_t j=read_djvec(dir+"/jacks/"+corr,T).symmetrized();
-	  const dbvec_t out=bvec_from_jvec(iens+21230,j);
+	  const dbvec_t out=bvec_from_jvec(iboot_ind[iens],j);
 	  
 	  out.ave_err().write(dir+"/plots/"+corr+".xmg");
 	  

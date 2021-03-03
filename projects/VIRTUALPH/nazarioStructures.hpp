@@ -306,7 +306,7 @@ struct nazarioReader
   }
   
   /// Gets the 3pts for a given insertion, combination, smearing level, mu and alpha
-  djvec_t get3pts(const HAV hAV,const size_t icomb,const size_t isl,const size_t mu,const size_t alpha)
+  djvec_t get3pts(const HAV hAV,const size_t icomb,const size_t isl,const size_t mu,const size_t alpha,const string plot="")
   {
     const size_t ire=(hAV==HAV::HA)?0:1;
     
@@ -315,9 +315,12 @@ struct nazarioReader
     
     djvec_t out=threePts[ic];
     
+    if(plot!="")
+      out.ave_err().write(plot);
+    
     for(int it=0;it<tmax;it++)
       {
-	const double dt=fabs(tmax/2.0-it);
+	const double dt=(it<(tmax/2))?fabs(z0-it):fabs(it-(tmax-z0));
 	const double arg=-eG[icomb]*dt;
 	out[it]/=exp(arg);
       }

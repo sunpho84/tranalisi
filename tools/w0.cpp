@@ -113,12 +113,7 @@ djack_t find_w0(const vector<double> &t,const djvec_t &E,const size_t ord=5,cons
 				 },
 				 guess_t_min,guess_t_max);
   
-  cout<<"w0/a2: "<<w02_fr_a2.ave_err()<<endl;
-  
-  ofstream out_txt("w0_fr_a2.txt");
-  out_txt<<w02_fr_a2.ave_err()<<endl;
-  
-  w02_fr_a2.bin_write("w0_fr_a2.dat");
+  cout<<"w02/a2: "<<w02_fr_a2.ave_err()<<endl;
   
   //print the fit
   grace_file_t fout("plots/fit.xmg");
@@ -153,9 +148,15 @@ int main(int narg,char **arg)
   p.ave_err().write(t,"plots/plaq.xmg");
   
   const djack_t w02_fr_a2=find_w0(t,p);
-  const double w0=0.1755;
-  djack_t a=w0/sqrt(w02_fr_a2);
+  const djack_t w0_fr_a=sqrt(w02_fr_a2);
+  const double w0Exp=0.1755;
+  djack_t a=w0Exp/w0_fr_a;
   cout<<"a: "<<smart_print(a)<<" fm"<<endl;
+  
+  ofstream out_w0_fr_a_txt("w0_fr_a.txt");
+  out_w0_fr_a_txt<<w0_fr_a.ave_err()<<endl;
+  
+  w0_fr_a.bin_write("w0_fr_a.dat");
   
   return 0;
 }
