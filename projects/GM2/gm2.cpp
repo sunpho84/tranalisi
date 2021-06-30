@@ -1,7 +1,7 @@
 #include <tranalisi.hpp>
 
 const size_t T=128;
-const size_t nconfs=28;
+const size_t nconfs=196;
 const index_t id({{"r2",2},{"r1",2},{"corr",61},{"T",T},{"ri",2}});
 
 std::pair<vector<double>,vector<double>> read(const char* path)
