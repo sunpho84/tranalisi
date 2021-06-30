@@ -31,7 +31,7 @@ std::pair<vector<double>,vector<double>> read(const char* path)
       for(size_t _t=0;_t<T;_t++)
 	{
 	  const size_t t=std::min(T-_t,_t);
-	  const int c=(t==0)?2:1;
+	  const int c=(t==0 or t==T/2)?2:1;
 	  
 	  const size_t r2=r1;
 	  for(size_t corr : {35,36,37})
