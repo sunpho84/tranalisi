@@ -49,8 +49,8 @@ std::pair<vector<double>,vector<double>> read(const char* path)
 
 int main(int narg,char** arg)
 {
-  if(narg<2)
-    CRASH("use %s file",arg[0]);
+  // if(narg<2)
+  //   CRASH("use %s file",arg[0]);
   
   vector<double> PP,VV;
   
@@ -66,12 +66,40 @@ int main(int narg,char** arg)
       for(const double& vv : _VV)
 	VV.push_back(vv);
     }
-      
-  for(auto& pp : PP)
-    cout<<pp<<endl;
   
-  // for(const double& d : data)
-  //   cout<<d<<endl;
+  vector<double> c((T/2+1)*4),a((T/2+1)*2);
+  index_t id({{"copy",2},{"conf",nconfs},{"T",T}});
+  for(size_t t=0;t<=T/2;t++)
+    for(size_t iconf=0;iconf<nconfs;iconf++)
+      for(size_t icopy=0;icopy<2;icopy++)
+	{
+	  const double& x=VV[id({icopy,iconf,t})];
+	  a[icopy+2*t]+=x;
+	  
+	  for(size_t jcopy=0;jcopy<2;jcopy++)
+	    {
+	      const double& y=VV[id({jcopy,iconf,t})];
+	      c[jcopy+2*(icopy+2*t)]+=x*y;
+	    }
+	}
+  
+  for(size_t t=0;t<=T/2;t++)
+    {
+      for(size_t icopy=0;icopy<2;icopy++)
+	a[icopy+2*t]/=nconfs;
+	
+      for(size_t icopy=0;icopy<2;icopy++)
+	for(size_t jcopy=0;jcopy<2;jcopy++)
+	  c[jcopy+2*(icopy+2*t)]/=nconfs;
+      
+      for(size_t icopy=0;icopy<2;icopy++)
+	for(size_t jcopy=0;jcopy<2;jcopy++)
+	  c[jcopy+2*(icopy+2*t)]-=a[icopy+2*t]*a[jcopy+2*t];
+      
+      const double corr=c[0+2*(1+2*t)]/sqrt(c[0+2*(0+2*t)]*c[1+2*(1+2*t)]);
+      
+      cout<<t<<" "<<corr<<endl;
+    }
   
   return 0;
 }
