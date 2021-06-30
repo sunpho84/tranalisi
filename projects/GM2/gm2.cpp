@@ -57,7 +57,7 @@ void an(const vector<double>& data,const char* tag)
   for(size_t t=0;t<=T/2;t++)
     for(size_t ijack=0;ijack<njacks+1;ijack++)
       for(size_t iconf=0;iconf<nconfs;iconf++)
-	if(iconf<clust_size*ijack or iconf>=(clust_size+1)*ijack)
+	if(iconf<clust_size*ijack or iconf>=clust_size*(ijack+1))
 	  for(size_t icopy=0;icopy<2;icopy++)
 	    {
 	      const double& x=data[id({icopy,iconf,t})];
