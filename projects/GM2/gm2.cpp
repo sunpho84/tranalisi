@@ -62,6 +62,7 @@ void an(const vector<double>& data,const char* tag)
 	    double copy_ave=0;
 	    for(size_t icopy=0;icopy<2;icopy++)
 	      copy_ave+=data[id({icopy,iconf,t})];
+	    copy_ave/=2;
 	    aa[t][ijack]+=copy_ave;
 	    cc[t][ijack]+=copy_ave*copy_ave;
 	    
@@ -120,7 +121,7 @@ void an(const vector<double>& data,const char* tag)
     }
   
   ave.ave_err().write(combine("/tmp/%s_ave.xmg",tag));
-  a.ave_err().write(combine("/tmp/%s_combo_ave.xmg",tag));
+  aa.ave_err().write(combine("/tmp/%s_combo_ave.xmg",tag));
   cc.ave_err().write(combine("/tmp/%s_combo_err.xmg",tag));
   err.ave_err().write(combine("/tmp/%s_err.xmg",tag));
   corr.ave_err().write(combine("/tmp/%s_corr.xmg",tag));
