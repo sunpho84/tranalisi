@@ -41,7 +41,7 @@ std::pair<vector<double>,vector<double>> read(const char* path)
   
   for(auto& pp : PP)
     pp/=2*2;
-  ,const char* tag,const char* tag 
+  
   for(auto& vv : VV)
     vv/=2*2*3;
   
