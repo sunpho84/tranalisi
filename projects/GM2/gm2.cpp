@@ -67,38 +67,51 @@ int main(int narg,char** arg)
 	VV.push_back(vv);
     }
   
-  vector<double> c((T/2+1)*4),a((T/2+1)*2);
+  set_njacks(28);
+  const size_t clust_size=nconfs/njacks;
+  
+  djvec_t c((T/2+1)*4),a((T/2+1)*2);
   index_t id({{"copy",2},{"conf",nconfs},{"T",T}});
   for(size_t t=0;t<=T/2;t++)
-    for(size_t iconf=0;iconf<nconfs;iconf++)
-      for(size_t icopy=0;icopy<2;icopy++)
-	{
-	  const double& x=VV[id({icopy,iconf,t})];
-	  a[icopy+2*t]+=x;
-	  
-	  for(size_t jcopy=0;jcopy<2;jcopy++)
+    for(size_t ijack=0;ijack<njacks+1;ijack++)
+      for(size_t iconf=0;iconf<nconfs;iconf++)
+	if(iconf<clust_size*ijack or iconf>=(clust_size+1)*ijack)
+	  for(size_t icopy=0;icopy<2;icopy++)
 	    {
-	      const double& y=VV[id({jcopy,iconf,t})];
-	      c[jcopy+2*(icopy+2*t)]+=x*y;
+	      const double& x=VV[id({icopy,iconf,t})];
+	      a[icopy+2*t][ijack]+=x;
+	      
+	      for(size_t jcopy=0;jcopy<2;jcopy++)
+		{
+		  const double& y=VV[id({jcopy,iconf,t})];
+		  c[jcopy+2*(icopy+2*t)][ijack]+=x*y;
+		}
 	    }
-	}
   
   for(size_t t=0;t<=T/2;t++)
     {
       for(size_t icopy=0;icopy<2;icopy++)
-	a[icopy+2*t]/=nconfs;
-	
+	{
+	  for(size_t ijack=0;ijack<njacks;ijack++)
+	    a[icopy+2*t][ijack]/=nconfs-clust_size;
+	  a[icopy+2*t][njacks]/=nconfs;
+	}
+      
       for(size_t icopy=0;icopy<2;icopy++)
 	for(size_t jcopy=0;jcopy<2;jcopy++)
-	  c[jcopy+2*(icopy+2*t)]/=nconfs;
+	  {
+	    for(size_t ijack=0;ijack<njacks;ijack++)
+	      c[jcopy+2*(icopy+2*t)][ijack]/=nconfs-clust_size;
+	    c[jcopy+2*(icopy+2*t)][njacks]/=nconfs;
+	  }
       
       for(size_t icopy=0;icopy<2;icopy++)
 	for(size_t jcopy=0;jcopy<2;jcopy++)
 	  c[jcopy+2*(icopy+2*t)]-=a[icopy+2*t]*a[jcopy+2*t];
+	
+      const djack_t corr=c[0+2*(1+2*t)]/sqrt(c[0+2*(0+2*t)]*c[1+2*(1+2*t)]);
       
-      const double corr=c[0+2*(1+2*t)]/sqrt(c[0+2*(0+2*t)]*c[1+2*(1+2*t)]);
-      
-      cout<<t<<" "<<corr<<endl;
+      cout<<t<<" "<<corr.ave_err()<<endl;
     }
   
   return 0;
