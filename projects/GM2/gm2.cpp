@@ -53,7 +53,7 @@ void an(const vector<double>& data,const char* tag)
   const size_t clust_size=nconfs/njacks;
   
   djvec_t c((T/2+1)*4),a((T/2+1)*2);
-  index_t id({{"copy",2},{"conf",nconfs},{"T",T}});
+  index_t id({{"copy",2},{"conf",nconfs},{"T",T/2+1}});
   for(size_t t=0;t<=T/2;t++)
     for(size_t ijack=0;ijack<njacks+1;ijack++)
       for(size_t iconf=0;iconf<nconfs;iconf++)
