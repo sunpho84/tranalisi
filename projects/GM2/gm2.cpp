@@ -111,12 +111,10 @@ void an(const vector<double>& data,const char* tag)
 	for(size_t jcopy=0;jcopy<2;jcopy++)
 	  c[jcopy+2*(icopy+2*t)]-=a[icopy+2*t]*a[jcopy+2*t];
 	
-      for(size_t icopy=0;icopy<2;icopy++)
-	{
-	  ave[t]+=a[icopy+2*t]/2;
-	  err[t]+=c[icopy+2*(icopy+2*t)];
-	}
-      err[t]=sqrt(err[t]/(2*nconfs));
+      ave[t]+=a[0+2*t];
+      err[t]+=c[0+2*(0+2*t)];
+      
+      err[t]=sqrt(err[t]/(nconfs-1));
       corr[t]=c[0+2*(1+2*t)]/sqrt(c[0+2*(0+2*t)]*c[1+2*(1+2*t)]);
     }
   
