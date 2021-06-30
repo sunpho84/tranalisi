@@ -33,8 +33,8 @@ std::pair<vector<double>,vector<double>> read(const char* path)
 	  
 	  const size_t r2=r1;
 	  for(size_t corr : {35,36,37})
-	    VV[t]+=data[id({r2,r1,corr,_t})];
-	  PP[t]+=data[id({r2,r1,5,_t})];
+	    VV[t]+=data[id({r2,r1,corr,_t,0})];
+	  PP[t]+=data[id({r2,r1,5,_t,0})];
 	}
   
   for(auto& pp : PP)
