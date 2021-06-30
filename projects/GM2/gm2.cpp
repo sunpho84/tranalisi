@@ -53,8 +53,20 @@ int main(int narg,char** arg)
     CRASH("use %s file",arg[0]);
   
   vector<double> PP,VV;
-  tie(PP,VV)=read(arg[1]);
   
+  const size_t nconfs=196;
+  for(const char* p: {"out","run2/out"})
+    for(size_t iconf=0;iconf<nconfs;iconf++)
+    {
+      vector<double> _PP,_VV;
+      tie(_PP,_VV)=read(combine("%s/%04zu/mes_contr_2pts_ll",p,iconf+1).c_str());
+      
+      for(const double& pp : _PP)
+	PP.push_back(pp);
+      for(const double& vv : _VV)
+	VV.push_back(vv);
+    }
+      
   for(auto& pp : PP)
     cout<<pp<<endl;
   
