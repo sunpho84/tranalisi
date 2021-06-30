@@ -25,7 +25,10 @@ index_t id({{"r2",2},{"r1",2},{"corr",61}});
 
 int main(int narg,char** arg)
 {
-  vector<double> data=read("/tmp/test");
+  if(narg<2)
+    CRASH("use %s file",arg[0]);
+  
+  vector<double> data=read(arg[1]);
   if(data.size()!=id.max())
     CRASH("mismatch, %zu %zu",data.size(),id.max());
   
