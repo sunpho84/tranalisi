@@ -95,9 +95,9 @@ void an(const vector<double>& data,const char* tag)
       for(size_t icopy=0;icopy<2;icopy++)
 	{
 	  ave[t]+=a[icopy+2*t]/2;
-	  err[t]+=sqr(c[icopy+2*(icopy+2*t)]);
+	  err[t]+=c[icopy+2*(icopy+2*t)];
 	}
-      err[t]=sqrt(err[t]);
+      err[t]=sqrt(err[t]/(2*nconfs));
       corr[t]=c[0+2*(1+2*t)]/sqrt(c[0+2*(0+2*t)]*c[1+2*(1+2*t)]);
     }
   
