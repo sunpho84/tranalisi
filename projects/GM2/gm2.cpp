@@ -30,11 +30,12 @@ std::pair<vector<double>,vector<double>> read(const char* path)
       for(size_t _t=0;_t<T;_t++)
 	{
 	  const size_t t=std::min(T-_t,_t);
+	  const int c=(t==0)?2:1;
 	  
 	  const size_t r2=r1;
 	  for(size_t corr : {35,36,37})
-	    VV[t]+=data[id({r2,r1,corr,_t,0})];
-	  PP[t]+=data[id({r2,r1,5,_t,0})];
+	    VV[t]+=data[id({r2,r1,corr,_t,0})]*c;
+	  PP[t]+=data[id({r2,r1,5,_t,0})]*c;
 	}
   
   for(auto& pp : PP)
