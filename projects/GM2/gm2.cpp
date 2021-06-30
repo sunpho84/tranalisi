@@ -1,5 +1,7 @@
 #include <tranalisi.hpp>
 
+const int T=128;
+
 vector<double> read(const char* path)
 {
   ifstream input(path);
@@ -21,7 +23,7 @@ vector<double> read(const char* path)
   return data;
 }
 
-index_t id({{"r2",2},{"r1",2},{"corr",61}});
+index_t id({{"r2",2},{"r1",2},{"corr",61},{"T",T}});
 
 int main(int narg,char** arg)
 {
@@ -31,6 +33,8 @@ int main(int narg,char** arg)
   vector<double> data=read(arg[1]);
   if(data.size()!=id.max())
     CRASH("mismatch, %zu %zu",data.size(),id.max());
+  
+  //vector<double> VV
   
   // for(const double& d : data)
   //   cout<<d<<endl;
