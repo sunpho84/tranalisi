@@ -52,27 +52,45 @@ void an(const vector<double>& data,const char* tag)
 {
   const size_t clust_size=nconfs/njacks;
   
-  djvec_t c((T/2+1)*4),a((T/2+1)*2);
+  djvec_t c((T/2+1)*4),a((T/2+1)*2),aa((T/2+1)),cc(T/2+1);
   index_t id({{"copy",2},{"conf",nconfs},{"T",T/2+1}});
   for(size_t t=0;t<=T/2;t++)
     for(size_t ijack=0;ijack<njacks+1;ijack++)
       for(size_t iconf=0;iconf<nconfs;iconf++)
 	if(iconf<clust_size*ijack or iconf>=clust_size*(ijack+1))
-	  for(size_t icopy=0;icopy<2;icopy++)
-	    {
-	      const double& x=data[id({icopy,iconf,t})];
-	      a[icopy+2*t][ijack]+=x;
-	      
-	      for(size_t jcopy=0;jcopy<2;jcopy++)
-		{
-		  const double& y=data[id({jcopy,iconf,t})];
-		  c[jcopy+2*(icopy+2*t)][ijack]+=x*y;
-		}
-	    }
+	  {
+	    double copy_ave=0;
+	    for(size_t icopy=0;icopy<2;icopy++)
+	      copy_ave+=data[id({icopy,iconf,t})];
+	    aa[t][ijack]+=copy_ave;
+	    cc[t][ijack]+=copy_ave*copy_ave;
+	    
+	    for(size_t icopy=0;icopy<2;icopy++)
+	      {
+		const double& x=data[id({icopy,iconf,t})];
+		a[icopy+2*t][ijack]+=x;
+		
+		for(size_t jcopy=0;jcopy<2;jcopy++)
+		  {
+		    const double& y=data[id({jcopy,iconf,t})];
+		    c[jcopy+2*(icopy+2*t)][ijack]+=x*y;
+		  }
+	      }
+	  }
   
   djvec_t ave(T/2+1),err(T/2+1),corr(T/2+1);
   for(size_t t=0;t<=T/2;t++)
     {
+      for(size_t ijack=0;ijack<njacks;ijack++)
+	{
+	  aa[t][ijack]/=nconfs-clust_size;
+	  cc[t][ijack]/=nconfs-clust_size;
+	}
+      aa[t][njacks]/=nconfs;
+      cc[t][njacks]/=nconfs;
+      cc[t]-=aa[t]*aa[t];
+      cc[t]=sqrt(cc[t]/(nconfs-1));
+      
       for(size_t icopy=0;icopy<2;icopy++)
 	{
 	  for(size_t ijack=0;ijack<njacks;ijack++)
@@ -102,6 +120,8 @@ void an(const vector<double>& data,const char* tag)
     }
   
   ave.ave_err().write(combine("/tmp/%s_ave.xmg",tag));
+  a.ave_err().write(combine("/tmp/%s_combo_ave.xmg",tag));
+  cc.ave_err().write(combine("/tmp/%s_combo_err.xmg",tag));
   err.ave_err().write(combine("/tmp/%s_err.xmg",tag));
   corr.ave_err().write(combine("/tmp/%s_corr.xmg",tag));
 }
