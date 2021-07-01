@@ -120,7 +120,7 @@ void an(const vector<double>& data,const char* tag)
       for(size_t icopy=0;icopy<ncopies;icopy++)
 	for(size_t jcopy=icopy+1;jcopy<ncopies;jcopy++)
 	  corr[t]+=c[icopy+ncopies*(jcopy+ncopies*t)]/sqrt(c[icopy+ncopies*(icopy+ncopies*t)]*c[jcopy+ncopies*(jcopy+ncopies*t)]);
-      corr[t]/=ncopies*(ncopies+1)/2.0;
+      corr[t]/=ncopies*(ncopies-1)/2.0;
     }
   
   ave.ave_err().write(combine("/tmp/%s_ave.xmg",tag));
