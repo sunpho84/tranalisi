@@ -53,7 +53,7 @@ void an(const vector<double>& data,const char* tag)
 {
   const size_t clust_size=nconfs/njacks;
   
-  djvec_t c((T/2+1)*4),a((T/2+1)*2),aa((T/2+1)),cc(T/2+1);
+  djvec_t c((T/2+1)*ncopies*ncopies),a((T/2+1)*ncopies),aa((T/2+1)),cc(T/2+1);
   index_t id({{"copy",ncopies},{"conf",nconfs},{"T",T/2+1}});
   for(size_t t=0;t<=T/2;t++)
     for(size_t ijack=0;ijack<njacks+1;ijack++)
@@ -140,6 +140,8 @@ int main(int narg,char** arg)
   for(const char* p: {"out","run2/out","run3/out"})
     for(size_t iconf=0;iconf<nconfs;iconf++)
     {
+      cout<<p<<" "<<iconf<<endl;
+      
       vector<double> _PP,_VV;
       tie(_PP,_VV)=read(combine("%s/%04zu/mes_contr_2pts_ll",p,iconf+1).c_str());
       
