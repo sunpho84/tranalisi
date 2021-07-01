@@ -2,6 +2,7 @@
 
 const size_t T=128;
 const size_t nconfs=196;
+const size_t ncopies=3;
 const index_t id({{"r2",2},{"r1",2},{"corr",61},{"T",T},{"ri",2}});
 
 std::pair<vector<double>,vector<double>> read(const char* path)
@@ -53,28 +54,28 @@ void an(const vector<double>& data,const char* tag)
   const size_t clust_size=nconfs/njacks;
   
   djvec_t c((T/2+1)*4),a((T/2+1)*2),aa((T/2+1)),cc(T/2+1);
-  index_t id({{"copy",2},{"conf",nconfs},{"T",T/2+1}});
+  index_t id({{"copy",ncopies},{"conf",nconfs},{"T",T/2+1}});
   for(size_t t=0;t<=T/2;t++)
     for(size_t ijack=0;ijack<njacks+1;ijack++)
       for(size_t iconf=0;iconf<nconfs;iconf++)
 	if(iconf<clust_size*ijack or iconf>=clust_size*(ijack+1))
 	  {
 	    double copy_ave=0;
-	    for(size_t icopy=0;icopy<2;icopy++)
+	    for(size_t icopy=0;icopy<ncopies;icopy++)
 	      copy_ave+=data[id({icopy,iconf,t})];
-	    copy_ave/=2;
+	    copy_ave/=ncopies;
 	    aa[t][ijack]+=copy_ave;
 	    cc[t][ijack]+=copy_ave*copy_ave;
 	    
-	    for(size_t icopy=0;icopy<2;icopy++)
+	    for(size_t icopy=0;icopy<ncopies;icopy++)
 	      {
 		const double& x=data[id({icopy,iconf,t})];
-		a[icopy+2*t][ijack]+=x;
+		a[icopy+ncopies*t][ijack]+=x;
 		
-		for(size_t jcopy=0;jcopy<2;jcopy++)
+		for(size_t jcopy=0;jcopy<ncopies;jcopy++)
 		  {
 		    const double& y=data[id({jcopy,iconf,t})];
-		    c[jcopy+2*(icopy+2*t)][ijack]+=x*y;
+		    c[jcopy+ncopies*(icopy+ncopies*t)][ijack]+=x*y;
 		  }
 	      }
 	  }
@@ -92,30 +93,34 @@ void an(const vector<double>& data,const char* tag)
       cc[t]-=aa[t]*aa[t];
       cc[t]=sqrt(cc[t]/(nconfs-1));
       
-      for(size_t icopy=0;icopy<2;icopy++)
+      for(size_t icopy=0;icopy<ncopies;icopy++)
 	{
 	  for(size_t ijack=0;ijack<njacks;ijack++)
-	    a[icopy+2*t][ijack]/=nconfs-clust_size;
-	  a[icopy+2*t][njacks]/=nconfs;
+	    a[icopy+ncopies*t][ijack]/=nconfs-clust_size;
+	  a[icopy+ncopies*t][njacks]/=nconfs;
 	}
       
-      for(size_t icopy=0;icopy<2;icopy++)
-	for(size_t jcopy=0;jcopy<2;jcopy++)
+      for(size_t icopy=0;icopy<ncopies;icopy++)
+	for(size_t jcopy=0;jcopy<ncopies;jcopy++)
 	  {
 	    for(size_t ijack=0;ijack<njacks;ijack++)
-	      c[jcopy+2*(icopy+2*t)][ijack]/=nconfs-clust_size;
-	    c[jcopy+2*(icopy+2*t)][njacks]/=nconfs;
+	      c[jcopy+ncopies*(icopy+ncopies*t)][ijack]/=nconfs-clust_size;
+	    c[jcopy+ncopies*(icopy+ncopies*t)][njacks]/=nconfs;
 	  }
       
-      for(size_t icopy=0;icopy<2;icopy++)
-	for(size_t jcopy=0;jcopy<2;jcopy++)
-	  c[jcopy+2*(icopy+2*t)]-=a[icopy+2*t]*a[jcopy+2*t];
+      for(size_t icopy=0;icopy<ncopies;icopy++)
+	for(size_t jcopy=0;jcopy<ncopies;jcopy++)
+	  c[jcopy+ncopies*(icopy+ncopies*t)]-=a[icopy+ncopies*t]*a[jcopy+ncopies*t];
 	
-      ave[t]+=a[0+2*t];
-      err[t]+=c[0+2*(0+2*t)];
+      ave[t]+=a[0+ncopies*t];
+      err[t]+=c[0+ncopies*(0+ncopies*t)];
       
       err[t]=sqrt(err[t]/(nconfs-1));
-      corr[t]=c[0+2*(1+2*t)]/sqrt(c[0+2*(0+2*t)]*c[1+2*(1+2*t)]);
+      corr[t]=0;
+      for(size_t icopy=0;icopy<ncopies;icopy++)
+	for(size_t jcopy=icopy+1;jcopy<ncopies;jcopy++)
+	  corr[t]+=c[icopy+ncopies*(jcopy+ncopies*t)]/sqrt(c[icopy+ncopies*(icopy+ncopies*t)]*c[jcopy+ncopies*(jcopy+ncopies*t)]);
+      corr[t]/=ncopies*(ncopies+1)/2.0;
     }
   
   ave.ave_err().write(combine("/tmp/%s_ave.xmg",tag));
@@ -132,7 +137,7 @@ int main(int narg,char** arg)
   
   vector<double> PP,VV;
   
-  for(const char* p: {"out","run2/out"})
+  for(const char* p: {"out","run2/out","run3/out"})
     for(size_t iconf=0;iconf<nconfs;iconf++)
     {
       vector<double> _PP,_VV;
