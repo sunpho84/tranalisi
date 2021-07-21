@@ -120,7 +120,7 @@ int main()
     for(size_t iSource=0;iSource<sourcesList.size();iSource++)
       {
 	const string file=confsList[iConf]+"/"+sourcesList[iSource];
-	
+	cout<<file<<endl;
 	loader.open(file);
 	loader.load("uu");
     }
