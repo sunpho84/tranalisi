@@ -13,6 +13,28 @@
 using namespace H5;
 using namespace std;
 
+int nMPIranks,MPIrank;
+int T,TH;
+string confsPattern;
+string output;
+size_t nConfs,nSources;
+constexpr size_t nPV=2;
+
+index_t idData;
+index_t idData_loader;
+vector<float> rawData;
+
+void setPars()
+{
+  TH=T/2;
+  cout<<"NConfs: "<<nConfs<<endl;
+  cout<<"NSources: "<<nSources<<endl;
+  idData.set_ranges({{"T",TH+1},{"PV",nPV},{"Confs",nConfs},{"Source",nSources}});
+  idData_loader.set_ranges({{"T",T},{"Gamma",16}});
+  rawData.resize(idData.max(),0.0);
+  cout<<"Data size: "<<rawData.size()<<endl;
+}
+
 vector<string> getConfsList(const string& confsPattern)
 {
   vector<string> confsList;
@@ -47,7 +69,7 @@ vector<string> getSourcesList(const string& firstConf)
   return sourcesList;
 }
 
-struct dataLoader
+struct DataLoader
 {
   //const int rank=dataspace.getSimpleExtentNdims();
   static constexpr int rank=4;
@@ -64,7 +86,7 @@ struct dataLoader
   
   std::vector<float> dataIn;
   
-  dataLoader(const int T)
+  DataLoader(const int T)
   {
     dimsm[0]=T;
     dimsm[1]=nGamma;
@@ -103,33 +125,16 @@ struct dataLoader
   }
 };
 
-int main(int narg,char **arg)
+void loadRawData()
 {
-  MPI_Init(&narg,&arg);
-  int nMPIranks,MPIrank;
-  MPI_Comm_size(MPI_COMM_WORLD,&nMPIranks);
-  MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
-  
-  raw_file_t input("input.txt","r");
-  const int T=input.read<size_t>("T");
-  const string confsPattern=input.read<string>("ConfsPattern");
-  const string output=input.read<string>("Output");
-  
-  const size_t TH=T/2;
   const vector<string> confsList=getConfsList(confsPattern);
-  const size_t nConfs=confsList.size();
-  cout<<"NConfs: "<<nConfs<<endl;
+  nConfs=confsList.size();
   const vector<string> sourcesList=getSourcesList(confsList.front());
-  const size_t nSources=sourcesList.size();
-  cout<<"NSources: "<<nSources<<endl;
+  nSources=sourcesList.size();
   
-  constexpr size_t nPV=2;
-  index_t idData({{"T",TH+1},{"PV",nPV},{"Confs",nConfs},{"Source",nSources}});
-  index_t idData_loader({{"T",T},{"Gamma",16}});
-  vector<float> data(idData.max(),0.0);
-  cout<<"Data size: "<<data.size()<<endl;
+  setPars();
   
-  dataLoader loader(T);
+  DataLoader loader(T);
   const array<pair<int,int>,4> map{std::pair<int,int>{0,0},{1,1},{1,2},{1,3}};
   
   const size_t confChunk=(nConfs+nMPIranks-1)/nMPIranks;
@@ -152,14 +157,14 @@ int main(int narg,char **arg)
 		const size_t& igamma_out=m.first;
 		const size_t& igamma_in=m.second;
 		const float& in=loader.dataIn[idData_loader({tIn,igamma_in})];
-		float& out=data[idData({tOut,igamma_out,iConf,iSource})];
+		float& out=rawData[idData({tOut,igamma_out,iConf,iSource})];
 		
 		out+=in;
 	      }
 	}
     }
   
-  MPI_Allreduce(MPI_IN_PLACE,&data[0],idData.max(),MPI_FLOAT,MPI_SUM,MPI_COMM_WORLD);
+  MPI_Allreduce(MPI_IN_PLACE,&rawData[0],idData.max(),MPI_FLOAT,MPI_SUM,MPI_COMM_WORLD);
   
   for(size_t i=0;i<idData.max();i++)
     {
@@ -169,16 +174,46 @@ int main(int narg,char **arg)
       const size_t &ig=coords[1];
       
       const double norm=((t==0)?1:2)*((ig==0)?1:3);
-      data[i]/=norm;
+      rawData[i]/=norm;
     }
   
   if(MPIrank==0)
     {
-      raw_file_t out(output, "w");
-      out.bin_write(data);
+      raw_file_t out(output,"w");
+      out.bin_write(nConfs);
+      out.bin_write(nSources);
+      out.bin_write(rawData);
     }
   
   MPI_Finalize();
+}
+
+void loadData()
+{
+  raw_file_t out(output,"r");
+  out.bin_read(nConfs);
+  out.bin_read(nSources);
+  
+  setPars();
+  
+  out.bin_read(rawData);
+}
+
+int main(int narg,char **arg)
+{
+  MPI_Init(&narg,&arg);
+  MPI_Comm_size(MPI_COMM_WORLD,&nMPIranks);
+  MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
+  
+  raw_file_t input("input.txt","r");
+  T=input.read<size_t>("T");
+  confsPattern=input.read<string>("ConfsPattern");
+  output=input.read<string>("Output");
+  
+  if(not file_exists(output))
+    loadRawData();
+  else
+    loadData();
   
   // cout<<"rank: "<<rank<<endl;
   // hsize_t dims_out[rank];
