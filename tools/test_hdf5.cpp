@@ -3,6 +3,9 @@
 #include <filesystem>
 #include <glob.h>
 #include <H5Cpp.h>
+
+#include <mpi.h>
+
 #include <vector>
 
 #include <tranalisi.hpp>
@@ -100,8 +103,13 @@ struct dataLoader
   }
 };
 
-int main()
+int main(int narg,char **arg)
 {
+  MPI_Init(&narg,&arg);
+  int nMPIranks,MPIrank;
+  MPI_Comm_size(MPI_COMM_WORLD,&nMPIranks);
+  MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
+  
   raw_file_t input("input.txt","r");
   const int T=input.read<size_t>("T");
   const size_t TH=T/2;
@@ -121,7 +129,11 @@ int main()
   
   dataLoader loader(T);
   const array<pair<int,int>,4> map{std::pair<int,int>{0,0},{1,1},{1,2},{1,3}};
-  for(size_t iConf=0;iConf<confsList.size();iConf++)
+  
+  const size_t confChunk=(nConfs+nMPIranks-1)/nMPIranks;
+  const size_t firstConf=std::min((size_t)MPIrank*confChunk,nConfs);
+  const size_t lastConf=std::min(firstConf+confChunk,nConfs);
+  for(size_t iConf=firstConf;iConf<lastConf;iConf++)
     for(size_t iSource=0;iSource<sourcesList.size();iSource++)
       {
 	const string file=confsList[iConf]+"/"+sourcesList[iSource];
@@ -141,6 +153,8 @@ int main()
 	      out+=in;
 	    }
       }
+  
+  MPI_Finalize();
   
   // cout<<"rank: "<<rank<<endl;
   // hsize_t dims_out[rank];

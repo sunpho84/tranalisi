@@ -121,6 +121,16 @@ AC_LINK_IFELSE(
 	       [AC_MSG_RESULT([no]);Minuit2_found=false])
 LIBS=$SAVED_LIBS
 
+#mpi
+LX_FIND_MPI
+AC_MSG_RESULT([with C++ MPI cpp options... $MPI_CXXFLAGS])
+AC_MSG_RESULT([with C++ MPI link options... $MPI_CXXLDFLAGS])
+AC_SUBST(MPI_CXXFLAGS)
+AC_SUBST(MPI_CXXLDFLAGS)
+AC_SUBST(CXXFLAGS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(CXXLDFLAGS)
+
 #hdf5
 AX_LIB_HDF5([serial])
 if test "${with_hdf5}" == "yes"
