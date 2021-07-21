@@ -135,7 +135,7 @@ void loadRawData()
   setPars();
   
   DataLoader loader(T);
-  const array<pair<int,int>,4> map{std::pair<int,int>{0,0},{1,1},{1,2},{1,3}};
+  const array<pair<int,int>,4> map{std::pair<int,int>{0,0},{1,6},{1,7},{1,8}};
   
   const size_t confChunk=(nConfs+nMPIranks-1)/nMPIranks;
   const size_t firstConf=std::min((size_t)MPIrank*confChunk,nConfs);
@@ -173,7 +173,7 @@ void loadRawData()
       const size_t &t=coords[0];
       const size_t &ig=coords[1];
       
-      const double norm=((t==0 or t==TH)?1:2)*((ig==0)?1:3);
+      const double norm=((t==0 or t==TH)?1:2)*((ig==0)?1:-3);
       rawData[i]/=norm;
     }
   
@@ -199,6 +199,25 @@ void loadData()
   out.bin_read(rawData);
 }
 
+djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t icorr)
+{
+  const size_t clust_size=nConfs/njacks;
+  djvec_t ave(TH+1);
+  ave=0.0;
+  for(size_t iConf=0;iConf<nConfs;iConf++)
+    {
+      const size_t iClust=iConf/clust_size;
+      for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
+	for(size_t t=0;t<TH+1;t++)
+	  ave[t][iClust]+=rawData[idData({t,icorr,iConf,iSource})]*t*t*t;
+    }
+  
+  ave.clusterize(clust_size);
+  ave/=(iSourceMax-iSourceMin)*L*L*L;
+  
+  return ave;
+}
+
 int main(int narg,char **arg)
 {
   MPI_Init(&narg,&arg);
@@ -217,20 +236,11 @@ int main(int narg,char **arg)
     loadData();
   
   set_njacks(15);
-  const size_t clust_size=nConfs/njacks;
-  djvec_t ave(TH+1);
-  ave=0.0;
-  for(size_t iConf=0;iConf<nConfs;iConf++)
-    {
-      const size_t iClust=iConf/clust_size;
-      for(size_t iSource=0;iSource<nSources;iSource++)
-	for(size_t t=0;t<TH+1;t++)
-	  ave[t][iClust]+=rawData[idData({t,0,iConf,iSource})];
-    }
   
-  ave.clusterize(clust_size);
-  ave/=nSources*L*L*L;
-  ave.ave_err().write("plots/P5P5_new.xmg");
+  const djvec_t ave0=getAve(0,nSources/2,1);
+  const djvec_t ave1=getAve(nSources/2,nSources,1);
+  ave0.ave_err().write("plots/P5P5_new1.xmg");
+  ave1.ave_err().write("plots/P5P5_new2.xmg");
   
   // cout<<"rank: "<<rank<<endl;
   // hsize_t dims_out[rank];
