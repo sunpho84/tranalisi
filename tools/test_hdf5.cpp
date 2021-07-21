@@ -59,7 +59,7 @@ struct dataLoader
   H5File file;
   string groupName;
   
-  std::vector<float> data_out;
+  std::vector<float> dataIn;
   
   dataLoader(const int T)
   {
@@ -75,7 +75,7 @@ struct dataLoader
     count[2]=nGamma;
     count[3]=1;
     
-    data_out.resize(T*nGamma);
+    dataIn.resize(T*nGamma);
   }
   
   void open(const string& path)
@@ -96,7 +96,7 @@ struct dataLoader
     
     dataspace.selectHyperslab(H5S_SELECT_SET,count,offset);
     
-    dataset.read(&data_out[0],PredType::NATIVE_FLOAT,memspace,dataspace);
+    dataset.read(&dataIn[0],PredType::NATIVE_FLOAT,memspace,dataspace);
   }
 };
 
@@ -104,18 +104,23 @@ int main()
 {
   raw_file_t input("input.txt","r");
   const int T=input.read<size_t>("T");
-  const int TH=T/2;
+  const size_t TH=T/2;
   const string confsPattern=input.read<string>("ConfsPattern");
   const vector<string> confsList=getConfsList(confsPattern);
-  cout<<"NConfs: "<<confsList.size()<<endl;
+  const size_t nConfs=confsList.size();
+  cout<<"NConfs: "<<nConfs<<endl;
   const vector<string> sourcesList=getSourcesList(confsList.front());
-  cout<<"NSources: "<<sourcesList.size()<<endl;
+  const size_t nSources=sourcesList.size();
+  cout<<"NSources: "<<nSources<<endl;
   
-  constexpr int nPV=2;
-  index_t data({{"T",TH+1},{"PV",nPV}});
+  constexpr size_t nPV=2;
+  index_t idData({{"T",TH+1},{"PV",nPV},{"Confs",nConfs},{"Source",nSources}});
+  index_t idData_loader({{"T",T},{"Gamma",16}});
+  vector<float> data(idData.max(),0.0);
+  cout<<"Data size: "<<data.size()<<endl;
   
   dataLoader loader(T);
-  
+  const array<pair<int,int>,4> map{std::pair<int,int>{0,0},{1,1},{1,2},{1,3}};
   for(size_t iConf=0;iConf<confsList.size();iConf++)
     for(size_t iSource=0;iSource<sourcesList.size();iSource++)
       {
@@ -123,7 +128,19 @@ int main()
 	cout<<file<<endl;
 	loader.open(file);
 	loader.load("uu");
-    }
+	
+	for(size_t tIn=0;tIn<T;tIn++)
+	  for(const auto& m : map)
+	    {
+	      const size_t tOut=(tIn>=TH)?(T-tIn):tIn;
+	      const size_t& igamma_out=m.first;
+	      const size_t& igamma_in=m.second;
+	      const float& in=loader.dataIn[idData_loader({tIn,igamma_in})];
+	      float& out=data[idData({tOut,igamma_out,iConf,iSource})];
+	      
+	      out+=in;
+	    }
+      }
   
   // cout<<"rank: "<<rank<<endl;
   // hsize_t dims_out[rank];
