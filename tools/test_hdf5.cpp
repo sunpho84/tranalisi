@@ -14,7 +14,7 @@ using namespace H5;
 using namespace std;
 
 int nMPIranks,MPIrank;
-int T,TH;
+int T,L,TH;
 string confsPattern;
 string output;
 size_t nConfs,nSources;
@@ -148,7 +148,7 @@ void loadRawData()
 	{
 	  const string file=confsList[iConf]+"/"+sourcesList[iSource];
 	  loader.open(file);
-	  loader.load("uu");
+	  loader.load("dd");
 	  
 	  for(size_t tIn=0;tIn<T;tIn++)
 	    for(const auto& m : map)
@@ -207,6 +207,7 @@ int main(int narg,char **arg)
   
   raw_file_t input("input.txt","r");
   T=input.read<size_t>("T");
+  L=input.read<size_t>("L");
   confsPattern=input.read<string>("ConfsPattern");
   output=input.read<string>("Output");
   
@@ -214,6 +215,22 @@ int main(int narg,char **arg)
     loadRawData();
   else
     loadData();
+  
+  set_njacks(15);
+  const size_t clust_size=nConfs/njacks;
+  djvec_t ave(TH+1);
+  ave=0.0;
+  for(size_t iConf=0;iConf<nConfs;iConf++)
+    {
+      const size_t iClust=iConf/clust_size;
+      for(size_t iSource=0;iSource<nSources;iSource++)
+	for(size_t t=0;t<TH+1;t++)
+	  ave[t][iClust]+=rawData[idData({t,0,iConf,iSource})];
+    }
+  
+  ave.clusterize(clust_size);
+  ave/=nSources*L*L*L;
+  ave.ave_err().write("plots/P5P5_new.xmg");
   
   // cout<<"rank: "<<rank<<endl;
   // hsize_t dims_out[rank];
