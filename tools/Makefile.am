@@ -44,7 +44,7 @@ simple_effective_mass_SOURCES=simple_effective_mass.cpp
 
 test_hdf5_SOURCES=test_hdf5.cpp
 test_hdf5_CXXFLAGS=@MPI_CXXFLAGS@ @CXXFLAGS@
-test_hdf5_LIBS=@MPI_CXXLIBS@ @LIBS
+test_hdf5_LIBS=@MPI_CXXLIBS@ @LIBS@
 test_hdf5_LDFLAGS=@MPI_CXXLDFLAGS@ @LDFLAGS@
 
 test_SOURCES=test.cpp
