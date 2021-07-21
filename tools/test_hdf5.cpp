@@ -173,7 +173,7 @@ void loadRawData()
       const size_t &t=coords[0];
       const size_t &ig=coords[1];
       
-      const double norm=((t==0)?1:2)*((ig==0)?1:3);
+      const double norm=((t==0 or t==TH)?1:2)*((ig==0)?1:3);
       rawData[i]/=norm;
     }
   
