@@ -111,14 +111,15 @@ int main()
   const vector<string> sourcesList=getSourcesList(confsList.front());
   cout<<"NSources: "<<sourcesList.size()<<endl;
   
-  dataLoader loader(T);
-  
   constexpr int nPV=2;
   index_t data({{"T",TH+1},{"PV",nPV}});
   
   for(size_t iConf=0;iConf<confsList.size();iConf++)
+#pragma omp parallel for
     for(size_t iSource=0;iSource<sourcesList.size();iSource++)
       {
+	dataLoader loader(T);
+	
 	const string file=confsList[iConf]+"/"+sourcesList[iSource];
 	cout<<file<<endl;
 	loader.open(file);
