@@ -112,8 +112,10 @@ int main(int narg,char **arg)
   
   raw_file_t input("input.txt","r");
   const int T=input.read<size_t>("T");
-  const size_t TH=T/2;
   const string confsPattern=input.read<string>("ConfsPattern");
+  const string output=input.read<string>("Output");
+  
+  const size_t TH=T/2;
   const vector<string> confsList=getConfsList(confsPattern);
   const size_t nConfs=confsList.size();
   cout<<"NConfs: "<<nConfs<<endl;
@@ -134,25 +136,47 @@ int main(int narg,char **arg)
   const size_t firstConf=std::min((size_t)MPIrank*confChunk,nConfs);
   const size_t lastConf=std::min(firstConf+confChunk,nConfs);
   for(size_t iConf=firstConf;iConf<lastConf;iConf++)
-    for(size_t iSource=0;iSource<sourcesList.size();iSource++)
-      {
-	const string file=confsList[iConf]+"/"+sourcesList[iSource];
-	cout<<file<<endl;
-	loader.open(file);
-	loader.load("uu");
-	
-	for(size_t tIn=0;tIn<T;tIn++)
-	  for(const auto& m : map)
-	    {
-	      const size_t tOut=(tIn>=TH)?(T-tIn):tIn;
-	      const size_t& igamma_out=m.first;
-	      const size_t& igamma_in=m.second;
-	      const float& in=loader.dataIn[idData_loader({tIn,igamma_in})];
-	      float& out=data[idData({tOut,igamma_out,iConf,iSource})];
-	      
-	      out+=in;
-	    }
-      }
+    {
+      cout<<MPIrank<<" "<<iConf<<" ["<<firstConf<<":"<<lastConf<<"] "<<confsList[iConf]<<endl;
+      
+      for(size_t iSource=0;iSource<nSources;iSource++)
+	{
+	  const string file=confsList[iConf]+"/"+sourcesList[iSource];
+	  loader.open(file);
+	  loader.load("uu");
+	  
+	  for(size_t tIn=0;tIn<T;tIn++)
+	    for(const auto& m : map)
+	      {
+		const size_t tOut=(tIn>=TH)?(T-tIn):tIn;
+		const size_t& igamma_out=m.first;
+		const size_t& igamma_in=m.second;
+		const float& in=loader.dataIn[idData_loader({tIn,igamma_in})];
+		float& out=data[idData({tOut,igamma_out,iConf,iSource})];
+		
+		out+=in;
+	      }
+	}
+    }
+  
+  MPI_Reduce(MPI_IN_PLACE,&data[0],idData.max(),MPI_FLOAT,MPI_SUM,0,MPI_COMM_WORLD);
+  
+  if(MPIrank==0)
+    {
+      for(size_t i=0;i<idData.max();i++)
+	{
+	  const std::vector<size_t> coords=idData(i);
+	  
+	  const size_t &t=coords[0];
+	  const size_t &ig=coords[1];
+	  
+	  const double norm=((t==0)?1:2)*((ig==0)?1:3);
+	  data[i]/=norm;
+	}
+      
+      raw_file_t out(output, "w");
+      out.bin_write(data);
+    }
   
   MPI_Finalize();
   
