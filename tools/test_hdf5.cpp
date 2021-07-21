@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <filesystem>
 #include <glob.h>
 #include <H5Cpp.h>
 #include <vector>
@@ -8,6 +9,40 @@
 
 using namespace H5;
 using namespace std;
+
+vector<string> getConfsList(const string& confsPattern)
+{
+  vector<string> confsList;
+  glob_t globbuf;
+  
+  if(glob(confsPattern.c_str(),0,nullptr,&globbuf))
+    CRASH("Unable to find pattern %s for conf",confsPattern.c_str());
+  else
+    for(int j=0;j<(int)globbuf.gl_pathc;j++)
+      confsList.push_back(globbuf.gl_pathv[j]);
+  globfree(&globbuf);
+  
+  return confsList;
+}
+
+vector<string> getSourcesList(const string& firstConf)
+{
+  vector<string> sourcesList;
+  glob_t globbuf;
+  
+  const string sourcesPattern=(firstConf+"/twop_id*_st*.h5");
+  if(glob(sourcesPattern.c_str(),0,nullptr,&globbuf))
+    CRASH("Unable to find pattern %s for source",sourcesPattern.c_str());
+  else
+    for(int j=0;j<(int)globbuf.gl_pathc;j++)
+      {
+	const std::filesystem::path confFull=globbuf.gl_pathv[j];
+	sourcesList.push_back(confFull.filename());
+      }
+  globfree(&globbuf);
+  
+  return sourcesList;
+}
 
 struct dataLoader
 {
@@ -70,26 +105,24 @@ int main()
   raw_file_t input("input.txt","r");
   const int T=input.read<size_t>("T");
   const int TH=T/2;
-  const string confPattern=input.read<string>("ConfsPattern");
+  const string confsPattern=input.read<string>("ConfsPattern");
+  const vector<string> confsList=getConfsList(confsPattern);
+  cout<<"NConfs: "<<confsList.size()<<endl;
+  const vector<string> sourcesList=getSourcesList(confsList.front());
+  cout<<"NSources: "<<sourcesList.size()<<endl;
   
   dataLoader loader(T);
-
-  vector<string> conf_list;
-  glob_t globbuf;
-  if(glob(confPattern.c_str(),0,nullptr,&globbuf))
-    CRASH("Unable to find pattern %s for conf",confPattern.c_str());
-  else
-    for(int j=0;j<(int)globbuf.gl_pathc;j++)
-      conf_list.push_back(globbuf.gl_pathv[j]);
-  globfree(&globbuf);
   
   constexpr int nPV=2;
   index_t data({{"T",TH+1},{"PV",nPV}});
   
-  for(size_t iConf=0;iConf<conf_list.size();iConf++)
-    {
-      loader.open(conf_list[iConf]+"/twop_id178_st050.h5");
-      loader.load("uu");
+  for(size_t iConf=0;iConf<confsList.size();iConf++)
+    for(size_t iSource=0;iSource<sourcesList.size();iSource++)
+      {
+	const string file=confsList[iConf]+"/"+sourcesList[iSource];
+	
+	loader.open(file);
+	loader.load("uu");
     }
   
   // cout<<"rank: "<<rank<<endl;
