@@ -159,21 +159,21 @@ int main(int narg,char **arg)
 	}
     }
   
-  MPI_Reduce(MPI_IN_PLACE,&data[0],idData.max(),MPI_FLOAT,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Allreduce(MPI_IN_PLACE,&data[0],idData.max(),MPI_FLOAT,MPI_SUM,MPI_COMM_WORLD);
+  
+  for(size_t i=0;i<idData.max();i++)
+    {
+      const std::vector<size_t> coords=idData(i);
+      
+      const size_t &t=coords[0];
+      const size_t &ig=coords[1];
+      
+      const double norm=((t==0)?1:2)*((ig==0)?1:3);
+      data[i]/=norm;
+    }
   
   if(MPIrank==0)
     {
-      for(size_t i=0;i<idData.max();i++)
-	{
-	  const std::vector<size_t> coords=idData(i);
-	  
-	  const size_t &t=coords[0];
-	  const size_t &ig=coords[1];
-	  
-	  const double norm=((t==0)?1:2)*((ig==0)?1:3);
-	  data[i]/=norm;
-	}
-      
       raw_file_t out(output, "w");
       out.bin_write(data);
     }
