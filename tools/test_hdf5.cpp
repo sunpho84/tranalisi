@@ -14,7 +14,7 @@ using namespace H5;
 using namespace std;
 
 int nMPIranks,MPIrank;
-int T,L,TH;
+size_t T,L,TH;
 string confsPattern;
 string output;
 size_t nConfs,nSources;
