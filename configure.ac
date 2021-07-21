@@ -41,7 +41,6 @@ AC_LANG([C++])
 
 AC_PROG_YACC
 AM_PROG_LEX
-
 AX_CXX_COMPILE_STDCXX(17,noext,mandatory)
 AX_CXXFLAGS_WARN_ALL
 
@@ -121,6 +120,27 @@ AC_LINK_IFELSE(
   	       [AC_MSG_RESULT([yes]);Minuit2_found=true],
 	       [AC_MSG_RESULT([no]);Minuit2_found=false])
 LIBS=$SAVED_LIBS
+
+#hdf5
+AX_LIB_HDF5([serial])
+if test "${with_hdf5}" == "yes"
+then
+	LIBS="$LIBS $HDF5_LIBS"
+	CPPFLAGS="$CPPFLAGS $HDF5_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $HDF5_LDFLAGS"
+fi
+
+#overwrite with Minuit2 if available
+if test "${Minuit2_found}" == true
+then
+	default_minimizer=Minuit2
+fi
+#check that we have a valid default otherwise crash
+if test "$default_minimizer" == none
+then
+	AC_MSG_ERROR(["No minimizer tool found"])
+fi
+AC_MSG_RESULT([Default minimizer: ${default_minimizer}])
 
 #find the default minimizer
 default_minimizer=none
