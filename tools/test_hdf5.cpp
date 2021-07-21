@@ -88,7 +88,7 @@ int main()
   
   for(size_t iConf=0;iConf<conf_list.size();iConf++)
     {
-      loader.open(conf_list[iConf]+"twop_id178_st050.h5");
+      loader.open(conf_list[iConf]+"/twop_id178_st050.h5");
       loader.load("uu");
     }
   
