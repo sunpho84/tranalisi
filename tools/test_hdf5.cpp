@@ -135,7 +135,7 @@ void loadRawData()
   setPars();
   
   DataLoader loader(T);
-  const array<pair<int,int>,7> map{std::pair<int,int>{0,0},{1,6},{1,7},{1,8},{2,13},{2,14},{2,15}};
+  const array<pair<int,int>,7> map{std::pair<int,int>{0,0},{1,6},{1,7},{1,8},{2,10},{2,11},{2,12}};
   
   const size_t confChunk=(nConfs+nMPIranks-1)/nMPIranks;
   const size_t firstConf=std::min((size_t)MPIrank*confChunk,nConfs);
@@ -209,7 +209,7 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t icor
       const size_t iClust=iConf/clust_size;
       for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
 	for(size_t t=0;t<TH+1;t++)
-	  ave[t][iClust]+=rawData[idData({t,icorr,iConf,iSource})]*t*t*t;
+	  ave[t][iClust]+=rawData[idData({t,icorr,iConf,iSource})];
     }
   
   ave.clusterize(clust_size);
@@ -237,12 +237,10 @@ int main(int narg,char **arg)
   
   set_njacks(15);
   
-  const djvec_t ave0=getAve(0,nSources/2,1);
-  const djvec_t ave1=getAve(nSources/2,nSources,1);
-  const djvec_t ave=(ave0+ave1)/2;
-  ave.ave_err().write("plots/P5P5_new.xmg");
-  ave0.ave_err().write("plots/P5P5_new1.xmg");
-  ave1.ave_err().write("plots/P5P5_new2.xmg");
+  const djvec_t aveVK=getAve(0,nSources,1);
+  const djvec_t aveTK=getAve(0,nSources,2);
+  effective_mass(aveVK).ave_err().write("plots/VKVK_new.xmg");
+  effective_mass(aveTK).ave_err().write("plots/TKTK_new.xmg");
   
   // cout<<"rank: "<<rank<<endl;
   // hsize_t dims_out[rank];
