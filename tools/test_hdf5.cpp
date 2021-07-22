@@ -14,12 +14,13 @@ using namespace H5;
 using namespace std;
 
 int nMPIranks,MPIrank;
-size_t T,L,TH;
+size_t T,L,TH,THp1;
 string confsPattern;
 string output;
 size_t nConfs,nSources;
 constexpr size_t nPV=3;
 
+bool tAve;
 index_t idData;
 index_t idData_loader;
 vector<float> rawData;
@@ -27,9 +28,15 @@ vector<float> rawData;
 void setPars()
 {
   TH=T/2;
+  
+  if(tAve)
+    THp1=TH+1;
+  else
+    THp1=T;
+  
   cout<<"NConfs: "<<nConfs<<endl;
   cout<<"NSources: "<<nSources<<endl;
-  idData.set_ranges({{"T",TH+1},{"PV",nPV},{"Confs",nConfs},{"Source",nSources}});
+  idData.set_ranges({{"T",THp1},{"PV",nPV},{"Confs",nConfs},{"Source",nSources}});
   idData_loader.set_ranges({{"T",T},{"Gamma",16}});
   rawData.resize(idData.max(),0.0);
   cout<<"Data size: "<<rawData.size()<<endl;
@@ -125,8 +132,12 @@ struct DataLoader
   }
 };
 
-void loadRawData()
+void loadRawData(int narg,char** arg)
 {
+  MPI_Init(&narg,&arg);
+  MPI_Comm_size(MPI_COMM_WORLD,&nMPIranks);
+  MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
+  
   const vector<string> confsList=getConfsList(confsPattern);
   nConfs=confsList.size();
   const vector<string> sourcesList=getSourcesList(confsList.front());
@@ -153,7 +164,10 @@ void loadRawData()
 	  for(size_t tIn=0;tIn<T;tIn++)
 	    for(const auto& m : map)
 	      {
-		const size_t tOut=(tIn>=TH)?(T-tIn):tIn;
+		const size_t tOut=
+		  tAve?
+		  ((tIn>=TH)?(T-tIn):tIn):
+		  tIn;
 		const size_t& igamma_out=m.first;
 		const size_t& igamma_in=m.second;
 		const float& in=loader.dataIn[idData_loader({tIn,igamma_in})];
@@ -173,7 +187,8 @@ void loadRawData()
       const size_t &t=coords[0];
       const size_t &ig=coords[1];
       
-      const double norm=((t==0 or t==TH)?1:2)*((ig==0)?1:-3);
+      const double norm=((t==0 or t==TH or tAve==false)?1:2)*
+	((ig==0)?1:-3);
       rawData[i]/=norm;
     }
   
@@ -202,13 +217,13 @@ void loadData()
 djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t icorr)
 {
   const size_t clust_size=nConfs/njacks;
-  djvec_t ave(TH+1);
+  djvec_t ave(THp1);
   ave=0.0;
   for(size_t iConf=0;iConf<nConfs;iConf++)
     {
       const size_t iClust=iConf/clust_size;
       for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
-	for(size_t t=0;t<TH+1;t++)
+	for(size_t t=0;t<THp1;t++)
 	  ave[t][iClust]+=rawData[idData({t,icorr,iConf,iSource})];
     }
   
@@ -220,27 +235,102 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t icor
 
 int main(int narg,char **arg)
 {
-  MPI_Init(&narg,&arg);
-  MPI_Comm_size(MPI_COMM_WORLD,&nMPIranks);
-  MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
-  
   raw_file_t input("input.txt","r");
   T=input.read<size_t>("T");
   L=input.read<size_t>("L");
   confsPattern=input.read<string>("ConfsPattern");
   output=input.read<string>("Output");
+  tAve=input.read<bool>("tAve");
   
   if(not file_exists(output))
-    loadRawData();
+    loadRawData(narg,arg);
   else
     loadData();
   
   set_njacks(15);
   
+  //const vector<double> dt=vector_up_to<double>(THp1);
+  
+  const djvec_t aveP5=getAve(0,nSources,0);
   const djvec_t aveVK=getAve(0,nSources,1);
-  const djvec_t aveTK=getAve(0,nSources,2);
-  effective_mass(aveVK).ave_err().write("plots/VKVK_new.xmg");
-  effective_mass(aveTK).ave_err().write("plots/TKTK_new.xmg");
+  aveVK.ave_err().write("plots/corr_VKVK.xmg");
+  const djack_t mP5=constant_fit(effective_mass(aveP5),25,32,"plots/eff_mass_P5P5.xmg");
+  const djack_t mVK=constant_fit(effective_mass(aveVK),25,32,"plots/eff_mass_VKVK.xmg");
+  const djack_t E2p=2*sqrt(sqr(mP5)+sqr(2*M_PI/L));
+  cout<<"EVK: "<<E2p.ave_err()<<endl;
+  
+  valarray<double> dt2p(THp1);
+  for(size_t t=0;t<THp1;t++)
+    dt2p[t]=cosh((TH-t)*E2p.ave());
+  djvec_t normalizedVK=aveVK;
+  for(size_t t=0;t<THp1;t++)
+    normalizedVK[t]/=dt2p[t];
+  normalizedVK.ave_err().write("plots/VKVK_normalized.xmg");
+  
+  grace_file_t errVK_plot("plots/VKVK_err.xmg");
+  grace_file_t aveVK_plot("plots/VKVK_ave.xmg");
+  vec_ave_err_t y1(THp1);
+  for(int n=1;n<=nSources;n*=2)
+    {
+      const size_t nCopies=nSources/n;
+      
+      vec_ave_err_t copyAveVK(THp1);
+      vector<double> s(THp1,0.0),s2(THp1,0.0);
+      for(size_t iCopy=0;iCopy<nCopies;iCopy++)
+	{
+	  const djvec_t aveVK=getAve(iCopy*n,(iCopy+1)*n,1);
+	  djvec_t normalizedVK=aveVK;
+	  
+	  for(size_t t=0;t<THp1;t++)
+	    {
+	      normalizedVK[t]/=dt2p[t];
+	      
+	      copyAveVK[t].ave()+=normalizedVK[t].ave();
+	      copyAveVK[t].err()+=normalizedVK[t].err();
+	      
+	      s[t]+=aveVK[t].err();
+	      s2[t]+=sqr(aveVK[t].err());
+	    }
+	}
+      
+      for(size_t t=0;t<THp1;t++)
+	{
+	  copyAveVK[t].ave()/=nCopies;
+	  copyAveVK[t].err()/=nCopies;
+	}
+      
+      aveVK_plot.write_vec_ave_err(copyAveVK);
+      
+      if(nCopies>1)
+	{
+	  vec_ave_err_t y(THp1);
+	  for(size_t t=0;t<THp1;t++)
+	    {
+	      s[t]/=nCopies;
+	      s2[t]/=nCopies;
+	      s2[t]-=sqr(s[t]);
+	      
+	      y[t].ave()=s[t];
+	      y[t].err()=sqrt(s2[t]/(nCopies-1));
+	    }
+	  // aveVK[t]*=t*t*t;
+	  
+	  // normalize
+	  // const djvec_t aveTK=getAve(0,nSources,2);
+	  // if(n==1)
+	  //   y1=y;
+	  // else
+	  //   {
+	  //     for(size_t t=0;t<THp1;t++)
+	  // 	{
+	  // 	  y[t].err()=sqrt(sqr(y[t].err()/y[t].ave())+sqr(y1[t].err()/y1[t].ave()))*y[t].ave()/y1[t].ave()*sqrt(n);
+	  // 	  y[t].ave()*=sqrt(n)/y1[t].ave();
+	  // 	}
+	      errVK_plot.write_vec_ave_err(y);
+	    // }
+	}
+      // effective_mass(aveTK).ave_err().write("plots/TKTK_new.xmg");
+    }
   
   // cout<<"rank: "<<rank<<endl;
   // hsize_t dims_out[rank];
