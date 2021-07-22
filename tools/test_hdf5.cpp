@@ -18,7 +18,7 @@ size_t T,L,TH;
 string confsPattern;
 string output;
 size_t nConfs,nSources;
-constexpr size_t nPV=2;
+constexpr size_t nPV=3;
 
 index_t idData;
 index_t idData_loader;
@@ -135,7 +135,7 @@ void loadRawData()
   setPars();
   
   DataLoader loader(T);
-  const array<pair<int,int>,4> map{std::pair<int,int>{0,0},{1,6},{1,7},{1,8}};
+  const array<pair<int,int>,7> map{std::pair<int,int>{0,0},{1,6},{1,7},{1,8},{2,13},{2,14},{2,15}};
   
   const size_t confChunk=(nConfs+nMPIranks-1)/nMPIranks;
   const size_t firstConf=std::min((size_t)MPIrank*confChunk,nConfs);
@@ -239,6 +239,8 @@ int main(int narg,char **arg)
   
   const djvec_t ave0=getAve(0,nSources/2,1);
   const djvec_t ave1=getAve(nSources/2,nSources,1);
+  const djvec_t ave=(ave0+ave1)/2;
+  ave.ave_err().write("plots/P5P5_new.xmg");
   ave0.ave_err().write("plots/P5P5_new1.xmg");
   ave1.ave_err().write("plots/P5P5_new2.xmg");
   
