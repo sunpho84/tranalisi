@@ -278,7 +278,6 @@ int main(int narg,char **arg)
   // normalizedVK.ave_err().write("plots/VKVK_normalized.xmg");
   
   grace_file_t errVK_plot("plots/VKVK_err.xmg");
-  grace_file_t errP5_plot("plots/P5P5_err.xmg");
   grace_file_t aveVK_plot("plots/VKVK_ave.xmg");
   vec_ave_err_t y1(THp1);
   for(size_t n=1;n<=nSources;n*=2)
@@ -289,7 +288,7 @@ int main(int narg,char **arg)
       vector<double> s(THp1,0.0),s2(THp1,0.0);
       for(size_t iCopy=0;iCopy<nCopies;iCopy++)
 	{
-	  const djvec_t aveVK=getAve(iCopy*n,(iCopy+1)*n,0);
+	  const djvec_t aveVK=getAve(iCopy*n,(iCopy+1)*n,1);
 	  // djvec_t normalizedVK=aveVK;
 	  
 	  for(size_t t=0;t<THp1;t++)
@@ -337,7 +336,7 @@ int main(int narg,char **arg)
 	  // 	  y[t].err()=sqrt(sqr(y[t].err()/y[t].ave())+sqr(y1[t].err()/y1[t].ave()))*y[t].ave()/y1[t].ave()*sqrt(n);
 	  // 	  y[t].ave()*=sqrt(n)/y1[t].ave();
 	  // 	}
-	    errP5_plot.write_vec_ave_err(y);
+	    errVK_plot.write_vec_ave_err(y);
 	    // }
 	}
       // effective_mass(aveTK).ave_err().write("plots/TKTK_new.xmg");
