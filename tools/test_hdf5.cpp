@@ -80,6 +80,7 @@ vector<string> getSourcesList(const string& firstConf)
 
 struct DataLoader
 {
+  //Here for future memory
   //const int rank=dataspace.getSimpleExtentNdims();
   static constexpr int rank=4;
   static constexpr int nGamma=16;
