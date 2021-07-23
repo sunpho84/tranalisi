@@ -256,8 +256,6 @@ int main(int narg,char **arg)
   
   set_njacks(195);
   
-  //const vector<double> dt=vector_up_to<double>(THp1);
-  
   const djvec_t aveP5=getAve(0,nSources,0);
   const djvec_t aveVK=getAve(0,nSources,1);
   aveP5.ave_err().write("plots/corr_P5P5.xmg");
