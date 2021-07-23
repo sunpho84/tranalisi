@@ -24,6 +24,7 @@ bool tAve;
 index_t idData;
 index_t idData_loader;
 vector<float> rawData;
+vector<int> confMap;
 
 void setPars()
 {
@@ -219,12 +220,13 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t icor
   const size_t clust_size=nConfs/njacks;
   djvec_t ave(THp1);
   ave=0.0;
-  for(size_t iConf=0;iConf<nConfs;iConf++)
+  for(size_t _iConf=0;_iConf<nConfs;_iConf++)
     {
+      const size_t iConf=confMap[_iConf];
       const size_t iClust=iConf/clust_size;
       for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
 	for(size_t t=0;t<THp1;t++)
-	  ave[t][iClust]+=rawData[idData({t,icorr,iConf,iSource})];
+	  ave[t][iClust]+=rawData[idData({t,icorr,_iConf,iSource})];
     }
   
   ave.clusterize(clust_size);
@@ -247,30 +249,39 @@ int main(int narg,char **arg)
   else
     loadData();
   
-  set_njacks(15);
+  raw_file_t confMapFile("map.txt","r");
+  for(size_t iConf=0;iConf<nConfs;iConf++)
+    confMap.push_back(confMapFile.read<int>());
+  
+  set_njacks(195);
   
   //const vector<double> dt=vector_up_to<double>(THp1);
   
   const djvec_t aveP5=getAve(0,nSources,0);
   const djvec_t aveVK=getAve(0,nSources,1);
+  aveP5.ave_err().write("plots/corr_P5P5.xmg");
   aveVK.ave_err().write("plots/corr_VKVK.xmg");
-  const djack_t mP5=constant_fit(effective_mass(aveP5),25,32,"plots/eff_mass_P5P5.xmg");
-  const djack_t mVK=constant_fit(effective_mass(aveVK),25,32,"plots/eff_mass_VKVK.xmg");
+  if(not tAve)
+    aveVK.symmetrized().ave_err().write("plots/corr_VKVK_symm.xmg");
+  const djack_t mP5=constant_fit(effective_mass(tAve?aveP5:aveP5.symmetrized()),25,32,"plots/eff_mass_P5P5.xmg");
+  const djack_t mVK=constant_fit(effective_mass(tAve?aveVK:aveVK.symmetrized()),25,32,"plots/eff_mass_VKVK.xmg");
   const djack_t E2p=2*sqrt(sqr(mP5)+sqr(2*M_PI/L));
+  cout<<"mP5: "<<mP5.ave_err()<<endl;
   cout<<"EVK: "<<E2p.ave_err()<<endl;
   
-  valarray<double> dt2p(THp1);
-  for(size_t t=0;t<THp1;t++)
-    dt2p[t]=cosh((TH-t)*E2p.ave());
-  djvec_t normalizedVK=aveVK;
-  for(size_t t=0;t<THp1;t++)
-    normalizedVK[t]/=dt2p[t];
-  normalizedVK.ave_err().write("plots/VKVK_normalized.xmg");
+  // valarray<double> dt2p(THp1);
+  // for(size_t t=0;t<THp1;t++)
+  //   dt2p[t]=cosh(((double)TH-t)*E2p.ave());
+  // djvec_t normalizedVK=aveVK;
+  // for(size_t t=0;t<THp1;t++)
+  //   normalizedVK[t]/=dt2p[t];
+  // normalizedVK.ave_err().write("plots/VKVK_normalized.xmg");
   
   grace_file_t errVK_plot("plots/VKVK_err.xmg");
+  grace_file_t errP5_plot("plots/P5P5_err.xmg");
   grace_file_t aveVK_plot("plots/VKVK_ave.xmg");
   vec_ave_err_t y1(THp1);
-  for(int n=1;n<=nSources;n*=2)
+  for(size_t n=1;n<=nSources;n*=2)
     {
       const size_t nCopies=nSources/n;
       
@@ -278,15 +289,15 @@ int main(int narg,char **arg)
       vector<double> s(THp1,0.0),s2(THp1,0.0);
       for(size_t iCopy=0;iCopy<nCopies;iCopy++)
 	{
-	  const djvec_t aveVK=getAve(iCopy*n,(iCopy+1)*n,1);
-	  djvec_t normalizedVK=aveVK;
+	  const djvec_t aveVK=getAve(iCopy*n,(iCopy+1)*n,0);
+	  // djvec_t normalizedVK=aveVK;
 	  
 	  for(size_t t=0;t<THp1;t++)
 	    {
-	      normalizedVK[t]/=dt2p[t];
+	      // normalizedVK[t]/=dt2p[t];
 	      
-	      copyAveVK[t].ave()+=normalizedVK[t].ave();
-	      copyAveVK[t].err()+=normalizedVK[t].err();
+ 	      copyAveVK[t].ave()+=aveVK[t].ave();
+	      copyAveVK[t].err()+=aveVK[t].err();
 	      
 	      s[t]+=aveVK[t].err();
 	      s2[t]+=sqr(aveVK[t].err());
@@ -326,7 +337,7 @@ int main(int narg,char **arg)
 	  // 	  y[t].err()=sqrt(sqr(y[t].err()/y[t].ave())+sqr(y1[t].err()/y1[t].ave()))*y[t].ave()/y1[t].ave()*sqrt(n);
 	  // 	  y[t].ave()*=sqrt(n)/y1[t].ave();
 	  // 	}
-	      errVK_plot.write_vec_ave_err(y);
+	    errP5_plot.write_vec_ave_err(y);
 	    // }
 	}
       // effective_mass(aveTK).ave_err().write("plots/TKTK_new.xmg");
