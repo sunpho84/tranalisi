@@ -1,4 +1,5 @@
-#include <iostream>
+
+65;6200;1c#include <iostream>
 
 #include <filesystem>
 #include <glob.h>
@@ -289,12 +290,9 @@ int main(int narg,char **arg)
       for(size_t iCopy=0;iCopy<nCopies;iCopy++)
 	{
 	  const djvec_t aveVK=getAve(iCopy*n,(iCopy+1)*n,1);
-	  // djvec_t normalizedVK=aveVK;
 	  
 	  for(size_t t=0;t<THp1;t++)
 	    {
-	      // normalizedVK[t]/=dt2p[t];
-	      
  	      copyAveVK[t].ave()+=aveVK[t].ave();
 	      copyAveVK[t].err()+=aveVK[t].err();
 	      
