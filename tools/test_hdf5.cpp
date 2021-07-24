@@ -1,5 +1,4 @@
-
-65;6200;1c#include <iostream>
+#include <iostream>
 
 #include <filesystem>
 #include <glob.h>
@@ -141,9 +140,24 @@ void loadRawData(int narg,char** arg)
   MPI_Comm_size(MPI_COMM_WORLD,&nMPIranks);
   MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
   
-  const vector<string> confsList=getConfsList(confsPattern);
+  const vector<string> possibleConfsList=getConfsList(confsPattern);
+  const vector<string> sourcesList=getSourcesList(possibleConfsList.front());
+  vector<string> confsList;
+  for(const string& conf : possibleConfsList)
+    {
+      bool exists=true;
+      for(size_t iSource=0;iSource<nSources;iSource++)
+	{
+	  const string file=conf+"/"+sourcesList[iSource];
+	  std::filesystem::path p(file);
+	  if(not std::filesystem::exists(file))
+	    exists=false;
+	}
+      
+      if(exists)
+	confsList.push_back(conf);
+    }
   nConfs=confsList.size();
-  const vector<string> sourcesList=getSourcesList(confsList.front());
   nSources=sourcesList.size();
   
   setPars();
