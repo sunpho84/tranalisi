@@ -150,15 +150,20 @@ void loadRawData(int narg,char** arg)
   for(const string& conf : possibleConfsList)
     {
       bool exists=true;
-      for(size_t iSource=0;iSource<nSources;iSource++)
+      string confPath;
+      size_t iSource=0;
+      while(iSource<nSources and exists)
 	{
-	  const string file=conf+"/"+sourcesList[iSource];
-	  if(not file_exists(file))
+	  confPath=conf+"/"+sourcesList[iSource];
+	  if(not file_exists(confPath))
 	    exists=false;
+	  iSource++;
 	}
       
       if(exists)
-	confsList.push_back(conf);
+	  confsList.push_back(conf);
+      if(MPIrank)
+	cout<<"Conf "<<conf<<(exists?" accepted":(" discarded, "+confPath+" not found"))<<endl;
     }
   
   if(MPIrank==0 and confsList.size()!=possibleConfsList.size())
