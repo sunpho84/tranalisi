@@ -13,7 +13,7 @@
 using namespace H5;
 using namespace std;
 
-int nMPIranks,MPIrank;
+int nMPIranks,MPIrank=0;
 size_t T,L,TH,THp1;
 string confsPattern;
 string output;
@@ -35,12 +35,16 @@ void setPars()
   else
     THp1=T;
   
-  cout<<"NConfs: "<<nConfs<<endl;
-  cout<<"NSources: "<<nSources<<endl;
   idData.set_ranges({{"T",THp1},{"PV",nPV},{"Confs",nConfs},{"Source",nSources}});
   idData_loader.set_ranges({{"T",T},{"Gamma",16}});
   rawData.resize(idData.max(),0.0);
-  cout<<"Data size: "<<rawData.size()<<endl;
+  
+  if(MPIrank==0)
+    {
+      cout<<"NConfs: "<<nConfs<<endl;
+      cout<<"NSources: "<<nSources<<endl;
+      cout<<"Data size: "<<rawData.size()<<endl;
+    }
 }
 
 vector<string> getConfsList(const string& confsPattern)
@@ -149,14 +153,17 @@ void loadRawData(int narg,char** arg)
       for(size_t iSource=0;iSource<nSources;iSource++)
 	{
 	  const string file=conf+"/"+sourcesList[iSource];
-	  std::filesystem::path p(file);
-	  if(not std::filesystem::exists(file))
+	  if(not file_exists(file))
 	    exists=false;
 	}
       
       if(exists)
 	confsList.push_back(conf);
     }
+  
+  if(MPIrank==0 and confsList.size()!=possibleConfsList.size())
+    cout<<"Confs list resized from "<<possibleConfsList.size()<<"to: "<<confsList.size();
+  
   nConfs=confsList.size();
   nSources=sourcesList.size();
   
