@@ -156,13 +156,17 @@ void loadRawData(int narg,char** arg)
 	{
 	  confPath=conf+"/"+sourcesList[iSource];
 	  if(not file_exists(confPath))
-	    exists=false;
+	    {
+	      exists=false;
+	      if(MPIrank==0)
+		cout<<" "<<confPath<<" not found"<<endl;
+	    }
 	  iSource++;
 	}
       
       if(exists)
 	  confsList.push_back(conf);
-      if(MPIrank)
+      if(MPIrank==0)
 	cout<<"Conf "<<conf<<(exists?" accepted":(" discarded, "+confPath+" not found"))<<endl;
     }
   
