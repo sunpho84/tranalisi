@@ -269,14 +269,6 @@ int main(int narg,char **arg)
   cout<<"mP5: "<<mP5.ave_err()<<endl;
   cout<<"EVK: "<<E2p.ave_err()<<endl;
   
-  // valarray<double> dt2p(THp1);
-  // for(size_t t=0;t<THp1;t++)
-  //   dt2p[t]=cosh(((double)TH-t)*E2p.ave());
-  // djvec_t normalizedVK=aveVK;
-  // for(size_t t=0;t<THp1;t++)
-  //   normalizedVK[t]/=dt2p[t];
-  // normalizedVK.ave_err().write("plots/VKVK_normalized.xmg");
-  
   grace_file_t errVK_plot("plots/VKVK_err.xmg");
   grace_file_t aveVK_plot("plots/VKVK_ave.xmg");
   vec_ave_err_t y1(THp1);
