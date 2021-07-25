@@ -163,13 +163,13 @@ void loadRawData(int narg,char** arg)
 		exists=false;
 	      iSource++;
 	    }
+	  
+	  cout<<"Conf "<<conf<<(exists?" accepted":(" discarded, "+confPath+" not found"))<<endl;
 	}
       MPI_Bcast(&exists,sizeof(bool),MPI_CHAR,0,MPI_COMM_WORLD);
       
       if(exists)
 	  confsList.push_back(conf);
-      if(MPIrank==0)
-	cout<<"Conf "<<conf<<(exists?" accepted":(" discarded, "+confPath+" not found"))<<endl;
     }
   
   if(MPIrank==0 and confsList.size()!=possibleConfsList.size())
