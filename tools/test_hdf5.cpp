@@ -146,6 +146,7 @@ void loadRawData(int narg,char** arg)
   
   const vector<string> possibleConfsList=getConfsList(confsPattern);
   const vector<string> sourcesList=getSourcesList(possibleConfsList.front());
+  nSources=sourcesList.size();
   vector<string> confsList;
   for(const string& conf : possibleConfsList)
     {
@@ -156,11 +157,7 @@ void loadRawData(int narg,char** arg)
 	{
 	  confPath=conf+"/"+sourcesList[iSource];
 	  if(not file_exists(confPath))
-	    {
-	      exists=false;
-	      if(MPIrank==0)
-		cout<<" "<<confPath<<" not found"<<endl;
-	    }
+	    exists=false;
 	  iSource++;
 	}
       
@@ -174,7 +171,6 @@ void loadRawData(int narg,char** arg)
     cout<<"Confs list resized from "<<possibleConfsList.size()<<"to: "<<confsList.size();
   
   nConfs=confsList.size();
-  nSources=sourcesList.size();
   
   setPars();
   
