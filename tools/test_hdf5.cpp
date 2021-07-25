@@ -211,7 +211,7 @@ void loadRawData(int narg,char** arg)
 		  const size_t& igamma_out=m.first;
 		  const size_t& igamma_in=m.second;
 		  const double& in=loader.dataIn[idData_loader({iMes,tIn,igamma_in})];
-		  double& out=rawData[idData({iConf,iSource,igamma_out,iMes,tOut,})];
+		  double& out=rawData[idData({iConf,iSource,igamma_out,iMes,tOut})];
 		  
 		  out+=in;
 		}
@@ -224,8 +224,8 @@ void loadRawData(int narg,char** arg)
     {
       const std::vector<size_t> coords=idData(i);
       
-      const size_t &t=coords[0];
-      const size_t &ig=coords[1];
+      const size_t &t=coords.back();
+      const size_t &ig=coords[2];
       
       const double norm=((t==0 or t==TH or tAve==false)?1:2)*
 	((ig==0)?1:-3);
