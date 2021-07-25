@@ -151,15 +151,20 @@ void loadRawData(int narg,char** arg)
   for(const string& conf : possibleConfsList)
     {
       bool exists=true;
-      string confPath;
-      size_t iSource=0;
-      while(iSource<nSources and exists)
+      
+      if(MPIrank==0)
 	{
-	  confPath=conf+"/"+sourcesList[iSource];
-	  if(not file_exists(confPath))
-	    exists=false;
-	  iSource++;
+	  string confPath;
+	  size_t iSource=0;
+	  while(iSource<nSources and exists)
+	    {
+	      confPath=conf+"/"+sourcesList[iSource];
+	      if(not file_exists(confPath))
+		exists=false;
+	      iSource++;
+	    }
 	}
+      MPI_Bcast(&exists,sizeof(bool),MPI_CHAR,0,MPI_COMM_WORLD);
       
       if(exists)
 	  confsList.push_back(conf);
