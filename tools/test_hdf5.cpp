@@ -25,7 +25,7 @@ constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 bool tAve;
 index_t idData;
 index_t idData_loader;
-vector<float> rawData;
+vector<double> rawData;
 vector<int> confMap;
 
 void setPars()
@@ -99,7 +99,7 @@ struct DataLoader
   H5File file;
   string groupName;
   
-  std::vector<float> dataIn;
+  std::vector<double> dataIn;
   
   DataLoader(const int T)
   {
@@ -138,7 +138,7 @@ struct DataLoader
 	
 	dataspace.selectHyperslab(H5S_SELECT_SET,count,offset);
 	
-	dataset.read(&dataIn[idData_loader({iMes,0,0})],PredType::NATIVE_FLOAT,memspace,dataspace);
+	dataset.read(&dataIn[idData_loader({iMes,0,0})],PredType::NATIVE_DOUBLE,memspace,dataspace);
       }
   }
 };
@@ -210,15 +210,15 @@ void loadRawData(int narg,char** arg)
 		    tIn;
 		  const size_t& igamma_out=m.first;
 		  const size_t& igamma_in=m.second;
-		  const float& in=loader.dataIn[idData_loader({iMes,tIn,igamma_in})];
-		  float& out=rawData[idData({iConf,iSource,igamma_out,iMes,tOut,})];
+		  const double& in=loader.dataIn[idData_loader({iMes,tIn,igamma_in})];
+		  double& out=rawData[idData({iConf,iSource,igamma_out,iMes,tOut,})];
 		  
 		  out+=in;
 		}
 	}
     }
   
-  MPI_Allreduce(MPI_IN_PLACE,&rawData[0],idData.max(),MPI_FLOAT,MPI_SUM,MPI_COMM_WORLD);
+  MPI_Allreduce(MPI_IN_PLACE,&rawData[0],idData.max(),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   
   for(size_t i=0;i<idData.max();i++)
     {
