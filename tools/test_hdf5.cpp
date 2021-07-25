@@ -115,7 +115,7 @@ struct DataLoader
     count[2]=nGamma;
     count[3]=1;
     
-    dataIn.resize(nGamma*nMes,T);
+    dataIn.resize(idData.max(),0.0);
   }
   
   void open(const string& path)
