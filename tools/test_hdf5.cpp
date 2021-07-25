@@ -19,6 +19,8 @@ string confsPattern;
 string output;
 size_t nConfs,nSources;
 constexpr size_t nPV=3;
+constexpr size_t nMes=3;
+constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 
 bool tAve;
 index_t idData;
@@ -35,8 +37,8 @@ void setPars()
   else
     THp1=T;
   
-  idData.set_ranges({{"T",THp1},{"PV",nPV},{"Confs",nConfs},{"Source",nSources}});
-  idData_loader.set_ranges({{"T",T},{"Gamma",16}});
+  idData.set_ranges({{"Confs",nConfs},{"Source",nSources},{"PV",nPV},{"Mes",nMes},{"T",THp1}});
+  idData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Gamma",16}});
   rawData.resize(idData.max(),0.0);
   
   if(MPIrank==0)
@@ -113,7 +115,7 @@ struct DataLoader
     count[2]=nGamma;
     count[3]=1;
     
-    dataIn.resize(T*nGamma);
+    dataIn.resize(nGamma*nMes,T);
   }
   
   void open(const string& path)
@@ -127,14 +129,17 @@ struct DataLoader
     file.close();
   }
   
-  void load(const string& tag)
+  void load()
   {
-    const DataSet dataset=file.openDataSet(groupName+"/mesons/"+tag);
-    const DataSpace dataspace=dataset.getSpace();
-    
-    dataspace.selectHyperslab(H5S_SELECT_SET,count,offset);
-    
-    dataset.read(&dataIn[0],PredType::NATIVE_FLOAT,memspace,dataspace);
+    for(size_t iMes=0;iMes<nMes;iMes++)
+      {
+	const DataSet dataset=file.openDataSet(groupName+"/mesons/"+mesTag[iMes]);
+	const DataSpace dataspace=dataset.getSpace();
+	
+	dataspace.selectHyperslab(H5S_SELECT_SET,count,offset);
+	
+	dataset.read(&dataIn[idData_loader({iMes,0,0})],PredType::NATIVE_FLOAT,memspace,dataspace);
+      }
   }
 };
 
@@ -159,7 +164,7 @@ void loadRawData(int narg,char** arg)
 	  while(iSource<nSources and exists)
 	    {
 	      confPath=conf+"/"+sourcesList[iSource];
-	      if(not file_exists(confPath))
+	      if(not std::filesystem::exists(confPath))
 		exists=false;
 	      iSource++;
 	    }
@@ -193,22 +198,23 @@ void loadRawData(int narg,char** arg)
 	{
 	  const string file=confsList[iConf]+"/"+sourcesList[iSource];
 	  loader.open(file);
-	  loader.load("dd");
+	  loader.load();
 	  
-	  for(size_t tIn=0;tIn<T;tIn++)
-	    for(const auto& m : map)
-	      {
-		const size_t tOut=
-		  tAve?
-		  ((tIn>=TH)?(T-tIn):tIn):
-		  tIn;
-		const size_t& igamma_out=m.first;
-		const size_t& igamma_in=m.second;
-		const float& in=loader.dataIn[idData_loader({tIn,igamma_in})];
-		float& out=rawData[idData({tOut,igamma_out,iConf,iSource})];
-		
-		out+=in;
-	      }
+	  for(size_t iMes=0;iMes<nMes;iMes++)
+	    for(size_t tIn=0;tIn<T;tIn++)
+	      for(const auto& m : map)
+		{
+		  const size_t tOut=
+		    tAve?
+		    ((tIn>=TH)?(T-tIn):tIn):
+		    tIn;
+		  const size_t& igamma_out=m.first;
+		  const size_t& igamma_in=m.second;
+		  const float& in=loader.dataIn[idData_loader({iMes,tIn,igamma_in})];
+		  float& out=rawData[idData({iConf,iSource,igamma_out,iMes,tOut,})];
+		  
+		  out+=in;
+		}
 	}
     }
   
@@ -248,9 +254,10 @@ void loadData()
   out.bin_read(rawData);
 }
 
-djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t icorr)
+djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iCorr,const size_t iMes)
 {
   const size_t clust_size=nConfs/njacks;
+  
   djvec_t ave(THp1);
   ave=0.0;
   for(size_t _iConf=0;_iConf<nConfs;_iConf++)
@@ -259,7 +266,7 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t icor
       const size_t iClust=iConf/clust_size;
       for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
 	for(size_t t=0;t<THp1;t++)
-	  ave[t][iClust]+=rawData[idData({t,icorr,_iConf,iSource})];
+	  ave[t][iClust]+=rawData[idData({_iConf,iSource,iCorr,iMes,t})];
     }
   
   ave.clusterize(clust_size);
@@ -282,96 +289,104 @@ int main(int narg,char **arg)
   else
     loadData();
   
-  raw_file_t confMapFile("map.txt","r");
-  for(size_t iConf=0;iConf<nConfs;iConf++)
-    confMap.push_back(confMapFile.read<int>());
-  
-  set_njacks(195);
-  
-  const djvec_t aveP5=getAve(0,nSources,0);
-  const djvec_t aveVK=getAve(0,nSources,1);
-  aveP5.ave_err().write("plots/corr_P5P5.xmg");
-  aveVK.ave_err().write("plots/corr_VKVK.xmg");
-  if(not tAve)
-    aveVK.symmetrized().ave_err().write("plots/corr_VKVK_symm.xmg");
-  const djack_t mP5=constant_fit(effective_mass(tAve?aveP5:aveP5.symmetrized()),25,32,"plots/eff_mass_P5P5.xmg");
-  const djack_t mVK=constant_fit(effective_mass(tAve?aveVK:aveVK.symmetrized()),25,32,"plots/eff_mass_VKVK.xmg");
-  const djack_t E2p=2*sqrt(sqr(mP5)+sqr(2*M_PI/L));
-  cout<<"mP5: "<<mP5.ave_err()<<endl;
-  cout<<"EVK: "<<E2p.ave_err()<<endl;
-  
-  grace_file_t errVK_plot("plots/VKVK_err.xmg");
-  grace_file_t aveVK_plot("plots/VKVK_ave.xmg");
-  vec_ave_err_t y1(THp1);
-  for(size_t n=1;n<=nSources;n*=2)
+  if(file_exists("map.txt"))
     {
-      const size_t nCopies=nSources/n;
-      
-      vec_ave_err_t copyAveVK(THp1);
-      vector<double> s(THp1,0.0),s2(THp1,0.0);
-      for(size_t iCopy=0;iCopy<nCopies;iCopy++)
-	{
-	  const djvec_t aveVK=getAve(iCopy*n,(iCopy+1)*n,1);
-	  
-	  for(size_t t=0;t<THp1;t++)
-	    {
- 	      copyAveVK[t].ave()+=aveVK[t].ave();
-	      copyAveVK[t].err()+=aveVK[t].err();
-	      
-	      s[t]+=aveVK[t].err();
-	      s2[t]+=sqr(aveVK[t].err());
-	    }
-	}
-      
-      for(size_t t=0;t<THp1;t++)
-	{
-	  copyAveVK[t].ave()/=nCopies;
-	  copyAveVK[t].err()/=nCopies;
-	}
-      
-      aveVK_plot.write_vec_ave_err(copyAveVK);
-      
-      if(nCopies>1)
-	{
-	  vec_ave_err_t y(THp1);
-	  for(size_t t=0;t<THp1;t++)
-	    {
-	      s[t]/=nCopies;
-	      s2[t]/=nCopies;
-	      s2[t]-=sqr(s[t]);
-	      
-	      y[t].ave()=s[t];
-	      y[t].err()=sqrt(s2[t]/(nCopies-1));
-	    }
-	  // aveVK[t]*=t*t*t;
-	  
-	  // normalize
-	  // const djvec_t aveTK=getAve(0,nSources,2);
-	  // if(n==1)
-	  //   y1=y;
-	  // else
-	  //   {
-	  //     for(size_t t=0;t<THp1;t++)
-	  // 	{
-	  // 	  y[t].err()=sqrt(sqr(y[t].err()/y[t].ave())+sqr(y1[t].err()/y1[t].ave()))*y[t].ave()/y1[t].ave()*sqrt(n);
-	  // 	  y[t].ave()*=sqrt(n)/y1[t].ave();
-	  // 	}
-	    errVK_plot.write_vec_ave_err(y);
-	    // }
-	}
-      // effective_mass(aveTK).ave_err().write("plots/TKTK_new.xmg");
+      raw_file_t confMapFile("map.txt","r");
+      for(size_t iConf=0;iConf<nConfs;iConf++)
+	confMap.push_back(confMapFile.read<int>());
     }
+  else
+    confMap=vector_up_to<int>(nConfs);
   
-  // cout<<"rank: "<<rank<<endl;
-  // hsize_t dims_out[rank];
-  // dataspace.getSimpleExtentDims(dims_out,nullptr);
-  // for(int i=0;i<rank;i++)
-  //   cout<<dims_out[i]<<endl;
-  
-  // for(int t=0;t<T;t++)
-  //   cout<<loader.data_out[0+nGamma*t]<<endl;
-  
-  // const DataType dataType=dataset.getDataType();
+  set_njacks(nConfs);
+
+  for(size_t iMes=0;iMes<nMes;iMes++)
+    {
+      const djvec_t aveP5=getAve(0,nSources,0,iMes);
+      const djvec_t aveVK=getAve(0,nSources,1,iMes);
+      aveP5.ave_err().write("plots/corr_P5P5"+(string)mesTag[iMes]+".xmg");
+      aveVK.ave_err().write("plots/corr_VKVK"+(string)mesTag[iMes]+".xmg");
+      if(not tAve)
+	aveVK.symmetrized().ave_err().write("plots/corr_VKVK_symm.xmg");
+      const djack_t mP5=constant_fit(effective_mass(tAve?aveP5:aveP5.symmetrized()),25,32,"plots/eff_mass_P5P5.xmg");
+      const djack_t mVK=constant_fit(effective_mass(tAve?aveVK:aveVK.symmetrized()),25,32,"plots/eff_mass_VKVK.xmg");
+      const djack_t E2p=2*sqrt(sqr(mP5)+sqr(2*M_PI/L));
+      cout<<"mP5: "<<mP5.ave_err()<<endl;
+      cout<<"EVK: "<<E2p.ave_err()<<endl;
+      
+      grace_file_t errVK_plot("plots/VKVK_err.xmg");
+      grace_file_t aveVK_plot("plots/VKVK_ave.xmg");
+      vec_ave_err_t y1(THp1);
+      for(size_t n=1;n<=nSources;n*=2)
+	{
+	  const size_t nCopies=nSources/n;
+	  
+	  vec_ave_err_t copyAveVK(THp1);
+	  vector<double> s(THp1,0.0),s2(THp1,0.0);
+	  for(size_t iCopy=0;iCopy<nCopies;iCopy++)
+	    {
+	      const djvec_t aveVK=getAve(iCopy*n,(iCopy+1)*n,1,iMes);
+	      
+	      for(size_t t=0;t<THp1;t++)
+		{
+		  copyAveVK[t].ave()+=aveVK[t].ave();
+		  copyAveVK[t].err()+=aveVK[t].err();
+		  
+		  s[t]+=aveVK[t].err();
+		  s2[t]+=sqr(aveVK[t].err());
+		}
+	    }
+	  
+	  for(size_t t=0;t<THp1;t++)
+	    {
+	      copyAveVK[t].ave()/=nCopies;
+	      copyAveVK[t].err()/=nCopies;
+	    }
+	  
+	  aveVK_plot.write_vec_ave_err(copyAveVK);
+	  
+	  if(nCopies>1)
+	    {
+	      vec_ave_err_t y(THp1);
+	      for(size_t t=0;t<THp1;t++)
+		{
+		  s[t]/=nCopies;
+		  s2[t]/=nCopies;
+		  s2[t]-=sqr(s[t]);
+		  
+		  y[t].ave()=s[t];
+		  y[t].err()=sqrt(s2[t]/(nCopies-1));
+		}
+	      // aveVK[t]*=t*t*t;
+	      
+	      // normalize
+	      // const djvec_t aveTK=getAve(0,nSources,2);
+	      // if(n==1)
+	      //   y1=y;
+	      // else
+	      //   {
+	      //     for(size_t t=0;t<THp1;t++)
+	      // 	{
+	      // 	  y[t].err()=sqrt(sqr(y[t].err()/y[t].ave())+sqr(y1[t].err()/y1[t].ave()))*y[t].ave()/y1[t].ave()*sqrt(n);
+	      // 	  y[t].ave()*=sqrt(n)/y1[t].ave();
+	      // 	}
+	      errVK_plot.write_vec_ave_err(y);
+	      // }
+	    }
+	  // effective_mass(aveTK).ave_err().write("plots/TKTK_new.xmg");
+	}
+    }
+
+      // cout<<"rank: "<<rank<<endl;
+      // hsize_t dims_out[rank];
+      // dataspace.getSimpleExtentDims(dims_out,nullptr);
+      // for(int i=0;i<rank;i++)
+      //   cout<<dims_out[i]<<endl;
+      
+      // for(int t=0;t<T;t++)
+      //   cout<<loader.data_out[0+nGamma*t]<<endl;
+      
+      // const DataType dataType=dataset.getDataType();
   
   // dataset.q
   // cout<<"NSubobj:"<<dataset.getNumObjs()<<endl;
@@ -380,6 +395,6 @@ int main(int narg,char **arg)
   //     const string subGroupName=dataset.getObjnameByIdx(i);
   //     cout<<"Subobj:"<<subGroupName<<endl;
   //   }
-  
+ 
   return 0;
 }
