@@ -18,8 +18,8 @@ size_t T,L,TH,THp1;
 string confsPattern;
 string output;
 size_t nConfs,nSources;
-constexpr size_t nPV=3;
-constexpr char corrTag[nPV][5]={"P5P5","VKVK","TKTK"};
+constexpr size_t nGammaComb=4;
+constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","_KVK"};
 constexpr size_t nMes=3;
 constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 
@@ -134,7 +134,7 @@ void setPars()
   
   THp1=TH+1;
   
-  idData.set_ranges({{"Confs",nConfs},{"Source",nSources},{"PV",nPV},{"Mes",nMes},{"T",THp1}});
+  idData.set_ranges({{"Confs",nConfs},{"Source",nSources},{"GammComb",nGammaComb},{"Mes",nMes},{"T",THp1}});
   idData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Gamma",16}});
   idOpenData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Id1",4},{"Id2",4},{"Id3",4},{"Id4",4},{"Ri",2}});
   rawData.resize(idData.max(),0.0);
@@ -199,7 +199,7 @@ struct DataLoader
   
   static constexpr int openRank=7;
   
-  hsize_t openDimsm[5];
+  hsize_t openDimsm[6];
   DataSpace openMemspace;
   
   hsize_t      openOffset[openRank];   // hyperslab offset in the file
@@ -230,7 +230,8 @@ struct DataLoader
     openDimsm[2]=4;
     openDimsm[3]=4;
     openDimsm[4]=4;
-    openMemspace.setExtentSimple(5,openDimsm);
+    openDimsm[5]=2;
+    openMemspace.setExtentSimple(6,openDimsm);
     
     for(int i=0;i<openRank;i++)
       openOffset[i]=0;
@@ -357,6 +358,44 @@ void loadRawData(int narg,char** arg)
 		  
 		  out+=in;
 		}
+
+  const Gamma_data_t Gamma_data[nGamma]=
+    {{{0,1,2,3},{1,1,1,1},{0,0,0,0}},
+     {{3,2,1,0},{0,0,0,0},{-1,-1,1,1}},
+     {{3,2,1,0},{-1,1,1,-1},{0,0,0,0}},
+     {{2,3,0,1},{0,0,0,0},{-1,1,1,-1}},
+     {{2,3,0,1},{-1,-1,-1,-1},{0,0,0,0}},
+     {{0,1,2,3},{1,1,-1,-1},{0,0,0,0}},
+     {{3,2,1,0},{0,0,0,0},{1,1,1,1}},
+     {{3,2,1,0},{1,-1,1,-1},{0,0,0,0}},
+     {{2,3,0,1},{0,0,0,0},{1,-1,1,-1}},
+     {{2,3,0,1},{1,1,-1,-1},{0,0,0,0}},
+     {{1,0,3,2},{0,0,0,0},{-1,-1,1,1}},
+     {{1,0,3,2},{-1,1,1,-1},{0,0,0,0}},
+     {{0,1,2,3},{0,0,0,0},{-1,1,1,-1}},
+     {{1,0,3,2},{0,0,0,0},{1,1,1,1}},
+     {{1,0,3,2},{1,-1,1,-1},{0,0,0,0}},
+     {{0,1,2,3},{0,0,0,0},{1,-1,1,-1}}};
+
+	  
+	  for(size_t iMes=0;iMes<nMes;iMes++)
+	    for(size_t tIn=0;tIn<T;tIn++)
+	      for(size_t id1=0;id1<4;id1++)
+		{
+		  const size_t tOut=
+		    ((tIn>=TH)?(T-tIn):tIn);
+		  const size_t iGammaIn=1;
+		  const size_t iGammaOut=3;
+		  const size_t id2=Gamma_data[iGammaIn][0][id1];
+		  const size_t id3=id1;
+		  const size_t id4=id2;
+		  
+		  const size_t ri=0;
+		  const double& in=loader.openDataIn[idOpenData_loader({iMes,tIn,id1,id2,id3,id4,ri})];
+		  double& out=rawData[idData({iConf,iSource,iGammaOut,iMes,tOut})];
+		  
+		  out+=in;
+		}
 	}
     }
   
@@ -396,7 +435,7 @@ void loadData()
   out.bin_read(rawData);
 }
 
-djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iCorr,const size_t iMes)
+djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes)
 {
   const size_t clust_size=nConfs/njacks;
   
@@ -408,7 +447,7 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iCor
       const size_t iClust=iConf/clust_size;
       for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
 	for(size_t t=0;t<THp1;t++)
-	  ave[t][iClust]+=rawData[idData({_iConf,iSource,iCorr,iMes,t})];
+	  ave[t][iClust]+=rawData[idData({_iConf,iSource,iGammaComb,iMes,t})];
     }
   
   ave.clusterize(clust_size);
@@ -417,9 +456,9 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iCor
   return ave;
 }
 
-void an(const size_t& iCorr)
+void an(const size_t& iGammaComb)
 {
-  const string tag=corrTag[iCorr];
+  const string tag=gammaCombTag[iGammaComb];
   const size_t clust_size=nConfs/njacks;
   const size_t nCopies=2;
   const size_t nSourcesToBeUsed=nSources;
@@ -437,7 +476,7 @@ void an(const size_t& iCorr)
 	  s=0.0;
 	  for(size_t iSource=nSourcesPerCopy*iCopy;iSource<nSourcesPerCopy*(iCopy+1);iSource++)
 	    for(size_t iMes=0;iMes<nMes;iMes+=2)
-	      s+=rawData[idData({iConf,iSource,iCorr,iMes,t})];
+	      s+=rawData[idData({iConf,iSource,iGammaComb,iMes,t})];
 	  s/=nSourcesPerCopy*L*L*L*2;
 	}
   
@@ -566,14 +605,14 @@ int main(int narg,char **arg)
   set_njacks(nConfs);
   
   djack_t mP5;
-  for(size_t iCorr=0;iCorr<3;iCorr++)
+  for(size_t iGammaComb=0;iGammaComb<nGammaComb;iGammaComb++)
     {
-      const string cTag=corrTag[iCorr];
+      const string cTag=gammaCombTag[iGammaComb];
       
       djvec_t aveCorr(THp1,0.0);
       for(size_t iMes=0;iMes<nMes;iMes++)
 	{
-	  const djvec_t corr=getAve(0,nSources,iCorr,iMes);
+	  const djvec_t corr=getAve(0,nSources,iGammaComb,iMes);
 	  corr.ave_err().write("plots/corr_"+cTag+"_"+(string)mesTag[iMes]+".xmg");
 	  if(iMes!=1)
 	    aveCorr+=corr;
@@ -581,9 +620,9 @@ int main(int narg,char **arg)
       aveCorr/=2.0;
       aveCorr.ave_err().write("plots/corr_"+cTag+".xmg");
       
-      const djack_t m=constant_fit(effective_mass(aveCorr),(iCorr==0)?25:20,32,"plots/eff_mass_"+cTag+".xmg");
+      const djack_t m=constant_fit(effective_mass(aveCorr),(iGammaComb==0)?25:20,32,"plots/eff_mass_"+cTag+".xmg");
       
-      switch(iCorr)
+      switch(iGammaComb)
 	{
 	case 0:
 	  mP5=m;
@@ -601,7 +640,7 @@ int main(int narg,char **arg)
 	  break;
 	}
       
-      an(iCorr);
+      an(iGammaComb);
       
       grace_file_t err_plot("plots/err_scaling_"+cTag+".xmg");
       grace_file_t ave_plot("plots/ave_"+cTag+".xmg");
@@ -615,8 +654,8 @@ int main(int narg,char **arg)
 	  for(size_t iCopy=0;iCopy<nCopies;iCopy++)
 	    {
 	      const djvec_t ave=
-		(getAve(iCopy*n,(iCopy+1)*n,iCorr,0)+
-		 getAve(iCopy*n,(iCopy+1)*n,iCorr,2))/2.0;
+		(getAve(iCopy*n,(iCopy+1)*n,iGammaComb,0)+
+		 getAve(iCopy*n,(iCopy+1)*n,iGammaComb,2))/2.0;
 	      
 	      for(size_t t=0;t<THp1;t++)
 		{
