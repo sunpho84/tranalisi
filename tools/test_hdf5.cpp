@@ -241,7 +241,7 @@ struct DataLoader
     openCount[2]=4;
     openCount[3]=4;
     openCount[4]=4;
-    openCount[5]=1;
+    openCount[5]=4;
     openCount[6]=2;
     
     openDataIn.resize(idData_loader.max(),0.0);
@@ -376,26 +376,40 @@ void loadRawData(int narg,char** arg)
      {{1,0,3,2},{0,0,0,0},{1,1,1,1}},
      {{1,0,3,2},{1,-1,1,-1},{0,0,0,0}},
      {{0,1,2,3},{0,0,0,0},{1,-1,1,-1}}};
-
+  
 	  
 	  for(size_t iMes=0;iMes<nMes;iMes++)
 	    for(size_t tIn=0;tIn<T;tIn++)
-	      for(size_t id1=0;id1<4;id1++)
-		{
-		  const size_t tOut=
-		    ((tIn>=TH)?(T-tIn):tIn);
-		  const size_t iGammaIn=1;
+	      {
+		const size_t tOut=
+		  ((tIn>=TH)?(T-tIn):tIn);
+		
 		  const size_t iGammaOut=3;
-		  const size_t id2=Gamma_data[iGammaIn][0][id1];
-		  const size_t id3=id1;
-		  const size_t id4=id2;
 		  
-		  const size_t ri=0;
-		  const double& in=loader.openDataIn[idOpenData_loader({iMes,tIn,id1,id2,id3,id4,ri})];
-		  double& out=rawData[idData({iConf,iSource,iGammaOut,iMes,tOut})];
+		  const size_t iGammaIn1=1;
+		  const size_t iGammaIn2=1;
 		  
-		  out+=in;
-		}
+		  for(size_t id1=0;id1<4;id1++)
+		    for(size_t id3=0;id3<4;id3++)
+		      {
+			const size_t id2=Gamma_data[iGammaIn1][0][id1];
+			const size_t id4=Gamma_data[iGammaIn2][0][id1];
+			complex<double> c1,c2;
+			for(size_t ri=0;ri<2;ri++)
+			  {
+			    ((double*)&c1)[ri]=Gamma_data[iGammaIn1][ri][id1];
+			    ((double*)&c2)[ri]=Gamma_data[iGammaIn2][ri][id1];
+			  }
+			const complex<double> c=c1*c2;
+			
+			double& out=rawData[idData({iConf,iSource,iGammaOut,iMes,tOut})];
+			for(size_t ri=0;ri<2;ri++)
+			  {
+			    const double& in=loader.openDataIn[idOpenData_loader({iMes,tIn,id1,id2,id3,id4,ri})];
+			    out+=in*((double*)&c)[ri];
+			  }
+		      }
+	      }
 	}
     }
   
