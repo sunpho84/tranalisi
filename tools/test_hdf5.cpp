@@ -136,7 +136,7 @@ void setPars()
   
   idData.set_ranges({{"Confs",nConfs},{"Source",nSources},{"PV",nPV},{"Mes",nMes},{"T",THp1}});
   idData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Gamma",16}});
-  idOpenData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Id1",4},{"Id2",4},{"Id3",4},{"Id4",4}});
+  idOpenData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Id1",4},{"Id2",4},{"Id3",4},{"Id4",4},{"Ri",2}});
   rawData.resize(idData.max(),0.0);
   
   if(MPIrank==0)
@@ -230,7 +230,7 @@ struct DataLoader
     openDimsm[2]=4;
     openDimsm[3]=4;
     openDimsm[4]=4;
-    openMemspace.setExtentSimple(2,openDimsm);
+    openMemspace.setExtentSimple(5,openDimsm);
     
     for(int i=0;i<openRank;i++)
       openOffset[i]=0;
@@ -240,9 +240,8 @@ struct DataLoader
     openCount[2]=4;
     openCount[3]=4;
     openCount[4]=4;
-    openCount[2]=4;
     openCount[5]=1;
-    openCount[6]=1;
+    openCount[6]=2;
     
     openDataIn.resize(idData_loader.max(),0.0);
   }
@@ -282,7 +281,7 @@ struct DataLoader
 	
 	dataspace.selectHyperslab(H5S_SELECT_SET,openCount,openOffset);
 	
-	dataset.read(&openDataIn[idOpenData_loader({iMes,0,0,0,0,0})],PredType::NATIVE_DOUBLE,openMemspace,dataspace);
+	dataset.read(&openDataIn[idOpenData_loader({iMes,0,0,0,0,0,0})],PredType::NATIVE_DOUBLE,openMemspace,dataspace);
       }
   }
 };
@@ -344,27 +343,6 @@ void loadRawData(int narg,char** arg)
 	  loader.open(file);
 	  loader.load();
 	  loader.openLoad();
-	  
-	  for(size_t iMes=0;iMes<nMes;iMes++)
-	    for(size_t tIn=0;tIn<T;tIn++)
-	      for(const auto& m : map)
-		{
-		  const size_t tOut=
-		    ((tIn>=TH)?(T-tIn):tIn);
-		  const size_t& igamma_out=m.first;
-		  const size_t& igamma_in=m.second;
-		  const double& in=loader.dataIn[idData_loader({iMes,tIn,igamma_in})];
-		  double& out=rawData[idData({iConf,iSource,igamma_out,iMes,tOut})];
-		  
-		  out+=in;
-		}
-	}
-      
-      for(size_t iSource=0;iSource<nSources;iSource++)
-	{
-	  const string file=confsList[iConf]+"/"+sourcesList[iSource];
-	  loader.open(file);
-	  loader.load();
 	  
 	  for(size_t iMes=0;iMes<nMes;iMes++)
 	    for(size_t tIn=0;tIn<T;tIn++)
