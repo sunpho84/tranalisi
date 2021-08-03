@@ -244,7 +244,7 @@ struct DataLoader
     openCount[5]=4;
     openCount[6]=2;
     
-    openDataIn.resize(idData_loader.max(),0.0);
+    openDataIn.resize(idOpenData_loader.max(),0.0);
   }
   
   void open(const string& path)
@@ -273,7 +273,7 @@ struct DataLoader
   
   void openLoad()
   {
-    const string tag[3]={"dd_open","ud_open","uu_open"};
+    const string tag[3]={"uu_open","ud_open","dd_open"};
     
     for(size_t iMes=0;iMes<nMes;iMes++)
       {
@@ -296,6 +296,7 @@ void loadRawData(int narg,char** arg)
   const vector<string> possibleConfsList=getConfsList(confsPattern);
   const vector<string> sourcesList=getSourcesList(possibleConfsList.front());
   nSources=sourcesList.size();
+  
   vector<string> confsList;
   for(const string& conf : possibleConfsList)
     {
@@ -377,39 +378,60 @@ void loadRawData(int narg,char** arg)
      {{1,0,3,2},{1,-1,1,-1},{0,0,0,0}},
      {{0,1,2,3},{0,0,0,0},{1,-1,1,-1}}};
   
-	  
+    // A(i)=(GSO)_{ij(i)} (G5)_{j(i)}
+    // B(k)=(G5)_k (GSI)_{kl(k)}
+   const array<array<size_t,3>,3> map{array<size_t,3>{3,1,1},{3,2,2},{3,3,3}};
+  //const array<array<size_t,3>,1> map{array<size_t,3>{3,5,5}};
 	  for(size_t iMes=0;iMes<nMes;iMes++)
 	    for(size_t tIn=0;tIn<T;tIn++)
 	      {
 		const size_t tOut=
 		  ((tIn>=TH)?(T-tIn):tIn);
-		
-		  const size_t iGammaOut=3;
+
+		for(const auto& m : map)
+		  {
+		    const size_t iGammaOut=m[0];
 		  
-		  const size_t iGammaIn1=1;
-		  const size_t iGammaIn2=1;
+		  const size_t iGammaIn1=m[1];
+		  const size_t iGammaIn2=m[2];
 		  
-		  for(size_t id1=0;id1<4;id1++)
-		    for(size_t id3=0;id3<4;id3++)
+		  const auto& g1=Gamma_data[iGammaIn1];
+		  const auto& g2=Gamma_data[iGammaIn2];
+		  const auto& g5=Gamma_data[5];
+		  
+		  double& out=rawData[idData({iConf,iSource,iGammaOut,iMes,tOut})];
+		  
+		  for(size_t nu=0;nu<4;nu++)
+		    for(size_t rh=0;rh<4;rh++)
 		      {
-			const size_t id2=Gamma_data[iGammaIn1][0][id1];
-			const size_t id4=Gamma_data[iGammaIn2][0][id1];
-			complex<double> c1,c2;
+			const size_t si=g1[0][nu];
+			const size_t mu=g2[0][rh];
+			complex<double> c1,c2,c15,c25;
 			for(size_t ri=0;ri<2;ri++)
 			  {
-			    ((double*)&c1)[ri]=Gamma_data[iGammaIn1][ri][id1];
-			    ((double*)&c2)[ri]=Gamma_data[iGammaIn2][ri][id1];
+			    ((double*)&c1)[ri]=g1[ri+1][nu];
+			    ((double*)&c2)[ri]=g2[ri+1][rh];
+			    ((double*)&c15)[ri]=g5[ri+1][nu];
+			    ((double*)&c25)[ri]=g5[ri+1][mu];
 			  }
-			const complex<double> c=c1*c2;
+			const complex<double> c=c1*c2*c15*c25;
 			
-			double& out=rawData[idData({iConf,iSource,iGammaOut,iMes,tOut})];
+			// if(tIn==0 and iSource==0 and iMes==0 and iConf==0)
+			//   printf("%zu %zu %zu %zu ",mu,nu,si,rh);
 			for(size_t ri=0;ri<2;ri++)
 			  {
-			    const double& in=loader.openDataIn[idOpenData_loader({iMes,tIn,id1,id2,id3,id4,ri})];
+			    const double& in=loader.openDataIn[idOpenData_loader({iMes,tIn,mu,nu,si,rh,ri})];
+			// if(tIn==0 and iSource==0 and iMes==0 and iConf==0)
+			//   printf(" %lg",in);
+			    
 			    out+=in*((double*)&c)[ri];
 			  }
+			// if(tIn==0 and iSource==0 and iMes==0 and iConf==0)
+			//   printf("\n");
 		      }
+		  }
 	      }
+      cout<<rawData[idData({iConf,iSource,3,0,0})]<<" "<<rawData[idData({iConf,iSource,0,0,0})]<<endl;
 	}
     }
   
