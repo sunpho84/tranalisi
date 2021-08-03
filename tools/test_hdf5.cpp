@@ -25,8 +25,108 @@ constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 
 index_t idData;
 index_t idData_loader;
+index_t idOpenData_loader;
 vector<double> rawData;
 vector<int> confMap;
+
+//! parameters to solve
+struct params_t
+{
+  size_t t;
+  double a;
+  params_t(size_t t,double a) : t(t),a(a) {}
+};
+
+//! compute the kernel f(Q)
+double f_Q(double Q,double a)
+{
+  const double mass_muon=0.1056583745;
+  double am=mass_muon*a;
+  double w=Q/am;
+  double s=sqr(w);
+  double A=sqrt(4+s);
+  
+  return 1/(sqr(am)*w*A)*sqr((A-w)/(A+w));
+  //double Z=(sqrt(1+4/s)-1)/2;
+  //return 1/sqr(am)*s*Z*Z*Z*(1-s*Z)/(1+s*Z*Z);
+}
+
+//! kernel of eq.10
+double kern_Q(double Q,void *params)
+{
+  double t=((params_t*)params)->t;
+  double a=((params_t*)params)->a;
+  return 4*Q*f_Q(Q,a)*((cos(Q*t)-1)/(Q*Q)+t*t/2);
+}
+
+//! parameters of LO corr
+struct params_LO_t
+{
+  double Z2,M,a;
+  params_LO_t(double Z2,double M,double a) : Z2(Z2),M(M),a(a) {}
+  template <class T> params_LO_t(const vector<T> &p,size_t i) : Z2(p[0][i]),M(p[1][i]),a(p[2][i]) {}
+};
+
+//! compute tilde for double
+map<pair<size_t,double>,double> looktab;
+inline double ftilde_t(size_t t,double a)
+{
+  pair<size_t,double> key(t,a);
+  auto it=looktab.find(key);
+  if(it!=looktab.end()) return it->second;
+  
+  int workspace_size=1000;
+  gsl_integration_workspace *workspace=gsl_integration_workspace_alloc(workspace_size);
+  
+  params_t param(t,a);
+  
+  //! function structure
+  gsl_function f;
+  f.function=kern_Q;
+  f.params=&param;
+  
+  //integrate
+  double result;
+  double abserr;
+  double start=0,epsabs=0,epsrel=1e-6;
+  gsl_integration_qagiu(&f,start,epsabs,epsrel,workspace_size,workspace,&result,&abserr);
+  
+  gsl_integration_workspace_free(workspace);
+  
+  looktab[key]=result;
+  
+  //cout<<"t: "<<t<<" "<<"ftilde: "<<result<<endl;
+  
+  return result;
+}
+
+//! return the LO
+double kern_LO_reco_gsl(double t,void *_params)
+{
+  params_LO_t *params=(params_LO_t*)_params;
+  double &M=params->M;
+  double &Z2=params->Z2;
+  double &a=params->a;
+  
+  return ftilde_t(t,a)*nonperiodic_two_pts_corr_fun(Z2,M,t);
+}
+
+template <class T> T kern_num(const T &corr_t,double t,const double &a)
+{
+  return corr_t*ftilde_t(t,a);
+}
+
+//! integrate the kernel
+template <class TV,class TS=typename TV::base_type> TS integrate_corr_times_kern_up_to(const TV &corr,size_t T,const double &a,size_t &upto,size_t ord=1)
+{
+  //store the kernel
+  TV kern(T/2);
+  for(size_t t=1;t<T/2;t++) kern[t]=kern_num(corr[t],t,a);
+  kern[0]=0.0;
+
+  const double eu=2.0/3,ed=-1.0/3;
+  return 4*sqr(alpha_em)*(sqr(eu)+sqr(ed))*integrate_corr_up_to(kern,upto);
+}
 
 void setPars()
 {
@@ -36,6 +136,7 @@ void setPars()
   
   idData.set_ranges({{"Confs",nConfs},{"Source",nSources},{"PV",nPV},{"Mes",nMes},{"T",THp1}});
   idData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Gamma",16}});
+  idOpenData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Id1",4},{"Id2",4},{"Id3",4},{"Id4",4}});
   rawData.resize(idData.max(),0.0);
   
   if(MPIrank==0)
@@ -96,7 +197,17 @@ struct DataLoader
   H5File file;
   string groupName;
   
+  static constexpr int openRank=7;
+  
+  hsize_t openDimsm[5];
+  DataSpace openMemspace;
+  
+  hsize_t      openOffset[openRank];   // hyperslab offset in the file
+  hsize_t      openCount[openRank];    // size of the hyperslab in the file
+  
   std::vector<double> dataIn;
+  
+  std::vector<double> openDataIn;
   
   DataLoader(const int T)
   {
@@ -113,6 +224,27 @@ struct DataLoader
     count[3]=1;
     
     dataIn.resize(idData.max(),0.0);
+    
+    openDimsm[0]=T;
+    openDimsm[1]=4;
+    openDimsm[2]=4;
+    openDimsm[3]=4;
+    openDimsm[4]=4;
+    openMemspace.setExtentSimple(2,openDimsm);
+    
+    for(int i=0;i<openRank;i++)
+      openOffset[i]=0;
+    
+    openCount[0]=T;
+    openCount[1]=1;
+    openCount[2]=4;
+    openCount[3]=4;
+    openCount[4]=4;
+    openCount[2]=4;
+    openCount[5]=1;
+    openCount[6]=1;
+    
+    openDataIn.resize(idData_loader.max(),0.0);
   }
   
   void open(const string& path)
@@ -136,6 +268,21 @@ struct DataLoader
 	dataspace.selectHyperslab(H5S_SELECT_SET,count,offset);
 	
 	dataset.read(&dataIn[idData_loader({iMes,0,0})],PredType::NATIVE_DOUBLE,memspace,dataspace);
+      }
+  }
+  
+  void openLoad()
+  {
+    const string tag[3]={"dd_open","ud_open","uu_open"};
+    
+    for(size_t iMes=0;iMes<nMes;iMes++)
+      {
+	const DataSet dataset=file.openDataSet(groupName+"/mesons/"+tag[iMes]);
+	const DataSpace dataspace=dataset.getSpace();
+	
+	dataspace.selectHyperslab(H5S_SELECT_SET,openCount,openOffset);
+	
+	dataset.read(&openDataIn[idOpenData_loader({iMes,0,0,0,0,0})],PredType::NATIVE_DOUBLE,openMemspace,dataspace);
       }
   }
 };
@@ -190,6 +337,28 @@ void loadRawData(int narg,char** arg)
   for(size_t iConf=firstConf;iConf<lastConf;iConf++)
     {
       cout<<MPIrank<<" "<<iConf<<" ["<<firstConf<<":"<<lastConf<<"] "<<confsList[iConf]<<endl;
+      
+      for(size_t iSource=0;iSource<nSources;iSource++)
+	{
+	  const string file=confsList[iConf]+"/"+sourcesList[iSource];
+	  loader.open(file);
+	  loader.load();
+	  loader.openLoad();
+	  
+	  for(size_t iMes=0;iMes<nMes;iMes++)
+	    for(size_t tIn=0;tIn<T;tIn++)
+	      for(const auto& m : map)
+		{
+		  const size_t tOut=
+		    ((tIn>=TH)?(T-tIn):tIn);
+		  const size_t& igamma_out=m.first;
+		  const size_t& igamma_in=m.second;
+		  const double& in=loader.dataIn[idData_loader({iMes,tIn,igamma_in})];
+		  double& out=rawData[idData({iConf,iSource,igamma_out,iMes,tOut})];
+		  
+		  out+=in;
+		}
+	}
       
       for(size_t iSource=0;iSource<nSources;iSource++)
 	{
@@ -577,6 +746,55 @@ int main(int narg,char **arg)
   //     const string subGroupName=dataset.getObjnameByIdx(i);
   //     cout<<"Subobj:"<<subGroupName<<endl;
   //   }
+  
+  const djvec_t corr=(getAve(0,nSources,1,0)+getAve(0,nSources,1,2))/2;
+  djack_t mVK1,Z2VK1;
+  two_pts_fit(Z2VK1,mVK1,corr,TH,18,32);
+  djack_t mVK2,Z2VK2;
+  two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
+  
+  const double a=0.414,Za=0.746;
+  
+  grace_file_t amu("plots/amu.xmg");
+  djvec_t amuInt(TH),amuSubs1(TH),amuSubs2(TH);
+  for(size_t upto=0;upto<TH;upto++)
+    {
+      djvec_t corrRefatta1=corr;
+      djvec_t corrRefatta2=corr;
+      for(size_t t=upto;t<TH;t++)
+	{
+	  corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,+1);
+	  corrRefatta2[t]=two_pts_corr_fun(Z2VK2,mVK2,TH,t,+1);
+	}
+      size_t THm1=TH-1;
+      const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,a,upto)*sqr(Za)*1e10;
+      const djack_t cSubs1=integrate_corr_times_kern_up_to(corrRefatta1,T,a,THm1)*sqr(Za)*1e10;
+      const djack_t cSubs2=integrate_corr_times_kern_up_to(corrRefatta2,T,a,THm1)*sqr(Za)*1e10;
+      amuInt[upto]=cInt;
+      amuSubs1[upto]=cSubs1;
+      amuSubs2[upto]=cSubs2;
+    }
+  amu.set_xaxis_label("t");
+  
+  amu.write_vec_ave_err(amuInt.ave_err());
+  amu.set_no_line();
+  amu.set_legend("Pure integration");
+  amu.set_all_colors(grace::RED);
+  
+  amu.write_vec_ave_err(amuSubs1.ave_err());
+  amu.set_no_line();
+  amu.set_all_colors(grace::BLUE);
+  amu.set_legend("Substituting 2pts beyond t");
+  
+  amu.write_vec_ave_err(amuSubs2.ave_err());
+  amu.set_no_line();
+  amu.set_all_colors(grace::ORANGE);
+  amu.set_legend("Substituting 2pts beyond t");
+  
+  amu.new_data_set();
+  amu.set_legend("BMW light connected");
+  amu.set_all_colors(grace::GREEN4);
+  amu.write_constant_band(0,TH,djack_t(gauss_filler_t{633.7,5.0,23423}));
   
   return 0;
 }
