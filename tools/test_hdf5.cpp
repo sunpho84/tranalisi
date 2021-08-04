@@ -123,7 +123,7 @@ template <class TV,class TS=typename TV::base_type> TS integrate_corr_times_kern
   TV kern(T/2);
   for(size_t t=1;t<T/2;t++) kern[t]=kern_num(corr[t],t,a);
   kern[0]=0.0;
-
+  
   const double eu=2.0/3,ed=-1.0/3;
   return 4*sqr(alpha_em)*(sqr(eu)+sqr(ed))*integrate_corr_up_to(kern,upto);
 }
@@ -181,6 +181,54 @@ vector<string> getSourcesList(const string& firstConf)
   return sourcesList;
 }
 
+// const Gamma_data_t Gamma_data[nGamma]=
+//   {{{0,1,2,3},{1,01,1,1},{0,0,0,0}},
+//    {{3,2,1,0},{0,0,0,0},{1,1,-1,-1}},
+//    {{3,2,1,0},{1,-1,-1,1},{0,0,0,0}},
+//    {{2,3,0,1},{0,0,0,0},{1,-1,-1,1}},
+//    {{0,1,2,3},{1,1,-1,-1},{0,0,0,0}},
+//    {{2,3,0,1},{1,1,1,1},{0,0,0,0}}};
+
+//The structure for gamma matrix
+struct dirac_matr
+{
+  int pos[4];
+  std::complex<double> entr[4];
+  
+  dirac_matr operator*(const dirac_matr& oth) const
+  {
+    dirac_matr out;
+    
+    //This is the line on the first matrix
+    for(int ig1=0;ig1<4;ig1++)
+      {
+	//This is the line to be taken on the second matrix
+	const int ig2=this->pos[ig1];
+	
+	//For each line, the column of the output matrix which is
+	//different from 0 is the column of the second matrix different
+	//from 0 on the line with index equal to the column of the first
+	//matrix which is different from 0 (that is, ig2)
+	out.pos[ig1]=oth.pos[ig2];
+	
+	//The entries of the output is, on each line, the complex
+	//product of the entries of the first matrix on that line, for
+	//the entries of the second matrix on the line with the index
+	//equal to the column of the first matrix which is different
+	//from 0 (which again is ig2)
+	out.entr[ig1]=this->entr[ig1]*oth.entr[ig2];
+	
+      }
+    return out;
+  }
+};
+
+dirac_matr gam[16]={dirac_matr{{0,1,2,3},std::complex<double>{1,0},{1,0},{1,0},{1,0}},
+		    {{3,2,1,0},std::complex<double>{0,1},{0,1},{0,-1},{0,-1}},
+		    {{3,2,1,0},std::complex<double>{1,0},{-1,0},{-1,0},{1,0}},
+		    {{2,3,0,1},std::complex<double>{0,1},{0,-1},{0,-1},{0,1}},
+		    {{0,1,2,3},std::complex<double>{1,0},{1,0},{-1,0},{-1,0}},
+		    {{2,3,0,1},std::complex<double>{1,0},{1,0},{1,0},{1,0}}};
 struct DataLoader
 {
   //Here for future memory
@@ -359,112 +407,48 @@ void loadRawData(int narg,char** arg)
 		  
 		  out+=in;
 		}
-
-  // const Gamma_data_t Gamma_data[nGamma]=
-  //   {{{0,1,2,3},{1,01,1,1},{0,0,0,0}},
-  //    {{3,2,1,0},{0,0,0,0},{1,1,-1,-1}},
-  //    {{3,2,1,0},{1,-1,-1,1},{0,0,0,0}},
-  //    {{2,3,0,1},{0,0,0,0},{1,-1,-1,1}},
-  //    {{0,1,2,3},{1,1,-1,-1},{0,0,0,0}},
-  //    {{2,3,0,1},{1,1,1,1},{0,0,0,0}}};
-  
-    //The structure for gamma matrix
-  struct dirac_matr
-  {
-    int pos[4];
-    std::complex<double> entr[4];
-    
-    dirac_matr operator*(const dirac_matr& oth) const
-    {
-      dirac_matr out;
-      
-      //This is the line on the first matrix
-      for(int ig1=0;ig1<4;ig1++)
-	{
-	  //This is the line to be taken on the second matrix
-	  const int ig2=this->pos[ig1];
 	  
-	  //For each line, the column of the output matrix which is
-	  //different from 0 is the column of the second matrix different
-	  //from 0 on the line with index equal to the column of the first
-	  //matrix which is different from 0 (that is, ig2)
-	  out.pos[ig1]=oth.pos[ig2];
-	  
-	  //The entries of the output is, on each line, the complex
-	  //product of the entries of the first matrix on that line, for
-	  //the entries of the second matrix on the line with the index
-	  //equal to the column of the first matrix which is different
-	  //from 0 (which again is ig2)
-	  out.entr[ig1]=this->entr[ig1]*oth.entr[ig2];
-	  
-	}
-      return out;
-    }
-  };
-  
-  dirac_matr gamma[16]={dirac_matr{{0,1,2,3},std::complex<double>{1,0},{1,0},{1,0},{1,0}},
-			{{3,2,1,0},std::complex<double>{0,1},{0,1},{0,-1},{0,-1}},
-			{{3,2,1,0},std::complex<double>{1,0},{-1,0},{-1,0},{1,0}},
-			{{2,3,0,1},std::complex<double>{0,1},{0,-1},{0,-1},{0,1}},
-			{{0,1,2,3},std::complex<double>{1,0},{1,0},{-1,0},{-1,0}},
-			{{2,3,0,1},std::complex<double>{1,0},{1,0},{1,0},{1,0}}};
-  
-  gamma[6]=gamma[1]*gamma[5];
-  gamma[7]=gamma[2]*gamma[5];
-  gamma[8]=gamma[3]*gamma[5];
-  gamma[9]=gamma[4]*gamma[5];
-  gamma[10]=gamma[4]*gamma[1];
-  gamma[11]=gamma[4]*gamma[2];
-  gamma[12]=gamma[4]*gamma[3];
-  gamma[13]=gamma[2]*gamma[3];
-  gamma[14]=gamma[3]*gamma[1];
-  gamma[15]=gamma[1]*gamma[2];
-  
-    // A(i)=(GSO)_{ij(i)} (G5)_{j(i)}
-    // B(k)=(G5)_k (GSI)_{kl(k)}
-  const array<array<size_t,3>,6> map{array<size_t,3>{3,10,1},{3,11,2},{3,12,3},{4,1,10},{4,2,11},{4,3,12}};
-  //const array<array<size_t,3>,1> map{array<size_t,3>{3,5,5}};
+	  // A(i)=(GSO)_{ij(i)} (G5)_{j(i)}
+	  // B(k)=(G5)_k (GSI)_{kl(k)}
+	  const array<array<int,4>,6> map{array<int,4>{3,10,1,-1},{3,11,2,-1},{3,12,3,-1},{4,1,10,-1},{4,2,11,-1},{4,3,12,-1}};
 	  for(size_t iMes=0;iMes<nMes;iMes++)
-	    for(size_t tIn=0;tIn<T;tIn++)
+	    for(size_t tIn=0;tIn<THp1;tIn++)
 	      {
 		const size_t tOut=
 		  ((tIn>=TH)?(T-tIn):tIn);
-
+		
 		for(const auto& m : map)
 		  {
+		    const double s=
+		      ((tIn>=TH)?m[3]:+1.0);
+		    
 		    const size_t iGammaOut=m[0];
-		  
-		  const size_t iGammaIn1=m[1];
-		  const size_t iGammaIn2=m[2];
-		  
-		  const dirac_matr g1=gamma[iGammaIn1]*gamma[5];
-		  const dirac_matr g2=gamma[5]*gamma[iGammaIn2];
-		  
-		  double& out=rawData[idData({iConf,iSource,iGammaOut,iMes,tOut})];
-		  
-		  for(size_t nu=0;nu<4;nu++)
-		    for(size_t rh=0;rh<4;rh++)
-		      {
-			const size_t si=g1.pos[nu];
-			const size_t mu=g2.pos[rh];
-			const auto& c1=g1.entr[nu];
-			const auto& c2=g2.entr[rh];
-			
-			const complex<double> c=c1*c2;
-			
-			// if(tIn==0 and iSource==0 and iMes==0 and iConf==0)
-			//   printf("%zu %zu %zu %zu ",mu,nu,si,rh);
-			for(size_t ri=0;ri<2;ri++)
-			  {
-			    const double& in=loader.openDataIn[idOpenData_loader({iMes,tIn,mu,nu,si,rh,ri})];
-			// if(tIn==0 and iSource==0 and iMes==0 and iConf==0)
-			//   printf(" %lg",in);
-			    
-			    out+=in*((double*)&c)[ri];
-			  }
-			// if(tIn==0 and iSource==0 and iMes==0 and iConf==0)
-			//   printf("\n");
-		      }
+		    
+		    const size_t iGammaIn1=m[1];
+		    const size_t iGammaIn2=m[2];
+		    
+		    const dirac_matr g1=gam[iGammaIn1]*gam[5];
+		    const dirac_matr g2=gam[5]*gam[iGammaIn2];
+		    
+		    double& out=rawData[idData({iConf,iSource,iGammaOut,iMes,tOut})];
+		    
+		    for(size_t nu=0;nu<4;nu++)
+		      for(size_t rh=0;rh<4;rh++)
+			{
+			  const size_t si=g1.pos[nu];
+			  const size_t mu=g2.pos[rh];
+			  const auto& c1=g1.entr[nu];
+			  const auto& c2=g2.entr[rh];
+			  
+			  const complex<double> c=c1*c2;
+			  
+			  for(size_t ri=0;ri<2;ri++)
+			    {
+			      const double& in=loader.openDataIn[idOpenData_loader({iMes,tIn,mu,nu,si,rh,ri})];
+			      
+			      out+=in*((double*)&c)[ri]*s;
+			    }
+			}
 		  }
 	      }
 	}
@@ -653,6 +637,17 @@ void an(const size_t& iGammaComb)
 
 int main(int narg,char **arg)
 {
+  gam[6]=gam[1]*gam[5];
+  gam[7]=gam[2]*gam[5];
+  gam[8]=gam[3]*gam[5];
+  gam[9]=gam[4]*gam[5];
+  gam[10]=gam[4]*gam[1];
+  gam[11]=gam[4]*gam[2];
+  gam[12]=gam[4]*gam[3];
+  gam[13]=gam[2]*gam[3];
+  gam[14]=gam[3]*gam[1];
+  gam[15]=gam[1]*gam[2];
+  
   raw_file_t input("input.txt","r");
   T=input.read<size_t>("T");
   L=input.read<size_t>("L");
