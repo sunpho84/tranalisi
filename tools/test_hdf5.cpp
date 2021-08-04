@@ -228,7 +228,18 @@ dirac_matr gam[16]={dirac_matr{{0,1,2,3},std::complex<double>{1,0},{1,0},{1,0},{
 		    {{3,2,1,0},std::complex<double>{1,0},{-1,0},{-1,0},{1,0}},
 		    {{2,3,0,1},std::complex<double>{0,1},{0,-1},{0,-1},{0,1}},
 		    {{0,1,2,3},std::complex<double>{1,0},{1,0},{-1,0},{-1,0}},
-		    {{2,3,0,1},std::complex<double>{1,0},{1,0},{1,0},{1,0}}};
+		    {{2,3,0,1},std::complex<double>{1,0},{1,0},{1,0},{1,0}},
+		    gam[1]*gam[5],
+		    gam[2]*gam[5],
+		    gam[3]*gam[5],
+		    gam[4]*gam[5],
+		    gam[4]*gam[1],
+		    gam[4]*gam[2],
+		    gam[4]*gam[3],
+		    gam[2]*gam[3],
+		    gam[3]*gam[1],
+		    gam[1]*gam[2]};
+
 struct DataLoader
 {
   //Here for future memory
@@ -637,16 +648,6 @@ void an(const size_t& iGammaComb)
 
 int main(int narg,char **arg)
 {
-  gam[6]=gam[1]*gam[5];
-  gam[7]=gam[2]*gam[5];
-  gam[8]=gam[3]*gam[5];
-  gam[9]=gam[4]*gam[5];
-  gam[10]=gam[4]*gam[1];
-  gam[11]=gam[4]*gam[2];
-  gam[12]=gam[4]*gam[3];
-  gam[13]=gam[2]*gam[3];
-  gam[14]=gam[3]*gam[1];
-  gam[15]=gam[1]*gam[2];
   
   raw_file_t input("input.txt","r");
   T=input.read<size_t>("T");
