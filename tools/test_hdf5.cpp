@@ -23,8 +23,8 @@ size_t T,L,TH,THp1;
 string confsPattern;
 string output;
 size_t nConfs,nSources;
-constexpr size_t nGammaComb=6;
-constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","PP"};
+constexpr size_t nGammaComb=5;
+constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK"};
 constexpr size_t nMes=3;
 constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 
@@ -426,8 +426,7 @@ void loadRawData(int narg,char** arg)
 	  
 	  // A(i)=(GSO)_{ij(i)} (G5)_{j(i)}
 	  // B(k)=(G5)_k (GSI)_{kl(k)}
-	  //const array<array<int,4>,6> map{array<int,4>{3,10,1,-1},{3,11,2,-1},{3,12,3,-1},{4,1,10,-1},{4,2,11,-1},{4,3,12,-1}};
-	  const array<array<int,4>,7> map{array<int,4>{3,10,1,-1},{3,11,2,-1},{3,12,3,-1},{4,1,10,-1},{4,2,11,-1},{4,3,12,-1},{5,5,5,+1}};
+	  const array<array<int,4>,6> map{array<int,4>{3,10,1,-1},{3,11,2,-1},{3,12,3,-1},{4,1,10,-1},{4,2,11,-1},{4,3,12,-1}};
 	  for(size_t iMes=0;iMes<nMes;iMes++)
 	    for(size_t tIn=0;tIn<T;tIn++)
 	      {
@@ -667,8 +666,12 @@ int main(int narg,char **arg)
   raw_file_t input("input.txt","r");
   T=input.read<size_t>("T");
   L=input.read<size_t>("L");
+  const double a=input.read<double>("a");
+  const double Za=input.read<double>("Za");
   confsPattern=input.read<string>("ConfsPattern");
   output=input.read<string>("Output");
+  const size_t tMinFit=input.read<size_t>("TFit");
+  const size_t tMaxFit=input.read<size_t>();
   
   if(not file_exists(output))
     loadRawData(narg,arg);
@@ -838,6 +841,7 @@ int main(int narg,char **arg)
   const djvec_t c01=-getAve(0,nSources,4);
   const djvec_t c11=-getAve(0,nSources,2);
   const size_t t0=3;
+  
   tie(eig,recastEigvec,origEigvec)=gevp({c00,c01,c01,c11},t0);
   
   djvec_t SL(THp1),SS(THp1);
@@ -868,10 +872,10 @@ int main(int narg,char **arg)
 	}
     }
   
-  djack_t ZS,ZL,M;
-  two_pts_SL_fit(ZS,ZL,M,SL,SS,TH,17,24,"plots/SL.xmg");
-  const djack_t Z2L=ZL*ZL;
-  cout<<"Z2L: "<<Z2L<<endl;
+  djack_t eig0ZS,eig0ZL,eig0M;
+  two_pts_SL_fit(eig0ZS,eig0ZL,eig0M,SL,SS,TH,tMinFit,tMaxFit,"plots/SL.xmg");
+  const djack_t eig0Z2L=eig0ZL*eig0ZL;
+  cout<<"Z2L: "<<eig0Z2L<<endl;
   
   // {
   // //Work data
@@ -931,12 +935,14 @@ int main(int narg,char **arg)
   eig[0].ave_err().write("plots/eig1.xmg");
   eig[1].ave_err().write("plots/eig2.xmg");
   
-  const djack_t eig0M=constant_fit(effective_mass(eig[0]),18,32,"plots/eff_eig1.xmg");
-  cout<<"eig0 mass: "<<eig0M.ave_err()<<endl;
-  effective_mass(eig[1]).ave_err().write("plots/eff_eig2.xmg");
-  
-  djvec_t rat=effective_mass(eig[1])/effective_mass(eig[0]);
-  rat.ave_err().write("plots/eff_rat.xmg");
+  {
+    const djack_t eig0M=constant_fit(effective_mass(eig[0]),tMinFit,tMaxFit,"plots/eff_eig1.xmg");
+    cout<<"eig0 mass: "<<eig0M.ave_err()<<endl;
+    effective_mass(eig[1]).ave_err().write("plots/eff_eig2.xmg");
+    
+    djvec_t rat=effective_mass(eig[1])/effective_mass(eig[0]);
+    rat.ave_err().write("plots/eff_rat.xmg");
+  }
   
   // for(auto r : origEigvec)
   //   cout<<r.ave_err()<<endl;
@@ -1010,13 +1016,10 @@ int main(int narg,char **arg)
   
   const djvec_t corr=getAve(0,nSources,1);
   djack_t mVK1,Z2VK1;
-  two_pts_fit(Z2VK1,mVK1,corr,TH,18,24,"plots/eff_mass_VKVK_twopts_fit.xmg");
+  two_pts_fit(Z2VK1,mVK1,corr,TH,tMinFit,tMaxFit,"plots/eff_mass_VKVK_twopts_fit.xmg");
   cout<<"Z2: "<<Z2VK1<<endl;
-  djack_t mVK2,Z2VK2;
-  two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
-  
-  //const double a=0.414,Za=0.765;//0.746;
-  const double a=0.414,Za=0.746;
+  // djack_t mVK2,Z2VK2;
+  // two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
   
   grace_file_t amu("plots/amu.xmg");
   djvec_t amuInt(TH),amuSubs1(TH),amuSubs2(TH);
@@ -1027,7 +1030,7 @@ int main(int narg,char **arg)
       for(size_t t=upto;t<TH;t++)
 	{
 	  corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
-	  corrRefatta2[t]=two_pts_corr_fun(Z2L,eig0M,TH,t,0);
+	  corrRefatta2[t]=two_pts_corr_fun(eig0Z2L,eig0M,TH,t,0);
 	}
       size_t THm1=TH-1;
       const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,a,upto)*sqr(Za)*1e10;
@@ -1064,7 +1067,7 @@ int main(int narg,char **arg)
   for(size_t t=0;t<=TH;t++)
     {
       corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
-      corrRefatta2[t]=two_pts_corr_fun(Z2L,eig0M,TH,t,0);
+      corrRefatta2[t]=two_pts_corr_fun(eig0Z2L,eig0M,TH,t,0);
     }
   corrRefatta1.ave_err().write("plots/corr_refatta1.xmg");
   corrRefatta2.ave_err().write("plots/corr_refatta2.xmg");
