@@ -10,6 +10,11 @@
 
 #include <tranalisi.hpp>
 
+
+
+#include <unsupported/Eigen/MatrixFunctions>
+
+
 using namespace H5;
 using namespace std;
 
@@ -18,8 +23,8 @@ size_t T,L,TH,THp1;
 string confsPattern;
 string output;
 size_t nConfs,nSources;
-constexpr size_t nGammaComb=5;
-constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK"};
+constexpr size_t nGammaComb=6;
+constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","PP"};
 constexpr size_t nMes=3;
 constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 
@@ -421,7 +426,8 @@ void loadRawData(int narg,char** arg)
 	  
 	  // A(i)=(GSO)_{ij(i)} (G5)_{j(i)}
 	  // B(k)=(G5)_k (GSI)_{kl(k)}
-	  const array<array<int,4>,6> map{array<int,4>{3,10,1,-1},{3,11,2,-1},{3,12,3,-1},{4,1,10,-1},{4,2,11,-1},{4,3,12,-1}};
+	  //const array<array<int,4>,6> map{array<int,4>{3,10,1,-1},{3,11,2,-1},{3,12,3,-1},{4,1,10,-1},{4,2,11,-1},{4,3,12,-1}};
+	  const array<array<int,4>,7> map{array<int,4>{3,10,1,-1},{3,11,2,-1},{3,12,3,-1},{4,1,10,-1},{4,2,11,-1},{4,3,12,-1},{5,5,5,-1}};
 	  for(size_t iMes=0;iMes<nMes;iMes++)
 	    for(size_t tIn=0;tIn<T;tIn++)
 	      {
@@ -821,6 +827,168 @@ int main(int narg,char **arg)
 	}
     }
   
+  
+  /////////////////////////////////////////////////////////////////
+  
+  vector<djvec_t> eig;
+  vector<djvec_t> recastEigvec;
+  vector<djvec_t> origEigvec;
+  
+  const djvec_t c00=getAve(0,nSources,1);
+  const djvec_t c01=-getAve(0,nSources,4);
+  const djvec_t c11=-getAve(0,nSources,2);
+  const size_t t0=3;
+  tie(eig,recastEigvec,origEigvec)=gevp({c00,c01,c01,c11},t0);
+  
+  djvec_t SL(THp1),SS(THp1);
+  for(size_t t=0;t<=TH;t++)
+    {
+      for(size_t ijack=0;ijack<=njacks;ijack++)
+	{
+	  typedef Matrix<double,2,2> Matr;
+	  
+	  Matr e;
+	  const auto& ei=origEigvec;
+	  e(0,0)=ei[0][t][ijack];
+	  e(0,1)=ei[2][t][ijack];
+	  e(1,0)=ei[1][t][ijack];
+	  e(1,1)=ei[3][t][ijack];
+	  
+	  Matr c;
+	  c(0,0)=c00[t][ijack];
+	  c(0,1)=c01[t][ijack];
+	  c(1,0)=c01[t][ijack];
+	  c(1,1)=c11[t][ijack];
+	  
+	  const Matr sl=c*e.transpose();
+	  const Matr ss=e*c*e.transpose();
+	  
+	  SL[t][ijack]=sl(0,0);
+	  SS[t][ijack]=ss(0,0);
+	}
+    }
+  
+  djack_t ZS,ZL,M;
+  two_pts_SL_fit(ZS,ZL,M,SL,SS,TH,17,24,"plots/SL.xmg");
+  const djack_t Z2L=ZL*ZL;
+  cout<<"Z2L: "<<Z2L<<endl;
+  
+  // {
+  // //Work data
+  // typedef Matrix<double,Dynamic,Dynamic> Matr;
+  // typedef Matrix<complex<double>,Dynamic,Dynamic> MatrC;
+  // // GeneralizedEigenSolver<Matr> ges;
+  // // EigenSolver<Matr> ge;
+  
+  // const size_t n=2;
+  // //Output
+  // vector<djvec_t> l(n,djvec_t(T));
+  // vector<djvec_t> recastEigvec(n*n,djvec_t(T));
+  // vector<djvec_t> origEigvec(n*n,djvec_t(T));
+  
+  // for(size_t ijack=njacks;ijack<=njacks;ijack++)
+  //   {
+  //     // const vector<djvec_t> d={c00,c01,c01,c11};
+  //     // //Fill the rhs matrix
+  //     // Matr b(n,n);
+  //     // for(size_t i=0;i<n;i++)
+  //     // 	for(size_t j=0;j<n;j++)
+  //     // 	  b(i,j)=d[i*n+j][t0][ijack];
+      
+  //     // const Matr binv=b.inverse();
+      
+  //     for(size_t t=0;t<T;t++)
+  // 	{
+  // 	  cout<<"/////////////////////////////////////////////////////////////////"<<endl;
+  // 	  cout<<"t="<<t<<endl;
+	  
+  // 	  // //Fill the lhs matrix
+  // 	  // Matr a(n,n);
+  // 	  // for(size_t i=0;i<n;i++)
+  // 	  //   for(size_t j=0;j<n;j++)
+  // 	  //     a(i,j)=d[i*n+j][t][ijack];
+	  
+  // 	  // const Matr c=binv*a;
+  // 	  // ge.compute(c);
+  // 	  // const MatrC ceigval=ge.eigenvalues();
+  // 	  // const MatrC ceigvec=b.inverse().sqrt()*ge.eigenvectors();
+  // 	  // cout<<"Eigenvectors of recast: "<<endl<<ceigvec<<endl;
+	  
+  // 	  // //Compute and store
+  // 	  // ges.compute(a,b);
+  // 	  // cout<<"Eigenvalues: "<<
+  // 	  //   ges.eigenvalues()<<endl;
+  // 	  // cout<<"Problem: "<<a<<endl<<endl<<b<<endl<<endl;
+  // 	  // auto vEig=(b.inverse().sqrt()*ges.eigenvectors()).eval();
+  // 	  // cout<<"Eigenvectors: "<<endl<<ges.eigenvectors()<<endl;
+	  
+  // 	  const MatrC m=ceigvec.transpose()*a*ceigvec;
+  // 	  cout<<"m: "<<endl<<m<<endl;
+  // 	}
+  //   }
+  // }
+  
+  eig[0].ave_err().write("plots/eig1.xmg");
+  eig[1].ave_err().write("plots/eig2.xmg");
+  
+  const djack_t eig0M=constant_fit(effective_mass(eig[0]),18,32,"plots/eff_eig1.xmg");
+  cout<<"eig0 mass: "<<eig0M.ave_err()<<endl;
+  effective_mass(eig[1]).ave_err().write("plots/eff_eig2.xmg");
+  
+  djvec_t rat=effective_mass(eig[1])/effective_mass(eig[0]);
+  rat.ave_err().write("plots/eff_rat.xmg");
+  
+  // for(auto r : origEigvec)
+  //   cout<<r.ave_err()<<endl;
+  
+  // cout.precision(16);
+  // grace_file_t reco1("plots/eig_reco0.xmg");
+  // for(size_t t=0;t<32;t++)
+  //   {
+  //     djack_t out;
+  //     for(size_t ijack=0;ijack<=njacks;ijack++)
+  // 	{
+  // 	  typedef Matrix<double,2,2> Matr;
+	  
+  // 	  Matr e;
+  // 	  const auto& ei=origEigvec;
+  // 	  e(0,0)=ei[0][t][ijack];
+  // 	  e(0,1)=ei[2][t][ijack];
+  // 	  e(1,0)=ei[1][t][ijack];
+  // 	  e(1,1)=ei[3][t][ijack];
+	  
+  // 	  Matr c;
+  // 	  c(0,0)=c00[t][ijack];
+  // 	  c(0,1)=c01[t][ijack];
+  // 	  c(1,0)=c01[t][ijack];
+  // 	  c(1,1)=c11[t][ijack];
+	  
+  // 	  const Matr r=e*c*e.transpose();
+	  
+  // 	  if(ijack==njacks)
+  // 	    cout<<r<<endl<<endl;
+  // 	  out[ijack]=r(0,0);
+  // 	}
+  //     // const djack_t& e00=origEigvec[0][t];
+  //     // const djack_t& e01=origEigvec[1][t];
+  //     // const djack_t& e10=origEigvec[2][t];
+  //     // //      const djack_t& e11=origEigvec[3][t];
+      
+  //     // djack_t e=
+  //     // 	e00*c00[t]*e00+
+  //     // 	e00*c01[t]*e01+
+  //     // 	e10*c01[t]*e00+
+  //     // 	e10*c11[t]*e01;
+      
+  //     // djack_t f=
+  //     // 	e00*c00[t]*e00+
+  //     // 	e00*c01[t]*e01+
+  //     // 	e10*c01[t]*e00+
+  //     // 	e10*c11[t]*e01;
+      
+  //     reco1.write_ave_err(t,out.ave_err());
+  //   }
+  
   // cout<<"rank: "<<rank<<endl;
   // hsize_t dims_out[rank];
   // dataspace.getSimpleExtentDims(dims_out,nullptr);
@@ -840,12 +1008,14 @@ int main(int narg,char **arg)
   //     cout<<"Subobj:"<<subGroupName<<endl;
   //   }
   
-  const djvec_t corr=(getAve(0,nSources,1,0)+getAve(0,nSources,1,2))/2;
+  const djvec_t corr=getAve(0,nSources,1);
   djack_t mVK1,Z2VK1;
-  two_pts_fit(Z2VK1,mVK1,corr,TH,18,32);
+  two_pts_fit(Z2VK1,mVK1,corr,TH,18,24,"plots/eff_mass_VKVK_twopts_fit.xmg");
+  cout<<"Z2: "<<Z2VK1<<endl;
   djack_t mVK2,Z2VK2;
   two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
   
+  //const double a=0.414,Za=0.765;//0.746;
   const double a=0.414,Za=0.746;
   
   grace_file_t amu("plots/amu.xmg");
@@ -856,8 +1026,8 @@ int main(int narg,char **arg)
       djvec_t corrRefatta2=corr;
       for(size_t t=upto;t<TH;t++)
 	{
-	  corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,+1);
-	  corrRefatta2[t]=two_pts_corr_fun(Z2VK2,mVK2,TH,t,+1);
+	  corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
+	  corrRefatta2[t]=two_pts_corr_fun(Z2L,eig0M,TH,t,0);
 	}
       size_t THm1=TH-1;
       const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,a,upto)*sqr(Za)*1e10;
@@ -888,6 +1058,16 @@ int main(int narg,char **arg)
   amu.set_legend("BMW light connected");
   amu.set_all_colors(grace::GREEN4);
   amu.write_constant_band(0,TH,djack_t(gauss_filler_t{633.7,5.0,23423}));
+  
+  djvec_t corrRefatta1=corr;
+  djvec_t corrRefatta2=corr;
+  for(size_t t=0;t<=TH;t++)
+    {
+      corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
+      corrRefatta2[t]=two_pts_corr_fun(Z2L,eig0M,TH,t,0);
+    }
+  corrRefatta1.ave_err().write("plots/corr_refatta1.xmg");
+  corrRefatta2.ave_err().write("plots/corr_refatta2.xmg");
   
   return 0;
 }
