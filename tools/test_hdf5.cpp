@@ -361,30 +361,40 @@ void loadRawData(int narg,char** arg)
   const vector<string> sourcesList=getSourcesList(possibleConfsList.front());
   nSources=sourcesList.size();
   
-  vector<string> confsList;
-  for(const string& conf : possibleConfsList)
+  const size_t nPossibleConfs=possibleConfsList.size();
+  vector<int> exists(nPossibleConfs,true);
+  {
+    const size_t confChunk=(nPossibleConfs+nMPIranks-1)/nMPIranks;
+    const size_t firstConf=std::min((size_t)MPIrank*confChunk,nPossibleConfs);
+    const size_t lastConf=std::min(firstConf+confChunk,nPossibleConfs);
+    for(size_t iConf=firstConf;iConf<lastConf;iConf++)
+      {
+	const string& conf=possibleConfsList[iConf];
+	
+	string confPath;
+	size_t iSource=0;
+	while(iSource<nSources and exists[iConf])
+	  {
+	    confPath=conf+"/"+sourcesList[iSource];
+	    if(not std::filesystem::exists(confPath))
+	      exists[iConf]=false;
+	    iSource++;
+	  }
+      }
+  }
+  
+  for(size_t loopRank=0;loopRank<nMPIranks;loopRank++)
     {
-      bool exists=true;
-      
-      if(MPIrank==0)
-	{
-	  string confPath;
-	  size_t iSource=0;
-	  while(iSource<nSources and exists)
-	    {
-	      confPath=conf+"/"+sourcesList[iSource];
-	      if(not std::filesystem::exists(confPath))
-		exists=false;
-	      iSource++;
-	    }
-	  
-	  cout<<"Conf "<<conf<<(exists?" accepted":(" discarded, "+confPath+" not found"))<<endl;
-	}
-      MPI_Bcast(&exists,sizeof(bool),MPI_CHAR,0,MPI_COMM_WORLD);
-      
-      if(exists)
-	  confsList.push_back(conf);
+      const size_t confChunk=(nPossibleConfs+nMPIranks-1)/nMPIranks;
+      const size_t firstConf=std::min((size_t)loopRank*confChunk,nPossibleConfs);
+      const size_t lastConf=std::min(firstConf+confChunk,nPossibleConfs);
+      MPI_Bcast(&exists[firstConf],lastConf-firstConf,MPI_INT,loopRank,MPI_COMM_WORLD);
     }
+  
+  vector<string> confsList;
+  for(size_t iConf=0;iConf<nPossibleConfs;iConf++)
+    if(exists[iConf])
+      confsList.push_back(possibleConfsList[iConf]);
   
   if(MPIrank==0 and confsList.size()!=possibleConfsList.size())
     cout<<"Confs list resized from "<<possibleConfsList.size()<<"to: "<<confsList.size()<<endl;
@@ -711,7 +721,8 @@ int main(int narg,char **arg)
 	{
 	case 0:
 	  mP5=m;
-	  cout<<"mP5: "<<m.ave_err()<<endl;
+	  cout<<"amP5: "<<m.ave_err()<<endl;
+	  cout<<"mP5: "<<djack_t(m/a).ave_err()<<endl;
 	  break;
 	case 1:
 	  {
@@ -844,7 +855,17 @@ int main(int narg,char **arg)
   
   tie(eig,recastEigvec,origEigvec)=gevp({c00,c01,c01,c11},t0);
   
-  djvec_t SL(THp1),SS(THp1);
+  eig[0].ave_err().write("plots/eig1.xmg");
+  eig[1].ave_err().write("plots/eig2.xmg");
+  
+  const djack_t eig0MDiagFit=constant_fit(effective_mass(eig[0]),tMinFit,tMaxFit,"plots/eff_eig1.xmg");
+  cout<<"eig0 mass: "<<eig0MDiagFit.ave_err()<<endl;
+  
+  // const djack_t eig1MDiagFit=constant_fit(effective_mass(eig[1]),13,18,"plots/eff_eig2.xmg");
+  // cout<<"eig1 mass: "<<eig1MDiagFit.ave_err()<<endl;
+  
+  djvec_t SL0(THp1),SS0(THp1);
+  djvec_t SL1(THp1),SS1(THp1);
   for(size_t t=0;t<=TH;t++)
     {
       for(size_t ijack=0;ijack<=njacks;ijack++)
@@ -867,152 +888,26 @@ int main(int narg,char **arg)
 	  const Matr sl=c*e.transpose();
 	  const Matr ss=e*c*e.transpose();
 	  
-	  SL[t][ijack]=sl(0,0);
-	  SS[t][ijack]=ss(0,0);
+	  SL0[t][ijack]=sl(0,0);
+	  SS0[t][ijack]=ss(0,0);
+	  SL1[t][ijack]=sl(0,1);
+	  SS1[t][ijack]=ss(1,1);
 	}
     }
   
   djack_t eig0ZS,eig0ZL,eig0M;
-  two_pts_SL_fit(eig0ZS,eig0ZL,eig0M,SL,SS,TH,tMinFit,tMaxFit,"plots/SL.xmg");
+  two_pts_SL_fit(eig0ZS,eig0ZL,eig0M,SL0,SS0,TH,tMinFit,tMaxFit,"plots/SL0.xmg");
   const djack_t eig0Z2L=eig0ZL*eig0ZL;
-  cout<<"Z2L: "<<eig0Z2L<<endl;
+  cout<<"Z20L: "<<eig0Z2L<<endl;
   
-  // {
-  // //Work data
-  // typedef Matrix<double,Dynamic,Dynamic> Matr;
-  // typedef Matrix<complex<double>,Dynamic,Dynamic> MatrC;
-  // // GeneralizedEigenSolver<Matr> ges;
-  // // EigenSolver<Matr> ge;
+  djvec_t subCorr1=c00;
+  for(size_t t=0;t<=TH;t++)
+      subCorr1[t]-=two_pts_corr_fun(eig0Z2L,eig0M,TH,t,+1);
   
-  // const size_t n=2;
-  // //Output
-  // vector<djvec_t> l(n,djvec_t(T));
-  // vector<djvec_t> recastEigvec(n*n,djvec_t(T));
-  // vector<djvec_t> origEigvec(n*n,djvec_t(T));
-  
-  // for(size_t ijack=njacks;ijack<=njacks;ijack++)
-  //   {
-  //     // const vector<djvec_t> d={c00,c01,c01,c11};
-  //     // //Fill the rhs matrix
-  //     // Matr b(n,n);
-  //     // for(size_t i=0;i<n;i++)
-  //     // 	for(size_t j=0;j<n;j++)
-  //     // 	  b(i,j)=d[i*n+j][t0][ijack];
-      
-  //     // const Matr binv=b.inverse();
-      
-  //     for(size_t t=0;t<T;t++)
-  // 	{
-  // 	  cout<<"/////////////////////////////////////////////////////////////////"<<endl;
-  // 	  cout<<"t="<<t<<endl;
-	  
-  // 	  // //Fill the lhs matrix
-  // 	  // Matr a(n,n);
-  // 	  // for(size_t i=0;i<n;i++)
-  // 	  //   for(size_t j=0;j<n;j++)
-  // 	  //     a(i,j)=d[i*n+j][t][ijack];
-	  
-  // 	  // const Matr c=binv*a;
-  // 	  // ge.compute(c);
-  // 	  // const MatrC ceigval=ge.eigenvalues();
-  // 	  // const MatrC ceigvec=b.inverse().sqrt()*ge.eigenvectors();
-  // 	  // cout<<"Eigenvectors of recast: "<<endl<<ceigvec<<endl;
-	  
-  // 	  // //Compute and store
-  // 	  // ges.compute(a,b);
-  // 	  // cout<<"Eigenvalues: "<<
-  // 	  //   ges.eigenvalues()<<endl;
-  // 	  // cout<<"Problem: "<<a<<endl<<endl<<b<<endl<<endl;
-  // 	  // auto vEig=(b.inverse().sqrt()*ges.eigenvectors()).eval();
-  // 	  // cout<<"Eigenvectors: "<<endl<<ges.eigenvectors()<<endl;
-	  
-  // 	  const MatrC m=ceigvec.transpose()*a*ceigvec;
-  // 	  cout<<"m: "<<endl<<m<<endl;
-  // 	}
-  //   }
-  // }
-  
-  eig[0].ave_err().write("plots/eig1.xmg");
-  eig[1].ave_err().write("plots/eig2.xmg");
-  
-  {
-    const djack_t eig0M=constant_fit(effective_mass(eig[0]),tMinFit,tMaxFit,"plots/eff_eig1.xmg");
-    cout<<"eig0 mass: "<<eig0M.ave_err()<<endl;
-    effective_mass(eig[1]).ave_err().write("plots/eff_eig2.xmg");
-    
-    djvec_t rat=effective_mass(eig[1])/effective_mass(eig[0]);
-    rat.ave_err().write("plots/eff_rat.xmg");
-  }
-  
-  // for(auto r : origEigvec)
-  //   cout<<r.ave_err()<<endl;
-  
-  // cout.precision(16);
-  // grace_file_t reco1("plots/eig_reco0.xmg");
-  // for(size_t t=0;t<32;t++)
-  //   {
-  //     djack_t out;
-  //     for(size_t ijack=0;ijack<=njacks;ijack++)
-  // 	{
-  // 	  typedef Matrix<double,2,2> Matr;
-	  
-  // 	  Matr e;
-  // 	  const auto& ei=origEigvec;
-  // 	  e(0,0)=ei[0][t][ijack];
-  // 	  e(0,1)=ei[2][t][ijack];
-  // 	  e(1,0)=ei[1][t][ijack];
-  // 	  e(1,1)=ei[3][t][ijack];
-	  
-  // 	  Matr c;
-  // 	  c(0,0)=c00[t][ijack];
-  // 	  c(0,1)=c01[t][ijack];
-  // 	  c(1,0)=c01[t][ijack];
-  // 	  c(1,1)=c11[t][ijack];
-	  
-  // 	  const Matr r=e*c*e.transpose();
-	  
-  // 	  if(ijack==njacks)
-  // 	    cout<<r<<endl<<endl;
-  // 	  out[ijack]=r(0,0);
-  // 	}
-  //     // const djack_t& e00=origEigvec[0][t];
-  //     // const djack_t& e01=origEigvec[1][t];
-  //     // const djack_t& e10=origEigvec[2][t];
-  //     // //      const djack_t& e11=origEigvec[3][t];
-      
-  //     // djack_t e=
-  //     // 	e00*c00[t]*e00+
-  //     // 	e00*c01[t]*e01+
-  //     // 	e10*c01[t]*e00+
-  //     // 	e10*c11[t]*e01;
-      
-  //     // djack_t f=
-  //     // 	e00*c00[t]*e00+
-  //     // 	e00*c01[t]*e01+
-  //     // 	e10*c01[t]*e00+
-  //     // 	e10*c11[t]*e01;
-      
-  //     reco1.write_ave_err(t,out.ave_err());
-  //   }
-  
-  // cout<<"rank: "<<rank<<endl;
-  // hsize_t dims_out[rank];
-  // dataspace.getSimpleExtentDims(dims_out,nullptr);
-  // for(int i=0;i<rank;i++)
-  //   cout<<dims_out[i]<<endl;
-  
-  // for(int t=0;t<T;t++)
-  //   cout<<loader.data_out[0+nGamma*t]<<endl;
-  
-  // const DataType dataType=dataset.getDataType();
-  
-  // dataset.q
-  // cout<<"NSubobj:"<<dataset.getNumObjs()<<endl;
-  // for(ssize_t i=0;i<dataset.getNumObjs();i++)
-  //   {
-  //     const string subGroupName=dataset.getObjnameByIdx(i);
-  //     cout<<"Subobj:"<<subGroupName<<endl;
-  //   }
+  djack_t eig1Z2L,eig1M;
+  two_pts_fit(eig1Z2L,eig1M,subCorr1,TH,8,19,"plots/SL1.xmg");
+  cout<<"Z21L: "<<eig1Z2L<<endl;
+  cout<<"M1L: "<<eig1M<<endl;
   
   const djvec_t corr=getAve(0,nSources,1);
   djack_t mVK1,Z2VK1;
@@ -1031,6 +926,7 @@ int main(int narg,char **arg)
 	{
 	  corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
 	  corrRefatta2[t]=two_pts_corr_fun(eig0Z2L,eig0M,TH,t,0);
+	  corrRefatta2[t]+=two_pts_corr_fun(eig1Z2L,eig1M,TH,t,0);
 	}
       size_t THm1=TH-1;
       const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,a,upto)*sqr(Za)*1e10;
@@ -1050,12 +946,12 @@ int main(int narg,char **arg)
   amu.write_vec_ave_err(amuSubs1.ave_err());
   amu.set_no_line();
   amu.set_all_colors(grace::BLUE);
-  amu.set_legend("Substituting 2pts beyond t");
+  amu.set_legend("Analytic continuation of groun state");
   
   amu.write_vec_ave_err(amuSubs2.ave_err());
   amu.set_no_line();
   amu.set_all_colors(grace::ORANGE);
-  amu.set_legend("Substituting 2pts beyond t");
+  amu.set_legend("Ground and first exc.state (GEVP)");
   
   amu.new_data_set();
   amu.set_legend("BMW light connected");
