@@ -715,7 +715,7 @@ int main(int narg,char **arg)
       aveCorr/=2.0;
       aveCorr.ave_err().write("plots/corr_"+cTag+".xmg");
       
-      const djack_t m=constant_fit(effective_mass(aveCorr),(iGammaComb==0)?25:20,32,"plots/eff_mass_"+cTag+".xmg");
+      const djack_t m=constant_fit(effective_mass(aveCorr),(iGammaComb==0)?22:20,32,"plots/eff_mass_"+cTag+".xmg");
       
       switch(iGammaComb)
 	{
