@@ -412,8 +412,8 @@ void loadRawData(int narg,char** arg)
 		  os<<" has wrong size "<<size<<" against reference size "<<refSize;
 		cout<<os.str()<<endl;
 	      }
+	    iSource++;
 	  }
-	iSource++;
       }
   }
   
