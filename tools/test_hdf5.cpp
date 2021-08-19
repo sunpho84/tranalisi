@@ -34,6 +34,9 @@ index_t idOpenData_loader;
 vector<double> rawData;
 vector<int> confMap;
 
+vector<string> possibleConfsList;
+vector<string> sourcesList;
+
 //! parameters to solve
 struct params_t
 {
@@ -351,18 +354,27 @@ struct DataLoader
   }
 };
 
+string sourceName(const size_t& iConf,const size_t& iSource)
+{
+  return possibleConfsList[iConf]+"/"+sourcesList[iSource];
+}
+
 void loadRawData(int narg,char** arg)
 {
   MPI_Init(&narg,&arg);
   MPI_Comm_size(MPI_COMM_WORLD,&nMPIranks);
   MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
   
-  const vector<string> possibleConfsList=getConfsList(confsPattern);
-  const vector<string> sourcesList=getSourcesList(possibleConfsList.front());
+  possibleConfsList=getConfsList(confsPattern);
+  sourcesList=getSourcesList(possibleConfsList.front());
   nSources=sourcesList.size();
+  const size_t refSize=
+    std::filesystem::file_size(sourceName(0,0));
+  if(MPIrank==0)
+    cout<<"Reference size: "<<refSize<<endl;
   
   const size_t nPossibleConfs=possibleConfsList.size();
-  vector<int> exists(nPossibleConfs,true);
+  vector<int> accepted(nPossibleConfs,true);
   {
     const size_t confChunk=(nPossibleConfs+nMPIranks-1)/nMPIranks;
     const size_t firstConf=std::min((size_t)MPIrank*confChunk,nPossibleConfs);
@@ -371,15 +383,37 @@ void loadRawData(int narg,char** arg)
       {
 	const string& conf=possibleConfsList[iConf];
 	
-	string confPath;
+	string sourcePath;
 	size_t iSource=0;
-	while(iSource<nSources and exists[iConf])
+	while(iSource<nSources and accepted[iConf])
 	  {
-	    confPath=conf+"/"+sourcesList[iSource];
-	    if(not std::filesystem::exists(confPath))
-	      exists[iConf]=false;
-	    iSource++;
+	    sourcePath=sourceName(iConf,iSource);
+	    
+	    const bool exists=
+	      std::filesystem::exists(sourcePath);
+	    
+	    bool correctSize=false;
+	    size_t size=refSize;
+	    if(exists)
+	      {
+		size=std::filesystem::file_size(sourcePath);
+		correctSize=(size==refSize);
+	      }
+	    
+	    accepted[iConf]=exists and correctSize;
+	    
+	    if(not accepted[iConf])
+	      {
+		ostringstream os;
+		os<<"Conf "<<conf<<" discarded since "<<sourcePath;
+		if(not exists)
+		  os<<" does not exists"<<endl;
+		if(not correctSize)
+		  os<<" has wrong size "<<size<<" against reference size "<<refSize;
+		cout<<os.str()<<endl;
+	      }
 	  }
+	iSource++;
       }
   }
   
@@ -388,12 +422,12 @@ void loadRawData(int narg,char** arg)
       const size_t confChunk=(nPossibleConfs+nMPIranks-1)/nMPIranks;
       const size_t firstConf=std::min((size_t)loopRank*confChunk,nPossibleConfs);
       const size_t lastConf=std::min(firstConf+confChunk,nPossibleConfs);
-      MPI_Bcast(&exists[firstConf],lastConf-firstConf,MPI_INT,loopRank,MPI_COMM_WORLD);
+      MPI_Bcast(&accepted[firstConf],lastConf-firstConf,MPI_INT,loopRank,MPI_COMM_WORLD);
     }
   
   vector<string> confsList;
   for(size_t iConf=0;iConf<nPossibleConfs;iConf++)
-    if(exists[iConf])
+    if(accepted[iConf])
       confsList.push_back(possibleConfsList[iConf]);
   
   if(MPIrank==0 and confsList.size()!=possibleConfsList.size())
