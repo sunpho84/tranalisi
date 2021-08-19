@@ -408,8 +408,9 @@ void loadRawData(int narg,char** arg)
 		os<<"Conf "<<conf<<" discarded since "<<sourcePath;
 		if(not exists)
 		  os<<" does not exists"<<endl;
-		if(not correctSize)
-		  os<<" has wrong size "<<size<<" against reference size "<<refSize;
+		else
+		  if(not correctSize)
+		    os<<" has wrong size "<<size<<" against reference size "<<refSize;
 		cout<<os.str()<<endl;
 	      }
 	    iSource++;
