@@ -441,11 +441,21 @@ void loadRawData(int narg,char** arg)
   DataLoader loader(T);
   const array<pair<int,int>,7> map{std::pair<int,int>{0,0},{1,6},{1,7},{1,8},{2,10},{2,11},{2,12}};
   
-  const size_t confChunk=(nConfs+nMPIranks-1)/nMPIranks;
-  const size_t firstConf=std::min((size_t)MPIrank*confChunk,nConfs);
-  const size_t lastConf=std::min(firstConf+confChunk,nConfs);
-  for(size_t iConf=firstConf;iConf<lastConf;iConf++)
+  const size_t confChunkSize=(nConfs+nMPIranks-1)/nMPIranks;
+  const size_t firstConf=std::min((size_t)MPIrank*confChunkSize,nConfs);
+  const size_t lastConf=std::min(firstConf+confChunkSize,nConfs);
+  const size_t nConfsPerRank=lastConf-firstConf;
+  
+  if(MPIrank!=0)
     {
+      idData.set_ranges({{"Confs",nConfsPerRank},{"Source",nSources},{"GammComb",nGammaComb},{"Mes",nMes},{"T",THp1}});
+      rawData.resize(idData.max(),0.0);
+    }
+  
+  for(size_t _iConf=0;_iConf<nConfsPerRank;_iConf++)
+    {
+      const size_t iConf=_iConf+firstConf;
+      
       cout<<MPIrank<<" "<<iConf<<" ["<<firstConf<<":"<<lastConf<<"] "<<confsList[iConf]<<endl;
       
       for(size_t iSource=0;iSource<nSources;iSource++)
@@ -464,7 +474,7 @@ void loadRawData(int narg,char** arg)
 		  const size_t& igamma_out=m.first;
 		  const size_t& igamma_in=m.second;
 		  const double& in=loader.dataIn[idData_loader({iMes,tIn,igamma_in})];
-		  double& out=rawData[idData({iConf,iSource,igamma_out,iMes,tOut})];
+		  double& out=rawData[idData({_iConf,iSource,igamma_out,iMes,tOut})];
 		  
 		  out+=in;
 		}
@@ -515,22 +525,31 @@ void loadRawData(int narg,char** arg)
 	}
     }
   
-  MPI_Allreduce(MPI_IN_PLACE,&rawData[0],idData.max(),MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-  
-  for(size_t i=0;i<idData.max();i++)
+  if(MPIrank!=0)
+    MPI_Send(&rawData[0],idData.max(),MPI_DOUBLE,0,MPIrank,MPI_COMM_WORLD);
+  else
     {
-      const std::vector<size_t> coords=idData(i);
+      for(size_t iRank=1;iRank<nMPIranks;iRank++)
+	{
+	  const size_t firstConf=std::min(iRank*confChunkSize,nConfs);
+	  const size_t lastConf=std::min(firstConf+confChunkSize,nConfs);
+	  
+	  const size_t beg=idData({firstConf,0,0,0,0}),end=idData({lastConf,0,0,0,0}),size=end-beg;
+	  MPI_Recv(&rawData[idData({firstConf,0,0,0,0})],size,MPI_DOUBLE,iRank,iRank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+	}
       
-      const size_t &t=coords.back();
-      const size_t &ig=coords[2];
+      for(size_t i=0;i<idData.max();i++)
+	{
+	  const std::vector<size_t> coords=idData(i);
+	  
+	  const size_t &t=coords.back();
+	  const size_t &ig=coords[2];
+	  
+	  const double norm=((t==0 or t==TH)?1:2)*
+	    ((ig==0)?1:-3);
+	  rawData[i]/=norm;
+	}
       
-      const double norm=((t==0 or t==TH)?1:2)*
-	((ig==0)?1:-3);
-      rawData[i]/=norm;
-    }
-  
-  if(MPIrank==0)
-    {
       raw_file_t out(output,"w");
       out.bin_write(nConfs);
       out.bin_write(nSources);
