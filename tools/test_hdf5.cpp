@@ -543,7 +543,7 @@ void loadRawData(int narg,char** arg)
 	  if(nConfsToRecv>0)
 	    {
 	      const size_t beg=idData({firstConf,0,0,0,0}),size=idData({nConfsToRecv,0,0,0,0});
-	      cout<<"Receiving from rank "<<iRank<<" from conf "<<beg<<" for a block of confs "<<nConfsToRecv<<endl;
+	      cout<<"Receiving from rank "<<iRank<<" from conf "<<firstConf<<" for a block of confs "<<nConfsToRecv<<endl;
 	      MPI_Recv(&rawData[beg],size,MPI_DOUBLE,iRank,iRank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	    }
 	}
@@ -753,6 +753,9 @@ int main(int narg,char **arg)
     loadRawData(narg,arg);
   else
     loadData();
+  
+  if(MPIrank!=0)
+    return 0;
   
   if(file_exists("map.txt"))
     {
