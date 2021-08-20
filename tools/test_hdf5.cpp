@@ -751,11 +751,8 @@ int main(int narg,char **arg)
   
   if(not file_exists(output))
     loadRawData(narg,arg);
-  else
-    loadData();
   
-  if(MPIrank!=0)
-    return 0;
+  loadData();
   
   if(file_exists("map.txt"))
     {
