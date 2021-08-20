@@ -142,17 +142,20 @@ void setPars()
   
   THp1=TH+1;
   
-  idData.set_ranges({{"Confs",nConfs},{"Source",nSources},{"GammComb",nGammaComb},{"Mes",nMes},{"T",THp1}});
   idData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Gamma",16}});
   idOpenData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Id1",4},{"Id2",4},{"Id3",4},{"Id4",4},{"Ri",2}});
-  rawData.resize(idData.max(),0.0);
   
   if(MPIrank==0)
     {
       cout<<"NConfs: "<<nConfs<<endl;
       cout<<"NSources: "<<nSources<<endl;
-      cout<<"Data size: "<<rawData.size()<<endl;
     }
+}
+
+void setRawData(const size_t& nConfsToRes)
+{
+  idData.set_ranges({{"Confs",nConfsToRes},{"Source",nSources},{"GammComb",nGammaComb},{"Mes",nMes},{"T",THp1}});
+  rawData.resize(idData.max(),0.0);
 }
 
 vector<string> getConfsList(const string& confsPattern)
@@ -446,11 +449,10 @@ void loadRawData(int narg,char** arg)
   const size_t lastConf=std::min(firstConf+confChunkSize,nConfs);
   const size_t nConfsPerRank=lastConf-firstConf;
   
-  if(MPIrank!=0)
-    {
-      idData.set_ranges({{"Confs",nConfsPerRank},{"Source",nSources},{"GammComb",nGammaComb},{"Mes",nMes},{"T",THp1}});
-      rawData.resize(idData.max(),0.0);
-    }
+  const size_t nConfsToStore=
+    (MPIrank!=0)?nConfsPerRank:nConfs;
+  
+  setRawData(nConfsToStore);
   
   for(size_t _iConf=0;_iConf<nConfsPerRank;_iConf++)
     {
@@ -566,6 +568,8 @@ void loadData()
   out.bin_read(nSources);
   
   setPars();
+  setRawData(nConfs);
+  cout<<"Data size: "<<rawData.size()<<endl;
   
   out.bin_read(rawData);
 }
