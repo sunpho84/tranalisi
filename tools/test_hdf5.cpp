@@ -501,7 +501,7 @@ void loadRawData(int narg,char** arg)
 		    const dirac_matr g1=gam[iGammaIn1]*gam[5];
 		    const dirac_matr g2=gam[5]*gam[iGammaIn2];
 		    
-		    double& out=rawData[idData({iConf,iSource,iGammaOut,iMes,tOut})];
+		    double& out=rawData[idData({_iConf,iSource,iGammaOut,iMes,tOut})];
 		    
 		    for(size_t nu=0;nu<4;nu++)
 		      for(size_t rh=0;rh<4;rh++)
