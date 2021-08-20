@@ -293,7 +293,7 @@ struct DataLoader
     count[2]=nGamma;
     count[3]=1;
     
-    dataIn.resize(idData.max(),0.0);
+    dataIn.resize(idData_loader.max(),0.0);
     
     openDimsm[0]=T;
     openDimsm[1]=4;
@@ -537,7 +537,7 @@ void loadRawData(int narg,char** arg)
 	  const size_t lastConf=std::min(firstConf+confChunkSize,nConfs);
 	  
 	  const size_t beg=idData({firstConf,0,0,0,0}),end=idData({lastConf,0,0,0,0}),size=end-beg;
-	  MPI_Recv(&rawData[idData({firstConf,0,0,0,0})],size,MPI_DOUBLE,iRank,iRank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+	  MPI_Recv(&rawData[beg],size,MPI_DOUBLE,iRank,iRank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	}
       
       for(size_t i=0;i<idData.max();i++)
