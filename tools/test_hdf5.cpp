@@ -23,8 +23,8 @@ size_t T,L,TH,THp1;
 string confsPattern;
 string output;
 size_t nConfs,nSources;
-constexpr size_t nGammaComb=5;
-constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK"};
+constexpr size_t nGammaComb=7;
+constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","A0P5","P5A0"};
 constexpr size_t nMes=3;
 constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 
@@ -483,7 +483,7 @@ void loadRawData(int narg,char** arg)
 	  
 	  // A(i)=(GSO)_{ij(i)} (G5)_{j(i)}
 	  // B(k)=(G5)_k (GSI)_{kl(k)}
-	  const array<array<int,4>,6> map{array<int,4>{3,10,1,-1},{3,11,2,-1},{3,12,3,-1},{4,1,10,-1},{4,2,11,-1},{4,3,12,-1}};
+	  const array<array<int,4>,8> map{array<int,4>{3,10,1,-1},{3,11,2,-1},{3,12,3,-1},{4,1,10,-1},{4,2,11,-1},{4,3,12,-1},{5,9,5,-1},{6,5,9,-1}};
 	  for(size_t iMes=0;iMes<nMes;iMes++)
 	    for(size_t tIn=0;tIn<T;tIn++)
 	      {
@@ -550,7 +550,7 @@ void loadRawData(int narg,char** arg)
 	  const size_t &ig=coords[2];
 	  
 	  const double norm=((t==0 or t==TH)?1:2)*
-	    ((ig==0)?1:-3);
+	    ((ig==0 or ig==6 or ig==7)?1:-3);
 	  rawData[i]/=norm;
 	}
       
