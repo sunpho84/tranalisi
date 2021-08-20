@@ -535,8 +535,10 @@ void loadRawData(int narg,char** arg)
 	{
 	  const size_t firstConf=std::min(iRank*confChunkSize,nConfs);
 	  const size_t lastConf=std::min(firstConf+confChunkSize,nConfs);
+	  const size_t nConfsToRecv=lastConf-firstConf;
 	  
-	  const size_t beg=idData({firstConf,0,0,0,0}),size=idData({lastConf-firstConf,0,0,0,0});
+	  const size_t beg=idData({firstConf,0,0,0,0}),size=idData({nConfsToRecv,0,0,0,0});
+	  cout<<"Receiving from rank "<<iRank<<" from conf "<<beg<<" for a block of confs "<<nConfsToRecv<<endl;
 	  MPI_Recv(&rawData[beg],size,MPI_DOUBLE,iRank,iRank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	}
       
