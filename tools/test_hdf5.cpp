@@ -536,7 +536,7 @@ void loadRawData(int narg,char** arg)
 	  const size_t firstConf=std::min(iRank*confChunkSize,nConfs);
 	  const size_t lastConf=std::min(firstConf+confChunkSize,nConfs);
 	  
-	  const size_t beg=idData({firstConf,0,0,0,0}),end=idData({lastConf,0,0,0,0}),size=end-beg;
+	  const size_t beg=idData({firstConf,0,0,0,0}),size=idData({lastConf-firstConf,0,0,0,0});
 	  MPI_Recv(&rawData[beg],size,MPI_DOUBLE,iRank,iRank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	}
       
