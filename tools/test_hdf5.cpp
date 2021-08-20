@@ -528,7 +528,10 @@ void loadRawData(int narg,char** arg)
     }
   
   if(MPIrank!=0)
-    MPI_Send(&rawData[0],idData.max(),MPI_DOUBLE,0,MPIrank,MPI_COMM_WORLD);
+    {
+      if(nConfsPerRank)
+	MPI_Send(&rawData[0],idData.max(),MPI_DOUBLE,0,MPIrank,MPI_COMM_WORLD);
+    }
   else
     {
       for(size_t iRank=1;iRank<nMPIranks;iRank++)
@@ -537,9 +540,12 @@ void loadRawData(int narg,char** arg)
 	  const size_t lastConf=std::min(firstConf+confChunkSize,nConfs);
 	  const size_t nConfsToRecv=lastConf-firstConf;
 	  
-	  const size_t beg=idData({firstConf,0,0,0,0}),size=idData({nConfsToRecv,0,0,0,0});
-	  cout<<"Receiving from rank "<<iRank<<" from conf "<<beg<<" for a block of confs "<<nConfsToRecv<<endl;
-	  MPI_Recv(&rawData[beg],size,MPI_DOUBLE,iRank,iRank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+	  if(nConfsToRecv>0)
+	    {
+	      const size_t beg=idData({firstConf,0,0,0,0}),size=idData({nConfsToRecv,0,0,0,0});
+	      cout<<"Receiving from rank "<<iRank<<" from conf "<<beg<<" for a block of confs "<<nConfsToRecv<<endl;
+	      MPI_Recv(&rawData[beg],size,MPI_DOUBLE,iRank,iRank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+	    }
 	}
       
       for(size_t i=0;i<idData.max();i++)
