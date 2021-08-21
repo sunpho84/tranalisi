@@ -790,7 +790,8 @@ int main(int narg,char **arg)
       const djack_t ZAlt=fPfromPAlt/fPfromA;
       
       console<<"Z"<<((iMes==0)?"V":"A")<<": "<<Z.ave_err()<<endl;
-      console<<"Zalt"<<((iMes==0)?"V":"A")<<": "<<Z.ave_err()<<endl;
+      if(iMes==1)
+	console<<"Zalt"<<((iMes==0)?"V":"A")<<": "<<ZAlt.ave_err()<<endl;
     }
   
   djack_t mP5;
