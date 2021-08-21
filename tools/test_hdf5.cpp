@@ -784,14 +784,10 @@ int main(int narg,char **arg)
       console<<"mP: "<<mP[iMes].ave_err()<<" , ZA0: "<<ZA0[iMes].ave_err()<<" , ZP5: "<<ZP5[iMes].ave_err()<<endl;
       
       const djack_t fPfromP=2.0*ZP5[0]*amq/sqr(mP[0]);
-      const djack_t fPfromPAlt=2.0*ZP5[iMes]*amq/sqr(mP[iMes]);
       const djack_t fPfromA=ZA0[iMes]/mP[iMes];
       const djack_t Z=fPfromP/fPfromA;
-      const djack_t ZAlt=fPfromPAlt/fPfromA;
       
       console<<"Z"<<((iMes==0)?"V":"A")<<": "<<Z.ave_err()<<endl;
-      if(iMes==1)
-	console<<"Zalt"<<((iMes==0)?"V":"A")<<": "<<ZAlt.ave_err()<<endl;
     }
   
   djack_t mP5;
