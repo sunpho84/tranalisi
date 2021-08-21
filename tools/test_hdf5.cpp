@@ -10,11 +10,6 @@
 
 #include <tranalisi.hpp>
 
-
-
-#include <unsupported/Eigen/MatrixFunctions>
-
-
 using namespace H5;
 using namespace std;
 
@@ -39,7 +34,7 @@ vector<int> confMap;
 vector<string> possibleConfsList;
 vector<string> sourcesList;
 
-ofstream console("/dev/stdout");
+ofstream console;
 
 //! parameters to solve
 struct params_t
@@ -368,17 +363,6 @@ string sourceName(const size_t& iConf,const size_t& iSource)
 
 void loadRawData(int narg,char** arg)
 {
-  MPI_Init(&narg,&arg);
-  {
-    int temp;
-    MPI_Comm_size(MPI_COMM_WORLD,&temp);
-    nMPIranks=temp;
-    MPI_Comm_rank(MPI_COMM_WORLD,&temp);
-    MPIrank=temp;
-  }
-  console.close();
-  console.open((MPIrank==0)?"/dev/stdout":"/dev/null");
-  
   possibleConfsList=getConfsList(confsPattern);
   sourcesList=getSourcesList(possibleConfsList.front());
   nSources=sourcesList.size();
@@ -575,8 +559,6 @@ void loadRawData(int narg,char** arg)
       out.bin_write(nSources);
       out.bin_write(rawData);
     }
-  
-  MPI_Finalize();
 }
 
 void loadData()
@@ -748,6 +730,15 @@ void an(const size_t& iGammaComb)
 
 int main(int narg,char **arg)
 {
+  MPI_Init(&narg,&arg);
+  {
+    int temp;
+    MPI_Comm_size(MPI_COMM_WORLD,&temp);
+    nMPIranks=temp;
+    MPI_Comm_rank(MPI_COMM_WORLD,&temp);
+    MPIrank=temp;
+  }
+  console.open((MPIrank==0)?"/dev/stdout":"/dev/null");
   
   raw_file_t input("input.txt","r");
   T=input.read<size_t>("T");
@@ -1061,6 +1052,8 @@ int main(int narg,char **arg)
     }
   corrRefatta1.ave_err().write("plots/corr_refatta1.xmg");
   corrRefatta2.ave_err().write("plots/corr_refatta2.xmg");
+  
+  MPI_Finalize();
   
   return 0;
 }
