@@ -39,7 +39,7 @@ vector<int> confMap;
 vector<string> possibleConfsList;
 vector<string> sourcesList;
 
-ofstream console;
+ofstream console("/dev/stdout");
 
 //! parameters to solve
 struct params_t
@@ -376,6 +376,7 @@ void loadRawData(int narg,char** arg)
     MPI_Comm_rank(MPI_COMM_WORLD,&temp);
     MPIrank=temp;
   }
+  console.close();
   console.open((MPIrank==0)?"/dev/stdout":"/dev/null");
   
   possibleConfsList=getConfsList(confsPattern);
