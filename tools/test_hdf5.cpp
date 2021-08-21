@@ -765,16 +765,25 @@ int main(int narg,char **arg)
   set_njacks(nConfs);
   
   djack_t mP[2],ZA0[2],ZP5[2];
+  const djvec_t corrP5P5[2]=
+    {(getAve(0,nSources,idP5P5,0)+
+      getAve(0,nSources,idP5P5,2))/2.0,
+      getAve(0,nSources,idP5P5,1)};
+  const djvec_t corrA0P5[2]=
+    {(getAve(0,nSources,idA0P5,0)+
+      getAve(0,nSources,idA0P5,2))/2.0,
+      getAve(0,nSources,idA0P5,1)};
+  const djvec_t corrP5A0[2]=
+    {(getAve(0,nSources,idP5A0,0)+
+      getAve(0,nSources,idP5A0,2))/2.0,
+      getAve(0,nSources,idP5A0,1)};
+      
   for(size_t iMes=0;iMes<2;iMes++)
     {
-      const djvec_t corrP5P5=getAve(0,nSources,idP5P5,iMes);
-      const djvec_t corrA0P5=-getAve(0,nSources,idA0P5,iMes);
-      const djvec_t corrP5A0=-getAve(0,nSources,idP5A0,iMes);
-      
-      two_pts_SL_fit(ZP5[iMes],ZA0[iMes],mP[iMes],corrP5A0,corrP5P5,TH,22,tMaxFit,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
+      two_pts_SL_fit(ZP5[iMes],ZA0[iMes],mP[iMes],corrP5A0[iMes],corrP5P5[iMes],TH,28,36,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
       console<<"mP: "<<mP[iMes].ave_err()<<" , ZA0: "<<ZA0[iMes].ave_err()<<" , ZP5: "<<ZP5[iMes].ave_err()<<endl;
       
-      const djack_t fPfromP=ZP5[0]*amq/sqr(mP[0]);
+      const djack_t fPfromP=2.0*ZP5[0]*amq/sqr(mP[0]);
       const djack_t fPfromA=ZA0[iMes]/mP[iMes];
       const djack_t Z=fPfromP/fPfromA;
       
