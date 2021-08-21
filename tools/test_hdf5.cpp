@@ -771,7 +771,7 @@ int main(int narg,char **arg)
       const djvec_t corrA0P5=getAve(0,nSources,idA0P5,iMes);
       const djvec_t corrP5A0=getAve(0,nSources,idP5A0,iMes);
       
-      two_pts_SL_fit(ZA0[iMes],ZP5[iMes],mP[iMes],corrP5P5,corrP5P5,TH,tMinFit,tMaxFit,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
+      two_pts_SL_fit(ZA0[iMes],ZP5[iMes],mP[iMes],corrP5A0,corrP5P5,TH,22,tMaxFit,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
       console<<"mP: "<<mP[iMes].ave_err()<<" , ZA0: "<<ZA0[iMes].ave_err()<<" , ZP5: "<<ZP5[iMes].ave_err()<<endl;
       
       const djack_t fPfromP=ZP5[0]*amq/sqr(mP[0]);
