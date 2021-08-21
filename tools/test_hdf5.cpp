@@ -770,13 +770,13 @@ int main(int narg,char **arg)
       getAve(0,nSources,idP5P5,2))/2.0,
       getAve(0,nSources,idP5P5,1)};
   const djvec_t corrA0P5[2]=
-    {(getAve(0,nSources,idA0P5,0)+
-      getAve(0,nSources,idA0P5,2))/2.0,
-      getAve(0,nSources,idA0P5,1)};
+    {(-getAve(0,nSources,idA0P5,0)+
+      -getAve(0,nSources,idA0P5,2))/2.0,
+      -getAve(0,nSources,idA0P5,1)};
   const djvec_t corrP5A0[2]=
-    {(getAve(0,nSources,idP5A0,0)+
-      getAve(0,nSources,idP5A0,2))/2.0,
-      getAve(0,nSources,idP5A0,1)};
+    {(-getAve(0,nSources,idP5A0,0)+
+      -getAve(0,nSources,idP5A0,2))/2.0,
+      -getAve(0,nSources,idP5A0,1)};
       
   for(size_t iMes=0;iMes<2;iMes++)
     {
@@ -787,7 +787,7 @@ int main(int narg,char **arg)
       const djack_t fPfromA=ZA0[iMes]/mP[iMes];
       const djack_t Z=fPfromP/fPfromA;
       
-      console<<"Z: "<<Z.ave_err()<<endl;
+      console<<"Z"<<((iMes==0)?"V":"A")<<": "<<Z.ave_err()<<endl;
     }
   
   djack_t mP5;
