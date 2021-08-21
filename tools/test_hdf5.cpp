@@ -18,7 +18,7 @@
 using namespace H5;
 using namespace std;
 
-int nMPIranks,MPIrank=0;
+size_t nMPIranks,MPIrank=0;
 double amq;
 size_t T,L,TH,THp1;
 string confsPattern;
@@ -39,7 +39,7 @@ vector<int> confMap;
 vector<string> possibleConfsList;
 vector<string> sourcesList;
 
-ofstream out;
+ofstream console;
 
 //! parameters to solve
 struct params_t
@@ -369,17 +369,21 @@ string sourceName(const size_t& iConf,const size_t& iSource)
 void loadRawData(int narg,char** arg)
 {
   MPI_Init(&narg,&arg);
-  MPI_Comm_size(MPI_COMM_WORLD,&nMPIranks);
-  MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
-  
-  out.open((MPIrank==0)?"/dev/stdout":"/dev/null");
+  {
+    int temp;
+    MPI_Comm_size(MPI_COMM_WORLD,&temp);
+    nMPIranks=temp;
+    MPI_Comm_rank(MPI_COMM_WORLD,&temp);
+    MPIrank=temp;
+  }
+  console.open((MPIrank==0)?"/dev/stdout":"/dev/null");
   
   possibleConfsList=getConfsList(confsPattern);
   sourcesList=getSourcesList(possibleConfsList.front());
   nSources=sourcesList.size();
   const size_t refSize=
     std::filesystem::file_size(sourceName(0,0));
-  out<<"Reference size: "<<refSize<<endl;
+  console<<"Reference size: "<<refSize<<endl;
   
   const size_t nPossibleConfs=possibleConfsList.size();
   vector<int> accepted(nPossibleConfs,true);
@@ -440,7 +444,7 @@ void loadRawData(int narg,char** arg)
       confsList.push_back(possibleConfsList[iConf]);
   
   if(confsList.size()!=possibleConfsList.size())
-    out<<"Confs list resized from "<<possibleConfsList.size()<<"to: "<<confsList.size()<<endl;
+    console<<"Confs list resized from "<<possibleConfsList.size()<<"to: "<<confsList.size()<<endl;
   
   nConfs=confsList.size();
   
@@ -582,7 +586,7 @@ void loadData()
   
   setPars();
   setRawData(nConfs);
-  out<<"Data size: "<<rawData.size()<<endl;
+  console<<"Data size: "<<rawData.size()<<endl;
   
   out.bin_read(rawData);
 }
@@ -793,18 +797,18 @@ int main(int narg,char **arg)
 	{
 	case 0:
 	  mP5=m;
-	  out<<"amP5: "<<m.ave_err()<<endl;
-	  out<<"mP5: "<<djack_t(m/a).ave_err()<<endl;
+	  console<<"amP5: "<<m.ave_err()<<endl;
+	  console<<"mP5: "<<djack_t(m/a).ave_err()<<endl;
 	  break;
 	case 1:
 	  {
 	    const djack_t E2p=2*sqrt(sqr(mP5)+sqr(2*M_PI/L));
-	    out<<"EVK: "<<E2p.ave_err()<<endl;
-	    out<<"mVK: "<<m.ave_err()<<endl;
+	    console<<"EVK: "<<E2p.ave_err()<<endl;
+	    console<<"mVK: "<<m.ave_err()<<endl;
 	  }
 	  break;
 	case 2:
-	  out<<"mTK: "<<m.ave_err()<<endl;
+	  console<<"mTK: "<<m.ave_err()<<endl;
 	  break;
 	}
       
@@ -874,13 +878,13 @@ int main(int narg,char **arg)
       const djvec_t corrP5A0=getAve(iMes,nSources,idP5A0);
       
       two_pts_SL_fit(ZA0[iMes],ZP5[iMes],mP[iMes],corrP5P5,corrP5P5,TH,tMinFit,tMaxFit,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
-      out<<"mP: "<<mP[iMes].ave_err()<<" , ZA0: "<<ZA0[iMes].ave_err()<<" , ZP5: "<<ZP5[iMes].ave_err()<<endl;
+      console<<"mP: "<<mP[iMes].ave_err()<<" , ZA0: "<<ZA0[iMes].ave_err()<<" , ZP5: "<<ZP5[iMes].ave_err()<<endl;
       
       const djack_t fPfromP=ZP5[0]*amq/sqr(mP[0]);
       const djack_t fPfromA=ZA0[iMes]/mP[iMes];
       const djack_t Z=fPfromP/fPfromA;
       
-      out<<"Z: "<<Z.ave_err()<<endl;
+      console<<"Z: "<<Z.ave_err()<<endl;
     }
   
   // {
@@ -948,7 +952,7 @@ int main(int narg,char **arg)
   eig[1].ave_err().write("plots/eig2.xmg");
   
   const djack_t eig0MDiagFit=constant_fit(effective_mass(eig[0]),tMinFit,tMaxFit,"plots/eff_eig1.xmg");
-  out<<"eig0 mass: "<<eig0MDiagFit.ave_err()<<endl;
+  console<<"eig0 mass: "<<eig0MDiagFit.ave_err()<<endl;
   
   // const djack_t eig1MDiagFit=constant_fit(effective_mass(eig[1]),13,18,"plots/eff_eig2.xmg");
   // out<<"eig1 mass: "<<eig1MDiagFit.ave_err()<<endl;
@@ -987,7 +991,7 @@ int main(int narg,char **arg)
   djack_t eig0ZS,eig0ZL,eig0M;
   two_pts_SL_fit(eig0ZS,eig0ZL,eig0M,SL0,SS0,TH,tMinFit,tMaxFit,"plots/SL0.xmg");
   const djack_t eig0Z2L=eig0ZL*eig0ZL;
-  out<<"Z20L: "<<eig0Z2L<<endl;
+  console<<"Z20L: "<<eig0Z2L<<endl;
   
   djvec_t subCorr1=c00;
   for(size_t t=0;t<=TH;t++)
@@ -995,13 +999,13 @@ int main(int narg,char **arg)
   
   djack_t eig1Z2L,eig1M;
   two_pts_fit(eig1Z2L,eig1M,subCorr1,TH,8,19,"plots/SL1.xmg");
-  out<<"Z21L: "<<eig1Z2L<<endl;
-  out<<"M1L: "<<eig1M<<endl;
+  console<<"Z21L: "<<eig1Z2L<<endl;
+  console<<"M1L: "<<eig1M<<endl;
   
   const djvec_t corr=getAve(0,nSources,1);
   djack_t mVK1,Z2VK1;
   two_pts_fit(Z2VK1,mVK1,corr,TH,tMinFit,tMaxFit,"plots/eff_mass_VKVK_twopts_fit.xmg");
-  out<<"Z2: "<<Z2VK1<<endl;
+  console<<"Z2: "<<Z2VK1<<endl;
   // djack_t mVK2,Z2VK2;
   // two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
   
