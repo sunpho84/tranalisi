@@ -862,9 +862,9 @@ int main(int narg,char **arg)
   djack_t mP[2],ZA0[2],ZP5[2];
   for(size_t iMes=0;iMes<2;iMes++)
     {
-      const djvec_t corrP5P5=getAve(iMes,nSources,idP5P5);
-      const djvec_t corrA0P5=getAve(iMes,nSources,idA0P5);
-      const djvec_t corrP5A0=getAve(iMes,nSources,idP5A0);
+      const djvec_t corrP5P5=getAve(0,nSources,idP5P5,iMes);
+      const djvec_t corrA0P5=getAve(0,nSources,idA0P5,iMes);
+      const djvec_t corrP5A0=getAve(0,nSources,idP5A0,iMes);
       
       two_pts_SL_fit(ZA0[iMes],ZP5[iMes],mP[iMes],corrP5P5,corrP5P5,TH,tMinFit,tMaxFit,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
       console<<"mP: "<<mP[iMes].ave_err()<<" , ZA0: "<<ZA0[iMes].ave_err()<<" , ZP5: "<<ZP5[iMes].ave_err()<<endl;
