@@ -19,12 +19,14 @@ using namespace H5;
 using namespace std;
 
 int nMPIranks,MPIrank=0;
+double amq;
 size_t T,L,TH,THp1;
 string confsPattern;
 string output;
 size_t nConfs,nSources;
 constexpr size_t nGammaComb=7;
 constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","A0P5","P5A0"};
+enum{idP5P5,idVKVK,idTKTK,idVKTK,idTKVK,idA0P5,idP5A0};
 constexpr size_t nMes=3;
 constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 
@@ -36,6 +38,8 @@ vector<int> confMap;
 
 vector<string> possibleConfsList;
 vector<string> sourcesList;
+
+ofstream out;
 
 //! parameters to solve
 struct params_t
@@ -368,13 +372,14 @@ void loadRawData(int narg,char** arg)
   MPI_Comm_size(MPI_COMM_WORLD,&nMPIranks);
   MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
   
+  out.open((MPIrank==0)?"/dev/stdout":"/dev/null");
+  
   possibleConfsList=getConfsList(confsPattern);
   sourcesList=getSourcesList(possibleConfsList.front());
   nSources=sourcesList.size();
   const size_t refSize=
     std::filesystem::file_size(sourceName(0,0));
-  if(MPIrank==0)
-    cout<<"Reference size: "<<refSize<<endl;
+  out<<"Reference size: "<<refSize<<endl;
   
   const size_t nPossibleConfs=possibleConfsList.size();
   vector<int> accepted(nPossibleConfs,true);
@@ -434,8 +439,8 @@ void loadRawData(int narg,char** arg)
     if(accepted[iConf])
       confsList.push_back(possibleConfsList[iConf]);
   
-  if(MPIrank==0 and confsList.size()!=possibleConfsList.size())
-    cout<<"Confs list resized from "<<possibleConfsList.size()<<"to: "<<confsList.size()<<endl;
+  if(confsList.size()!=possibleConfsList.size())
+    out<<"Confs list resized from "<<possibleConfsList.size()<<"to: "<<confsList.size()<<endl;
   
   nConfs=confsList.size();
   
@@ -577,7 +582,7 @@ void loadData()
   
   setPars();
   setRawData(nConfs);
-  cout<<"Data size: "<<rawData.size()<<endl;
+  out<<"Data size: "<<rawData.size()<<endl;
   
   out.bin_read(rawData);
 }
@@ -742,6 +747,7 @@ int main(int narg,char **arg)
   raw_file_t input("input.txt","r");
   T=input.read<size_t>("T");
   L=input.read<size_t>("L");
+  amq=input.read<double>("amq");
   const double a=input.read<double>("a");
   const double Za=input.read<double>("Za");
   confsPattern=input.read<string>("ConfsPattern");
@@ -787,18 +793,18 @@ int main(int narg,char **arg)
 	{
 	case 0:
 	  mP5=m;
-	  cout<<"amP5: "<<m.ave_err()<<endl;
-	  cout<<"mP5: "<<djack_t(m/a).ave_err()<<endl;
+	  out<<"amP5: "<<m.ave_err()<<endl;
+	  out<<"mP5: "<<djack_t(m/a).ave_err()<<endl;
 	  break;
 	case 1:
 	  {
 	    const djack_t E2p=2*sqrt(sqr(mP5)+sqr(2*M_PI/L));
-	    cout<<"EVK: "<<E2p.ave_err()<<endl;
-	    cout<<"mVK: "<<m.ave_err()<<endl;
+	    out<<"EVK: "<<E2p.ave_err()<<endl;
+	    out<<"mVK: "<<m.ave_err()<<endl;
 	  }
 	  break;
 	case 2:
-	  cout<<"mTK: "<<m.ave_err()<<endl;
+	  out<<"mTK: "<<m.ave_err()<<endl;
 	  break;
 	}
       
@@ -858,6 +864,23 @@ int main(int narg,char **arg)
 	  err_plot.write_vec_ave_err(y);
 	  err_plot.set_legend(to_string(n)+"hits");
 	}
+    }
+  
+  djack_t mP[2],ZA0[2],ZP5[2];
+  for(size_t iMes=0;iMes<2;iMes++)
+    {
+      const djvec_t corrP5P5=getAve(iMes,nSources,idP5P5);
+      const djvec_t corrA0P5=getAve(iMes,nSources,idA0P5);
+      const djvec_t corrP5A0=getAve(iMes,nSources,idP5A0);
+      
+      two_pts_SL_fit(ZA0[iMes],ZP5[iMes],mP[iMes],corrP5P5,corrP5P5,TH,tMinFit,tMaxFit,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
+      out<<"mP: "<<mP[iMes].ave_err()<<" , ZA0: "<<ZA0[iMes].ave_err()<<" , ZP5: "<<ZP5[iMes].ave_err()<<endl;
+      
+      const djack_t fPfromP=ZP5[0]*amq/sqr(mP[0]);
+      const djack_t fPfromA=ZA0[iMes]/mP[iMes];
+      const djack_t Z=fPfromP/fPfromA;
+      
+      out<<"Z: "<<Z.ave_err()<<endl;
     }
   
   // {
@@ -925,10 +948,10 @@ int main(int narg,char **arg)
   eig[1].ave_err().write("plots/eig2.xmg");
   
   const djack_t eig0MDiagFit=constant_fit(effective_mass(eig[0]),tMinFit,tMaxFit,"plots/eff_eig1.xmg");
-  cout<<"eig0 mass: "<<eig0MDiagFit.ave_err()<<endl;
+  out<<"eig0 mass: "<<eig0MDiagFit.ave_err()<<endl;
   
   // const djack_t eig1MDiagFit=constant_fit(effective_mass(eig[1]),13,18,"plots/eff_eig2.xmg");
-  // cout<<"eig1 mass: "<<eig1MDiagFit.ave_err()<<endl;
+  // out<<"eig1 mass: "<<eig1MDiagFit.ave_err()<<endl;
   
   djvec_t SL0(THp1),SS0(THp1);
   djvec_t SL1(THp1),SS1(THp1);
@@ -964,7 +987,7 @@ int main(int narg,char **arg)
   djack_t eig0ZS,eig0ZL,eig0M;
   two_pts_SL_fit(eig0ZS,eig0ZL,eig0M,SL0,SS0,TH,tMinFit,tMaxFit,"plots/SL0.xmg");
   const djack_t eig0Z2L=eig0ZL*eig0ZL;
-  cout<<"Z20L: "<<eig0Z2L<<endl;
+  out<<"Z20L: "<<eig0Z2L<<endl;
   
   djvec_t subCorr1=c00;
   for(size_t t=0;t<=TH;t++)
@@ -972,13 +995,13 @@ int main(int narg,char **arg)
   
   djack_t eig1Z2L,eig1M;
   two_pts_fit(eig1Z2L,eig1M,subCorr1,TH,8,19,"plots/SL1.xmg");
-  cout<<"Z21L: "<<eig1Z2L<<endl;
-  cout<<"M1L: "<<eig1M<<endl;
+  out<<"Z21L: "<<eig1Z2L<<endl;
+  out<<"M1L: "<<eig1M<<endl;
   
   const djvec_t corr=getAve(0,nSources,1);
   djack_t mVK1,Z2VK1;
   two_pts_fit(Z2VK1,mVK1,corr,TH,tMinFit,tMaxFit,"plots/eff_mass_VKVK_twopts_fit.xmg");
-  cout<<"Z2: "<<Z2VK1<<endl;
+  out<<"Z2: "<<Z2VK1<<endl;
   // djack_t mVK2,Z2VK2;
   // two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
   
