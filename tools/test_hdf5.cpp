@@ -886,9 +886,9 @@ int main(int narg,char **arg)
 	  out<<"  # Contraction of S0_th0_m0_r"<<(_iMes&1)<<"_ll ^ \\dag and S0_th0_m0_r"<<((_iMes>>1)&1)<<"_ll:"<<endl;
 	  out<<endl;
 	  
-	  const size_t mapCorr[4]={0,1,1,1};
-	  const char corrName[4][5]={"P5P5","V1V1","V2V2","V3V3"};
-	  for(size_t _iCorr=0;_iCorr<4;_iCorr++)
+	  const size_t mapCorr[6]={0,1,1,1,5,6};
+	  const char corrName[6][5]={"P5P5","V1V1","V2V2","V3V3","A0P5","P5A0"};
+	  for(size_t _iCorr=0;_iCorr<6;_iCorr++)
 	    {
 	      out<<endl<<"  # "<<corrName[_iCorr]<<endl;
 	      for(size_t _t=0;_t<T;_t++)
