@@ -144,11 +144,8 @@ void setPars()
   idData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Gamma",16}});
   idOpenData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Id1",4},{"Id2",4},{"Id3",4},{"Id4",4},{"Ri",2}});
   
-  if(MPIrank==0)
-    {
-      cout<<"NConfs: "<<nConfs<<endl;
-      cout<<"NSources: "<<nSources<<endl;
-    }
+  console<<"NConfs: "<<nConfs<<endl;
+  console<<"NSources: "<<nSources<<endl;
 }
 
 void setRawData(const size_t& nConfsToRes)
