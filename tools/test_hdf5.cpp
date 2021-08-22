@@ -18,11 +18,11 @@ double amq;
 size_t T,L,TH,THp1;
 size_t tMinFit,tMaxFit;
 double a,ZaPetros;
-djack_t Za,Zv;
 string confsPattern;
 string refConfPattern;
 string output;
 size_t nConfs,nSources;
+
 constexpr size_t nGammaComb=7;
 constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","A0P5","P5A0"};
 enum{idP5P5,idVKVK,idTKTK,idVKTK,idTKVK,idA0P5,idP5A0};
@@ -758,8 +758,10 @@ void readConfMap()
     confMap=vector_up_to<int>(nConfs);
 }
 
-void determineRenoConst()
+djvec_t determineRenoConst()
 {
+  djvec_t Z(2);
+  
   djack_t mP[2],ZA0[2],ZP5[2];
   const djvec_t corrP5P5[2]=
     {(getAve(0,nSources,idP5P5,0)+
@@ -781,14 +783,12 @@ void determineRenoConst()
       
       const djack_t fPfromP=2.0*ZP5[0]*amq/sqr(mP[0]);
       const djack_t fPfromA=ZA0[iMes]/mP[iMes];
-      const djack_t Z=fPfromP/fPfromA;
+      Z[iMes]=fPfromP/fPfromA;
       
       console<<"Z"<<((iMes==0)?"V":"A")<<": "<<Z.ave_err()<<endl;
-      if(iMes==0)
-	Zv=Z;
-      else
-	Za=Z;
     }
+  
+  return Z;
 }
 
 int main(int narg,char **arg)
@@ -814,7 +814,8 @@ int main(int narg,char **arg)
   
   set_njacks(nConfs);
   
-  determineRenoConst();
+  const djvec_t Z=determineRenoConst();
+  const djack_t Za=Z[1];
   
   djack_t mP5;
   for(size_t iGammaComb=0;iGammaComb<nGammaComb;iGammaComb++)
