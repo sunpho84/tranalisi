@@ -17,6 +17,7 @@ size_t nMPIranks,MPIrank=0;
 double amq;
 size_t T,L,TH,THp1;
 string confsPattern;
+string refConfPattern;
 string output;
 size_t nConfs,nSources;
 constexpr size_t nGammaComb=7;
@@ -361,7 +362,7 @@ string sourceName(const size_t& iConf,const size_t& iSource)
 void loadRawData(int narg,char** arg)
 {
   possibleConfsList=getConfsList(confsPattern);
-  sourcesList=getSourcesList(possibleConfsList.front());
+  sourcesList=getSourcesList(refConfPattern);
   nSources=sourcesList.size();
   const size_t refSize=
     std::filesystem::file_size(sourceName(0,0));
@@ -556,6 +557,8 @@ void loadRawData(int narg,char** arg)
       out.bin_write(nSources);
       out.bin_write(rawData);
     }
+  
+  MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void loadData()
@@ -744,6 +747,7 @@ int main(int narg,char **arg)
   const double a=input.read<double>("a");
   const double Za=input.read<double>("Za");
   confsPattern=input.read<string>("ConfsPattern");
+  refConfPattern=input.read<string>("RefConfPattern");
   output=input.read<string>("Output");
   const size_t tMinFit=input.read<size_t>("TFit");
   const size_t tMaxFit=input.read<size_t>();
