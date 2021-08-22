@@ -785,7 +785,7 @@ djvec_t determineRenoConst()
       const djack_t fPfromA=ZA0[iMes]/mP[iMes];
       Z[iMes]=fPfromP/fPfromA;
       
-      console<<"Z"<<((iMes==0)?"V":"A")<<": "<<Z.ave_err()<<endl;
+      console<<"Z"<<((iMes==0)?"V":"A")<<": "<<Z[iMes].ave_err()<<endl;
     }
   
   return Z;
