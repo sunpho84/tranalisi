@@ -16,6 +16,9 @@ using namespace std;
 size_t nMPIranks,MPIrank=0;
 double amq;
 size_t T,L,TH,THp1;
+size_t tMinFit,tMaxFit;
+double a,ZaPetros;
+djack_t Za,Zv;
 string confsPattern;
 string refConfPattern;
 string output;
@@ -728,35 +731,23 @@ void an(const size_t& iGammaComb)
   corr.ave_err().write("plots/stat_corr_"+tag+".xmg");
 }
 
-int main(int narg,char **arg)
+void readInput()
 {
-  MPI_Init(&narg,&arg);
-  {
-    int temp;
-    MPI_Comm_size(MPI_COMM_WORLD,&temp);
-    nMPIranks=temp;
-    MPI_Comm_rank(MPI_COMM_WORLD,&temp);
-    MPIrank=temp;
-  }
-  console.open((MPIrank==0)?"/dev/stdout":"/dev/null");
-  
   raw_file_t input("input.txt","r");
   T=input.read<size_t>("T");
   L=input.read<size_t>("L");
   amq=input.read<double>("amq");
-  const double a=input.read<double>("a");
-  const double Za=input.read<double>("Za");
+  a=input.read<double>("a");
+  ZaPetros=input.read<double>("Za");
   confsPattern=input.read<string>("ConfsPattern");
   refConfPattern=input.read<string>("RefConfPattern");
   output=input.read<string>("Output");
-  const size_t tMinFit=input.read<size_t>("TFit");
-  const size_t tMaxFit=input.read<size_t>();
-  
-  if(not file_exists(output))
-    loadRawData(narg,arg);
-  
-  loadData();
-  
+  tMinFit=input.read<size_t>("TFit");
+  tMaxFit=input.read<size_t>();
+}
+
+void readConfMap()
+{
   if(file_exists("map.txt"))
     {
       raw_file_t confMapFile("map.txt","r");
@@ -765,9 +756,10 @@ int main(int narg,char **arg)
     }
   else
     confMap=vector_up_to<int>(nConfs);
-  
-  set_njacks(nConfs);
-  
+}
+
+void determineRenoConst()
+{
   djack_t mP[2],ZA0[2],ZP5[2];
   const djvec_t corrP5P5[2]=
     {(getAve(0,nSources,idP5P5,0)+
@@ -792,7 +784,37 @@ int main(int narg,char **arg)
       const djack_t Z=fPfromP/fPfromA;
       
       console<<"Z"<<((iMes==0)?"V":"A")<<": "<<Z.ave_err()<<endl;
+      if(iMes==0)
+	Zv=Z;
+      else
+	Za=Z;
     }
+}
+
+int main(int narg,char **arg)
+{
+  MPI_Init(&narg,&arg);
+  {
+    int temp;
+    MPI_Comm_size(MPI_COMM_WORLD,&temp);
+    nMPIranks=temp;
+    MPI_Comm_rank(MPI_COMM_WORLD,&temp);
+    MPIrank=temp;
+  }
+  console.open((MPIrank==0)?"/dev/stdout":"/dev/null");
+  
+  readInput();
+  
+  if(not file_exists(output))
+    loadRawData(narg,arg);
+  
+  loadData();
+  
+  readConfMap();
+  
+  set_njacks(nConfs);
+  
+  determineRenoConst();
   
   djack_t mP5;
   for(size_t iGammaComb=0;iGammaComb<nGammaComb;iGammaComb++)
@@ -1041,7 +1063,7 @@ int main(int narg,char **arg)
   amu.write_vec_ave_err(amuSubs1.ave_err());
   amu.set_no_line();
   amu.set_all_colors(grace::BLUE);
-  amu.set_legend("Analytic continuation of groun state");
+  amu.set_legend("Analytic continuation of ground state");
   
   amu.write_vec_ave_err(amuSubs2.ave_err());
   amu.set_no_line();
