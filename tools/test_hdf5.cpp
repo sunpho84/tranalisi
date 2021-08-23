@@ -16,7 +16,8 @@ using namespace std;
 size_t nMPIranks,MPIrank=0;
 double amq;
 size_t T,L,TH,THp1;
-size_t tMinFit,tMaxFit;
+size_t tMinVKVK,tMaxVKVK;
+size_t tMinP5P5,tMaxP5P5;
 double a,ZaPetros;
 string confsPattern;
 string refConfPattern;
@@ -742,8 +743,10 @@ void readInput()
   confsPattern=input.read<string>("ConfsPattern");
   refConfPattern=input.read<string>("RefConfPattern");
   output=input.read<string>("Output");
-  tMinFit=input.read<size_t>("TFit");
-  tMaxFit=input.read<size_t>();
+  tMinP5P5=input.read<size_t>("TFitP5P5");
+  tMaxP5P5=input.read<size_t>();
+  tMinVKVK=input.read<size_t>("TFitVKVK");
+  tMaxVKVK=input.read<size_t>();
 }
 
 void readConfMap()
@@ -778,7 +781,7 @@ djvec_t determineRenoConst()
       
   for(size_t iMes=0;iMes<2;iMes++)
     {
-      two_pts_SL_fit(ZP5[iMes],ZA0[iMes],mP[iMes],corrP5A0[iMes],corrP5P5[iMes],TH,28,36,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
+      two_pts_SL_fit(ZP5[iMes],ZA0[iMes],mP[iMes],corrP5A0[iMes],corrP5P5[iMes],TH,tMinP5P5,tMaxP5P5,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
       console<<"mP: "<<mP[iMes].ave_err()<<" , ZA0: "<<ZA0[iMes].ave_err()<<" , ZP5: "<<ZP5[iMes].ave_err()<<endl;
       
       const djack_t fPfromP=2.0*ZP5[0]*amq/sqr(mP[0]);
@@ -833,7 +836,10 @@ int main(int narg,char **arg)
       aveCorr/=2.0;
       aveCorr.ave_err().write("plots/corr_"+cTag+".xmg");
       
-      const djack_t m=constant_fit(effective_mass(aveCorr),(iGammaComb==0)?22:20,32,"plots/eff_mass_"+cTag+".xmg");
+      const size_t tMinFit[2]={tMinP5P5,tMinVKVK};
+      const size_t tMaxFit[2]={tMaxP5P5,tMaxVKVK};
+      const size_t isVK=(iGammaComb>0 and iGammaComb<5);
+      const djack_t m=constant_fit(effective_mass(aveCorr),tMinFit[isVK],tMaxFit[isVK],"plots/eff_mass_"+cTag+".xmg");
       
       switch(iGammaComb)
 	{
@@ -976,8 +982,8 @@ int main(int narg,char **arg)
   eig[0].ave_err().write("plots/eig1.xmg");
   eig[1].ave_err().write("plots/eig2.xmg");
   
-  const djack_t eig0MDiagFit=constant_fit(effective_mass(eig[0]),tMinFit,tMaxFit,"plots/eff_eig1.xmg");
-  console<<"eig0 mass: "<<eig0MDiagFit.ave_err()<<endl;
+  // const djack_t eig0MDiagFit=constant_fit(effective_mass(eig[0]),tMinFit,tMaxFit,"plots/eff_eig1.xmg");
+  // console<<"eig0 mass: "<<eig0MDiagFit.ave_err()<<endl;
   
   // const djack_t eig1MDiagFit=constant_fit(effective_mass(eig[1]),13,18,"plots/eff_eig2.xmg");
   // out<<"eig1 mass: "<<eig1MDiagFit.ave_err()<<endl;
@@ -1014,7 +1020,7 @@ int main(int narg,char **arg)
     }
   
   djack_t eig0ZS,eig0ZL,eig0M;
-  two_pts_SL_fit(eig0ZS,eig0ZL,eig0M,SL0,SS0,TH,tMinFit,tMaxFit,"plots/SL0.xmg");
+  two_pts_SL_fit(eig0ZS,eig0ZL,eig0M,SL0,SS0,TH,tMinVKVK,tMaxVKVK,"plots/SL0.xmg");
   const djack_t eig0Z2L=eig0ZL*eig0ZL;
   console<<"Z20L: "<<eig0Z2L<<endl;
   
@@ -1029,7 +1035,7 @@ int main(int narg,char **arg)
   
   const djvec_t corr=getAve(0,nSources,1);
   djack_t mVK1,Z2VK1;
-  two_pts_fit(Z2VK1,mVK1,corr,TH,tMinFit,tMaxFit,"plots/eff_mass_VKVK_twopts_fit.xmg");
+  two_pts_fit(Z2VK1,mVK1,corr,TH,tMinVKVK,tMaxVKVK,"plots/eff_mass_VKVK_twopts_fit.xmg");
   console<<"Z2: "<<Z2VK1<<endl;
   // djack_t mVK2,Z2VK2;
   // two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
