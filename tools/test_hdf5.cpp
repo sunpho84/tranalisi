@@ -925,7 +925,7 @@ void computeAmu(const djvec_t& Z)
       console<<"Z21L: "<<eig1Z2L<<endl;
       console<<"M1L: "<<eig1M<<endl;
       
-      const djvec_t corr=getAve(0,nSources,1);
+      const djvec_t corr=getAveForRego(0,nSources,1,rego);
       djack_t mVK1,Z2VK1;
       two_pts_fit(Z2VK1,mVK1,corr,TH,tMinVKVK,tMaxVKVK,"plots/eff_mass_VKVK_twopts_fit_rego"+regoTag[rego]+".xmg");
       console<<"Z2: "<<Z2VK1<<endl;
