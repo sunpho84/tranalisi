@@ -608,6 +608,24 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
   return ave/2;
 }
 
+enum RegoType{REGO_TM,REGO_OS};
+
+djvec_t getAveForRego(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const RegoType& rego)
+{
+  djvec_t res;
+  
+  switch (rego)
+    {
+    case REGO_TM:
+      res=getAve(iSourceMin,iSourceMax,iGammaComb);
+      break;
+    case REGO_OS:
+      res=getAve(iSourceMin,iSourceMax,iGammaComb,1);
+    }
+  
+  return res;
+}
+
 void an(const size_t& iGammaComb)
 {
   const string tag=gammaCombTag[iGammaComb];
@@ -794,6 +812,180 @@ djvec_t determineRenoConst()
   return Z;
 }
 
+void convertForSilvano()
+{
+  for(size_t iConf=0;iConf<nConfs;iConf++)
+    {
+      mkdir(combine("reordered/%04zu/",iConf+1));
+      ofstream out(combine("reordered/%04zu/mes_contr_2pts_ll",iConf+1));
+      out.precision(16);
+      const size_t mapMes[4]={0,1,1,2};
+      for(size_t _iMes=0;_iMes<4;_iMes++)
+	{
+	  const size_t iMes=mapMes[_iMes];
+	  out<<endl;
+	  out<<"  # Contraction of S0_th0_m0_r"<<(_iMes&1)<<"_ll ^ \\dag and S0_th0_m0_r"<<((_iMes>>1)&1)<<"_ll:"<<endl;
+	  out<<endl;
+	  
+	  const size_t mapCorr[6]={0,1,1,1,5,6};
+	  const char corrName[6][5]={"P5P5","V1V1","V2V2","V3V3","A0P5","P5A0"};
+	  for(size_t _iCorr=0;_iCorr<6;_iCorr++)
+	    {
+	      out<<endl<<"  # "<<corrName[_iCorr]<<endl;
+	      for(size_t _t=0;_t<T;_t++)
+		{
+		  size_t t=_t;
+		  if(t>=TH)
+		    t=T-t;
+		  
+		  double s=0;
+		  for(size_t iSource=0;iSource<nSources;iSource++)
+		    s+=rawData[idData({iConf,iSource,mapCorr[_iCorr],iMes,t})];
+		  s/=nSources*L*L*L;
+		  out<<s<<" "<<0<<endl;
+		}
+	    }
+	}
+    }
+}
+
+void computeAmu(const djvec_t& Z)
+{
+  const string regoTag[2]={"TM","OS"};
+  const size_t regoZId[2]={1,0};
+  
+  for(const RegoType& rego : {REGO_TM,REGO_OS})
+    {
+      console<<"Computing amu fore rego "<<regoTag[rego]<<endl;
+      
+      const djack_t Zrego=Z[regoZId[rego]];
+      
+      vector<djvec_t> eig;
+      vector<djvec_t> recastEigvec;
+      vector<djvec_t> origEigvec;
+      
+      const djvec_t c00=getAveForRego(0,nSources,1,rego);
+      const djvec_t c01=-getAveForRego(0,nSources,4,rego);
+      const djvec_t c11=-getAveForRego(0,nSources,2,rego);
+      const size_t t0=3;
+      
+      tie(eig,recastEigvec,origEigvec)=gevp({c00,c01,c01,c11},t0);
+      
+      eig[0].ave_err().write("plots/eig1Rego"+regoTag[rego]+".xmg");
+      eig[1].ave_err().write("plots/eig2Reno"+regoTag[rego]+".xmg");
+      
+      // const djack_t eig0MDiagFit=constant_fit(effective_mass(eig[0]),tMinFit,tMaxFit,"plots/eff_eig1.xmg");
+      // console<<"eig0 mass: "<<eig0MDiagFit.ave_err()<<endl;
+      
+      // const djack_t eig1MDiagFit=constant_fit(effective_mass(eig[1]),13,18,"plots/eff_eig2.xmg");
+      // out<<"eig1 mass: "<<eig1MDiagFit.ave_err()<<endl;
+      
+      djvec_t SL0(THp1),SS0(THp1);
+      djvec_t SL1(THp1),SS1(THp1);
+      for(size_t t=0;t<=TH;t++)
+	{
+	  for(size_t ijack=0;ijack<=njacks;ijack++)
+	    {
+	      typedef Matrix<double,2,2> Matr;
+	      
+	      Matr e;
+	      const auto& ei=origEigvec;
+	      e(0,0)=ei[0][t][ijack];
+	      e(0,1)=ei[2][t][ijack];
+	      e(1,0)=ei[1][t][ijack];
+	      e(1,1)=ei[3][t][ijack];
+	      
+	      Matr c;
+	      c(0,0)=c00[t][ijack];
+	      c(0,1)=c01[t][ijack];
+	      c(1,0)=c01[t][ijack];
+	      c(1,1)=c11[t][ijack];
+	      
+	      const Matr sl=c*e.transpose();
+	      const Matr ss=e*c*e.transpose();
+	      
+	      SL0[t][ijack]=sl(0,0);
+	      SS0[t][ijack]=ss(0,0);
+	      SL1[t][ijack]=sl(0,1);
+	      SS1[t][ijack]=ss(1,1);
+	    }
+	}
+      
+      djack_t eig0ZS,eig0ZL,eig0M;
+      two_pts_SL_fit(eig0ZS,eig0ZL,eig0M,SL0,SS0,TH,tMinVKVK,tMaxVKVK,"plots/SL0Rego"+regoTag[rego]+".xmg");
+      const djack_t eig0Z2L=eig0ZL*eig0ZL;
+      console<<"Z20L: "<<eig0Z2L<<endl;
+      
+      djvec_t subCorr1=c00;
+      for(size_t t=0;t<=TH;t++)
+	subCorr1[t]-=two_pts_corr_fun(eig0Z2L,eig0M,TH,t,+1);
+      
+      djack_t eig1Z2L,eig1M;
+      two_pts_fit(eig1Z2L,eig1M,subCorr1,TH,8,19,"plots/SL1Rego"+regoTag[rego]+".xmg");
+      console<<"Z21L: "<<eig1Z2L<<endl;
+      console<<"M1L: "<<eig1M<<endl;
+      
+      const djvec_t corr=getAve(0,nSources,1);
+      djack_t mVK1,Z2VK1;
+      two_pts_fit(Z2VK1,mVK1,corr,TH,tMinVKVK,tMaxVKVK,"plots/eff_mass_VKVK_twopts_fit_rego"+regoTag[rego]+".xmg");
+      console<<"Z2: "<<Z2VK1<<endl;
+      // djack_t mVK2,Z2VK2;
+      // two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
+      
+      grace_file_t amu("plots/amuRego"+regoTag[rego]+".xmg");
+      djvec_t amuInt(TH),amuSubs1(TH),amuSubs2(TH);
+      for(size_t upto=0;upto<TH;upto++)
+	{
+	  djvec_t corrRefatta1=corr;
+	  djvec_t corrRefatta2=corr;
+	  for(size_t t=upto;t<TH;t++)
+	    {
+	      corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
+	      corrRefatta2[t]=two_pts_corr_fun(eig0Z2L,eig0M,TH,t,0);
+	      corrRefatta2[t]+=two_pts_corr_fun(eig1Z2L,eig1M,TH,t,0);
+	    }
+	  size_t THm1=TH-1;
+	  const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,a,upto)*sqr(Zrego)*1e10;
+	  const djack_t cSubs1=integrate_corr_times_kern_up_to(corrRefatta1,T,a,THm1)*sqr(Zrego)*1e10;
+	  const djack_t cSubs2=integrate_corr_times_kern_up_to(corrRefatta2,T,a,THm1)*sqr(Zrego)*1e10;
+	  amuInt[upto]=cInt;
+	  amuSubs1[upto]=cSubs1;
+	  amuSubs2[upto]=cSubs2;
+	}
+      amu.set_xaxis_label("t");
+      
+      amu.write_vec_ave_err(amuInt.ave_err());
+      amu.set_no_line();
+      amu.set_legend("Pure integration");
+      amu.set_all_colors(grace::RED);
+      
+      amu.write_vec_ave_err(amuSubs1.ave_err());
+      amu.set_no_line();
+      amu.set_all_colors(grace::BLUE);
+      amu.set_legend("Analytic continuation of ground state");
+      
+      amu.write_vec_ave_err(amuSubs2.ave_err());
+      amu.set_no_line();
+      amu.set_all_colors(grace::ORANGE);
+      amu.set_legend("Ground and first exc.state (GEVP)");
+      
+      amu.new_data_set();
+      amu.set_legend("BMW light connected");
+      amu.set_all_colors(grace::GREEN4);
+      amu.write_constant_band(0,TH,djack_t(gauss_filler_t{633.7,5.0,23423}));
+      
+      djvec_t corrRefatta1=corr;
+      djvec_t corrRefatta2=corr;
+      for(size_t t=0;t<=TH;t++)
+	{
+	  corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
+	  corrRefatta2[t]=two_pts_corr_fun(eig0Z2L,eig0M,TH,t,0);
+	}
+      corrRefatta1.ave_err().write("plots/corr_refatta1_rego"+regoTag[rego]+".xmg");
+      corrRefatta2.ave_err().write("plots/corr_refatta2_rego"+regoTag[rego]+".xmg");
+    }
+}
+
 int main(int narg,char **arg)
 {
   MPI_Init(&narg,&arg);
@@ -818,7 +1010,6 @@ int main(int narg,char **arg)
   set_njacks(nConfs);
   
   const djvec_t Z=determineRenoConst();
-  const djack_t Za=Z[1];
   
   djack_t mP5;
   for(size_t iGammaComb=0;iGammaComb<nGammaComb;iGammaComb++)
@@ -931,166 +1122,11 @@ int main(int narg,char **arg)
   //   sil.set_legend("512 hits (simone");
   // }
   
-  for(size_t iConf=0;iConf<nConfs;iConf++)
-    {
-      mkdir(combine("reordered/%04zu/",iConf+1));
-      ofstream out(combine("reordered/%04zu/mes_contr_2pts_ll",iConf+1));
-      out.precision(16);
-      const size_t mapMes[4]={0,1,1,2};
-      for(size_t _iMes=0;_iMes<4;_iMes++)
-	{
-	  const size_t iMes=mapMes[_iMes];
-	  out<<endl;
-	  out<<"  # Contraction of S0_th0_m0_r"<<(_iMes&1)<<"_ll ^ \\dag and S0_th0_m0_r"<<((_iMes>>1)&1)<<"_ll:"<<endl;
-	  out<<endl;
-	  
-	  const size_t mapCorr[6]={0,1,1,1,5,6};
-	  const char corrName[6][5]={"P5P5","V1V1","V2V2","V3V3","A0P5","P5A0"};
-	  for(size_t _iCorr=0;_iCorr<6;_iCorr++)
-	    {
-	      out<<endl<<"  # "<<corrName[_iCorr]<<endl;
-	      for(size_t _t=0;_t<T;_t++)
-		{
-		  size_t t=_t;
-		  if(t>=TH)
-		    t=T-t;
-		  
-		  double s=0;
-		  for(size_t iSource=0;iSource<nSources;iSource++)
-		    s+=rawData[idData({iConf,iSource,mapCorr[_iCorr],iMes,t})];
-		  s/=nSources*L*L*L;
-		  out<<s<<" "<<0<<endl;
-		}
-	    }
-	}
-    }
-  
+  convertForSilvano();
   
   /////////////////////////////////////////////////////////////////
   
-  vector<djvec_t> eig;
-  vector<djvec_t> recastEigvec;
-  vector<djvec_t> origEigvec;
-  
-  const djvec_t c00=getAve(0,nSources,1);
-  const djvec_t c01=-getAve(0,nSources,4);
-  const djvec_t c11=-getAve(0,nSources,2);
-  const size_t t0=3;
-  
-  tie(eig,recastEigvec,origEigvec)=gevp({c00,c01,c01,c11},t0);
-  
-  eig[0].ave_err().write("plots/eig1.xmg");
-  eig[1].ave_err().write("plots/eig2.xmg");
-  
-  // const djack_t eig0MDiagFit=constant_fit(effective_mass(eig[0]),tMinFit,tMaxFit,"plots/eff_eig1.xmg");
-  // console<<"eig0 mass: "<<eig0MDiagFit.ave_err()<<endl;
-  
-  // const djack_t eig1MDiagFit=constant_fit(effective_mass(eig[1]),13,18,"plots/eff_eig2.xmg");
-  // out<<"eig1 mass: "<<eig1MDiagFit.ave_err()<<endl;
-  
-  djvec_t SL0(THp1),SS0(THp1);
-  djvec_t SL1(THp1),SS1(THp1);
-  for(size_t t=0;t<=TH;t++)
-    {
-      for(size_t ijack=0;ijack<=njacks;ijack++)
-	{
-	  typedef Matrix<double,2,2> Matr;
-	  
-	  Matr e;
-	  const auto& ei=origEigvec;
-	  e(0,0)=ei[0][t][ijack];
-	  e(0,1)=ei[2][t][ijack];
-	  e(1,0)=ei[1][t][ijack];
-	  e(1,1)=ei[3][t][ijack];
-	  
-	  Matr c;
-	  c(0,0)=c00[t][ijack];
-	  c(0,1)=c01[t][ijack];
-	  c(1,0)=c01[t][ijack];
-	  c(1,1)=c11[t][ijack];
-	  
-	  const Matr sl=c*e.transpose();
-	  const Matr ss=e*c*e.transpose();
-	  
-	  SL0[t][ijack]=sl(0,0);
-	  SS0[t][ijack]=ss(0,0);
-	  SL1[t][ijack]=sl(0,1);
-	  SS1[t][ijack]=ss(1,1);
-	}
-    }
-  
-  djack_t eig0ZS,eig0ZL,eig0M;
-  two_pts_SL_fit(eig0ZS,eig0ZL,eig0M,SL0,SS0,TH,tMinVKVK,tMaxVKVK,"plots/SL0.xmg");
-  const djack_t eig0Z2L=eig0ZL*eig0ZL;
-  console<<"Z20L: "<<eig0Z2L<<endl;
-  
-  djvec_t subCorr1=c00;
-  for(size_t t=0;t<=TH;t++)
-      subCorr1[t]-=two_pts_corr_fun(eig0Z2L,eig0M,TH,t,+1);
-  
-  djack_t eig1Z2L,eig1M;
-  two_pts_fit(eig1Z2L,eig1M,subCorr1,TH,8,19,"plots/SL1.xmg");
-  console<<"Z21L: "<<eig1Z2L<<endl;
-  console<<"M1L: "<<eig1M<<endl;
-  
-  const djvec_t corr=getAve(0,nSources,1);
-  djack_t mVK1,Z2VK1;
-  two_pts_fit(Z2VK1,mVK1,corr,TH,tMinVKVK,tMaxVKVK,"plots/eff_mass_VKVK_twopts_fit.xmg");
-  console<<"Z2: "<<Z2VK1<<endl;
-  // djack_t mVK2,Z2VK2;
-  // two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
-  
-  grace_file_t amu("plots/amu.xmg");
-  djvec_t amuInt(TH),amuSubs1(TH),amuSubs2(TH);
-  for(size_t upto=0;upto<TH;upto++)
-    {
-      djvec_t corrRefatta1=corr;
-      djvec_t corrRefatta2=corr;
-      for(size_t t=upto;t<TH;t++)
-	{
-	  corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
-	  corrRefatta2[t]=two_pts_corr_fun(eig0Z2L,eig0M,TH,t,0);
-	  corrRefatta2[t]+=two_pts_corr_fun(eig1Z2L,eig1M,TH,t,0);
-	}
-      size_t THm1=TH-1;
-      const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,a,upto)*sqr(Za)*1e10;
-      const djack_t cSubs1=integrate_corr_times_kern_up_to(corrRefatta1,T,a,THm1)*sqr(Za)*1e10;
-      const djack_t cSubs2=integrate_corr_times_kern_up_to(corrRefatta2,T,a,THm1)*sqr(Za)*1e10;
-      amuInt[upto]=cInt;
-      amuSubs1[upto]=cSubs1;
-      amuSubs2[upto]=cSubs2;
-    }
-  amu.set_xaxis_label("t");
-  
-  amu.write_vec_ave_err(amuInt.ave_err());
-  amu.set_no_line();
-  amu.set_legend("Pure integration");
-  amu.set_all_colors(grace::RED);
-  
-  amu.write_vec_ave_err(amuSubs1.ave_err());
-  amu.set_no_line();
-  amu.set_all_colors(grace::BLUE);
-  amu.set_legend("Analytic continuation of ground state");
-  
-  amu.write_vec_ave_err(amuSubs2.ave_err());
-  amu.set_no_line();
-  amu.set_all_colors(grace::ORANGE);
-  amu.set_legend("Ground and first exc.state (GEVP)");
-  
-  amu.new_data_set();
-  amu.set_legend("BMW light connected");
-  amu.set_all_colors(grace::GREEN4);
-  amu.write_constant_band(0,TH,djack_t(gauss_filler_t{633.7,5.0,23423}));
-  
-  djvec_t corrRefatta1=corr;
-  djvec_t corrRefatta2=corr;
-  for(size_t t=0;t<=TH;t++)
-    {
-      corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
-      corrRefatta2[t]=two_pts_corr_fun(eig0Z2L,eig0M,TH,t,0);
-    }
-  corrRefatta1.ave_err().write("plots/corr_refatta1.xmg");
-  corrRefatta2.ave_err().write("plots/corr_refatta2.xmg");
+  computeAmu(Z);
   
   MPI_Finalize();
   
