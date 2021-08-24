@@ -811,7 +811,7 @@ djvec_t determineRenoConst()
     }
   
   const djack_t ZV_fr_ZA=Z[0]/Z[1];
-  cout<<"Zv/Za: "<<ZV_fr_ZA.ave_err()<<endl;
+  console<<"Zv/Za: "<<ZV_fr_ZA.ave_err()<<endl;
   
   return Z;
 }
