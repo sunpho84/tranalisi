@@ -790,9 +790,9 @@ djvec_t determineRenoConst()
       getAve(0,nSources,idP5P5,2))/2.0,
       getAve(0,nSources,idP5P5,1)};
   const djvec_t corrA0P5[2]=
-    {(-getAve(0,nSources,idA0P5,0)+
-      -getAve(0,nSources,idA0P5,2))/2.0,
-      -getAve(0,nSources,idA0P5,1)};
+    {(getAve(0,nSources,idA0P5,0)+
+      getAve(0,nSources,idA0P5,2))/2.0,
+      getAve(0,nSources,idA0P5,1)};
   const djvec_t corrP5A0[2]=
     {(-getAve(0,nSources,idP5A0,0)+
       -getAve(0,nSources,idP5A0,2))/2.0,
@@ -954,6 +954,14 @@ void computeAmu(const djvec_t& Z)
 	  amuSubs2[upto]=cSubs2;
 	}
       amu.set_xaxis_label("t");
+      
+      djvec_t corrRefatta(THp1);
+      for(size_t t=0;t<TH;t++)
+	corrRefatta[t]=
+	  two_pts_corr_fun(eig0Z2L,eig0M,TH,t,0)+
+	  two_pts_corr_fun(eig1Z2L,eig1M,TH,t,0);
+      corrRefatta.ave_err().write("plots/corr_VKVK_refatta"+regoTag[rego]+".xmg");
+      effective_mass(corrRefatta).ave_err().write("plots/eff_mass_VKVK_refatta"+regoTag[rego]+".xmg");
       
       amu.write_vec_ave_err(amuInt.ave_err());
       amu.set_no_line();
