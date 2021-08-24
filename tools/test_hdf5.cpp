@@ -961,7 +961,7 @@ void computeAmu(const djvec_t& Z)
 	  two_pts_corr_fun(eig0Z2L,eig0M,TH,t,0)+
 	  two_pts_corr_fun(eig1Z2L,eig1M,TH,t,0);
       corrRefatta.ave_err().write("plots/corr_VKVK_refatta"+regoTag[rego]+".xmg");
-      effective_mass(corrRefatta).ave_err().write("plots/eff_mass_VKVK_refatta"+regoTag[rego]+".xmg");
+      effective_mass(corrRefatta,TH,0).ave_err().write("plots/eff_mass_VKVK_refatta_Rego"+regoTag[rego]+".xmg");
       
       amu.write_vec_ave_err(amuInt.ave_err());
       amu.set_no_line();
