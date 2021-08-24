@@ -799,7 +799,7 @@ djvec_t determineRenoConst()
       
   for(size_t iMes=0;iMes<2;iMes++)
     {
-      two_pts_SL_fit(ZP5[iMes],ZA0[iMes],mP[iMes],corrP5A0[iMes],corrP5P5[iMes],TH,tMinP5P5,tMaxP5P5,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
+      two_pts_SL_fit(ZP5[iMes],ZA0[iMes],mP[iMes],corrA0P5[iMes],corrP5P5[iMes],TH,tMinP5P5,tMaxP5P5,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
       console<<"mP: "<<mP[iMes].ave_err()<<" , ZA0: "<<ZA0[iMes].ave_err()<<" , ZP5: "<<ZP5[iMes].ave_err()<<endl;
       
       const djack_t fPfromP=2.0*ZP5[0]*amq/sqr(mP[0]);
