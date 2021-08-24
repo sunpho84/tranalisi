@@ -810,6 +810,9 @@ djvec_t determineRenoConst()
       console<<"Z"<<((iMes==0)?"V":"A")<<": "<<Z[iMes].ave_err()<<endl;
     }
   
+  const djack_t ZV_fr_ZA=Z[0]/Z[1];
+  cout<<"Zv/Za: "<<ZV_fr_ZA.ave_err()<<endl;
+  
   return Z;
 }
 
