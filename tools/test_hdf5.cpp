@@ -25,6 +25,7 @@ string output;
 size_t nConfs,nSources;
 
 constexpr size_t nGammaComb=7;
+const bool isVK[]=                         {0     ,1     ,1     ,1     ,1     ,0     ,0};
 constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","A0P5","P5A0"};
 enum{idP5P5,idVKVK,idTKTK,idVKTK,idTKVK,idA0P5,idP5A0};
 constexpr size_t nMes=3;
@@ -552,7 +553,7 @@ void loadRawData(int narg,char** arg)
 	  const size_t &ig=coords[2];
 	  
 	  const double norm=((t==0 or t==TH)?1:2)*
-	    ((ig==0 or ig==6 or ig==7)?1:-3);
+	    (isVK[ig]?-3:1);
 	  rawData[i]/=norm;
 	}
       
@@ -1029,8 +1030,8 @@ int main(int narg,char **arg)
       
       const size_t tMinFit[2]={tMinP5P5,tMinVKVK};
       const size_t tMaxFit[2]={tMaxP5P5,tMaxVKVK};
-      const size_t isVK=(iGammaComb>0 and iGammaComb<5);
-      const djack_t m=constant_fit(effective_mass(aveCorr),tMinFit[isVK],tMaxFit[isVK],"plots/eff_mass_"+cTag+".xmg");
+      const size_t is=isVK[iGammaComb];
+      const djack_t m=constant_fit(effective_mass(aveCorr),tMinFit[is],tMaxFit[is],"plots/eff_mass_"+cTag+".xmg");
       
       switch(iGammaComb)
 	{
