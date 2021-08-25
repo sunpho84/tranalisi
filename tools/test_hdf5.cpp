@@ -17,7 +17,7 @@ size_t nMPIranks,MPIrank=0;
 double amq;
 size_t T,L,TH,THp1;
 size_t tMinVKVK,tMaxVKVK;
-size_t tMinP5P5,tMaxP5P5;
+size_t tMinP5P5[2],tMaxP5P5[2];
 double a,ZaPetros;
 string confsPattern;
 string refConfPattern;
@@ -762,8 +762,12 @@ void readInput()
   confsPattern=input.read<string>("ConfsPattern");
   refConfPattern=input.read<string>("RefConfPattern");
   output=input.read<string>("Output");
-  tMinP5P5=input.read<size_t>("TFitP5P5");
-  tMaxP5P5=input.read<size_t>();
+  input.expect("TFitP5P5");
+  for(size_t iMes=0;iMes<2;iMes++)
+    {
+      tMinP5P5[iMes]=input.read<size_t>();
+      tMaxP5P5[iMes]=input.read<size_t>();
+    }
   tMinVKVK=input.read<size_t>("TFitVKVK");
   tMaxVKVK=input.read<size_t>();
 }
@@ -803,15 +807,15 @@ djvec_t determineRenoConst()
   for(size_t iMes=0;iMes<2;iMes++)
     {
       djack_t Z2P5separated,MP5separated;
-      two_pts_fit(Z2P5separated,MP5separated,corrP5P5[iMes],TH,tMinP5P5,tMaxP5P5,"plots/fitP5P5forZmes"+to_string(iMes)+".xmg");
+      two_pts_fit(Z2P5separated,MP5separated,corrP5P5[iMes],TH,tMinP5P5[iMes],tMaxP5P5[iMes],"plots/fitP5P5forZmes"+to_string(iMes)+".xmg");
       djvec_t testA0=corrP5A0[iMes];
       const djack_t ZP5separated=sqrt(Z2P5separated);
       for(size_t t=0;t<=TH;t++)
 	testA0[t]/=two_pts_corr_fun(ZP5separated,MP5separated,TH,t,-1);
-      const djack_t ZA0separated=constant_fit(testA0,tMinP5P5,tMaxP5P5,"plots/fitA0P5forZmes"+to_string(iMes)+".xmg");
+      const djack_t ZA0separated=constant_fit(testA0,tMinP5P5[iMes],tMaxP5P5[iMes],"plots/fitA0P5forZmes"+to_string(iMes)+".xmg");
       console<<"from separated fit, mP: "<<MP5separated.ave_err()<<" , ZA0: "<<ZA0separated.ave_err()<<" , ZP5: "<<ZP5separated.ave_err()<<endl;
       
-      two_pts_SL_fit(ZP5[iMes],ZA0[iMes],mP[iMes],corrP5A0[iMes],corrP5P5[iMes],TH,tMinP5P5,tMaxP5P5,combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
+      two_pts_SL_fit(ZP5[iMes],ZA0[iMes],mP[iMes],corrP5A0[iMes],corrP5P5[iMes],TH,tMinP5P5[iMes],tMaxP5P5[iMes],combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
       console<<"from combined fit, mP: "<<mP[iMes].ave_err()<<" , ZA0: "<<ZA0[iMes].ave_err()<<" , ZP5: "<<ZP5[iMes].ave_err()<<endl;
       
       const djack_t fPfromP=2.0*ZP5[0]*amq/sqr(mP[0]);
@@ -1049,9 +1053,10 @@ int main(int narg,char **arg)
 	}
       aveCorr/=2.0;
       aveCorr.ave_err().write("plots/corr_"+cTag+".xmg");
-      
-      const size_t tMinFit[2]={tMinP5P5,tMinVKVK};
-      const size_t tMaxFit[2]={tMaxP5P5,tMaxVKVK};
+
+      const size_t iMes=0;
+      const size_t tMinFit[2]={tMinP5P5[iMes],tMinVKVK};
+      const size_t tMaxFit[2]={tMaxP5P5[iMes],tMaxVKVK};
       const size_t is=isVK[iGammaComb];
       const djack_t m=constant_fit(effective_mass(aveCorr),tMinFit[is],tMaxFit[is],"plots/eff_mass_"+cTag+".xmg");
       
