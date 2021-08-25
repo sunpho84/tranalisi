@@ -805,9 +805,9 @@ djvec_t determineRenoConst()
       djack_t Z2P5separated,MP5separated;
       two_pts_fit(Z2P5separated,MP5separated,corrP5P5[iMes],TH,tMinP5P5,tMaxP5P5,"plots/fitP5P5forZmes"+to_string(iMes)+".xmg");
       djvec_t testA0=corrP5A0[iMes];
-      for(size_t t=0;t<=TH;t++)
-	testA0/=two_pts_corr_fun(Z2P5separated,MP5separated,TH,t,-1);
       const djack_t ZP5separated=sqrt(Z2P5separated);
+      for(size_t t=0;t<=TH;t++)
+	testA0[t]/=two_pts_corr_fun(ZP5separated,MP5separated,TH,t,-1);
       const djack_t ZA0separated=constant_fit(testA0,tMinP5P5,tMaxP5P5,"plots/fitA0P5forZmes"+to_string(iMes)+".xmg");
       console<<"from separated fit, mP: "<<MP5separated.ave_err()<<" , ZA0: "<<ZA0separated.ave_err()<<" , ZP5: "<<ZP5separated.ave_err()<<endl;
       
