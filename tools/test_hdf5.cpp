@@ -1034,7 +1034,7 @@ int main(int narg,char **arg)
   
   readConfMap();
   
-  set_njacks(nConfs);
+  set_njacks(sqrt(nConfs));
   
   const djvec_t Z=determineRenoConst();
   
