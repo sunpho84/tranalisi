@@ -587,25 +587,25 @@ using AveId=std::array<size_t,4>;
 std::map<AveId,djvec_t> aveCorrCache;
 bool hasTostoreCachedAveCorr=false;;
 
-void loadCachedAveCorr()
+bool loadCachedAveCorr()
 {
   if(not file_exists(cachedAveCorrPath))
     {
       console<<cachedAveCorrPath<<" does not exist, skipping loading cached average correlators"<<endl;
       
-      return;
+      return false;
     }
   
   raw_file_t file(cachedAveCorrPath,"r");
   console<<"Loading cached average correlators from file "<<cachedAveCorrPath<<endl;
-  const size_t expNJacks=file.bin_read<size_t>();
+  const size_t cachedNJacks=file.bin_read<size_t>();
   
   //load only if njacks agree
-  if(expNJacks!=njacks)
+  if(cachedNJacks!=njacks)
     {
-      console<<"Njacks in the file is "<<expNJacks<<" expecting "<<njacks<<", not loading"<<endl;
+      console<<"Njacks in the file is "<<cachedNJacks<<" expecting "<<njacks<<", not loading"<<endl;
       
-      return;
+      return false;
     }
   
   const size_t nCached=file.bin_read<size_t>();
@@ -618,6 +618,8 @@ void loadCachedAveCorr()
       data.bin_read(file);
       aveCorrCache[id]=data;
     }
+  
+  return true;
 }
 
 void storeCachedAveCorr()
@@ -636,16 +638,8 @@ void storeCachedAveCorr()
     }
 }
 
-void loadData(int narg,char **arg)
+void loadRawData(int narg,char **arg)
 {
-  if(file_exists(cachedAveCorrPath))
-    {
-      loadCachedAveCorr();
-      
-      
-      return;
-    }
-  
   // Can use raw data
   canUseRawData=true;
   
@@ -1248,11 +1242,13 @@ int main(int narg,char **arg)
   
   readInput();
   
-  loadData(narg,arg);
+  set_njacks(30);
+  
+  if(not loadCachedAveCorr())
+    loadRawData(narg,arg);
   
   readConfMap();
   
-  set_njacks(30);
   clustSize=nConfs/njacks;
   nConfsUsed=clustSize*njacks;
   console<<"NconfsUsed: "<<nConfsUsed<<endl;
