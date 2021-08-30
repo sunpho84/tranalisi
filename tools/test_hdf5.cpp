@@ -581,6 +581,14 @@ void loadData()
 
 djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes)
 {
+  using Id=std::array<size_t,4>;
+  const Id id{iSourceMin,iSourceMax,iGammaComb,iMes};
+  static std::map<Id,djvec_t> storage;
+  
+  if(storage.find(id)!=storage.end())
+    return
+      storage[id];
+  
   const size_t clust_size=nConfs/njacks;
   
   djvec_t ave(THp1);
@@ -596,6 +604,8 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
   
   ave.clusterize(clust_size);
   ave/=(iSourceMax-iSourceMin)*L*L*L;
+  
+  storage[id]=ave;
   
   return ave;
 }
@@ -801,8 +811,6 @@ djvec_t determineRenoConst()
     {(-getAve(0,nSources,idP5A0,0)+
       -getAve(0,nSources,idP5A0,2))/2.0,
       -getAve(0,nSources,idP5A0,1)};
-      
-  
   
   for(size_t iMes=0;iMes<2;iMes++)
     {
@@ -827,6 +835,9 @@ djvec_t determineRenoConst()
   
   const djack_t ZV_fr_ZA=Z[0]/Z[1];
   console<<"Zv/Za: "<<ZV_fr_ZA.ave_err()<<endl;
+  
+  const djvec_t ZvSilvCorr=2*amq*corrP5P5[0]/forward_derivative(corrA0P5[0]);
+  const djack_t ZvSilv=constant_fit(ZvSilvCorr,18,54,"plots/ZvSilv.xmg");
   
   return Z;
 }
@@ -1034,7 +1045,7 @@ int main(int narg,char **arg)
   
   readConfMap();
   
-  set_njacks(10);
+  set_njacks(sqrt(nConfs));
   
   const djvec_t Z=determineRenoConst();
   
