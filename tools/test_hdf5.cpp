@@ -836,13 +836,15 @@ djvec_t determineRenoConst()
   
   const djvec_t ZvSilvCorr=2*amq*corrP5P5[0]/forward_derivative(corrA0P5[0]);
   const djack_t ZvSilv=constant_fit(ZvSilvCorr,18,54,"plots/ZvSilv.xmg");
+  cout<<"ZvSilv: "<<ZvSilv.ave_err()<<endl;
   
   const djack_t ZaSilvCorrectingFactor=ZP5[0]/ZP5[1]*mP[1]*sinh(mP[1])/(mP[0]*sinh(mP[0]));
   cout<<"ZaSilvCorrectingFactor: "<<ZaSilvCorrectingFactor.ave_err()<<endl;
   
   const djvec_t ZaSilvCorr=2*amq*corrP5P5[1]/forward_derivative(corrA0P5[1])*ZaSilvCorrectingFactor;
-  const djack_t ZaSilv=constant_fit(ZvSilvCorr,18,54,"plots/ZaSilv.xmg");
-
+  const djack_t ZaSilv=constant_fit(ZaSilvCorr,18,54,"plots/ZaSilv.xmg");
+  cout<<"ZaSilv: "<<ZaSilv.ave_err()<<endl;
+  
   return Z;
 }
 
