@@ -480,7 +480,11 @@ void loadRawData(int narg,char** arg)
 	  
 	  // A(i)=(GSO)_{ij(i)} (G5)_{j(i)}
 	  // B(k)=(G5)_k (GSI)_{kl(k)}
-	  const array<array<int,4>,8> map{array<int,4>{3,10,1,-1},{3,11,2,-1},{3,12,3,-1},{4,1,10,-1},{4,2,11,-1},{4,3,12,-1},{5,9,5,-1},{6,5,9,-1}};
+	  const array<array<int,4>,8> map{array<int,4>
+					  {idVKTK,10,1,-1},{idVKTK,11,2,-1},{idVKTK,12,3,-1},
+					  {idTKVK,1,10,-1},{idTKVK,2,11,-1},{idTKVK,3,12,-1},
+					  {idA0P5,9,5,-1},
+					  {idP5A0,5,9,-1}};
 	  for(size_t iMes=0;iMes<nMes;iMes++)
 	    for(size_t tIn=0;tIn<T;tIn++)
 	      {
@@ -801,10 +805,10 @@ djvec_t determineRenoConst()
     {(getAve(0,nSources,idP5P5,0)+
       getAve(0,nSources,idP5P5,2))/2.0,
       getAve(0,nSources,idP5P5,1)};
-  const djvec_t corrA0P5[2]=
-    {(getAve(0,nSources,idA0P5,0)+
-      getAve(0,nSources,idA0P5,2))/2.0,
-      getAve(0,nSources,idA0P5,1)};
+  // const djvec_t corrA0P5[2]=
+  //   {(getAve(0,nSources,idA0P5,0)+
+  //     getAve(0,nSources,idA0P5,2))/2.0,
+  //     getAve(0,nSources,idA0P5,1)};
   const djvec_t corrP5A0[2]=
     {(-getAve(0,nSources,idP5A0,0)+
       -getAve(0,nSources,idP5A0,2))/2.0,
@@ -818,7 +822,7 @@ djvec_t determineRenoConst()
       const djack_t ZP5separated=sqrt(Z2P5separated);
       for(size_t t=0;t<=TH;t++)
 	testA0[t]/=two_pts_corr_fun(ZP5separated,MP5separated,TH,t,-1);
-      const djack_t ZA0separated=constant_fit(testA0,tMinP5P5[iMes],tMaxP5P5[iMes],"plots/fitA0P5forZmes"+to_string(iMes)+".xmg");
+      const djack_t ZA0separated=constant_fit(testA0,tMinP5P5[iMes],tMaxP5P5[iMes],"plots/fitP5A0forZmes"+to_string(iMes)+".xmg");
       console<<"from separated fit, mP: "<<MP5separated.ave_err()<<" , ZA0: "<<ZA0separated.ave_err()<<" , ZP5: "<<ZP5separated.ave_err()<<endl;
       
       two_pts_SL_fit(ZP5[iMes],ZA0[iMes],mP[iMes],corrP5A0[iMes],corrP5P5[iMes],TH,tMinP5P5[iMes],tMaxP5P5[iMes],combine("plots/A0P5FitMes%zu.xmg",iMes),-1,+1);
@@ -834,16 +838,16 @@ djvec_t determineRenoConst()
   const djack_t ZV_fr_ZA=Z[0]/Z[1];
   console<<"Zv/Za: "<<ZV_fr_ZA.ave_err()<<endl;
   
-  const djvec_t ZvSilvCorr=2*amq*corrP5P5[0]/forward_derivative(corrA0P5[0]);
+  const djvec_t ZvSilvCorr=2*amq*corrP5P5[0]/forward_derivative(corrP5A0[0]);
   const djack_t ZvSilv=constant_fit(ZvSilvCorr,18,54,"plots/ZvSilv.xmg");
-  cout<<"ZvSilv: "<<ZvSilv.ave_err()<<endl;
+  console<<"ZvSilv: "<<ZvSilv.ave_err()<<endl;
   
   const djack_t ZaSilvCorrectingFactor=ZP5[0]/ZP5[1]*mP[1]*sinh(mP[1])/(mP[0]*sinh(mP[0]));
-  cout<<"ZaSilvCorrectingFactor: "<<ZaSilvCorrectingFactor.ave_err()<<endl;
+  console<<"ZaSilvCorrectingFactor: "<<ZaSilvCorrectingFactor.ave_err()<<endl;
   
-  const djvec_t ZaSilvCorr=2*amq*corrP5P5[1]/forward_derivative(corrA0P5[1])*ZaSilvCorrectingFactor;
+  const djvec_t ZaSilvCorr=2*amq*corrP5P5[1]/forward_derivative(corrP5A0[1])*ZaSilvCorrectingFactor;
   const djack_t ZaSilv=constant_fit(ZaSilvCorr,18,54,"plots/ZaSilv.xmg");
-  cout<<"ZaSilv: "<<ZaSilv.ave_err()<<endl;
+  console<<"ZaSilv: "<<ZaSilv.ave_err()<<endl;
   
   return Z;
 }
@@ -1054,7 +1058,9 @@ int main(int narg,char **arg)
   set_njacks(30);
   clustSize=nConfs/njacks;
   nConfsUsed=clustSize*njacks;
-  cout<<"NconfsUsed: "<<nConfsUsed<<endl;
+  console<<"NconfsUsed: "<<nConfsUsed<<endl;
+  console<<"isVK[idA0P5]: "<<isVK[idA0P5]<<endl;
+  console<<"isVK[idP5A0]: "<<isVK[idP5A0]<<endl;
   
   const djvec_t Z=determineRenoConst();
   
