@@ -22,7 +22,7 @@ double a,ZaPetros;
 string confsPattern;
 string refConfPattern;
 string output;
-size_t nConfs,nSources;
+size_t nConfs,clustSize,nConfsUsed,nSources;
 
 constexpr size_t nGammaComb=7;
 const bool isVK[]=                         {0     ,1     ,1     ,1     ,1     ,0     ,0};
@@ -589,20 +589,19 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
     return
       storage[id];
   
-  const size_t clust_size=nConfs/njacks;
   
   djvec_t ave(THp1);
   ave=0.0;
-  for(size_t _iConf=0;_iConf<nConfs;_iConf++)
+  for(size_t _iConf=0;_iConf<nConfsUsed;_iConf++)
     {
       const size_t iConf=confMap[_iConf];
-      const size_t iClust=iConf/clust_size;
+      const size_t iClust=iConf/clustSize;
       for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
 	for(size_t t=0;t<THp1;t++)
 	  ave[t][iClust]+=rawData[idData({_iConf,iSource,iGammaComb,iMes,t})];
     }
   
-  ave.clusterize(clust_size);
+  ave.clusterize(clustSize);
   ave/=(iSourceMax-iSourceMin)*L*L*L;
   
   storage[id]=ave;
@@ -640,7 +639,6 @@ djvec_t getAveForRego(const size_t iSourceMin,const size_t iSourceMax,const size
 void an(const size_t& iGammaComb)
 {
   const string tag=gammaCombTag[iGammaComb];
-  const size_t clust_size=nConfs/njacks;
   const size_t nCopies=2;
   const size_t nSourcesToBeUsed=nSources;
   const size_t nSourcesPerCopy=nSourcesToBeUsed/nCopies;
@@ -667,12 +665,12 @@ void an(const size_t& iGammaComb)
     {
       djvec_t& c=copyAveData[iCopy];
       for(size_t t=0;t<=T/2;t++)
-	for(size_t iConf=0;iConf<nConfs;iConf++)
+	for(size_t iConf=0;iConf<nConfsUsed;iConf++)
 	  {
-	    const size_t iClust=iConf/clust_size;
+	    const size_t iClust=iConf/clustSize;
 	    c[t][iClust]+=sourceAveData[idDataAve({iConf,iCopy,t})];
 	  }
-      c.clusterize(clust_size);
+      c.clusterize(clustSize);
       c/=nSourcesPerCopy*L*L*L*2;
       copyAve.write_vec_ave_err(c.ave_err());
     }
@@ -688,7 +686,7 @@ void an(const size_t& iGammaComb)
   for(size_t t=0;t<=T/2;t++)
     for(size_t ijack=0;ijack<njacks+1;ijack++)
       for(size_t iConf=0;iConf<nConfs;iConf++)
-	if(iConf<clust_size*ijack or iConf>=clust_size*(ijack+1))
+	if(iConf<clustSize*ijack or iConf>=clustSize*(ijack+1))
 	  {
 	    double copy_ave=0;
 	    for(size_t iCopy=0;iCopy<nCopies;iCopy++)
@@ -716,8 +714,8 @@ void an(const size_t& iGammaComb)
     {
       for(size_t ijack=0;ijack<njacks;ijack++)
 	{
-	  aa[t][ijack]/=nConfs-clust_size;
-	  cc[t][ijack]/=nConfs-clust_size;
+	  aa[t][ijack]/=nConfs-clustSize;
+	  cc[t][ijack]/=nConfs-clustSize;
 	}
       aa[t][njacks]/=nConfs;
       cc[t][njacks]/=nConfs;
@@ -727,7 +725,7 @@ void an(const size_t& iGammaComb)
       for(size_t icopy=0;icopy<nCopies;icopy++)
 	{
 	  for(size_t ijack=0;ijack<njacks;ijack++)
-	    a[icopy+nCopies*t][ijack]/=nConfs-clust_size;
+	    a[icopy+nCopies*t][ijack]/=nConfs-clustSize;
 	  a[icopy+nCopies*t][njacks]/=nConfs;
 	}
       
@@ -735,7 +733,7 @@ void an(const size_t& iGammaComb)
 	for(size_t jcopy=0;jcopy<nCopies;jcopy++)
 	  {
 	    for(size_t ijack=0;ijack<njacks;ijack++)
-	      c[jcopy+nCopies*(icopy+nCopies*t)][ijack]/=nConfs-clust_size;
+	      c[jcopy+nCopies*(icopy+nCopies*t)][ijack]/=nConfs-clustSize;
 	    c[jcopy+nCopies*(icopy+nCopies*t)][njacks]/=nConfs;
 	  }
       
@@ -839,6 +837,12 @@ djvec_t determineRenoConst()
   const djvec_t ZvSilvCorr=2*amq*corrP5P5[0]/forward_derivative(corrA0P5[0]);
   const djack_t ZvSilv=constant_fit(ZvSilvCorr,18,54,"plots/ZvSilv.xmg");
   
+  const djack_t ZaSilvCorrectingFactor=ZP5[0]/ZP5[1]*mP[1]*sinh(mP[1])/(mP[0]*sinh(mP[0]));
+  cout<<"ZaSilvCorrectingFactor: "<<ZaSilvCorrectingFactor.ave_err()<<endl;
+  
+  const djvec_t ZaSilvCorr=2*amq*corrP5P5[1]/forward_derivative(corrA0P5[1])*ZaSilvCorrectingFactor;
+  const djack_t ZaSilv=constant_fit(ZvSilvCorr,18,54,"plots/ZaSilv.xmg");
+
   return Z;
 }
 
@@ -1045,7 +1049,10 @@ int main(int narg,char **arg)
   
   readConfMap();
   
-  set_njacks(sqrt(nConfs));
+  set_njacks(30);
+  clustSize=nConfs/njacks;
+  nConfsUsed=clustSize*njacks;
+  cout<<"NconfsUsed: "<<nConfsUsed<<endl;
   
   const djvec_t Z=determineRenoConst();
   
