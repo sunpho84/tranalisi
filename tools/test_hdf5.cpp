@@ -50,6 +50,8 @@ constexpr double corrNorm(const CORR_ID& id)
     return 1.0;
     break;
   }
+  
+  return 1.0;
 }
 
 constexpr size_t nMes=3;
@@ -692,8 +694,6 @@ void loadRawData(int narg,char **arg)
   out.bin_read(nConfs);
   out.bin_read(nSources);
   
-  setPars();
-  
   setRawData(nConfs);
   console<<"Data size: "<<_rawData.size()<<endl;
   
@@ -1286,6 +1286,8 @@ int main(int narg,char **arg)
   readInput();
   
   set_njacks(30);
+  
+  setPars();
   
   if(not loadCachedAveCorr())
     loadRawData(narg,arg);
