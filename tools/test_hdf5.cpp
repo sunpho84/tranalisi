@@ -596,6 +596,13 @@ bool loadCachedAveCorr()
       return false;
     }
   
+  if(file_exists(rawDataPackedPath) and std::filesystem::last_write_time(cachedAveCorrPath)<std::filesystem::last_write_time(rawDataPackedPath))
+    {
+      console<<rawDataPackedPath<<" newer than "<<cachedAveCorrPath<<", skipping loading averaged"<<endl;
+      
+      return false;
+    }
+  
   raw_file_t file(cachedAveCorrPath,"r");
   console<<"Loading cached average correlators from file "<<cachedAveCorrPath<<endl;
   const size_t cachedNJacks=file.bin_read<size_t>();
@@ -615,8 +622,11 @@ bool loadCachedAveCorr()
   for(size_t i=0;i<nCached;i++)
     {
       const AveId id=file.bin_read<AveId>();
-      djvec_t data(THp1);
-      data.bin_read(file);
+      console<<id<<endl;
+      
+      const size_t n=file.bin_read<size_t>();
+      djvec_t data(n);
+      file.bin_read(data);
       aveCorrCache[id]=data;
     }
   
@@ -637,6 +647,7 @@ void storeCachedAveCorr()
   for(const auto& c : aveCorrCache)
     {
       file.bin_write(c.first);
+      file.bin_write(c.second.size());
       file.bin_write(c.second);
     }
 }
@@ -667,9 +678,20 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
 {
   const AveId id{iSourceMin,iSourceMax,iGammaComb,iMes};
   
-  if(aveCorrCache.find(id)!=aveCorrCache.end())
-    return
-      aveCorrCache[id];
+  const auto ref=aveCorrCache.find(id);
+  if(ref!=aveCorrCache.end())
+    {
+      console<<"Getting cached ave corr: "<<id<<endl;
+      console<<" size: "<<aveCorrCache[id].size()<<endl;
+      
+      return ref->second;
+    }
+  else
+    {
+      console<<"Not found: "<<id<<endl;
+      if(not canUseRawData)
+	CRASH(" cannot reconstruct average as rawdata not present!");
+    }
   
   djvec_t ave(THp1);
   ave=0.0;
@@ -1259,9 +1281,10 @@ int main(int narg,char **arg)
   const djvec_t Z=determineRenoConst();
   
   if(canUseRawData)
-    analyzeRawData();
-  
-  convertForSilvano();
+    {
+      analyzeRawData();
+      convertForSilvano();
+    }
   
   /////////////////////////////////////////////////////////////////
   
