@@ -689,11 +689,8 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
       return ref->second;
     }
   else
-    {
-      console<<"Not found: "<<id<<endl;
-      if(not canUseRawData)
-	CRASH(" cannot reconstruct average as rawdata not present!");
-    }
+    if(not canUseRawData)
+      CRASH(" cannot reconstruct average as rawdata not present!");
   
   djvec_t ave(THp1);
   ave=0.0;
