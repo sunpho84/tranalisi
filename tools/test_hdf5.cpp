@@ -21,7 +21,7 @@ size_t tMinP5P5[2],tMaxP5P5[2];
 double a,ZaPetros;
 string confsPattern;
 string refConfPattern;
-string output;
+string rawDataPackedPath;
 size_t nConfs,clustSize,nConfsUsed,nSources;
 
 constexpr size_t nGammaComb=7;
@@ -34,7 +34,17 @@ constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 index_t idData;
 index_t idData_loader;
 index_t idOpenData_loader;
-vector<double> rawData;
+vector<double> _rawData;
+bool canUseRawData=false;
+
+double& rawData(const size_t& _iConf,const size_t& iSource,const size_t& igamma_out,const size_t& iMes,const size_t& tOut)
+{
+  if(not canUseRawData)
+    CRASH("Cannot use raw data");
+  
+  return _rawData[idData({_iConf,iSource,igamma_out,iMes,tOut})];
+}
+
 vector<int> confMap;
 
 vector<string> possibleConfsList;
@@ -157,7 +167,7 @@ void setPars()
 void setRawData(const size_t& nConfsToRes)
 {
   idData.set_ranges({{"Confs",nConfsToRes},{"Source",nSources},{"GammComb",nGammaComb},{"Mes",nMes},{"T",THp1}});
-  rawData.resize(idData.max(),0.0);
+  _rawData.resize(idData.max(),0.0);
 }
 
 vector<string> getConfsList(const string& confsPattern)
@@ -364,8 +374,10 @@ string sourceName(const size_t& iConf,const size_t& iSource)
   return possibleConfsList[iConf]+"/"+sourcesList[iSource];
 }
 
-void loadRawData(int narg,char** arg)
+void loadAndPackRawData(int narg,char** arg)
 {
+  console<<"Loading raw data from scratch"<<endl;
+  
   possibleConfsList=getConfsList(confsPattern);
   sourcesList=getSourcesList(refConfPattern);
   nSources=sourcesList.size();
@@ -473,7 +485,7 @@ void loadRawData(int narg,char** arg)
 		  const size_t& igamma_out=m.first;
 		  const size_t& igamma_in=m.second;
 		  const double& in=loader.dataIn[idData_loader({iMes,tIn,igamma_in})];
-		  double& out=rawData[idData({_iConf,iSource,igamma_out,iMes,tOut})];
+		  double& out=rawData(_iConf,iSource,igamma_out,iMes,tOut);
 		  
 		  out+=in;
 		}
@@ -504,7 +516,7 @@ void loadRawData(int narg,char** arg)
 		    const dirac_matr g1=gam[iGammaIn1]*gam[5];
 		    const dirac_matr g2=gam[5]*gam[iGammaIn2];
 		    
-		    double& out=rawData[idData({_iConf,iSource,iGammaOut,iMes,tOut})];
+		    double& out=rawData(_iConf,iSource,iGammaOut,iMes,tOut);
 		    
 		    for(size_t nu=0;nu<4;nu++)
 		      for(size_t rh=0;rh<4;rh++)
@@ -531,7 +543,7 @@ void loadRawData(int narg,char** arg)
   if(MPIrank!=0)
     {
       if(nConfsPerRank)
-	MPI_Send(&rawData[0],idData.max(),MPI_DOUBLE,0,MPIrank,MPI_COMM_WORLD);
+	MPI_Send(&_rawData[0],idData.max(),MPI_DOUBLE,0,MPIrank,MPI_COMM_WORLD);
     }
   else
     {
@@ -545,7 +557,7 @@ void loadRawData(int narg,char** arg)
 	    {
 	      const size_t beg=idData({firstConf,0,0,0,0}),size=idData({nConfsToRecv,0,0,0,0});
 	      cout<<"Receiving from rank "<<iRank<<" from conf "<<firstConf<<" for a block of confs "<<nConfsToRecv<<endl;
-	      MPI_Recv(&rawData[beg],size,MPI_DOUBLE,iRank,iRank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+	      MPI_Recv(&_rawData[beg],size,MPI_DOUBLE,iRank,iRank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	    }
 	}
       
@@ -558,54 +570,48 @@ void loadRawData(int narg,char** arg)
 	  
 	  const double norm=((t==0 or t==TH)?1:2)*
 	    (isVK[ig]?-3:1);
-	  rawData[i]/=norm;
+	  _rawData[i]/=norm;
 	}
       
-      raw_file_t out(output,"w");
+      raw_file_t out(rawDataPackedPath,"w");
       out.bin_write(nConfs);
       out.bin_write(nSources);
-      out.bin_write(rawData);
+      out.bin_write(_rawData);
     }
   
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
-void loadData(int narg,char **arg)
-{
-  if(not file_exists(output))
-    loadRawData(narg,arg);
-  
-  raw_file_t out(output,"r");
-  out.bin_read(nConfs);
-  out.bin_read(nSources);
-  
-  setPars();
-  setRawData(nConfs);
-  console<<"Data size: "<<rawData.size()<<endl;
-  
-  out.bin_read(rawData);
-}
-
+const string cachedAveCorrPath="cachedAveCorr.dat";
 using AveId=std::array<size_t,4>;
 std::map<AveId,djvec_t> aveCorrCache;
 bool hasTostoreCachedAveCorr=false;;
-const string cachedAveCorrPath="cachedAveCorr.dat";
 
 void loadCachedAveCorr()
 {
   if(not file_exists(cachedAveCorrPath))
-    return;
+    {
+      console<<cachedAveCorrPath<<" does not exist, skipping loading cached average correlators"<<endl;
+      
+      return;
+    }
   
   raw_file_t file(cachedAveCorrPath,"r");
+  console<<"Loading cached average correlators from file "<<cachedAveCorrPath<<endl;
   const size_t expNJacks=file.bin_read<size_t>();
   
   //load only if njacks agree
   if(expNJacks!=njacks)
-    return;
+    {
+      console<<"Njacks in the file is "<<expNJacks<<" expecting "<<njacks<<", not loading"<<endl;
+      
+      return;
+    }
   
-  const size_t nStored=file.bin_read<size_t>();
+  const size_t nCached=file.bin_read<size_t>();
+  console<<"Reading  "<<nCached<<" cached average correlators"<<endl;
   
-  for(size_t i=0;i<nStored;i++)
+  for(size_t i=0;i<nCached;i++)
     {
       const AveId id=file.bin_read<AveId>();
       djvec_t data(THp1);
@@ -616,15 +622,48 @@ void loadCachedAveCorr()
 
 void storeCachedAveCorr()
 {
+  const size_t& nCached=aveCorrCache.size();
+  
+  console<<"Storing "<<nCached<<" cached average correlators to file "<<cachedAveCorrPath<<endl;
   raw_file_t file(cachedAveCorrPath,"w");
   file.bin_write(njacks);
-  file.bin_write(aveCorrCache.size());
+  file.bin_write(nCached);
   
   for(const auto& c : aveCorrCache)
     {
       file.bin_write(c.first);
       file.bin_write(c.second);
     }
+}
+
+void loadData(int narg,char **arg)
+{
+  if(file_exists(cachedAveCorrPath))
+    {
+      loadCachedAveCorr();
+      
+      
+      return;
+    }
+  
+  // Can use raw data
+  canUseRawData=true;
+  
+  if(not file_exists(rawDataPackedPath))
+    loadAndPackRawData(narg,arg);
+  
+  console<<"Reading packed raw data"<<endl;
+  
+  raw_file_t out(rawDataPackedPath,"r");
+  out.bin_read(nConfs);
+  out.bin_read(nSources);
+  
+  setPars();
+  
+  setRawData(nConfs);
+  console<<"Data size: "<<_rawData.size()<<endl;
+  
+  out.bin_read(_rawData);
 }
 
 djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes)
@@ -643,15 +682,17 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
       const size_t iClust=iConf/clustSize;
       for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
 	for(size_t t=0;t<THp1;t++)
-	  ave[t][iClust]+=rawData[idData({_iConf,iSource,iGammaComb,iMes,t})];
+	  ave[t][iClust]+=rawData(_iConf,iSource,iGammaComb,iMes,t);
     }
   
   ave.clusterize(clustSize);
   ave/=(iSourceMax-iSourceMin)*L*L*L;
   
-  aveCorrCache[id]=ave;
-  
-  hasTostoreCachedAveCorr=true;
+  if(iSourceMin==0 and iSourceMax==nSources)
+    {
+      aveCorrCache[id]=ave;
+      hasTostoreCachedAveCorr=true;
+    }
   
   return ave;
 }
@@ -702,7 +743,7 @@ void rawDataAn(const size_t& iGammaComb)
 	  s=0.0;
 	  for(size_t iSource=nSourcesPerCopy*iCopy;iSource<nSourcesPerCopy*(iCopy+1);iSource++)
 	    for(size_t iMes=0;iMes<nMes;iMes+=2)
-	      s+=rawData[idData({iConf,iSource,iGammaComb,iMes,t})];
+	      s+=rawData(iConf,iSource,iGammaComb,iMes,t);
 	  s/=nSourcesPerCopy*L*L*L*2;
 	}
   
@@ -816,7 +857,7 @@ void readInput()
   ZaPetros=input.read<double>("Za");
   confsPattern=input.read<string>("ConfsPattern");
   refConfPattern=input.read<string>("RefConfPattern");
-  output=input.read<string>("Output");
+  rawDataPackedPath=input.read<string>("Output");
   input.expect("TFitP5P5");
   for(size_t iMes=0;iMes<2;iMes++)
     {
@@ -927,7 +968,7 @@ void convertForSilvano()
 		  
 		  double s=0;
 		  for(size_t iSource=0;iSource<nSources;iSource++)
-		    s+=rawData[idData({iConf,iSource,mapCorr[_iCorr],iMes,t})];
+		    s+=rawData(iConf,iSource,mapCorr[_iCorr],iMes,t);
 		  s/=nSources*L*L*L;
 		  out<<s<<" "<<0<<endl;
 		}
@@ -1081,30 +1122,10 @@ void computeAmu(const djvec_t& Z)
     }
 }
 
-int main(int narg,char **arg)
+void analyzeRawData()
 {
-  MPI_Init(&narg,&arg);
-  {
-    int temp;
-    MPI_Comm_size(MPI_COMM_WORLD,&temp);
-    nMPIranks=temp;
-    MPI_Comm_rank(MPI_COMM_WORLD,&temp);
-    MPIrank=temp;
-  }
-  console.open((MPIrank==0)?"/dev/stdout":"/dev/null");
-  
-  readInput();
-  
-  loadData(narg,arg);
-  
-  readConfMap();
-  
-  set_njacks(30);
-  clustSize=nConfs/njacks;
-  nConfsUsed=clustSize*njacks;
-  console<<"NconfsUsed: "<<nConfsUsed<<endl;
-  
-  const djvec_t Z=determineRenoConst();
+  if(not canUseRawData)
+    CRASH("cannot do the raw data analysis!");
   
   djack_t mP5;
   for(size_t iGammaComb=0;iGammaComb<nGammaComb;iGammaComb++)
@@ -1204,19 +1225,35 @@ int main(int narg,char **arg)
 	  err_plot.set_legend(to_string(n)+"hits");
 	}
     }
+}
+
+int main(int narg,char **arg)
+{
+  MPI_Init(&narg,&arg);
+  {
+    int temp;
+    MPI_Comm_size(MPI_COMM_WORLD,&temp);
+    nMPIranks=temp;
+    MPI_Comm_rank(MPI_COMM_WORLD,&temp);
+    MPIrank=temp;
+  }
+  console.open((MPIrank==0)?"/dev/stdout":"/dev/null");
   
-  // {
-  //   grace_file_t sil("/tmp/sil.xmg");
-  //   const djvec_t a120=(getAve(0,120,1,0)+
-  // 			getAve(0,120,1,2))/2.0;
-  //   const djvec_t a512=(getAve(0,nSources,1,0)+
-  // 			getAve(0,nSources,1,2))/2.0;
+  readInput();
   
-  //   sil.write_vec_ave_err(a120.ave_err());
-  //   sil.set_legend("120 hits (simone");
-  //   sil.write_vec_ave_err(a512.ave_err());
-  //   sil.set_legend("512 hits (simone");
-  // }
+  loadData(narg,arg);
+  
+  readConfMap();
+  
+  set_njacks(30);
+  clustSize=nConfs/njacks;
+  nConfsUsed=clustSize*njacks;
+  console<<"NconfsUsed: "<<nConfsUsed<<endl;
+  
+  const djvec_t Z=determineRenoConst();
+  
+  if(canUseRawData)
+    analyzeRawData();
   
   convertForSilvano();
   
