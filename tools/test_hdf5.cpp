@@ -944,33 +944,40 @@ void convertForSilvano()
 {
   for(size_t iConf=0;iConf<nConfs;iConf++)
     {
-      mkdir(combine("reordered/%04zu/",iConf+1));
-      ofstream out(combine("reordered/%04zu/mes_contr_2pts_ll",iConf+1));
-      out.precision(16);
-      const size_t mapMes[4]={0,1,1,2};
-      for(size_t _iMes=0;_iMes<4;_iMes++)
+      const string confPath=combine("reordered/%04zu/",iConf+1);
+      const string filePath=combine("reordered/%04zu/mes_contr_2pts_ll",iConf+1);
+      
+      if(not file_exists(filePath))
 	{
-	  const size_t iMes=mapMes[_iMes];
-	  out<<endl;
-	  out<<"  # Contraction of S0_th0_m0_r"<<(_iMes&1)<<"_ll ^ \\dag and S0_th0_m0_r"<<((_iMes>>1)&1)<<"_ll:"<<endl;
-	  out<<endl;
+	  mkdir(confPath);
 	  
-	  const size_t mapCorr[6]={0,1,1,1,5,6};
-	  const char corrName[6][5]={"P5P5","V1V1","V2V2","V3V3","A0P5","P5A0"};
-	  for(size_t _iCorr=0;_iCorr<6;_iCorr++)
+	  ofstream out(filePath);
+	  out.precision(16);
+	  const size_t mapMes[4]={0,1,1,2};
+	  for(size_t _iMes=0;_iMes<4;_iMes++)
 	    {
-	      out<<endl<<"  # "<<corrName[_iCorr]<<endl;
-	      for(size_t _t=0;_t<T;_t++)
+	      const size_t iMes=mapMes[_iMes];
+	      out<<endl;
+	      out<<"  # Contraction of S0_th0_m0_r"<<(_iMes&1)<<"_ll ^ \\dag and S0_th0_m0_r"<<((_iMes>>1)&1)<<"_ll:"<<endl;
+	      out<<endl;
+	      
+	      const size_t mapCorr[6]={0,1,1,1,5,6};
+	      const char corrName[6][5]={"P5P5","V1V1","V2V2","V3V3","A0P5","P5A0"};
+	      for(size_t _iCorr=0;_iCorr<6;_iCorr++)
 		{
-		  size_t t=_t;
-		  if(t>=TH)
-		    t=T-t;
-		  
-		  double s=0;
-		  for(size_t iSource=0;iSource<nSources;iSource++)
-		    s+=rawData(iConf,iSource,mapCorr[_iCorr],iMes,t);
-		  s/=nSources*L*L*L;
-		  out<<s<<" "<<0<<endl;
+		  out<<endl<<"  # "<<corrName[_iCorr]<<endl;
+		  for(size_t _t=0;_t<T;_t++)
+		    {
+		      size_t t=_t;
+		      if(t>=TH)
+			t=T-t;
+		      
+		      double s=0;
+		      for(size_t iSource=0;iSource<nSources;iSource++)
+			s+=rawData(iConf,iSource,mapCorr[_iCorr],iMes,t);
+		      s/=nSources*L*L*L;
+		      out<<s<<" "<<0<<endl;
+		    }
 		}
 	    }
 	}
