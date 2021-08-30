@@ -26,8 +26,32 @@ size_t nConfs,clustSize,nConfsUsed,nSources;
 
 constexpr size_t nGammaComb=7;
 const bool isVK[]=                         {0     ,1     ,1     ,1     ,1     ,0     ,0};
+
 constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","A0P5","P5A0"};
-enum{idP5P5,idVKVK,idTKTK,idVKTK,idTKVK,idA0P5,idP5A0};
+enum CORR_ID{idP5P5,idVKVK,idTKTK,idVKTK,idTKVK,idA0P5,idP5A0};
+
+constexpr double corrNorm(const CORR_ID& id)
+{
+  switch(id)
+  {
+  case idP5P5:
+    return 1.0;
+    break;
+  case idVKVK:
+  case idTKTK:
+  case idVKTK:
+  case idTKVK:
+    return -3.0;
+    break;
+  case idA0P5:
+    return -1.0;
+    break;
+  case idP5A0:
+    return 1.0;
+    break;
+  }
+}
+
 constexpr size_t nMes=3;
 constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 
@@ -569,7 +593,8 @@ void loadAndPackRawData(int narg,char** arg)
 	  const size_t &ig=coords[2];
 	  
 	  const double norm=((t==0 or t==TH)?1:2)*
-	    (isVK[ig]?-3:1);
+	    corrNorm(CORR_ID(ig));
+	  
 	  _rawData[i]/=norm;
 	}
       
