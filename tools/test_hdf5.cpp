@@ -648,7 +648,6 @@ bool loadCachedAveCorr()
   for(size_t i=0;i<nCached;i++)
     {
       const AveId id=file.bin_read<AveId>();
-      console<<id<<endl;
       
       const size_t n=file.bin_read<size_t>();
       djvec_t data(n);
@@ -707,12 +706,7 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
   
   const auto ref=aveCorrCache.find(id);
   if(ref!=aveCorrCache.end())
-    {
-      console<<"Getting cached ave corr: "<<id<<endl;
-      console<<" size: "<<aveCorrCache[id].size()<<endl;
-      
-      return ref->second;
-    }
+    return ref->second;
   else
     if(not canUseRawData)
       CRASH(" cannot reconstruct average as rawdata not present!");
