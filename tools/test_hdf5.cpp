@@ -608,6 +608,7 @@ bool loadCachedAveCorr()
       return false;
     }
   
+  file.bin_read(nConfs);
   const size_t nCached=file.bin_read<size_t>();
   console<<"Reading  "<<nCached<<" cached average correlators"<<endl;
   
@@ -627,8 +628,10 @@ void storeCachedAveCorr()
   const size_t& nCached=aveCorrCache.size();
   
   console<<"Storing "<<nCached<<" cached average correlators to file "<<cachedAveCorrPath<<endl;
+  
   raw_file_t file(cachedAveCorrPath,"w");
   file.bin_write(njacks);
+  file.bin_write(nConfs);
   file.bin_write(nCached);
   
   for(const auto& c : aveCorrCache)
