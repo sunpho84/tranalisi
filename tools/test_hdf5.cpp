@@ -570,8 +570,11 @@ void loadRawData(int narg,char** arg)
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
-void loadData()
+void loadData(int narg,char **arg)
 {
+  if(not file_exists(output))
+    loadRawData(narg,arg);
+  
   raw_file_t out(output,"r");
   out.bin_read(nConfs);
   out.bin_read(nSources);
@@ -583,16 +586,54 @@ void loadData()
   out.bin_read(rawData);
 }
 
+using AveId=std::array<size_t,4>;
+std::map<AveId,djvec_t> aveCorrCache;
+bool hasTostoreCachedAveCorr=false;;
+const string cachedAveCorrPath="cachedAveCorr.dat";
+
+void loadCachedAveCorr()
+{
+  if(not file_exists(cachedAveCorrPath))
+    return;
+  
+  raw_file_t file(cachedAveCorrPath,"r");
+  const size_t expNJacks=file.bin_read<size_t>();
+  
+  //load only if njacks agree
+  if(expNJacks!=njacks)
+    return;
+  
+  const size_t nStored=file.bin_read<size_t>();
+  
+  for(size_t i=0;i<nStored;i++)
+    {
+      const AveId id=file.bin_read<AveId>();
+      djvec_t data(THp1);
+      data.bin_read(file);
+      aveCorrCache[id]=data;
+    }
+}
+
+void storeCachedAveCorr()
+{
+  raw_file_t file(cachedAveCorrPath,"w");
+  file.bin_write(njacks);
+  file.bin_write(aveCorrCache.size());
+  
+  for(const auto& c : aveCorrCache)
+    {
+      file.bin_write(c.first);
+      file.bin_write(c.second);
+    }
+}
+
 djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes)
 {
-  using Id=std::array<size_t,4>;
-  const Id id{iSourceMin,iSourceMax,iGammaComb,iMes};
-  static std::map<Id,djvec_t> storage;
+  const AveId id{iSourceMin,iSourceMax,iGammaComb,iMes};
   
-  if(storage.find(id)!=storage.end())
+  if(aveCorrCache.find(id)!=aveCorrCache.end())
     return
-      storage[id];
-  
+      aveCorrCache[id];
   
   djvec_t ave(THp1);
   ave=0.0;
@@ -608,7 +649,9 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
   ave.clusterize(clustSize);
   ave/=(iSourceMax-iSourceMin)*L*L*L;
   
-  storage[id]=ave;
+  aveCorrCache[id]=ave;
+  
+  hasTostoreCachedAveCorr=true;
   
   return ave;
 }
@@ -640,7 +683,7 @@ djvec_t getAveForRego(const size_t iSourceMin,const size_t iSourceMax,const size
   return res;
 }
 
-void an(const size_t& iGammaComb)
+void rawDataAn(const size_t& iGammaComb)
 {
   const string tag=gammaCombTag[iGammaComb];
   const size_t nCopies=2;
@@ -1052,10 +1095,7 @@ int main(int narg,char **arg)
   
   readInput();
   
-  if(not file_exists(output))
-    loadRawData(narg,arg);
-  
-  loadData();
+  loadData(narg,arg);
   
   readConfMap();
   
@@ -1081,7 +1121,7 @@ int main(int narg,char **arg)
 	}
       aveCorr/=2.0;
       aveCorr.ave_err().write("plots/corr_"+cTag+".xmg");
-
+      
       const size_t iMes=0;
       const size_t tMinFit[2]={tMinP5P5[iMes],tMinVKVK};
       const size_t tMaxFit[2]={tMaxP5P5[iMes],tMaxVKVK};
@@ -1107,7 +1147,7 @@ int main(int narg,char **arg)
 	  break;
 	}
       
-      an(iGammaComb);
+      rawDataAn(iGammaComb);
       
       grace_file_t err_plot("plots/err_scaling_"+cTag+".xmg");
       grace_file_t ave_plot("plots/ave_"+cTag+".xmg");
@@ -1183,6 +1223,9 @@ int main(int narg,char **arg)
   /////////////////////////////////////////////////////////////////
   
   computeAmu(Z);
+  
+  if(hasTostoreCachedAveCorr)
+    storeCachedAveCorr();
   
   MPI_Finalize();
   
