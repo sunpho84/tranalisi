@@ -16,7 +16,6 @@ bin_PROGRAMS= \
 	prepare_jackknives \
 	simple_effective_mass \
 	test \
-	test_hdf5 \
 	two_pts_fit \
 	w0
 
@@ -41,10 +40,6 @@ planfit_SOURCES=planfit.cpp
 prepare_jackknives_SOURCES=prepare_jackknives.cpp
 
 simple_effective_mass_SOURCES=simple_effective_mass.cpp
-
-test_hdf5_SOURCES=test_hdf5.cpp
-test_hdf5_CXXFLAGS=@MPI_CXXFLAGS@ @CXXFLAGS@
-test_hdf5_LDFLAGS=@MPI_CXXLDFLAGS@ @LDFLAGS@ @MPI_CXXLIBS@ @LIBS@
 
 test_SOURCES=test.cpp
 
