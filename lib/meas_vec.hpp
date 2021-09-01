@@ -158,7 +158,7 @@ public:
   {bin_read(path.c_str());}
   
   //! clusterize each element
-  vmeas_t &clusterize(size_t clust_size=1)
+  vmeas_t &clusterize(double clust_size=1.0)
   {
     for(auto &a : *this) a.clusterize(clust_size);
     return *this;

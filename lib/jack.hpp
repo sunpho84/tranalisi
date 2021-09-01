@@ -167,7 +167,7 @@ public:
   }
   
   //! clusterize
-  void clusterize(size_t clust_size=1)
+  void clusterize(double clust_size=1.0)
   {
     if(clust_size==0) CRASH("clust_size is zero");
     
@@ -273,7 +273,7 @@ size_t trim_to_njacks_multiple(vector<T> &v,bool verbosity=false)
 
 //! clusterize a generic vector
 template <class T>
-void clusterize(vector<T> &v,size_t clust_size=1)
+void clusterize(vector<T> &v,const double clust_size=1.0)
 {
   //compute avarages
   v[njacks]=0.0;

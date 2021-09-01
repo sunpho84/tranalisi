@@ -751,8 +751,9 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
       do
 	{
 	  const size_t iConf=floor(curConf);
-	  const double end=std::min(confEnd,curConf+1.0);
-	  const double w=end-curConf;
+	  const double beg=curConf;
+	  const double end=std::min(confEnd,beg+1.0);
+	  const double w=end-beg;
 	  
 	  for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
 	    for(size_t t=0;t<THp1;t++)
