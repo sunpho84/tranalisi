@@ -411,8 +411,9 @@ void loadAndPackRawData(int narg,char** arg)
   nSources=sourcesList.size();
   if(nSourcesMax and nSourcesMax<nSources)
     {
-      console<<"Reducing nConfs from "<<nSources<<" to "<<nSourcesMax<<endl;
+      console<<"Reducing nSources from "<<nSources<<" to "<<nSourcesMax<<endl;
       sourcesList.resize(nSourcesMax);
+      nSources=nSourcesMax;
     }
   
   const size_t refSize=
