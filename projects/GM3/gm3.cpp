@@ -701,8 +701,10 @@ void loadRawData(int narg,char **arg)
   canUseRawData=true;
   
   if(not file_exists(rawDataPackedPath))
-    loadAndPackRawData(narg,arg);
-  
+    {
+      console<<rawDataPackedPath<<" not found, computing everything from scratch"<<endl;
+      loadAndPackRawData(narg,arg);
+    }
   console<<"Reading packed raw data"<<endl;
   
   raw_file_t out(rawDataPackedPath,"r");
