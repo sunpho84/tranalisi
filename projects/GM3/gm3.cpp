@@ -407,7 +407,7 @@ void loadAndPackRawData(int narg,char** arg)
   possibleConfsList=getConfsList(confsPattern);
   sourcesList=getSourcesList(refConfPattern);
   nSources=sourcesList.size();
-  if(nSourcesMax<nSources)
+  if(nSourcesMax and nSourcesMax<nSources)
     {
       console<<"Reducing nConfs from "<<nSources<<" to "<<nSourcesMax<<endl;
       sourcesList.resize(nSourcesMax);
@@ -650,7 +650,7 @@ bool loadCachedAveCorr()
   
   file.bin_read(nConfs);
   file.bin_read(nSources);
-  if(nSources>nSourcesMax)
+  if(nSourcesMax and nSources>nSourcesMax)
     {
       console<<"NSources in the file is "<<nSources<<" is exceeding nSourcesMax, "<<nSourcesMax<<", not loading"<<endl;
       
