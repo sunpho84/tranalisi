@@ -1212,7 +1212,7 @@ void analyzeRawData()
       const size_t tMinFit[2]={tMinP5P5[iMes],tMinVKVK};
       const size_t tMaxFit[2]={tMaxP5P5[iMes],tMaxVKVK};
       const size_t is=isVK[iGammaComb];
-      const djack_t m=constant_fit(effective_mass(aveCorr,parity[iGammaComb]),tMinFit[is],tMaxFit[is],"plots/eff_mass_"+cTag+".xmg");
+      const djack_t m=constant_fit(effective_mass(aveCorr,TH,parity[iGammaComb]),tMinFit[is],tMaxFit[is],"plots/eff_mass_"+cTag+".xmg");
       
       switch(iGammaComb)
 	{
