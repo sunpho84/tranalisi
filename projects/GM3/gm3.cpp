@@ -377,7 +377,7 @@ struct DataLoader
 	  {
 	    dataset=file.openDataSet(fullGroupName);
 	  }
-	catch(H5::FileIException)
+	catch(const H5::FileIException& exc)
 	  {
 	    CRASH("Unable to open group %s",fullGroupName.c_str());
 	  }
@@ -1338,8 +1338,6 @@ int main(int narg,char **arg)
   readConfMap();
   
   clustSize=(double)nConfs/njacks;
-  // nConfsUsed=clustSize*njacks;
-  // console<<"NconfsUsed: "<<nConfsUsed<<endl;
   
   const djvec_t Z=determineRenoConst();
   
