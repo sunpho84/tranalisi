@@ -26,7 +26,7 @@ size_t nConfs,clustSize,nConfsUsed,nSources,nSourcesMax;
 
 constexpr size_t nGammaComb=7;
 const bool isVK[]=                         {0     ,1     ,1     ,1     ,1     ,0     ,0};
-
+const int parity[]=                         {+1    ,+1    ,+1    ,-1    ,-1    ,-1    ,-1};
 constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","A0P5","P5A0"};
 enum CORR_ID{idP5P5,idVKVK,idTKTK,idVKTK,idTKVK,idA0P5,idP5A0};
 
@@ -1207,7 +1207,7 @@ void analyzeRawData()
       const size_t tMinFit[2]={tMinP5P5[iMes],tMinVKVK};
       const size_t tMaxFit[2]={tMaxP5P5[iMes],tMaxVKVK};
       const size_t is=isVK[iGammaComb];
-      const djack_t m=constant_fit(effective_mass(aveCorr),tMinFit[is],tMaxFit[is],"plots/eff_mass_"+cTag+".xmg");
+      const djack_t m=constant_fit(effective_mass(aveCorr,parity[iGammaComb]),tMinFit[is],tMaxFit[is],"plots/eff_mass_"+cTag+".xmg");
       
       switch(iGammaComb)
 	{
