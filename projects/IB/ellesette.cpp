@@ -348,7 +348,7 @@ int main()
   
   zp_fr_zs=ZP_fr_ZS.ave();
   
-  const djack_t norm=-sqr(af_TM)*sqr(aml)/pow(aM_TM,3)/sqr(zp_fr_zs);
+  const djack_t norm=-sqr(af_TM)*sqr(aml)/pow(aM_TM,3.0)/sqr(zp_fr_zs);
   cout<<"Norm: "<<norm.ave_err()<<endl;
   
   // const djvec_t P5P5_disco=load_bubble_P5P5();
@@ -549,7 +549,7 @@ int main()
       const djvec_t P5P5_0S_combo=P5P5_0S_conn-P5P5_0S_disc;
       P5P5_0S_combo.ave_err().write("plots/P5P5_0S_combo.xmg");
       
-      const djack_t norm_m2=1/zp_fr_zs*sqr(aml)*af_TM/pow(aM_TM,4);
+      const djack_t norm_m2=1/zp_fr_zs*sqr(aml)*af_TM/pow(aM_TM,4.0);
       
       const djvec_t l7_m2_corr=P5P5_0S_combo/P5P5_TM_SL*ZS_TM*norm_m2;
       l7_m2_corr.ave_err().write("plots/l7_m2.xmg");
