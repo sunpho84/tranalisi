@@ -22,7 +22,8 @@ double a,ZaPetros;
 string confsPattern;
 string refConfPattern;
 string rawDataPackedPath;
-size_t nConfs,clustSize,nConfsUsed,nSources,nSourcesMax;
+size_t nConfs,nSources,nSourcesMax;
+double clustSize;
 
 constexpr size_t nGammaComb=7;
 const bool isVK[]=                         {0     ,1     ,1     ,1     ,1     ,0     ,0};
@@ -741,13 +742,24 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
   
   djvec_t ave(THp1);
   ave=0.0;
-  for(size_t _iConf=0;_iConf<nConfsUsed;_iConf++)
+  for(size_t iClust=0;iClust<njacks;iClust++)
     {
-      const size_t iConf=confMap[_iConf];
-      const size_t iClust=iConf/clustSize;
-      for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
-	for(size_t t=0;t<THp1;t++)
-	  ave[t][iClust]+=rawData(_iConf,iSource,iGammaComb,iMes,t);
+      const double confBegin=iClust*clustSize;
+      const double confEnd=confBegin+clustSize;
+      
+      double curConf=confBegin;
+      do
+	{
+	  const size_t iConf=floor(curConf);
+	  const double end=std::min(confEnd,curConf+1.0);
+	  const double w=end-curConf;
+	  
+	  for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
+	    for(size_t t=0;t<THp1;t++)
+	      ave[t][iClust]+=rawData(iConf,iSource,iGammaComb,iMes,t)*w;
+	  curConf=end;
+	}
+      while(confEnd-curConf>1e-10);
     }
   
   ave.clusterize(clustSize);
@@ -818,7 +830,7 @@ void rawDataAn(const size_t& iGammaComb)
     {
       djvec_t& c=copyAveData[iCopy];
       for(size_t t=0;t<=T/2;t++)
-	for(size_t iConf=0;iConf<nConfsUsed;iConf++)
+	for(size_t iConf=0;iConf<nConfs;iConf++)
 	  {
 	    const size_t iClust=iConf/clustSize;
 	    c[t][iClust]+=sourceAveData[idDataAve({iConf,iCopy,t})];
@@ -1325,9 +1337,9 @@ int main(int narg,char **arg)
   
   readConfMap();
   
-  clustSize=nConfs/njacks;
-  nConfsUsed=clustSize*njacks;
-  console<<"NconfsUsed: "<<nConfsUsed<<endl;
+  clustSize=(double)nConfs/njacks;
+  // nConfsUsed=clustSize*njacks;
+  // console<<"NconfsUsed: "<<nConfsUsed<<endl;
   
   const djvec_t Z=determineRenoConst();
   
