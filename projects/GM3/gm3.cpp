@@ -369,7 +369,18 @@ struct DataLoader
   {
     for(size_t iMes=0;iMes<nMes;iMes++)
       {
-	const DataSet dataset=file.openDataSet(groupName+"/mesons/"+mesTag[iMes]);
+	DataSet dataset;
+	
+	const string fullGroupName=groupName+"/mesons/"+mesTag[iMes];
+	try
+	  {
+	    dataset=file.openDataSet(fullGroupName);
+	  }
+	catch(H5::FileIException)
+	  {
+	    CRASH("Unable to open group %s",fullGroupName.c_str());
+	  }
+	
 	const DataSpace dataspace=dataset.getSpace();
 	
 	dataspace.selectHyperslab(H5S_SELECT_SET,count,offset);
