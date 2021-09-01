@@ -22,7 +22,7 @@ double a,ZaPetros;
 string confsPattern;
 string refConfPattern;
 string rawDataPackedPath;
-size_t nConfs,clustSize,nConfsUsed,nSources;
+size_t nConfs,clustSize,nConfsUsed,nSources,nSourcesMax;
 
 constexpr size_t nGammaComb=7;
 const bool isVK[]=                         {0     ,1     ,1     ,1     ,1     ,0     ,0};
@@ -407,6 +407,12 @@ void loadAndPackRawData(int narg,char** arg)
   possibleConfsList=getConfsList(confsPattern);
   sourcesList=getSourcesList(refConfPattern);
   nSources=sourcesList.size();
+  if(nSourcesMax<nSources)
+    {
+      console<<"Reducing nConfs from "<<nSources<<" to "<<nSourcesMax<<endl;
+      sourcesList.resize(nSourcesMax);
+    }
+  
   const size_t refSize=
     std::filesystem::file_size(sourceName(0,0));
   console<<"Reference size: "<<refSize<<endl;
@@ -637,13 +643,20 @@ bool loadCachedAveCorr()
   //load only if njacks agree
   if(cachedNJacks!=njacks)
     {
-      console<<"Njacks in the file is "<<cachedNJacks<<" expecting "<<njacks<<", not loading"<<endl;
+      console<<"NJacks in the file is "<<cachedNJacks<<" expecting "<<njacks<<", not loading"<<endl;
       
       return false;
     }
   
   file.bin_read(nConfs);
   file.bin_read(nSources);
+  if(nSources>nSourcesMax)
+    {
+      console<<"NSources in the file is "<<nSources<<" is exceeding nSourcesMax, "<<nSourcesMax<<", not loading"<<endl;
+      
+      return false;
+    }
+  
   const size_t nCached=file.bin_read<size_t>();
   console<<"Reading  "<<nCached<<" cached average correlators"<<endl;
   
@@ -903,6 +916,7 @@ void readInput()
     }
   tMinVKVK=input.read<size_t>("TFitVKVK");
   tMaxVKVK=input.read<size_t>();
+  nSourcesMax=input.read<size_t>("NSourcesMax");
 }
 
 void readConfMap()
