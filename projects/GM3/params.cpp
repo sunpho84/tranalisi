@@ -30,16 +30,6 @@ void readInput()
   nSourcesMax=input.read<size_t>("NSourcesMax");
 }
 
-void setPars()
-{
-  TH=T/2;
-  
-  THp1=TH+1;
-  
-  idData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Gamma",16}});
-  idOpenData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Id1",4},{"Id2",4},{"Id3",4},{"Id4",4},{"Ri",2}});
-}
-
 void readConfMap()
 {
   if(file_exists("map.txt"))
@@ -68,6 +58,12 @@ void init(int narg,char **arg)
   
   set_njacks(30);
   
+  TH=T/2;
+  
+  THp1=TH+1;
+  
+  idData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Gamma",16}});
+  idOpenData_loader.set_ranges({{"Mes",nMes},{"T",T},{"Id1",4},{"Id2",4},{"Id3",4},{"Id4",4},{"Ri",2}});
 }
 
 void close()
