@@ -721,7 +721,9 @@ void loadRawData(int narg,char **arg)
   
   raw_file_t out(rawDataPackedPath,"r");
   out.bin_read(nConfs);
+  console<<"NConfs: "<<nConfs<<endl;
   out.bin_read(nSources);
+  console<<"NSorces: "<<nSources<<endl;
   
   setRawData(nConfs);
   console<<"Data size: "<<_rawData.size()<<endl;
