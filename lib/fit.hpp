@@ -2,6 +2,7 @@
 #define _FIT_HPP
 
 #include <Eigen/Dense>
+#include <effective.hpp>
 #include <functions.hpp>
 #include <grace.hpp>
 #include <meas_vec.hpp>
