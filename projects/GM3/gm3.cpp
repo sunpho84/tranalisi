@@ -729,19 +729,9 @@ void loadRawData(int narg,char **arg)
   out.bin_read(_rawData);
 }
 
-djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes)
+template <typename F>
+void jackknivesFill(F f)
 {
-  const AveId id{iSourceMin,iSourceMax,iGammaComb,iMes};
-  
-  const auto ref=aveCorrCache.find(id);
-  if(ref!=aveCorrCache.end())
-    return ref->second;
-  else
-    if(not canUseRawData)
-      CRASH(" cannot reconstruct average as rawdata not present!");
-  
-  djvec_t ave(THp1);
-  ave=0.0;
   for(size_t iClust=0;iClust<njacks;iClust++)
     {
       const double confBegin=iClust*clustSize;
@@ -755,14 +745,33 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
 	  const double end=std::min(confEnd,beg+1.0);
 	  const double w=end-beg;
 	  
-	  for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
-	    for(size_t t=0;t<THp1;t++)
-	      ave[t][iClust]+=rawData(iConf,iSource,iGammaComb,iMes,t)*w;
+	  f(iConf,iClust,w);
+	  
 	  curConf=end;
 	}
       while(confEnd-curConf>1e-10);
     }
+}
+
+djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes)
+{
+  const AveId id{iSourceMin,iSourceMax,iGammaComb,iMes};
   
+  const auto ref=aveCorrCache.find(id);
+  if(ref!=aveCorrCache.end())
+    return ref->second;
+  else
+    if(not canUseRawData)
+      CRASH(" cannot reconstruct average as rawdata not present!");
+  
+  djvec_t ave(THp1);
+  ave=0.0;
+  jackknivesFill([iSourceMin,iSourceMax,iGammaComb,iMes,&ave](const size_t& iConf,const size_t& iClust,const double& w)
+  {
+    for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
+      for(size_t t=0;t<THp1;t++)
+	ave[t][iClust]+=rawData(iConf,iSource,iGammaComb,iMes,t)*w;
+  });
   ave.clusterize(clustSize);
   ave/=(iSourceMax-iSourceMin)*L*L*L;
   
@@ -831,11 +840,10 @@ void rawDataAn(const size_t& iGammaComb)
     {
       djvec_t& c=copyAveData[iCopy];
       for(size_t t=0;t<=T/2;t++)
-	for(size_t iConf=0;iConf<nConfs;iConf++)
-	  {
-	    const size_t iClust=iConf/clustSize;
-	    c[t][iClust]+=sourceAveData[idDataAve({iConf,iCopy,t})];
-	  }
+	jackknivesFill([&c,&sourceAveData,&idDataAve,t,iCopy](const size_t& iConf,const size_t& iClust,const double& w)
+	{
+	    c[t][iClust]+=sourceAveData[idDataAve({iConf,iCopy,t})]*w;
+	});
       c.clusterize(clustSize);
       c/=nSourcesPerCopy*L*L*L*2;
       copyAve.write_vec_ave_err(c.ave_err());
