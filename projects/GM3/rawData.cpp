@@ -18,6 +18,11 @@
 
 using namespace H5;
 
+namespace
+{
+  double clustSize;
+}
+
 //The structure for gamma matrix
 struct dirac_matr
 {
@@ -310,7 +315,8 @@ void loadAndPackRawData(int narg,char** arg)
   nConfs=confsList.size();
   console<<"NConfs: "<<nConfs<<endl;
   
-  setPars();
+  clustSize=(double)nConfs/njacks;
+  console<<"Cluster size: "<<endl;
   
   DataLoader loader(T);
   const array<pair<int,int>,7> map{std::pair<int,int>{0,0},{1,6},{1,7},{1,8},{2,10},{2,11},{2,12}};

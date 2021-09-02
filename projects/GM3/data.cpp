@@ -58,3 +58,11 @@ djvec_t getAveForRego(const size_t iSourceMin,const size_t iSourceMax,const size
   
   return res;
 }
+
+void loadData(int narg,char **arg)
+{
+  if(not loadCachedAveCorr())
+    loadRawData(narg,arg);
+  
+  readConfMap();
+}

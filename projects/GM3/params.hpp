@@ -20,7 +20,6 @@ EXTERN string confsPattern;
 EXTERN string refConfPattern;
 EXTERN string rawDataPackedPath;
 EXTERN size_t nConfs,nSources,nSourcesMax;
-EXTERN double clustSize;
 EXTERN ofstream console;
 EXTERN index_t idData_loader;
 EXTERN index_t idOpenData_loader;
@@ -64,8 +63,6 @@ constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 
 void init(int narg,char **arg);
 void close();
-void readInput();
-void setPars();
 void readConfMap();
 
 #endif

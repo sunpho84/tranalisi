@@ -15,18 +15,7 @@ int main(int narg,char **arg)
 {
   init(narg,arg);
   
-  readInput();
-  
-  set_njacks(30);
-  
-  setPars();
-  
-  if(not loadCachedAveCorr())
-    loadRawData(narg,arg);
-  
-  readConfMap();
-  
-  clustSize=(double)nConfs/njacks;
+  loadData(narg,arg);
   
   const djvec_t Z=determineRenoConst();
   
@@ -35,8 +24,6 @@ int main(int narg,char **arg)
       analyzeRawData();
       convertForSilvano();
     }
-  
-  /////////////////////////////////////////////////////////////////
   
   computeAmu(Z);
   

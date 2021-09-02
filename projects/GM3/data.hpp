@@ -16,4 +16,6 @@ djvec_t getTMAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iG
 
 djvec_t getAveForRego(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const RegoType& rego);
 
+void loadData(int narg,char **arg);
+
 #endif

@@ -63,6 +63,11 @@ void init(int narg,char **arg)
   MPIrank=temp;
   
   console.open((MPIrank==0)?"/dev/stdout":"/dev/null");
+  
+  readInput();
+  
+  set_njacks(30);
+  
 }
 
 void close()
