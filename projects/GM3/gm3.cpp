@@ -729,30 +729,6 @@ void loadRawData(int narg,char **arg)
   out.bin_read(_rawData);
 }
 
-template <typename F>
-void jackknivesFill(F f)
-{
-  for(size_t iClust=0;iClust<njacks;iClust++)
-    {
-      const double confBegin=iClust*clustSize;
-      const double confEnd=confBegin+clustSize;
-      
-      double curConf=confBegin;
-      do
-	{
-	  const size_t iConf=floor(curConf);
-	  const double beg=curConf;
-	  const double end=std::min(confEnd,beg+1.0);
-	  const double w=end-beg;
-	  
-	  f(iConf,iClust,w);
-	  
-	  curConf=end;
-	}
-      while(confEnd-curConf>1e-10);
-    }
-}
-
 djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes)
 {
   const AveId id{iSourceMin,iSourceMax,iGammaComb,iMes};
@@ -766,7 +742,7 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
   
   djvec_t ave(THp1);
   ave=0.0;
-  jackknivesFill([iSourceMin,iSourceMax,iGammaComb,iMes,&ave](const size_t& iConf,const size_t& iClust,const double& w)
+  jackknivesFill(nConfs,[iSourceMin,iSourceMax,iGammaComb,iMes,&ave](const size_t& iConf,const size_t& iClust,const double& w)
   {
     for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
       for(size_t t=0;t<THp1;t++)
@@ -840,7 +816,7 @@ void rawDataAn(const size_t& iGammaComb)
     {
       djvec_t& c=copyAveData[iCopy];
       for(size_t t=0;t<=T/2;t++)
-	jackknivesFill([&c,&sourceAveData,&idDataAve,t,iCopy](const size_t& iConf,const size_t& iClust,const double& w)
+	jackknivesFill(nConfs,[&c,&sourceAveData,&idDataAve,t,iCopy](const size_t& iConf,const size_t& iClust,const double& w)
 	{
 	    c[t][iClust]+=sourceAveData[idDataAve({iConf,iCopy,t})]*w;
 	});

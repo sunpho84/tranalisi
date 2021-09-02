@@ -284,6 +284,15 @@ void clusterize(vector<T> &v,const double clust_size=1.0)
   v[njacks]/=clust_size*njacks;
 }
 
+/// Use to fill a jackknife-like structure
+///
+/// Loops automatically on the configurations and populate the
+/// cluster, assigning the correct weight to each contribution, even
+/// when nNconfs cannot be divided exactly by njacks
+void jackknivesFill(const size_t& nConfs,                                                                    ///< Number of confs
+		    const function<void(const size_t& iConf,const size_t& iClust,const double& weight)>& f); ///< Function used to fill
+		    
+
 #undef EXTERN_JACK
 #undef INIT_TO
 
