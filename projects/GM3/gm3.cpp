@@ -833,59 +833,41 @@ void rawDataAn(const size_t& iGammaComb)
   //   }
   
   djvec_t c((THp1)*nCopies*nCopies),a((THp1)*nCopies),aa((THp1)),cc(THp1);
-  for(size_t t=0;t<=T/2;t++)
-    for(size_t ijack=0;ijack<njacks+1;ijack++)
-      for(size_t iConf=0;iConf<nConfs;iConf++)
-	if(iConf<clustSize*ijack or iConf>=clustSize*(ijack+1))
-	  {
-	    double copy_ave=0;
-	    for(size_t iCopy=0;iCopy<nCopies;iCopy++)
-	      copy_ave+=sourceAveData[idDataAve({iConf,iCopy,t})];
-	    copy_ave/=nCopies;
-	    
-	    aa[t][ijack]+=copy_ave;
-	    cc[t][ijack]+=copy_ave*copy_ave;
-	    
-	    for(size_t iCopy=0;iCopy<nCopies;iCopy++)
-	      {
-		const double& x=sourceAveData[idDataAve({iConf,iCopy,t})];
-		a[iCopy+nCopies*t][ijack]+=x;
-		
-		for(size_t jCopy=0;jCopy<nCopies;jCopy++)
-		  {
-		    const double& y=sourceAveData[idDataAve({iConf,jCopy,t})];
-		    c[jCopy+nCopies*(iCopy+nCopies*t)][ijack]+=x*y;
-		  }
-	      }
-	  }
+  jackknivesFill(nConfs,
+		 [&sourceAveData,&idDataAve,&a,&c,&aa,&cc](const size_t& iConf,const size_t& iClust,const double& w)
+		 {
+		   for(size_t t=0;t<=T/2;t++)
+		     {
+		       double copy_ave=0;
+		       for(size_t iCopy=0;iCopy<nCopies;iCopy++)
+			 copy_ave+=sourceAveData[idDataAve({iConf,iCopy,t})];
+		       copy_ave/=nCopies;
+		       
+		       aa[t][iClust]+=copy_ave*w;
+		       cc[t][iClust]+=copy_ave*copy_ave*w;
+		       
+		       for(size_t iCopy=0;iCopy<nCopies;iCopy++)
+			 {
+			   const double& x=sourceAveData[idDataAve({iConf,iCopy,t})];
+			   a[iCopy+nCopies*t][iClust]+=x*w;
+			   
+			   for(size_t jCopy=0;jCopy<nCopies;jCopy++)
+			     {
+			       const double& y=sourceAveData[idDataAve({iConf,jCopy,t})];
+			       c[jCopy+nCopies*(iCopy+nCopies*t)][iClust]+=x*y*w;
+			     }
+			 }
+		     }
+		 });
+  
+  for(auto& x : {&a,&c,&aa,&cc})
+    x->clusterize(clustSize);
   
   djvec_t ave(THp1),err(THp1),corr(THp1);
   for(size_t t=0;t<=T/2;t++)
     {
-      for(size_t ijack=0;ijack<njacks;ijack++)
-	{
-	  aa[t][ijack]/=nConfs-clustSize;
-	  cc[t][ijack]/=nConfs-clustSize;
-	}
-      aa[t][njacks]/=nConfs;
-      cc[t][njacks]/=nConfs;
       cc[t]-=aa[t]*aa[t];
       cc[t]=sqrt(cc[t]/(nConfs-1));
-      
-      for(size_t icopy=0;icopy<nCopies;icopy++)
-	{
-	  for(size_t ijack=0;ijack<njacks;ijack++)
-	    a[icopy+nCopies*t][ijack]/=nConfs-clustSize;
-	  a[icopy+nCopies*t][njacks]/=nConfs;
-	}
-      
-      for(size_t icopy=0;icopy<nCopies;icopy++)
-	for(size_t jcopy=0;jcopy<nCopies;jcopy++)
-	  {
-	    for(size_t ijack=0;ijack<njacks;ijack++)
-	      c[jcopy+nCopies*(icopy+nCopies*t)][ijack]/=nConfs-clustSize;
-	    c[jcopy+nCopies*(icopy+nCopies*t)][njacks]/=nConfs;
-	  }
       
       for(size_t icopy=0;icopy<nCopies;icopy++)
 	for(size_t jcopy=0;jcopy<nCopies;jcopy++)
