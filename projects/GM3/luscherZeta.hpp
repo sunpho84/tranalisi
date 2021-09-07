@@ -228,9 +228,13 @@ struct LuscherZetaCalculator
   /// Computes the Luscher zeta function, with default value of the cut-off
   double operator()(const double& q2) const
   {
-    /// Compute the cutoff
-    const int lambda2=
-      floor(q2)+6;
+    /// Compute the cut-off
+    const int lambda=
+      ceil(sqrt(q2))+6;
+    
+    /// Compute the squared cut-off
+    const double lambda2=
+      lambda*lambda;
     
     return
       (*this)(q2,lambda2);
