@@ -51,7 +51,7 @@ struct DistanceMultiplicity
   }
   
   /// Constructor
-  DistanceMultiplicity(const int& maxDistance) :
+  DistanceMultiplicity(const int& maxDistance=30) :
     maxDistance(maxDistance),
     maxDistance2(maxDistance*maxDistance+1)
   {

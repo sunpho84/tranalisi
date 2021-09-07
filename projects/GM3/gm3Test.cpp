@@ -9,7 +9,7 @@ using namespace std;
 const int lambdaMax=30;
 static DistanceMultiplicity distanceMultiplicity(lambdaMax);
 
-const LuscherZetaCalculator luscherZetaCalculator(lambdaMax);
+const LuscherZetaCalculator luscherZetaCalculator;
 
 double q2=0.3;
 int lambda=4;
@@ -159,8 +159,8 @@ int main()
   
   q2=3.0;
   lambda=3.0;
-  const double o=lzc(0.4,nullptr);
-  const double n=luscherZetaCalculator.heatKernelCalculator(0.4,q2);
+  const double o=luscherZeta();
+  const double n=luscherZetaCalculator(q2);
   cout<<o<<" "<<n<<endl;
   return 0;
   
