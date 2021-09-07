@@ -17,7 +17,6 @@ int lambda=4;
 
 double aaaa(const double& t)
 {
-  
   /// Previous iteration result
   double oldRes=0.0;
   
@@ -49,7 +48,7 @@ double aaaa(const double& t)
   
   const double tot=
     res*pow(2*M_PI,-3.0)/sqrt(4*M_PI)-pow(4*M_PI,-2)*pow(t,-1.5);
-
+  
   return tot;
 }
 
@@ -77,6 +76,7 @@ double bbbb(const double& t)
 	  const double contr=
 	    mult*exp(q2*t-M_PI*M_PI*distance2/t);
 	  
+	  cout<<"small: "<<distance2<<" "<<contr<<endl;
 	  oldRes=res;
 	  res=oldRes+contr;
 	}
@@ -96,17 +96,21 @@ double bbbb(const double& t)
       const double contr=
 	exp(-t*(distance2-q2));
       
+      cout<<"large: "<<distance2<<" "<<contr<<endl;
+      
       sub+=contr*mult;
     }
   sub*=pow(2*M_PI,-3.0);
   
   const double tot=(res-sub)/sqrt(4*M_PI)-pow(4*M_PI,-2)*pow(t,-1.5);
+  cout<<" resa: "<<res/sqrt(4*M_PI)<<" "<<sub/sqrt(4*M_PI)<<endl<<endl;
   
   return tot;
 }
 
 //! kernel of eq.10
-double lzc(double t,void *params)
+double lzc(double t,
+	   void *params)
 {
   return ((t>1)?aaaa:bbbb)(t);
 }
@@ -152,7 +156,15 @@ double luscherZeta()
 int main()
 {
   cout.precision(16);
-
+  
+  q2=3.0;
+  lambda=3.0;
+  const double o=lzc(0.4,nullptr);
+  const double n=luscherZetaCalculator.heatKernelCalculator(0.4,q2);
+  cout<<o<<" "<<n<<endl;
+  return 0;
+  
+  
   double oldPhi=0.0;
   int iCorr=0;
   for(q2=0.081;q2<15.01;q2+=0.01)
