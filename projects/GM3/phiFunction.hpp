@@ -15,7 +15,7 @@ struct TanPhiCalculator
   double approximation(const double& q2) const
   {
     /// Equation A.5
-    const double x=
+    const double s=
       q2*(8.91363-
 	  q2*(16.5323-
 	      q2*(8.402-
@@ -27,7 +27,7 @@ struct TanPhiCalculator
     
     /// Denominator
     const double den=
-      1+x;
+      1+s;
     
     return
       num/den;
@@ -57,44 +57,35 @@ struct TanPhiCalculator
   }
   
   /// Calculate tan(phi)
-  double operator()(const double& q2) const
+  double operator()(const double& q) const
   {
-    if(q2<=0.01)
-      return approximation(q2);
-    else
-      return full(q2);
+    /// Square of q
+    const double q2=
+      q*q;
+    
+    return
+      (q2<=0.01)?
+      approximation(q2):
+      full(q2);
   }
 };
 
 /// Structure to compute phi
 struct PhiCalculator
 {
-  /// Calculator of the tan
+  /// Calculator of tan
   TanPhiCalculator tanPhiCalculator;
   
-  /// Inferior limit
-  const double xMin;
-  
   /// Superior limit
-  const double xMax;
-  
-  /// Number of points
-  const int nPoints;
-  
-  /// Interval
-  const double dX;
+  const double q2Max;
   
   /// Numer of known ones (without shifting)
   const vector<double> knownPhiOnes;
   
-  /// Temporarily store the points
-  vector<double> y;
-  
-  /// I-th point's abscissa
-  double x(const int& iPoint) const
+  double barePhi(const double& q) const
   {
     return
-      xMin+dX*iPoint;
+      atan(tanPhiCalculator(q));
   }
   
   /// Finds all points where the function is approximately one in modulo
@@ -104,19 +95,41 @@ struct PhiCalculator
     vector<double> res;
     
     /// Previous value
-    double prev=0.0;
+    double prev=
+      0.0;
     
-    for(double x=0.1;x<xMax+2.0;x+=dX)
+    /// Step to be used to find ones
+    const double step=
+      0.1;
+    
+    /// Starting point
+    const double start=
+      step;
+    
+    /// Ending point of the search
+    const double end=
+      q2Max+2.0;
+    
+    for(double q2=start;q2<end;q2+=step)
       {
+	/// Value of q
+	const double q=
+	  sqrt(q2);
+	
 	///Current value
 	const double cur=
-	  atan(tanPhiCalculator(x));
+	  barePhi(q);
 	
-	if((prev<1.0 and cur>1.0) or (prev<-1.0 and cur>-1.0))
+	if((fabs(prev)-1.0)*(fabs(cur)-1.0)<0)
 	  {
-	    /// Position
+	    /// Position of the one
 	    const double pos=
-	      x-dX/2.0;
+	      Brent_solve([this](const double& q)
+	      {
+		return
+		  fabs(this->barePhi(q))-1.0;
+	      },
+		q,sqrt(q2-step));
 	    
 	    res.push_back(pos);
 	  }
@@ -124,46 +137,66 @@ struct PhiCalculator
 	prev=cur;
       }
     
-    return res;
+    return
+      res;
   }
   
-  /// Constructor
-  PhiCalculator(const double& xMin,
-		const double& xMax,
-		const int& nIntervals) :
-    xMin(xMin),
-    xMax(xMax),
-    nPoints(nIntervals+1),
-    dX((xMax-xMin)/nIntervals),
-    knownPhiOnes(findPhiOnes()),
-    y(nPoints)
+  /// Computes the shift needed
+  int neededShift(const double& q,
+		  const double& rawPhi) const
   {
-    cout<<"Ones:"<<endl;
-    cout<<knownPhiOnes<<endl;
+    /// Find the number of ones before
+    int nSmallerOnes=0;
+    while(nSmallerOnes<(int)knownPhiOnes.size()-1 and knownPhiOnes[nSmallerOnes+1]<q)
+      nSmallerOnes++;
     
+    /// Computes the number of pairs of ones
+    const int numberOfSmallerPairs=
+      (nSmallerOnes+1)/2;
+    
+    /// Check if it is an even one, in which case the megative part must be shifted
+    const int isEvenOne=
+      nSmallerOnes%2==0;
+    
+    /// Check if the raw value of phi is negative
+    const int rawPhiIsNegative=
+      rawPhi<0;
+    
+    /// Computes the shift to be added
+    const int shift=
+      numberOfSmallerPairs+(isEvenOne and rawPhiIsNegative);
+    
+    return
+      shift;
   }
   
   /// Computes putting the correct shift to provide continuity
-  double operator()(const double& x) const
+  double operator()(const double& q) const
   {
-    if(x>=xMax)
+    if(q*q>=q2Max)
       CRASH("Cannot compute beyond xMax");
     
-    const double phi=
-      atan(tanPhiCalculator(x));
+    /// Compute rawPhi
+    const double rawPhi=
+      atan(tanPhiCalculator(q));
     
-    int iOnes=0;
-    while(iOnes<(int)knownPhiOnes.size()-1 and knownPhiOnes[iOnes+1]<x)
-      iOnes++;
+    /// Shift to be added
+    const int shift=
+      neededShift(q,rawPhi);
     
-    int b=
-      (iOnes+1)/2+(iOnes%2==0 and phi<0);
-      
+    /// Shifted value of phi
     const double shiftedPhi=
-      phi+M_PI*b;
+      rawPhi+M_PI*shift;
     
     return
       shiftedPhi;
+  }
+  
+  /// Constructor
+  PhiCalculator(const double& q2Max) :
+    q2Max(q2Max),
+    knownPhiOnes(findPhiOnes())
+  {
   }
 };
 
