@@ -82,7 +82,8 @@ struct PhiCalculator
   /// Numer of known ones (without shifting)
   const vector<double> knownPhiOnes;
   
-  double barePhi(const double& q) const
+  /// Raw value of phi without imposing continuity
+  double rawPhi(const double& q) const
   {
     return
       atan(tanPhiCalculator(q));
@@ -91,7 +92,7 @@ struct PhiCalculator
   /// Finds all points where the function is approximately one in modulo
   vector<double> findPhiOnes() const
   {
-    /// List of ones position to be returned
+    /// List of ones positions
     vector<double> res;
     
     /// Previous value
@@ -118,7 +119,7 @@ struct PhiCalculator
 	
 	///Current value
 	const double cur=
-	  barePhi(q);
+	  rawPhi(q);
 	
 	if((fabs(prev)-1.0)*(fabs(cur)-1.0)<0)
 	  {
@@ -127,7 +128,7 @@ struct PhiCalculator
 	      Brent_solve([this](const double& q)
 	      {
 		return
-		  fabs(this->barePhi(q))-1.0;
+		  fabs(this->rawPhi(q))-1.0;
 	      },
 		q,sqrt(q2-step));
 	    
