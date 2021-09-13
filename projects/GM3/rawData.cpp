@@ -360,11 +360,13 @@ void loadAndPackRawData(int narg,char** arg)
 	  
 	  // A(i)=(GSO)_{ij(i)} (G5)_{j(i)}
 	  // B(k)=(G5)_k (GSI)_{kl(k)}
-	  const array<array<int,4>,8> map{array<int,4>
-					  {idVKTK,10,1,-1},{idVKTK,11,2,-1},{idVKTK,12,3,-1},
-					  {idTKVK,1,10,-1},{idTKVK,2,11,-1},{idTKVK,3,12,-1},
-					  {idA0P5,9,5,-1},
-					  {idP5A0,5,9,-1}};
+	  const array<array<int,5>,10> map{array<int,5>
+					   {idVKTK,10,1,-1,0},{idVKTK,11,2,-1,0},{idVKTK,12,3,-1,0},
+					   {idTKVK,1,10,-1,0},{idTKVK,2,11,-1,0},{idTKVK,3,12,-1,0},
+					   {idA0P5,9,5,-1,0},
+					   {idP5A0,5,9,-1,0},
+					   {idV0P5,4,5,-1,1},
+					   {idP5V0,5,4,-1,1}};
 	  for(size_t iMes=0;iMes<nMes;iMes++)
 	    for(size_t tIn=0;tIn<T;tIn++)
 	      {
@@ -375,6 +377,10 @@ void loadAndPackRawData(int narg,char** arg)
 		  {
 		    const double s=
 		      ((tIn>=TH)?m[3]:+1.0);
+		    
+		    const complex imaginarity{
+		      (m[4]==0)?1.0:0.0,
+		      (m[4]==1)?1.0:0.0};
 		    
 		    const size_t iGammaOut=m[0];
 		    
@@ -394,7 +400,7 @@ void loadAndPackRawData(int narg,char** arg)
 			  const auto& c1=g1.entr[nu];
 			  const auto& c2=g2.entr[rh];
 			  
-			  const complex<double> c=c1*c2;
+			  const complex<double> c=c1*c2*imaginarity;
 			  
 			  for(size_t ri=0;ri<2;ri++)
 			    {

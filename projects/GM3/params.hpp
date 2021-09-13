@@ -24,11 +24,11 @@ EXTERN ofstream console;
 EXTERN index_t idData_loader;
 EXTERN index_t idOpenData_loader;
 
-constexpr size_t nGammaComb=7;
-constexpr bool isVK[]=                          {0     ,1     ,1     ,1     ,1     ,0     ,0};
-constexpr int parity[]=                         {+1    ,+1    ,+1    ,-1    ,-1    ,-1    ,-1};
-constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","A0P5","P5A0"};
-enum CORR_ID{idP5P5,idVKVK,idTKTK,idVKTK,idTKVK,idA0P5,idP5A0};
+constexpr size_t nGammaComb=9;
+constexpr bool isVK[]=                     {0     ,1     ,1     ,1     ,1     ,0     ,0     ,0     ,0    };
+constexpr int parity[]=                    {+1    ,+1    ,+1    ,-1    ,-1    ,-1    ,-1    ,-1    ,-1   };
+constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","A0P5","P5A0","V0P5","P5V0"};
+enum CORR_ID                               {idP5P5,idVKVK,idTKTK,idVKTK,idTKVK,idA0P5,idP5A0,idV0P5,idP5V0};
 
 enum RegoType{REGO_TM,REGO_OS};
 
@@ -51,6 +51,12 @@ constexpr double corrNorm(const CORR_ID& id)
     return -1.0;
     break;
   case idP5A0:
+    return 1.0;
+    break;
+  case idV0P5:
+    return -1.0;
+    break;
+  case idP5V0:
     return 1.0;
     break;
   }
