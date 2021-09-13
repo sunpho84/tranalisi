@@ -678,7 +678,7 @@ void loadRawData(int narg,char **arg)
   out.bin_read(nConfs);
   console<<"NConfs: "<<nConfs<<endl;
   out.bin_read(nSources);
-  console<<"NSorces: "<<nSources<<endl;
+  console<<"NSources: "<<nSources<<endl;
   
   setRawData(nConfs);
   console<<"Data size: "<<_rawData.size()<<endl;

@@ -72,8 +72,11 @@ int main()
   //     cout<<n<<": "<<kN<<" "<<tan(d11+phi)<<endl;
   //   }
   
-  momentumFinder(mPi,mRho,g2*0,L,10,"/tmp/free.xmg");
-  momentumFinder(mPi,mRho,g2,L,10,"/tmp/interacting.xmg");
+  ALaLuscherRepresentation interacting(mPi,L,g2,mRho);
+  ALaLuscherRepresentation free(mPi,L,0.0,mRho);
+  
+  free.findLevels(10,"/tmp/free.xmg");
+  interacting.findLevels(10,"/tmp/interacting.xmg");
   
   // grace_file_t lhs("/tmp/lhs.xmg");
   // lhs.set_no_symbol();
