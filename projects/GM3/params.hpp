@@ -19,7 +19,7 @@ EXTERN double a,ZaPetros;
 EXTERN string confsPattern;
 EXTERN string refConfPattern;
 EXTERN string rawDataPackedPath;
-EXTERN size_t nConfs,nSources,nSourcesMax;
+EXTERN size_t nConfs,nConfsMax,nSources,nSourcesMax;
 EXTERN ofstream console;
 EXTERN index_t idData_loader;
 EXTERN index_t idOpenData_loader;

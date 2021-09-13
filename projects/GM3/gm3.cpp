@@ -23,8 +23,8 @@ void testMf()
   const djack_t aFpi=
     2*amq*sqrt(Z2)/(aMpi*sinh(aMpi));
   
-  cout<<"aMpi: "<<aMpi<<endl;
-  cout<<"aFpi: "<<aFpi<<endl;
+  console<<"aMpi: "<<aMpi<<endl;
+  console<<"aFpi: "<<aFpi<<endl;
   
   const djack_t r=
     aMpi/aFpi;
@@ -35,13 +35,30 @@ void testMf()
   const double r2Phys=
     sqr(134.98/130.4);
   
-  cout<<" r2: "<<r2.ave_err()<<endl;
-  cout<<" r2Phys: "<<r2Phys<<endl;
+  console<<" r2: "<<r2.ave_err()<<endl;
+  console<<" r2Phys: "<<r2Phys<<endl;
   
   const djack_t r2frR2Phys=
     r2/r2Phys;
   
-  cout<<" r2/r2Phys: "<<r2frR2Phys.ave_err()<<endl;
+  console<<" r2/r2Phys: "<<r2frR2Phys.ave_err()<<endl;
+  
+  const djvec_t cV0P5=
+    (getAve(0,nSources,idV0P5,0)-getAve(0,nSources,idV0P5,2))/2;
+  cV0P5.ave_err().write("plots/corr_V0P5_usable.xmg");
+  
+  const djvec_t cV0P5der=
+    symmetric_derivative(cV0P5);
+  
+  cV0P5der.ave_err().write("plots/corr_V0P5_der.xmg");
+  
+  const djvec_t mPCACEff=
+    cV0P5der/(2*cP5P5);
+  
+  const djack_t mPCAC=
+    constant_fit(mPCACEff,14,TH-1,"plots/eff_mPCAC.xmg");
+  
+  console<<"mPCAC: "<<mPCAC.ave_err()<<endl;
 }
 
 int main(int narg,char **arg)

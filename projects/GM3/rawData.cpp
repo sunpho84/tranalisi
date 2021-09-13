@@ -309,6 +309,12 @@ void loadAndPackRawData(int narg,char** arg)
     if(accepted[iConf])
       confsList.push_back(possibleConfsList[iConf]);
   
+  if(nConfsMax and confsList.size()>nConfsMax)
+    {
+      console<<"Confs list size "<<confsList.size()<<" exceeding maximal number of confs: "<<nPossibleConfs<<", reducing"<<endl;
+      confsList.resize(nConfsMax);
+    }
+  
   if(confsList.size()!=possibleConfsList.size())
     console<<"Confs list resized from "<<possibleConfsList.size()<<"to: "<<confsList.size()<<endl;
   

@@ -28,6 +28,7 @@ void readInput()
   tMinVKVK=input.read<size_t>("TFitVKVK");
   tMaxVKVK=input.read<size_t>();
   nSourcesMax=input.read<size_t>("NSourcesMax");
+  nConfsMax=input.read<size_t>("NConfsMax");
 }
 
 void readConfMap()
