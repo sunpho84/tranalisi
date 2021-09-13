@@ -160,4 +160,62 @@ TS Brent_solve(F&& fun,
   return out;
 }
 
+/// Solve using Newton's method
+template <class F>
+double NewtonSolve(F&& fun,
+		   const double& guess,
+		   const double& tol=1e-13)
+{
+  /// Value
+  double x=
+    guess;
+  
+#ifdef DEBUG
+  cout<<"Starting to solve "<<guess<<endl;
+#endif
+  
+  double f;
+  do
+    {
+      /// Derivative
+      const double der=
+	gslDeriv(fun,x);
+      
+      f=fun(x);
+      
+      /// Step
+      const double dX=
+	f/der;
+      
+#ifdef DEBUG
+      cout<<x<<" "<<f<<" "<<der<<endl;
+#endif
+      
+      x-=dX;
+    }
+  while(fabs(f)>tol);
+  
+#ifdef DEBUG
+  cout<<"Solution: "<<x<<endl;
+#endif
+  
+  return
+    x;
+}
+
+//! Newton solve for type
+template <class F,
+	  class TS,
+	  class=enable_if_t<has_method_size<TS>::value>>
+TS Newton_solve(F&& fun,
+	       const double& guess,
+	       const double& tol=1e-13)
+{
+  TS out;
+  
+  for(size_t iel=0;iel<out.size();iel++)
+    out[iel]=Newton_solve(bind(fun,placeholders::_1,iel),guess,tol);
+  
+  return out;
+}
 #endif

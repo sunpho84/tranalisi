@@ -9,6 +9,7 @@
 #include <fit.hpp>
 #include <gevp.hpp>
 #include <grace.hpp>
+#include <gslWrap.hpp>
 #include <index.hpp>
 #include <jack.hpp>
 #include <meas_vec.hpp>
