@@ -24,7 +24,6 @@ libtran_a_SOURCES= \
 	meas_vec.cpp \
 	minimizer.cpp \
 	oper.cpp \
-	solve.cpp \
 	systematics.cpp \
 	tools.cpp
 
