@@ -113,6 +113,12 @@ public:
       bin_write(it);
   }
   
+  //! specialization for c-string
+  inline auto bin_write(const char* out)
+  {
+    bin_write(string(out));
+  }
+  
   //! binary read, non-vector case
   template <class T>
   auto bin_read(T &out) const -> enable_if_t<is_pod<T>::value>
