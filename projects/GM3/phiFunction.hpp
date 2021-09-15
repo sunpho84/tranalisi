@@ -1,6 +1,8 @@
 #ifndef _PHIFUNCTION_HPP
 #define _PHIFUNCTION_HPP
 
+#include <gslWrap.hpp>
+#include <hashedFunction.hpp>
 #include <fit.hpp>
 
 #include <luscherZeta.hpp>
@@ -201,163 +203,31 @@ struct PhiCalculator
   }
 };
 
-  // /// Previous value of phi
-    // double oldPhi=
-    //   0.0;
-    
-    // /// Correction needed to smooth phi
-    // int iCorr=0;
-    
-    // for(int iPoint=0;iPoint<nPoints;iPoint++)
-    //   {
-    // 	/// Abscissa
-    // 	const double x=
-    // 	  dX*iPoint+xMin;
-	
-    // 	/// Tan of phi
-    // 	const double tanPhi=
-    // 	  tanPhiCalculator(x);
-	
-    // 	// const double phi=atan(tanPhi);
-    // 	const double phi=
-    // 	  atan(tanPhi);
-	
-    // 	if(iPoint and x>0.1 and phi*oldPhi<-1.0)
-    // 	  iCorr++;
-	
-    // 	/// Smoothing correction
-    // 	const double corr=
-    // 	  phi+iCorr*M_PI;
-	
-    // 	y[iPoint]=
-    // 	  corr/(M_PI*x+1e-16);
-	
-    // 	oldPhi=phi;
-      // }
-//   }
+/// Provides an hashed version of the tanPhi function
+struct HashedTanPhiFunction
+{
+  /// Interpolates for phi(q)/(pi*q^2)
+  HashedFunction<> hashedFunction;
   
-//   vector<double> getSpline(const int& iX,
-// 			   const int& degree) const
-//   {
-//     vector<double> Al(2*degree+1,0.0);
-//     vector<double> c(degree+1,0.0);
+  /// Constructor
+  HashedTanPhiFunction(const string& path,
+		       const double& qMax,
+		       const int& nIntervals)
+    : hashedFunction(path,[pc=PhiCalculator(qMax*qMax)](const double& q)
+    {
+      return
+	pc(q)/(M_PI*q*q);
+    },
+      0.1,qMax,nIntervals)
+  {
+  }
   
-//     for(int dI=-(degree-1)/2;dI<=(degree+1)/2;dI++)
-//       {
-// 	const int iPoint=
-// 	  iX+dI;
-	
-// 	const double x=
-// 	  dI*dX;
-	
-//         /// Weight
-//         double w=
-// 	  1.0;
-	
-//         for(int f=0;f<=2*degree;f++)
-//           {
-//             Al[f]+=w;
-//             if(f<=degree)
-// 	      c[f]+=y[iPoint]*w;
-//             w*=x;
-//           }
-//       }
-  
-//   vector<double> A((degree+1)*(degree+1));
-//   for(int i=0;i<=degree;i++)
-//     for(int j=0;j<=degree;j++)
-//       A[i*(degree+1)+j]=Al[i+j];
-  
-//   //
-  
-//   for(int i=0;i<degree+1;i++)
-//     {
-//       double C=A[i*(degree+1)+i];
-//       for(int j=i;j<degree+1;j++)
-// 	A[i*(degree+1)+j]/=C;
-//       c[i]/=C;
-      
-//       for(int k=i+1;k<degree+1;k++)
-//         {
-//           double C=A[k*(degree+1)+i];
-//           for(int j=i;j<degree+1;j++)
-// 	    A[k*(degree+1)+j]-=A[i*(degree+1)+j]*C;
-//           c[k]-=C*c[i];
-//         }
-//     }
-  
-//   vector<double> res(degree+1);
-//   for(int k=degree;k>=0;k--)
-//     {
-//       double S=
-// 	0.0;
-      
-//       for(int i=k+1;i<degree+1;i++)
-// 	S+=A[k*(degree+1)+i]*res[i];
-//       res[k]=c[k]-S;
-//     }
-  
-//   return
-//     res;
-//   }
-  
-//     const int iX=
-//       floor((x-xMin)/dX);
-    
-//     constexpr int degree=
-//       3;
-    
-//     static_assert(degree%2,"degree must be odd");
-    
-//     const int offset=
-//       (degree-1)/2;
-    
-//     const int i0=
-//       std::max(offset,std::min(iX,nPoints-offset-2));
-    
-//     // poly_fit(const vector<double> &, const TV &y, int d)
-    
-//     // const int i1=
-//     //   i0+1;
-    
-//     // const double& y0=
-//     //   y[i0];
-    
-//     // return y0;
-    
-//     // const double& y1=
-//     //   y[i1];
-    
-//     // const double& x1=
-//     //   i1*dX+xMin;
-    
-//     // const double a=
-//     //   (y1-y0)/dX;
-    
-//     // const double b=
-//     //   y1-x1*a;
-    
-//     const vector<double> coeffs=
-//       getSpline(i0,degree);
-    
-//     double res=
-//       0.0;
-    
-//     double rx=
-//       1.0;
-    
-//     const double dist=
-//       x-(i0*dX+xMin);
-    
-//     for(int i=0;i<=degree;i++)
-//       {
-// 	res+=coeffs[i]*rx;
-// 	rx*=dist;
-//       }
-    
-//     return
-//       res;
-//   }
-// };
+  /// Evaluate for the required value of q
+  double operator()(const double& q) const
+  {
+    return
+      tan(hashedFunction(q)*M_PI*q*q);
+  }
+};
 
 #endif

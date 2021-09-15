@@ -203,15 +203,11 @@ struct HashedFunction
       res;
   }
   
-  /// Repeats the hash
-  const char* gitHash=
-    GIT_HASH;
-  
   /// Terminator
   template <typename F,
 	    typename R>
-  auto operateOn(const F& f,
-		 const R& r) const
+  R operateOn(const F& f,
+	      const R& r) const
   {
     return
       r;
@@ -222,25 +218,29 @@ struct HashedFunction
 	    typename R,
 	    typename O,
 	    typename...Tail>
-  auto operateOn(const F& f,
-		 const R& r,
-		 const O& o,
-		 const char* name,
-		 const Tail&...tail) const
+  R operateOn(const F& f,
+	      const R& r,
+	      const O& o,
+	      const char* name,
+	      const Tail&...tail) const
   {
-    //auto res=
+    R res=
       f(r,o,name);
       
     return
-      operateOn(f,r,tail...);
+      operateOn(f,res,tail...);
   }
   
   /// Loop on "control vars"
   template <typename F,
 	    typename R>
-  auto operateOnControlVars(const F& f,
-			    const R& r) const
+  R operateOnControlVars(const F& f,
+			 const R& r) const
   {
+    /// Repeats the hash
+    const string gitHash=
+    GIT_HASH;
+    
     return
       operateOn(f,
 		r,
@@ -264,8 +264,10 @@ struct HashedFunction
 				 const auto& o,
 				 const char* name)
     {
+      file.bin_write(o);
+      
       return
-	file.bin_write(o);
+	true;
     },true);
     
     file.bin_write(res.size());
@@ -287,29 +289,32 @@ struct HashedFunction
     
     if(status)
       {
-	cout<<"Checking file \""<<path<<"\""<<endl;
+	cout<<"Checking file \""<<path<<"\"... ";
 	
 	raw_file_t file(path,"r");
 	
 	status=
-	  operateOn([&file](const auto& o,
-			    const char* name,
-			    bool r)
+	  operateOnControlVars([&file](const bool& r,
+				       const auto& o,
+				       const char* name)
 	{
-	  if(r)
+	  bool res=
+	    r;
+	  
+	  if(res)
 	    {
 		const auto read=
-		  file.bin_read<decltype(o)>();
+		  file.bin_read<std::decay_t<decltype(o)>>();
 		
 		if(read!=o)
 		  {
-		    r=false;
-		    cout<<"Read variable "<<name<<" has value "<<read<<" different form expected "<<o<<endl;
+		    res=false;
+		    cout<<"Read variable "<<name<<" has value "<<read<<" different form expected "<<o<<". ";
 		  }
 	      }
 	  
 	  return
-	      r;
+	      res;
 	},true);
 	
 	if(status)
