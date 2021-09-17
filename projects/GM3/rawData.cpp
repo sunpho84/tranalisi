@@ -212,7 +212,7 @@ vector<string> getSourcesList(const string& firstConf)
       }
   globfree(&globbuf);
   
-  console<<"Found: "<<sourcesList.size()<<" sources"<<endl;
+  console<<"Found: "<<sourcesList.size()<<" sources for reference conf "<<firstConf<<endl;
   
   return sourcesList;
 }
