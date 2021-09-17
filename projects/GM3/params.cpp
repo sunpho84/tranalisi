@@ -12,7 +12,7 @@ void readInput()
 {
   raw_file_t input("input.txt","r");
   T=input.read<size_t>("T");
-  L=input.read<size_t>("L");
+  L=input.read<double>("L");
   amq=input.read<double>("amq");
   a=input.read<double>("a");
   ZaPetros=input.read<double>("Za");

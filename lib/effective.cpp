@@ -6,7 +6,7 @@
 
 const double NaN=numeric_limits<double>::quiet_NaN();
 
-double effective_mass(double ct,double ct_p_dt,size_t t,size_t TH,double guess,int par,int dt)
+double effective_mass(double ct,double ct_p_dt,double t,size_t TH,double guess,int par,double dt)
 {
   //compute the target, c(t+dt)/c(t)
   double target=ct_p_dt/ct;

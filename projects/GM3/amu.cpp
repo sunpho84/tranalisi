@@ -10,13 +10,13 @@
 #include <data.hpp>
 #include <kernels.hpp>
 #include <params.hpp>
+#include <renoConstants.hpp>
 
-void computeAmu(const djvec_t& Z)
+void computeAmu()
 {
   using namespace Eigen;
   
   const string regoTag[2]={"TM","OS"};
-  const size_t regoZId[2]={1,0};
   
   for(const RegoType& rego : {REGO_TM,REGO_OS})
     {

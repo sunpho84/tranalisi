@@ -3,6 +3,6 @@
 
 #include "meas_vec.hpp"
 
-void computeAmu(const djvec_t& Z);
+void computeAmu();
 
 #endif

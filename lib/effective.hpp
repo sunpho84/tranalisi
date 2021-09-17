@@ -1,6 +1,7 @@
 #ifndef _EFFECTIVE_HPP
 #define _EFFECTIVE_HPP
 
+#include "jack.hpp"
 #include <algorithm>
 #include <cmath>
 #include <functions.hpp>
@@ -14,7 +15,18 @@
 #include <vector>
 
 //! return the effective mass of a pair of points
-double effective_mass(double ct,double ct_p_dt,size_t t,size_t TH,double guess=1,int par=1,int dt=1);
+double effective_mass(double ct,double ct_p_dt,double t,size_t TH,double guess=1,int par=1,double dt=1);
+
+inline djack_t effective_mass(djack_t ct,djack_t ct_p_dt,double t,size_t TH,double guess=1,int par=1,double dt=1)
+{
+  djack_t res;
+  
+  for(size_t ijack=0;ijack<=njacks;ijack++)
+    res[ijack]=effective_mass(ct[ijack],ct_p_dt[ijack],t,TH,guess,par,dt);
+  
+  return res;
+}
+
 
 //! return the effective mass of a whole vector
 template <class T>

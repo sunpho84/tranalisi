@@ -7,10 +7,83 @@
 
 #include <math.hpp>
 
+#include <params.hpp>
 #include <phiFunction.hpp>
 
+/// Representation
+template <bool IncludeIsoVectorCorrection=true>
 struct ALaLuscherRepresentation
 {
+  /// Factor of the correction
+  static constexpr double isoVectorCorrection=
+    10.0/9;
+  
+  /// Single state contribution
+  struct Contr
+  {
+    /// Weight
+    double weight;
+    
+    /// Energy of the state
+    double energy;
+    
+    /// Sets the parameters
+    void set(const double& _weight,
+	     const double& _energy)
+    {
+      weight=_weight;
+      energy=_energy;
+    }
+    
+    /// Evaluates for time t, including the isovector correction
+    double operator()(const double& t) const
+    {
+      /// Factor to be included in case
+      constexpr double f=
+	IncludeIsoVectorCorrection?
+	isoVectorCorrection:
+	1.0;
+      
+      return
+	f*weight*exp(-t*energy);
+    }
+  };
+  
+  /// Coefficient of the expansion
+  vector<Contr> coeffs;
+  
+  /// Evaluates for time t
+  double operator()(const double& t) const
+  {
+    double res=
+      0.0;
+    
+    for(const auto& p : coeffs)
+      res+=p(t);
+    
+    return
+      res;
+  }
+  
+  /// Set the state
+  void setState(const int& i,
+		const double& coeff,
+		const double& energy)
+  {
+    coeffs[i].set(coeff,energy);
+  }
+  
+  /// Initialize with n states
+  ALaLuscherRepresentation(const int& n) :
+    coeffs(n)
+  {
+  }
+};
+
+struct ALaLuscherRepresentationCalculator
+{
+  const HashedTanPhiAndDerivFunction& tanPhiAndPhiDerivCalculator;
+  
   const double mPi;
   
   const double m2Pi;
@@ -25,27 +98,123 @@ struct ALaLuscherRepresentation
   
   const double kRho;
   
-  const TanPhiCalculator tanPhiCalculator;
+  const double App0;
   
-  ALaLuscherRepresentation(const double& mPi,
-			   const double& L,
-			   const double& g2,
-			   const double& mRho) :
+  double Gamma(const double& omega2,
+	       const double& k) const
+  {
+    return
+      g2*k*k*k/(6*M_PI*omega2);
+  }
+  
+  double getApp0() const
+  {
+    const auto [h,hPrime]=
+      hHPrime(kRho,mRho);
+    
+    return
+      h-mRho/2*hPrime+g2*m2Pi/(6*M_PI*M_PI);
+  }
+  
+  complex<double> App(const double& omega) const
+  {
+    const double omega2=
+      omega*omega;
+    
+    const double k=
+      sqrt(omega2/4-m2Pi);
+    
+    const auto [hRho,hPrimeRho]=
+      hHPrime(kRho,mRho);
+    
+    const auto [h,hPrime]=
+      hHPrime(k,omega);
+    
+    return
+      {hRho+(omega2-m2Rho)*hPrimeRho/(2*mRho)-h,omega*Gamma(omega2,k)};
+  }
+  
+  complex<double> F(const double& omega) const
+  {
+    const double num=
+      m2Rho-App0;
+    
+    const complex<double> den=
+      m2Rho-omega*omega-App(omega);
+    
+    return
+      num/den;
+  }
+  
+  /// Computes omega given kN
+  double omegaOf(const double& kN) const
+  {
+    return
+      2*sqrt(m2Pi+sqr(kN));
+  }
+  
+  /// Computes kN given omega
+  double kNOf(const double& omega) const
+  {
+    return
+      sqrt(omega*omega/4-m2Pi);
+  }
+  
+  /// Computes the weight
+  double contrWeight(const double& kN) const
+  {
+    /// Omega entering the definition
+      const double omega=
+	omegaOf(kN);
+    
+    /// d11'
+    const double d11deriv=
+      gslDeriv([this](const double& x)
+      {
+	return delta11(x);
+      },kN);
+    
+    /// Argument of the derivative of thi
+    const double arg=
+      kN*L/(2*M_PI);
+    
+    /// Computes phi'
+    const double phiDeriv=
+      tanPhiAndPhiDerivCalculator.phiDeriv(arg);
+    
+    /// Norm2 of the form factor
+    const double F2Norm=
+      norm(F(omega));
+    
+    return
+      2*pow(kN,5)/(3*M_PI*sqr(omega))*F2Norm/
+      (kN*d11deriv+arg*phiDeriv);
+  }
+  
+  /// Constructor
+  ALaLuscherRepresentationCalculator(const HashedTanPhiAndDerivFunction& tanPhiAndPhiDerivCalculator,
+				     const double& mPi,
+				     const double& L,
+				     const double& g2,
+				     const double& mRho) :
+    tanPhiAndPhiDerivCalculator(tanPhiAndPhiDerivCalculator),
     mPi(mPi),
     m2Pi(sqr(mPi)),
     L(L),
     g2(g2),
     mRho(mRho),
     m2Rho(sqr(mRho)),
-    kRho(sqrt(m2Rho/4-m2Pi))
+    kRho(sqrt(m2Rho/4-m2Pi)),
+    App0(getApp0())
   {
   }
   
+  /// Computes h and d'
   std::array<double,2> hHPrime(const double& k,
 			       const double& x) const
   {
     const double f1=
-    g2/(6*M_PI)*
+      g2/(6*M_PI)*
       sqr(k)/(M_PI*x);
     
     const double f2=
@@ -61,10 +230,11 @@ struct ALaLuscherRepresentation
       {h,hPrime};
   }
   
+  /// cot(delta11) function
   double cotDelta11(const double& kN) const
   {
     const double omega=
-      2*sqrt(m2Pi+sqr(kN));
+      omegaOf(kN);
     
     const double omega2=
       sqr(omega);
@@ -72,31 +242,44 @@ struct ALaLuscherRepresentation
     const double k=
       sqrt(omega2/4-m2Pi);
     
-    const double Gamma=
-      g2*k*k*k/(6*M_PI*omega2);
-    
-    const auto hHPrimeOmega=
+    const auto [hOmega,hPrimeOmega]=
       hHPrime(k,omega);
     
-    const double& hOmega=
-      hHPrimeOmega[0];
-    
-    const auto hHPrimeRho=
+    const auto [hRho,hPrimeRho]=
       hHPrime(kRho,mRho);
     
-    const double& hRho=
-      hHPrimeRho[0];
-    
-    const double& hPrimeRho=
-      hHPrimeRho[1];
-    
     const double cotDelta11=
-      (m2Rho-omega2-hRho-(omega2-m2Rho)*hPrimeRho/(2*mRho)+hOmega)/(omega*Gamma);
+      (m2Rho-omega2-hRho-(omega2-m2Rho)*hPrimeRho/(2*mRho)+hOmega)/(omega*Gamma(omega2,k));
     
     return
       cotDelta11;
   }
   
+  /// Delta11 function
+  double delta11(const double& kN) const
+  {
+    double delta11=
+      atan(1/cotDelta11(kN));
+    
+    if(delta11<0)
+      delta11+=M_PI;
+    
+    return
+      delta11;
+  }
+  
+  /// Derivative of the delta11 function
+  double derDelta11(const double& kN) const
+  {
+    return
+      gslDeriv([this](const double& x)
+      {
+	return
+	  delta11(x);
+      },kN);
+  }
+  
+  /// Computes the l.h.s of the quantization condition
   double levelsFinderLhs(const double& kN) const
   {
     const double cotD11=
@@ -106,7 +289,7 @@ struct ALaLuscherRepresentation
       1.0/cotD11;
     
     const double tanPhi=
-      tanPhiCalculator(kN*L/(2*M_PI));
+      tanPhiAndPhiDerivCalculator.tanPhi(kN*L/(2*M_PI));
     
     /// tan(a+b)=(tan(a)+tan(b))/(1-tan(a)*tan(b))
     const double tanD11PlusPhi=
@@ -116,13 +299,18 @@ struct ALaLuscherRepresentation
       tanD11PlusPhi;
   };
   
+  /// Find n levels
   vector<double> findLevels(const int& n,
 			    const string& path="")
     const
   {
+    //cout<<"  searching "<<n<<" levels"<<endl;
+    
     const auto zeroFinder=
       [this](const double& kN)
       {
+	//cout<<"     searching for zero near "<<kN<<endl;
+	
 	return
 	  levelsFinderLhs(kN);
       };
@@ -140,25 +328,35 @@ struct ALaLuscherRepresentation
     /// Positions of zeroes
     vector<double> zero;
     
+    /// Minimal value to search
+    const double xMin=
+      1e-4;
+    
     /// Starting value to be searched
     double x=
-      0.1;
+      xMin;
     
-    // plotLhs.set_no_line();
     for(int i=1;i<=n;i++)
       {
-	x=NewtonSolve(discontinuityFinder,x+0.01,1e-8);
+	//cout<<"   "<<i<<" initial "<<x<<endl;
+	x=NewtonSolve(discontinuityFinder,x+1e-4,1e-8);
 	discontinuities.push_back(x);
+	//cout<<"   "<<i<<" found disco "<<x<<endl;
 	
-	x=NewtonSolve(zeroFinder,x+0.01);
+	x=NewtonSolve(zeroFinder,x+1e-4,1e-8);
 	zero.push_back(x);
+	//cout<<"   "<<i<<" found zero "<<x<<endl;
       }
+    
+    /// Last point to plot
+    const double xMax=
+      x*1.1;
     
     if(path!="")
       {
 	grace_file_t plot(path);
 	
-	for(double x=0.1;x<0.7;x+=0.001)
+	for(double x=xMin;x<xMax;x+=0.001)
 	  plot.write_xy(x,atan(zeroFinder(x)));
 	
 	plot.set_no_symbol();
@@ -176,6 +374,106 @@ struct ALaLuscherRepresentation
     
     return
       zero;
+  }
+  
+  /// Gets the parameters of the states
+  template <bool IncludeIsoVectorCorrection=true>
+  ALaLuscherRepresentation<IncludeIsoVectorCorrection> getLevelsPars(const int& n,
+								     const string& path="") const
+  {
+    /// Gets all levels momentum
+    const vector<double> kNs=
+      findLevels(n,path);
+    
+    /// Result
+    ALaLuscherRepresentation res(n);
+    
+    for(int i=0;i<n;i++)
+      {
+	//cout<<"  adding solution for level "<<i<<endl;
+	
+	/// Single momentum
+	const double& kN=
+	  kNs[i];
+	
+	/// Weight of the state
+	const double weight=
+	  contrWeight(kN);
+	
+	const double omega=
+	  omegaOf(kN);
+	
+	res.setState(i,weight,omega);
+      }
+    
+    return
+      res;
+  }
+};
+
+/// Caches the calculation of the Luscher representation
+template <bool IncludeIsoVectorCorrection=true>
+struct ALaLuscherRepresentationCached
+{
+  /// Hashed calculator of phi and phi'
+  const HashedTanPhiAndDerivFunction& hashedPhiAndDerivCalculator;
+  
+  /// Cached value of mPi
+  double cachedMPi;
+  
+  /// Number of levels to be searched
+  const int n;
+  
+  /// Storage of the interpolation parameters
+  map<pair<double,double>,ALaLuscherRepresentation<IncludeIsoVectorCorrection>> cachedPars;
+  
+  /// Constructor
+  ALaLuscherRepresentationCached(const HashedTanPhiAndDerivFunction& hashedPhiAndDerivCalculator,
+				 const int& n) :
+    hashedPhiAndDerivCalculator(hashedPhiAndDerivCalculator),
+    cachedMPi(0.0),
+    n(n)
+  {
+  }
+  
+  /// Computes the representation
+  const ALaLuscherRepresentation<IncludeIsoVectorCorrection>& operator()(const double& mPi,
+									 const double& L,
+									 const double& mRho,
+									 const double& g2)
+  {
+    if(cachedMPi!=mPi)
+      {
+	//cout<<"Changing mPi from "<<cachedMPi<<" to "<<mPi<<endl;
+	
+	cachedPars.clear();
+	cachedMPi=mPi;
+      }
+    
+    /// Search key
+    const pair<double,double> key{mRho,g2};
+    
+    /// Result of the research
+    auto find=
+      cachedPars.find(key);
+    
+    if(find==cachedPars.end())
+      {
+	//cout<<"mPi "<<mPi<<" , L "<<L<<" , g2 "<<g2<<" , mRho "<<mRho<<endl;
+	
+	//cout<<" computing for values: mPi="<<mPi<<" , g2="<<g2<<" , mRho="<<mRho<<endl;
+	const ALaLuscherRepresentationCalculator interacting(hashedPhiAndDerivCalculator,mPi,L,g2,mRho);
+	const ALaLuscherRepresentation pars=
+	  interacting.getLevelsPars(n);
+	
+	const auto insertRes=
+	  cachedPars.insert({key,pars});
+	
+	find=insertRes.first;
+      }
+    
+    return
+      find->second;
   }
 };
 

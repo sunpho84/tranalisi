@@ -12,7 +12,8 @@ using namespace std;
 
 EXTERN size_t nMPIranks,MPIrank INIT_EXTERN_TO(=0);
 EXTERN double amq;
-EXTERN size_t T,L,TH,THp1;
+EXTERN size_t T,TH,THp1;
+EXTERN double L;
 EXTERN size_t tMinVKVK,tMaxVKVK;
 EXTERN size_t tMinP5P5[2],tMaxP5P5[2];
 EXTERN double a,ZaPetros;

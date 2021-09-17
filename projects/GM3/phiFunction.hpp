@@ -204,29 +204,69 @@ struct PhiCalculator
 };
 
 /// Provides an hashed version of the tanPhi function
-struct HashedTanPhiFunction
+struct HashedTanPhiAndDerivFunction
 {
+  const PhiCalculator pc;
+  
   /// Interpolates for phi(q)/(pi*q^2)
-  HashedFunction<> hashedFunction;
+  HashedFunction<> hashedPhiOverPiQ2Function;
+  
+  /// Interpolates for phi(q)/(pi*q^2)
+  HashedFunction<> hashedPhiDeriv;
   
   /// Constructor
-  HashedTanPhiFunction(const string& path,
-		       const double& qMax,
-		       const int& nIntervals)
-    : hashedFunction(path,[pc=PhiCalculator(qMax*qMax)](const double& q)
-    {
-      return
-	pc(q)/(M_PI*q*q);
-    },
-      0.1,qMax,nIntervals)
+  HashedTanPhiAndDerivFunction(const string& pathPhi,
+			       const string& pathPhiDeriv,
+			       const double& qMax,
+			       const int& nIntervals) :
+    pc(qMax*qMax),
+    hashedPhiOverPiQ2Function(pathPhi,
+			      [this](const double& q)
+			      {
+				return
+				  pc(q)/(M_PI*q*q);
+			      },
+			      0.1,
+			      qMax,
+			      nIntervals),
+      hashedPhiDeriv(pathPhiDeriv,
+		     [this](const double& q)
+		     {
+		       return
+			 gslDeriv(pc,q);
+		     },
+		     0.1,
+		     qMax,
+		     nIntervals)
   {
   }
   
-  /// Evaluate for the required value of q
-  double operator()(const double& q) const
+  /// Evaluate tan(phi(q)) for the required value of q
+  double tanPhi(const double& q) const
   {
     return
-      tan(hashedFunction(q)*M_PI*q*q);
+      tan(hashedPhiOverPiQ2Function(q)*M_PI*q*q);
+  }
+  
+  /// Evaluate phi'(q) for the required value of q
+  double phiDeriv(const double& q) const
+  {
+    return
+      hashedPhiDeriv(q);
+  }
+  
+  void plot(const char* phiPath,
+	    const char* phiDerivPath) const
+  {
+    for(auto& p : {make_pair(phiPath,hashedPhiOverPiQ2Function),
+		   {phiDerivPath,hashedPhiDeriv}})
+      {
+	grace_file_t plot(p.first);
+	
+	plot.set_no_symbol();
+	for(double q=p.second.xMin;q<p.second.xMax;q+=0.001)
+	  plot.write_xy(q,p.second(q));
+      }
   }
 };
 
