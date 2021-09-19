@@ -171,8 +171,11 @@ struct ALaLuscherRepresentationCalculator
     const double d11deriv=
       gslDeriv([this](const double& x)
       {
-	return delta11(x);
-      },kN);
+	return
+	  delta11(x);
+      },
+	kN,
+	1e-3);
     
     /// Argument of the derivative of thi
     const double arg=
@@ -276,7 +279,9 @@ struct ALaLuscherRepresentationCalculator
       {
 	return
 	  delta11(x);
-      },kN);
+      },
+	kN,
+	1e-3);
   }
   
   /// Computes the l.h.s of the quantization condition
@@ -339,11 +344,11 @@ struct ALaLuscherRepresentationCalculator
     for(int i=1;i<=n;i++)
       {
 	//cout<<"   "<<i<<" initial "<<x<<endl;
-	x=NewtonSolve(discontinuityFinder,x+1e-4,1e-8);
+	x=NewtonSolve(discontinuityFinder,x+1e-4);
 	discontinuities.push_back(x);
 	//cout<<"   "<<i<<" found disco "<<x<<endl;
 	
-	x=NewtonSolve(zeroFinder,x+1e-4,1e-8);
+	x=NewtonSolve(zeroFinder,x+1e-4);
 	zero.push_back(x);
 	//cout<<"   "<<i<<" found zero "<<x<<endl;
       }

@@ -107,7 +107,8 @@ struct LuscherZetaCalculator
   static constexpr double epsRel=1e-8;
   
   /// Size of the workspace
-  static constexpr int workspaceSize=1000;
+  static constexpr int workspaceSize=
+    1000;
   
   /// Workspace used by gsl
   gsl_integration_workspace *workspace;

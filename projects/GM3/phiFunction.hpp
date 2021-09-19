@@ -226,16 +226,16 @@ struct HashedTanPhiAndDerivFunction
 				return
 				  pc(q)/(M_PI*q*q);
 			      },
-			      0.1,
+			      0.01,
 			      qMax,
 			      nIntervals),
       hashedPhiDeriv(pathPhiDeriv,
 		     [this](const double& q)
 		     {
 		       return
-			 gslDeriv(pc,q);
+			 gslDeriv(pc,q,1e-3);
 		     },
-		     0.1,
+		     0.01,
 		     qMax,
 		     nIntervals)
   {

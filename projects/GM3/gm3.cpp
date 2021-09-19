@@ -102,22 +102,21 @@ void fitVKVK()
   cVKVK[0]=cVKVK[1];
   
   jack_fit_t fitter;
+  
   djvec_t pars(4);
-  pars[0].fill_gauss(1.15,0.01,235235);
-  pars[1].fill_gauss(3.30,0.1,7342);
-  pars[2].fill_gauss(5.50,0.1,23423);
+  pars[0].fill_gauss(1.15,0.05,235235);
+  pars[1].fill_gauss(0.17,0.05,7342);
+  pars[2].fill_gauss(0.32,0.05,23423);
   pars[3].fill_gauss(28.1,0.1,32235);
   
   const size_t iRDual=
     fitter.add_fit_par_limits(pars[0],"RDual",pars[0].ave(),pars[0].err(), 0.4,1.5);
-  const size_t iXEThr=
-    fitter.add_fit_par_limits(pars[1],"XEThr",pars[1].ave(),pars[1].err(), 2.0,4.0);
-  const size_t iXMRho=
-    fitter.add_fit_par_limits(pars[2],"XMRho",pars[2].ave(),pars[2].err(), 3.0,6.0);
+  const size_t iEThr=
+    fitter.add_fit_par_limits(pars[1],"EThr",pars[1].ave(),pars[1].err(), 0.01,1.0);
+  const size_t iMRho=
+    fitter.add_fit_par_limits(pars[2],"MRho",pars[2].ave(),pars[2].err(), 0.01,1.0);
   const size_t iG2=
     fitter.add_fit_par_limits(pars[3],"g2",pars[3].ave(),pars[3].err(), 25.0,35.0);
-  // fitter.fix_par(iRho);
-  //fitter.fix_par(iG2);
   
   const djack_t aMPi=
     constant_fit(effective_mass(cP5P5),tMinP5P5[0],tMaxP5P5[0]);
@@ -141,8 +140,8 @@ void fitVKVK()
   auto fullRep=
     [&LuschRep,
      iRDual,
-     iXEThr,
-     iXMRho,
+     iEThr,
+     iMRho,
      iG2](const vector<double>& p,
 	  const double& aMPi,
 	  const double& t)
@@ -150,9 +149,9 @@ void fitVKVK()
       const double& rDual=
 	p[iRDual];
       const double eThr=
-	p[iXEThr]*aMPi;
+	p[iEThr];
       const double amRho=
-	p[iXMRho]*aMPi;
+	p[iMRho];
       const double& g2=
 	p[iG2];
       
@@ -178,7 +177,7 @@ void fitVKVK()
     };
   
   const size_t tMinFit=
-    3;
+    5;
   
   size_t tFit=
     tMinFit;
@@ -262,7 +261,7 @@ void fitVKVK()
     [&jackFullRep](const double& tPlot)
     {
       const double dTPlot=
-	1e-3;
+	1;
       
       const djack_t y=
 	jackFullRep(tPlot);
@@ -276,6 +275,20 @@ void fitVKVK()
       return
 	e;
     };
+  
+  const djack_t& rDual=
+	pars[iRDual];
+  const djack_t eThr=
+	pars[iEThr];
+  const djack_t amRho=
+	pars[iMRho];
+  const djack_t g=
+    sqrt(pars[iG2]);
+  
+  cout<<"rDual: "<<rDual.ave_err()<<endl;
+  cout<<"eThr: "<<eThr.ave_err()<<endl;
+  cout<<"amRho: "<<amRho.ave_err()<<endl;
+  cout<<"g: "<<g.ave_err()<<endl;
   
   grace_file_t plotFit("plots/aLaLuscherFit.xmg");
   plotFit.write_vec_ave_err(effective_mass(cVKVK).ave_err());
