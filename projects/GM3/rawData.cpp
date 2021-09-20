@@ -324,6 +324,13 @@ void loadAndPackRawData(int narg,char** arg)
   clustSize=(double)nConfs/njacks;
   console<<"Cluster size: "<<endl;
   
+  if(MPIrank==0)
+    {
+      raw_file_t confMap("reordered/confMap.txt","w");
+      for(const auto& c : confsList)
+	confMap.write(c);
+    }
+  
   DataLoader loader(T);
   const array<pair<int,int>,7> map{std::pair<int,int>{0,0},{1,6},{1,7},{1,8},{2,10},{2,11},{2,12}};
   
