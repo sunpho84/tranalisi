@@ -328,7 +328,7 @@ void loadAndPackRawData(int narg,char** arg)
     {
       raw_file_t confMap("reordered/confMap.txt","w");
       for(const auto& c : confsList)
-	confMap.write(c);
+	confMap.printf("%s\n",c.c_str());
     }
   
   DataLoader loader(T);
