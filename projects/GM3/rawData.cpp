@@ -717,9 +717,9 @@ void convertForSilvano()
   for(size_t iConf=0;iConf<nConfs;iConf++)
     {
       const string confPath=
-	"reordered/"+confList[iConf];
+	"reordered/"+confsList[iConf];
       const string filePath=
-	"reordered/"+confList[iconf]+"/mes_contr_2pts_ll";
+	"reordered/"+confsList[iConf]+"/mes_contr_2pts_ll";
       
       if(not file_exists(filePath))
 	{
