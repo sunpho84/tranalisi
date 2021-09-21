@@ -15,6 +15,7 @@ EXTERN vector<double> _rawData;
 EXTERN vector<int> confMap;
 EXTERN vector<string> possibleConfsList;
 EXTERN vector<string> sourcesList;
+EXTERN vector<string> confsList;
 
 inline double& rawData(const size_t& _iConf,const size_t& iSource,const size_t& igamma_out,const size_t& iMes,const size_t& tOut)
 {

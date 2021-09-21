@@ -304,7 +304,6 @@ void loadAndPackRawData(int narg,char** arg)
       MPI_Bcast(&accepted[firstConf],lastConf-firstConf,MPI_INT,loopRank,MPI_COMM_WORLD);
     }
   
-  vector<string> confsList;
   for(size_t iConf=0;iConf<nPossibleConfs;iConf++)
     if(accepted[iConf])
       confsList.push_back(possibleConfsList[iConf]);
@@ -352,7 +351,8 @@ void loadAndPackRawData(int narg,char** arg)
       
       for(size_t iSource=0;iSource<nSources;iSource++)
 	{
-	  const string file=confsList[iConf]+"/"+sourcesList[iSource];
+	  const string file=
+	    confsList[iConf]+"/"+sourcesList[iSource];
 	  loader.open(file);
 	  loader.load();
 	  loader.openLoad();
@@ -716,8 +716,10 @@ void convertForSilvano()
 {
   for(size_t iConf=0;iConf<nConfs;iConf++)
     {
-      const string confPath=combine("reordered/%04zu/",iConf+1);
-      const string filePath=combine("reordered/%04zu/mes_contr_2pts_ll",iConf+1);
+      const string confPath=
+	"reordered/"+confList[iConf];
+      const string filePath=
+	"reordered/"+confList[iconf]+"/mes_contr_2pts_ll";
       
       if(not file_exists(filePath))
 	{
