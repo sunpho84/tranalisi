@@ -303,19 +303,22 @@ int main(int narg,char **arg)
   
   loadData(narg,arg);
   
-  Z=determineRenoConst();
-  
-  if(canUseRawData)
+  if(MPIrank==0)
     {
-      analyzeRawData();
-      convertForSilvano();
+      Z=determineRenoConst();
+      
+      if(canUseRawData)
+	{
+	  //analyzeRawData();
+	  convertForSilvano();
+	}
+      
+      computeAmu();
+      
+      testMf();
+      
+      fitVKVK();
     }
-  
-  computeAmu();
-  
-  testMf();
-  
-  fitVKVK();
   
   close();
   

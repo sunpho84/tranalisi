@@ -73,5 +73,4 @@ void close()
     storeCachedAveCorr();
   
   MPI_Finalize();
-  
 }

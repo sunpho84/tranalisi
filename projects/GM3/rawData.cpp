@@ -714,7 +714,7 @@ djvec_t getRawAve(const size_t iSourceMin,const size_t iSourceMax,const size_t i
 
 void convertForSilvano()
 {
-  cout<<"Performing conversion"<<endl;
+  cout<<"Performing conversion, nconfs: "<<nConfs<<endl;
   
   for(size_t iConf=0;iConf<nConfs;iConf++)
     {
