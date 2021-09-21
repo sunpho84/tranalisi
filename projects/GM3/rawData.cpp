@@ -718,18 +718,26 @@ void convertForSilvano()
   
   for(size_t iConf=0;iConf<nConfs;iConf++)
     {
-      const string confPath=
-	"reordered/"+confsList[iConf];
+      /// Full path 
+      std::filesystem::path full=
+	confsList[iConf];
+      
+      /// Extract conf name
+      const string confName=
+	full.filename();
+      
+      const string outputConf=
+	"reordered/"+confName;
       const string filePath=
-	"reordered/"+confsList[iConf]+"/mes_contr_2pts_ll";
-
-      console<<"Conf: "<<confsList[iConf]<<endl;
-      console<<"Probing path "<<confPath<<endl;
+	"reordered/"+confName+"/mes_contr_2pts_ll";
+      
+      console<<"Conf: "<<confName<<endl;
+      console<<"Probing path "<<outputConf<<endl;
       console<<"Probing file "<<filePath<<endl;
       
       if(not file_exists(filePath))
 	{
-	  mkdir(confPath);
+	  mkdir(outputConf);
 	  
 	  ofstream out(filePath);
 	  out.precision(16);
