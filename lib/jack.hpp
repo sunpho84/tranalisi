@@ -42,33 +42,66 @@ public:
   typedef T base_type;
   
   //! creator
-  jack_t() : valarray<T>(njacks+1) {check_njacks_init();}
+  jack_t() :
+    valarray<T>(njacks+1)
+  {
+    check_njacks_init();
+  }
   
   //! create with size (only njacks is accepted)
   //explicit jack_t(size_t ext_njacks) : jack_t() {if(njacks!=ext_njacks) CRASH("NJacks %zu different from global value %zu",ext_njacks,njacks);}
   
   //! create from double
-  jack_t(double ext) : jack_t() {*this=ext;}
+  jack_t(double ext) : jack_t()
+  {
+    *this=ext;
+  }
   
   //! create from sliced array
-  jack_t(const slice_array<jack_t> &slice) : valarray<T>(slice) {}
+  jack_t(const slice_array<jack_t> &slice) :
+    valarray<T>(slice)
+  {
+  }
   
   //! creator from data
-  jack_t(const valarray<T> &data) : jack_t() {init_from_data(data);}
+  jack_t(const valarray<T> &data) :
+    jack_t()
+  {
+    init_from_data(data);
+  }
   
   //! move constructor
-  jack_t(jack_t&& oth) : valarray<T>(forward<valarray<T>>(oth)) {// cout<<"move const"<<endl;
+  jack_t(jack_t&& oth) :
+    valarray<T>(forward<valarray<T>>(oth))
+  {
   }
   
   //! construct from expr
   template<class _Dom>
-  jack_t(const _Expr<_Dom,T> &oth) : valarray<T>(oth) {}
+  jack_t(const _Expr<_Dom,T> &oth) :
+    valarray<T>(oth)
+  {
+  }
   
   //! constrcutor specifying gauss_filler
-  explicit jack_t(const gauss_filler_t &gf) : jack_t() {fill_gauss(gf);}
+  explicit jack_t(const gauss_filler_t &gf) :
+    jack_t()
+  {
+    fill_gauss(gf);
+  }
   
   //! copy constructor
-  jack_t(const jack_t &oth) : valarray<T>(oth) {// cout<<"copy const"<<endl;
+  jack_t(const jack_t &oth) :
+    valarray<T>(oth)
+  {
+  }
+  
+  template <typename...Args>
+  explicit jack_t(const Args&...args) :
+    jack_t()
+  {
+    for(size_t ijack=0;ijack<=njacks;ijack++)
+      (*this)[ijack]=T(getJack(args,ijack)...);
   }
   
   //! move assignement
@@ -80,13 +113,67 @@ public:
   //! assignement
   template<class oth_t>
   jack_t &operator=(const oth_t &oth)
-  {valarray<T>::operator=(oth);return *this;}
+  {
+    valarray<T>::operator=(oth);
+    
+    return
+      *this;
+  }
+  
+  template <typename U>
+  static decltype(auto) getJack(U&& u,
+				const size_t& ijack)
+  {
+    return
+      u;
+  }
+  
+  template <typename U>
+  static U& getJack(jack_t<U>& u,
+		    const size_t& ijack)
+  {
+    return
+      u[ijack];
+  }
+  
+  template <typename U>
+  static const U& getJack(const jack_t<U>& u,
+			  const size_t& ijack)
+  {
+    return
+      u[ijack];
+  }
+
+#define PROVIDE_CALLABLE(CONST)			\
+  template <typename...Args>			\
+  auto operator()(Args&&...args) CONST		\
+  {						\
+    using R=							\
+      decltype((*this)[0](getJack(args,/*ijack*/0)...));	\
+								\
+    jack_t<R> res;						\
+								\
+    for(size_t ijack=0;ijack<=njacks;ijack++)			\
+      res[ijack]=(*this)[ijack](getJack(args,ijack)...);	\
+								\
+    return							\
+      res;							\
+  }
+  
+  PROVIDE_CALLABLE(const);
+  
+  PROVIDE_CALLABLE(/* non const*/);
+  
+#undef PROVIDE_CALLABLE
   
   //! fill the central with the average
   void fill_ave_with_components_ave()
   {
     (*this)[njacks]=0;
-    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[njacks]+=(*this)[ijack];
+    
+    for(size_t ijack=0;ijack<njacks;ijack++)
+      (*this)[njacks]+=(*this)[ijack];
+    
     (*this)[njacks]/=njacks;
   }
   
@@ -125,58 +212,85 @@ public:
   }
   
   //! return only the average
-  T ave() const {return ave_err().ave();}
+  T ave() const
+  {
+    return
+      ave_err().ave();
+  }
   
   //! return only the error
-  T err() const {return ave_err().err();}
+  T err() const
+  {
+    return
+      ave_err().err();
+  }
   
   //! significativity (number of sigma of difference from 0)
   T significativity() const
   {
-    auto ae=ave_err();
-    return fabs(ae.ave()/ae.err());
+    auto ae=
+      ave_err();
+    
+    return
+      fabs(ae.ave()/ae.err());
   }
   
   //! initialize from aver_err_t and a seed
   void fill_gauss(const gauss_filler_t &gf)
   {
     check_njacks_init();
+    
     gen_t gen(gf.seed);
+    
     for(size_t ijack=0;ijack<njacks;ijack++)
       (*this)[ijack]=gen.get_gauss(gf.ae.ave(),gf.ae.err()/sqrt(njacks-1));
+    
     (*this)[njacks]=gf.ae.ave();
   }
   
   //! initialize from ave and err
   void fill_gauss(T ave,T err,int seed)
-  {fill_gauss(gauss_filler_t(ave,err,seed));}
+  {
+    fill_gauss(gauss_filler_t(ave,err,seed));
+  }
   
   //! intialize froma ave_err_t and seed
   void fill_gauss(const ave_err_t &ae,int seed)
-  {fill_gauss(gauss_filler_t(ae,seed));}
+  {
+    fill_gauss(gauss_filler_t(ae,seed));
+  }
   
   //! fill the clusters
   size_t fill_clusters(const valarray<T> &data)
   {
     //compute cluster size
-    size_t clust_size=data.size()/njacks;
-    if(clust_size*njacks!=data.size()) CRASH("Data size %zu is not multiple of njacks %zu",data.size(),njacks);
-    for(size_t it=0;it<data.size();it++) (*this)[it/clust_size]+=data[it];
+    const size_t clust_size=
+      data.size()/njacks;
     
-    return clust_size;
+    if(clust_size*njacks!=data.size())
+      CRASH("Data size %zu is not multiple of njacks %zu",data.size(),njacks);
+    
+    for(size_t it=0;it<data.size();it++)
+      (*this)[it/clust_size]+=data[it];
+    
+    return
+      clust_size;
   }
   
   //! clusterize
   void clusterize(double clust_size=1.0)
   {
-    if(clust_size==0) CRASH("clust_size is zero");
+    if(clust_size==0)
+      CRASH("clust_size is zero");
     
     //fill clusters and compute avarages
     set_to_zero((*this)[njacks]);
-    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[njacks]+=(*this)[ijack];
+    for(size_t ijack=0;ijack<njacks;ijack++)
+      (*this)[njacks]+=(*this)[ijack];
     
     //clusterize
-    for(size_t ijack=0;ijack<njacks;ijack++) (*this)[ijack]=((*this)[njacks]-(*this)[ijack])/double((njacks-1)*clust_size);
+    for(size_t ijack=0;ijack<njacks;ijack++)
+      (*this)[ijack]=((*this)[njacks]-(*this)[ijack])/double((njacks-1)*clust_size);
     (*this)[njacks]/=clust_size*njacks;
   }
   
