@@ -7,60 +7,12 @@
 #include <data.hpp>
 #include <fit.hpp>
 #include <kernels.hpp>
+#include <mPCAC.hpp>
 #include <params.hpp>
 #include <rawData.hpp>
 #include <renoConstants.hpp>
 
 using namespace std;
-
-void testMf()
-{
-  const djvec_t cP5P5=
-    getAveForRego(0,nSources,idP5P5,REGO_TM);
-  
-  djack_t Z2,aMpi;
-  two_pts_fit(Z2,aMpi,cP5P5,TH,tMinP5P5[0],tMaxP5P5[0],"plots/P5P5fitForMpi.xmg");
-  
-  const djack_t aFpi=
-    2*amq*sqrt(Z2)/(aMpi*sinh(aMpi));
-  
-  console<<"aMpi: "<<aMpi<<endl;
-  console<<"aFpi: "<<aFpi<<endl;
-  
-  const djack_t r=
-    aMpi/aFpi;
-  
-  const djack_t r2=
-    r*r;
-  
-  const double r2Phys=
-    sqr(134.98/130.4);
-  
-  console<<" r2: "<<r2.ave_err()<<endl;
-  console<<" r2Phys: "<<r2Phys<<endl;
-  
-  const djack_t r2frR2Phys=
-    r2/r2Phys;
-  
-  console<<" r2/r2Phys: "<<r2frR2Phys.ave_err()<<endl;
-  
-  const djvec_t cV0P5=
-    (getAve(0,nSources,idV0P5,0)-getAve(0,nSources,idV0P5,2))/2;
-  cV0P5.ave_err().write("plots/corr_V0P5_usable.xmg");
-  
-  const djvec_t cV0P5der=
-    symmetric_derivative(cV0P5);
-  
-  cV0P5der.ave_err().write("plots/corr_V0P5_der.xmg");
-  
-  const djvec_t mPCACEff=
-    cV0P5der/(2*cP5P5);
-  
-  const djack_t mPCAC=
-    constant_fit(mPCACEff,14,TH-1,"plots/eff_mPCAC.xmg");
-  
-  console<<"mPCAC: "<<mPCAC.ave_err()<<endl;
-}
 
 template <typename T>
 T dualPartFun(const T& mRho,
@@ -122,20 +74,7 @@ void fitVKVK()
     constant_fit(effective_mass(cP5P5),tMinP5P5[0],tMaxP5P5[0]);
   
   const int n=6;
-  ALaLuscherRepresentationCached LuschRep(hashedPhiAndDerivCalculator,n);
-  
-  // {
-  //   const double amRho=
-  //     pars[iXMRho][0]*aMPi[0];
-    
-  //   const double& g2=
-  //     pars[iG2][0];
-    
-  //   for(const auto& c : LuschRep(aMPi[0],L,amRho,g2).coeffs)
-  //     cout<<c.weight<<" "<<c.energy<<endl;
-  // }
-  
-  // CRASH("");
+  ALaLuscherRepresentationCached LuschRep(hashedPhiAndDerivCalculator,nLeveles);
   
   auto fullRep=
     [&LuschRep,
@@ -177,7 +116,7 @@ void fitVKVK()
     };
   
   const size_t tMinFit=
-    5;
+    6;
   
   size_t tFit=
     tMinFit;
@@ -257,6 +196,24 @@ void fitVKVK()
   cout<<"---"<<endl;
   cout<<pars.ave_err()<<endl;
   
+  djvec_t weights(nLeveles),energy(nLeveles);
+  for(size_t ijack=0;ijack<=njacks;ijack++)
+    {
+      const auto c=
+	LuschRep(aMPi[ijack],L,pars[iMRho][ijack],pars[iG2][ijack]).coeffs;
+      
+      for(int ilev=0;ilev<nLeveles;ilev++)
+	{
+	  weights[ilev][ijack]=c[ilev].weight;
+	  energy[ilev][ijack]=c[ilev].energy;
+	}
+    }
+  
+  console<<"Levels (i,w,e):"<<endl;
+  console<<"-------"<<endl;
+  for(int ilev=0;ilev<nLeveles;ilev++)
+    console<<" "<<ilev<<" "<<weights[ilev].ave_err()<<" "<<energy[ilev].ave_err()<<endl;
+  
   auto effMassFun=
     [&jackFullRep](const double& tPlot)
     {
@@ -315,7 +272,7 @@ int main(int narg,char **arg)
       
       computeAmu();
       
-      testMf();
+      computeMPCAC();
       
       fitVKVK();
     }
