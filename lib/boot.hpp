@@ -295,6 +295,19 @@ string to_string(const boot_t<T> &obj)
   return os.str();
 } 
 
+template <typename T,
+	  typename U>
+boot_t<T> pow(const boot_t<T>& a,
+	      const U& b)
+{
+  boot_t<T> c;
+  
+  for(size_t iboot=0;iboot<a.size();iboot++)
+    c[iboot]=pow(a[iboot],b);
+  
+  return c;
+}
+
 #undef EXTERN_BOOT
 #undef INIT_TO
 

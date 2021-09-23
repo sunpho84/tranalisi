@@ -9,7 +9,6 @@
 #include <random.hpp>
 #include <sstream>
 #include <tools.hpp>
-#include <valarray>
 
 #ifndef EXTERN_JACK
  #define EXTERN_JACK extern
@@ -27,23 +26,57 @@ EXTERN_JACK size_t njacks INIT_TO(UNDEF_NJACKS);
 //! set the number of jackknives
 inline void set_njacks(int ext_njacks)
 {
-  if(njacks==UNDEF_NJACKS) njacks=ext_njacks;
-  else CRASH("Unbale to set njacks twice");
+  if(njacks==UNDEF_NJACKS)
+    njacks=ext_njacks;
+  else
+    CRASH("Unbale to set njacks twice");
+}
+
+template <typename T>
+struct jack_t;
+
+template <typename U>
+decltype(auto) getJack(U&& u,
+		       const size_t& ijack)
+{
+  return
+    u;
+}
+
+template <typename U>
+U& getJack(jack_t<U>& u,
+	   const size_t& ijack)
+{
+  return
+    u[ijack];
+}
+
+template <typename U>
+const U& getJack(const jack_t<U>& u,
+		 const size_t& ijack)
+{
+  return
+    u[ijack];
 }
 
 //! crash if number of jackknives is not initialized
 inline void check_njacks_init()
-{if(njacks==UNDEF_NJACKS) CRASH("Set njacks before");}
-
-template <class T> class jack_t : public valarray<T>
 {
-public:
+  if(njacks==UNDEF_NJACKS)
+    CRASH("Set njacks before");
+}
+
+template <typename T>
+struct jack_t
+{
+  vector<T> data;
+  
   //! base type of the jack
   typedef T base_type;
   
   //! creator
   jack_t() :
-    valarray<T>(njacks+1)
+    data(njacks+1)
   {
     check_njacks_init();
   }
@@ -51,37 +84,32 @@ public:
   //! create with size (only njacks is accepted)
   //explicit jack_t(size_t ext_njacks) : jack_t() {if(njacks!=ext_njacks) CRASH("NJacks %zu different from global value %zu",ext_njacks,njacks);}
   
-  //! create from double
-  jack_t(double ext) : jack_t()
-  {
-    *this=ext;
-  }
   
-  //! create from sliced array
-  jack_t(const slice_array<jack_t> &slice) :
-    valarray<T>(slice)
-  {
-  }
+  // //! create from sliced array
+  // jack_t(const slice_array<jack_t> &slice) :
+  //   valarray<T>(slice)
+  // {
+  // }
   
-  //! creator from data
-  jack_t(const valarray<T> &data) :
-    jack_t()
-  {
-    init_from_data(data);
-  }
+  // //! creator from data
+  // jack_t(const valarray<T> &data) :
+  //   jack_t()
+  // {
+  //   init_from_data(data);
+  // }
   
   //! move constructor
   jack_t(jack_t&& oth) :
-    valarray<T>(forward<valarray<T>>(oth))
+    data(std::move(oth.data))
   {
   }
   
-  //! construct from expr
-  template<class _Dom>
-  jack_t(const _Expr<_Dom,T> &oth) :
-    valarray<T>(oth)
-  {
-  }
+  // //! construct from expr
+  // template<class _Dom>
+  // jack_t(const _Expr<_Dom,T> &oth) :
+  //   valarray<T>(oth)
+  // {
+  // }
   
   //! constrcutor specifying gauss_filler
   explicit jack_t(const gauss_filler_t &gf) :
@@ -92,58 +120,55 @@ public:
   
   //! copy constructor
   jack_t(const jack_t &oth) :
-    valarray<T>(oth)
+    data(oth.data)
   {
   }
   
   template <typename...Args>
-  explicit jack_t(const Args&...args) :
-    jack_t()
+  explicit jack_t(const Args&...args)
   {
+    data.reserve(njacks+1);
+    
     for(size_t ijack=0;ijack<=njacks;ijack++)
-      (*this)[ijack]=T(getJack(args,ijack)...);
+      data.emplace_back(getJack(args,ijack)...);
   }
   
-  //! move assignement
-  jack_t &operator=(jack_t &&oth) noexcept =default;
-  
-  //! copy assignement
-  jack_t &operator=(const jack_t &oth) =default;
-  
-  //! assignement
-  template<class oth_t>
-  jack_t &operator=(const oth_t &oth)
+  size_t size() const
   {
-    valarray<T>::operator=(oth);
+    return
+      data.size();
+  }
+  
+#define PROVIDE_SUBSCRIBE_OPERATOR(CONST)	\
+  CONST T& operator[](const size_t& i) CONST	\
+  {						\
+    return					\
+      data[i];					\
+  }
+  
+  PROVIDE_SUBSCRIBE_OPERATOR(const);
+  
+  PROVIDE_SUBSCRIBE_OPERATOR(/*non const*/);
+  
+#undef PROVIDE_SUBSCRIBE_OPERATOR
+  
+  //! move assignment
+  jack_t &operator=(jack_t&& oth) noexcept =default;
+  
+  //! copy assignment
+  jack_t &operator=(const jack_t& oth) =default;
+  
+  //! assignment
+  template <typename U>
+  jack_t &operator=(const U& oth)
+  {
+    for(size_t ijack=0;ijack<=njacks;ijack++)
+      data[ijack]=getJack(oth,ijack);
     
     return
       *this;
   }
   
-  template <typename U>
-  static decltype(auto) getJack(U&& u,
-				const size_t& ijack)
-  {
-    return
-      u;
-  }
-  
-  template <typename U>
-  static U& getJack(jack_t<U>& u,
-		    const size_t& ijack)
-  {
-    return
-      u[ijack];
-  }
-  
-  template <typename U>
-  static const U& getJack(const jack_t<U>& u,
-			  const size_t& ijack)
-  {
-    return
-      u[ijack];
-  }
-
 #define PROVIDE_CALLABLE(CONST)			\
   template <typename...Args>			\
   auto operator()(Args&&...args) CONST		\
@@ -261,7 +286,7 @@ public:
   }
   
   //! fill the clusters
-  size_t fill_clusters(const valarray<T> &data)
+  size_t fill_clusters(const vector<T> &data)
   {
     //compute cluster size
     const size_t clust_size=
@@ -295,7 +320,7 @@ public:
   }
   
   //! initialize from vector of T, so to create jackknives
-  void init_from_data(const valarray<T> &data)
+  void init_from_data(const vector<T>& data)
   {
     check_njacks_init();
     clusterize(fill_clusters(data));
@@ -406,6 +431,157 @@ void clusterize(vector<T> &v,const double clust_size=1.0)
 void jackknivesFill(const size_t& nConfs,                                                                    ///< Number of confs
 		    const function<void(const size_t& iConf,const size_t& iClust,const double& weight)>& f); ///< Function used to fill
 		    
+
+#define PROVIDE_BINARY_OPERATOR(SYMBOL)				\
+  template <typename T>						\
+  jack_t<T> operator SYMBOL(const jack_t<T>& a,			\
+			    const jack_t<T>& b)			\
+  {								\
+    jack_t<T> c;						\
+								\
+    for(size_t ijack=0;ijack<=njacks;ijack++)			\
+      c[ijack]=a[ijack] SYMBOL b[ijack];			\
+								\
+    return							\
+      c;							\
+  }								\
+								\
+  template <typename T>						\
+  jack_t<T> operator SYMBOL(const jack_t<T>& a,			\
+			    const T& b)				\
+  {								\
+    jack_t<T> c;						\
+								\
+    for(size_t ijack=0;ijack<=njacks;ijack++)			\
+      c[ijack]=a[ijack] SYMBOL b;				\
+								\
+    return							\
+      c;							\
+  }								\
+								\
+  template <typename T>						\
+  jack_t<T> operator SYMBOL(const T& a,				\
+			    const jack_t<T>& b)			\
+  {								\
+    jack_t<T> c;						\
+								\
+    for(size_t ijack=0;ijack<=njacks;ijack++)			\
+      c[ijack]=a SYMBOL b[ijack];				\
+								\
+    return							\
+      c;							\
+  }								\
+								\
+  template <typename T>						\
+  jack_t<T>& operator SYMBOL ##=(jack_t<T>& a,			\
+				 const jack_t<T>& b)		\
+    {								\
+      for(size_t ijack=0;ijack<=njacks;ijack++)			\
+	a[ijack] SYMBOL ## = b[ijack];				\
+								\
+      return							\
+      a;							\
+    }								\
+								\
+  template <typename T>						\
+  jack_t<T>& operator SYMBOL ##=(jack_t<T>& a,			\
+				 const T& b)			\
+    {								\
+      for(size_t ijack=0;ijack<=njacks;ijack++)			\
+	a[ijack] SYMBOL ## = b;					\
+								\
+      return							\
+      a;							\
+    }
+
+
+PROVIDE_BINARY_OPERATOR(+)
+PROVIDE_BINARY_OPERATOR(-)
+PROVIDE_BINARY_OPERATOR(*)
+PROVIDE_BINARY_OPERATOR(/)
+
+#undef PROVIDE_BINARY_OPERATOR
+
+#define PROVIDE_UNARY_OPERATOR(NAME)				\
+  template <typename T>						\
+  jack_t<T> NAME(const jack_t<T>& a)				\
+  {								\
+    jack_t<T> b;						\
+								\
+    for(size_t ijack=0;ijack<=njacks;ijack++)			\
+      b[ijack]=NAME(a[ijack]);					\
+    								\
+    return							\
+      b;							\
+  }
+
+PROVIDE_UNARY_OPERATOR(abs)
+PROVIDE_UNARY_OPERATOR(exp)
+PROVIDE_UNARY_OPERATOR(log)
+PROVIDE_UNARY_OPERATOR(sqrt)
+PROVIDE_UNARY_OPERATOR(sin)
+PROVIDE_UNARY_OPERATOR(sinh)
+PROVIDE_UNARY_OPERATOR(cos)
+PROVIDE_UNARY_OPERATOR(cosh)
+PROVIDE_UNARY_OPERATOR(tan)
+PROVIDE_UNARY_OPERATOR(tanh)
+
+#undef PROVIDE_UNARY_OPERATOR
+
+#define PROVIDE_BINARY_FUNCTION(NAME)					\
+  template <typename T>							\
+  jack_t<T> NAME(const jack_t<T>& a,					\
+		 const jack_t<T>& b)					\
+  {									\
+    jack_t<T> c;							\
+    									\
+    for(size_t ijack=0;ijack<=njacks;ijack++)				\
+      c[ijack]=NAME(a[ijack],b[ijack]);					\
+    									\
+    return								\
+      c;								\
+  }									\
+									\
+  template <typename T>							\
+  jack_t<T> NAME(const jack_t<T>& a,					\
+		 const T& b)						\
+  {									\
+    jack_t<T> c;							\
+    									\
+    for(size_t ijack=0;ijack<=njacks;ijack++)				\
+      c[ijack]=NAME(a[ijack],b);					\
+    									\
+    return								\
+      c;								\
+  }									\
+									\
+  template <typename T>							\
+  jack_t<T> NAME(const T& a,						\
+		 const jack_t<T>& b)					\
+  {									\
+    jack_t<T> c;							\
+    									\
+    for(size_t ijack=0;ijack<=njacks;ijack++)				\
+      c[ijack]=NAME(a,b[ijack]);					\
+    									\
+    return								\
+      c;								\
+  }
+
+PROVIDE_BINARY_FUNCTION(pow)
+#undef PROVIDE_BINARY_FUNCTION
+
+template <typename T>
+jack_t<T> operator-(const jack_t<T>& a)
+{
+  jack_t<T> b;
+  
+    for(size_t ijack=0;ijack<=njacks;ijack++)
+      b[ijack]=-a[ijack];
+    
+    return
+      b;
+}
 
 #undef EXTERN_JACK
 #undef INIT_TO
