@@ -147,7 +147,7 @@ djvec_t der_3pts(const int irtags,const int tpar,const int rpar,const array<doub
 
 //! return the three pts behaviour
 djack_t three_pts_dt_reco(const djack_t &Zso,const djack_t &Mso,const djack_t &Zsi,const djack_t &Msi,int t)
-{return Zso*Zsi/(4*Mso*Msi)*exp(-Mso*t)*exp(-Msi*(T/2-t))*(Mso+Msi);}
+{return Zso*Zsi/(4*Mso*Msi)*exp(-Mso*t)*exp(-Msi*(T/2.0-t))*(Mso+Msi);}
 
 //! compute the Z from 2pts decay constant
 void z_from_2pts_dec(djack_t &za,djack_t &zv,const djvec_t &P5P5_SAME,const djvec_t &A0P5_SAME,const djvec_t &P5P5_OPPO,const djvec_t &A0P5_OPPO,const double m,const string &tag)
@@ -434,8 +434,8 @@ int main(int narg,char **arg)
 		{
 		  LO_3_dt_an[t]=three_pts_dt_reco(Z[rdiff_so],M[rdiff_so],Z[rdiff_si],M[rdiff_si],t);
 		  LO_3_dt_nu[t]=(M[rdiff_so]+M[rdiff_si])*
-		    (LO_P5P5[rdiff_so][t]-two_pts_corr_fun(Z2[rdiff_so],M[rdiff_so],T/2,T-t,0))*
-		    (LO_P5P5[rdiff_si][T/2-t]-two_pts_corr_fun(Z2[rdiff_si],M[rdiff_si],T/2,T/2+t,0))
+		    (LO_P5P5[rdiff_so][t]-two_pts_corr_fun(Z2[rdiff_so],M[rdiff_so],T/2.0,T-t,0))*
+		    (LO_P5P5[rdiff_si][T/2-t]-two_pts_corr_fun(Z2[rdiff_si],M[rdiff_si],T/2.0,T/2.0+t,0))
 		    /(Z[rdiff_so]*Z[rdiff_si]);
 		}
 	      //cout<<"Check "<<RTAGS_3PTS_NAME[rdiff_tot]<<"reco, "<<LO_3_dt[0].ave_err()<<" "<<djack_t(LO_P5P5[rdiff_so][T/2]/2).ave_err()<<endl;
@@ -466,14 +466,14 @@ int main(int narg,char **arg)
 	      {
 		grace_file_t eff_file("plots/effmass_3pts_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
 		eff_file.write_vec_ave_err(effective_mass(LO_3,T/2,0,1).ave_err());
-		eff_file.write_constant_band(0,T/2,djack_t(M[rdiff_so]-M[rdiff_si]));
+		eff_file.write_constant_band(0,T/2.0,djack_t(M[rdiff_so]-M[rdiff_si]));
 	      }
 	      
 	      //write the aperiodic effective mass of 3pts corrected minus non corrected
 	      {
 		grace_file_t eff_corr_file("plots/effmass_3pts_corr_"+RTAGS_3PTS_NAME[rdiff_tot]+".xmg");
 		eff_corr_file.write_vec_ave_err(djvec_t(effective_mass(CORR_3,T/2,0,1)-effective_mass(LO_3,T/2,0,1)).ave_err());
-		eff_corr_file.write_constant_band(0,T/2,djack_t(M_CORR[rdiff_so]-M_CORR[rdiff_si]-M[rdiff_so]+M[rdiff_si]));
+		eff_corr_file.write_constant_band(0,T/2.0,djack_t(M_CORR[rdiff_so]-M_CORR[rdiff_si]-M[rdiff_so]+M[rdiff_si]));
 	      }
 	      
 	      //reconstruct 3pts dt
@@ -714,7 +714,7 @@ int main(int narg,char **arg)
 	  zv_fr_za_t_file.write_vec_ave_err(zv_fr_za_t.ave_err());
 	  djack_t zv_fr_za=constant_fit(zv_fr_za_t,tmin,tmax);
 	  zv_fr_za_t_file.write_constant_band(tmin,tmax,zv_fr_za);
-	  djack_t zv_fr_za_ri=djack_t({Zv_ae[0][ib],1234})/djack_t({Za_ae[0][ib],1234});
+	  djack_t zv_fr_za_ri=djack_t(gauss_filler_t{Zv_ae[0][ib],1234})/djack_t(gauss_filler_t{Za_ae[0][ib],1234});
 	  zv_fr_za_t_file.write_constant_band(tmin,tmax,zv_fr_za_ri);
 	  
 	  //compute corr to zv/za from direct ratio
