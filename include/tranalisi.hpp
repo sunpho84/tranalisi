@@ -21,5 +21,6 @@
 #include <stopwatch.hpp>
 #include <systematics.hpp>
 #include <tasks.hpp>
+#include <vecFilter.hpp>
 
 #endif

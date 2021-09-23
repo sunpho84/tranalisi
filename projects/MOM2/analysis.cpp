@@ -421,8 +421,8 @@ void combined_sea_chir_extrap(const vector<comb_extr_t> &list,const string& suff
       
       //fit and pars
       jack_fit_t jack_fit;
-      djack_t mslope=0.0;
-      djack_t mslope_a2dep=0.0;
+      djack_t mslope(0.0);
+      djack_t mslope_a2dep(0.0);
       
       //output plot
       grace_file_t plot("comb_sea_chir/plots/comb_sea_chir_extrap_"+tag+"_"+suffix+".xmg");

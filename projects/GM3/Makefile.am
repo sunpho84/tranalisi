@@ -16,7 +16,8 @@ __top_builddir__bin_gm3_SOURCES= \
 	%D%/kernels.cpp \
 	%D%/params.cpp \
 	%D%/rawData.cpp \
-	%D%/renoConstants.cpp
+	%D%/renoConstants.cpp \
+	%D%/VKVKRepresentation.cpp
 
 __top_builddir__bin_gm3_CXXFLAGS=@MPI_CXXFLAGS@
 __top_builddir__bin_gm3_LDFLAGS=@MPI_CXXLDFLAGS@

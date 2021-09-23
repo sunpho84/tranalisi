@@ -1,8 +1,11 @@
 #ifndef _AMU_HPP
 #define _AMU_HPP
 
-#include "meas_vec.hpp"
+#include <meas_vec.hpp>
 
-void computeAmu();
+#include <VKVKRepresentation.hpp>
+
+void computeAmu(const RegoType& rego,
+		const jack_t<VKVKRep>& rep);
 
 #endif

@@ -78,7 +78,7 @@ djack_t find_w0(const vector<double> &t,const djvec_t &E,const size_t ord=5,cons
   for(size_t it=0;it<nt;it++)
     {
       bool bw=(it>0),fw=(it+1<nt);
-      djack_t d=0.0;
+      djack_t d(0.0);
       if(bw) d+=(t2E[it]-t2E[it-1])/dt;
       if(fw) d+=(t2E[it+1]-t2E[it])/dt;
       d/=(bw+fw);

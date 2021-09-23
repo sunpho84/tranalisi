@@ -160,7 +160,7 @@ int main()
   //select simple or full calculation
   enum{SIMPLE,FULL};
   const bool simple_full=FULL;
-  const djack_t deltam_tm=(simple_full==SIMPLE)?0.0:deltam_tm_full;
+  const djack_t deltam_tm=(simple_full==SIMPLE)?(djack_t)0.0:deltam_tm_full;
   const djack_t deltam_cr=(simple_full==SIMPLE)?deltam_cr_simple:deltam_cr_full;
   
   //build corrected correlators with same r

@@ -32,6 +32,7 @@ constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","
 enum CORR_ID                               {idP5P5,idVKVK,idTKTK,idVKTK,idTKVK,idA0P5,idP5A0,idV0P5,idP5V0};
 
 enum RegoType{REGO_TM,REGO_OS};
+static const string regoTag[2]={"TM","OS"};
 
 using AveId=array<size_t,4>;
 

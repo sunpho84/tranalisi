@@ -45,7 +45,7 @@ djvec_t perens_t::get_contraction_by_name(const string &suffix,const string &bil
   const size_t base_nel=T;
   const size_t hw=data.size()/(base_nel*each);
   
-  const djvec_t out=coeff*vec_filter(data,gslice(base_nel*offset,{hw,T},{each*base_nel,1}));
+  const djvec_t out=coeff*vec_filter(data,base_nel*offset,{hw,T},{each*base_nel,1});
   
   if(tpar) return out.symmetrized(tpar);
   else     return out;

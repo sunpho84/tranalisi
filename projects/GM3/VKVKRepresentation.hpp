@@ -78,4 +78,7 @@ struct VKVKRep
   }
 };
 
+jack_t<VKVKRep> fitVKVK(const int nLevels,
+			const size_t tMin);
+
 #endif
