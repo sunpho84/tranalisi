@@ -53,6 +53,7 @@ bool loadCachedAveCorr()
       const size_t n=file.bin_read<size_t>();
       djvec_t data(n);
       file.bin_read(data);
+      cout<<data<<endl;
       aveCorrCache[id]=data;
     }
   

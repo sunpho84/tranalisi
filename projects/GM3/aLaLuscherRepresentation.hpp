@@ -424,13 +424,13 @@ struct ALaLuscherRepresentationCached
   const HashedTanPhiAndDerivFunction& hashedPhiAndDerivCalculator;
   
   /// Cached value of mPi
-  double cachedMPi;
+  mutable double cachedMPi;
   
   /// Number of levels to be searched
   const int n;
   
   /// Storage of the interpolation parameters
-  map<pair<double,double>,ALaLuscherRepresentation<IncludeIsoVectorCorrection>> cachedPars;
+  mutable map<pair<double,double>,ALaLuscherRepresentation<IncludeIsoVectorCorrection>> cachedPars;
   
   /// Constructor
   ALaLuscherRepresentationCached(const HashedTanPhiAndDerivFunction& hashedPhiAndDerivCalculator,
@@ -445,7 +445,7 @@ struct ALaLuscherRepresentationCached
   const ALaLuscherRepresentation<IncludeIsoVectorCorrection>& operator()(const double& mPi,
 									 const double& L,
 									 const double& mRho,
-									 const double& g2)
+									 const double& g2) const
   {
     if(cachedMPi!=mPi)
       {
