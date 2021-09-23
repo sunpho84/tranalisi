@@ -269,7 +269,8 @@ void permes_combo_t<TV>::computeAxialPseudoCouplings(const string& mesPlotsPath)
 	      const double P=ens.pMes[iMesKin];
 	      
 	      //perform a preliminary fit
-	      djack_t fit_E,ZPP,ZA0P,ZA3P=1.0;
+	      djack_t fit_E,ZPP,ZA0P,ZA3P;
+	      ZA3P=1.0;
 	      two_pts_fit(ZPP, fit_E,corrPP[iMesKin], T/2,tMin,tMax,combine("%s/CPP_fit/prel_%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),"",+1);
 	      two_pts_fit(ZA0P,fit_E,corrA0P[iMesKin],T/2,tMin,tMax-1,combine("%s/CA0P_fit/prel_%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),"",-1);
 	      two_pts_fit(ZA3P,fit_E,corrA3P[iMesKin],T/2,tMin,tMax,combine("%s/CA3P_fit/prel_%s.xmg",mesPlotsPath.c_str(),kinTag(iMom1,iMom2).c_str()),"",+1);

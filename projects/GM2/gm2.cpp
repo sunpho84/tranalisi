@@ -123,11 +123,11 @@ void an(const vector<double>& data,const char* tag)
       corr[t]/=ncopies*(ncopies-1)/2.0;
     }
   
-  ave.ave_err().write(combine("/tmp/%s_ave.xmg",tag));
-  aa.ave_err().write(combine("/tmp/%s_combo_ave.xmg",tag));
-  cc.ave_err().write(combine("/tmp/%s_combo_err.xmg",tag));
-  err.ave_err().write(combine("/tmp/%s_err.xmg",tag));
-  corr.ave_err().write(combine("/tmp/%s_corr.xmg",tag));
+  // ave.ave_err().write(combine("/tmp/%s_ave.xmg",tag));
+  // aa.ave_err().write(combine("/tmp/%s_combo_ave.xmg",tag));
+  // cc.ave_err().write(combine("/tmp/%s_combo_err.xmg",tag));
+  // err.ave_err().write(combine("/tmp/%s_err.xmg",tag));
+  corr.ave_err().write(combine("plots/%s_stat_corr.xmg",tag));
 }
 
 int main(int narg,char** arg)
