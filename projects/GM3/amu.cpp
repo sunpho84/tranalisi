@@ -89,10 +89,12 @@ void computeAmu(const RegoType& rego,
   // console<<"Z21L: "<<eig1Z2L<<endl;
   // console<<"M1L: "<<eig1M<<endl;
   
+  const double eu=2.0/3,ed=-1.0/3;
   const djvec_t corr=
-    getAveForRego(0,nSources,1,rego);
-  // djack_t mVK1,Z2VK1;
-  // two_pts_fit(Z2VK1,mVK1,corr,TH,tMinVKVK,tMaxVKVK,"plots/eff_mass_VKVK_twopts_fit_rego"+regoTag[rego]+".xmg");
+    getAveForRego(0,nSources,1,rego)*sqr(Zrego)*(sqr(eu)+sqr(ed));
+  
+  djack_t mVK1,Z2VK1;
+  two_pts_fit(Z2VK1,mVK1,corr,TH,tMinVKVK,tMaxVKVK,"plots/eff_mass_VKVK_twopts_fit_rego"+regoTag[rego]+".xmg");
   // console<<"Z2: "<<Z2VK1<<endl;
   // // djack_t mVK2,Z2VK2;
   // // two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
@@ -102,20 +104,20 @@ void computeAmu(const RegoType& rego,
   for(size_t upto=0;upto<TH;upto++)
     {
       djvec_t corrRefatta1=corr;
-      // djvec_t corrRefatta2=corr;
+      djvec_t corrRefatta2=corr;
       for(size_t t=upto;t<TH;t++)
 	{
-	  corrRefatta1[t]=rep(t)();
-	  // corrRefatta2[t]=two_pts_corr_fun(eig0Z2L,eig0M,TH,t,0);
-	  // corrRefatta2[t]+=two_pts_corr_fun(eig1Z2L,eig1M,TH,t,0);
+	  corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
+	  corrRefatta2[t]=rep(t)();
 	}
+      
       size_t THm1=TH-1;
-      const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,a,upto)*sqr(Zrego)*1e10;
-      const djack_t cSubs1=integrate_corr_times_kern_up_to(corrRefatta1,T,a,THm1)*sqr(Zrego)*1e10;
-      // const djack_t cSubs2=integrate_corr_times_kern_up_to(corrRefatta2,T,a,THm1)*sqr(Zrego)*1e10;
+      const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,a,upto)*1e10;
+      const djack_t cSubs1=integrate_corr_times_kern_up_to(corrRefatta1,T,a,THm1)*1e10;
+       const djack_t cSubs2=integrate_corr_times_kern_up_to(corrRefatta2,T,a,THm1)*1e10;
       amuInt[upto]=cInt;
       amuSubs1[upto]=cSubs1;
-      // amuSubs2[upto]=cSubs2;
+      amuSubs2[upto]=cSubs2;
     }
   amu.set_xaxis_label("t");
   
@@ -140,18 +142,10 @@ void computeAmu(const RegoType& rego,
   amu.write_vec_ave_err(amuSubs2.ave_err());
   amu.set_no_line();
   amu.set_all_colors(grace::ORANGE);
-  amu.set_legend("Ground and first exc.state (GEVP)");
+  amu.set_legend("A la luscher rep");
   
   amu.new_data_set();
   amu.set_legend("BMW light connected");
   amu.set_all_colors(grace::GREEN4);
   amu.write_constant_band(0,TH,djack_t(gauss_filler_t{633.7,5.0,23423}));
-  
-  djvec_t corrRefatta1=corr;
-  // djvec_t corrRefatta2=corr;
-  for(size_t t=0;t<=TH;t++)
-    corrRefatta1[t]=rep(t)();
-  
-  corrRefatta1.ave_err().write("plots/corr_refatta1_rego"+regoTag[rego]+".xmg");
-  // corrRefatta2.ave_err().write("plots/corr_refatta2_rego"+regoTag[rego]+".xmg");
 }

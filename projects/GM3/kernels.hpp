@@ -27,8 +27,7 @@ TS integrate_corr_times_kern_up_to(const TV &corr,size_t T,const double &a,size_
   for(size_t t=1;t<T/2;t++) kern[t]=kern_num(corr[t],t,a);
   kern[0]=0.0;
   
-  const double eu=2.0/3,ed=-1.0/3;
-  return 4*sqr(alpha_em)*(sqr(eu)+sqr(ed))*integrate_corr_up_to(kern,upto);
+  return 4*sqr(alpha_em)*integrate_corr_up_to(kern,upto);
 }
 
 #endif

@@ -1,11 +1,12 @@
 AM_CPPFLAGS+=-I$(top_srcdir)/projects/%D%
 
 bin_PROGRAMS+= \
-	$(top_builddir)/bin/gm3 \
-	$(top_builddir)/bin/gm3Test
+	$(top_builddir)/bin/gm3
 
-__top_builddir__bin_gm3Test_SOURCES= \
-	%D%/gm3Test.cpp
+#	$(top_builddir)/bin/gm3Test
+
+#__top_builddir__bin_gm3Test_SOURCES= 
+#	%D%/gm3Test.cpp
 
 __top_builddir__bin_gm3_SOURCES= \
 	%D%/amu.cpp \

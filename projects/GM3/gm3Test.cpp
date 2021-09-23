@@ -116,7 +116,6 @@ int main()
     {
       ALaLuscherRepresentationCalculator interacting(hashedPhiAndDerivCalculator,mPi*f,L/f,g2,mRho*f);
       
-      
       //for(const auto& p : interacting.getLevelsPars(4).coeffs)
       auto p=interacting.getLevelsPars(4,"/tmp/glp"+to_string(f)+".xmg").coeffs.front();
       cout<<f<<" "<<p.energy/f<<endl;

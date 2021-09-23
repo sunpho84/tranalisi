@@ -17,6 +17,8 @@ using namespace std;
 
 int main(int narg,char **arg)
 {
+  hashedPhiAndDerivCalculator.plot("plots/phi.xmg","plots/phiDeriv.xmg");
+  
   init(narg,arg);
   
   loadData(narg,arg);

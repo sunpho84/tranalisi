@@ -5,6 +5,7 @@
 #include <hashedFunction.hpp>
 #include <fit.hpp>
 
+#include <externer.hpp>
 #include <luscherZeta.hpp>
 
 /// Computes the r.h.s of eq.A.3 of Nuclear Physics B364 (1991) 237-251
@@ -269,5 +270,16 @@ struct HashedTanPhiAndDerivFunction
       }
   }
 };
+
+namespace
+{
+  static const double qMax=
+  4.3;
+  
+  static const int nIntervals=
+    1000;
+}
+
+EXTERN HashedTanPhiAndDerivFunction hashedPhiAndDerivCalculator INIT_EXTERN_TO(("lookupTables/phi.hash","lookupTables/phiDeriv.hash",qMax,nIntervals));
 
 #endif

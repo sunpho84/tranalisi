@@ -6,17 +6,13 @@
 /// Representation of the vector correlator
 struct VKVKRep
 {
-  const ALaLuscherRepresentationCached<true>& LuschRep;
-  
-  const double mPi;
+  const ALaLuscherRepresentation<true> LuschRep;
   
   const double rDual;
   
   const double eThr;
   
   const double mRho;
-  
-  const double g2;
   
   double dualPartFun(const double& t) const
   {
@@ -47,21 +43,17 @@ struct VKVKRep
   double LuschPartFun(const double& t) const
   {
     return
-      LuschRep(mPi,L,mRho,g2)(t);
+      LuschRep(t);
   }
   
-  VKVKRep(const ALaLuscherRepresentationCached<true>& LuschRep,
-	  const double& mPi,
+  VKVKRep(const ALaLuscherRepresentation<true>& LuschRep,
 	  const double& rDual,
 	  const double& eThr,
-	  const double& mRho,
-	  const double& g2) :
+	  const double& mRho) :
     LuschRep(LuschRep),
-    mPi(mPi),
     rDual(rDual),
     eThr(eThr),
-    mRho(mRho),
-    g2(g2)
+    mRho(mRho)
   {
   }
   

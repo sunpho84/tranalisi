@@ -74,7 +74,7 @@ struct ALaLuscherRepresentation
   }
   
   /// Initialize with n states
-  ALaLuscherRepresentation(const int& n) :
+  ALaLuscherRepresentation(const int& n=0) :
     coeffs(n)
   {
   }
@@ -82,8 +82,6 @@ struct ALaLuscherRepresentation
 
 struct ALaLuscherRepresentationCalculator
 {
-  const HashedTanPhiAndDerivFunction& tanPhiAndPhiDerivCalculator;
-  
   const double mPi;
   
   const double m2Pi;
@@ -183,7 +181,7 @@ struct ALaLuscherRepresentationCalculator
     
     /// Computes phi'
     const double phiDeriv=
-      tanPhiAndPhiDerivCalculator.phiDeriv(arg);
+      hashedPhiAndDerivCalculator.phiDeriv(arg);
     
     /// Norm2 of the form factor
     const double F2Norm=
@@ -195,12 +193,10 @@ struct ALaLuscherRepresentationCalculator
   }
   
   /// Constructor
-  ALaLuscherRepresentationCalculator(const HashedTanPhiAndDerivFunction& tanPhiAndPhiDerivCalculator,
-				     const double& mPi,
+  ALaLuscherRepresentationCalculator(const double& mPi,
 				     const double& L,
 				     const double& g2,
 				     const double& mRho) :
-    tanPhiAndPhiDerivCalculator(tanPhiAndPhiDerivCalculator),
     mPi(mPi),
     m2Pi(sqr(mPi)),
     L(L),
@@ -294,7 +290,7 @@ struct ALaLuscherRepresentationCalculator
       1.0/cotD11;
     
     const double tanPhi=
-      tanPhiAndPhiDerivCalculator.tanPhi(kN*L/(2*M_PI));
+      hashedPhiAndDerivCalculator.tanPhi(kN*L/(2*M_PI));
     
     /// tan(a+b)=(tan(a)+tan(b))/(1-tan(a)*tan(b))
     const double tanD11PlusPhi=
@@ -414,15 +410,20 @@ struct ALaLuscherRepresentationCalculator
     return
       res;
   }
+  
+  template <bool IncludeIsoVectorCorrection=true>
+  ALaLuscherRepresentation<IncludeIsoVectorCorrection> operator()(const int& n,
+								  const string& path="") const
+  {
+    return
+      getLevelsPars(n,path);
+  }
 };
 
 /// Caches the calculation of the Luscher representation
 template <bool IncludeIsoVectorCorrection=true>
 struct ALaLuscherRepresentationCached
 {
-  /// Hashed calculator of phi and phi'
-  const HashedTanPhiAndDerivFunction& hashedPhiAndDerivCalculator;
-  
   /// Cached value of mPi
   mutable double cachedMPi;
   
@@ -433,9 +434,7 @@ struct ALaLuscherRepresentationCached
   mutable map<pair<double,double>,ALaLuscherRepresentation<IncludeIsoVectorCorrection>> cachedPars;
   
   /// Constructor
-  ALaLuscherRepresentationCached(const HashedTanPhiAndDerivFunction& hashedPhiAndDerivCalculator,
-				 const int& n) :
-    hashedPhiAndDerivCalculator(hashedPhiAndDerivCalculator),
+  ALaLuscherRepresentationCached(const int& n) :
     cachedMPi(0.0),
     n(n)
   {
@@ -467,7 +466,7 @@ struct ALaLuscherRepresentationCached
 	//cout<<"mPi "<<mPi<<" , L "<<L<<" , g2 "<<g2<<" , mRho "<<mRho<<endl;
 	
 	//cout<<" computing for values: mPi="<<mPi<<" , g2="<<g2<<" , mRho="<<mRho<<endl;
-	const ALaLuscherRepresentationCalculator interacting(hashedPhiAndDerivCalculator,mPi,L,g2,mRho);
+	const ALaLuscherRepresentationCalculator interacting(mPi,L,g2,mRho);
 	const ALaLuscherRepresentation pars=
 	  interacting.getLevelsPars(n);
 	
@@ -481,5 +480,11 @@ struct ALaLuscherRepresentationCached
       find->second;
   }
 };
+
+static const double qMax=
+    4.3;
+  
+const int nIntervals=
+  1000;
 
 #endif
