@@ -670,9 +670,13 @@ public:
     vector<bool> status(nd);
     minimizer_t minimizer(distr_fit_FCN,pars);
     
-    TS ch2;
+    TS initialCh2,finalCh2;
     for(idistr=0;idistr<nd;idistr++)
       {
+	vector<double> _pars(npars);
+	for(size_t ipar=0;ipar<npars;ipar++)
+	  _pars[ipar]=pars.pars.Parameter(ipar).Value();
+	initialCh2[idistr]=minimizer.eval(_pars);
 	// distr_fit_debug=false;
 	// if(idistr==out_pars[0]->size()-1) distr_fit_debug=true;
 	
@@ -680,7 +684,7 @@ public:
 	
 	//cout<<"----------------------- "<<idistr<<" ----------------------- "<<endl;
 	vector<double> pars=minimizer.minimize();
-	ch2[idistr]=minimizer.eval(pars);
+	finalCh2[idistr]=minimizer.eval(pars);
 	
 	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[idistr]=pars[ipar];
 	status[idistr]=minimizer.status();
@@ -689,9 +693,9 @@ public:
     
     //write ch2
     const size_t nDof=data.size()-nfree_pars;
-    cout<<"Ch2: "<<ch2.ave_err()<<" / "<<nDof<<endl;
+    cout<<"Ch2: "<<finalCh2[njacks]<<" / "<<nDof<<" (initial: "<<finalCh2[njacks]<<", spread: "<<finalCh2.err()<<")"<<endl;
     
-    return make_tuple(ch2,nDof,status);
+    return make_tuple(finalCh2,nDof,status);
   }
   
   //! fix a single parameter

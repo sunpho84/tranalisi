@@ -21,6 +21,9 @@
 
 using namespace std;
 
+const char* gitHash=
+  GIT_HASH;
+
 void flush_unused_memory()
 {
 #ifdef HAVE_MALLOC_H

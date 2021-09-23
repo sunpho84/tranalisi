@@ -9,6 +9,7 @@
 
 using namespace Eigen;
 
+/// Original eigenvectors are those needed to build the optimal operator
 tuple<vector<djvec_t>,vector<djvec_t>,vector<djvec_t>> gevp(const vector<djvec_t> &d,const size_t t0)
 {
   //Check correlators and get the time extent
@@ -21,7 +22,8 @@ tuple<vector<djvec_t>,vector<djvec_t>,vector<djvec_t>> gevp(const vector<djvec_t
   
   //Work data
   typedef Matrix<double,Dynamic,Dynamic> Matr;
-  GeneralizedEigenSolver<Matr> ges;
+  EigenSolver<Matr> ge;
+  // GeneralizedEigenSolver<Matr> ges;
   
   //Output
   vector<djvec_t> l(n,djvec_t(T));
@@ -36,6 +38,8 @@ tuple<vector<djvec_t>,vector<djvec_t>,vector<djvec_t>> gevp(const vector<djvec_t
 	for(size_t j=0;j<n;j++)
 	  b(i,j)=d[i*n+j][t0][ijack];
       
+      const Matr binv=b.inverse();
+      
       for(size_t t=0;t<T;t++)
 	{
 	  //Fill the lhs matrix
@@ -44,17 +48,20 @@ tuple<vector<djvec_t>,vector<djvec_t>,vector<djvec_t>> gevp(const vector<djvec_t
 	    for(size_t j=0;j<n;j++)
 	      a(i,j)=d[i*n+j][t][ijack];
 	  
-	  //Compute and store
-	  ges.compute(a,b);
-	  for(size_t i=0;i<n;i++)
-	    l[i][t][ijack]=ges.eigenvalues()(i).real();
+	  //Recast problem
+	  const Matr c=binv*a;
 	  
-	  auto vEig=(b.inverse().sqrt()*ges.eigenvectors()).eval();
+	  //Compute and store
+	  ge.compute(c);
+	  for(size_t i=0;i<n;i++)
+	    l[i][t][ijack]=ge.eigenvalues()(i).real();
+	  
+	  auto vEig=(b.inverse().sqrt()*ge.eigenvectors()).eval();
 	  
 	  for(size_t i=0;i<n;i++)
 	    for(size_t j=0;j<n;j++)
 	      {
-		recastEigvec[i*n+j][t][ijack]=ges.eigenvectors()(i,j).real();
+		recastEigvec[i*n+j][t][ijack]=ge.eigenvectors()(i,j).real();
 		origEigvec[i*n+j][t][ijack]=vEig(i,j).real();
 	      }
 	}

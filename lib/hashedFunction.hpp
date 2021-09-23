@@ -1,7 +1,7 @@
 #ifndef _HASHEDFUNCTION_HPP
 #define _HASHEDFUNCTION_HPP
 
-#include <git_hash.hpp>
+// #include <git_hash.hpp>
 #include <raw_file.hpp>
 
 #include <array>
@@ -237,14 +237,10 @@ struct HashedFunction
   R operateOnControlVars(const F& f,
 			 const R& r) const
   {
-    /// Repeats the hash
-    const string gitHash=
-    GIT_HASH;
-    
     return
       operateOn(f,
 		r,
-		gitHash,"GIT_HASH",
+		(string)gitHash,"GIT_HASH",
 		xMin,"xMin",
 		xMax,"xMax",
 		dX,"dX",

@@ -24,10 +24,10 @@ jack_t<VKVKRep> fitVKVK(const int nLevels,
   jack_fit_t fitter;
   
   djvec_t pars(4);
-  pars[0].fill_gauss(1.15,0.05,235235);
-  pars[1].fill_gauss(0.13,0.05,7342);
-  pars[2].fill_gauss(0.22,0.05,23423);
-  pars[3].fill_gauss(28.1,0.1,32235);
+  pars[0].fill_gauss(1.15,0.01,235235);
+  pars[1].fill_gauss(0.13,0.01,7342);
+  pars[2].fill_gauss(0.22,0.01,23423);
+  pars[3].fill_gauss(28.1,0.01,32235);
   
   const size_t iRDual=
     fitter.add_fit_par_limits(pars[0],"RDual",pars[0].ave(),pars[0].err(), 0.2,2.0);

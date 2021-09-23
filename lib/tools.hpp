@@ -15,6 +15,8 @@
 
 using namespace std;
 
+extern const char* gitHash;
+
 DEFINE_HAS_METHOD(size);
 
 DEFINE_HAS_METHOD(ave_err);
