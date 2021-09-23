@@ -24,10 +24,10 @@ jack_t<VKVKRep> fitVKVK(const int nLevels,
   jack_fit_t fitter;
   
   djvec_t pars(4);
-  pars[0].fill_gauss(1.15,0.01,235235);
-  pars[1].fill_gauss(0.13,0.01,7342);
-  pars[2].fill_gauss(0.22,0.01,23423);
-  pars[3].fill_gauss(28.1,0.01,32235);
+  pars[0].fill_gauss(1.07,1e-3,235235);
+  pars[1].fill_gauss(0.13,1e-3,7342);
+  pars[2].fill_gauss(0.780*a,1e-3,23423);
+  pars[3].fill_gauss(27.1,1e-3,32235);
   
   const size_t iRDual=
     fitter.add_fit_par_limits(pars[0],"RDual",pars[0].ave(),pars[0].err(), 0.2,2.0);
@@ -41,15 +41,15 @@ jack_t<VKVKRep> fitVKVK(const int nLevels,
   const djack_t aMPi=
     constant_fit(effective_mass(cP5P5),tMinP5P5[0],tMaxP5P5[0]);
   
-  //fit_debug=true;
+  // fit_debug=true;
   
   const size_t tMinFit=
     5;
   
+  ALaLuscherRepresentationCached<true> cachedLuschRepFinder(nLevels);
+  
   size_t tFit=
     tMinFit;
-  
-  ALaLuscherRepresentationCached<true> cachedLuschRepFinder(nLevels);
   
   while(tFit<THp1 and cVKVK[tFit].err()<0.1*fabs(cVKVK[tFit].ave()))
     {
@@ -167,10 +167,13 @@ jack_t<VKVKRep> fitVKVK(const int nLevels,
 	e;
     };
   
+  const djack_t mRho=aMRho/a;
+  
   cout<<"mPi: "<<aMPi.ave_err()<<endl;
   cout<<"rDual: "<<rDual.ave_err()<<endl;
   cout<<"eThr: "<<eThr.ave_err()<<endl;
   cout<<"amRho: "<<aMRho.ave_err()<<endl;
+  cout<<"mRho: "<<mRho.ave_err()<<endl;
   cout<<"g: "<<g.ave_err()<<endl;
   
   grace_file_t plotFit("plots/aLaLuscherFit.xmg");

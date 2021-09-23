@@ -673,27 +673,30 @@ public:
     TS initialCh2,finalCh2;
     for(idistr=0;idistr<nd;idistr++)
       {
-	vector<double> _pars(npars);
+	vector<double> resPars(npars);
 	for(size_t ipar=0;ipar<npars;ipar++)
-	  _pars[ipar]=pars.pars.Parameter(ipar).Value();
-	initialCh2[idistr]=minimizer.eval(_pars);
+	  resPars[ipar]=pars.pars.Parameter(ipar).Value();
+	initialCh2[idistr]=distr_fit_FCN(resPars);
+	// cout<<"initial["<<idistr<<"]: "<<initialCh2[idistr]<<" ";
 	// distr_fit_debug=false;
 	// if(idistr==out_pars[0]->size()-1) distr_fit_debug=true;
 	
 	//minimize and print the result
 	
 	//cout<<"----------------------- "<<idistr<<" ----------------------- "<<endl;
-	vector<double> pars=minimizer.minimize();
-	finalCh2[idistr]=minimizer.eval(pars);
+	resPars=minimizer.minimize();
+	finalCh2[idistr]=distr_fit_FCN(resPars);
+	cout<<"final: "<<finalCh2[idistr]<<endl;
 	
-	for(size_t ipar=0;ipar<npars;ipar++) (*(out_pars[ipar]))[idistr]=pars[ipar];
+	for(size_t ipar=0;ipar<npars;ipar++)
+	  (*(out_pars[ipar]))[idistr]=resPars[ipar];
 	status[idistr]=minimizer.status();
 	// distr_fit_debug=false;
     }
     
     //write ch2
     const size_t nDof=data.size()-nfree_pars;
-    cout<<"Ch2: "<<finalCh2[njacks]<<" / "<<nDof<<" (initial: "<<finalCh2[njacks]<<", spread: "<<finalCh2.err()<<")"<<endl;
+    cout<<"Ch2: "<<finalCh2.ave_err()<<" / "<<nDof<<" (initial: "<<initialCh2.ave_err()<<")"<<endl;
     
     return make_tuple(finalCh2,nDof,status);
   }

@@ -243,8 +243,12 @@ public:
 //! wrapper against minimization class
 class minimizer_t
 {
+  const minimizer_fun_t &fun;
+  
   ROOT::Minuit2::MnMigrad migrad;
-  size_t npars;
+  
+  const size_t npars;
+  
   minimizer_t();
   
   bool _status{true};
@@ -256,8 +260,15 @@ class minimizer_t
     return _status;
   }
   
+  
   //construct from migrad
-  minimizer_t(const minimizer_fun_t &fun,const minimizer_pars_t &pars) : migrad(fun,pars.pars,2),npars(pars.size()) {}
+  minimizer_t(const minimizer_fun_t &fun,
+	      const minimizer_pars_t &pars) :
+    fun(fun),
+    migrad(fun,pars.pars,2),
+    npars(pars.size())
+  {
+  }
   
   //! minimizer
   vector<double> minimize()
@@ -291,7 +302,9 @@ class minimizer_t
   
   //! evaluate the function
   double eval(const vector<double> &pars)
-  {return migrad().Fval();}
+  {
+    return fun(pars);
+  }
 };
 
 //! set the level of verbosity
