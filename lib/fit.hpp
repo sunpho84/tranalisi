@@ -686,7 +686,7 @@ public:
 	//cout<<"----------------------- "<<idistr<<" ----------------------- "<<endl;
 	resPars=minimizer.minimize();
 	finalCh2[idistr]=distr_fit_FCN(resPars);
-	cout<<"final: "<<finalCh2[idistr]<<endl;
+	//cout<<"final: "<<finalCh2[idistr]<<endl;
 	
 	for(size_t ipar=0;ipar<npars;ipar++)
 	  (*(out_pars[ipar]))[idistr]=resPars[ipar];

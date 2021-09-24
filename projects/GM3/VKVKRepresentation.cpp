@@ -6,28 +6,29 @@
 #include <renoConstants.hpp>
 #include <VKVKRepresentation.hpp>
 
-jack_t<VKVKRep> fitVKVK(const int nLevels,
-			const size_t tMin)
+jack_t<VKVKRep> fitVKVK(const RegoType& rego,
+			const int& nLevels,
+			const size_t& tMin)
 {
   const djvec_t cP5P5=
-    getAveForRego(0,nSources,idP5P5,REGO_TM);
+    getAveForRego(0,nSources,idP5P5,rego);
   
   /// Charge factor of the correlator
   const double chargeFactor=
     5.0/9;
   
   djvec_t cVKVK=
-    getAveForRego(0,nSources,idVKVK,REGO_TM)*sqr(Z[regoZId[REGO_TM]])*chargeFactor;
-  cVKVK.ave_err().write("plots/corr_for_Rep.xmg");
+    getAveForRego(0,nSources,idVKVK,rego)*sqr(Z[regoZId[rego]])*chargeFactor;
+  cVKVK.ave_err().write("plots/corr_for_Rep"+regoTag[rego]+".xmg");
   cVKVK[0]=cVKVK[1];
   
   jack_fit_t fitter;
   
   djvec_t pars(4);
-  pars[0].fill_gauss(1.07,1e-3,235235);
-  pars[1].fill_gauss(0.13,1e-3,7342);
-  pars[2].fill_gauss(0.780*a,1e-3,23423);
-  pars[3].fill_gauss(27.1,1e-3,32235);
+  pars[0].fill_gauss((rego==REGO_TM)?1.00:1.30,0.1,235235);
+  pars[1].fill_gauss(((rego==REGO_TM)?0.416:0.53)*a,0.1,7342);
+  pars[2].fill_gauss(0.770*a,0.1,23423);
+  pars[3].fill_gauss(27,1,32235);
   
   const size_t iRDual=
     fitter.add_fit_par_limits(pars[0],"RDual",pars[0].ave(),pars[0].err(), 0.2,2.0);
@@ -36,10 +37,10 @@ jack_t<VKVKRep> fitVKVK(const int nLevels,
   const size_t iMRho=
     fitter.add_fit_par_limits(pars[2],"MRho",pars[2].ave(),pars[2].err(), 0.01,1.0);
   const size_t iG2=
-    fitter.add_fit_par_limits(pars[3],"g2",pars[3].ave(),pars[3].err(), 25.0,35.0);
+    fitter.add_fit_par_limits(pars[3],"g2",pars[3].ave(),pars[3].err(), 20.0,35.0);
   
   const djack_t aMPi=
-    constant_fit(effective_mass(cP5P5),tMinP5P5[0],tMaxP5P5[0]);
+    constant_fit(effective_mass(cP5P5),tMinP5P5[rego],tMaxP5P5[rego],"plots/eff_mass_P5P5"+regoTag[rego]+"_for_rep.xmg");
   
   // fit_debug=true;
   
@@ -130,6 +131,8 @@ jack_t<VKVKRep> fitVKVK(const int nLevels,
   cVKVKFull=
     cVKVKLuscher+cVKVKDual;
   
+  cVKVKFull.ave_err().write("plots/VKVK_"+regoTag[rego]+"_representation.xmg");
+  
   djvec_t weights(nLevels),energy(nLevels);
   for(size_t ijack=0;ijack<=njacks;ijack++)
     {
@@ -176,7 +179,7 @@ jack_t<VKVKRep> fitVKVK(const int nLevels,
   cout<<"mRho: "<<mRho.ave_err()<<endl;
   cout<<"g: "<<g.ave_err()<<endl;
   
-  grace_file_t plotFit("plots/aLaLuscherFit.xmg");
+  grace_file_t plotFit("plots/aLaLuscherFit"+regoTag[rego]+".xmg");
   plotFit.write_vec_ave_err(effective_mass(cVKVK).ave_err());
   plotFit.set_no_line();
   plotFit.write_polygon(effMassFun,tMinFit,tMaxFit);

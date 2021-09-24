@@ -70,7 +70,8 @@ struct VKVKRep
   }
 };
 
-jack_t<VKVKRep> fitVKVK(const int nLevels,
-			const size_t tMin);
+jack_t<VKVKRep> fitVKVK(const RegoType& rego,
+			const int& nLevels,
+			const size_t& tMin);
 
 #endif
