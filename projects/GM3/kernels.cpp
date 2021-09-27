@@ -2,6 +2,7 @@
 # include "config.hpp"
 #endif
 
+#include "functions.hpp"
 #include <math.hpp>
 
 #include <kernels.hpp>

@@ -4,6 +4,7 @@
 #include <index.hpp>
 
 #include <fstream>
+#include <memory>
 #include <string>
 
 #include <externer.hpp>
@@ -16,7 +17,9 @@ EXTERN size_t T,TH,THp1;
 EXTERN double L;
 EXTERN size_t tMinVKVK,tMaxVKVK;
 EXTERN size_t tMinP5P5[2],tMaxP5P5[2];
-EXTERN double a,ZaPetros;
+EXTERN double aAve,aErr,ZaPetros;
+EXTERN unique_ptr<djack_t> a;
+EXTERN unique_ptr<djack_t> aFromPhysLine;
 EXTERN string confsPattern;
 EXTERN string refConfPattern;
 EXTERN string rawDataPackedPath;

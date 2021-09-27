@@ -14,7 +14,8 @@ void readInput()
   T=input.read<size_t>("T");
   L=input.read<double>("L");
   amq=input.read<double>("amq");
-  a=input.read<double>("a");
+  aAve=input.read<double>("a");
+  aErr=input.read<double>();
   ZaPetros=input.read<double>("Za");
   confsPattern=input.read<string>("ConfsPattern");
   refConfPattern=input.read<string>("RefConfPattern");
@@ -59,6 +60,9 @@ void init(int narg,char **arg)
   
   set_njacks(30);
   
+  a=make_unique<djack_t>();
+  aFromPhysLine=make_unique<djack_t>();
+  a->fill_gauss({aAve,aErr,2354235});
   TH=T/2;
   
   THp1=TH+1;

@@ -6,6 +6,7 @@
 #include <meas_vec.hpp>
 
 #include <data.hpp>
+#include <physLine.hpp>
 
 /// Compute the PCAC mass
 void computeMPCAC()
@@ -28,11 +29,25 @@ void computeMPCAC()
   const djack_t r2=
     r*r;
   
+  const double fPiPhys=
+    0.1304;
+  
+  const double mPiPhys=
+    0.13498;
+  
   const double r2Phys=
-    sqr(134.98/130.4);
+    sqr(mPiPhys/0.1304);
+  
+  const djack_t aFromFPi=
+    aFpi/fPiPhys;
   
   console<<" r2: "<<r2.ave_err()<<endl;
   console<<" r2Phys: "<<r2Phys<<endl;
+  console<<" a from aFpi: "<<aFromFPi.ave_err()<<endl;
+  
+  *aFromPhysLine=
+    jackCall(aFromMPiFPi,aMpi,aFpi);
+  console<<" a from phys line analysis: "<<aFromPhysLine->ave_err()<<endl;
   
   const djack_t r2frR2Phys=
     r2/r2Phys;

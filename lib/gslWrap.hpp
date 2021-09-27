@@ -2,6 +2,7 @@
 #define _GSLWRAP_HPP
 
 #include <gsl/gsl_deriv.h>
+#include <gsl/gsl_integration.h>
 
 /// Wraps any function into a gsl one
 template <typename F>
@@ -27,7 +28,7 @@ template <typename F>
    }
    
    /// Returns the wrapper
-   const gsl_function* getWrapper() const
+   gsl_function* getWrapper()
    {
      return
        this;
@@ -47,6 +48,37 @@ double gslDeriv(F&& fun,
   double absErr;
   
   gsl_deriv_central(GslFunction(fun).getWrapper(),x,eps,&res,&absErr);
+  
+  return
+    res;
+}
+
+/// Use gsl to integrate from lower to infinity
+template <typename F>
+double gslIntegrateUpToInfinity(F&& fun,
+				const double& lower,
+				const double& eps=1e-8)
+{
+  /// Absolute error
+  constexpr double epsAbs=0;
+  
+  /// Size of the workspace
+  static constexpr int workspaceSize=
+    1000;
+  
+  /// Result
+  double res;
+  
+  /// Absolute error
+  double absErr;
+  
+  /// Workspace used by gsl
+  gsl_integration_workspace *workspace=
+    gsl_integration_workspace_alloc(workspaceSize);
+  
+  gsl_integration_qagiu(GslFunction(fun).getWrapper(),lower,epsAbs,eps,workspaceSize,workspace,&res,&absErr);
+  
+  gsl_integration_workspace_free(workspace);
   
   return
     res;

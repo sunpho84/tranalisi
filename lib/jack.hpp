@@ -169,10 +169,10 @@ struct jack_t
       *this;
   }
   
-#define PROVIDE_CALLABLE(CONST)			\
-  template <typename...Args>			\
-  auto operator()(Args&&...args) CONST		\
-  {						\
+#define PROVIDE_CALLABLE(CONST)					\
+  template <typename...Args>					\
+  auto operator()(Args&&...args) CONST				\
+  {								\
     using R=							\
       decltype((*this)[0](getJack(args,/*ijack*/0)...));	\
 								\
@@ -190,6 +190,29 @@ struct jack_t
   PROVIDE_CALLABLE(/* non const*/);
   
 #undef PROVIDE_CALLABLE
+
+#define PROVIDE_ACTON(CONST)						\
+  template <typename F,							\
+	    typename...Args>						\
+  auto actOn(const F& f,						\
+	     Args&&...args) CONST					\
+  {									\
+    using R=								\
+      decltype(f(data[0],getJack(std::forward<Args>(args),0)...));	\
+									\
+    jack_t<R> res;							\
+									\
+    for(size_t ijack=0;ijack<=njacks;ijack++)				\
+      res[ijack]=f(data[ijack],getJack(std::forward<Args>(args),ijack)...); \
+									\
+    return								\
+      res;								\
+  }
+  
+PROVIDE_ACTON(const)
+PROVIDE_ACTON(/* non const*/)
+  
+#undef PROVIDE_ACTON
   
   //! fill the central with the average
   void fill_ave_with_components_ave()
@@ -581,6 +604,23 @@ jack_t<T> operator-(const jack_t<T>& a)
     
     return
       b;
+}
+
+template <typename F,
+	  typename...Args>
+auto jackCall(const F& f,
+	      Args&&...args)
+{
+  using R=
+    decltype(f(getJack(std::forward<Args>(args),0)...));
+  
+  jack_t<R> res;
+  
+  for(size_t ijack=0;ijack<=njacks;ijack++)
+    res[ijack]=f(getJack(std::forward<Args>(args),ijack)...);
+  
+  return
+    res;
 }
 
 #undef EXTERN_JACK

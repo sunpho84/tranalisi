@@ -16,6 +16,7 @@ __top_builddir__bin_gm3_SOURCES= \
 	%D%/mPCAC.cpp \
 	%D%/kernels.cpp \
 	%D%/params.cpp \
+	%D%/physLine.cpp \
 	%D%/rawData.cpp \
 	%D%/renoConstants.cpp \
 	%D%/VKVKRepresentation.cpp

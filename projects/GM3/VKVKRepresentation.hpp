@@ -4,9 +4,10 @@
 #include <aLaLuscherRepresentation.hpp>
 
 /// Representation of the vector correlator
+template <typename TwoPionsRepresentation>
 struct VKVKRep
 {
-  const ALaLuscherRepresentation<true> LuschRep;
+  const TwoPionsRepresentation LuschRep;
   
   const double rDual;
   
@@ -46,7 +47,7 @@ struct VKVKRep
       LuschRep(t);
   }
   
-  VKVKRep(const ALaLuscherRepresentation<true>& LuschRep,
+  VKVKRep(const TwoPionsRepresentation& LuschRep,
 	  const double& rDual,
 	  const double& eThr,
 	  const double& mRho) :
@@ -70,8 +71,16 @@ struct VKVKRep
   }
 };
 
-jack_t<VKVKRep> fitVKVK(const RegoType& rego,
-			const int& nLevels,
-			const size_t& tMin);
+template <bool IncludeIsospinCorrection=true>
+using VKVKRepFiniteVol=
+  VKVKRep<ALaLuscherRepresentation<IncludeIsospinCorrection>>;
+
+template <bool IncludeIsospinCorrection=true>
+using VKVKRepInfiniteVol=
+  VKVKRep<ALaLuscherRepresentationInfVol<IncludeIsospinCorrection>>;
+
+pair<jack_t<VKVKRepFiniteVol<>>,
+     jack_t<VKVKRepInfiniteVol<>>> fitVKVK(const RegoType& rego,
+					   const int& nLevels);
 
 #endif

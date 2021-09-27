@@ -255,7 +255,7 @@ struct vmeas_t
     
     vmeas_t res(n);
     
-    for(size_t i=0;i<=n;i++)
+    for(size_t i=0;i<n;i++)
       res[i]=data[i+beg];
     
     return res;

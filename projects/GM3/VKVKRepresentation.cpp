@@ -6,12 +6,26 @@
 #include <renoConstants.hpp>
 #include <VKVKRepresentation.hpp>
 
-jack_t<VKVKRep> fitVKVK(const RegoType& rego,
-			const int& nLevels,
-			const size_t& tMin)
+double VKVKInfVol(const VKVKRepInfiniteVol<>& rep,
+		  const ALaLuscherRepresentationInfVol<true>& aLaLusch,
+		  const double& t)
+{
+  const double dualPart=
+    rep.dualPartFun(t);
+  
+  const double LuschPart=
+    aLaLusch(t);
+  
+  return
+    dualPart+LuschPart;
+}
+
+pair<jack_t<VKVKRepFiniteVol<>>,
+     jack_t<VKVKRepInfiniteVol<>>> fitVKVK(const RegoType& rego,
+					   const int& nLevels)
 {
   const djvec_t cP5P5=
-    getAveForRego(0,nSources,idP5P5,rego);
+    getAveForRego(0,nSources,idP5P5,REGO_TM);
   
   /// Charge factor of the correlator
   const double chargeFactor=
@@ -20,15 +34,14 @@ jack_t<VKVKRep> fitVKVK(const RegoType& rego,
   djvec_t cVKVK=
     getAveForRego(0,nSources,idVKVK,rego)*sqr(Z[regoZId[rego]])*chargeFactor;
   cVKVK.ave_err().write("plots/corr_for_Rep"+regoTag[rego]+".xmg");
-  cVKVK[0]=cVKVK[1];
-  
+    
   jack_fit_t fitter;
   
   djvec_t pars(4);
-  pars[0].fill_gauss((rego==REGO_TM)?1.00:1.30,0.1,235235);
-  pars[1].fill_gauss(((rego==REGO_TM)?0.416:0.53)*a,0.1,7342);
-  pars[2].fill_gauss(0.770*a,0.1,23423);
-  pars[3].fill_gauss(27,1,32235);
+  pars[0].fill_gauss((rego==REGO_TM)?1.05:1.20,0.04,235235);
+  pars[1].fill_gauss(((rego==REGO_TM)?0.416:0.5)*aAve,0.05,7342);
+  pars[2].fill_gauss(((rego==REGO_TM)?0.760:0.7900)*aAve,0.05,23423);
+  pars[3].fill_gauss(((rego==REGO_TM)?28:26),0.5,32235);
   
   const size_t iRDual=
     fitter.add_fit_par_limits(pars[0],"RDual",pars[0].ave(),pars[0].err(), 0.2,2.0);
@@ -39,13 +52,19 @@ jack_t<VKVKRep> fitVKVK(const RegoType& rego,
   const size_t iG2=
     fitter.add_fit_par_limits(pars[3],"g2",pars[3].ave(),pars[3].err(), 20.0,35.0);
   
+  //fitter.fix_par(iEThr);
+  //fitter.fix_par(iMRho);
+  //fitter.fix_par(iG2);
+  
   const djack_t aMPi=
-    constant_fit(effective_mass(cP5P5),tMinP5P5[rego],tMaxP5P5[rego],"plots/eff_mass_P5P5"+regoTag[rego]+"_for_rep.xmg");
+    constant_fit(effective_mass(cP5P5),tMinP5P5[REGO_TM],tMaxP5P5[REGO_TM],"plots/eff_mass_P5P5"+regoTag[REGO_TM]+"_for_rep.xmg");
   
   // fit_debug=true;
   
   const size_t tMinFit=
-    5;
+    (rego==REGO_TM)?
+    5:
+    6;
   
   ALaLuscherRepresentationCached<true> cachedLuschRepFinder(nLevels);
   
@@ -84,6 +103,8 @@ jack_t<VKVKRep> fitVKVK(const RegoType& rego,
       tFit++;
     };
   
+  cout<<"Fitting in the range: ["<<tMinFit<<":"<<tFit-1<<"]"<<endl;
+  
   const size_t tMaxFit=
     tFit;
   
@@ -111,7 +132,7 @@ jack_t<VKVKRep> fitVKVK(const RegoType& rego,
   const jack_t<ALaLuscherRepresentationCalculator> jLuschRepConstructor(aMPi,L,g2,aMRho);
   const jack_t<ALaLuscherRepresentation<true>> LuschRep=
     jLuschRepConstructor(nLevels);
-  const jack_t<VKVKRep> rep(LuschRep,rDual,eThr,aMRho);
+  const jack_t<VKVKRepFiniteVol<>> rep(LuschRep,rDual,eThr,aMRho);
   
   djvec_t cVKVKDual(THp1);
   djvec_t cVKVKLuscher(THp1);
@@ -170,7 +191,7 @@ jack_t<VKVKRep> fitVKVK(const RegoType& rego,
 	e;
     };
   
-  const djack_t mRho=aMRho/a;
+  const djack_t mRho=aMRho/(*a);
   
   cout<<"mPi: "<<aMPi.ave_err()<<endl;
   cout<<"rDual: "<<rDual.ave_err()<<endl;
@@ -185,6 +206,18 @@ jack_t<VKVKRep> fitVKVK(const RegoType& rego,
   plotFit.write_polygon(effMassFun,tMinFit,tMaxFit);
   plotFit.write_polygon(effMassFun,tMaxFit,TH-1,grace::GREEN4);
   
+  djvec_t cVKVKInfVol=
+    cVKVK;
+  
+  jack_t<ALaLuscherRepresentationInfVol<true>> aLaLusch(aMPi,g2,aMRho);
+  jack_t<VKVKRepInfiniteVol<>> repInfVol(aLaLusch,rDual,eThr,aMRho);
+  
+
+  // for(size_t t=0;t<TH;t++)
+  //   cVKVKInfVol[t]=jackCall(VKVKInfVol,rep,aLaLusch,t);
+  // cVKVKInfVol.ave_err().write("plots/cVKVK_"+regoTag[rego]+"_InfVol.xmg");
+  // effective_mass(cVKVKInfVol,TH,0).ave_err().write("plots/eff_mass_VKVK_InfVol_"+regoTag[rego]+".xmg");
+ 
   return
-    rep;
+    {rep,repInfVol};
 }

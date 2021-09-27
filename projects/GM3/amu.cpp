@@ -14,13 +14,21 @@
 #include <VKVKRepresentation.hpp>
 
 void computeAmu(const RegoType& rego,
-		const jack_t<VKVKRep>& rep)
+		const jack_t<VKVKRepFiniteVol<>>& rep,
+		const jack_t<VKVKRepInfiniteVol<>>& infVolRep)
 {
   using namespace Eigen;
   
     // for(const RegoType& rego : {REGO_TM,REGO_OS})
   //   {
   console<<"Computing amu fore rego "<<regoTag[rego]<<endl;
+  
+  const djack_t aMRho=
+    rep.actOn([](const VKVKRepFiniteVol<>& rep)
+    {
+     return
+       rep.mRho;
+    });
   
   const djack_t Zrego=Z[regoZId[rego]];
   
@@ -100,24 +108,32 @@ void computeAmu(const RegoType& rego,
   // // two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
   
   grace_file_t amu("plots/amuRego"+regoTag[rego]+".xmg");
-  djvec_t amuInt(TH),amuSubs1(TH),amuSubs2(TH);
+  djvec_t amuInt(TH),amuSubs1(TH),amuSubs2(TH),amuSubs3(TH),amuSubs4(TH);
   for(size_t upto=0;upto<TH;upto++)
     {
       djvec_t corrRefatta1=corr;
       djvec_t corrRefatta2=corr;
+      djvec_t corrRefatta4=corr;
       for(size_t t=upto;t<TH;t++)
 	{
 	  corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
 	  corrRefatta2[t]=rep(t)();
+	  corrRefatta4[t]=infVolRep(t)();
 	}
       
       size_t THm1=TH-1;
-      const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,a,upto)*1e10;
-      const djack_t cSubs1=integrate_corr_times_kern_up_to(corrRefatta1,T,a,THm1)*1e10;
-       const djack_t cSubs2=integrate_corr_times_kern_up_to(corrRefatta2,T,a,THm1)*1e10;
+      const djack_t ja(*a);
+      const djack_t jal=*aFromPhysLine;
+      const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,ja,upto)*1e10;
+      const djack_t cSubs1=integrate_corr_times_kern_up_to(corrRefatta1,T,ja,THm1)*1e10;
+      const djack_t cSubs2=integrate_corr_times_kern_up_to(corrRefatta2,T,ja,THm1)*1e10;
+      const djack_t cSubs3=integrate_corr_times_kern_up_to(corrRefatta2,T,jal,THm1)*1e10;
+      const djack_t cSubs4=integrate_corr_times_kern_up_to(corrRefatta4,T,jal,THm1)*1e10;
       amuInt[upto]=cInt;
       amuSubs1[upto]=cSubs1;
       amuSubs2[upto]=cSubs2;
+      amuSubs3[upto]=cSubs3;
+      amuSubs4[upto]=cSubs4;
     }
   amu.set_xaxis_label("t");
   
@@ -144,8 +160,26 @@ void computeAmu(const RegoType& rego,
   amu.set_all_colors(grace::ORANGE);
   amu.set_legend("A la luscher rep");
   
+  amu.write_vec_ave_err(amuSubs3.ave_err());
+  amu.set_no_line();
+  amu.set_all_colors(grace::ORANGE);
+  amu.set_legend("A la luscher rep + lt");
+  
+  amu.write_vec_ave_err(amuSubs4.ave_err());
+  amu.set_no_line();
+  amu.set_all_colors(grace::MAGENTA);
+  amu.set_legend("A la luscher rep + lt + infvol");
+  
   amu.new_data_set();
   amu.set_legend("BMW light connected");
   amu.set_all_colors(grace::GREEN4);
   amu.write_constant_band(0,TH,djack_t(gauss_filler_t{633.7,5.0,23423}));
+  
+  for(const auto& amu : {// amuSubs1,
+			 // amuSubs2,
+      amuSubs3,
+      amuSubs4
+    })
+    console<<"amu: "<<(aAve*aAve)<<" "<<amu[20]<<endl;
 }
+

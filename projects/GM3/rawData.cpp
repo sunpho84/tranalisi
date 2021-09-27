@@ -596,7 +596,7 @@ void analyzeRawData()
 	case 0:
 	  mP5=m;
 	  console<<"amP5: "<<m.ave_err()<<endl;
-	  console<<"mP5: "<<djack_t(m/a).ave_err()<<endl;
+	  console<<"mP5: "<<djack_t(m/aAve).ave_err()<<endl;
 	  break;
 	case 1:
 	  {

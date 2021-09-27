@@ -487,4 +487,79 @@ static const double qMax=
 const int nIntervals=
   1000;
 
+template <bool IncludeIsoVectorCorrection=true>
+struct ALaLuscherRepresentationInfVol
+{
+  gsl_integration_workspace *workspace;
+  
+  /// Absolute error
+  static constexpr double epsAbs=0;
+  
+  /// Size of the workspace
+  static constexpr int workspaceSize=
+    1000;
+  
+  const ALaLuscherRepresentationCalculator aLaLusch;
+  
+  const double mPi;
+  
+  double integrand(const double& omega,
+		   const double& t) const
+  {
+      return
+	(1.0/(48.0*sqr(M_PI)))*sqr(omega)*pow(1.0-sqr(2.0*mPi/omega),1.5)*exp(-omega*t)*norm(aLaLusch.F(omega));
+  };
+  
+  double operator()(const double& t) const
+  {
+    /// Result
+    double res;
+    
+    /// Absolute error
+    double absErr;
+    
+    const double& eps=1e-8;
+    
+    gsl_integration_qagiu(GslFunction([this,t](const double& omega)
+      {
+	return
+	  integrand(omega,t);
+      }).getWrapper(),2*mPi,epsAbs,eps,workspaceSize,workspace,&res,&absErr);
+    
+    return
+      res;
+  }
+  
+  ALaLuscherRepresentationInfVol(const double& mPi,
+				 const double& g2,
+				 const double& mRho) :
+    workspace(gsl_integration_workspace_alloc(workspaceSize)),
+    aLaLusch(mPi,1e30,g2,mRho),
+    mPi(mPi)
+  {
+  }
+  
+  ALaLuscherRepresentationInfVol(const ALaLuscherRepresentationInfVol& oth) :
+    workspace(gsl_integration_workspace_alloc(workspaceSize)),
+    aLaLusch(oth.aLaLusch),
+    mPi(oth.mPi)
+  {
+  }
+  
+  ALaLuscherRepresentationInfVol(ALaLuscherRepresentationInfVol&& oth)
+  {
+    workspace=
+      oth.workspace;
+    
+    oth.workspace=
+      nullptr;
+  }
+  
+  ~ALaLuscherRepresentationInfVol()
+  {
+    if(workspace)
+      gsl_integration_workspace_free(workspace);
+  }
+};
+
 #endif
