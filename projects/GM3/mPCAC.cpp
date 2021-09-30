@@ -41,9 +41,13 @@ void computeMPCAC()
   const djack_t aFromFPi=
     aFpi/fPiPhys;
   
+  const djack_t mPiL=
+    aMpi*L;
+  
   console<<" r2: "<<r2.ave_err()<<endl;
   console<<" r2Phys: "<<r2Phys<<endl;
   console<<" a from aFpi: "<<aFromFPi.ave_err()<<endl;
+  console<<" mPi*L: "<<mPiL.ave_err()<<endl;
   
   *aFromPhysLine=
     jackCall(aFromMPiFPi,aMpi,aFpi);
