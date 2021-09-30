@@ -5,12 +5,13 @@
 #include <fit.hpp>
 #include <meas_vec.hpp>
 
-#include <data.hpp>
-#include <physLine.hpp>
+#include <GM3/perens.hpp>
+#include <GM3/physLine.hpp>
 
 /// Compute the PCAC mass
-void computeMPCAC()
+void perens_t::computeMPCAC()
 {
+  #warning rename
   const djvec_t cP5P5=
     getAveForRego(0,nSources,idP5P5,REGO_TM);
   
@@ -49,9 +50,9 @@ void computeMPCAC()
   console<<" a from aFpi: "<<aFromFPi.ave_err()<<endl;
   console<<" mPi*L: "<<mPiL.ave_err()<<endl;
   
-  *aFromPhysLine=
+  aFromPhysLine=
     jackCall(aFromMPiFPi,aMpi,aFpi);
-  console<<" a from phys line analysis: "<<aFromPhysLine->ave_err()<<endl;
+  console<<" a from phys line analysis: "<<aFromPhysLine.ave_err()<<endl;
   
   const djack_t r2frR2Phys=
     r2/r2Phys;

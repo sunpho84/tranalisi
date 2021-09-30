@@ -4,11 +4,10 @@
 
 #include "fit.hpp"
 
-#include <data.hpp>
-#include <params.hpp>
-#include <renoConstants.hpp>
+#include <GM3/params.hpp>
+#include <GM3/perens.hpp>
 
-djvec_t determineRenoConst()
+djvec_t perens_t::determineRenoConst() const
 {
   djvec_t Z(2),Zsilv(2);
   

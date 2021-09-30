@@ -4,9 +4,11 @@
 
 #include <filesystem>
 
-#include <cachedData.hpp>
+#include <GM3/perens.hpp>
 
-bool loadCachedAveCorr()
+constexpr char cachedAveCorrPath[]="cachedAveCorr.dat";
+
+bool perens_t::loadCachedAveCorr()
 {
   if(not file_exists(cachedAveCorrPath))
     {
@@ -59,9 +61,10 @@ bool loadCachedAveCorr()
   return true;
 }
 
-void storeCachedAveCorr()
+void perens_t::storeCachedAveCorr() const
 {
-  const size_t& nCached=aveCorrCache.size();
+  const size_t& nCached=
+    aveCorrCache.size();
   
   console<<"Storing "<<nCached<<" cached average correlators to file "<<cachedAveCorrPath<<endl;
   

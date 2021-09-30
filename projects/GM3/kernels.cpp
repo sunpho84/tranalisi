@@ -5,7 +5,7 @@
 #include "functions.hpp"
 #include <math.hpp>
 
-#include <kernels.hpp>
+#include <GM3/kernels.hpp>
 
 //! parameters to solve
 struct params_t

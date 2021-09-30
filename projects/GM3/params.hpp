@@ -7,27 +7,12 @@
 #include <memory>
 #include <string>
 
-#include <externer.hpp>
+#include "externer.hpp"
 
 using namespace std;
 
 EXTERN size_t nMPIranks,MPIrank INIT_EXTERN_TO(=0);
-EXTERN double amq;
-EXTERN size_t T,TH,THp1;
-EXTERN double L;
-EXTERN size_t tMinVKVK,tMaxVKVK;
-EXTERN size_t tMinP5P5[2],tMaxP5P5[2];
-EXTERN double aAve,aErr,ZaPetros;
-EXTERN unique_ptr<djack_t> a;
-EXTERN unique_ptr<djack_t> aFromPhysLine;
-EXTERN string confsPattern;
-EXTERN string refConfPattern;
-EXTERN string rawDataPackedPath;
-EXTERN size_t nConfs,nConfsMax,nSources,nSourcesMax;
 EXTERN ofstream console;
-EXTERN index_t idData_loader;
-EXTERN index_t idOpenData_loader;
-EXTERN int nLevels;
 
 constexpr size_t nGammaComb=9;
 constexpr bool isVK[]=                     {0     ,1     ,1     ,1     ,1     ,0     ,0     ,0     ,0    };
@@ -37,6 +22,8 @@ enum CORR_ID                               {idP5P5,idVKVK,idTKTK,idVKTK,idTKVK,i
 
 enum RegoType{REGO_TM,REGO_OS};
 static const string regoTag[2]={"TM","OS"};
+
+constexpr size_t regoZId[2]={1,0};
 
 using AveId=array<size_t,4>;
 
@@ -75,6 +62,5 @@ constexpr char mesTag[nMes][3]={"uu","ud","dd"};
 
 void init(int narg,char **arg);
 void close();
-void readConfMap();
 
 #endif

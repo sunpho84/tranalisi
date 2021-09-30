@@ -7,7 +7,7 @@
 
 #include <math.hpp>
 
-#include <params.hpp>
+#include "params.hpp"
 #include <phiFunction.hpp>
 
 /// Representation

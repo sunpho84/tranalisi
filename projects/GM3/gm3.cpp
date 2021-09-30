@@ -1,21 +1,15 @@
 #define EXTERN
 #define INIT_EXTERN_TO(ARGS...) ARGS
 
-#include <aLaLuscherRepresentation.hpp>
-#include <amu.hpp>
-#include <cachedData.hpp>
-#include <data.hpp>
 #include <fit.hpp>
-#include <kernels.hpp>
-#include <mPCAC.hpp>
-#include <params.hpp>
-#include <rawData.hpp>
-#include <renoConstants.hpp>
-#include <VKVKRepresentation.hpp>
+
+#include <GM3/aLaLuscherRepresentation.hpp>
+#include <GM3/kernels.hpp>
+#include <GM3/perens.hpp>
 
 using namespace std;
 
-void loadDisco()
+void perens_t::loadDisco()
 {
   ifstream file("disco.dat");
   if(not file.good())
@@ -41,7 +35,7 @@ void loadDisco()
   cout<<"discoClustSize: "<<discoClustSize<<endl;
   djvec_t d(T,0.0);
   for(size_t t=0;t<T;t++)
-    jackknivesFill(nDiscoConfs,[&d,&l,t](const size_t& iConf,const size_t& iClust,const double& w)
+    jackknivesFill(nDiscoConfs,[this,&d,&l,t](const size_t& iConf,const size_t& iClust,const double& w)
     {
       d[t][iClust]+=l[t+T*iConf]*w;
     });
@@ -71,34 +65,32 @@ void loadDisco()
 
 int main(int narg,char **arg)
 {
-  omp_set_num_threads(1);
-  
-  hashedPhiAndDerivCalculator.plot("plots/phi.xmg","plots/phiDeriv.xmg");
-  
   init(narg,arg);
   
-  loadData(narg,arg);
+  perens_t ens(".");
+  
+  ens.loadData(narg,arg);
   
   if(MPIrank==0)
     {
-      computeMPCAC();
-      Z=determineRenoConst();
+      ens.computeMPCAC();
+      ens.Z=ens.determineRenoConst();
       
-      if(canUseRawData)
+      if(ens.canUseRawData)
 	{
-	  analyzeRawData();
-	  convertForSilvano();
+	  ens.analyzeRawData();
+	  ens.convertForSilvano();
 	}
       
       if(file_exists("disco.dat"))
-	loadDisco();
+	ens.loadDisco();
       
       for(const RegoType& rego : {REGO_TM,REGO_OS})
-	{      
+	{
 	  const auto [rep,repInfVol]=
-	    fitVKVK(rego,nLevels);
+	    ens.fitVKVK(rego,ens.nLevels);
 	  
-	  computeAmu(rego,rep,repInfVol);
+	ens.computeAmu(rego,rep,repInfVol);
 	}
     }
   

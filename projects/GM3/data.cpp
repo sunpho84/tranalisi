@@ -4,14 +4,11 @@
 
 #include <filesystem>
 
-#include <cachedData.hpp>
-#include <data.hpp>
-#include <params.hpp>
-#include "rawData.hpp"
+#include <GM3/perens.hpp>
 
 using namespace std;
 
-djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes)
+djvec_t perens_t::getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes) const
 {
   djvec_t res;
   
@@ -31,19 +28,21 @@ djvec_t getAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGam
 	 }
      }
   
-  return res;
+  return
+    res;
 }
 
-djvec_t getTMAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb)
+djvec_t perens_t::getTMAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb) const
 {
   djvec_t ave(THp1);
   for(size_t iMes=0;iMes<nMes;iMes+=2)
     ave+=getAve(iSourceMin,iSourceMax,iGammaComb,iMes);
   
-  return ave/2;
+  return
+    ave/2;
 }
 
-djvec_t getAveForRego(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const RegoType& rego)
+djvec_t perens_t::getAveForRego(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const RegoType& rego) const
 {
   djvec_t res;
   
@@ -59,7 +58,7 @@ djvec_t getAveForRego(const size_t iSourceMin,const size_t iSourceMax,const size
   return res;
 }
 
-void loadData(int narg,char **arg)
+void perens_t::loadData(int narg,char **arg)
 {
   if(not loadCachedAveCorr())
     loadRawData(narg,arg);

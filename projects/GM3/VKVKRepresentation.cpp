@@ -2,13 +2,12 @@
 # include "config.hpp"
 #endif
 
-#include <data.hpp>
-#include <renoConstants.hpp>
-#include <VKVKRepresentation.hpp>
+#include <GM3/perens.hpp>
+#include <GM3/VKVKRepresentation.hpp>
 
-double VKVKInfVol(const VKVKRepInfiniteVol& rep,
-		  const ALaLuscherRepresentationInfVol& aLaLusch,
-		  const double& t)
+double perens_t::VKVKInfVol(const VKVKRepInfiniteVol& rep,
+			    const ALaLuscherRepresentationInfVol& aLaLusch,
+			    const double& t) const
 {
   const double dualPart=
     rep.dualPartFun(t);
@@ -21,8 +20,8 @@ double VKVKInfVol(const VKVKRepInfiniteVol& rep,
 }
 
 pair<jack_t<VKVKRepFiniteVol>,
-     jack_t<VKVKRepInfiniteVol>> fitVKVK(const RegoType& rego,
-					 const int& nLevels)
+     jack_t<VKVKRepInfiniteVol>> perens_t::fitVKVK(const RegoType& rego,
+						   const int& nLevels) const
 {
   const RegoType REGO_FIT=
     REGO_TM;
@@ -97,7 +96,8 @@ pair<jack_t<VKVKRepFiniteVol>,
   while(tFit<THp1 and cVKVK[tFit].err()<0.1*fabs(cVKVK[tFit].ave()))
     {
       fitter.add_point(cVKVK[tFit],
-		       [&aMPiAll=aMPi,
+		       [this,
+			&aMPiAll=aMPi,
 			&cachedLuschRepFinder,
 			iRDual,
 			iEThr,
@@ -196,7 +196,8 @@ pair<jack_t<VKVKRepFiniteVol>,
     console<<" "<<ilev<<" "<<weights[ilev].ave_err()<<" "<<energy[ilev].ave_err()<<endl;
   
   auto effMassFun=
-    [&rep](const double& tPlot)
+    [this,
+     &rep](const double& tPlot)
     {
       const double dTPlot=
 	1;
@@ -214,7 +215,7 @@ pair<jack_t<VKVKRepFiniteVol>,
 	e;
     };
   
-  const djack_t mRho=aMRho/(*a);
+  const djack_t mRho=aMRho/a;
   
   cout<<"rDual: "<<rDual.ave_err()<<endl;
   cout<<"eThr: "<<eThr.ave_err()<<endl;
@@ -277,7 +278,13 @@ pair<jack_t<VKVKRepFiniteVol>,
   
   grace_file_t compaVKVKRecoInfFinite("plots/cVKVK_"+regoTag[rego]+"_FinInfVol.xmg");
   for(size_t t=0;t<TH;t++)
-    cVKVKInfVol[t]=jackCall(VKVKInfVol,repInfVol,aLaLusch,t);
+    cVKVKInfVol[t]=jackCall([t,this](const VKVKRepInfiniteVol &rep,
+				     const ALaLuscherRepresentationInfVol &aLaLusch)
+    {
+      return
+	this->VKVKInfVol(rep,aLaLusch,t);
+    },
+      repInfVol,aLaLusch);
   compaVKVKRecoInfFinite.write_vec_ave_err(cVKVKInfVol.ave_err());
   compaVKVKRecoInfFinite.set_legend("InfVol");
   compaVKVKRecoInfFinite.write_vec_ave_err(cVKVKFull.ave_err());

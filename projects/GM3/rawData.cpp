@@ -12,9 +12,7 @@
 #include "fit.hpp"
 #include "meas_vec.hpp"
 
-#include <data.hpp>
-#include <params.hpp>
-#include <rawData.hpp>
+#include <GM3/perens.hpp>
 
 using namespace H5;
 
@@ -102,7 +100,9 @@ struct DataLoader
   
   std::vector<double> openDataIn;
   
-  DataLoader(const int T)
+  DataLoader(const int T,
+	     const index_t& idData_loader,
+	     const index_t& idOpenData_loader)
   {
     dimsm[0]=T;
     dimsm[1]=nGamma;
@@ -151,7 +151,7 @@ struct DataLoader
     file.close();
   }
   
-  void load()
+  void load(const index_t& idData_loader)
   {
     for(size_t iMes=0;iMes<nMes;iMes++)
       {
@@ -175,7 +175,7 @@ struct DataLoader
       }
   }
   
-  void openLoad()
+  void openLoad(const index_t& idOpenData_loader)
   {
     const string tag[3]={"uu_open","ud_open","dd_open"};
     
@@ -191,7 +191,7 @@ struct DataLoader
   }
 };
 
-string sourceName(const size_t& iConf,const size_t& iSource)
+string perens_t::sourceName(const size_t& iConf,const size_t& iSource)
 {
   return possibleConfsList[iConf]+"/"+sourcesList[iSource];
 }
@@ -232,7 +232,7 @@ vector<string> getConfsList(const string& confsPattern)
   return confsList;
 }
 
-void loadAndPackRawData(int narg,char** arg)
+void perens_t::loadAndPackRawData(int narg,char** arg)
 {
   console<<"Loading raw data from scratch"<<endl;
   
@@ -330,7 +330,7 @@ void loadAndPackRawData(int narg,char** arg)
 	confMap.printf("%s\n",c.c_str());
     }
   
-  DataLoader loader(T);
+  DataLoader loader(T,idData_loader,idOpenData_loader);
   const array<pair<int,int>,7> map{std::pair<int,int>{0,0},{1,6},{1,7},{1,8},{2,10},{2,11},{2,12}};
   
   const size_t confChunkSize=(nConfs+nMPIranks-1)/nMPIranks;
@@ -354,8 +354,8 @@ void loadAndPackRawData(int narg,char** arg)
 	  const string file=
 	    confsList[iConf]+"/"+sourcesList[iSource];
 	  loader.open(file);
-	  loader.load();
-	  loader.openLoad();
+	  loader.load(idData_loader);
+	  loader.openLoad(idOpenData_loader);
 	  
 	  for(size_t iMes=0;iMes<nMes;iMes++)
 	    for(size_t tIn=0;tIn<T;tIn++)
@@ -470,7 +470,7 @@ void loadAndPackRawData(int narg,char** arg)
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
-void rawDataAn(const size_t& iGammaComb)
+void perens_t::rawDataAn(const size_t& iGammaComb)
 {
   const string tag=gammaCombTag[iGammaComb];
   const size_t nCopies=2;
@@ -493,7 +493,7 @@ void rawDataAn(const size_t& iGammaComb)
 	  s/=nSourcesPerCopy*L*L*L*2;
 	}
   
-  grace_file_t copyAve("plots/copy_ave_"+tag+".xmg");
+  grace_file_t copyAve(basePath+"/plots/copy_ave_"+tag+".xmg");
   vector<djvec_t> copyAveData(2,djvec_t(THp1));
   for(size_t iCopy=0;iCopy<nCopies;iCopy++)
     {
@@ -510,7 +510,13 @@ void rawDataAn(const size_t& iGammaComb)
   
   djvec_t c((THp1)*nCopies*nCopies),a((THp1)*nCopies),aa((THp1)),cc(THp1);
   jackknivesFill(nConfs,
-		 [&sourceAveData,&idDataAve,&a,&c,&aa,&cc](const size_t& iConf,const size_t& iClust,const double& w)
+		 [this,
+		  &sourceAveData,
+		  &idDataAve,
+		  &a,
+		  &c,
+		  &aa,
+		  &cc](const size_t& iConf,const size_t& iClust,const double& w)
 		 {
 		   for(size_t t=0;t<=T/2;t++)
 		     {
@@ -564,7 +570,7 @@ void rawDataAn(const size_t& iGammaComb)
   corr.ave_err().write("plots/stat_corr_"+tag+".xmg");
 }
 
-void analyzeRawData()
+void perens_t::analyzeRawData()
 {
   if(not canUseRawData)
     CRASH("cannot do the raw data analysis!");
@@ -669,7 +675,7 @@ void analyzeRawData()
     }
 }
 
-void loadRawData(int narg,char **arg)
+void perens_t::loadRawData(int narg,char **arg)
 {
   // Can use raw data
   canUseRawData=true;
@@ -693,26 +699,27 @@ void loadRawData(int narg,char **arg)
   out.bin_read(_rawData);
 }
 
-djvec_t getRawAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes)
+djvec_t perens_t::getRawAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes) const
 {
   if(not canUseRawData)
       CRASH(" cannot reconstruct average as rawdata not present!");
   
   djvec_t ave(THp1);
   ave=0.0;
-  jackknivesFill(nConfs,[iSourceMin,iSourceMax,iGammaComb,iMes,&ave](const size_t& iConf,const size_t& iClust,const double& w)
-  {
-    for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
-      for(size_t t=0;t<THp1;t++)
-	ave[t][iClust]+=rawData(iConf,iSource,iGammaComb,iMes,t)*w;
-  });
+  jackknivesFill(nConfs,
+		 [this,iSourceMin,iSourceMax,iGammaComb,iMes,&ave](const size_t& iConf,const size_t& iClust,const double& w)
+		 {
+		   for(size_t iSource=iSourceMin;iSource<iSourceMax;iSource++)
+		     for(size_t t=0;t<THp1;t++)
+		       ave[t][iClust]+=rawData(iConf,iSource,iGammaComb,iMes,t)*w;
+		 });
   ave.clusterize(clustSize);
   ave/=(iSourceMax-iSourceMin)*L*L*L;
   
   return ave;
 }
 
-void convertForSilvano()
+void perens_t::convertForSilvano() const
 {
   cout<<"Performing conversion, nconfs: "<<nConfs<<endl;
   
@@ -727,7 +734,7 @@ void convertForSilvano()
 	full.filename();
       
       const string outputConf=
-	"reordered/"+confName;
+	basePath+"reordered/"+confName;
       const string filePath=
 	"reordered/"+confName+"/mes_contr_2pts_ll";
       
@@ -770,4 +777,26 @@ void convertForSilvano()
 	    }
 	}
     }
+}
+
+double& perens_t::rawData(const size_t& _iConf,const size_t& iSource,const size_t& igamma_out,const size_t& iMes,const size_t& tOut)
+{
+  if(not canUseRawData)
+    CRASH("Cannot use raw data");
+  
+  return _rawData[idData({_iConf,iSource,igamma_out,iMes,tOut})];
+}
+
+const double& perens_t::rawData(const size_t& _iConf,const size_t& iSource,const size_t& igamma_out,const size_t& iMes,const size_t& tOut) const
+{
+  if(not canUseRawData)
+    CRASH("Cannot use raw data");
+  
+  return _rawData[idData({_iConf,iSource,igamma_out,iMes,tOut})];
+}
+
+void perens_t::setRawData(const size_t& nConfsToRes)
+{
+  idData.set_ranges({{"Confs",nConfsToRes},{"Source",nSources},{"GammComb",nGammaComb},{"Mes",nMes},{"T",THp1}});
+  _rawData.resize(idData.max(),0.0);
 }

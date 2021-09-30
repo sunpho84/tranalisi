@@ -1,7 +1,7 @@
 #ifndef _VKVKREPRESENTATION_HPP
 #define _VKVKREPRESENTATION_HPP
 
-#include <aLaLuscherRepresentation.hpp>
+#include "aLaLuscherRepresentation.hpp"
 
 /// Representation of the vector correlator
 template <typename TwoPionsRepresentation>
@@ -76,9 +76,5 @@ using VKVKRepFiniteVol=
 
 using VKVKRepInfiniteVol=
   VKVKRep<ALaLuscherRepresentationInfVol>;
-
-pair<jack_t<VKVKRepFiniteVol>,
-     jack_t<VKVKRepInfiniteVol>> fitVKVK(const RegoType& rego,
-					 const int& nLevels);
 
 #endif

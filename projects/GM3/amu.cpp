@@ -7,15 +7,14 @@
 #include "gevp.hpp"
 #include "meas_vec.hpp"
 
-#include <data.hpp>
-#include <kernels.hpp>
-#include <params.hpp>
-#include <renoConstants.hpp>
-#include <VKVKRepresentation.hpp>
+#include <GM3/kernels.hpp>
+#include <GM3/params.hpp>
+#include <GM3/perens.hpp>
+#include <GM3/VKVKRepresentation.hpp>
 
-void computeAmu(const RegoType& rego,
-		const jack_t<VKVKRepFiniteVol>& rep,
-		const jack_t<VKVKRepInfiniteVol>& infVolRep)
+void perens_t::computeAmu(const RegoType& rego,
+			  const jack_t<VKVKRepFiniteVol>& rep,
+			  const jack_t<VKVKRepInfiniteVol>& infVolRep)
 {
   using namespace Eigen;
   
@@ -122,8 +121,8 @@ void computeAmu(const RegoType& rego,
 	}
       
       size_t THm1=TH-1;
-      const djack_t ja(*a);
-      const djack_t jal=*aFromPhysLine;
+      const djack_t ja=a;
+      const djack_t jal=aFromPhysLine;
       const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,ja,upto)*1e10;
       const djack_t cSubs1=integrate_corr_times_kern_up_to(corrRefatta1,T,ja,THm1)*1e10;
       const djack_t cSubs2=integrate_corr_times_kern_up_to(corrRefatta2,T,ja,THm1)*1e10;
