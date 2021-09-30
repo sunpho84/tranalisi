@@ -85,6 +85,8 @@ struct DataLoader
   hsize_t      offset[rank];   // hyperslab offset in the file
   hsize_t      count[rank];    // size of the hyperslab in the file
   
+  string storedPath;
+  
   H5File file;
   string groupName;
   
@@ -142,6 +144,7 @@ struct DataLoader
   
   void open(const string& path)
   {
+    storedPath=path;
     file.openFile(path,H5F_ACC_RDONLY);
     groupName=file.getObjnameByIdx(0);
   }
@@ -157,7 +160,9 @@ struct DataLoader
       {
 	DataSet dataset;
 	
-	const string fullGroupName=groupName+"/mesons/"+mesTag[iMes];
+	const string fullGroupName=
+	  groupName+"/mesons/"+mesTag[iMes];
+	
 	try
 	  {
 	    dataset=file.openDataSet(fullGroupName);
@@ -181,12 +186,24 @@ struct DataLoader
     
     for(size_t iMes=0;iMes<nMes;iMes++)
       {
-	const DataSet dataset=file.openDataSet(groupName+"/mesons/"+tag[iMes]);
-	const DataSpace dataspace=dataset.getSpace();
+	const string fullGroupName=
+	  groupName+"/mesons/"+tag[iMes];
 	
-	dataspace.selectHyperslab(H5S_SELECT_SET,openCount,openOffset);
-	
-	dataset.read(&openDataIn[idOpenData_loader({iMes,0,0,0,0,0,0})],PredType::NATIVE_DOUBLE,openMemspace,dataspace);
+	try
+	  {
+	    const DataSet dataset=
+	      file.openDataSet(fullGroupName);
+	    const DataSpace dataspace=
+	      dataset.getSpace();
+	    
+	    dataspace.selectHyperslab(H5S_SELECT_SET,openCount,openOffset);
+	    
+	    dataset.read(&openDataIn[idOpenData_loader({iMes,0,0,0,0,0,0})],PredType::NATIVE_DOUBLE,openMemspace,dataspace);
+	  }
+	catch(const H5::FileIException& exc)
+	  {
+	    CRASH("Unable to open group %s",fullGroupName.c_str(),storedPath.c_str());
+	  }
       }
   }
 };
@@ -201,7 +218,9 @@ vector<string> getSourcesList(const string& firstConf)
   vector<string> sourcesList;
   glob_t globbuf;
   
-  const string sourcesPattern=(firstConf+"/twop_id*_st*.h5");
+  const string sourcesPattern=
+    (firstConf+"/twop_id*_st*.h5");
+  
   if(glob(sourcesPattern.c_str(),0,nullptr,&globbuf))
     CRASH("Unable to find pattern %s for source",sourcesPattern.c_str());
   else
