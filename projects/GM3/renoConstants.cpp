@@ -49,7 +49,7 @@ djvec_t determineRenoConst()
   
   const djack_t ZV_fr_ZA=Z[0]/Z[1];
   console<<"Zv/Za: "<<ZV_fr_ZA.ave_err()<<endl;
-
+  
   const djvec_t derP5A0TM=-symmetric_derivative(corrP5A0[0]);
   derP5A0TM.ave_err().write("plots/derP5A0_regoTM.xmg");
   const djvec_t ZvSilvCorr=2*amq*corrP5P5[0]/derP5A0TM;
@@ -62,7 +62,9 @@ djvec_t determineRenoConst()
   
   const djvec_t derP5A0OS=-symmetric_derivative(corrP5A0[1]);
   derP5A0OS.ave_err().write("plots/derP5A0_regoOS.xmg");
-  const djvec_t ZaSilvCorr=2*amq*corrP5P5[1]/derP5A0OS*ZaSilvCorrectingFactor;
+  const djvec_t ZaSilvUnCorr=2*amq*corrP5P5[1]/derP5A0OS;
+  const djvec_t ZaSilvCorr=ZaSilvUnCorr*ZaSilvCorrectingFactor;
+  const djack_t ZaSilvUn=constant_fit(ZaSilvUnCorr,tMinP5P5[0],tMaxP5P5[0],"plots/ZaSilvUncorr.xmg");
   const djack_t ZaSilv=constant_fit(ZaSilvCorr,tMinP5P5[0],tMaxP5P5[0],"plots/ZaSilv.xmg");
   console<<"ZaSilv: "<<ZaSilv.ave_err()<<endl;
   Zsilv[1]=ZaSilv;

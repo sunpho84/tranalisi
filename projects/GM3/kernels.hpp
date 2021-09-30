@@ -21,7 +21,7 @@ T kern_num(const T &corr_t,double t,const T &a)
 
 //! integrate the kernel
 template <class TV,class TS=typename TV::base_type>
-TS integrate_corr_times_kern_up_to(const TV &corr,size_t T,const TS &a,size_t &upto,size_t ord=1)
+TS integrate_corr_times_kern_up_to(const TV &corr,size_t T,const TS &a,size_t upto,size_t ord=1)
 {
   //store the kernel
   TV kern(T/2);

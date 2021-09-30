@@ -506,8 +506,8 @@ struct ALaLuscherRepresentationInfVol
   double integrand(const double& omega,
 		   const double& t) const
   {
-      return
-	(1.0/(48.0*sqr(M_PI)))*sqr(omega)*pow(1.0-sqr(2.0*mPi/omega),1.5)*exp(-omega*t)*norm(aLaLusch.F(omega));
+    return
+      10.0/9*(1.0/(48.0*sqr(M_PI)))*sqr(omega)*pow(1.0-sqr(2.0*mPi/omega),1.5)*exp(-omega*t)*norm(aLaLusch.F(omega));
   };
   
   double operator()(const double& t) const

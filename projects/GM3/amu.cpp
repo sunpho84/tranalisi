@@ -107,10 +107,6 @@ void computeAmu(const RegoType& rego,
   // // djack_t mVK2,Z2VK2;
   // // two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
   
-  djvec_t corrInfVol=corr;
-  for(size_t t=0;t<TH;t++)
-    corrInfVol[t]=infVolRep(t)();
-  
   grace_file_t amu("plots/amuRego"+regoTag[rego]+".xmg");
   djvec_t amuInt(TH),amuSubs1(TH),amuSubs2(TH),amuSubs3(TH),amuSubs4(TH);
   for(size_t upto=0;upto<TH;upto++)
@@ -122,7 +118,7 @@ void computeAmu(const RegoType& rego,
 	{
 	  corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
 	  corrRefatta2[t]=rep(t)();
-	  corrRefatta4[t]=corrInfVol[t];
+	  corrRefatta4[t]=infVolRep(t)();
 	}
       
       size_t THm1=TH-1;
@@ -177,13 +173,9 @@ void computeAmu(const RegoType& rego,
   amu.new_data_set();
   amu.set_legend("BMW light connected");
   amu.set_all_colors(grace::GREEN4);
-  amu.write_constant_band(0,TH,djack_t(gauss_filler_t{633.7,5.0,23423}));
+  amu.write_constant_band(0,TH,djack_t(gauss_filler_t{652.4,6.0,23423}));
   
-  for(const auto& amu : {// amuSubs1,
-			 // amuSubs2,
-      amuSubs3,
-      amuSubs4
-    })
-    console<<"amu: "<<(aAve*aAve)<<" "<<amu[20]<<endl;
+  console<<"amu: "<<(aAve*aAve)<<" "<<amuSubs3[20]<<endl;
+  console<<"amu: "<<(aAve*aAve)<<" "<<amuSubs4[6]<<" inf vol"<<endl;
 }
 

@@ -93,7 +93,6 @@ int main(int narg,char **arg)
       if(file_exists("disco.dat"))
 	loadDisco();
       
-      const int nLevels=6;
       for(const RegoType& rego : {REGO_TM,REGO_OS})
 	{      
 	  const auto [rep,repInfVol]=

@@ -30,6 +30,7 @@ void readInput()
   tMaxVKVK=input.read<size_t>();
   nSourcesMax=input.read<size_t>("NSourcesMax");
   nConfsMax=input.read<size_t>("NConfsMax");
+  nLevels=input.read<size_t>("NLevels");
 }
 
 void readConfMap()

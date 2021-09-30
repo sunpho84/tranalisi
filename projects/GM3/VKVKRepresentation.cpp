@@ -24,8 +24,33 @@ pair<jack_t<VKVKRepFiniteVol<>>,
      jack_t<VKVKRepInfiniteVol<>>> fitVKVK(const RegoType& rego,
 					   const int& nLevels)
 {
+  const RegoType REGO_FIT=
+    REGO_TM;
+  
+  array<array<array<double,4>,4>,2> priors;
+  
+  priors[REGO_TM][0]={1.05, 0.04, 0.2, 2.0};
+  priors[REGO_OS][0]={1.20, 0.04, 0.2, 2.0};
+  priors[REGO_TM][1]={0.416*aAve,0.05, 0.01,1.0};
+  priors[REGO_OS][1]={0.500*aAve,0.05, 0.01,1.0};
+  priors[REGO_TM][2]={0.760*aAve,0.05, 0.01,1.0};
+  priors[REGO_OS][2]={0.790*aAve,0.05, 0.01,1.0};
+  priors[REGO_TM][3]={28,   0.5,  20.0,35};
+  priors[REGO_OS][3]={26,   0.5,  20.0,35};
+  
+  const string priorFilePath=
+    "priorsALaLuscherFit.txt";
+  if(file_exists(priorFilePath))
+    {
+      raw_file_t file(priorFilePath,"r");
+      for(int iPar=0;iPar<4;iPar++)
+	for(int r=0;r<2;r++)
+	  for(int i=0;i<4;i++)
+	    file.read(priors[r][iPar][i]);
+    }
+  
   const djvec_t cP5P5=
-    getAveForRego(0,nSources,idP5P5,REGO_TM);
+    getAveForRego(0,nSources,idP5P5,REGO_FIT);
   
   /// Charge factor of the correlator
   const double chargeFactor=
@@ -38,26 +63,24 @@ pair<jack_t<VKVKRepFiniteVol<>>,
   jack_fit_t fitter;
   
   djvec_t pars(4);
-  pars[0].fill_gauss((rego==REGO_TM)?1.05:1.20,0.04,235235);
-  pars[1].fill_gauss(((rego==REGO_TM)?0.416:0.5)*aAve,0.05,7342);
-  pars[2].fill_gauss(((rego==REGO_TM)?0.760:0.7900)*aAve,0.05,23423);
-  pars[3].fill_gauss(((rego==REGO_TM)?28:26),0.5,32235);
+  for(int iPar=0;iPar<4;iPar++)
+    pars[iPar].fill_gauss(priors[rego][iPar][0],priors[rego][iPar][1],235235);
   
   const size_t iRDual=
-    fitter.add_fit_par_limits(pars[0],"RDual",pars[0].ave(),pars[0].err(), 0.2,2.0);
+    fitter.add_fit_par_limits(pars[0],"RDual",pars[0].ave(),pars[0].err(), priors[rego][0][2],priors[rego][0][3]);
   const size_t iEThr=
-    fitter.add_fit_par_limits(pars[1],"EThr",pars[1].ave(),pars[1].err(), 0.01,1.0);
+    fitter.add_fit_par_limits(pars[1],"EThr",pars[1].ave(),pars[1].err(),  priors[rego][1][2],priors[rego][1][3]);
   const size_t iMRho=
-    fitter.add_fit_par_limits(pars[2],"MRho",pars[2].ave(),pars[2].err(), 0.01,1.0);
+    fitter.add_fit_par_limits(pars[2],"MRho",pars[2].ave(),pars[2].err(),  priors[rego][2][2],priors[rego][2][3]);
   const size_t iG2=
-    fitter.add_fit_par_limits(pars[3],"g2",pars[3].ave(),pars[3].err(), 20.0,35.0);
+    fitter.add_fit_par_limits(pars[3],"g2",pars[3].ave(),pars[3].err(),    priors[rego][3][2],priors[rego][3][3]);
   
   //fitter.fix_par(iEThr);
   //fitter.fix_par(iMRho);
   //fitter.fix_par(iG2);
   
   const djack_t aMPi=
-    constant_fit(effective_mass(cP5P5),tMinP5P5[REGO_TM],tMaxP5P5[REGO_TM],"plots/eff_mass_P5P5"+regoTag[REGO_TM]+"_for_rep.xmg");
+    constant_fit(effective_mass(cP5P5),tMinP5P5[REGO_FIT],tMaxP5P5[REGO_FIT],"plots/eff_mass_P5P5"+regoTag[REGO_FIT]+"_for_rep.xmg");
   
   // fit_debug=true;
   
@@ -111,13 +134,13 @@ pair<jack_t<VKVKRepFiniteVol<>>,
   const djvec_t oldPars=
     pars;
   
-  fitter.fit();
+  fitter.fit(true);
   
   const djack_t& rDual=
     pars[iRDual];
-  const djack_t eThr=
+  const djack_t& eThr=
     pars[iEThr];
-  const djack_t aMRho=
+  const djack_t& aMRho=
     pars[iMRho];
   const djack_t g2=
     pars[iG2];
@@ -193,10 +216,12 @@ pair<jack_t<VKVKRepFiniteVol<>>,
   
   const djack_t mRho=aMRho/(*a);
   
-  cout<<"mPi: "<<aMPi.ave_err()<<endl;
   cout<<"rDual: "<<rDual.ave_err()<<endl;
   cout<<"eThr: "<<eThr.ave_err()<<endl;
   cout<<"amRho: "<<aMRho.ave_err()<<endl;
+  cout<<"g2: "<<g2.ave_err()<<endl;
+  cout<<endl;
+  cout<<"mPi: "<<aMPi.ave_err()<<endl;
   cout<<"mRho: "<<mRho.ave_err()<<endl;
   cout<<"g: "<<g.ave_err()<<endl;
   
@@ -209,14 +234,56 @@ pair<jack_t<VKVKRepFiniteVol<>>,
   djvec_t cVKVKInfVol=
     cVKVK;
   
+  // for(int ilev=0;ilev<nLevels;ilev++)
+  //   console<<" "<<energy[ilev].ave_err()<<" "<<weights[ilev].ave_err()<<endl;
+  
+  // {
+    int nLevels2=14;
+    const jack_t<ALaLuscherRepresentationCalculator> jLuschRepConstructor2(aMPi,L*2,g2,aMRho);
+  const jack_t<ALaLuscherRepresentation<true>> LuschRep2=
+    jLuschRepConstructor2(nLevels2);
+  const jack_t<VKVKRepFiniteVol<>> rep2(LuschRep2,rDual,eThr,aMRho);
+  djvec_t cVKVKFull2(THp1);
+  for(size_t t=0;t<=TH;t++)
+    {
+      const auto r=
+	rep(t);
+      
+      for(size_t ijack=0;ijack<=njacks;ijack++)
+	cVKVKFull2[t][ijack]=r[ijack]();
+    }
+  cVKVKFull2.ave_err().write("/tmp/bbb"+regoTag[rego]+".xmg");
+  djvec_t weights2(nLevels2),energy2(nLevels2);
+  for(size_t ijack=0;ijack<=njacks;ijack++)
+    {
+      const auto c=
+	rep2[ijack].LuschRep.coeffs;
+      
+      for(int ilev=0;ilev<nLevels2;ilev++)
+	{
+	  weights2[ilev][ijack]=c[ilev].weight;
+	  energy2[ilev][ijack]=c[ilev].energy;
+	}
+    // }
+  
+  grace_file_t levels("plots/levelsLargerL"+regoTag[rego]+".xmg");
+  for(int ilev=0;ilev<nLevels2;ilev++)
+    levels.write_ave_err(energy2[ilev].ave_err(),weights2[ilev].ave_err());
+  
+  }
+  
   jack_t<ALaLuscherRepresentationInfVol<true>> aLaLusch(aMPi,g2,aMRho);
   jack_t<VKVKRepInfiniteVol<>> repInfVol(aLaLusch,rDual,eThr,aMRho);
   
-
-  // for(size_t t=0;t<TH;t++)
-  //   cVKVKInfVol[t]=jackCall(VKVKInfVol,rep,aLaLusch,t);
-  // cVKVKInfVol.ave_err().write("plots/cVKVK_"+regoTag[rego]+"_InfVol.xmg");
-  // effective_mass(cVKVKInfVol,TH,0).ave_err().write("plots/eff_mass_VKVK_InfVol_"+regoTag[rego]+".xmg");
+  grace_file_t compaVKVKRecoInfFinite("plots/cVKVK_"+regoTag[rego]+"_FinInfVol.xmg");
+  for(size_t t=0;t<TH;t++)
+    cVKVKInfVol[t]=jackCall(VKVKInfVol,repInfVol,aLaLusch,t);
+  compaVKVKRecoInfFinite.write_vec_ave_err(cVKVKInfVol.ave_err());
+  compaVKVKRecoInfFinite.set_legend("InfVol");
+  compaVKVKRecoInfFinite.write_vec_ave_err(cVKVKFull.ave_err());
+  compaVKVKRecoInfFinite.set_legend("FinVol");
+  
+  effective_mass(cVKVKInfVol,TH,0).ave_err().write("plots/eff_mass_VKVK_InfVol_"+regoTag[rego]+".xmg");
  
   return
     {rep,repInfVol};

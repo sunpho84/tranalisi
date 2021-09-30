@@ -27,6 +27,7 @@ EXTERN size_t nConfs,nConfsMax,nSources,nSourcesMax;
 EXTERN ofstream console;
 EXTERN index_t idData_loader;
 EXTERN index_t idOpenData_loader;
+EXTERN int nLevels;
 
 constexpr size_t nGammaComb=9;
 constexpr bool isVK[]=                     {0     ,1     ,1     ,1     ,1     ,0     ,0     ,0     ,0    };
