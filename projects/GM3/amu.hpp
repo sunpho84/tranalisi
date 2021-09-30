@@ -6,7 +6,7 @@
 #include <VKVKRepresentation.hpp>
 
 void computeAmu(const RegoType& rego,
-		const jack_t<VKVKRepFiniteVol<>>& rep,
-		const jack_t<VKVKRepInfiniteVol<>>& infVolRep);
+		const jack_t<VKVKRepFiniteVol>& rep,
+		const jack_t<VKVKRepInfiniteVol>& infVolRep);
 
 #endif

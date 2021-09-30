@@ -11,7 +11,6 @@
 #include <phiFunction.hpp>
 
 /// Representation
-template <bool IncludeIsoVectorCorrection=true>
 struct ALaLuscherRepresentation
 {
   /// Factor of the correction
@@ -38,14 +37,8 @@ struct ALaLuscherRepresentation
     /// Evaluates for time t, including the isovector correction
     double operator()(const double& t) const
     {
-      /// Factor to be included in case
-      constexpr double f=
-	IncludeIsoVectorCorrection?
-	isoVectorCorrection:
-	1.0;
-      
       return
-	f*weight*exp(-t*energy);
+	isoVectorCorrection*weight*exp(-t*energy);
     }
   };
   
@@ -378,9 +371,8 @@ struct ALaLuscherRepresentationCalculator
   }
   
   /// Gets the parameters of the states
-  template <bool IncludeIsoVectorCorrection=true>
-  ALaLuscherRepresentation<IncludeIsoVectorCorrection> getLevelsPars(const int& n,
-								     const string& path="") const
+  ALaLuscherRepresentation getLevelsPars(const int& n,
+					 const string& path="") const
   {
     /// Gets all levels momentum
     const vector<double> kNs=
@@ -411,9 +403,8 @@ struct ALaLuscherRepresentationCalculator
       res;
   }
   
-  template <bool IncludeIsoVectorCorrection=true>
-  ALaLuscherRepresentation<IncludeIsoVectorCorrection> operator()(const int& n,
-								  const string& path="") const
+  ALaLuscherRepresentation operator()(const int& n,
+				      const string& path="") const
   {
     return
       getLevelsPars(n,path);
@@ -421,7 +412,6 @@ struct ALaLuscherRepresentationCalculator
 };
 
 /// Caches the calculation of the Luscher representation
-template <bool IncludeIsoVectorCorrection=true>
 struct ALaLuscherRepresentationCached
 {
   /// Cached value of mPi
@@ -431,7 +421,7 @@ struct ALaLuscherRepresentationCached
   const int n;
   
   /// Storage of the interpolation parameters
-  mutable map<pair<double,double>,ALaLuscherRepresentation<IncludeIsoVectorCorrection>> cachedPars;
+  mutable map<pair<double,double>,ALaLuscherRepresentation> cachedPars;
   
   /// Constructor
   ALaLuscherRepresentationCached(const int& n) :
@@ -441,10 +431,10 @@ struct ALaLuscherRepresentationCached
   }
   
   /// Computes the representation
-  const ALaLuscherRepresentation<IncludeIsoVectorCorrection>& operator()(const double& mPi,
-									 const double& L,
-									 const double& mRho,
-									 const double& g2) const
+  const ALaLuscherRepresentation& operator()(const double& mPi,
+					     const double& L,
+					     const double& mRho,
+					     const double& g2) const
   {
     if(cachedMPi!=mPi)
       {
@@ -487,7 +477,6 @@ static const double qMax=
 const int nIntervals=
   1000;
 
-template <bool IncludeIsoVectorCorrection=true>
 struct ALaLuscherRepresentationInfVol
 {
   gsl_integration_workspace *workspace;
@@ -546,7 +535,9 @@ struct ALaLuscherRepresentationInfVol
   {
   }
   
-  ALaLuscherRepresentationInfVol(ALaLuscherRepresentationInfVol&& oth)
+  ALaLuscherRepresentationInfVol(ALaLuscherRepresentationInfVol&& oth) :
+    aLaLusch(std::move(oth.aLaLusch)),
+    mPi(std::move(oth.mPi))
   {
     workspace=
       oth.workspace;

@@ -14,8 +14,8 @@
 #include <VKVKRepresentation.hpp>
 
 void computeAmu(const RegoType& rego,
-		const jack_t<VKVKRepFiniteVol<>>& rep,
-		const jack_t<VKVKRepInfiniteVol<>>& infVolRep)
+		const jack_t<VKVKRepFiniteVol>& rep,
+		const jack_t<VKVKRepInfiniteVol>& infVolRep)
 {
   using namespace Eigen;
   
@@ -24,7 +24,7 @@ void computeAmu(const RegoType& rego,
   console<<"Computing amu fore rego "<<regoTag[rego]<<endl;
   
   const djack_t aMRho=
-    rep.actOn([](const VKVKRepFiniteVol<>& rep)
+    rep.actOn([](const VKVKRepFiniteVol& rep)
     {
      return
        rep.mRho;

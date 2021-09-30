@@ -71,16 +71,14 @@ struct VKVKRep
   }
 };
 
-template <bool IncludeIsospinCorrection=true>
 using VKVKRepFiniteVol=
-  VKVKRep<ALaLuscherRepresentation<IncludeIsospinCorrection>>;
+  VKVKRep<ALaLuscherRepresentation>;
 
-template <bool IncludeIsospinCorrection=true>
 using VKVKRepInfiniteVol=
-  VKVKRep<ALaLuscherRepresentationInfVol<IncludeIsospinCorrection>>;
+  VKVKRep<ALaLuscherRepresentationInfVol>;
 
-pair<jack_t<VKVKRepFiniteVol<>>,
-     jack_t<VKVKRepInfiniteVol<>>> fitVKVK(const RegoType& rego,
-					   const int& nLevels);
+pair<jack_t<VKVKRepFiniteVol>,
+     jack_t<VKVKRepInfiniteVol>> fitVKVK(const RegoType& rego,
+					 const int& nLevels);
 
 #endif

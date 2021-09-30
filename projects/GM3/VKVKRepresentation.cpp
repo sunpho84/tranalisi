@@ -6,8 +6,8 @@
 #include <renoConstants.hpp>
 #include <VKVKRepresentation.hpp>
 
-double VKVKInfVol(const VKVKRepInfiniteVol<>& rep,
-		  const ALaLuscherRepresentationInfVol<true>& aLaLusch,
+double VKVKInfVol(const VKVKRepInfiniteVol& rep,
+		  const ALaLuscherRepresentationInfVol& aLaLusch,
 		  const double& t)
 {
   const double dualPart=
@@ -20,9 +20,9 @@ double VKVKInfVol(const VKVKRepInfiniteVol<>& rep,
     dualPart+LuschPart;
 }
 
-pair<jack_t<VKVKRepFiniteVol<>>,
-     jack_t<VKVKRepInfiniteVol<>>> fitVKVK(const RegoType& rego,
-					   const int& nLevels)
+pair<jack_t<VKVKRepFiniteVol>,
+     jack_t<VKVKRepInfiniteVol>> fitVKVK(const RegoType& rego,
+					 const int& nLevels)
 {
   const RegoType REGO_FIT=
     REGO_TM;
@@ -89,7 +89,7 @@ pair<jack_t<VKVKRepFiniteVol<>>,
     5:
     6;
   
-  ALaLuscherRepresentationCached<true> cachedLuschRepFinder(nLevels);
+  ALaLuscherRepresentationCached cachedLuschRepFinder(nLevels);
   
   size_t tFit=
     tMinFit;
@@ -153,9 +153,9 @@ pair<jack_t<VKVKRepFiniteVol<>>,
       parsPerJack[ijack][i]=pars[i][ijack];
   
   const jack_t<ALaLuscherRepresentationCalculator> jLuschRepConstructor(aMPi,L,g2,aMRho);
-  const jack_t<ALaLuscherRepresentation<true>> LuschRep=
+  const jack_t<ALaLuscherRepresentation> LuschRep=
     jLuschRepConstructor(nLevels);
-  const jack_t<VKVKRepFiniteVol<>> rep(LuschRep,rDual,eThr,aMRho);
+  const jack_t<VKVKRepFiniteVol> rep(LuschRep,rDual,eThr,aMRho);
   
   djvec_t cVKVKDual(THp1);
   djvec_t cVKVKLuscher(THp1);
@@ -240,9 +240,9 @@ pair<jack_t<VKVKRepFiniteVol<>>,
   // {
     int nLevels2=14;
     const jack_t<ALaLuscherRepresentationCalculator> jLuschRepConstructor2(aMPi,L*2,g2,aMRho);
-  const jack_t<ALaLuscherRepresentation<true>> LuschRep2=
+  const jack_t<ALaLuscherRepresentation> LuschRep2=
     jLuschRepConstructor2(nLevels2);
-  const jack_t<VKVKRepFiniteVol<>> rep2(LuschRep2,rDual,eThr,aMRho);
+  const jack_t<VKVKRepFiniteVol> rep2(LuschRep2,rDual,eThr,aMRho);
   djvec_t cVKVKFull2(THp1);
   for(size_t t=0;t<=TH;t++)
     {
@@ -272,8 +272,8 @@ pair<jack_t<VKVKRepFiniteVol<>>,
   
   }
   
-  jack_t<ALaLuscherRepresentationInfVol<true>> aLaLusch(aMPi,g2,aMRho);
-  jack_t<VKVKRepInfiniteVol<>> repInfVol(aLaLusch,rDual,eThr,aMRho);
+  jack_t<ALaLuscherRepresentationInfVol> aLaLusch(aMPi,g2,aMRho);
+  jack_t<VKVKRepInfiniteVol> repInfVol(aLaLusch,rDual,eThr,aMRho);
   
   grace_file_t compaVKVKRecoInfFinite("plots/cVKVK_"+regoTag[rego]+"_FinInfVol.xmg");
   for(size_t t=0;t<TH;t++)
