@@ -202,7 +202,7 @@ struct DataLoader
 	  }
 	catch(const H5::FileIException& exc)
 	  {
-	    CRASH("Unable to open group %s",fullGroupName.c_str(),storedPath.c_str());
+	    CRASH("Unable to open group %s in file %s",fullGroupName.c_str(),storedPath.c_str());
 	  }
       }
   }
