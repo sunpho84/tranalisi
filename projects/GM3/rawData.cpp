@@ -714,6 +714,7 @@ void perens_t::loadRawData(int narg,char **arg)
   
   setRawData(nConfs);
   console<<"Data size: "<<_rawData.size()<<endl;
+  clustSize=(double)nConfs/njacks;
   
   out.bin_read(_rawData);
 }

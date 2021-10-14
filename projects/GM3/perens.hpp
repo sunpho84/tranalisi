@@ -17,6 +17,7 @@ struct perens_t
   double L;
   size_t tMinVKVK,tMaxVKVK;
   size_t tMinP5P5[2],tMaxP5P5[2];
+  size_t tMinLusch[2];
   double aAve,aErr,ZaPetros;
   djack_t a;
   djack_t aFromPhysLine;
@@ -67,6 +68,8 @@ struct perens_t
       }
     tMinVKVK=input.read<size_t>("TFitVKVK");
     tMaxVKVK=input.read<size_t>();
+    tMinLusch[0]=input.read<size_t>("TMinLusch");
+    tMinLusch[1]=input.read<size_t>();
     nSourcesMax=input.read<size_t>("NSourcesMax");
     nConfsMax=input.read<size_t>("NConfsMax");
     nLevels=input.read<size_t>("NLevels");

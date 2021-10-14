@@ -84,9 +84,10 @@ pair<jack_t<VKVKRepFiniteVol>,
   // fit_debug=true;
   
   const size_t tMinFit=
-    (rego==REGO_TM)?
-    5:
-    6;
+    tMinLusch[rego];
+    // (rego==REGO_TM)?
+    // 5:
+    // 6;
   
   ALaLuscherRepresentationCached cachedLuschRepFinder(nLevels);
   

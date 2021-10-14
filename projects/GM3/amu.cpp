@@ -29,7 +29,11 @@ void perens_t::computeAmu(const RegoType& rego,
        rep.mRho;
     });
   
-  const djack_t Zrego=Z[regoZId[rego]];
+  const djack_t aFromMRho=
+    aMRho/0.775;
+  
+  const djack_t Zrego=
+    Z[regoZId[rego]];
   
   // vector<djvec_t> eig;
   // vector<djvec_t> recastEigvec;
@@ -107,32 +111,54 @@ void perens_t::computeAmu(const RegoType& rego,
   // // two_pts_fit(Z2VK2,mVK2,corr,TH,22,32);
   
   grace_file_t amu("plots/amuRego"+regoTag[rego]+".xmg");
-  djvec_t amuInt(TH),amuSubs1(TH),amuSubs2(TH),amuSubs3(TH),amuSubs4(TH);
+  djvec_t amuInt(TH),amuSubs1(TH),amuSubs2(TH),amuSubs3(TH),amuSubs4(TH),amuSubs5(TH),amuSubs6(TH);
   for(size_t upto=0;upto<TH;upto++)
     {
-      djvec_t corrRefatta1=corr;
-      djvec_t corrRefatta2=corr;
-      djvec_t corrRefatta4=corr;
-      for(size_t t=upto;t<TH;t++)
+      djvec_t corrRefattaSingleExp=corr;
+      djvec_t corrRefattaTFinito=corr;
+      djvec_t corrRefattaTInfinito=corr;
+      for(size_t t=upto;t<=TH;t++)
 	{
-	  corrRefatta1[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
-	  corrRefatta2[t]=rep(t)();
-	  corrRefatta4[t]=infVolRep(t)();
+	  corrRefattaSingleExp[t]=two_pts_corr_fun(Z2VK1,mVK1,TH,t,0);
+	  corrRefattaTFinito[t]=rep(t)();
+	  corrRefattaTInfinito[t]=infVolRep(t)();
 	}
       
       size_t THm1=TH-1;
       const djack_t ja=a;
       const djack_t jal=aFromPhysLine;
+      const djack_t jam=aFromMRho;
       const djack_t cInt=integrate_corr_times_kern_up_to(corr,T,ja,upto)*1e10;
-      const djack_t cSubs1=integrate_corr_times_kern_up_to(corrRefatta1,T,ja,THm1)*1e10;
-      const djack_t cSubs2=integrate_corr_times_kern_up_to(corrRefatta2,T,ja,THm1)*1e10;
-      const djack_t cSubs3=integrate_corr_times_kern_up_to(corrRefatta2,T,jal,THm1)*1e10;
-      const djack_t cSubs4=integrate_corr_times_kern_up_to(corrRefatta4,T,jal,THm1)*1e10;
+      const djack_t cSubs1=integrate_corr_times_kern_up_to(corrRefattaSingleExp,T,ja,THm1)*1e10;
+      const djack_t cSubs2=integrate_corr_times_kern_up_to(corrRefattaTFinito,T,ja,THm1)*1e10;
+      const djack_t cSubs3=integrate_corr_times_kern_up_to(corrRefattaTFinito,T,jal,THm1)*1e10;
+      const djack_t cSubs4=integrate_corr_times_kern_up_to(corrRefattaTInfinito,T,jal,THm1)*1e10;
+      const djack_t cSubs5=integrate_corr_times_kern_up_to(corrRefattaTFinito,T,jam,THm1)*1e10;
+      const djack_t cSubs6=integrate_corr_times_kern_up_to(corrRefattaTInfinito,T,jam,THm1)*1e10;
       amuInt[upto]=cInt;
       amuSubs1[upto]=cSubs1;
       amuSubs2[upto]=cSubs2;
       amuSubs3[upto]=cSubs3;
       amuSubs4[upto]=cSubs4;
+      amuSubs5[upto]=cSubs5;
+      amuSubs6[upto]=cSubs6;
+      
+      if(upto==0 and rego==REGO_TM)
+	{
+	  ofstream outForNazOri("/tmp/B07264.dat");
+	  outForNazOri.precision(16);
+	  outForNazOri<<njacks<<" "<<T<<endl;
+	  for(size_t ijack=0;ijack<njacks;ijack++)
+	    for(size_t t=0;t<T;t++)
+	      outForNazOri<<t<<" "<<((t==0)?0:corr[(t<TH)?t:(T-t)][ijack])/(sqr(Zrego[ijack])*(sqr(eu)+sqr(ed)))<<endl;
+	  
+	  ofstream outForNazFilt("/tmp/B07264_filtered.dat");
+	  outForNazFilt.precision(16);
+	  outForNazFilt<<njacks<<" "<<T<<endl;
+	  for(size_t ijack=0;ijack<njacks;ijack++)
+	    for(size_t t=0;t<T;t++)
+	      outForNazFilt<<t<<" "<<((t==0)?0:corrRefattaTFinito[(t<TH)?t:(T-t)][ijack])/(sqr(Zrego[ijack])*(sqr(eu)+sqr(ed)))<<endl;
+	}
     }
   amu.set_xaxis_label("t");
   
@@ -169,6 +195,11 @@ void perens_t::computeAmu(const RegoType& rego,
   amu.set_all_colors(grace::MAGENTA);
   amu.set_legend("A la luscher rep + lt + infvol");
   
+  amu.write_vec_ave_err(amuSubs5.ave_err());
+  amu.set_no_line();
+  amu.set_all_colors(grace::MAROON);
+  amu.set_legend("A la luscher rep + lt rho + infvol");
+  
   amu.new_data_set();
   amu.set_legend("BMW light connected");
   amu.set_all_colors(grace::GREEN4);
@@ -176,5 +207,7 @@ void perens_t::computeAmu(const RegoType& rego,
   
   console<<"amu: "<<(aAve*aAve)<<" "<<amuSubs3[20]<<endl;
   console<<"amu: "<<(aAve*aAve)<<" "<<amuSubs4[6]<<" inf vol"<<endl;
+  console<<"amu from rho: "<<(aAve*aAve)<<" "<<amuSubs5[6]<<endl;
+  console<<"amu from rho: "<<(aAve*aAve)<<" "<<amuSubs6[6]<<" inf vol"<<endl;
 }
 

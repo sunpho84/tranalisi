@@ -63,6 +63,10 @@ void perens_t::computeMPCAC()
     (getAve(0,nSources,idV0P5,0)-getAve(0,nSources,idV0P5,2))/2;
   cV0P5.ave_err().write("plots/corr_V0P5_usable.xmg");
   
+  const djvec_t cV0P5_OS=
+    getAve(0,nSources,idV0P5,1);
+  cV0P5_OS.ave_err().write("plots/corr_V0P5_other_rego.xmg");
+  
   const djvec_t cV0P5der=
     symmetric_derivative(cV0P5);
   
