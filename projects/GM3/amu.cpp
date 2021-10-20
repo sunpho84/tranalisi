@@ -209,5 +209,8 @@ void perens_t::computeAmu(const RegoType& rego,
   console<<"amu: "<<(aAve*aAve)<<" "<<amuSubs4[6]<<" inf vol"<<endl;
   console<<"amu from rho: "<<(aAve*aAve)<<" "<<amuSubs5[6]<<endl;
   console<<"amu from rho: "<<(aAve*aAve)<<" "<<amuSubs6[6]<<" inf vol"<<endl;
+  
+  const djack_t ddss=sqrt(a/aFromMRho);
+  console<<"amu from rho with prefact: "<<(aAve*aAve)<<" "<<amuSubs5[6]*ddss<<endl;
 }
 

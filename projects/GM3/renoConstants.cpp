@@ -46,6 +46,13 @@ djvec_t perens_t::determineRenoConst() const
       console<<"Z"<<((iMes==0)?"V":"A")<<": "<<Z[iMes].ave_err()<<endl;
     }
   
+  const djack_t mPiTM=mP[0]/a;
+  const djack_t mPiOS=mP[1]/a;
+  
+  const djack_t a2=a*a;
+  cout<<"TM pion in phys units: "<<a2.ave()<<" "<<mPiTM.ave_err()<<endl;
+  cout<<"OS pion in phys units: "<<a2.ave()<<" "<<mPiOS.ave_err()<<endl;
+  
   const djack_t ZV_fr_ZA=Z[0]/Z[1];
   console<<"Zv/Za: "<<ZV_fr_ZA.ave_err()<<endl;
   
