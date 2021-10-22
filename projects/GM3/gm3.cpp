@@ -82,6 +82,8 @@ int main(int narg,char **arg)
 	  ens.convertForSilvano();
 	}
       
+      ens.Gilberto();
+      
       if(file_exists("disco.dat"))
 	ens.loadDisco();
       
@@ -90,7 +92,7 @@ int main(int narg,char **arg)
 	  const auto [rep,repInfVol]=
 	    ens.fitVKVK(rego,ens.nLevels);
 	  
-	ens.computeAmu(rego,rep,repInfVol);
+	  ens.computeAmu(rego,rep,repInfVol);
 	}
     }
   
