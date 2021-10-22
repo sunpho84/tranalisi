@@ -124,7 +124,7 @@ void perens_t::Gilberto() const
 	for(int t=0;t<nT;t++)
 	  W(r,t)=
 	    (PrecFloat(1.0)-lambda)*A(r,t)+
-	    lambda*(r==t)*sqr(corr[r].err()/corr[0].ave());
+	    lambda*(r==t)*sqr(corr[r+1].err()/corr[0].ave());
       
       const auto Winv=
 	W.inverse();
