@@ -50,6 +50,7 @@ void perens_t::Gilberto() const
     };
   
   const int nT=10,tMin=1;
+  
   PrecVect R(nT);
   for(int it=0;it<nT;it++)
     {
@@ -59,54 +60,77 @@ void perens_t::Gilberto() const
 	PrecFloat(1.0)/t+PrecFloat(1.0)/(T-t);
     }
   
-  {
-    grace_file_t RFile("/tmp/R.xmg");
-    RFile.new_data_set();
-        for(int it=0;it<nT;it++)
-      {
-	const int t=
-	  it+tMin;
-	RFile.write_xy(t,R[it].get());
-      }
-  }
+  grace_file_t RFile("/tmp/R.xmg");
+  RFile.new_data_set();
+  for(int it=0;it<nT;it++)
+    {
+      const int t=
+	it+tMin;
+      RFile.write_xy(t,R[it].get());
+    }
   
-  const auto Afun=
-    [&bT](const double& t,const double& r,const PrecFloat& Estar)
-  {
-    return
-      gslIntegrateUpToInfinity([t,r,Estar,&bT](const PrecFloat& E)
-      {
-	return
-	  (sqr(E-Estar)*bT(t,E)*bT(r,E)).get();
-      },0);
-  };
+  /////////////////////////////////////////////////////////////////
   
-  const auto AfunAn=
-    [this](const double& t,const double& r)
-  {
-	return
+  PrecMatr A(nT,nT);
+  
+  for(int r=0;r<nT;r++)
+    for(int t=0;t<nT;t++)
+	A(r,t)=
 	  PrecFloat(1)/(r+t)+
 	  PrecFloat(1)/(T+r-t)+
 	  PrecFloat(1)/(T-r+t)+
 	  PrecFloat(1)/(2*T-r-t);
-  };
   
-  grace_file_t Cent("/tmp/Cent.xmg");
-  grace_file_t Res("/tmp/Res.xmg");
-  grace_file_t out("/tmp/E.xmg");
-  for(double Estar=0.1;Estar<=5;Estar+=0.1)
+  /////////////////////////////////////////////////////////////////
+  
+  const double lambda=0.5;
+  
+  const auto Z=
+    [](const PrecFloat& Estar,
+       const PrecFloat& sigma)
     {
-      PrecMatr A(nT,nT);
-      PrecMatr Aan(nT,nT);
-      for(int r=0;r<nT;r++)
-	for(int c=0;c<nT;c++)
-	  {
-	    A(r,c)=Afun(r+tMin,c+tMin,Estar);
-	    Aan(r,c)=AfunAn(r+tMin,c+tMin,Estar);
-	  }
+      return
+	(PrecFloat(1)+erf(Estar/(M_SQRT2*sigma)))/2;
+    };
+  
+  const PrecFloat sigma=0.4;
+  
+  const auto N=
+    [&sigma,&lambda,&Z](const PrecFloat& Estar,
+			const PrecFloat& k)
+    {
+      return
+	(PrecFloat(1)-lambda)/(2*Z(Estar,sigma))*exp((/*alpha*/-k)*((/*alpha*/-k)*sigma*sigma+2*Estar)/2);
+    };
+  
+  const auto F=
+    [&sigma](const PrecFloat& Estar,
+	     const PrecFloat& k)
+    {
+      return
+	PrecFloat(1)+erf(((/*alpha*/-k)*sigma*sigma+Estar)/(M_SQRT2*sigma));
+    };
+  
+  grace_file_t out("/tmp/E.xmg");
+  for(double Estar=0;Estar<5.0;Estar+=0.01)
+    {
+      PrecVect f(nT);
+      for(int t=0;t<nT;t++)
+	f(t)=N(Estar,t)*F(Estar,t)+N(Estar,T-t)*F(Estar,T-t);
       
-      const auto Ainv=
-	A.inverse();
+      PrecMatr W(nT,nT);
+      
+      for(int r=0;r<nT;r++)
+	for(int t=0;t<nT;t++)
+	  W(r,t)=
+	    (PrecFloat(1.0)-lambda)*A(r,t)+
+	    lambda*(r==t)*sqr(corr[r].err()/corr[0].ave());
+      
+      const auto Winv=
+	W.inverse();
+      
+      const PrecVect g=
+	(Winv*(f+R*(PrecFloat(1)-(R.transpose()*Winv*f).eval()(0)/(R.transpose()*Winv*R).eval()(0)))).eval();
       
       // const MatrixXd Sdiag=
       //   svd.singularValues().asDiagonal();
@@ -116,15 +140,15 @@ void perens_t::Gilberto() const
       
       // cout<<(Ainv-AinvBis).eval()<<endl;
       
-      const auto num=
-	(Ainv*R).eval();
+      // const auto num=
+      // 	(Ainv*R).eval();
       
-      const auto den=
-	(R.transpose()*Ainv*R)(0);
+      // const auto den=
+      // 	(R.transpose()*Ainv*R)(0);
       
       grace_file_t gFile("/tmp/g"+to_string(Estar)+".xmg");
-      const auto g=
-	(num/den).eval();
+      // const auto g=
+      // 	(num/den).eval();
       for(int iT=0;iT<nT;iT++)
 	gFile.write_xy(iT,g[iT].get());
       
@@ -144,8 +168,8 @@ void perens_t::Gilberto() const
       x/=in;
       x2/=in;
       x2-=x*x;
-      Cent.write_xy(Estar,x.get());
-      Res.write_xy(Estar,sqrt(x2).get());
+      // Cent.write_xy(Estar,x.get());
+      // Res.write_xy(Estar,sqrt(x2).get());
       
       djack_t s{};
       for(int iT=0;iT<nT;iT++)

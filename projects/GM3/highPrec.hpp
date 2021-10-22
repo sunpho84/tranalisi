@@ -313,6 +313,20 @@ inline PrecFloat sqrt(const PrecFloat& in)
     out;
 }
 
+inline PrecFloat erf(const PrecFloat& in)
+{
+  PrecFloat out;
+  
+#ifdef FAKE_HP
+  out.data=erf(in.data);
+#else
+  mpfr_erf(out.data,in.data,MPFR_RNDD);
+#endif
+  
+  return
+    out;
+}
+
 namespace Eigen
 {
   template<>
