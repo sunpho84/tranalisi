@@ -241,6 +241,7 @@ struct PrecFloat
     return
       *this;
   }
+  
   PrecFloat operator/(const PrecFloat& b) const
   {
     PrecFloat out;
@@ -321,6 +322,48 @@ inline PrecFloat erf(const PrecFloat& in)
   out.data=erf(in.data);
 #else
   mpfr_erf(out.data,in.data,MPFR_RNDD);
+#endif
+  
+  return
+    out;
+}
+
+inline PrecFloat operator/(const double& a,const PrecFloat& b)
+{
+  PrecFloat out;
+  
+#ifdef FAKE_HP
+  out.data=a/b.data;
+#else
+  mpfr_d_div(out.data,a,b.data,MPFR_RNDD);
+#endif
+  
+  return
+    out;
+}
+
+inline PrecFloat operator-(const double& a,const PrecFloat& b)
+{
+  PrecFloat out;
+  
+#ifdef FAKE_HP
+  out.data=a-b.data;
+#else
+  mpfr_d_sub(out.data,a,b.data,MPFR_RNDD);
+#endif
+  
+  return
+    out;
+}
+
+inline PrecFloat operator+(const double& a,const PrecFloat& b)
+{
+  PrecFloat out;
+  
+#ifdef FAKE_HP
+  out.data=a+b.data;
+#else
+  mpfr_add_d(out.data,b.data,a,MPFR_RNDD);
 #endif
   
   return
