@@ -1,4 +1,4 @@
-#include <tranalisi.hpp>
+#include <eigen3/Eigen/Dense>
 
 #include <mpfr.h>
 
@@ -407,3 +407,10 @@ namespace Eigen
       };
   };
 }
+
+using PrecVect=
+  Eigen::Matrix<PrecFloat,Eigen::Dynamic,1>;
+
+using PrecMatr=
+  Eigen::Matrix<PrecFloat,Eigen::Dynamic,Eigen::Dynamic>;
+
