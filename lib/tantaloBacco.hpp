@@ -88,6 +88,8 @@ struct TantaloBaccoRecoEngine :
   
   void fillR()
   {
+    R.resize(nT,1);
+    
     for(int iT=0;iT<nT;iT++)
       R[iT]=
 	1.0/PrecFloat(iT+tMin)+useBw*
@@ -101,6 +103,8 @@ struct TantaloBaccoRecoEngine :
   
   void fillA()
   {
+    A.resize(nT,nT);
+    
     for(int iR=0;iR<nT;iR++)
       for(int iT=0;iT<nT;iT++)
 	{
@@ -121,7 +125,7 @@ struct TantaloBaccoRecoEngine :
       for(int iT=0;iT<nT;iT++)
 	AFile.write_xy(iT+nT*iR,A(iR,iT).get());
   }
-
+  
   TantaloBaccoRecoEngine(const TantaloBaccoPars& pars) :
     TantaloBaccoPars(pars)
   {
