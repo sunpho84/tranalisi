@@ -16,6 +16,7 @@ include VIRTUALPH/Makefile.am
 include REPH/Makefile.am
 include IB/Makefile.am
 include HADRON_SCHEME/Makefile.am
+include GILBACCO/Makefile.am
 include BARYONS/Makefile.am
 #include FPIEM/Makefile.am
 #include PLNG/Makefile.am

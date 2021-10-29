@@ -398,6 +398,11 @@ int main(int argc, char** argv)
 	  plot->set_legend(to_string(kappa));
 	}
       
+      const djack_t ZP_fr_ZS=
+	sqrt(Z2_OS/Z2);
+      
+      cout<<"ZP/ZS: "<<ZP_fr_ZS.ave_err()<<endl;
+      
       cout<<endl;
     }
   

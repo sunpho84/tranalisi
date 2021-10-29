@@ -143,6 +143,8 @@ struct TantaloBaccoReco :
   
   PrecVect f;
   
+  PrecMatr B;
+  
   PrecMatr W;
   
   PrecVect g;
@@ -161,6 +163,20 @@ struct TantaloBaccoReco :
       fFile.write_xy(i,f(i).get());
   }
   
+  void fillB()
+  {
+    B.resize(nT,nT);
+    
+    for(int iR=0;iR<nT;iR++)
+      for(int iT=0;iT<nT;iT++)
+	B(iR,iT)=sqr(corr[iR+tMin].err()/corr[1].ave())*(iR==iT);
+    
+    grace_file_t BFile("/tmp/B"+to_string(Estar.get())+".xmg");
+    for(int iR=0;iR<nT;iR++)
+      for(int iT=0;iT<nT;iT++)
+	BFile.write_xy(iT+nT*iR,B(iR,iT).get());
+  }
+  
   void fillW()
   {
     W.resize(nT,nT);
@@ -169,7 +185,7 @@ struct TantaloBaccoReco :
       for(int iT=0;iT<nT;iT++)
 	W(iR,iT)=
 	  (1-lambda)*A(iR,iT)+
-	  lambda*(iR==iT)*sqr(corr[iR+tMin].err()/sqr(corr[1].ave()));
+	  lambda*B(iR,iT);
     
     grace_file_t WFile("/tmp/W"+to_string(Estar.get())+".xmg");
     for(int iR=0;iR<nT;iR++)
@@ -229,6 +245,8 @@ struct TantaloBaccoReco :
     corr(corr)
   {
     fillF();
+    
+    fillB();
     
     fillW();
     
