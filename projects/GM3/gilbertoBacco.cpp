@@ -52,8 +52,9 @@ void perens_t::Gilberto() const
       const PrecFloat lambda=0.0;
       const PrecFloat alpha=0.0;
       const int useBw=1;
-      TantaloBaccoPars pars(T,tMin,nT,E0,lambda,sigma,useBw);
-      TantaloBaccoRecoEngine recoEngine(pars);
+      constexpr bool useTantalo=true;
+      TantaloBaccoPars pars(useTantalo,T,tMin,nT,E0,lambda,sigma,useBw);
+      TantaloBaccoRecoEngine recoEngine(pars,Estar);
       
       TantaloBaccoReco reco(recoEngine,Estar,corr);
       
