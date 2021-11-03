@@ -748,7 +748,7 @@ void perens_t::convertForSilvano() const
   
   for(size_t iConf=0;iConf<nConfs;iConf++)
     {
-      /// Full path 
+      /// Full path
       std::filesystem::path full=
 	confsList[iConf];
       
@@ -757,7 +757,7 @@ void perens_t::convertForSilvano() const
 	full.filename();
       
       const string outputConf=
-	basePath+"reordered/"+confName;
+	basePath+"/reordered/"+confName;
       const string filePath=
 	"reordered/"+confName+"/mes_contr_2pts_ll";
       
