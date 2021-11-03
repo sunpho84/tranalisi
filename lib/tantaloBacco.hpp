@@ -10,6 +10,8 @@
 
 struct TantaloBaccoPars
 {
+  const bool useTantalo;
+  
   const int T;
   
   const int tMin;
@@ -26,13 +28,15 @@ struct TantaloBaccoPars
   
   const int useBw;
   
-  TantaloBaccoPars(const int& T,
+  TantaloBaccoPars(const bool& useTantalo,
+		   const int& T,
 		   const int& tMin,
 		   const int& nT,
 		   const PrecFloat& E0,
 		   const PrecFloat& lambda,
 		   const PrecFloat& sigma,
 		   const int& useBw) :
+    useTantalo(useTantalo),
     T(T),
     tMin(tMin),
     nT(nT),
@@ -101,8 +105,30 @@ struct TantaloBaccoRecoEngine :
       RFile.write_xy(iT,R[iT].get());
   }
   
-  void fillA()
+  static PrecFloat tantalArt(const PrecFloat& Estar,
+			     const PrecFloat& E0,
+			     const PrecFloat& i)
   {
+    return
+      exp(-i*E0)/i;
+  }
+  
+  static PrecFloat baccArt(const PrecFloat& Estar,
+			   const PrecFloat& E0,
+			   const PrecFloat& i)
+  {
+    return
+      ((1/i-Estar)*2/i+Estar*Estar)/i;
+  }
+  
+  void fillA(const PrecFloat& Estar)
+  {
+    auto art=[this,&Estar](const PrecFloat& i)
+    {
+      return
+	(useTantalo?tantalArt:baccArt)(Estar,E0,i);
+    };
+    
     A.resize(nT,nT);
     
     for(int iR=0;iR<nT;iR++)
@@ -112,12 +138,12 @@ struct TantaloBaccoRecoEngine :
 	  const PrecFloat b=(PrecFloat)T-iR+iT;
 	  const PrecFloat c=(PrecFloat)T+iR-iT;
 	  const PrecFloat d=(PrecFloat)2*T-iR-iT-2*tMin;
-	  
+	
 	  A(iR,iT)=
-	    exp(-a*E0)/a+
-	    useBw*(exp(-b*E0)/b+
-		   exp(-c*E0)/c+
-		   exp(-d*E0)/d);
+	    art(a)+
+	    useBw*(art(b)+
+		   art(c)+
+		   art(d));
 	}
     
     grace_file_t AFile("/tmp/A.xmg");
@@ -126,10 +152,11 @@ struct TantaloBaccoRecoEngine :
 	AFile.write_xy(iT+nT*iR,A(iR,iT).get());
   }
   
-  TantaloBaccoRecoEngine(const TantaloBaccoPars& pars) :
+  TantaloBaccoRecoEngine(const TantaloBaccoPars& pars,
+			 const PrecFloat& Estar) :
     TantaloBaccoPars(pars)
   {
-    fillA();
+    fillA(Estar);
     fillR();
   }
 };
@@ -139,7 +166,7 @@ struct TantaloBaccoReco :
 {
   const PrecFloat Estar;
   
-  const djvec_t corr;
+  const vector<jack_t<PrecFloat>> corr;
   
   PrecVect f;
   
@@ -168,8 +195,14 @@ struct TantaloBaccoReco :
     B.resize(nT,nT);
     
     for(int iR=0;iR<nT;iR++)
-      for(int iT=0;iT<nT;iT++)
-	B(iR,iT)=sqr(corr[iR+tMin].err()/corr[1].ave())*(iR==iT);
+      {
+	djack_t c;
+	for(size_t ijack=0;ijack<=njacks;ijack++)
+	  c[ijack]=corr[iR+tMin][ijack].get();
+	
+	for(int iT=0;iT<nT;iT++)
+	  B(iR,iT)=sqr(c.err()/corr[1][0])*(iR==iT);
+      }
     
     grace_file_t BFile("/tmp/B"+to_string(Estar.get())+".xmg");
     for(int iR=0;iR<nT;iR++)
@@ -223,9 +256,9 @@ struct TantaloBaccoReco :
     return s;
   }
   
-  djack_t recoDensity() const
+  jack_t<PrecFloat> recoDensity() const
   {
-    djack_t s{};
+    jack_t<PrecFloat> s{};
     for(size_t ijack=0;ijack<=njacks;ijack++)
       {
 	PrecFloat temp=0.0;
@@ -239,7 +272,7 @@ struct TantaloBaccoReco :
   
   TantaloBaccoReco(const TantaloBaccoRecoEngine& engine,
 		   const PrecFloat& Estar,
-		   const djvec_t& corr) :
+		   const vector<jack_t<PrecFloat>>& corr) :
     TantaloBaccoRecoEngine(engine),
     Estar(Estar),
     corr(corr)

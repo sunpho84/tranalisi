@@ -28,8 +28,14 @@ void perens_t::Gilberto() const
   // Becchi's delta f(x)=(e2+x2)/(2*(e2-x2)^2)/cosh^2(x/(e2-x2)) eq 270 pag.90
   
   const double eu=2.0/3,ed=-1.0/3;
-   djvec_t corr=
-     getAveForRego(0,nSources,1,REGO_TM)*sqr(Z[regoZId[REGO_TM]])*(sqr(eu)+sqr(ed));
+  vector<jack_t<PrecFloat>> corr(THp1);
+  
+  {
+    djvec_t _corr=
+      getAveForRego(0,nSources,1,REGO_TM)*sqr(Z[regoZId[REGO_TM]])*(sqr(eu)+sqr(ed));
+    for(size_t it=0;it<=TH;it++)
+      corr[it]=_corr[it];
+  }
    
    // djack_t Z2(0.01);
    // djack_t M(1.4);
@@ -95,7 +101,12 @@ void perens_t::Gilberto() const
       // Cent.write_xy(Estar,x.get());
       // Res.write_xy(Estar,sqrt(x2).get());
       
-      const djack_t d=reco.recoDensity();
+      djack_t d;
+      {
+	const jack_t<PrecFloat> _d=reco.recoDensity();
+	for(size_t ijack=0;ijack<=njacks;ijack++)
+	  d[ijack]=_d[ijack].get();
+      }
       out.write_ave_err(Estar.get(),d.ave_err());
     }
   

@@ -712,11 +712,14 @@ void perens_t::loadRawData(int narg,char **arg)
   out.bin_read(nSources);
   console<<"NSources: "<<nSources<<endl;
   
-  setRawData(nConfs);
-  console<<"Data size: "<<_rawData.size()<<endl;
-  clustSize=(double)nConfs/njacks;
-  
-  out.bin_read(_rawData);
+  if(MPIrank==0)
+    {
+      setRawData(nConfs);
+      console<<"Data size: "<<_rawData.size()<<endl;
+      clustSize=(double)nConfs/njacks;
+      
+      out.bin_read(_rawData);
+    }
 }
 
 djvec_t perens_t::getRawAve(const size_t iSourceMin,const size_t iSourceMax,const size_t iGammaComb,const size_t iMes) const
