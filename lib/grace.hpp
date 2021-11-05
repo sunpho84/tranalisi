@@ -40,7 +40,7 @@ namespace grace
 };
 
 //! class to write a grace file
-class grace_file_t : private ofstream
+struct grace_file_t : private ofstream
 {
   bool need_close_set;
   
@@ -98,8 +98,6 @@ class grace_file_t : private ofstream
   
   //! write all props and start a new set
   void close_cur_set();
-  
-public:
   
   using ofstream::flush;
   

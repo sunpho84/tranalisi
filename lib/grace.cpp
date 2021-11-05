@@ -293,6 +293,7 @@ void grace_file_t::new_data_set(grace::color_t col,grace::symbol_t sym)
 
 void grace_file_t::new_data_set()
 {
+  close_cur_set(); //need to stay also here to get the correct val later
   new_data_set(get_col_no_increment(),get_symbol_no_increment());
 }
 

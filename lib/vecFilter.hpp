@@ -29,7 +29,7 @@ T vec_filter(const T &v,
 	offset;
       
       for(size_t d=0;d<strides.size();d++)
-	i=c[d]*strides[d];
+	i+=c[d]*strides[d];
       
       res[o]=v[i];
     }
