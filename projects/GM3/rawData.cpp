@@ -208,9 +208,14 @@ struct DataLoader
   }
 };
 
+string perens_t::sourceName(const string& confName,const size_t& iSource)
+{
+  return confName+"/"+sourcesList[iSource];
+}
+
 string perens_t::sourceName(const size_t& iConf,const size_t& iSource)
 {
-  return possibleConfsList[iConf]+"/"+sourcesList[iSource];
+  return sourceName(possibleConfsList[iConf],iSource);
 }
 
 vector<string> getSourcesList(const string& firstConf,const string& sourceFilePattern)
@@ -267,7 +272,7 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
     }
   
   const size_t refSize=
-    std::filesystem::file_size(sourceName(0,0));
+    std::filesystem::file_size(sourceName(refConfPattern,0));
   console<<"Reference size: "<<refSize<<endl;
   
   const size_t nPossibleConfs=possibleConfsList.size();

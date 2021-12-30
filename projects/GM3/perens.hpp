@@ -115,6 +115,8 @@ struct perens_t
   
   void setRawData(const size_t& nConfsToRes);
   
+  string sourceName(const string& confName,const size_t& iSource);
+  
   string sourceName(const size_t& iConf,const size_t& iSource);
   
   void loadAndPackRawData(int narg,char** arg);
