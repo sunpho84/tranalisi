@@ -30,6 +30,7 @@ AC_ARG_WITH(gsl,
         LDFLAGS="-L${with_gsl}/lib/ $LDFLAGS")
 AC_MSG_RESULT([with gsl... $with_gsl])
 
+AC_CHECK_LIB([mpfr],[mpfr_clear])
 AC_CHECK_LIB([m],[cos])
 AC_CHECK_LIB([gslcblas],[cblas_dgemm],,AC_MSG_ERROR([Unable to find gslcblas]))
 AC_CHECK_LIB([gsl],[gsl_blas_dgemm],,AC_MSG_ERROR([Unable to find gsl]))

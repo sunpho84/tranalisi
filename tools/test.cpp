@@ -1,84 +1,88 @@
-#include <tranalisi.hpp>
+#include <tantaloBacco.hpp>
 
-const size_t T=48,TH=T/2;
+#include <tranalisi.hpp>
 
 int main()
 {
   set_njacks(15);
+  PrecFloat::setDefaultPrecision(1024);
   
-  const djvec_t P5P5_TM=
-    (read_djvec("data/mes_contr_M0_R0_0_M0_R0_0_P5P5",T,0).symmetrized()+
-     read_djvec("data/mes_contr_M0_R1_0_M0_R1_0_P5P5",T,0).symmetrized())/2;
+  PrecFloat sigma=0.025;
+  PrecFloat Estar=0.1;
+  grace_file_t Dens("/tmp/Dens.xmg");
   
-  const djvec_t A0P5_TM=
-    (read_djvec("data/mes_contr_M0_R0_0_M0_R0_0_A0P5",T,0).symmetrized(-1)+
-     read_djvec("data/mes_contr_M0_R1_0_M0_R1_0_A0P5",T,0).symmetrized(-1))/2;
+  const PrecFloat E0=0.0;
   
-  // const djvec_t P5A0_TM=
-  //   (read_djvec("data/mes_contr_M0_R0_0_M0_R0_0_P5A0",T,0).symmetrized(-1)+
-  //    read_djvec("data/mes_contr_M0_R1_0_M0_R1_0_P5A0",T,0).symmetrized(-1))/2;
+  const size_t T=128;
+  const size_t tMin=1;
+  const size_t nT=T/2;
   
-  P5P5_TM.ave_err().write("plots/P5P5_TM.xmg");
-  // P5A0_TM.ave_err().write("plots/P5A0_TM.xmg");
-  A0P5_TM.ave_err().write("plots/A0P5_TM.xmg");
-  
-  const djvec_t P5P5_OS=
-    read_djvec("data/mes_contr_M0_R0_0_M0_R1_0_P5P5",T,0).symmetrized();
-  
-  const djvec_t S0P5_OS=
-    read_djvec("data/mes_contr_M0_R0_0_M0_R1_0_S0P5",T,0).symmetrized();
-  
-  const djvec_t A0P5_OS=
-    read_djvec("data/mes_contr_M0_R0_0_M0_R1_0_A0P5",T,0).symmetrized(-1);
-  
-  // const djvec_t P5A0_OS=
-  //   read_djvec("data/mes_contr_M0_R1_0_M0_R1_0_P5A0",T,0).symmetrized(-1);
-  
-  effective_mass(P5P5_TM,TH,-1).ave_err().write("plots/P5P5_TM.xmg");
-  // effective_mass(P5A0_TM,TH,-1).ave_err().write("plots/P5A0_TM.xmg");
-  effective_mass(A0P5_TM,TH,-1).ave_err().write("plots/A0P5_TM.xmg");
-  
-  effective_mass(P5P5_OS,TH,+1).ave_err().write("plots/P5P5_OS.xmg");
-  // effective_mass(P5A0_OS,TH,-1).ave_err().write("plots/P5A0_OS.xmg");
-  effective_mass(A0P5_OS,TH,-1).ave_err().write("plots/A0P5_OS.xmg");
-  // effective_mass(
-		 S0P5_OS// ,TH,+1)
-    .ave_err().write("plots/S0P5_OS.xmg");
-  
-  const double amq=0.0100;
-  
-  const djvec_t derA0P5TM=symmetric_derivative(A0P5_TM);
-  derA0P5TM.ave_err().write("plots/derP5A0_regoTM.xmg");
-  const djvec_t ZvSilvCorr=2*amq*P5P5_TM/derA0P5TM;
-  const djack_t ZvSilv=constant_fit(ZvSilvCorr,12,23,"plots/ZvSilv.xmg");
-  cout<<"ZvSilv: "<<ZvSilv.ave_err()<<endl;
-  
-  djack_t mP_OS,mP_TM;
-  djack_t ZA0_OS,ZA0_TM;
-  djack_t ZP5_OS,ZP5_TM;
-  
-  two_pts_SL_fit(ZP5_TM,ZA0_TM,mP_TM,A0P5_TM,P5P5_TM,TH,12,23,"plots/A0P5FitMesTM.xmg",-1,+1);
-  two_pts_SL_fit(ZP5_OS,ZA0_OS,mP_OS,A0P5_OS,P5P5_OS,TH,12,23,"plots/A0P5FitMesOS.xmg",-1,+1);
-  const djack_t ZaSilvCorrectingFactor=ZP5_TM/ZP5_OS*mP_OS*sinh(mP_OS)/(mP_TM*sinh(mP_TM));
-  cout<<"ZaSilvCorrectingFactor: "<<ZaSilvCorrectingFactor.ave_err()<<endl;
-  
-  const djvec_t derA0P5OS=symmetric_derivative(A0P5_OS);
-  derA0P5OS.ave_err().write("plots/derP5A0_regoOS.xmg");
-  const djvec_t ZaSilvUnCorr=2*amq*P5P5_OS/derA0P5OS;
-  const djvec_t ZaSilvCorr=ZaSilvUnCorr*ZaSilvCorrectingFactor;
-  const djack_t ZaSilvUn=constant_fit(ZaSilvUnCorr,12,23,"plots/ZaSilvUncorr.xmg");
-  const djack_t ZaSilv=constant_fit(ZaSilvCorr,12,23,"plots/ZaSilv.xmg");
-  cout<<"ZaSilv: "<<ZaSilv.ave_err()<<endl;
-  
-  const djack_t fPfromP_TM=2.0*ZP5_TM*amq/sqr(mP_TM);
-  const djack_t fPfromA_TM=ZA0_TM/mP_TM;
-  const djack_t Zv=fPfromP_TM/fPfromA_TM;
-  cout<<"Zv: "<<Zv.ave_err()<<endl;
-
-  // const djack_t fPfromP_OS=2.0*ZP5_OS*amq/sqr(mP_OS);
-  const djack_t fPfromA_OS=ZA0_OS/mP_OS;
-  const djack_t Za=fPfromP_TM/fPfromA_OS;
-  cout<<"Za: "<<Za.ave_err()<<endl;
+  const PrecFloat lambda=0.0;
+  const PrecFloat alpha=0.0;
+  const int useBw=1;
+  constexpr bool useTantalo=true;
+  vector<jack_t<PrecFloat>> corr(T/2+1);
+  ifstream input("/tmp/i");
+  for(size_t t=0;t<=T/2;t++)
+    {
+      //const PrecFloat f=exp(-(PrecFloat)t*0.4)+exp(-((PrecFloat)T-t)*0.4);
+      double f;
+      input>>f;
+      corr[t]=f;
+    }
+  gen_t g(31241);
+  do
+    {
+      TantaloBaccoPars pars(useTantalo,T,tMin,nT,E0,lambda,sigma,useBw);
+      TantaloBaccoRecoEngine recoEngine(pars,Estar);
+      
+      TantaloBaccoReco reco(recoEngine,Estar,corr);
+      
+      const string Etag=to_string(Estar.get());
+      grace_file_t RecDelta("/tmp/RecDelta"+Etag+".xmg");
+      grace_file_t RecDelta2("/tmp/RecDelta2"+Etag+".xmg");
+      grace_file_t TargDelta("/tmp/TargDelta"+Etag+".xmg");
+      grace_file_t ErrDelta("/tmp/ErrDelta"+Etag+".xmg");
+      
+      PrecFloat y=0;
+      for(size_t it=0;it<nT;it++)
+	y+=reco.g[it]*exp(-0.4*(PrecFloat)it);
+      
+      for(PrecFloat E=0.0;E<Estar*3;E+=0.01)
+	{
+	  const PrecFloat sTarg=recoEngine.Delta(Estar,E);
+	  const PrecFloat sReco=reco.recoDelta(E);
+	  RecDelta.write_xy(E.get(),sReco.get());
+	  TargDelta.write_xy(E.get(),sTarg.get());
+	  const PrecFloat dS=sReco-sTarg;
+	  ErrDelta.write_xy(E.get(),dS.get());
+	  
+	  PrecFloat sReco2=0.0;
+	  for(size_t iT=0;iT<nT;iT++)
+	    sReco2+=reco.g(iT)*reco.bT(iT+tMin,E);
+	  sReco2+=(reco.g(2)*g.get_double(-1e-5,1e-5))*reco.bT(2+tMin,E);
+	  RecDelta2.write_xy(E.get(),sReco2.get());
+	}
+      
+      const PrecFloat rd=reco.recoDensity()[0];
+      for(PrecFloat E=Estar-sigma;E<Estar+sigma;E+=0.01)
+	Dens.write_xy(E.get(),rd.get());
+      
+      grace_file_t gFile("/tmp/g"+Etag+".xmg");
+      for(size_t it=0;it<nT;it++)
+	gFile.write_xy(it,reco.g[it].get());
+      
+      const PrecFloat EstarPrime=sqr(Estar+sigma)/Estar;
+      const PrecFloat sigmaPrime=sigma*sqrt(EstarPrime/Estar);
+      
+      //cout<<(sigma+sigmaPrime).get()<<" "<<(EstarPrime-Estar).get()<<endl;
+      
+      Estar=EstarPrime;
+      sigma=sigmaPrime;
+      
+      cout<<Estar.get()<<" "<<sigma.get()<<endl;
+    }
+  while(Estar<1);
   
   return 0;
 }
