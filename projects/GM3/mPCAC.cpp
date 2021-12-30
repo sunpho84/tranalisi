@@ -11,7 +11,6 @@
 /// Compute the PCAC mass
 void perens_t::computeMPCAC()
 {
-  #warning rename
   const djvec_t cP5P5=
     getAveForRego(0,nSources,idP5P5,REGO_TM);
   

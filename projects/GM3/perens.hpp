@@ -21,7 +21,8 @@ struct perens_t
   double aAve,aErr,ZaPetros;
   djack_t a;
   djack_t aFromPhysLine;
-  string confsPattern;
+  string confsDirPattern;
+  string sourceFilePattern;
   string refConfPattern;
   string rawDataPackedPath;
   size_t nConfs,nConfsMax,nSources,nSourcesMax;
@@ -57,7 +58,8 @@ struct perens_t
     aAve=input.read<double>("a");
     aErr=input.read<double>();
     ZaPetros=input.read<double>("Za");
-    confsPattern=input.read<string>("ConfsPattern");
+    confsDirPattern=input.read<string>("ConfsDirPattern");
+    sourceFilePattern=input.read<string>("SourceFilePattern");
     refConfPattern=input.read<string>("RefConfPattern");
     rawDataPackedPath=input.read<string>("Output");
     input.expect("TFitP5P5");

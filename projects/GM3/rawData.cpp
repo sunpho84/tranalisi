@@ -213,13 +213,13 @@ string perens_t::sourceName(const size_t& iConf,const size_t& iSource)
   return possibleConfsList[iConf]+"/"+sourcesList[iSource];
 }
 
-vector<string> getSourcesList(const string& firstConf)
+vector<string> getSourcesList(const string& firstConf,const string& sourceFilePattern)
 {
   vector<string> sourcesList;
   glob_t globbuf;
   
   const string sourcesPattern=
-    (firstConf+"/twop_id*_st*.h5");
+    (firstConf+"/"+sourceFilePattern);
   
   if(glob(sourcesPattern.c_str(),0,nullptr,&globbuf))
     CRASH("Unable to find pattern %s for source",sourcesPattern.c_str());
@@ -255,8 +255,8 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
 {
   console<<"Loading raw data from scratch"<<endl;
   
-  possibleConfsList=getConfsList(confsPattern);
-  sourcesList=getSourcesList(refConfPattern);
+  possibleConfsList=getConfsList(confsDirPattern);
+  sourcesList=getSourcesList(refConfPattern,sourceFilePattern);
   nSources=sourcesList.size();
   console<<"NSources: "<<nSources<<endl;
   if(nSourcesMax and nSourcesMax<nSources)
