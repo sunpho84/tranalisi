@@ -166,7 +166,7 @@ struct TantaloBaccoReco :
 {
   const PrecFloat Estar;
   
-  const vector<jack_t<PrecFloat>> corr;
+  const djvec_t corr;
   
   PrecVect f;
   
@@ -196,12 +196,14 @@ struct TantaloBaccoReco :
     
     for(int iR=0;iR<nT;iR++)
       {
-	djack_t c;
-	for(size_t ijack=0;ijack<=njacks;ijack++)
-	  c[ijack]=corr[iR+tMin][ijack].get();
-	
 	for(int iT=0;iT<nT;iT++)
-	  B(iR,iT)=sqr(c.err()/corr[1][0])*(iR==iT);
+	  if(lambda!=0)
+	    if(useTantalo)
+	      B(iR,iT)=sqr(corr[iR+tMin].err()/corr[1].ave())*(iR==iT);
+	    else
+	      B(iR,iT)=sqr(corr[iR+tMin].err()/corr[1].ave())*(iR==iT);
+	  else
+	    B(iR,iT)=0.0;
       }
     
     grace_file_t BFile("/tmp/B"+to_string(Estar.get())+".xmg");
@@ -231,15 +233,25 @@ struct TantaloBaccoReco :
     PrecMatr Winv=
       W.inverse();
     
-    const PrecFloat num=
-      1-R.transpose()*Winv*f;
+    grace_file_t WFile("/tmp/Winv"+to_string(Estar.get())+".xmg");
+    for(int iR=0;iR<nT;iR++)
+      for(int iT=0;iT<nT;iT++)
+	WFile.write_xy(iT+nT*iR,Winv(iR,iT).get());
     
     const PrecFloat den=
       R.transpose()*Winv*R;
     
-    g=
-      Winv*f+
-      Winv*R*num/den;
+    if(useTantalo)
+      {
+	const PrecFloat num=
+	  1-R.transpose()*Winv*f;
+	
+	g=
+	  Winv*f+
+	  Winv*R*num/den;
+      }
+    else
+      g=Winv*R/den;
     
     grace_file_t gFile("/tmp/g"+to_string(Estar.get())+".xmg");
     for(int iT=0;iT<nT;iT++)
@@ -256,9 +268,10 @@ struct TantaloBaccoReco :
     return s;
   }
   
-  jack_t<PrecFloat> recoDensity() const
+  djack_t recoDensity() const
   {
-    jack_t<PrecFloat> s{};
+    djack_t s;
+    
     for(size_t ijack=0;ijack<=njacks;ijack++)
       {
 	PrecFloat temp=0.0;
@@ -270,9 +283,18 @@ struct TantaloBaccoReco :
     return s;
   }
   
+  PrecFloat recoErrDensity() const
+  {
+    PrecFloat s=0.0;
+    for(int iT=0;iT<nT;iT++)
+      s+=sqr(g[iT]*corr[iT+tMin].err());
+    
+    return sqrt(s);
+  }
+  
   TantaloBaccoReco(const TantaloBaccoRecoEngine& engine,
 		   const PrecFloat& Estar,
-		   const vector<jack_t<PrecFloat>>& corr) :
+		   const djvec_t& corr) :
     TantaloBaccoRecoEngine(engine),
     Estar(Estar),
     corr(corr)
