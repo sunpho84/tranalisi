@@ -39,17 +39,17 @@ int main(int narg,char **arg)
   //put a warning
   if(path_in=="/dev/stdin") cerr<<"Reading from stdin"<<endl;
   
-  vector<double> ave(T),err(T);
-  djvec_t data(T);
+  vector<double> ave(T/2+1),err(T/2+1);
+  djvec_t data(T/2+1);
   ifstream file_in(path_in);
   if(!file_in.good()) CRASH("Opening %s to read",path_in.c_str());
-  for(int t=0;t<T;t++)
+  for(int t=0;t<T/2+1;t++)
     if(!(file_in>>ave[t]>>err[t]))
       CRASH("Reading t=%zu",t);
     else
       data[t].fill_gauss({ave[t],err[t],3224});
       
-  effective_mass(data.symmetrize(par)).ave_err().write(path_out);
+  effective_mass(data,T/2,par).ave_err().write(path_out);
   
   return 0;
 }

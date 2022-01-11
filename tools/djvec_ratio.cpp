@@ -48,7 +48,7 @@ int main(int narg,char **arg)
   if(path_out=="")
     cout<<rat.ave_err()<<endl;
   else
-    rat.ave_err().write(path_out);
+    rat.bin_write(path_out);
   
   return 0;
 }
