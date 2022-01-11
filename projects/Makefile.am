@@ -18,6 +18,7 @@ include IB/Makefile.am
 include HADRON_SCHEME/Makefile.am
 include GILBACCO/Makefile.am
 include BARYONS/Makefile.am
+include SPECDENS/Makefile.am
 #include FPIEM/Makefile.am
 #include PLNG/Makefile.am
 include MOM2/Makefile.am

@@ -12,12 +12,12 @@ int main()
   const PrecFloat Efict=1.5;
   const int useBw=0;
   
-  vector<jack_t<PrecFloat>> corr(T);
+  djvec_t corr(T);
   grace_file_t corrPlot("corr.xmg");
   for(int t=0;t<T;t++)
     {
-      corr[t]=exp(-Efict*t)+exp(-Efict*(T-t))*useBw;
-      corrPlot.write_xy(t,corr[t][0].get());
+      corr[t]=(exp(-Efict*t)+exp(-Efict*(T-t))*useBw).get();
+      corrPlot.write_xy(t,corr[t].ave());
     }
   
   const PrecFloat E0=0.1;
@@ -46,12 +46,7 @@ int main()
       
       TantaloBaccoRecoEngine recoEngine(pars,Estar);
       TantaloBaccoReco reco(recoEngine,Estar,corr);
-      djack_t d;
-      {
-	const jack_t<PrecFloat> _d=reco.recoDensity();
-	for(size_t ijack=0;ijack<=njacks;ijack++)
-	  d[ijack]=_d[ijack].get();
-      }
+      djack_t d=reco.recoDensity();
       densPlot.write_ave_err(Estar.get(),d.ave_err());
       
       PrecFloat x=0,x2=0,in=0;

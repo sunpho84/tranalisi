@@ -114,6 +114,15 @@ struct PrecFloat
       mpfr_less_p(this->data,oth.data);
 #endif
   }
+  bool operator<=(const PrecFloat& oth) const
+  {
+    return
+#ifdef FAKE_HP
+      data<oth.data;
+#else
+      mpfr_lessequal_p(this->data,oth.data);
+#endif
+  }
   
   bool operator>(const PrecFloat& oth) const
   {
@@ -409,8 +418,52 @@ namespace Eigen
 }
 
 using PrecVect=
-  Eigen::Matrix<PrecFloat,Eigen::Dynamic,1>;
+  std::vector<PrecFloat>;
 
-using PrecMatr=
-  Eigen::Matrix<PrecFloat,Eigen::Dynamic,Eigen::Dynamic>;
+struct PrecMatr
+{
+  size_t nR;
+  
+  size_t nC;
+  
+  using type=PrecFloat;
+  
+  std::vector<PrecFloat> data;
+  
+  PrecMatr(const size_t& nR=0,const size_t& nC=0) :
+    nR(nR),
+    nC(nC),
+    data(nR*nC)
+  {
+  }
+  
+  void resize(const size_t& nR,const size_t& nC)
+  {
+    this->nR=nR;
+    this->nC=nC;
+    data.resize(nR*nC);
+  }
+  
+  PrecFloat& operator()(size_t iR,size_t iC)
+  {
+    return data[iC+nC*iR];
+  }
+  
+  const PrecFloat& operator()(size_t iR,size_t iC) const
+  {
+    return data[iC+nC*iR];
+  }
+  
+  PrecFloat formWith(const PrecVect& l,const PrecVect& r) const
+  {
+    PrecFloat a=0.0;
+    
+    for(size_t iR=0;iR<nR;iR++)
+      for(size_t iC=0;iC<nC;iC++)
+	a+=l[iR]*(*this)(iR,iC)*r[iC];
+    
+    return a;
+  }
+};
+
 

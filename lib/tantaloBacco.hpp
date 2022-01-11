@@ -3,6 +3,7 @@
 
 #include <grace.hpp>
 #include <highPrec.hpp>
+#include <invert.hpp>
 #include <math.hpp>
 #include <meas_vec.hpp>
 
@@ -58,7 +59,7 @@ struct TantaloBaccoPars
   PrecFloat Z(const PrecFloat& Estar) const
   {
     return
-      (PrecFloat(1)+erf(Estar/(M_SQRT2*sigma)))/2;
+      (PrecFloat(1)+erf(Estar/(sqrt(PrecFloat(2))*sigma)))/2;
   };
   
   PrecFloat N(const PrecFloat& Estar,
@@ -86,8 +87,13 @@ struct TantaloBaccoPars
 struct TantaloBaccoRecoEngine :
   TantaloBaccoPars
 {
+  /// Normalization
   PrecVect R;
   
+  /// Mean
+  PrecVect M;
+  
+  /// Orthonormalization
   PrecMatr A;
   
   void fillR()
@@ -95,14 +101,37 @@ struct TantaloBaccoRecoEngine :
     R.resize(nT,1);
     
     for(int iT=0;iT<nT;iT++)
-      R[iT]=
-	1.0/PrecFloat(iT+tMin)+useBw*
-	1.0/PrecFloat(T-iT-tMin);
+      {
+	R[iT]=
+	  1.0/PrecFloat(iT+tMin);
+	if(useBw)
+	  R[iT]+=
+	    1.0/PrecFloat(T-iT-tMin);
+      }
     
     grace_file_t RFile("/tmp/R.xmg");
     RFile.new_data_set();
     for(int iT=0;iT<nT;iT++)
       RFile.write_xy(iT,R[iT].get());
+  }
+  
+  void fillM()
+  {
+    M.resize(nT,1);
+    
+    for(int iT=0;iT<nT;iT++)
+      {
+	
+	M[iT]=
+	  sqr(1.0/PrecFloat(iT+tMin));
+	if(useBw)
+	  M[iT]+=sqr(1.0/PrecFloat(T-iT-tMin));
+      }
+    
+    grace_file_t MFile("/tmp/M.xmg");
+    MFile.new_data_set();
+    for(int iT=0;iT<nT;iT++)
+      MFile.write_xy(iT,M[iT].get());
   }
   
   static PrecFloat tantalArt(const PrecFloat& Estar,
@@ -135,15 +164,21 @@ struct TantaloBaccoRecoEngine :
       for(int iT=0;iT<nT;iT++)
 	{
 	  const PrecFloat a=(PrecFloat)iR+iT+2*tMin;
-	  const PrecFloat b=(PrecFloat)T-iR+iT;
-	  const PrecFloat c=(PrecFloat)T+iR-iT;
-	  const PrecFloat d=(PrecFloat)2*T-iR-iT-2*tMin;
-	
+	  
 	  A(iR,iT)=
-	    art(a)+
-	    useBw*(art(b)+
-		   art(c)+
-		   art(d));
+	    art(a);
+	  
+	  if(useBw)
+	    {
+	      const PrecFloat b=(PrecFloat)T-iR+iT;
+	      const PrecFloat c=(PrecFloat)T+iR-iT;
+	      const PrecFloat d=(PrecFloat)2*T-iR-iT-2*tMin;
+	      
+	  A(iR,iT)+=
+	    art(b)+
+	    art(c)+
+	    art(d);
+	    }
 	}
     
     grace_file_t AFile("/tmp/A.xmg");
@@ -158,12 +193,17 @@ struct TantaloBaccoRecoEngine :
   {
     fillA(Estar);
     fillR();
+    fillM();
   }
 };
 
 struct TantaloBaccoReco :
   TantaloBaccoRecoEngine
 {
+  enum TargetFunction{GAUSS,LEGO};
+  
+  TargetFunction targetFunction{GAUSS};
+  
   const PrecFloat Estar;
   
   const djvec_t corr;
@@ -176,18 +216,37 @@ struct TantaloBaccoReco :
   
   PrecVect g;
   
+  PrecFloat fFun(const PrecFloat& t) const
+  {
+    switch(targetFunction)
+      {
+      case GAUSS:
+	return
+	  N(Estar,t)*F(Estar,t);
+	break;
+      case LEGO:
+	return 0;
+	break;
+      }
+    
+    return 0;
+  }
+  
   void fillF()
   {
     f.resize(nT,1);
     
     for(int iT=0;iT<nT;iT++)
-      f(iT)=
-	N(Estar,iT+tMin)*F(Estar,iT+tMin)+useBw*
-	N(Estar,T-iT-tMin)*F(Estar,T-iT-tMin);
+      {
+	f[iT]=fFun(iT+tMin);
+	if(useBw)
+	  f[iT]+=
+	    fFun(T-T-iT-tMin);
+      }
     
     grace_file_t fFile("/tmp/f"+to_string(Estar.get())+".xmg");
     for(int i=0;i<nT;i++)
-      fFile.write_xy(i,f(i).get());
+      fFile.write_xy(i,f[i].get());
   }
   
   void fillB()
@@ -228,10 +287,14 @@ struct TantaloBaccoReco :
 	WFile.write_xy(iT+nT*iR,W(iR,iT).get());
   }
   
+  /////////////////////////////////////////////////////////////////
+  
   void computeG()
   {
-    PrecMatr Winv=
-      W.inverse();
+    PrecMatr Winv(nT,nT);
+    invert_matrix(W,Winv);
+    
+    //cout<<"Check inversion: "<<(Winv*W-PrecMatr::Identity(nT,nT)).squaredNorm().get()<<" "<<(W*Winv-PrecMatr::Identity(nT,nT)).squaredNorm().get()<<endl;
     
     grace_file_t WFile("/tmp/Winv"+to_string(Estar.get())+".xmg");
     for(int iR=0;iR<nT;iR++)
@@ -239,19 +302,30 @@ struct TantaloBaccoReco :
 	WFile.write_xy(iT+nT*iR,Winv(iR,iT).get());
     
     const PrecFloat den=
-      R.transpose()*Winv*R;
+      Winv.formWith(R,R);
+    
+    g.resize(nT);
     
     if(useTantalo)
       {
 	const PrecFloat num=
-	  1-R.transpose()*Winv*f;
+	  1-Winv.formWith(R,f);
 	
-	g=
-	  Winv*f+
-	  Winv*R*num/den;
+	for(int iR=0;iR<nT;iR++)
+	  {
+	    g[iR]=0.0;
+	    for(int iC=0;iC<nT;iC++)
+	      g[iR]+=
+		Winv(iR,iC)*(f[iC]+R[iC]*num/den);
+	  }
       }
     else
-      g=Winv*R/den;
+      for(int iR=0;iR<nT;iR++)
+	{
+	  g[iR]=0.0;
+	  for(int iC=0;iC<nT;iC++)
+	    g[iR]+=Winv(iR,iC)*R[iC]/den;
+	}
     
     grace_file_t gFile("/tmp/g"+to_string(Estar.get())+".xmg");
     for(int iT=0;iT<nT;iT++)
@@ -263,7 +337,7 @@ struct TantaloBaccoReco :
     PrecFloat s=0;
     
     for(int iT=0;iT<nT;iT++)
-      s+=g(iT)*bT(iT+tMin,E);
+      s+=g[iT]*bT(iT+tMin,E);
     
     return s;
   }
