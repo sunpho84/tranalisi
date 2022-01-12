@@ -40,13 +40,13 @@ namespace Bacco
     
     /// Basis to be used
     PrecFloat bT(const int& t,
-		 const double& E) const
+		 const PrecFloat& E) const
     {
       PrecFloat res=
-	exp((PrecFloat)(-t*E));
+	exp(-t*E);
       
       if(hasBwSignal)
-	res+=exp((PrecFloat)(-(T-t)*E));
+	res+=exp(-(T-t)*E);
       
       return res;
     };
@@ -72,7 +72,7 @@ namespace Bacco
       return s;
     }
     
-    /// Integer power, to be used for future reference
+    /// Integer power, to be used for mean and variance
     static int pow(const int a,const int& n)
     {
       int res=1;
@@ -286,7 +286,7 @@ namespace Bacco
       grace_file_t WinvFile("/tmp/Winv"+to_string(Estar)+".xmg");
       for(int iR=0;iR<nT;iR++)
 	for(int iT=0;iT<nT;iT++)
-	  WFile.write_xy(iT+nT*iR,Winv(iR,iT).get());
+	  WinvFile.write_xy(iT+nT*iR,Winv(iR,iT).get());
       
       const PrecVect v=
 	prepareWVect(Winv);
@@ -329,18 +329,41 @@ namespace Bacco
   struct TargettedReconstructor :
     public ReconstructionEngine
   {
+    const double E0;
+    
     const PrecFloat alpha=0;
     
-    const double sigma;
-    
-    const PrecVect f;
+    PrecFloat aFun(const PrecFloat& i) const
+    {
+      return
+	exp(-i*E0)/i;
+    }
     
     virtual PrecFloat fFun(const PrecFloat& i) const =0;
     
-    virtual PrecFloat targetFunction(const double& E) const =0;
+    virtual double targetFunction(const double& E) const =0;
+    
+    virtual PrecFloat squareNorm() const =0;
     
     PrecVect prepareWVect(const PrecMatr& Winv) const
     {
+      PrecVect f(nT,1);
+      
+      for(int iT=0;iT<nT;iT++)
+	{
+	  f[iT]=fFun(iT+tMin);
+	  
+	  if(hasBwSignal)
+	    f[iT]+=
+	      fFun(T-iT-tMin);
+	}
+      
+      grace_file_t fFile("/tmp/f"+to_string(Estar)+".xmg");
+      for(int i=0;i<nT;i++)
+	fFile.write_xy(i,f[i].get());
+      
+      /////////////////////////////////////////////////////////////////
+      
       PrecVect res(nT);
       
       const PrecFloat num=
@@ -356,24 +379,31 @@ namespace Bacco
       return res;
     }
     
-    PrecVect fillF()
+    double recoErr(const double& E,
+		   const Reconstruction& reco) const
     {
-      PrecVect f(nT,1);
+      return targetFunction(E)-reco.smearingFunction(E).get();
+    }
+    
+    double deviation(const Reconstruction& reco) const
+    {
+      PrecFloat a=
+	sqr(reco.widthOfSquare());
       
       for(int iT=0;iT<nT;iT++)
 	{
-	  f[iT]=fFun(iT+tMin);
+	  PrecFloat f=
+	    fFun(iT+tMin);
 	  
 	  if(hasBwSignal)
-	    f[iT]+=
-	      fFun(T-T-iT-tMin);
+	    f+=
+	      fFun(T-iT-tMin);
+	  
+	  a-=
+	    2*reco.g[iT]*f;
 	}
       
-      grace_file_t fFile("/tmp/f"+to_string(Estar)+".xmg");
-      for(int i=0;i<nT;i++)
-	fFile.write_xy(i,f[i].get());
-      
-      return f;
+      return (a+squareNorm()).get();
     }
     
     TargettedReconstructor(const CorrelatorPars& correlatorPars,
@@ -381,56 +411,53 @@ namespace Bacco
 			   const int& tMax,
 			   const double& Estar,
 			   const double& lambda,
-			   const double& sigma) :
+			   const double& E0) :
       ReconstructionEngine(correlatorPars,tMin,tMax,Estar,lambda),
-      sigma(sigma),
-      f(fillF())
+      E0(E0)
     {
     }
   };
   
+  /////////////////////////////////////////////////////////////////
+  
   struct GaussReconstructor :
     public TargettedReconstructor
   {
-    const double E0;
+    const double sigma;
     
-    const PrecFloat Z;
-    
-    static PrecFloat Zfun(const double& Estar,
-			  const double& sigma)
+    PrecFloat zFun() const
     {
       return
 	(PrecFloat(1)+erf(Estar/(sqrt(PrecFloat(2))*sigma)))/2;
-    };
-    
-    PrecFloat aFun(const PrecFloat& i) const
-    {
-      return
-	exp(-i*E0)/i;
-    }
-    
-    PrecFloat N(const PrecFloat& Estar,
-		const PrecFloat& k) const
-    {
-      return
-	(1-lambda)/(2*Z)*exp((alpha-k)*((alpha-k)*sigma*sigma+2*Estar)/2);
-    }
-    
-    PrecFloat F(const PrecFloat& Estar,
-		const PrecFloat& k) const
-    {
-      return
-	1+erf(((alpha-k)*sigma*sigma+Estar-E0)/(M_SQRT2*sigma));
     }
     
     PrecFloat fFun(const PrecFloat& t) const
     {
-      return
-	N(Estar,t)*F(Estar,t);
+      const PrecFloat Z=
+	zFun();
+      
+      const PrecFloat N=
+	(1-lambda)/(2*Z)*exp((alpha-t)*((alpha-t)*sigma*sigma+2*Estar)/2);
+      
+      const PrecFloat F=
+	1+erf(((alpha-t)*sigma*sigma+Estar-E0)/(sqrt(PrecFloat(2))*sigma));
+      
+      return N*F;
     }
     
-    PrecFloat targetFunction(const double& E) const
+    PrecFloat squareNorm() const
     {
+      const PrecFloat x=
+	((PrecFloat)E0-Estar)/sigma;
+      
+      return erfc(x)/(sqrt(precPi())*sigma*sqr(erfc(x/sqrt(PrecFloat(2)))));
+    }
+    
+    double targetFunction(const double& E) const
+    {
+      const double Z=
+	zFun().get();
+      
       return
 	exp(-sqr(E-Estar)/(2*sigma*sigma))/(M_SQRT2*sqrt(M_PI)*sigma*Z);
     };
@@ -442,12 +469,50 @@ namespace Bacco
 			const double& lambda,
 			const double& E0,
 			const double& sigma) :
-      TargettedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,sigma),
-      E0(E0),
-      Z(Zfun(Estar,sigma))
+      TargettedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
+      sigma(sigma)
     {
     }
   };
+  
+  /////////////////////////////////////////////////////////////////
+  
+    struct LegoReconstructor :
+    public TargettedReconstructor
+  {
+    const double width;
+    
+    PrecFloat fFun(const PrecFloat& t) const
+    {
+      return
+	(exp(-(Estar-width/2)*t)-exp(-(Estar+width/2)*t))/(width*t);
+    }
+    
+    double targetFunction(const double& E) const
+    {
+      return
+	((E>Estar-width/2) and (E<Estar+width/2))/width;
+    };
+    
+    PrecFloat squareNorm() const
+    {
+      return PrecFloat(1)/width;
+    }
+    
+    LegoReconstructor(const CorrelatorPars& correlatorPars,
+			const int& tMin,
+			const int& tMax,
+			const double& Estar,
+			const double& lambda,
+			const double& E0,
+			const double& width) :
+      TargettedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
+      width(width)
+    {
+    }
+  };
+  
+  /////////////////////////////////////////////////////////////////
   
   struct BGReconstructor :
     public ReconstructionEngine

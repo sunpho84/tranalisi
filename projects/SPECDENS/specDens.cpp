@@ -18,6 +18,7 @@ int main()
   const string corrPath=input.read<string>("CorrPath");
   const PrecFloat lambda=input.read<double>("Lambda");
   const double a=input.read<double>("a");
+  cout<<"aaa"<<a<<endl;
   
   set_njacks(30);
   PrecFloat::setDefaultPrecision(precision);

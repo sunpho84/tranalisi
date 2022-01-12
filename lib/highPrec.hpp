@@ -323,6 +323,25 @@ inline PrecFloat sqrt(const PrecFloat& in)
     out;
 }
 
+inline PrecFloat acos(const PrecFloat& in)
+{
+  PrecFloat out;
+  
+#ifdef FAKE_HP
+  out.data=acos(in.data);
+#else
+  mpfr_acos(out.data,in.data,MPFR_RNDD);
+#endif
+  
+  return
+    out;
+}
+
+inline PrecFloat precPi()
+{
+  return acos((PrecFloat)-1);
+}
+
 inline PrecFloat erf(const PrecFloat& in)
 {
   PrecFloat out;
@@ -331,6 +350,20 @@ inline PrecFloat erf(const PrecFloat& in)
   out.data=erf(in.data);
 #else
   mpfr_erf(out.data,in.data,MPFR_RNDD);
+#endif
+  
+  return
+    out;
+}
+
+inline PrecFloat erfc(const PrecFloat& in)
+{
+  PrecFloat out;
+  
+#ifdef FAKE_HP
+  out.data=erfc(in.data);
+#else
+  mpfr_erfc(out.data,in.data,MPFR_RNDD);
 #endif
   
   return

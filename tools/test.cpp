@@ -22,23 +22,33 @@ int main()
   
   CorrelatorPars correlatorPars(T,hasBwSignal,E0,corr);
   
-  const int tMax=30;
+  const int tMax=128;
   const double Estar=0.5;
-  BGReconstructor bgReconstructor(correlatorPars,tMin,tMax,Estar,lambda);
-  
+  const double sigma=0.25;
+  std::unique_ptr<ReconstructionEngine> reconstructor=make_unique<GaussReconstructor>(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
+  TargettedReconstructor *targettedReconstructor=static_cast<TargettedReconstructor*>(&*reconstructor);
   const Reconstruction reco=
-    bgReconstructor.getReco();
+    reconstructor->getReco();
   
   cout<<"Mean: "<<reco.mean().get()<<endl;
   cout<<"WidthOfSquare: "<<reco.widthOfSquare().get()<<endl;
   cout<<"Width: "<<reco.width().get()<<endl;
+  cout<<"Square norm: "<<targettedReconstructor->squareNorm().get()<<endl;
+  cout<<"Deviation: "<<targettedReconstructor->deviation(reco)<<endl;
   
-  grace_file_t D("/tmp/RecoDelta"+to_string(Estar)+".xmg");
-  D.set_xaxis_label("E");
-  D.set_yaxis_label("\xD");
-  D.set_no_symbol();
+  grace_file_t RecPlot("/tmp/RecoDelta"+to_string(Estar)+".xmg");
+  RecPlot.set_xaxis_label("E");
+  RecPlot.set_yaxis_label("\xD");
+  RecPlot.set_no_symbol();
   for(double E=0.001;E<=1;E+=0.005)
-    D.write_xy(E,reco.smearingFunction(E).get());
+    RecPlot.write_xy(E,reco.smearingFunction(E).get());
+  
+  grace_file_t TargPlot("/tmp/TargetDelta"+to_string(Estar)+".xmg");
+  TargPlot.set_xaxis_label("E");
+  TargPlot.set_yaxis_label("\xD");
+  TargPlot.set_no_symbol();
+  for(double E=0.001;E<=3;E+=0.0005)
+    TargPlot.write_xy(E,targettedReconstructor->targetFunction(E));
   
   // auto get=[&](const size_t& nT,const double& Estar,const bool tantaloUsage)
   // {
