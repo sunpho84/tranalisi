@@ -82,7 +82,7 @@ int main(int narg,char **arg)
 	  ens.convertForSilvano();
 	}
       
-      ens.Gilberto();
+      //ens.Gilberto();
       
       if(file_exists("disco.dat"))
 	ens.loadDisco();

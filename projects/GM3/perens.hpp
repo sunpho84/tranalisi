@@ -135,7 +135,7 @@ struct perens_t
 		  const jack_t<VKVKRepFiniteVol>& rep,
 		  const jack_t<VKVKRepInfiniteVol>& infVolRep);
   
-  void Gilberto() const;
+  //void Gilberto() const;
   
   bool loadCachedAveCorr();
   

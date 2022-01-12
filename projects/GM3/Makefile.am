@@ -13,7 +13,6 @@ __top_builddir__bin_gm3_SOURCES= \
 	%D%/cachedData.cpp \
 	%D%/data.cpp \
 	%D%/gm3.cpp \
-	%D%/gilbertoBacco.cpp \
 	%D%/mPCAC.cpp \
 	%D%/kernels.cpp \
 	%D%/params.cpp \
@@ -21,6 +20,8 @@ __top_builddir__bin_gm3_SOURCES= \
 	%D%/rawData.cpp \
 	%D%/renoConstants.cpp \
 	%D%/VKVKRepresentation.cpp
+
+# 	%D%/gilbertoBacco.cpp
 
 __top_builddir__bin_gm3_CXXFLAGS=@MPI_CXXFLAGS@
 __top_builddir__bin_gm3_LDFLAGS=@MPI_CXXLDFLAGS@

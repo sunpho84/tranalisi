@@ -5,59 +5,81 @@
 int main()
 {
   set_njacks(15);
-  const PrecFloat lambda=0.0;
-  const PrecFloat alpha=0.0;
-  const int useBw=0;
-  constexpr bool dontUseTantalo=false;
-  constexpr bool useTantalo=true;
-  double sigma=0.2;
+  const double lambda=0.0;
+  const int hasBwSignal=0;
+  // constexpr bool dontUseTantalo=false;
+  // constexpr bool useTantalo=true;
+  // double sigma=0.2;
   const size_t T=245;
   const size_t tMin=1;
-  const PrecFloat E0=0.00001;
+  const double E0=0.00001;
   djvec_t corr(T/2+1);
   corr=0;
   
   PrecFloat::setDefaultPrecision(1024);
-  auto get=[&](const size_t& nT,const double& Estar,const bool tantaloUsage)
-  {
-    TantaloBaccoPars pars(tantaloUsage,T,tMin,nT,E0,lambda,sigma,useBw);
-    TantaloBaccoRecoEngine recoEngine(pars,Estar);
-    TantaloBaccoReco reco(recoEngine,Estar,corr);
+  
+  using namespace Bacco;
+  
+  CorrelatorPars correlatorPars(T,hasBwSignal,E0,corr);
+  
+  const int tMax=30;
+  const double Estar=0.5;
+  BGReconstructor bgReconstructor(correlatorPars,tMin,tMax,Estar,lambda);
+  
+  const Reconstruction reco=
+    bgReconstructor.getReco();
+  
+  cout<<"Mean: "<<reco.mean().get()<<endl;
+  cout<<"WidthOfSquare: "<<reco.widthOfSquare().get()<<endl;
+  cout<<"Width: "<<reco.width().get()<<endl;
+  
+  grace_file_t D("/tmp/RecoDelta"+to_string(Estar)+".xmg");
+  D.set_xaxis_label("E");
+  D.set_yaxis_label("\xD");
+  D.set_no_symbol();
+  for(double E=0.001;E<=1;E+=0.005)
+    D.write_xy(E,reco.smearingFunction(E).get());
+  
+  // auto get=[&](const size_t& nT,const double& Estar,const bool tantaloUsage)
+  // {
+  //   TantaloBaccoPars pars(tantaloUsage,T,tMin,nT,E0,lambda,sigma,useBw);
+  //   TantaloBaccoRecoEngine recoEngine(pars,Estar);
+  //   TantaloBaccoReco reco(recoEngine,Estar,corr);
     
-    PrecFloat width2=reco.A.formWith(reco.g,reco.g);
-      PrecFloat ave=0.0;
-      for(size_t i=0;i<nT;i++)
-	ave+=reco.g[i]*reco.M[i];
-    const PrecFloat width=sqrt(width2);
-    // for(size_t it=0;it<nT;it++)
-    //   cout<<reco.g[it].get()<<endl;
+  //   PrecFloat width2=reco.A.formWith(reco.g,reco.g);
+  //     PrecFloat ave=0.0;
+  //     for(size_t i=0;i<nT;i++)
+  // 	ave+=reco.g[i]*reco.M[i];
+  //   const PrecFloat width=sqrt(width2);
+  //   // for(size_t it=0;it<nT;it++)
+  //   //   cout<<reco.g[it].get()<<endl;
     
-    grace_file_t D("/tmp/RecoDelta"+to_string(Estar)+"_"+to_string(nT)+(tantaloUsage?"use":"dontuse")+".xmg");
-    D.set_xaxis_label("E");
-    D.set_yaxis_label("\xD");
-    D.set_no_symbol();
-    D.set_subtitle("Nt="+to_string(nT));
-    for(double E=E0.get();E<=1;E+=0.005)
-      D.write_xy(E,reco.recoDelta(E).get());
+  //   grace_file_t D("/tmp/RecoDelta"+to_string(Estar)+"_"+to_string(nT)+(tantaloUsage?"use":"dontuse")+".xmg");
+  //   D.set_xaxis_label("E");
+  //   D.set_yaxis_label("\xD");
+  //   D.set_no_symbol();
+  //   D.set_subtitle("Nt="+to_string(nT));
+  //   for(double E=E0.get();E<=1;E+=0.005)
+  //     D.write_xy(E,reco.recoDelta(E).get());
     
-    if(tantaloUsage)
-      {
-	grace_file_t D("/tmp/TargetDelta"+to_string(Estar)+"_"+to_string(nT)+".xmg");
-	D.set_xaxis_label("E");
-	D.set_yaxis_label("\xD");
-	D.set_no_symbol();
-	D.set_subtitle("Nt="+to_string(nT));
-	for(double E=E0.get();E<=1;E+=0.005)
-	  D.write_xy(E,reco.Delta(Estar,E).get());
+  //   if(tantaloUsage)
+  //     {
+  // 	grace_file_t D("/tmp/TargetDelta"+to_string(Estar)+"_"+to_string(nT)+".xmg");
+  // 	D.set_xaxis_label("E");
+  // 	D.set_yaxis_label("\xD");
+  // 	D.set_no_symbol();
+  // 	D.set_subtitle("Nt="+to_string(nT));
+  // 	for(double E=E0.get();E<=1;E+=0.005)
+  // 	  D.write_xy(E,reco.Delta(Estar,E).get());
 	
-	grace_file_t Er("/tmp/ErrDelta"+to_string(Estar)+"_"+to_string(nT)+".xmg");
-	Er.set_xaxis_label("E");
-	Er.set_yaxis_label("\xD");
-	Er.set_no_symbol();
-	Er.set_subtitle("Nt="+to_string(nT));
-	for(double E=E0.get();E<=1;E+=0.005)
-	  Er.write_xy(E,(reco.Delta(Estar,E).get()-reco.recoDelta(E)).get());
-      }
+  // 	grace_file_t Er("/tmp/ErrDelta"+to_string(Estar)+"_"+to_string(nT)+".xmg");
+  // 	Er.set_xaxis_label("E");
+  // 	Er.set_yaxis_label("\xD");
+  // 	Er.set_no_symbol();
+  // 	Er.set_subtitle("Nt="+to_string(nT));
+  // 	for(double E=E0.get();E<=1;E+=0.005)
+  // 	  Er.write_xy(E,(reco.Delta(Estar,E).get()-reco.recoDelta(E)).get());
+  //     }
     // cout<<endl;
     // PrecFloat max=0.0;
     // double mP=0;
@@ -71,15 +93,15 @@ int main()
     // 	  }
     //   }
     // return std::make_tuple(max,mP);
-    return width.get();
-  };
+  //   return width.get();
+  // };
   
-  const double w=get(128,0.5,dontUseTantalo);
-  cout<<"w: "<<w<<endl;
-  sigma=w;
-  cout<<sigma<<endl;
-  const double w2=get(128,0.5,useTantalo);
-  cout<<"w2: "<<w2<<endl;
+  // const double w=get(128,0.5,dontUseTantalo);
+  // cout<<"w: "<<w<<endl;
+  // sigma=w;
+  // cout<<sigma<<endl;
+  // const double w2=get(128,0.5,useTantalo);
+  // cout<<"w2: "<<w2<<endl;
   
   
   // get(16,0.5);
