@@ -6,6 +6,7 @@
 #include <invert.hpp>
 #include <math.hpp>
 #include <meas_vec.hpp>
+#include <solve.hpp>
 
 // https://arxiv.org/pdf/1903.06476.pdf
 
@@ -25,6 +26,23 @@ namespace Bacco
     
     /// Correlation function to be analyzed
     const djvec_t corr;
+    
+    template <typename F>
+    void loopOverIrIt(F&& f,const int tMin,const int nT) const
+    {
+      for(int iR=0;iR<nT;iR++)
+	for(int iT=0;iT<nT;iT++)
+	  {
+	    f(iR,iT,iR+iT+2*tMin);
+	    
+	    if(hasBwSignal)
+	      {
+		f(iR,iT,T-iR+iT);
+		f(iR,iT,T+iR-iT);
+		f(iR,iT,2*T-iR-iT-2*tMin);
+	      }
+	  }
+    }
     
     /// Constructor
     CorrelatorPars(const int& T,
@@ -52,16 +70,76 @@ namespace Bacco
     };
   };
   
-  struct Reconstruction
+  /// Implements the plottability function
+  struct Plottable
   {
+    /// Plots the smearing function
+    void plot(const string& path,
+	      const double& Emin,
+	      const double& Emax,
+	      const int& nPoints=101) const
+    {
+      grace_file_t plot(path);
+      
+      plot.write_line([this](const double& E)
+      {
+	return this->plotFunction(E);
+      },Emin,Emax,nPoints);
+      
+      plot.set_xaxis_label("E");
+      plot.set_yaxis_label("\xD");
+      plot.set_no_symbol();
+    }
+    
+    virtual double plotFunction(const double&E) const =0;
+  };
+  
+  /// Holds a reconstrucion of the smearing function
+  struct Reconstruction :
+    public Plottable
+  {
+    /// Basis size
     const int nT;
     
+    /// Minimal value of t
     const int tMin;
     
+    /// Holds the correlation function
     const CorrelatorPars correlatorPars;
     
+    /// Parameters of the reconstrucion
     const PrecVect g;
     
+    double widthAssumingGaussianAround(const double& E) const
+    {
+      PrecFloat f=0.0;
+      
+      correlatorPars.loopOverIrIt([&f,this,&E](const int& iR,
+				     const int& iT,
+				     const PrecFloat& i)
+      {
+	f+=
+	  g[iR]*g[iT]*((1/i-E)*2/i+E*E)/i;
+      },tMin,nT);
+      
+      const double functional=
+	f.get();
+      
+      const double est=
+	functional*4*sqrt(M_PI);
+      
+      const double res=
+	NewtonSolve([functional,E](const double& s)
+	{
+	  return (-2*exp(-sqr(E/s))+sqrt(M_PI)*s*(1+erf(E/s)))/
+	    (2*M_PI*sqr(1+erf(E/(sqrt(2)*s))))-
+	    functional;
+	},est);
+      
+      return res;
+    }
+    
+    /// Computes the reconstrucion function at a given energy
     PrecFloat smearingFunction(const double& E) const
     {
       PrecFloat s=0;
@@ -70,6 +148,11 @@ namespace Bacco
 	s+=g[iT]*correlatorPars.bT(iT+tMin,E);
       
       return s;
+    }
+    
+    double plotFunction(const double&E) const
+    {
+      return smearingFunction(E).get();
     }
     
     /// Integer power, to be used for mean and variance
@@ -83,7 +166,6 @@ namespace Bacco
     }
     
     /// Compute \sum_it g[it]/(it+tMin)^n with periodicity
-    
     PrecFloat gWeightedWithTToMinusN(const int n) const
     {
       PrecFloat m=0.0;
@@ -98,44 +180,34 @@ namespace Bacco
       return m;
     }
     
+    /// Returns the normalization, which should be 1
+    PrecFloat norm() const
+    {
+      return gWeightedWithTToMinusN(1);
+    }
+    
+    /// Returns the mean
     PrecFloat mean() const
     {
       return gWeightedWithTToMinusN(2);
     }
     
-    PrecFloat meanOfSquare() const
+    /// Returns the expectation value of E^2
+    PrecFloat meanOfE2() const
     {
       return 2*gWeightedWithTToMinusN(3);
     }
     
-    PrecFloat widthOfSquare() const
-    {
-      PrecFloat w2=0.0;
-      const int& T=
-	correlatorPars.T;
-      
-      for(int iR=0;iR<nT;iR++)
-	for(int iT=0;iT<nT;iT++)
-	  {
-	    auto add=[&w2,gtr=g[iT]*g[iR]](const int i){w2+=gtr/i;};
-	    
-	    add(iR+iT+2*tMin);
-	    
-	    if(correlatorPars.hasBwSignal)
-	      for(const int i : {T-iR+iT,
-				 T+iR-iT,
-				 2*T-iR-iT-2*tMin})
-		add(i);
-	  }
-      
-      return sqrt(w2);
-    }
-    
+    /// Computes the estimator of the width as <(E-<E>)^2>
+    ///
+    /// Notice that since the smearing function is not garanteed to be
+    /// definite positive, the width can be undefinite
     PrecFloat width() const
     {
-      return sqrt(meanOfSquare()-sqr(mean()));
+      return sqrt(meanOfE2()-sqr(mean()));
     }
     
+    /// Reconstruct the density for the fixed energy
     djack_t recoDensity() const
     {
       djack_t s;
@@ -151,6 +223,7 @@ namespace Bacco
       return s;
     }
     
+    /// Default constructor
     Reconstruction(const int& nT,
 		   const int& tMin,
 		   const CorrelatorPars& correlatorPars,
@@ -163,7 +236,7 @@ namespace Bacco
     }
   };
   
-  struct ReconstructionEngine
+  struct Reconstructor
   {
     const CorrelatorPars correlatorPars;
     
@@ -217,22 +290,15 @@ namespace Bacco
       // fill A
       
       /// Orthonormalization
-      PrecMatr A(nT,nT);
+      PrecMatr A(nT,nT,0.0);
       
-      for(int iR=0;iR<nT;iR++)
-	for(int iT=0;iT<nT;iT++)
-	  {
-	    A(iR,iT)=
-	      aFun(iR+iT+2*tMin);
-	    
-	    if(hasBwSignal)
-	      {
-		A(iR,iT)+=
-		  aFun(T-iR+iT)+
-		  aFun(T+iR-iT)+
-		  aFun(2*T-iR-iT-2*tMin);
-	      }
-	  }
+      correlatorPars.loopOverIrIt([&A,this](const int& iR,
+					    const int& iT,
+					    const int& i)
+      {
+	A(iR,iT)+=
+	  aFun(iR+iT+2*tMin);
+      },tMin,nT);
       
       grace_file_t AFile("/tmp/A.xmg");
       for(int iR=0;iR<nT;iR++)
@@ -312,7 +378,7 @@ namespace Bacco
       return reco;
     }
     
-    ReconstructionEngine(const CorrelatorPars& correlatorPars,
+    Reconstructor(const CorrelatorPars& correlatorPars,
 			 const int& tMin,
 			 const int& tMax,
 			 const double& Estar,
@@ -326,13 +392,17 @@ namespace Bacco
     }
   };
   
-  struct TargettedReconstructor :
-    public ReconstructionEngine
+  struct TargetedReconstructor :
+    public Reconstructor,
+    public Plottable
   {
     const double E0;
     
     const PrecFloat alpha=0;
     
+    /// In the targeted reconstruction, a is set to the orthonormality of the basis vector
+    ///
+    /// See eq.32 of Nazario's paper
     PrecFloat aFun(const PrecFloat& i) const
     {
       return
@@ -342,6 +412,11 @@ namespace Bacco
     virtual PrecFloat fFun(const PrecFloat& i) const =0;
     
     virtual double targetFunction(const double& E) const =0;
+    
+    double plotFunction(const double&E) const
+    {
+      return targetFunction(E);
+    }
     
     virtual PrecFloat squareNorm() const =0;
     
@@ -387,8 +462,14 @@ namespace Bacco
     
     double deviation(const Reconstruction& reco) const
     {
-      PrecFloat a=
-	sqr(reco.widthOfSquare());
+      PrecFloat a=0.0;
+      correlatorPars.loopOverIrIt([&a,reco](const int& iR,
+					    const int& iT,
+					    const int& i)
+      {
+	      a+=reco.g[iT]*reco.g[iR]/i;
+      },tMin,nT);
+      
       
       for(int iT=0;iT<nT;iT++)
 	{
@@ -403,16 +484,16 @@ namespace Bacco
 	    2*reco.g[iT]*f;
 	}
       
-      return (a+squareNorm()).get();
+      return sqrt(a+squareNorm()).get();
     }
     
-    TargettedReconstructor(const CorrelatorPars& correlatorPars,
+    TargetedReconstructor(const CorrelatorPars& correlatorPars,
 			   const int& tMin,
 			   const int& tMax,
 			   const double& Estar,
 			   const double& lambda,
 			   const double& E0) :
-      ReconstructionEngine(correlatorPars,tMin,tMax,Estar,lambda),
+      Reconstructor(correlatorPars,tMin,tMax,Estar,lambda),
       E0(E0)
     {
     }
@@ -421,7 +502,7 @@ namespace Bacco
   /////////////////////////////////////////////////////////////////
   
   struct GaussReconstructor :
-    public TargettedReconstructor
+    public TargetedReconstructor
   {
     const double sigma;
     
@@ -469,7 +550,7 @@ namespace Bacco
 			const double& lambda,
 			const double& E0,
 			const double& sigma) :
-      TargettedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
+      TargetedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
       sigma(sigma)
     {
     }
@@ -478,7 +559,7 @@ namespace Bacco
   /////////////////////////////////////////////////////////////////
   
     struct LegoReconstructor :
-    public TargettedReconstructor
+    public TargetedReconstructor
   {
     const double width;
     
@@ -506,7 +587,7 @@ namespace Bacco
 			const double& lambda,
 			const double& E0,
 			const double& width) :
-      TargettedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
+      TargetedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
       width(width)
     {
     }
@@ -515,7 +596,7 @@ namespace Bacco
   /////////////////////////////////////////////////////////////////
   
   struct BGReconstructor :
-    public ReconstructionEngine
+    public Reconstructor
   {
     PrecVect prepareWVect(const PrecMatr& Winv) const
     {
@@ -538,7 +619,7 @@ namespace Bacco
     }
     
     BGReconstructor(const CorrelatorPars &correlatorPars,const int &tMin,const int &tMax,const double &Estar,const double &lambda) :
-      ReconstructionEngine(correlatorPars,tMin,tMax,Estar,lambda)
+      Reconstructor(correlatorPars,tMin,tMax,Estar,lambda)
     {
     }
   };

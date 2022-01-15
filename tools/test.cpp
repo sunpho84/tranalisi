@@ -12,7 +12,7 @@ int main()
   // double sigma=0.2;
   const size_t T=245;
   const size_t tMin=1;
-  const double E0=0.00001;
+  const double E0=0.0000;
   djvec_t corr(T/2+1);
   corr=0;
   
@@ -22,35 +22,180 @@ int main()
   
   CorrelatorPars correlatorPars(T,hasBwSignal,E0,corr);
   
-  const int tMax=128;
+  const int tMax=65;
   const double Estar=0.5;
-  const double sigma=0.25;
-  std::unique_ptr<ReconstructionEngine> reconstructor=make_unique<GaussReconstructor>(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
-  TargettedReconstructor *targettedReconstructor=static_cast<TargettedReconstructor*>(&*reconstructor);
-  const Reconstruction reco=
-    reconstructor->getReco();
   
-  cout<<"Mean: "<<reco.mean().get()<<endl;
-  cout<<"WidthOfSquare: "<<reco.widthOfSquare().get()<<endl;
-  cout<<"Width: "<<reco.width().get()<<endl;
-  cout<<"Square norm: "<<targettedReconstructor->squareNorm().get()<<endl;
-  cout<<"Deviation: "<<targettedReconstructor->deviation(reco)<<endl;
+  BGReconstructor bgReconstructor(correlatorPars,tMin,tMax,Estar,lambda);
   
-  grace_file_t RecPlot("/tmp/RecoDelta"+to_string(Estar)+".xmg");
-  RecPlot.set_xaxis_label("E");
-  RecPlot.set_yaxis_label("\xD");
-  RecPlot.set_no_symbol();
-  for(double E=0.001;E<=1;E+=0.005)
-    RecPlot.write_xy(E,reco.smearingFunction(E).get());
+  const Reconstruction bgReco=
+    bgReconstructor.getReco();
+  bgReco.plot("/tmp/bgReco.xmg",0,1);
   
-  grace_file_t TargPlot("/tmp/TargetDelta"+to_string(Estar)+".xmg");
-  TargPlot.set_xaxis_label("E");
-  TargPlot.set_yaxis_label("\xD");
-  TargPlot.set_no_symbol();
-  for(double E=0.001;E<=3;E+=0.0005)
-    TargPlot.write_xy(E,targettedReconstructor->targetFunction(E));
+  const double bgWidth=
+    bgReco.widthAssumingGaussianAround(Estar);
+  cout<<"BG width: "<<bgWidth<<endl;
   
-  // auto get=[&](const size_t& nT,const double& Estar,const bool tantaloUsage)
+  const double sigma=0.02;
+  GaussReconstructor gaussReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
+  
+  const Reconstruction gaussReco=
+    gaussReconstructor.getReco();
+  gaussReco.plot("/tmp/gaussReco.xmg",0,1);
+  gaussReconstructor.plot("/tmp/gaussTarget.xmg",0,1);
+  const double gaussWidth=
+    gaussReco.widthAssumingGaussianAround(Estar);
+  cout<<"Reconstructed: "<<gaussWidth<<endl;
+  cout<<"Error: "<<gaussWidth/sigma-1<<endl;
+  cout<<"Deviation: "<<gaussReconstructor.deviation(gaussReco)<<endl;
+  
+  // grace_file_t widthVswidth("widthVsWidth.xmg");
+  // //
+  // widthVswidth.write_xy(0,0);
+  // widthVswidth.write_xy(bgWidth*4,bgWidth*4);
+  // widthVswidth.set_no_symbol();
+  // widthVswidth.set_line_color(grace::BLUE);
+  // widthVswidth.set_line_style(grace::DASHED_LINE);
+  // widthVswidth.set_legend("Target width");
+  // //
+  // widthVswidth.new_data_set();
+  // widthVswidth.write_line([&](const double sigma)
+  // {
+  //   cout<<" "<<sigma<<endl;
+  //   GaussReconstructor gaussReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
+    
+  //   const Reconstruction gaussReco=
+  //     gaussReconstructor.getReco();
+    
+  //   return gaussReco.widthAssumingGaussianAround(Estar);
+  // },bgWidth/1.3,bgWidth*4);
+  // widthVswidth.set_line_color(grace::RED);
+  // widthVswidth.set_legend("Tantalo Width");
+  // //
+  // widthVswidth.new_data_set();
+  // //
+  // widthVswidth.write_xy(0,bgWidth);
+  // widthVswidth.write_xy(bgWidth*4,bgWidth);
+  // widthVswidth.set_no_symbol();
+  // widthVswidth.set_line_color(grace::GREEN4);
+  // widthVswidth.set_legend("BG Width");
+  
+  grace_file_t deviation("deviation.xmg");
+  deviation.set_yaxis_logscale();
+  deviation.set_yaxis_label("d");
+  deviation.set_xaxis_label("\\xs\\0");
+  auto pl=[&](const int tMin,const int tMax)
+  {
+    BGReconstructor bgReconstructor(correlatorPars,tMin,tMax,Estar,lambda);
+    
+    const Reconstruction bgReco=
+      bgReconstructor.getReco();
+    bgReco.plot("/tmp/bgReco.xmg",0,1);
+    
+    const double bgWidth=
+      bgReco.widthAssumingGaussianAround(Estar);
+    cout<<"BG width: "<<bgWidth<<endl;
+    
+    deviation.write_line([&](const double sigma)
+    {
+      GaussReconstructor gaussReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
+      
+      const Reconstruction gaussReco=
+	gaussReconstructor.getReco();
+      
+      return gaussReconstructor.deviation(gaussReco);
+    },bgWidth/1.3,bgWidth*4);
+  };
+  // pl(1,17);
+   pl(1,33);
+  // pl(1,49);
+  pl(1,65);
+  pl(1,129);
+  // const double gaussWidth=
+  //   gaussReconstructor.widthAssumingGaussian(bgReco);
+  
+  gaussReconstructor.plot("/tmp/gaussTarget.xmg",0.2,0.8);
+  gaussReco.plot("/tmp/gaussReco.xmg",0.2,0.8);
+  bgReco.plot("/tmp/bgReco.xmg",0.2,0.8);
+  
+  for(auto& i : {make_tuple(static_cast<Reconstructor*>(&gaussReconstructor),&gaussReco,"gauss"),
+		 {static_cast<Reconstructor*>(&bgReconstructor),&bgReco,"bg"}})
+    {
+      cout<<std::get<2>(i)<<" "<<std::get<1>(i)->widthAssumingGaussianAround(Estar)<<" "<<std::get<1>(i)->width().get()<<" "<<sigma<<endl;
+    }
+  
+  // grace_file_t RecPlot("/tmp/RecoDelta"+to_string(Estar)+"_sigma"+to_string(sigma)+".xmg");
+  // RecPlot.set_xaxis_label("E");
+  // RecPlot.set_yaxis_label("\xD");
+  // RecPlot.set_no_symbol();
+  // PrecFloat s0=0,s1=0,s2=0;
+  // for(double E=E0;E<=3;E+=0.001)
+  // 	{
+  // 	  const PrecFloat y=
+  // 	    gaussReco.smearingFunction(E);
+  // 	  s0+=y;
+  // 	  s1+=y*E;
+  // 	  s2+=y*E*E;
+  // 	  RecPlot.write_xy(E,y.get());
+  // 	}
+
+  //     // LegoReconstructor legoReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
+      
+  //     
+  // 	gaussReconstructor.getReco();
+      
+  //     // const double deviation=
+  //     // 	gaussReconstructor->deviation(reco);
+      
+  //     cout<<"Sigma: "<<sigma<<endl;
+  //     cout<<"Norm: "<<(bgReco.norm()-1).get()<<endl;
+  //     cout<<"Mean: "<<bgReco.mean().get()<<endl;
+  //     cout<<"WidthOfSquare: "<<bgWidth<<endl;
+  //     cout<<"Width: "<<bgReco.width().get()<<endl;
+  //     // cout<<"Deviation: "<<deviation<<endl;
+      
+  //     double t=bgReco.width().get();
+  //     // if(prev)
+  //     // 	if(t>prev or deviation>1e-6)
+  //     // 	  step/=-2;
+      
+  //     cerr<<sigma<<" "<<t<<endl;
+      
+  //     // prev=t;
+  //     // sigma+=step;
+      
+  //     grace_file_t RecPlot("/tmp/RecoDelta"+to_string(Estar)+"_sigma"+to_string(sigma)+".xmg");
+  //     RecPlot.set_xaxis_label("E");
+  //     RecPlot.set_yaxis_label("\xD");
+  //     RecPlot.set_no_symbol();
+  //     PrecFloat s0=0,s1=0,s2=0;
+  //     for(double E=E0;E<=3;E+=0.001)
+  // 	{
+  // 	  const PrecFloat y=
+  // 	    gaussReco.smearingFunction(E);
+  // 	  s0+=y;
+  // 	  s1+=y*E;
+  // 	  s2+=y*E*E;
+  // 	  RecPlot.write_xy(E,y.get());
+  // 	}
+      
+  //     s1/=s0;
+  //     s2/=s0;
+      
+  //     s2-=s1*s1;
+  //     cout<<"Norm: "<<s0.get()<<", mean: "<<s1.get()<<", width: "<<sqrt(s2).get()<<endl;
+      
+  //     grace_file_t TargPlot("/tmp/BgTargetDelta"+to_string(Estar)+"_sigma"+to_string(sigma)+".xmg");
+  //     TargPlot.set_xaxis_label("E");
+  //     TargPlot.set_yaxis_label("\xD");
+  //     TargPlot.set_no_symbol();
+  //     for(double E=E0;E<=3;E+=0.001)
+  // 	TargPlot.write_xy(E,bgReco.smearingFunction(E).get());
+      
+  //     cout<<endl;
+  //   }
+  // while(1);
+  
+      // auto get=[&](const size_t& nT,const double& Estar,const bool tantaloUsage)
   // {
   //   TantaloBaccoPars pars(tantaloUsage,T,tMin,nT,E0,lambda,sigma,useBw);
   //   TantaloBaccoRecoEngine recoEngine(pars,Estar);

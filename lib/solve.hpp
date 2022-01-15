@@ -4,9 +4,10 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
-#include <tools.hpp>
-
 #include <iostream>
+
+#include <gslWrap.hpp>
+#include <tools.hpp>
 
 using namespace std;
 

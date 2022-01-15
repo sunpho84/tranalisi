@@ -9,6 +9,7 @@ struct PrecFloat
   static void setDefaultPrecision(const int& n)
   {
 #ifndef FAKE_HP
+#pragma omp parallel
     mpfr_set_default_prec(n);
 #endif
   }
@@ -323,6 +324,20 @@ inline PrecFloat sqrt(const PrecFloat& in)
     out;
 }
 
+inline PrecFloat pow(const PrecFloat& a,const PrecFloat& b)
+{
+  PrecFloat out;
+  
+#ifdef FAKE_HP
+  out.data=pow(in.data,b.data);
+#else
+  mpfr_pow(out.data,a.data,b.data,MPFR_RNDD);
+#endif
+  
+  return
+    out;
+}
+
 inline PrecFloat acos(const PrecFloat& in)
 {
   PrecFloat out;
@@ -463,18 +478,29 @@ struct PrecMatr
   
   std::vector<PrecFloat> data;
   
-  PrecMatr(const size_t& nR=0,const size_t& nC=0) :
+  template <typename...Args>
+  PrecMatr(const size_t& nR,
+	   const size_t& nC,
+	   Args&&...args) :
     nR(nR),
     nC(nC),
-    data(nR*nC)
+    data(nR*nC,std::forward<Args>(args)...)
   {
   }
   
-  void resize(const size_t& nR,const size_t& nC)
+  PrecMatr() :
+    PrecMatr(0,0)
+  {
+  }
+  
+  template <typename...Args>
+  void resize(const size_t& nR,
+	      const size_t& nC,
+	      Args&&...args)
   {
     this->nR=nR;
     this->nC=nC;
-    data.resize(nR*nC);
+    data.resize(nR*nC,std::forward<Args>(args)...);
   }
   
   PrecFloat& operator()(size_t iR,size_t iC)
