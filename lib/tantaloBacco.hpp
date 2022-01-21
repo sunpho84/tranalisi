@@ -110,6 +110,21 @@ namespace Bacco
     /// Parameters of the reconstrucion
     const PrecVect g;
     
+    /// Squared norm
+    PrecFloat squareNorm() const
+    {
+      PrecFloat a=0.0;
+      
+      correlatorPars.loopOverIrIt([&a,this](const int& iR,
+					    const int& iT,
+					    const int& i)
+      {
+	a+=g[iT]*g[iR]/i;
+      },tMin,nT);
+      
+      return a;
+    }
+    
     double widthAssumingGaussianAround(const double& E) const
     {
       PrecFloat f=0.0;
@@ -129,10 +144,28 @@ namespace Bacco
 	functional*4*sqrt(M_PI);
       
       const double res=
+	// est;
 	NewtonSolve([functional,E](const double& s)
 	{
-	  return (-2*exp(-sqr(E/s))+sqrt(M_PI)*s*(1+erf(E/s)))/
-	    (2*M_PI*sqr(1+erf(E/(sqrt(2)*s))))-
+	  const double x=
+	    E/s;
+	  
+	  const double num=
+	    2*erf(x)+2-4*x*exp(-x*x)/sqrt(M_PI);
+	  
+	  const double den=
+	    sqr(erf(x/sqrt(2))+1);
+	  
+	  const double xi=
+	    num/den;
+	  
+	  const double guess=
+	    s/(4*sqrt(M_PI));
+	  
+	  const double fOfS=
+	    guess*xi;
+	  
+	  return fOfS-
 	    functional;
 	},est);
       
@@ -290,7 +323,8 @@ namespace Bacco
       // fill A
       
       /// Orthonormalization
-      PrecMatr A(nT,nT,0.0);
+      PrecMatr A(nT,nT);
+      A.setZero();
       
       correlatorPars.loopOverIrIt([&A,this](const int& iR,
 					    const int& iT,
@@ -344,10 +378,9 @@ namespace Bacco
       
       /////////////////////////////////////////////////////////////////
       
-      PrecMatr Winv(nT,nT);
-      invert_matrix(W,Winv);
+      PrecMatr Winv=W.inverse();
       
-      //cout<<"Check inversion: "<<(Winv*W-PrecMatr::Identity(nT,nT)).squaredNorm().get()<<" "<<(W*Winv-PrecMatr::Identity(nT,nT)).squaredNorm().get()<<endl;
+      // cout<<"Check inversion: "<<(Winv*W-PrecMatr::Identity(nT,nT)).squaredNorm().get()<<" "<<(W*Winv-PrecMatr::Identity(nT,nT)).squaredNorm().get()<<endl;
       
       grace_file_t WinvFile("/tmp/Winv"+to_string(Estar)+".xmg");
       for(int iR=0;iR<nT;iR++)
@@ -441,15 +474,18 @@ namespace Bacco
       
       PrecVect res(nT);
       
+      const PrecFloat c=
+	(1-(PrecFloat)lambda);
+      
       const PrecFloat num=
-	(1-Winv.formWith(R,f));
+	1-c*R.transpose()*Winv*f;
       
       const PrecFloat den=
-	Winv.formWith(R,R);
+	R.transpose()*Winv*R;
       
       for(int iC=0;iC<nT;iC++)
 	res[iC]=
-	  f[iC]+R[iC]*num/den;
+	  c*f[iC]+R[iC]*num/den;
       
       return res;
     }
@@ -460,16 +496,9 @@ namespace Bacco
       return targetFunction(E)-reco.smearingFunction(E).get();
     }
     
-    double deviation(const Reconstruction& reco) const
+    PrecFloat projectionWithReco(const Reconstruction& reco) const
     {
-      PrecFloat a=0.0;
-      correlatorPars.loopOverIrIt([&a,reco](const int& iR,
-					    const int& iT,
-					    const int& i)
-      {
-	      a+=reco.g[iT]*reco.g[iR]/i;
-      },tMin,nT);
-      
+      PrecFloat res=0.0;
       
       for(int iT=0;iT<nT;iT++)
 	{
@@ -480,11 +509,16 @@ namespace Bacco
 	    f+=
 	      fFun(T-iT-tMin);
 	  
-	  a-=
-	    2*reco.g[iT]*f;
+	  res+=
+	    reco.g[iT]*f;
 	}
       
-      return sqrt(a+squareNorm()).get();
+      return res;
+    }
+    
+    double deviation(const Reconstruction& reco) const
+    {
+      return (reco.squareNorm()-2*projectionWithReco(reco)+squareNorm()).get();
     }
     
     TargetedReconstructor(const CorrelatorPars& correlatorPars,
@@ -518,7 +552,7 @@ namespace Bacco
 	zFun();
       
       const PrecFloat N=
-	(1-lambda)/(2*Z)*exp((alpha-t)*((alpha-t)*sigma*sigma+2*Estar)/2);
+	1/(2*Z)*exp((alpha-t)*((alpha-t)*sigma*sigma+2*Estar)/2);
       
       const PrecFloat F=
 	1+erf(((alpha-t)*sigma*sigma+Estar-E0)/(sqrt(PrecFloat(2))*sigma));
@@ -603,7 +637,7 @@ namespace Bacco
       PrecVect res(nT);
       
       const PrecFloat den=
-	Winv.formWith(R,R);
+	R.transpose()*Winv*R;
       
       for(int iC=0;iC<nT;iC++)
 	res[iC]=

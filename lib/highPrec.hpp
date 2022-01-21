@@ -2,10 +2,13 @@
 
 #include <mpfr.h>
 
+/// Undef this to disable actual usage of the high preceision
 //#define FAKE_HP
 
+/// Structure to represent arbitray precision real number
 struct PrecFloat
 {
+  /// Sets the default precision
   static void setDefaultPrecision(const int& n)
   {
 #ifndef FAKE_HP
@@ -14,12 +17,14 @@ struct PrecFloat
 #endif
   }
   
+  /// Storage
 #ifndef FAKE_HP
   mpfr_t data{};
 #else
   double data;
 #endif
   
+  /// Returns the internal data
   double get() const
   {
 #ifdef FAKE_HP
@@ -30,6 +35,7 @@ struct PrecFloat
 #endif
   }
   
+  /// Assignment
   PrecFloat& operator=(const double& in)
   {
 #ifdef FAKE_HP
@@ -42,6 +48,7 @@ struct PrecFloat
       *this;
   }
   
+  /// Assign from another number
   PrecFloat& operator=(const PrecFloat& oth)
   {
 #ifdef FAKE_HP
@@ -54,6 +61,7 @@ struct PrecFloat
       *this;
   }
   
+  /// Default initialization
   PrecFloat()
   {
 #ifdef FAKE_HP
@@ -62,6 +70,7 @@ struct PrecFloat
 #endif
   }
   
+  /// Copy constructor
   PrecFloat(const PrecFloat& oth)
   {
 #ifdef FAKE_HP
@@ -71,33 +80,29 @@ struct PrecFloat
 #endif
   }
   
-  PrecFloat(const double& in)
-  {
-#ifdef FAKE_HP
-    data=in;
-#else
-    mpfr_init_set_d(data,in,MPFR_RNDD);
-#endif
-  }
+  /////////////////////////////////////////////////////////////////  
   
-  PrecFloat(const int& in)
-  {
 #ifdef FAKE_HP
-    data=in;
-#else
-    mpfr_init_set_si(data,in,MPFR_RNDD);
-#endif
+#define PROVIDE_CONVERSION_FROM(TYPE,)			\
+  PrecFloat(const TYPE& in)				\
+  {							\
+    data=in;						\
   }
-  
-  PrecFloat(const unsigned long int& in)
-  {
-#ifdef FAKE_HP
-    data=in;
 #else
-    mpfr_init_set_ui(data,in,MPFR_RNDD);
-#endif
+#define PROVIDE_CONVERSION_FROM(TYPE,MPFR_TAG)		\
+  PrecFloat(const TYPE& in)				\
+  {							\
+  mpfr_init_set_ ## MPFR_TAG(data,in,MPFR_RNDD);	\
   }
+#endif
   
+  PROVIDE_CONVERSION_FROM(double,d);
+  PROVIDE_CONVERSION_FROM(int,si);
+  PROVIDE_CONVERSION_FROM(unsigned long int,ui);
+  
+#undef PROVIDE_CONVERSION_FROM
+  
+  /// Destructor
   ~PrecFloat()
   {
 #ifdef FAKE_HP
@@ -106,101 +111,80 @@ struct PrecFloat
 #endif
   }
   
-  bool operator<(const PrecFloat& oth) const
-  {
-    return
+  /////////////////////////////////////////////////////////////////
+  
 #ifdef FAKE_HP
-      data<oth.data;
+#define BINARY_COMPARISON_OPERATOR_HELPER(NAME,MPFR_NAME)	\
+  data NAME in.data
 #else
-      mpfr_less_p(this->data,oth.data);
+#define BINARY_COMPARISON_OPERATOR_HELPER(NAME,MPFR_NAME)	\
+  MPFR_NAME(data,in.data)
 #endif
+  
+#define PROVIDE_BINARY_COMPARISON_OPERATOR(NAME,MPFR_NAME)	\
+  								\
+  inline bool operator NAME(const PrecFloat& in) const	\
+  {								\
+    return							\
+      BINARY_COMPARISON_OPERATOR_HELPER(NAME,MPFR_NAME);	\
   }
-  bool operator<=(const PrecFloat& oth) const
-  {
-    return
+
+  PROVIDE_BINARY_COMPARISON_OPERATOR(<,mpfr_less_p);
+  PROVIDE_BINARY_COMPARISON_OPERATOR(<=,mpfr_lessequal_p);
+  PROVIDE_BINARY_COMPARISON_OPERATOR(>,mpfr_greater_p);
+  PROVIDE_BINARY_COMPARISON_OPERATOR(>=,mpfr_greaterequal_p);
+  PROVIDE_BINARY_COMPARISON_OPERATOR(==,mpfr_equal_p);
+  PROVIDE_BINARY_COMPARISON_OPERATOR(!=,!mpfr_equal_p);
+  
+#undef BINARY_COMPARISON_OPERATOR_HELPER
+#undef BINARY_COMPARISON_OPERATOR
+  
+  /////////////////////////////////////////////////////////////////
+  
+  // Providing the binary operator as nonmember function allows to
+  // take into account automatically also the cases in which the first
+  // operand is not a PrecFloat
+  
 #ifdef FAKE_HP
-      data<oth.data;
+#define BINARY_OPERATOR_HELPER(NAME,MPFR_NAME)\
+  out.data=in1.data NAME in2.data
 #else
-      mpfr_lessequal_p(this->data,oth.data);
+#define BINARY_OPERATOR_HELPER(NAME,MPFR_NAME)\
+  MPFR_NAME(out.data,in1.data,in2.data,MPFR_RNDD)
 #endif
-  }
   
-  bool operator>(const PrecFloat& oth) const
-  {
-    return
-#ifdef FAKE_HP
-      data>oth.data;
-#else
-      mpfr_greater_p(this->data,oth.data);
-#endif
-  }
+#define PROVIDE_SELF_BINARY_OPERATOR(NAME)			\
+  								\
+  inline PrecFloat& operator NAME ## =(const PrecFloat& in)	\
+    {								\
+      return							\
+      (*this)=(*this)NAME in;					\
+    }
   
-  bool operator==(const PrecFloat& oth) const
-  {
-    return
-#ifdef FAKE_HP
-      data==oth.data;
-#else
-      mpfr_cmp(this->data,oth.data)==0;
-#endif
-  }
+#define PROVIDE_BINARY_OPERATOR(NAME,MPFR_NAME)			\
+  								\
+  friend inline PrecFloat operator NAME(const PrecFloat& in1,	\
+					const PrecFloat& in2)	\
+  {								\
+    PrecFloat out;						\
+  								\
+    BINARY_OPERATOR_HELPER(NAME,MPFR_NAME);			\
+								\
+    return out;							\
+  }								\
+  								\
+  PROVIDE_SELF_BINARY_OPERATOR(NAME);				\
   
-  bool operator!=(const PrecFloat& oth) const
-  {
-    return
-#ifdef FAKE_HP
-      data!=oth.data;
-#else
-      not ((*this)==oth);
-#endif
-  }
+  PROVIDE_BINARY_OPERATOR(+,mpfr_add)
+  PROVIDE_BINARY_OPERATOR(-,mpfr_sub)
+  PROVIDE_BINARY_OPERATOR(*,mpfr_mul)
+  PROVIDE_BINARY_OPERATOR(/,mpfr_div)
   
-  PrecFloat operator+(const PrecFloat& b) const
-  {
-    PrecFloat out;
-    
-#ifdef FAKE_HP
-    out=data+b.data;
-#else
-    mpfr_add(out.data,this->data,b.data,MPFR_RNDD);
-#endif
-    
-    return
-      out;
-  }
+#undef BINARY_OPERATOR_HELPER
+#undef PROVIDE_BINARY_OPERATOR
+#undef PROVIDE_SELF_BINARY_OPERATOR
   
-  PrecFloat& operator+=(const PrecFloat& b)
-  {
-    (*this)=
-      (*this)+b;
-    
-    return
-     *this;
-  }
-  
-  PrecFloat operator-(const PrecFloat& b) const
-  {
-    PrecFloat out;
-    
-#ifdef FAKE_HP
-    out.data=data-b.data;
-#else
-    mpfr_sub(out.data,this->data,b.data,MPFR_RNDD);
-#endif
-    
-    return
-      out;
-  }
-  
-  PrecFloat& operator-=(const PrecFloat& b)
-  {
-    (*this)=
-      (*this)-b;
-    
-    return
-     *this;
-  }
-  
+  /// Negation
   PrecFloat operator-() const
   {
     PrecFloat out;
@@ -214,218 +198,65 @@ struct PrecFloat
     return
       out;
   }
-  
-  PrecFloat operator*(const PrecFloat& b) const
-  {
-    PrecFloat out;
-    
-#ifdef FAKE_HP
-    out.data=data*b.data;
-#else
-    mpfr_mul(out.data,this->data,b.data,MPFR_RNDD);
-#endif
-    
-    return
-      out;
-  }
-  
-  PrecFloat operator*(const double& b) const
-  {
-    PrecFloat out;
-    
-#ifdef FAKE_HP
-    out.data=data*b;
-#else
-    mpfr_mul_d(out.data,this->data,b,MPFR_RNDD);
-#endif
-    
-    return
-      out;
-  }
-  
-  PrecFloat& operator*=(const PrecFloat& b)
-  {
-    (*this)=
-      (*this)*b;
-    
-    return
-      *this;
-  }
-  
-  PrecFloat operator/(const PrecFloat& b) const
-  {
-    PrecFloat out;
-    
-#ifdef FAKE_HP
-    out.data=data/b.data;
-#else
-    mpfr_div(out.data,this->data,b.data,MPFR_RNDD);
-#endif
-    
-    return
-      out;
-  }
-  
-  PrecFloat& operator/=(const PrecFloat& b)
-  {
-    (*this)=
-      (*this)/b;
-    
-    return
-      *this;
-  }
 };
 
-inline PrecFloat operator*(const double& a,const PrecFloat& b)
-{
-  return
-    b*a;
-}
+/////////////////////////////////////////////////////////////////
 
-inline PrecFloat exp(const PrecFloat& in)
-{
-  PrecFloat out;
-  
 #ifdef FAKE_HP
-  out.data=exp(in.data);
+#define UNARY_HELPER(NAME,MPFR_NAME)\
+  out.data=NAME(in.data)
 #else
-  mpfr_exp(out.data,in.data,MPFR_RNDD);
+#define UNARY_HELPER(NAME,MPFR_NAME)\
+  MPFR_NAME(out.data,in.data,MPFR_RNDD)
 #endif
-  
-  return
-    out;
+
+#define PROVIDE_UNARY_FUNCTION(NAME,MPFR_NAME)	\
+						\
+  inline PrecFloat NAME(const PrecFloat& in)	\
+{						\
+  PrecFloat out;				\
+						\
+  UNARY_HELPER(NAME,MPFR_NAME);			\
+						\
+  return					\
+    out;					\
 }
 
-inline PrecFloat abs(const PrecFloat& in)
-{
-  PrecFloat out;
-  
-#ifdef FAKE_HP
-  out.data=abs(in.data);
-#else
-  mpfr_abs(out.data,in.data,MPFR_RNDD);
-#endif
-  
-  return
-    out;
-}
+PROVIDE_UNARY_FUNCTION(exp,mpfr_exp)
+PROVIDE_UNARY_FUNCTION(abs,mpfr_abs)
+PROVIDE_UNARY_FUNCTION(sqrt,mpfr_sqrt)
+PROVIDE_UNARY_FUNCTION(asin,mpfr_asin)
+PROVIDE_UNARY_FUNCTION(acos,mpfr_acos)
+PROVIDE_UNARY_FUNCTION(sin,mpfr_sin)
+PROVIDE_UNARY_FUNCTION(cos,mpfr_cos)
+PROVIDE_UNARY_FUNCTION(sinh,mpfr_sinh)
+PROVIDE_UNARY_FUNCTION(cosh,mpfr_cosh)
+PROVIDE_UNARY_FUNCTION(erf,mpfr_erf)
+PROVIDE_UNARY_FUNCTION(erfc,mpfr_erfc)
 
-inline PrecFloat sqrt(const PrecFloat& in)
-{
-  PrecFloat out;
-  
-#ifdef FAKE_HP
-  out.data=sqrt(in.data);
-#else
-  mpfr_sqrt(out.data,in.data,MPFR_RNDD);
-#endif
-  
-  return
-    out;
-}
+#undef PROVIDE_UNARY_FUNCTION
+#undef UNARY_HELPER
 
-inline PrecFloat pow(const PrecFloat& a,const PrecFloat& b)
-{
-  PrecFloat out;
-  
-#ifdef FAKE_HP
-  out.data=pow(in.data,b.data);
-#else
-  mpfr_pow(out.data,a.data,b.data,MPFR_RNDD);
-#endif
-  
-  return
-    out;
-}
+/////////////////////////////////////////////////////////////////
 
-inline PrecFloat acos(const PrecFloat& in)
-{
-  PrecFloat out;
-  
-#ifdef FAKE_HP
-  out.data=acos(in.data);
-#else
-  mpfr_acos(out.data,in.data,MPFR_RNDD);
-#endif
-  
-  return
-    out;
-}
-
+/// Precise definition of Pi
 inline PrecFloat precPi()
 {
-  return acos((PrecFloat)-1);
-}
-
-inline PrecFloat erf(const PrecFloat& in)
-{
   PrecFloat out;
   
 #ifdef FAKE_HP
-  out.data=erf(in.data);
+  out.data=M_PI;
 #else
-  mpfr_erf(out.data,in.data,MPFR_RNDD);
+  mpfr_const_pi(out.data,MPFR_RNDD);
 #endif
   
   return
     out;
 }
 
-inline PrecFloat erfc(const PrecFloat& in)
-{
-  PrecFloat out;
-  
-#ifdef FAKE_HP
-  out.data=erfc(in.data);
-#else
-  mpfr_erfc(out.data,in.data,MPFR_RNDD);
-#endif
-  
-  return
-    out;
-}
+/////////////////////////////////////////////////////////////////
 
-inline PrecFloat operator/(const double& a,const PrecFloat& b)
-{
-  PrecFloat out;
-  
-#ifdef FAKE_HP
-  out.data=a/b.data;
-#else
-  mpfr_d_div(out.data,a,b.data,MPFR_RNDD);
-#endif
-  
-  return
-    out;
-}
-
-inline PrecFloat operator-(const double& a,const PrecFloat& b)
-{
-  PrecFloat out;
-  
-#ifdef FAKE_HP
-  out.data=a-b.data;
-#else
-  mpfr_d_sub(out.data,a,b.data,MPFR_RNDD);
-#endif
-  
-  return
-    out;
-}
-
-inline PrecFloat operator+(const double& a,const PrecFloat& b)
-{
-  PrecFloat out;
-  
-#ifdef FAKE_HP
-  out.data=a+b.data;
-#else
-  mpfr_add_d(out.data,b.data,a,MPFR_RNDD);
-#endif
-  
-  return
-    out;
-}
+// Tell Eigen how to deal with PrecFloat numbers
 
 namespace Eigen
 {
@@ -466,63 +297,7 @@ namespace Eigen
 }
 
 using PrecVect=
-  std::vector<PrecFloat>;
+  Eigen::Matrix<PrecFloat,Eigen::Dynamic,1>;
 
-struct PrecMatr
-{
-  size_t nR;
-  
-  size_t nC;
-  
-  using type=PrecFloat;
-  
-  std::vector<PrecFloat> data;
-  
-  template <typename...Args>
-  PrecMatr(const size_t& nR,
-	   const size_t& nC,
-	   Args&&...args) :
-    nR(nR),
-    nC(nC),
-    data(nR*nC,std::forward<Args>(args)...)
-  {
-  }
-  
-  PrecMatr() :
-    PrecMatr(0,0)
-  {
-  }
-  
-  template <typename...Args>
-  void resize(const size_t& nR,
-	      const size_t& nC,
-	      Args&&...args)
-  {
-    this->nR=nR;
-    this->nC=nC;
-    data.resize(nR*nC,std::forward<Args>(args)...);
-  }
-  
-  PrecFloat& operator()(size_t iR,size_t iC)
-  {
-    return data[iC+nC*iR];
-  }
-  
-  const PrecFloat& operator()(size_t iR,size_t iC) const
-  {
-    return data[iC+nC*iR];
-  }
-  
-  PrecFloat formWith(const PrecVect& l,const PrecVect& r) const
-  {
-    PrecFloat a=0.0;
-    
-    for(size_t iR=0;iR<nR;iR++)
-      for(size_t iC=0;iC<nC;iC++)
-	a+=l[iR]*(*this)(iR,iC)*r[iC];
-    
-    return a;
-  }
-};
-
-
+using PrecMatr=
+  Eigen::Matrix<PrecFloat,Eigen::Dynamic,Eigen::Dynamic>;
