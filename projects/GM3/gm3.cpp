@@ -73,14 +73,14 @@ int main(int narg,char **arg)
   
   if(MPIrank==0)
     {
+      if(ens.canUseRawData)
+	ens.convertForSilvano();
+      
       ens.computeMPCAC();
       ens.Z=ens.determineRenoConst();
       
       if(ens.canUseRawData)
-	{
-	  ens.convertForSilvano();
-	  ens.analyzeRawData();
-	}
+	ens.analyzeRawData();
       
       //ens.Gilberto();
       
