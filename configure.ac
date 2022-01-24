@@ -238,6 +238,16 @@ AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([Eigen/Dense],,AC_MSG_ERROR([Error! Eigen required]))
 AC_LANG_POP([C++])
 
+#check highPrec
+AC_ARG_WITH(highPrec,
+        AS_HELP_STRING([--with-highPrec[=dir]], [Specify where to find highPrec library]),
+        with_highPrec="${withval}"
+	CPPFLAGS="-I${with_highPrec} $CPPFLAGS")
+AC_MSG_RESULT([with highPrec... $with_highPrec])
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADERS([highPrec.hpp],,AC_MSG_ERROR([Error! Library highPrec required]))
+AC_LANG_POP([C++])
+
 #activate arch optimization
 AC_ARG_ENABLE(arch-optimizations,
         AS_HELP_STRING([--enable-arch-optimizations=val[-march=native]],[Enable architecture optimizations]),

@@ -78,8 +78,8 @@ int main(int narg,char **arg)
       
       if(ens.canUseRawData)
 	{
-	  ens.analyzeRawData();
 	  ens.convertForSilvano();
+	  ens.analyzeRawData();
 	}
       
       //ens.Gilberto();

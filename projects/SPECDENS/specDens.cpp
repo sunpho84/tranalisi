@@ -3,10 +3,22 @@
 
 #include <tranalisi.hpp>
 
-// constexpr bool useTantalo=false;
-
 int main()
 {
+  PrecFloat::setDefaultPrecision(1024);
+  cout.precision(PrecFloat::getNDigits());
+  
+  const PrecFloat r=integrateBetween0andInfinite([](const PrecFloat& x){return exp(-sqr(x-0.5)/2);});
+  cout<<r<<endl;
+  const PrecFloat n=sqrt(precPi()/2)*erfc(-(PrecFloat)0.5/sqrt(PrecFloat(2)));
+  cout<<n<<endl;
+  
+  // return 0;
+  
+  // testQ();
+
+  // return 0;
+  
   input_file_t input("input.txt");
   const size_t precision=input.read<size_t>("Precision");
   const size_t T=input.read<size_t>("T");
@@ -22,8 +34,8 @@ int main()
   set_njacks(30);
   PrecFloat::setDefaultPrecision(precision);
   
-  double sigma=0.055;
-  double Estar=0.05;
+  double sigma=0.300*a;
+  double Estar=0.1*a;
   grace_file_t Dens("plots/Dens.xmg");
   grace_file_t SigmaPlot("plots/Sigma.xmg");
   grace_file_t RsFile("plots/Rs.xmg");
@@ -51,38 +63,6 @@ int main()
       cout<<"Estar: "<<Estar<<endl;
       cout<<"Sigma: "<<sigma<<endl;
       
-      // double lambda=1/(sqr(corr[1].ave())+1);
-      // for(int i=0;i<1;i++)
-      // 	{
-      // 	  const double eps=1e-3;
-      // 	  djack_t d[2];
-      // 	  TantaloBaccoPars pars(useTantalo,T,tMin,nT,E0,lambda,sigma,useBw);
-      // 	  PrecFloat width2;
-	  
-      // 	  PrecFloat Err2=0.0;
-	  
-      // 	  for(int iEps=0;iEps<=1;iEps++)
-      // 	    {
-      // 	      TantaloBaccoRecoEngine recoEngine(pars,Estar+eps*iEps);
-      // 	      TantaloBaccoReco reco(recoEngine,Estar+eps*iEps,corr);
-      // 	      d[iEps]=reco.recoDensity();
-      // 	      cout<<iEps<<" "<<d[iEps]<<endl;
-      // 	      if(iEps==0)
-      // 		{
-      // 		  width2=reco.g.transpose()*reco.A*reco.g;
-      // 		  for(size_t iT=0;iT<nT;iT++)
-      // 		    Err2+=sqr(reco.g(iT)*corr[iT+tMin].err());
-      // 		}
-      // 	    }
-      // 	  const djack_t bd=(d[1]-d[0])/eps;
-      // 	  // const djack_t fd=(d[2]-d[1])/eps;
-      // 	  cout<<"Der: "<<bd.ave_err()<<endl;
-      // 	  // const PrecFloat A=width2*sqr(bd).ave();
-      // 	  lambda=1/(sqr(bd)+1).ave();
-      // 	  cout<<"Lambda: "<<lambda<<endl;
-      // 	}
-      //lambda=0.5;
-      
       using namespace Bacco;
       
       CorrelatorPars correlatorPars(T,hasBwSignal,E0,corr);
@@ -91,56 +71,39 @@ int main()
       
       const Reconstruction reco=
 	reconstructor.getReco();
-      // TantaloBaccoRecoEngine recoEngine(pars,Estar);
-      // TantaloBaccoReco reco(recoEngine,Estar,corr);
-      
-      /// Verify the norm
-      // PrecFloat norm1=0.0;
-      // for(size_t iT=0;iT<nT;iT++)
-      // 	norm1+=reco.R(iT)*reco.g[iT];
-      // const PrecFloat norm1m1=norm1-1;
-      // cout<<"norm-1: "<<norm1m1.get()<<endl;
-      /// Find last coeff
       
       /// Compute the width
       const double width=
 	reco.widthAssumingGaussianAround(Estar);
       cout<<"width: "<<width<<endl;
       
-      if(width/sigma>1.1)
-	sigma*=1.1;
-      else
+      const double norm2Difference=
+	reconstructor.deviation(reco);
+      cout<<"norm2 of the difference between target and reconstructed: "<<norm2Difference<<endl;
+      
+      const double widthDeviation=
+	width/sigma-1;
+      
+      cout<<"deviation of reco from target: "<<widthDeviation<<endl;
+
+      const double lowDev=0.01;
+      const double highDev=0.012;
+      if(1 or (widthDeviation>lowDev and widthDeviation<highDev))
 	{
-	  const double deviation=
-	    reconstructor.deviation(reco);
-	  cout<<"deviation: "<<deviation<<endl;
+	  // cout<<"norm of reconstructed function: "<<reco.norm().get()<<endl;
+	  // cout<<"square norm of reconstructed function: "<<reco.squareNorm().get()<<endl;
+	  // cout<<"projection with reconstructed function: "<<reconstructor.projectionWithReco(reco).get()<<endl;
+	  // cout<<"square norm of target function: "<<reconstructor.squareNorm().get()<<endl;
 	  
 	  const double mean=
 	    reco.mean().get();
 	  cout<<"mean: "<<mean<<endl;
 	  
-	  // PrecFloat var=0.0,ave=0.0;
-	  // const PrecFloat dE=Estar/160;
-	  // for(PrecFloat E=0;E<Estar*8;E+=dE)
-	  // 	{
-	  // 	  const PrecFloat y=reco.recoDelta(E);
-	  // 	  ave+=y*E;
-	  // 	  var+=y*y*sqr(E-Estar);
-	  // 	}
-	  // var*=dE;
-	  // ave*=dE;
-	  // // var-=ave*ave;
-	  // const PrecFloat sigmaEff=sqrt(var);
-	  // cout<<"Ave: "<<ave.get()<<" "<<Estar.get()<<endl;
-	  // cout<<"sigma: "<<sigmaEff.get()<<endl;
-	  
-	  SigmaPlot.write_xy(Estar,width);
+	  SigmaPlot.write_xy(Estar/a,width/a);
 	  
 	  PrecFloat Err2=0.0;
 	  for(size_t iT=0;iT<nT;iT++)
 	    Err2+=sqr(reco.g[iT]*corr[iT+tMin].err());
-	  // const PrecFloat F=(1-lambda)*width2+lambda*Err2;
-	  // cout<<"Functionals: "<<F.get()<<endl;
 	  
 	  const djack_t rd=
 	    reco.recoDensity();
@@ -149,8 +112,8 @@ int main()
 	  RsFile.write_ave_err(Estar/a,rs.ave_err());
 	  
 	  const string Etag=to_string(Estar);
-	  reconstructor.plot("plots/TargDelta"+Etag+".xmg",0,Estar*3);
-	  reco.plot("plots/RecoDelta"+Etag+".xmg",0,Estar*3);
+	  reconstructor.plot("plots/TargDelta"+Etag+".xmg",0,Estar*4);
+	  reco.plot("plots/RecoDelta"+Etag+".xmg",0,Estar*4);
 	  // grace_file_t TargDelta("plots/TargDelta"+Etag+".xmg");
 	  // grace_file_t ErrDelta("plots/ErrDelta"+Etag+".xmg");
 	  
@@ -213,9 +176,23 @@ int main()
 	  // migrad.minimize();
 	  
 	  
-	  Estar+=width/4;
+	  const double newEstar=
+	    Estar+width/4;
+	  // const double newSigma=
+	  //   width*newEstar/Estar;
+	  
+	  Estar=newEstar;
+	  //sigma=newSigma;
 	  
 	  cout<<"================="<<endl;
+	}
+      else
+	{
+	  if(widthDeviation>highDev)
+	    sigma*=1.05;
+	  if(widthDeviation<lowDev)
+	    sigma/=1.048;
+	  cout<<"Gaussian deviating too much, enlarging it"<<endl;
 	}
     }
   while(Estar<1);
