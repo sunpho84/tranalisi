@@ -245,10 +245,7 @@ AC_ARG_WITH(highPrec,
 	CPPFLAGS="-I${with_highPrec} $CPPFLAGS")
 AC_MSG_RESULT([with highPrec... $with_highPrec])
 AC_LANG_PUSH([C++])
-AC_CHECK_HEADERS([highPrec.hpp],
-	[AC_DEFINE([HAVE_HIGH_PREC_HPP], 1,
-                   [Define to 1 if you have <highPrec.hpp>.])],dnl AC_MSG_ERROR([Error! Library highPrec required])
-)
+AC_CHECK_HEADERS([highPrec.hpp])
 AM_CONDITIONAL([HAVE_HIGH_PREC],[test "${ac_cv_highPrec_hpp}" == "yes" ],[true],[false])
 AC_LANG_POP([C++])
 

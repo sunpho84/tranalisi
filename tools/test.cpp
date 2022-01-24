@@ -1,9 +1,12 @@
-#include <tantaloBacco.hpp>
-
 #include <tranalisi.hpp>
+
+#ifdef HAVE_HIGHPREC_HPP
+# include <tantaloBacco.hpp>
+#endif
 
 int main()
 {
+#ifdef HAVE_HIGHPREC_HPP
   set_njacks(15);
   const double lambda=0.0;
   const int hasBwSignal=0;
@@ -368,5 +371,6 @@ int main()
   //   }
   // while(Estar<1);
   
+#endif
   return 0;
 }
