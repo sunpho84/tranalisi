@@ -51,6 +51,8 @@ double findMlForRatio(const double& x)
   double s=
     1e-5;
   
+  int niter=0;
+  
   do
     if(ratio(m+s)<=x)
       {
@@ -58,7 +60,7 @@ double findMlForRatio(const double& x)
 	s*=2;
       }
     else s/=2;
-  while(s>1e-14);
+  while(s>1e-14 and niter++<1000);
   
   return
     m;
