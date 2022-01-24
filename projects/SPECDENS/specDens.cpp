@@ -8,7 +8,7 @@ int main()
   PrecFloat::setDefaultPrecision(1024);
   cout.precision(PrecFloat::getNDigits());
   
-  const PrecFloat r=integrateBetween0andInfinite([](const PrecFloat& x){return exp(-sqr(x-0.5)/2);});
+  const PrecFloat r=integrateUpToInfinite([](const PrecFloat& x){return exp(-sqr(x-0.5)/2);});
   cout<<r<<endl;
   const PrecFloat n=sqrt(precPi()/2)*erfc(-(PrecFloat)0.5/sqrt(PrecFloat(2)));
   cout<<n<<endl;
@@ -90,10 +90,10 @@ int main()
       const double highDev=0.012;
       if(1 or (widthDeviation>lowDev and widthDeviation<highDev))
 	{
-	  // cout<<"norm of reconstructed function: "<<reco.norm().get()<<endl;
-	  // cout<<"square norm of reconstructed function: "<<reco.squareNorm().get()<<endl;
-	  // cout<<"projection with reconstructed function: "<<reconstructor.projectionWithReco(reco).get()<<endl;
-	  // cout<<"square norm of target function: "<<reconstructor.squareNorm().get()<<endl;
+	  // cout<<"norm of reconstructed function: "<<reco.norm()<<endl;
+	  // cout<<"square norm of reconstructed function: "<<reco.squareNorm()<<endl;
+	  // cout<<"projection with reconstructed function: "<<reconstructor.projectionWithReco(reco)<<endl;
+	  // cout<<"square norm of target function: "<<reconstructor.squareNorm()<<endl;
 	  
 	  const double mean=
 	    reco.mean().get();
@@ -136,7 +136,7 @@ int main()
 	  // const PrecFloat EstarPrime=sqr(Estar+sigma)/Estar;
 	  // const PrecFloat sigmaPrime=sigma*sqrt(EstarPrime/Estar);
 	  
-	  //cout<<(sigma+sigmaPrime).get()<<" "<<(EstarPrime-Estar).get()<<endl;
+	  //cout<<(sigma+sigmaPrime)<<" "<<(EstarPrime-Estar)<<endl;
 	  
 	  // minimizer_pars_t fitPars;
 	  // vector<double> fitG(nT-1);
@@ -152,12 +152,12 @@ int main()
 	  // 	for(size_t iT=0;iT<nT-1;iT++)
 	  // 	  lastCoeff-=reco.R(iT)*reco.g[iT];
 	  // 	lastCoeff/=reco.R(nT-1);
-	  // 	cout<<"lastCoeff: "<<lastCoeff.get()<<endl;
+	  // 	cout<<"lastCoeff: "<<lastCoeff<<endl;
 	  
 	  // 	/// Compute the width
 	  // 	PrecFloat width2=reco.g.transpose()*reco.B*reco.g;
 	  // 	const PrecFloat width=sqrt(width2);
-	  // 	cout<<"width: "<<width.get()<<endl;
+	  // 	cout<<"width: "<<width<<endl;
 	  
 	  // 	const djack_t rd=reco.recoDensity();
 	  // 	const ave_err_t ae=rd.ave_err();
@@ -167,7 +167,7 @@ int main()
 	  // 	// for(size_t iT=0;iT<nT;iT++)
 	  // 	//   Err2+=sqr(reco.g(iT)*corr[iT+tMin].err());
 	  // 	const PrecFloat F=(1-lambda)*width*sqr(ae.ave())+lambda*ae.err();
-	  // 	cout<<"Functionals: "<<F.get()<<endl;
+	  // 	cout<<"Functionals: "<<F<<endl;
 	  
 	  // 	return F.get();
 	  // });
