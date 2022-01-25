@@ -246,7 +246,7 @@ AC_ARG_WITH(highPrec,
 AC_MSG_RESULT([with highPrec... $with_highPrec])
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([highPrec.hpp])
-AM_CONDITIONAL([HAVE_HIGH_PREC],[test "${ac_cv_highPrec_hpp}" == "yes" ],[true],[false])
+AM_CONDITIONAL([HAVE_HIGH_PREC],[test "${ac_cv_header_highPrec_hpp}" = "yes" ])
 AC_LANG_POP([C++])
 
 #activate arch optimization

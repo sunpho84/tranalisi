@@ -57,7 +57,7 @@ namespace Bacco
     }
     
     /// Basis to be used
-    PrecFloat bT(const int& t,
+    PrecFloat bT(const PrecFloat& t,
 		 const PrecFloat& E) const
     {
       PrecFloat res=
@@ -578,12 +578,12 @@ namespace Bacco
     };
     
     GaussReconstructor(const CorrelatorPars& correlatorPars,
-			const int& tMin,
-			const int& tMax,
-			const double& Estar,
-			const double& lambda,
-			const double& E0,
-			const double& sigma) :
+		       const int& tMin,
+		       const int& tMax,
+		       const double& Estar,
+		       const double& lambda,
+		       const double& E0,
+		       const double& sigma) :
       TargetedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
       sigma(sigma)
     {
@@ -592,7 +592,84 @@ namespace Bacco
   
   /////////////////////////////////////////////////////////////////
   
-    struct LegoReconstructor :
+  struct NumericalReconstructor :
+    public TargetedReconstructor
+  {
+    virtual PrecFloat unnormalizedTargetFunction(const PrecFloat& E) const =0;
+    
+    const PrecFloat norm;
+    
+    PrecFloat squareNorm() const
+    {
+      return integrateUpToInfinite([this](const PrecFloat& E)
+      {
+	return sqr(preciseTargetFunction(E));
+      },E0);
+    }
+    
+     PrecFloat preciseTargetFunction(const PrecFloat& E) const
+    {
+      return unnormalizedTargetFunction(E)/norm;
+    }
+    
+    double targetFunction(const double& E) const
+    {
+      return preciseTargetFunction(E).get();
+    }
+    
+    PrecFloat fFunHelper(const PrecFloat& t) const
+    {
+      return integrateUpToInfinite([t,this](const PrecFloat& E)
+      {
+	return unnormalizedTargetFunction(E)*correlatorPars.bT(t,E);
+      },E0);
+    }
+    
+    PrecFloat fFun(const PrecFloat& t) const
+    {
+      return fFunHelper(t)/norm;
+    }
+    
+    NumericalReconstructor(const CorrelatorPars& correlatorPars,
+		       const int& tMin,
+		       const int& tMax,
+		       const double& Estar,
+		       const double& lambda,
+		       const double& E0) :
+      TargetedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
+      norm(fFunHelper(0))
+    {
+    }
+  };
+  
+  /////////////////////////////////////////////////////////////////
+  
+  struct GaussDivE2Reconstructor :
+    public NumericalReconstructor
+  {
+    const double sigma;
+    
+    PrecFloat unnormalizedTargetFunction(const PrecFloat& E) const
+    {
+      return exp(-sqr((E-Estar)/sigma)/2);
+    }
+    
+    GaussDivE2Reconstructor(const CorrelatorPars& correlatorPars,
+			    const int& tMin,
+			    const int& tMax,
+			    const double& Estar,
+			    const double& lambda,
+			    const double& E0,
+			    const double sigma) :
+      NumericalReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
+      sigma(sigma)
+    {
+    }
+  };
+  
+  /////////////////////////////////////////////////////////////////
+  
+  struct LegoReconstructor :
     public TargetedReconstructor
   {
     const double width;

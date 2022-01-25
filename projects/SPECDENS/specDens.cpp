@@ -67,6 +67,8 @@ int main()
       
       CorrelatorPars correlatorPars(T,hasBwSignal,E0,corr);
       GaussReconstructor reconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
+      GaussDivE2Reconstructor gd2Reconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
+  
       //BGReconstructor reconstructor(correlatorPars,tMin,tMax,Estar,lambda);
       
       const Reconstruction reco=
