@@ -597,7 +597,20 @@ namespace Bacco
   {
     virtual PrecFloat unnormalizedTargetFunction(const PrecFloat& E) const =0;
     
-    const PrecFloat norm;
+    mutable bool normComputed{false};
+    
+    mutable PrecFloat _norm;
+    
+    const PrecFloat& norm() const
+    {
+      if(not normComputed)
+	{
+	  _norm=fFunHelper(0);
+	  normComputed=true;
+	}
+      
+      return _norm;
+    }
     
     PrecFloat squareNorm() const
     {
@@ -609,7 +622,7 @@ namespace Bacco
     
      PrecFloat preciseTargetFunction(const PrecFloat& E) const
     {
-      return unnormalizedTargetFunction(E)/norm;
+      return unnormalizedTargetFunction(E)/norm();
     }
     
     double targetFunction(const double& E) const
@@ -627,7 +640,7 @@ namespace Bacco
     
     PrecFloat fFun(const PrecFloat& t) const
     {
-      return fFunHelper(t)/norm;
+      return fFunHelper(t)/norm();
     }
     
     NumericalReconstructor(const CorrelatorPars& correlatorPars,
@@ -636,8 +649,7 @@ namespace Bacco
 		       const double& Estar,
 		       const double& lambda,
 		       const double& E0) :
-      TargetedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
-      norm(fFunHelper(0))
+      TargetedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0)
     {
     }
   };
@@ -651,7 +663,7 @@ namespace Bacco
     
     PrecFloat unnormalizedTargetFunction(const PrecFloat& E) const
     {
-      return exp(-sqr((E-Estar)/sigma)/2);
+      return exp(-sqr((E-Estar)/sigma)/2)/sqr(E);
     }
     
     GaussDivE2Reconstructor(const CorrelatorPars& correlatorPars,
