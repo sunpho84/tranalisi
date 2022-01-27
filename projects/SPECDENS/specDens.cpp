@@ -5,13 +5,13 @@
 
 int main()
 {
-  PrecFloat::setDefaultPrecision(1024);
-  cout.precision(PrecFloat::getNDigits());
+  // PrecFloat::setDefaultPrecision(1024);
+  // cout.precision(PrecFloat::getNDigits());
   
-  const PrecFloat r=integrateUpToInfinite([](const PrecFloat& x){return exp(-sqr(x-0.5)/2);});
-  cout<<r<<endl;
-  const PrecFloat n=sqrt(precPi()/2)*erfc(-(PrecFloat)0.5/sqrt(PrecFloat(2)));
-  cout<<n<<endl;
+  // const PrecFloat r=integrateUpToInfinite([](const PrecFloat& x){return exp(-sqr(x-0.5)/2);});
+  // cout<<r<<endl;
+  // const PrecFloat n=sqrt(precPi()/2)*erfc(-(PrecFloat)0.5/sqrt(PrecFloat(2)));
+  // cout<<n<<endl;
   
   // return 0;
   
@@ -34,15 +34,16 @@ int main()
   set_njacks(30);
   PrecFloat::setDefaultPrecision(precision);
   
-  double sigma=0.300*a;
-  double Estar=0.1*a;
+  const double E0=2*0.140*a;
+  
+  double sigma=0.160*a;
+  double Estar=E0;//0.6*a;
   grace_file_t Dens("plots/Dens.xmg");
   grace_file_t SigmaPlot("plots/Sigma.xmg");
   grace_file_t RsFile("plots/Rs.xmg");
   RsFile.set_title("R(s)");
   RsFile.set_xaxis_label("E [GeV]");
-  
-  const double E0=0.0;
+  grace_file_t RsAltFile("plots/RsAlt.xmg");
   
   const PrecFloat alpha=0.0;
   const djvec_t corr=read_djvec(corrPath,T/2+1);
@@ -57,7 +58,7 @@ int main()
   corr.ave_err().write("plots/Corr.xmg");
   effective_mass(corr,T/2,hasBwSignal?+1:0).ave_err().write("plots/EffMass.xmg");
   
-  // gen_t g(31241);
+  gen_t g(31241);
   do
     {
       cout<<"Estar: "<<Estar<<endl;
@@ -67,41 +68,51 @@ int main()
       
       CorrelatorPars correlatorPars(T,hasBwSignal,E0,corr);
       GaussReconstructor reconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
-      GaussDivE2Reconstructor gd2Reconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
-  
+      
       //BGReconstructor reconstructor(correlatorPars,tMin,tMax,Estar,lambda);
       
       const Reconstruction reco=
 	reconstructor.getReco();
       
+      GaussDivE2Reconstructor gd2Reconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
+      const Reconstruction gd2Reco=
+	gd2Reconstructor.getReco();
+      // cout<<"Normalization: "<<gd2Reconstructor.normalization()<<endl;
+      gd2Reco.plot("plots/gaussDivE2reco"+to_string(Estar)+".xmg",E0,4*Estar);
+      gd2Reconstructor.plot("plots/gaussDivE2target"+to_string(Estar)+".xmg",E0,4*Estar);
+      // cout<<"Gauss norm: "<<reco.norm()<<endl;
+      // cout<<"Gauss/E^2 norm: "<<gd2Reco.norm()<<endl;
       /// Compute the width
-      const double width=
-	reco.widthAssumingGaussianAround(Estar);
-      cout<<"width: "<<width<<endl;
+      // const double width=
+      // 	reco.widthAssumingGaussianAround(Estar);
+      // cout<<"width: "<<width<<endl;
       
       const double norm2Difference=
 	reconstructor.deviation(reco);
       cout<<"norm2 of the difference between target and reconstructed: "<<norm2Difference<<endl;
+      const double gDivE2norm2Difference=
+	gd2Reconstructor.deviation2(gd2Reco);
+      cout<<"norm2 of the difference between g/e^2target and reconstructed: "<<gDivE2norm2Difference<<endl;
       
-      const double widthDeviation=
-	width/sigma-1;
+      const double deviation=
+	gDivE2norm2Difference;
       
-      cout<<"deviation of reco from target: "<<widthDeviation<<endl;
-
-      const double lowDev=0.01;
-      const double highDev=0.012;
-      if(1 or (widthDeviation>lowDev and widthDeviation<highDev))
+      // cout<<"deviation of reco from target: "<<widthDeviation<<endl;
+      
+      const double lowDev=0.0001;
+      const double highDev=0.0005;
+      if(deviation>lowDev and deviation<highDev)
 	{
 	  // cout<<"norm of reconstructed function: "<<reco.norm()<<endl;
 	  // cout<<"square norm of reconstructed function: "<<reco.squareNorm()<<endl;
 	  // cout<<"projection with reconstructed function: "<<reconstructor.projectionWithReco(reco)<<endl;
 	  // cout<<"square norm of target function: "<<reconstructor.squareNorm()<<endl;
 	  
-	  const double mean=
-	    reco.mean().get();
-	  cout<<"mean: "<<mean<<endl;
+	  // const double mean=
+	  //   reco.mean().get();
+	  // cout<<"mean: "<<mean<<endl;
 	  
-	  SigmaPlot.write_xy(Estar/a,width/a);
+	  // SigmaPlot.write_xy(Estar/a,width/a);
 	  
 	  PrecFloat Err2=0.0;
 	  for(size_t iT=0;iT<nT;iT++)
@@ -112,10 +123,11 @@ int main()
 	  Dens.write_ave_err(Estar,rd.ave_err());
 	  const djack_t rs=rd/sqr(Estar);
 	  RsFile.write_ave_err(Estar/a,rs.ave_err());
+	  RsAltFile.write_ave_err(Estar/a,gd2Reco.recoDensity().ave_err());
 	  
 	  const string Etag=to_string(Estar);
-	  reconstructor.plot("plots/TargDelta"+Etag+".xmg",0,Estar*4);
-	  reco.plot("plots/RecoDelta"+Etag+".xmg",0,Estar*4);
+	  reconstructor.plot("plots/TargDelta"+Etag+".xmg",E0,Estar*4);
+	  reco.plot("plots/RecoDelta"+Etag+".xmg",E0,Estar*4);
 	  // grace_file_t TargDelta("plots/TargDelta"+Etag+".xmg");
 	  // grace_file_t ErrDelta("plots/ErrDelta"+Etag+".xmg");
 	  
@@ -179,7 +191,7 @@ int main()
 	  
 	  
 	  const double newEstar=
-	    Estar+width/4;
+	    Estar+sigma/4;
 	  // const double newSigma=
 	  //   width*newEstar/Estar;
 	  
@@ -190,10 +202,10 @@ int main()
 	}
       else
 	{
-	  if(widthDeviation>highDev)
+	  if(deviation<lowDev)
+	    sigma/=1.04;
+	  else
 	    sigma*=1.05;
-	  if(widthDeviation<lowDev)
-	    sigma/=1.048;
 	  cout<<"Gaussian deviating too much, enlarging it"<<endl;
 	}
     }

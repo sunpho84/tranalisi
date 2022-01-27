@@ -44,6 +44,18 @@ namespace Bacco
 	  }
     }
     
+    template <typename F>
+    void loopOverIt(F&& f,const int tMin,const int nT) const
+    {
+	for(int iT=0;iT<nT;iT++)
+	  {
+	    f(iT,iT+tMin);
+	    
+	    if(hasBwSignal)
+	      f(iT,T-iT-tMin);
+	  }
+    }
+    
     /// Constructor
     CorrelatorPars(const int& T,
 		   const bool& hasBwSignal,
@@ -65,6 +77,49 @@ namespace Bacco
       
       if(hasBwSignal)
 	res+=exp(-(T-t)*E);
+      
+      return res;
+    };
+    
+#define PROVIDE_MOMENT(NAME,SPEC...)		\
+    						\
+    PrecFloat NAME(const PrecFloat& t) const	\
+    {						\
+      auto c=					\
+	[this](const PrecFloat& t)		\
+	{					\
+	  return exp(-t*E0)*(SPEC);		\
+	};					\
+						\
+      PrecFloat res=				\
+	c(t);					\
+						\
+      if(hasBwSignal)				\
+	res+=c(T-t);				\
+						\
+      return res;				\
+    }
+    
+    PROVIDE_MOMENT(norm,1/t)
+    PROVIDE_MOMENT(firstMoment,(1+E0*t)/(t*t))
+    PROVIDE_MOMENT(secondMoment,(2+E0*t*(2+E0*t))/(t*t*t))
+    
+#undef PROVIDE_MOMENT
+    
+    /// Integral of E*bT(E) from E0 to infinity
+    PrecFloat basisFirstMoment(const PrecFloat& t) const
+    {
+      auto c=
+	[this](const PrecFloat& t)
+	{
+	  return exp(-t*E0)*(1/t+E0)/t;
+	};
+      
+      PrecFloat res=
+	c(t);
+      
+      if(hasBwSignal)
+	res+=c(T-t);
       
       return res;
     };
@@ -110,16 +165,16 @@ namespace Bacco
     /// Parameters of the reconstrucion
     const PrecVect g;
     
-    /// Squared norm
+    /// Norm of the square within the support
     PrecFloat squareNorm() const
     {
       PrecFloat a=0.0;
       
       correlatorPars.loopOverIrIt([&a,this](const int& iR,
 					    const int& iT,
-					    const int& i)
+					    const PrecFloat& i)
       {
-	a+=g[iT]*g[iR]/i;
+	a+=g[iT]*g[iR]*exp(-correlatorPars.E0*i)/i;
       },tMin,nT);
       
       return a;
@@ -173,7 +228,7 @@ namespace Bacco
     }
     
     /// Computes the reconstrucion function at a given energy
-    PrecFloat smearingFunction(const double& E) const
+    PrecFloat smearingFunction(const PrecFloat& E) const
     {
       PrecFloat s=0;
       
@@ -198,47 +253,32 @@ namespace Bacco
       return res;
     }
     
-    /// Compute \sum_it g[it]/(it+tMin)^n with periodicity
-    PrecFloat gWeightedWithTToMinusN(const int n) const
-    {
-      PrecFloat m=0.0;
-      
-      for(int iT=0;iT<nT;iT++)
-	{
-	  m+=g[iT]/pow(iT+tMin,n);
-	  if(correlatorPars.hasBwSignal)
-	    m+=g[iT]/pow(correlatorPars.T-iT-tMin,n);
-	}
-      
-      return m;
-    }
+// #define PROVIDE_MOMENT(NAME,SPEC...)					
+//     PrecFloat NAME() const						
+//     {									
+//       PrecFloat m=0.0;							
+// 									
+//       correlatorPars.loopOverIt([this,&m](const int& iT,		
+// 					  const PrecFloat& i)		
+//       {									
+// 	m+=g[iT]*(SPEC);						
+//       },tMin,nT);							
+//       									
+//       return m;								
+//     }
     
-    /// Returns the normalization, which should be 1
-    PrecFloat norm() const
-    {
-      return gWeightedWithTToMinusN(1);
-    }
-    
-    /// Returns the mean
-    PrecFloat mean() const
-    {
-      return gWeightedWithTToMinusN(2);
-    }
-    
-    /// Returns the expectation value of E^2
-    PrecFloat meanOfE2() const
-    {
-      return 2*gWeightedWithTToMinusN(3);
-    }
+//     PROVIDE_MOMENT(norm,correlatorPars.norm(i))
+//     PROVIDE_MOMENT(mean,correlatorPars.firstMoment(i))
+//     PROVIDE_MOMENT(meanOfE2,correlatorPars.secondMoment(i))
     
     /// Computes the estimator of the width as <(E-<E>)^2>
     ///
     /// Notice that since the smearing function is not garanteed to be
     /// definite positive, the width can be undefinite
-    PrecFloat width() const
-    {
-      return sqrt(meanOfE2()-sqr(mean()));
-    }
+    // PrecFloat width() const
+    // {
+    //   return sqrt(meanOfE2()-sqr(mean()));
+    // }
     
     /// Reconstruct the density for the fixed energy
     djack_t recoDensity() const
@@ -429,6 +469,9 @@ namespace Bacco
     public Reconstructor,
     public Plottable
   {
+    /// Normalize the weight with E^m
+    const int mFact;
+    
     const double E0;
     
     const PrecFloat alpha=0;
@@ -438,9 +481,19 @@ namespace Bacco
     /// See eq.32 of Nazario's paper
     PrecFloat aFun(const PrecFloat& i) const
     {
-      return
-	exp(-i*E0)/i;
+      if(mFact!=0 and mFact!=2)
+	CRASH("Not implemented");
+      
+      if(mFact==0)
+	return
+	  exp(-i*E0)/i;
+      else
+	return
+	  (24+E0*i*(24+E0*i*(12+E0*i*(4+E0*i))))/(exp(E0*i)*pow(i,5));
+      //(gamma(1+m)/pow(i,m)+(pow(E0,m)*(-(m*gamma(m))+gamma(1+m,E0*i)))/pow(E0*i,m))/i; wrong, check, maybe is just the ordinary gamma
     }
+    
+    // virtual PrecFloat normalization() const =0;
     
     virtual PrecFloat fFun(const PrecFloat& i) const =0;
     
@@ -451,6 +504,7 @@ namespace Bacco
       return targetFunction(E);
     }
     
+    /// Returns the actual squared norm, in the support
     virtual PrecFloat squareNorm() const =0;
     
     PrecVect prepareWVect(const PrecMatr& Winv) const
@@ -477,15 +531,16 @@ namespace Bacco
       const PrecFloat c=
 	(1-(PrecFloat)lambda);
       
-      const PrecFloat num=
-	1-c*R.transpose()*Winv*f;
+      // const PrecFloat num=
+      // 	normalization()-c*R.transpose()*Winv*f;
       
-      const PrecFloat den=
-	R.transpose()*Winv*R;
+      // const PrecFloat den=
+      // 	R.transpose()*Winv*R;
       
       for(int iC=0;iC<nT;iC++)
 	res[iC]=
-	  c*f[iC]+R[iC]*num/den;
+	  c*f[iC]// +R[iC]*num/den
+	  ;
       
       return res;
     }
@@ -521,13 +576,15 @@ namespace Bacco
       return (reco.squareNorm()-2*projectionWithReco(reco)+squareNorm()).get();
     }
     
-    TargetedReconstructor(const CorrelatorPars& correlatorPars,
-			   const int& tMin,
-			   const int& tMax,
-			   const double& Estar,
-			   const double& lambda,
-			   const double& E0) :
+    TargetedReconstructor(const int mFact,
+			  const CorrelatorPars& correlatorPars,
+			  const int& tMin,
+			  const int& tMax,
+			  const double& Estar,
+			  const double& lambda,
+			  const double& E0) :
       Reconstructor(correlatorPars,tMin,tMax,Estar,lambda),
+      mFact(mFact),
       E0(E0)
     {
     }
@@ -540,24 +597,9 @@ namespace Bacco
   {
     const double sigma;
     
-    PrecFloat zFun() const
-    {
-      return
-	(PrecFloat(1)+erf(Estar/(sqrt(PrecFloat(2))*sigma)))/2;
-    }
-    
     PrecFloat fFun(const PrecFloat& t) const
     {
-      const PrecFloat Z=
-	zFun();
-      
-      const PrecFloat N=
-	1/(2*Z)*exp((alpha-t)*((alpha-t)*sigma*sigma+2*Estar)/2);
-      
-      const PrecFloat F=
-	1+erf(((alpha-t)*sigma*sigma+Estar-E0)/(sqrt(PrecFloat(2))*sigma));
-      
-      return N*F;
+      return exp(-t*Estar+sqr(t*sigma)/2)*erfc((t*sigma*sigma+E0-Estar)/(sigma*sqrt((PrecFloat)2)))/2;
     }
     
     PrecFloat squareNorm() const
@@ -565,16 +607,13 @@ namespace Bacco
       const PrecFloat x=
 	((PrecFloat)E0-Estar)/sigma;
       
-      return erfc(x)/(sqrt(precPi())*sigma*sqr(erfc(x/sqrt(PrecFloat(2)))));
+      return erfc(x)/(4*sqrt(precPi())*sigma);
     }
     
     double targetFunction(const double& E) const
     {
-      const double Z=
-	zFun().get();
-      
       return
-	exp(-sqr(E-Estar)/(2*sigma*sigma))/(M_SQRT2*sqrt(M_PI)*sigma*Z);
+	exp(-sqr((E-Estar)/sigma)/2)/(sqrt(2*M_PI)*sigma);
     };
     
     GaussReconstructor(const CorrelatorPars& correlatorPars,
@@ -584,7 +623,7 @@ namespace Bacco
 		       const double& lambda,
 		       const double& E0,
 		       const double& sigma) :
-      TargetedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
+      TargetedReconstructor(0,correlatorPars,tMin,tMax,Estar,lambda,E0),
       sigma(sigma)
     {
     }
@@ -595,23 +634,6 @@ namespace Bacco
   struct NumericalReconstructor :
     public TargetedReconstructor
   {
-    virtual PrecFloat unnormalizedTargetFunction(const PrecFloat& E) const =0;
-    
-    mutable bool normComputed{false};
-    
-    mutable PrecFloat _norm;
-    
-    const PrecFloat& norm() const
-    {
-      if(not normComputed)
-	{
-	  _norm=fFunHelper(0);
-	  normComputed=true;
-	}
-      
-      return _norm;
-    }
-    
     PrecFloat squareNorm() const
     {
       return integrateUpToInfinite([this](const PrecFloat& E)
@@ -620,36 +642,41 @@ namespace Bacco
       },E0);
     }
     
-     PrecFloat preciseTargetFunction(const PrecFloat& E) const
-    {
-      return unnormalizedTargetFunction(E)/norm();
-    }
+    virtual PrecFloat preciseTargetFunction(const PrecFloat& E) const=0;
     
     double targetFunction(const double& E) const
     {
       return preciseTargetFunction(E).get();
     }
     
-    PrecFloat fFunHelper(const PrecFloat& t) const
+    double deviation2(const Reconstruction& reco) const
     {
-      return integrateUpToInfinite([t,this](const PrecFloat& E)
+      return integrateUpToInfinite([this,&reco](const PrecFloat& E)
       {
-	return unnormalizedTargetFunction(E)*correlatorPars.bT(t,E);
-      },E0);
+	return sqr(preciseTargetFunction(E)-reco.smearingFunction(E));
+      },E0).get()/
+	integrateUpToInfinite([this](const PrecFloat& E)
+      {
+	return sqr(preciseTargetFunction(E));
+      },E0).get();
     }
     
     PrecFloat fFun(const PrecFloat& t) const
     {
-      return fFunHelper(t)/norm();
+      return integrateUpToInfinite([t,this](const PrecFloat& E)
+      {
+	return pow(E,2*mFact)*preciseTargetFunction(E)*correlatorPars.bT(t,E);
+      },E0);
     }
     
-    NumericalReconstructor(const CorrelatorPars& correlatorPars,
-		       const int& tMin,
-		       const int& tMax,
-		       const double& Estar,
-		       const double& lambda,
-		       const double& E0) :
-      TargetedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0)
+    NumericalReconstructor(const int& mFact,
+			   const CorrelatorPars& correlatorPars,
+			   const int& tMin,
+			   const int& tMax,
+			   const double& Estar,
+			   const double& lambda,
+			   const double& E0) :
+      TargetedReconstructor(mFact,correlatorPars,tMin,tMax,Estar,lambda,E0)
     {
     }
   };
@@ -661,9 +688,11 @@ namespace Bacco
   {
     const double sigma;
     
-    PrecFloat unnormalizedTargetFunction(const PrecFloat& E) const
+    PrecFloat preciseTargetFunction(const PrecFloat& E) const
     {
-      return exp(-sqr((E-Estar)/sigma)/2)/sqr(E);
+      return
+	exp(-sqr((E-Estar)/sigma)/2)/(sqrt(2*precPi())*sigma)
+	/sqr(E);
     }
     
     GaussDivE2Reconstructor(const CorrelatorPars& correlatorPars,
@@ -673,7 +702,7 @@ namespace Bacco
 			    const double& lambda,
 			    const double& E0,
 			    const double sigma) :
-      NumericalReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
+      NumericalReconstructor(0,correlatorPars,tMin,tMax,Estar,lambda,E0),
       sigma(sigma)
     {
     }
@@ -710,7 +739,7 @@ namespace Bacco
 			const double& lambda,
 			const double& E0,
 			const double& width) :
-      TargetedReconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0),
+      TargetedReconstructor(0,correlatorPars,tMin,tMax,Estar,lambda,E0),
       width(width)
     {
     }
