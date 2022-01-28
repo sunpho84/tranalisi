@@ -371,7 +371,7 @@ namespace Bacco
 					    const int& i)
       {
 	A(iR,iT)+=
-	  aFun(iR+iT+2*tMin);
+	  aFun(i);
       },tMin,nT);
       
       grace_file_t AFile("/tmp/A.xmg");
@@ -509,7 +509,7 @@ namespace Bacco
     
     PrecVect prepareWVect(const PrecMatr& Winv) const
     {
-      PrecVect f(nT,1);
+      PrecVect f(nT);
       
       for(int iT=0;iT<nT;iT++)
 	{
@@ -665,7 +665,7 @@ namespace Bacco
     {
       return integrateUpToInfinite([t,this](const PrecFloat& E)
       {
-	return pow(E,2*mFact)*preciseTargetFunction(E)*correlatorPars.bT(t,E);
+	return pow(E,2*mFact)*preciseTargetFunction(E)*exp(-t*E);//not using bT since bw signal taken explicitly into account correlatorPars.bT(t,E);
       },E0);
     }
     
