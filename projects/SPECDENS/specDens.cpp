@@ -36,14 +36,17 @@ int main()
   
   const double E0=2*0.140*a;
   
-  double sigma=0.160*a;
+  double sigma=0.15*a;
   double Estar=E0;//0.6*a;
   grace_file_t Dens("plots/Dens.xmg");
   grace_file_t SigmaPlot("plots/Sigma.xmg");
+  SigmaPlot.set_yaxis_label("\\xs\\0 [GeV]");
+  SigmaPlot.set_xaxis_label("E [GeV]");
   grace_file_t RsFile("plots/Rs.xmg");
   RsFile.set_title("R(s)");
   RsFile.set_xaxis_label("E [GeV]");
   grace_file_t RsAltFile("plots/RsAlt.xmg");
+  grace_file_t RsFromPeakAltsFile("plots/RsFromPeaks.xmg");
   
   const PrecFloat alpha=0.0;
   const djvec_t corr=read_djvec(corrPath,T/2+1);
@@ -58,11 +61,11 @@ int main()
   corr.ave_err().write("plots/Corr.xmg");
   effective_mass(corr,T/2,hasBwSignal?+1:0).ave_err().write("plots/EffMass.xmg");
   
-  gen_t g(31241);
+  //gen_t g(31241);
   do
     {
-      cout<<"Estar: "<<Estar<<endl;
-      cout<<"Sigma: "<<sigma<<endl;
+      cout<<"Estar: "<<Estar<<" = "<<Estar/a<<" GeV"<<endl;
+      cout<<"Sigma: "<<sigma<<" = "<<sigma/a<<" GeV"<<endl;
       
       using namespace Bacco;
       
@@ -80,6 +83,22 @@ int main()
       // cout<<"Normalization: "<<gd2Reconstructor.normalization()<<endl;
       gd2Reco.plot("plots/gaussDivE2reco"+to_string(Estar)+".xmg",E0,4*Estar);
       gd2Reconstructor.plot("plots/gaussDivE2target"+to_string(Estar)+".xmg",E0,4*Estar);
+      grace_file_t plotSmeFWE("plots/gaussDivE2reco"+to_string(Estar)+"WithError.xmg");
+      plotSmeFWE.write_polygon([&](const double& E)
+      {
+	djack_t res;
+	for(size_t ijack=0;ijack<=njacks;ijack++)
+	    {
+	      PrecFloat s=0;
+	      
+	      for(int iT=0;iT<gd2Reco.nT;iT++)
+		s+=gd2Reco.g[iT]*correlatorPars.corr[iT][ijack]/correlatorPars.corr[iT].ave()*correlatorPars.bT(iT+tMin,E);
+	      
+	      res[ijack]=s.get();
+	    }
+	return res;
+      },E0,4*Estar);
+      
       // cout<<"Gauss norm: "<<reco.norm()<<endl;
       // cout<<"Gauss/E^2 norm: "<<gd2Reco.norm()<<endl;
       /// Compute the width
@@ -99,9 +118,10 @@ int main()
       
       // cout<<"deviation of reco from target: "<<widthDeviation<<endl;
       
-      const double lowDev=0.0001;
-      const double highDev=0.0005;
-      if(deviation>lowDev and deviation<highDev)
+      const double minDev=1e-4;
+      const double maxDev=5e-4;
+      if(0 or ( deviation>minDev and
+		deviation<maxDev))
 	{
 	  // cout<<"norm of reconstructed function: "<<reco.norm()<<endl;
 	  // cout<<"square norm of reconstructed function: "<<reco.squareNorm()<<endl;
@@ -112,7 +132,19 @@ int main()
 	  //   reco.mean().get();
 	  // cout<<"mean: "<<mean<<endl;
 	  
-	  // SigmaPlot.write_xy(Estar/a,width/a);
+	  SigmaPlot.write_xy(Estar/a,sigma/a);
+	  
+	  /// Valid only on B64
+	  PrecFloat s=0;
+	  for(const auto& [ePeak,wPeak] :
+		{std::pair<double,double>{0.540665,0.271642},
+		 {0.687199, 1.73837},
+		 {0.801856, 2.54741},
+		 {0.893164, 1.05354},
+		 {0.998051, 0.201638},
+		 {1.12037 ,0.325096}})
+	    s+=wPeak*gd2Reco.smearingFunction(ePeak*a)*sqr(ePeak*a);
+	  RsFromPeakAltsFile.write_xy(Estar/a,s.get());
 	  
 	  PrecFloat Err2=0.0;
 	  for(size_t iT=0;iT<nT;iT++)
@@ -202,11 +234,17 @@ int main()
 	}
       else
 	{
-	  if(deviation<lowDev)
-	    sigma/=1.04;
+	  cout<<"Gaussian deviating too ";
+	  if(deviation<minDev)
+	    {
+	      cout<<"little, shrinking it"<<endl;
+	      sigma/=1.04;
+	    }
 	  else
-	    sigma*=1.05;
-	  cout<<"Gaussian deviating too much, enlarging it"<<endl;
+	    {
+	      cout<<"much, enlarging it"<<endl;
+	      sigma*=1.05;
+	    }
 	}
     }
   while(Estar<1);

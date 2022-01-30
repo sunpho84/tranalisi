@@ -381,23 +381,23 @@ namespace Bacco
       
       /////////////////////////////////////////////////////////////////
       
-      // fill B
+      // // fill B
       
-      PrecMatr B(nT,nT);
+      // PrecMatr B(nT,nT);
       
-      for(int iR=0;iR<nT;iR++)
-	{
-	  for(int iT=0;iT<nT;iT++)
-	    if(lambda!=0)
-	      B(iR,iT)=sqr(corr[iR+tMin].err()/corr[1].ave())*(iR==iT);
-	    else
-	      B(iR,iT)=0.0;
-	}
+      // for(int iR=0;iR<nT;iR++)
+      // 	{
+      // 	  for(int iT=0;iT<nT;iT++)
+      // 	    if(lambda!=0)
+      // 	      B(iR,iT)=sqr(corr[iR+tMin].err()/corr[1].ave())*(iR==iT);
+      // 	    else
+      // 	      B(iR,iT)=0.0;
+      // 	}
       
-      grace_file_t BFile("/tmp/B"+to_string(Estar)+".xmg");
-      for(int iR=0;iR<nT;iR++)
-	for(int iT=0;iT<nT;iT++)
-	  BFile.write_xy(iT+nT*iR,B(iR,iT).get());
+      // grace_file_t BFile("/tmp/B"+to_string(Estar)+".xmg");
+      // for(int iR=0;iR<nT;iR++)
+      // 	for(int iT=0;iT<nT;iT++)
+      // 	  BFile.write_xy(iT+nT*iR,B(iR,iT).get());
       
       /////////////////////////////////////////////////////////////////
       
@@ -407,9 +407,17 @@ namespace Bacco
       
       for(int iR=0;iR<nT;iR++)
 	for(int iT=0;iT<nT;iT++)
-	  W(iR,iT)=
-	    (1-lambda)*A(iR,iT)+
-	    lambda*B(iR,iT);
+	  {
+	    const PrecFloat relErr=corr[iR+tMin].err()/abs(corr[iR+tMin].ave());
+	    const PrecFloat f=lambda*sqr(relErr)*(iR==iT);
+	    
+	    W(iR,iT)=
+	    A(iR,iT)*
+	    (1+f);
+	    
+	    // (1-lambda)*A(iR,iT)+
+	    // lambda*B(iR,iT);
+	  }
       
       grace_file_t WFile("/tmp/W"+to_string(Estar)+".xmg");
       for(int iR=0;iR<nT;iR++)
@@ -528,8 +536,8 @@ namespace Bacco
       
       PrecVect res(nT);
       
-      const PrecFloat c=
-	(1-(PrecFloat)lambda);
+      // const PrecFloat c=
+      // 	(1-(PrecFloat)lambda);
       
       // const PrecFloat num=
       // 	normalization()-c*R.transpose()*Winv*f;
@@ -539,7 +547,8 @@ namespace Bacco
       
       for(int iC=0;iC<nT;iC++)
 	res[iC]=
-	  c*f[iC]// +R[iC]*num/den
+	  // c*
+	  f[iC]// +R[iC]*num/den
 	  ;
       
       return res;
@@ -665,7 +674,8 @@ namespace Bacco
     {
       return integrateUpToInfinite([t,this](const PrecFloat& E)
       {
-	return pow(E,2*mFact)*preciseTargetFunction(E)*exp(-t*E);//not using bT since bw signal taken explicitly into account correlatorPars.bT(t,E);
+	//not using bT since bw signal taken explicitly into account
+	return pow(E,2*mFact)*preciseTargetFunction(E)*exp(-t*E);
       },E0);
     }
     
@@ -702,7 +712,7 @@ namespace Bacco
 			    const double& lambda,
 			    const double& E0,
 			    const double sigma) :
-      NumericalReconstructor(0,correlatorPars,tMin,tMax,Estar,lambda,E0),
+      NumericalReconstructor(2,correlatorPars,tMin,tMax,Estar,lambda,E0),
       sigma(sigma)
     {
     }
