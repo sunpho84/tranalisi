@@ -8,6 +8,8 @@
 #include <meas_vec.hpp>
 #include <solve.hpp>
 
+#include <gsl/gsl_sf_erf.h>
+
 // https://arxiv.org/pdf/1903.06476.pdf
 
 namespace Bacco
@@ -175,6 +177,21 @@ namespace Bacco
 					    const PrecFloat& i)
       {
 	a+=g[iT]*g[iR]*exp(-correlatorPars.E0*i)/i;
+      },tMin,nT);
+      
+      return a;
+    }
+    
+    /// My definition of the statistical error
+    PrecFloat myStatisticalError() const
+    {
+      PrecFloat a=0.0;
+      
+      correlatorPars.loopOverIt([&a,this,&corr=correlatorPars.corr](const int& iT,
+								    const PrecFloat& i)
+      {
+	const PrecFloat relErr=corr[iT+tMin].err()/abs(corr[iT+tMin].ave());
+	a+=sqr(g[iT])*exp(-correlatorPars.E0*i)/i*sqr(relErr);
       },tMin,nT);
       
       return a;
@@ -353,10 +370,10 @@ namespace Bacco
 	      1.0/PrecFloat(T-iT-tMin);
 	}
       
-      grace_file_t RFile("/tmp/R.xmg");
-      RFile.new_data_set();
-      for(int iT=0;iT<nT;iT++)
-	RFile.write_xy(iT,R[iT].get());
+      // grace_file_t RFile("/tmp/R.xmg");
+      // RFile.new_data_set();
+      // for(int iT=0;iT<nT;iT++)
+      // 	RFile.write_xy(iT,R[iT].get());
       
       /////////////////////////////////////////////////////////////////
       
@@ -374,10 +391,10 @@ namespace Bacco
 	  aFun(i);
       },tMin,nT);
       
-      grace_file_t AFile("/tmp/A.xmg");
-      for(int iR=0;iR<nT;iR++)
-	for(int iT=0;iT<nT;iT++)
-	  AFile.write_xy(iT+nT*iR,A(iR,iT).get());
+      // grace_file_t AFile("/tmp/A.xmg");
+      // for(int iR=0;iR<nT;iR++)
+      // 	for(int iT=0;iT<nT;iT++)
+      // 	  AFile.write_xy(iT+nT*iR,A(iR,iT).get());
       
       /////////////////////////////////////////////////////////////////
       
@@ -412,17 +429,17 @@ namespace Bacco
 	    const PrecFloat f=lambda*sqr(relErr)*(iR==iT);
 	    
 	    W(iR,iT)=
-	    A(iR,iT)*
-	    (1+f);
+	      A(iR,iT)*
+	      (1+f);
 	    
 	    // (1-lambda)*A(iR,iT)+
 	    // lambda*B(iR,iT);
 	  }
       
-      grace_file_t WFile("/tmp/W"+to_string(Estar)+".xmg");
-      for(int iR=0;iR<nT;iR++)
-	for(int iT=0;iT<nT;iT++)
-	  WFile.write_xy(iT+nT*iR,W(iR,iT).get());
+      // grace_file_t WFile("/tmp/W"+to_string(Estar)+".xmg");
+      // for(int iR=0;iR<nT;iR++)
+      // 	for(int iT=0;iT<nT;iT++)
+      // 	  WFile.write_xy(iT+nT*iR,W(iR,iT).get());
       
       /////////////////////////////////////////////////////////////////
       
@@ -430,10 +447,10 @@ namespace Bacco
       
       // cout<<"Check inversion: "<<(Winv*W-PrecMatr::Identity(nT,nT)).squaredNorm().get()<<" "<<(W*Winv-PrecMatr::Identity(nT,nT)).squaredNorm().get()<<endl;
       
-      grace_file_t WinvFile("/tmp/Winv"+to_string(Estar)+".xmg");
-      for(int iR=0;iR<nT;iR++)
-	for(int iT=0;iT<nT;iT++)
-	  WinvFile.write_xy(iT+nT*iR,Winv(iR,iT).get());
+      // grace_file_t WinvFile("/tmp/Winv"+to_string(Estar)+".xmg");
+      // for(int iR=0;iR<nT;iR++)
+      // 	for(int iT=0;iT<nT;iT++)
+      // 	  WinvFile.write_xy(iT+nT*iR,Winv(iR,iT).get());
       
       const PrecVect v=
 	prepareWVect(Winv);
@@ -450,9 +467,9 @@ namespace Bacco
 	      Winv(iR,iC)*v[iC];
 	}
       
-      grace_file_t gFile("/tmp/g"+to_string(Estar)+".xmg");
-      for(int iT=0;iT<nT;iT++)
-	gFile.write_xy(iT,g[iT].get());
+      // grace_file_t gFile("plots/g"+to_string(Estar)+".xmg");
+      // for(int iT=0;iT<nT;iT++)
+      // 	gFile.write_xy(iT,g[iT].get());
       
       Reconstruction reco(nT,tMin,correlatorPars,g);
       
@@ -528,9 +545,9 @@ namespace Bacco
 	      fFun(T-iT-tMin);
 	}
       
-      grace_file_t fFile("/tmp/f"+to_string(Estar)+".xmg");
-      for(int i=0;i<nT;i++)
-	fFile.write_xy(i,f[i].get());
+      // grace_file_t fFile("/tmp/f"+to_string(Estar)+".xmg");
+      // for(int i=0;i<nT;i++)
+      // 	fFile.write_xy(i,f[i].get());
       
       /////////////////////////////////////////////////////////////////
       
@@ -608,7 +625,16 @@ namespace Bacco
     
     PrecFloat fFun(const PrecFloat& t) const
     {
-      return exp(-t*Estar+sqr(t*sigma)/2)*erfc((t*sigma*sigma+E0-Estar)/(sigma*sqrt((PrecFloat)2)))/2;
+      const PrecFloat x=-t*Estar+sqr(t*sigma)/2;
+      const PrecFloat y=(t*sigma*sigma+E0-Estar)/(sigma*sqrt((PrecFloat)2));
+      
+      return
+#ifndef FAKE_HP
+	exp(x)*erfc(y)/2
+#else
+	exp(x+gsl_sf_log_erfc(y.data))/2
+#endif
+	;
     }
     
     PrecFloat squareNorm() const
@@ -672,10 +698,25 @@ namespace Bacco
     
     PrecFloat fFun(const PrecFloat& t) const
     {
-      return integrateUpToInfinite([t,this](const PrecFloat& E)
+      
+      return
+#ifdef FAKE_HP
+	gslIntegrateUpToInfinity
+#else
+	integrateUpToInfinite
+#endif
+	([t,this](const PrecFloat& E)
       {
 	//not using bT since bw signal taken explicitly into account
-	return pow(E,2*mFact)*preciseTargetFunction(E)*exp(-t*E);
+	const PrecFloat w=pow(E,2*mFact);
+	const PrecFloat f=preciseTargetFunction(E);
+	const PrecFloat b=exp(-t*E);
+	
+	return (w*f*b)
+#ifdef FAKE_HP
+	  .get()
+#endif
+	  ;
       },E0);
     }
     

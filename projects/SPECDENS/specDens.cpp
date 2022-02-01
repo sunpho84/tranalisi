@@ -1,24 +1,10 @@
-// #define FAKE_HP
+ #define FAKE_HP
 #include <tantaloBacco.hpp>
 
 #include <tranalisi.hpp>
 
 int main()
 {
-  // PrecFloat::setDefaultPrecision(1024);
-  // cout.precision(PrecFloat::getNDigits());
-  
-  // const PrecFloat r=integrateUpToInfinite([](const PrecFloat& x){return exp(-sqr(x-0.5)/2);});
-  // cout<<r<<endl;
-  // const PrecFloat n=sqrt(precPi()/2)*erfc(-(PrecFloat)0.5/sqrt(PrecFloat(2)));
-  // cout<<n<<endl;
-  
-  // return 0;
-  
-  // testQ();
-
-  // return 0;
-  
   input_file_t input("input.txt");
   const size_t precision=input.read<size_t>("Precision");
   const size_t T=input.read<size_t>("T");
@@ -30,6 +16,7 @@ int main()
   const string corrPath=input.read<string>("CorrPath");
   const double lambda=input.read<double>("Lambda");
   const double a=input.read<double>("a");
+  const double za=input.read<double>("za");
   
   set_njacks(30);
   PrecFloat::setDefaultPrecision(precision);
@@ -46,22 +33,14 @@ int main()
   RsFile.set_title("R(s)");
   RsFile.set_xaxis_label("E [GeV]");
   grace_file_t RsAltFile("plots/RsAlt.xmg");
-  grace_file_t RsFromPeakAltsFile("plots/RsFromPeaks.xmg");
+  // grace_file_t RsFromPeakAltsFile("plots/RsFromPeaks.xmg");
   
   const PrecFloat alpha=0.0;
-  const djvec_t corr=read_djvec(corrPath,T/2+1);
-  // raw_file_t inputCorr(corrPath,"r");
-  // for(size_t t=0;t<=T/2;t++)
-  //   {
-  //     const double f=inputCorr.read<double>();
-  //     const double e=inputCorr.read<double>();
-  //     corr[t].fill_gauss({f,e},t+33);
-  //   }
+  const djvec_t corr=read_djvec(corrPath,T/2+1)*sqr(za)*12*sqr(M_PI);
   
   corr.ave_err().write("plots/Corr.xmg");
   effective_mass(corr,T/2,hasBwSignal?+1:0).ave_err().write("plots/EffMass.xmg");
   
-  //gen_t g(31241);
   do
     {
       cout<<"Estar: "<<Estar<<" = "<<Estar/a<<" GeV"<<endl;
@@ -71,8 +50,6 @@ int main()
       
       CorrelatorPars correlatorPars(T,hasBwSignal,E0,corr);
       GaussReconstructor reconstructor(correlatorPars,tMin,tMax,Estar,lambda,E0,sigma);
-      
-      //BGReconstructor reconstructor(correlatorPars,tMin,tMax,Estar,lambda);
       
       const Reconstruction reco=
 	reconstructor.getReco();
@@ -109,12 +86,18 @@ int main()
       const double norm2Difference=
 	reconstructor.deviation(reco);
       cout<<"norm2 of the difference between target and reconstructed: "<<norm2Difference<<endl;
-      const double gDivE2norm2Difference=
+      const double gDivE2norm2Difference2=
 	gd2Reconstructor.deviation2(gd2Reco);
+      cout<<"norm2 of the difference2 between g/e^2target and reconstructed: "<<gDivE2norm2Difference2<<endl;
+      const double gDivE2norm2Difference=
+	gd2Reconstructor.deviation(gd2Reco);
       cout<<"norm2 of the difference between g/e^2target and reconstructed: "<<gDivE2norm2Difference<<endl;
+      const double myStatisticalError=
+	gd2Reco.myStatisticalError().get();
+      cout<<"my statistical error: "<<myStatisticalError<<endl;
       
       const double deviation=
-	gDivE2norm2Difference;
+	gDivE2norm2Difference2;
       
       // cout<<"deviation of reco from target: "<<widthDeviation<<endl;
       
@@ -135,16 +118,16 @@ int main()
 	  SigmaPlot.write_xy(Estar/a,sigma/a);
 	  
 	  /// Valid only on B64
-	  PrecFloat s=0;
-	  for(const auto& [ePeak,wPeak] :
-		{std::pair<double,double>{0.540665,0.271642},
-		 {0.687199, 1.73837},
-		 {0.801856, 2.54741},
-		 {0.893164, 1.05354},
-		 {0.998051, 0.201638},
-		 {1.12037 ,0.325096}})
-	    s+=wPeak*gd2Reco.smearingFunction(ePeak*a)*sqr(ePeak*a);
-	  RsFromPeakAltsFile.write_xy(Estar/a,s.get());
+	  // PrecFloat s=0;
+	  // for(const auto& [ePeak,wPeak] :
+	  // 	{std::pair<double,double>{0.540665,0.271642},
+	  // 	 {0.687199, 1.73837},
+	  // 	 {0.801856, 2.54741},
+	  // 	 {0.893164, 1.05354},
+	  // 	 {0.998051, 0.201638},
+	  // 	 {1.12037 ,0.325096}})
+	  //   s+=wPeak*gd2Reco.smearingFunction(ePeak*a)*sqr(ePeak*a);
+	  // RsFromPeakAltsFile.write_xy(Estar/a,s.get());
 	  
 	  PrecFloat Err2=0.0;
 	  for(size_t iT=0;iT<nT;iT++)

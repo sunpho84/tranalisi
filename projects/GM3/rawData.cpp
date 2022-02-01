@@ -751,60 +751,63 @@ void perens_t::convertForSilvano() const
 {
   cout<<"Performing conversion, nconfs: "<<nConfs<<endl;
   
-  for(size_t iConf=0;iConf<nConfs;iConf++)
-    {
-      /// Full path
-      std::filesystem::path full=
-	confsList[iConf];
-      
-      /// Extract conf name
-      const string confName=
-	full.filename();
-      
-      const string outputConf=
-	basePath+"/reordered/"+confName;
-      const string filePath=
-	"reordered/"+confName+"/mes_contr_2pts_ll";
-      
-      console<<"Conf: "<<confName<<endl;
-      console<<"Probing path "<<outputConf<<endl;
-      console<<"Probing file "<<filePath<<endl;
-      
-      if(not file_exists(filePath))
-	{
-	  mkdir(outputConf);
-	  
-	  ofstream out(filePath);
-	  out.precision(16);
-	  const size_t mapMes[4]={0,1,1,2};
-	  for(size_t _iMes=0;_iMes<4;_iMes++)
-	    {
-	      const size_t iMes=mapMes[_iMes];
-	      out<<endl;
-	      out<<"  # Contraction of S0_th0_m0_r"<<(_iMes&1)<<"_ll ^ \\dag and S0_th0_m0_r"<<((_iMes>>1)&1)<<"_ll:"<<endl;
-	      out<<endl;
-	      
-	      const size_t mapCorr[6]={0,1,1,1,5,6};
-	      const char corrName[6][5]={"P5P5","V1V1","V2V2","V3V3","A0P5","P5A0"};
-	      for(size_t _iCorr=0;_iCorr<6;_iCorr++)
-		{
-		  out<<endl<<"  # "<<corrName[_iCorr]<<endl;
-		  for(size_t _t=0;_t<T;_t++)
-		    {
-		      size_t t=_t;
-		      if(t>=TH)
-			t=T-t;
-		      
-		      double s=0;
-		      for(size_t iSource=0;iSource<nSources;iSource++)
-			s+=rawData(iConf,iSource,mapCorr[_iCorr],iMes,t);
-		      s/=nSources*L*L*L;
-		      out<<s<<" "<<0<<endl;
-		    }
-		}
-	    }
-	}
-    }
+  if(confsList.size()<nConfs)
+    cout<<"Cannot convert because list of confs path is not long enough"<<endl;
+  else
+    for(size_t iConf=0;iConf<nConfs;iConf++)
+      {
+	/// Full path
+	std::filesystem::path full=
+	  confsList[iConf];
+	
+	/// Extract conf name
+	const string confName=
+	  full.filename();
+	
+	const string outputConf=
+	  basePath+"/reordered/"+confName;
+	const string filePath=
+	  "reordered/"+confName+"/mes_contr_2pts_ll";
+	
+	console<<"Conf: "<<confName<<endl;
+	console<<"Probing path "<<outputConf<<endl;
+	console<<"Probing file "<<filePath<<endl;
+	
+	if(not file_exists(filePath))
+	  {
+	    mkdir(outputConf);
+	    
+	    ofstream out(filePath);
+	    out.precision(16);
+	    const size_t mapMes[4]={0,1,1,2};
+	    for(size_t _iMes=0;_iMes<4;_iMes++)
+	      {
+		const size_t iMes=mapMes[_iMes];
+		out<<endl;
+		out<<"  # Contraction of S0_th0_m0_r"<<(_iMes&1)<<"_ll ^ \\dag and S0_th0_m0_r"<<((_iMes>>1)&1)<<"_ll:"<<endl;
+		out<<endl;
+		
+		const size_t mapCorr[6]={0,1,1,1,5,6};
+		const char corrName[6][5]={"P5P5","V1V1","V2V2","V3V3","A0P5","P5A0"};
+		for(size_t _iCorr=0;_iCorr<6;_iCorr++)
+		  {
+		    out<<endl<<"  # "<<corrName[_iCorr]<<endl;
+		    for(size_t _t=0;_t<T;_t++)
+		      {
+			size_t t=_t;
+			if(t>=TH)
+			  t=T-t;
+			
+			double s=0;
+			for(size_t iSource=0;iSource<nSources;iSource++)
+			  s+=rawData(iConf,iSource,mapCorr[_iCorr],iMes,t);
+			s/=nSources*L*L*L;
+			out<<s<<" "<<0<<endl;
+		      }
+		  }
+	      }
+	  }
+      }
 }
 
 double& perens_t::rawData(const size_t& _iConf,const size_t& iSource,const size_t& igamma_out,const size_t& iMes,const size_t& tOut)
