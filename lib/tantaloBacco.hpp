@@ -578,7 +578,7 @@ namespace Bacco
     }
     
     PrecFloat projectionWithReco(const Reconstruction& reco) const
-    {
+    {//va messo a posto mfact se no non si capisce
       PrecFloat res=0.0;
       
       for(int iT=0;iT<nT;iT++)
@@ -599,6 +599,9 @@ namespace Bacco
     
     double deviation(const Reconstruction& reco) const
     {
+      for(auto p : {reco.squareNorm(),2*projectionWithReco(reco),squareNorm()})
+	cout<<"Term: "<<p.get()<<endl;
+      
       return (reco.squareNorm()-2*projectionWithReco(reco)+squareNorm()).get();
     }
     
@@ -734,27 +737,40 @@ namespace Bacco
   
   /////////////////////////////////////////////////////////////////
   
-  struct GaussDivE2Reconstructor :
+  struct GenericDivE2Reconstructor :
     public NumericalReconstructor
   {
-    const double sigma;
+    // const double sigma;
+    
+    using F=function<PrecFloat(const PrecFloat&)>;
+    
+    const F genericTargetFunction;
     
     PrecFloat preciseTargetFunction(const PrecFloat& E) const
     {
-      return
-	exp(-sqr((E-Estar)/sigma)/2)/(sqrt(2*precPi())*sigma)
-	/sqr(E);
+      return genericTargetFunction(E)/sqr(E);
     }
+      
+    //   const double width=sigma;
     
-    GaussDivE2Reconstructor(const CorrelatorPars& correlatorPars,
-			    const int& tMin,
-			    const int& tMax,
-			    const double& Estar,
-			    const double& lambda,
-			    const double& E0,
-			    const double sigma) :
+      // return
+      // 	sigma/(sqr(E-Estar)+sqr(sigma))/M_PI/E/E;
+      // return
+      // 	((E>Estar-width/2) and (E<Estar+width/2))/width/E/E;
+      // return
+      // 	exp(-sqr((E-Estar)/sigma)/2)/(sqrt(2*precPi())*sigma)
+      // 	/sqr(E);
+    // }
+    
+    GenericDivE2Reconstructor(const CorrelatorPars& correlatorPars,
+			      const int& tMin,
+			      const int& tMax,
+			      const double& Estar,
+			      const double& lambda,
+			      const double& E0,
+			      const F& genericTargetFunction) :
       NumericalReconstructor(2,correlatorPars,tMin,tMax,Estar,lambda,E0),
-      sigma(sigma)
+      genericTargetFunction(genericTargetFunction)
     {
     }
   };
