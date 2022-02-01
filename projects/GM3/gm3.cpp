@@ -89,6 +89,8 @@ int main(int narg,char **arg)
       
       for(const RegoType& rego : {REGO_TM,REGO_OS})
 	{
+	  ens.getAveForRego(0,ens.nSources,1,rego).bin_write("plots/VKVK_corr_fromAmu_"+regoTag[rego]+".dat");
+	  
 	  const auto [rep,repInfVol]=
 	    ens.fitVKVK(rego,ens.nLevels);
 	  
