@@ -430,7 +430,7 @@ namespace Bacco
 	    
 	    W(iR,iT)=
 	      A(iR,iT)*
-	      (1+f);
+	      (1-lambda+f);
 	    
 	    // (1-lambda)*A(iR,iT)+
 	    // lambda*B(iR,iT);
@@ -506,16 +506,23 @@ namespace Bacco
     /// See eq.32 of Nazario's paper
     PrecFloat aFun(const PrecFloat& i) const
     {
-      if(mFact!=0 and mFact!=2)
-	CRASH("Not implemented");
-      
-      if(mFact==0)
-	return
-	  exp(-i*E0)/i;
-      else
-	return
-	  (24+E0*i*(24+E0*i*(12+E0*i*(4+E0*i))))/(exp(E0*i)*pow(i,5));
-      //(gamma(1+m)/pow(i,m)+(pow(E0,m)*(-(m*gamma(m))+gamma(1+m,E0*i)))/pow(E0*i,m))/i; wrong, check, maybe is just the ordinary gamma
+      switch(mFact)
+	{
+	case 0:
+	  return
+	    exp(-i*E0)/i;
+	  break;
+	case 2:
+	  return
+	    (24+E0*i*(24+E0*i*(12+E0*i*(4+E0*i))))/(exp(E0*i)*pow(i,5));
+	  break;
+	default:
+	  return gslIntegrateUpToInfinity([i,this](const double& E)
+	  {
+	    return exp(-i.get()*E)*pow(E,2*mFact);
+	  },E0);
+	  //(gamma(1+m)/pow(i,m)+(pow(E0,m)*(-(m*gamma(m))+gamma(1+m,E0*i)))/pow(E0*i,m))/i; wrong, check, maybe is just the ordinary gamma
+	}
     }
     
     // virtual PrecFloat normalization() const =0;
@@ -543,6 +550,8 @@ namespace Bacco
 	  if(hasBwSignal)
 	    f[iT]+=
 	      fFun(T-iT-tMin);
+	  
+	  f[iT]*=1-lambda;
 	}
       
       // grace_file_t fFile("/tmp/f"+to_string(Estar)+".xmg");
@@ -556,11 +565,12 @@ namespace Bacco
       // const PrecFloat c=
       // 	(1-(PrecFloat)lambda);
       
-      // const PrecFloat num=
-      // 	normalization()-c*R.transpose()*Winv*f;
+      const PrecFloat num=
+	// normalization()
+	1-R.transpose()*Winv*f;
       
-      // const PrecFloat den=
-      // 	R.transpose()*Winv*R;
+      const PrecFloat den=
+	R.transpose()*Winv*R;
       
       for(int iC=0;iC<nT;iC++)
 	res[iC]=
@@ -599,10 +609,16 @@ namespace Bacco
     
     double deviation(const Reconstruction& reco) const
     {
-      for(auto p : {reco.squareNorm(),2*projectionWithReco(reco),squareNorm()})
-	cout<<"Term: "<<p.get()<<endl;
+      return
+	gslIntegrateUpToInfinity([&reco,this](const double& E)
+	{
+	  return sqr((reco.smearingFunction(E).get()-targetFunction(E)))*pow(E,2*mFact);
+	},E0);
       
-      return (reco.squareNorm()-2*projectionWithReco(reco)+squareNorm()).get();
+      // for(auto p : {reco.squareNorm(),2*projectionWithReco(reco),squareNorm()})
+      // 	cout<<"Term: "<<p.get()<<endl;
+      
+      // return (reco.squareNorm()-2*projectionWithReco(reco)+squareNorm()).get();
     }
     
     TargetedReconstructor(const int mFact,
@@ -661,7 +677,7 @@ namespace Bacco
 		       const double& lambda,
 		       const double& E0,
 		       const double& sigma) :
-      TargetedReconstructor(0,correlatorPars,tMin,tMax,Estar,lambda,E0),
+      TargetedReconstructor(0 /*do not touch */,correlatorPars,tMin,tMax,Estar,lambda,E0),
       sigma(sigma)
     {
     }
@@ -762,14 +778,15 @@ namespace Bacco
       // 	/sqr(E);
     // }
     
-    GenericDivE2Reconstructor(const CorrelatorPars& correlatorPars,
+    GenericDivE2Reconstructor(const int& mFact,
+			      const CorrelatorPars& correlatorPars,
 			      const int& tMin,
 			      const int& tMax,
 			      const double& Estar,
 			      const double& lambda,
 			      const double& E0,
 			      const F& genericTargetFunction) :
-      NumericalReconstructor(2,correlatorPars,tMin,tMax,Estar,lambda,E0),
+      NumericalReconstructor(mFact,correlatorPars,tMin,tMax,Estar,lambda,E0),
       genericTargetFunction(genericTargetFunction)
     {
     }
