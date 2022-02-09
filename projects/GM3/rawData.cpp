@@ -528,7 +528,7 @@ void perens_t::rawDataAn(const size_t& iGammaComb)
 		const double& y=rawData(iConf,iSource,iGammaComb,iMes,t);
 		allSourcesPerMesPlot.write_xy(t,y);
 	      }
-	    allSourcesPerMesPlot.set_comment(string("Conf ")+confMap[iConf]+"_source_"+to_string(iSource));
+	    allSourcesPerMesPlot.set_comment(string("Conf ")+confsList[iConf]+"_source_"+to_string(iSource));
 	    allSourcesPerMesPlot.new_data_set();
 	}
     }
