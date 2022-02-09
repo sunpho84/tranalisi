@@ -517,6 +517,21 @@ void perens_t::rawDataAn(const size_t& iGammaComb)
 	  s/=nSourcesPerCopy*L*L*L*2;
 	}
   
+  for(size_t iMes=0;iMes<nMes;iMes+=2)
+    {
+      grace_file_t allSourcesPerMesPlot(basePath+"/plots/allSources_"+tag+"_mes"+mesTag[iMes]+".xmg");
+      for(size_t iConf=0;iConf<nConfs;iConf++)
+	for(size_t iSource=0;iSource<nSources;iSource++)
+	  {
+	    for(size_t t=0;t<=T/2;t++)
+	      {
+		const double& y=rawData(iConf,iSource,iGammaComb,iMes,t);
+		allSourcesPerMesPlot.write_xy(t,y);
+	      }
+	    allSourcesPerMesPlot.set_comment("Conf "+to_string(iConf)+"_source_"+to_string(iSource));
+	}
+    }
+  
   grace_file_t copyAve(basePath+"/plots/copy_ave_"+tag+".xmg");
   vector<djvec_t> copyAveData(2,djvec_t(THp1));
   for(size_t iCopy=0;iCopy<nCopies;iCopy++)
