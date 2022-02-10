@@ -94,6 +94,7 @@ int main(int narg,char **arg)
 	  const auto [rep,repInfVol]=
 	    ens.fitVKVK(rego,ens.nLevels);
 	  
+	  ens.computeWindow(rego);
 	  ens.computeAmu(rego,rep,repInfVol);
 	}
     }

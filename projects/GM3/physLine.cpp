@@ -3,6 +3,7 @@
 #endif
 
 #include <cmath>
+#include <iostream>
 
 namespace LEC
 {
@@ -52,6 +53,7 @@ double findMlForRatio(const double& x)
     1e-5;
   
   int niter=0;
+  const int maxNiter=1000;
   
   do
     if(ratio(m+s)<=x)
@@ -60,7 +62,12 @@ double findMlForRatio(const double& x)
 	s*=2;
       }
     else s/=2;
-  while(s>1e-14 and niter++<1000);
+  while(s>1e-14 and niter++<maxNiter);
+  
+  using namespace std;
+  
+  if(niter>=maxNiter)
+    cerr<<"Warning, unable to find the physical value of ml"<<endl;
   
   return
     m;

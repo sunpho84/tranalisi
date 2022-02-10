@@ -19,7 +19,8 @@ __top_builddir__bin_gm3_SOURCES= \
 	%D%/physLine.cpp \
 	%D%/rawData.cpp \
 	%D%/renoConstants.cpp \
-	%D%/VKVKRepresentation.cpp
+	%D%/VKVKRepresentation.cpp \
+	%D%/window.cpp
 
 # 	%D%/gilbertoBacco.cpp
 

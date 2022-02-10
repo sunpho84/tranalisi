@@ -99,7 +99,7 @@ void perens_t::computeAmu(const RegoType& rego,
   // two_pts_fit(eig1Z2L,eig1M,subCorr1,TH,8,19,"plots/SL1Rego"+regoTag[rego]+".xmg");
   // console<<"Z21L: "<<eig1Z2L<<endl;
   // console<<"M1L: "<<eig1M<<endl;
-  getAveForRego(0,nSources,1,rego).bin_write("plots/VKVK_corr_fromAmu_"+regoTag[rego]+".dat");
+  //getAveForRego(0,nSources,1,rego).bin_write("plots/VKVK_corr_fromAmu_"+regoTag[rego]+".dat");
   getAveForRego(0,nSources,1,rego).ave_err().write("plots/VKVK_corr_fromAmu_"+regoTag[rego]+".xmg");
   
   const double eu=2.0/3,ed=-1.0/3;
