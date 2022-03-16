@@ -42,7 +42,7 @@ djvec_t read_conf_set_t(const vector<string> &file_paths,size_t ntot_col,const v
   
   index_t index({{"file",nFiles},{"block",nblocks},{"block_entr",block_nentr}});
   
-  vector<double> rawData;
+  vector<double> rawData(index.max());
   
 #pragma omp parallel for
   for(size_t ifile=0;ifile<nFiles;ifile++)
