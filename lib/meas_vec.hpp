@@ -560,6 +560,9 @@ template <class T> vmeas_t<boot_t<T>> bvec_from_jvec(const size_t seed,const vme
   return out;
 }
 
+//! read from a list of paths
+djvec_t read_conf_set_t(const vector<string> &file_paths,size_t ntot_col,const vector<size_t> &cols,size_t nlines,bool verbosity);
+
 //! read from a list of confs
 djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size_t ntot_col,const vector<size_t> &cols,size_t nlines,bool verbosity=VERBOSE);
 

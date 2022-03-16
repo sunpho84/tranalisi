@@ -5,27 +5,29 @@
 #ifdef USE_OMP
  #include <omp.h>
 #endif
+
+#include <index.hpp>
 #include <meas_vec.hpp>
 
-djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size_t ntot_col,const vector<size_t> &cols,size_t nlines,bool verbosity)
+djvec_t read_conf_set_t(const vector<string> &file_paths,size_t ntot_col,const vector<size_t> &cols,size_t nlines,bool verbosity)
 {
-  check_njacks_init();
-  
-  //get the list of existing files
-  size_t clust_size=trim_to_njacks_multiple(id_list);
-  
-  if(verbosity==VERBOSE) cout<<"Clust size: "<<clust_size<<endl;
-  
   //open all files
   vector<obs_file_t> files;
-  for(auto &id : id_list) files.push_back(obs_file_t(combine(template_path.c_str(),id),ntot_col,cols));
+  for(auto &file_path : file_paths)
+    files.push_back(obs_file_t(file_path,ntot_col,cols));
+  
+  const size_t nFiles=file_paths.size();
   
   //measure the length of the first file
   size_t length;
-  if(files.size()==0) length=0;
+  if(nFiles==0) length=0;
   else length=files[0].length(nlines);
   
   if(verbosity==VERBOSE) cout<<"Total length (in multiple of nlines="<<nlines<<"): "<<length<<endl;
+  
+  const double clust_size=nFiles/(double)njacks;
+  
+  if(verbosity==VERBOSE) cout<<"Clust size: "<<clust_size<<endl;
   
   //check that the length is a multiple of ncols*nlines
   size_t block_nentr=nlines*cols.size();
@@ -37,36 +39,40 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
   djvec_t data(length);
   
   if(verbosity==VERBOSE)cout<<"Starting to read"<<endl;
+  
+  index_t index({{"file",nFiles},{"block",nblocks},{"block_entr",block_nentr}});
+  
+  vector<double> rawData;
+  
 #pragma omp parallel for
-  for(size_t ijack=0;ijack<njacks;ijack++)
+  for(size_t ifile=0;ifile<nFiles;ifile++)
     {
-      const size_t beg_file=ijack*clust_size;
-      const size_t end_file=(ijack+1)*clust_size;
-      
       if(verbosity)
-	printf("Block of ijack: %zu, reading from file %zu to %zu\n",ijack,beg_file,end_file);
-      
-      for(size_t ifile=beg_file;ifile<end_file;ifile++)
-	{
-	  if(verbosity)
 #ifdef USE_OMP
-	    printf("Thread %d/%d reading file %zu/%zu\n",omp_get_thread_num(),omp_get_num_threads(),ifile,files.size());
+	printf("Thread %d/%d reading file %zu/%zu\n",omp_get_thread_num(),omp_get_num_threads(),ifile,files.size());
 #else
-	    printf("Reading file %zu/%zu\n",ifile,files.size());
+      printf("Reading file %zu/%zu\n",ifile,files.size());
 #endif
+      
+      //read all blocks
+      for(size_t iblock=0;iblock<nblocks;iblock++)
+	{
+	  vector<double> temp=files[ifile].read(nlines,false);
+	  if(temp.size()!=block_nentr) CRASH("Error reading file %zu, iblock %zu",ifile,iblock);
 	  
-	  //read all blocks
-	  for(size_t iblock=0;iblock<nblocks;iblock++)
-	    {
-	      vector<double> temp=files[ifile].read(nlines,false);
-	      if(temp.size()!=block_nentr) CRASH("Error reading file %zu, iblock %zu",ifile,iblock);
-	      
-	      //copy
-	      for(size_t ientr=0;ientr<block_nentr;ientr++) data[ientr+block_nentr*iblock][ijack]+=temp[ientr];
-	    }
+	  //copy
+	  for(size_t ientr=0;ientr<block_nentr;ientr++) rawData[index({ifile,iblock,ientr})]=temp[ientr];
 	}
     }
+    
   if(verbosity) cout<<"Finished reading"<<endl;
+  
+  jackknivesFill(nFiles,[&](const size_t& iConf,const size_t& iClust,const double& weight)
+  {
+    for(size_t iblock=0;iblock<nblocks;iblock++)
+      for(size_t ientr=0;ientr<block_nentr;ientr++)
+	data[ientr+block_nentr*iblock][iClust]+=rawData[index({iConf,iblock,ientr})];
+  });
   
   //clusterize each entry
   {
@@ -76,6 +82,17 @@ djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size
   }
   
   return data;
+}
+
+djvec_t read_conf_set_t(const string &template_path,vector<size_t> &id_list,size_t ntot_col,const vector<size_t> &cols,size_t nlines,bool verbosity)
+{
+  check_njacks_init();
+  
+  //open all files
+  vector<string> file_list;
+  for(auto &id : id_list) file_list.push_back(combine(template_path.c_str(),id));
+  
+  return read_conf_set_t(file_list,ntot_col,cols,nlines,verbosity);
 }
 
 djvec_t read_conf_set_t(const string &template_path,const range_t &range,size_t ntot_col,const vector<size_t> &cols,size_t nlines,bool verbosity)
