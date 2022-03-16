@@ -71,7 +71,7 @@ djvec_t read_conf_set_t(const vector<string> &file_paths,size_t ntot_col,const v
   {
     for(size_t iblock=0;iblock<nblocks;iblock++)
       for(size_t ientr=0;ientr<block_nentr;ientr++)
-	data[ientr+block_nentr*iblock][iClust]+=rawData[index({iConf,iblock,ientr})];
+	data[ientr+block_nentr*iblock][iClust]+=rawData[index({iConf,iblock,ientr})]*weight;
   });
   
   //clusterize each entry
