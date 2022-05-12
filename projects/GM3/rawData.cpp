@@ -277,8 +277,7 @@ vector<string> getSourcesList(const string& firstConf,const string& sourceFilePa
       H5File file;
       file.openFile(firstConf,H5F_ACC_RDONLY);
       H5::Group group = file.openGroup("dd");
-      std::vector<std::string> datasetNames;
-      H5Literate(group.getId(),H5_INDEX_NAME,H5_ITER_INC,NULL,file_info,&datasetNames);
+      H5Literate(group.getId(),H5_INDEX_NAME,H5_ITER_INC,NULL,file_info,&sourcesList);
       group.close();
     }
   
