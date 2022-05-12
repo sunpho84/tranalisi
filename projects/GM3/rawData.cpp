@@ -483,7 +483,7 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
 	  // B(k)=(G5)_k (GSI)_{kl(k)}
 	  const array<array<int,5>,18> map{array<int,5>
 					   {idAKAK,6,6,+1,0},{idAKAK,7,7,+1,0},{idAKAK,8,8,+1,0},
-					   {idVKVK,1,1,+1,0},{idVKVK,2,2,+1,0},{idVKVK,3,3,+1,0},
+					   {idVJVJ,1,1,+1,0},{idVJVJ,2,2,+1,0},{idVJVJ,3,3,+1,0},
 					   {idVKTK,10,1,-1,0},{idVKTK,11,2,-1,0},{idVKTK,12,3,-1,0},
 					   {idTKVK,1,10,-1,0},{idTKVK,2,11,-1,0},{idTKVK,3,12,-1,0},
 					   {idA0A0,9,9,+1,0},
