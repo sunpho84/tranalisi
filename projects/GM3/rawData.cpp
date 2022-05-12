@@ -481,9 +481,13 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
 	  
 	  // A(i)=(GSO)_{ij(i)} (G5)_{j(i)}
 	  // B(k)=(G5)_k (GSI)_{kl(k)}
-	  const array<array<int,5>,10> map{array<int,5>
+	  const array<array<int,5>,18> map{array<int,5>
+					   {idAKAK,6,6,+1,0},{idAKAK,7,7,+1,0},{idAKAK,8,8,+1,0},
+					   {idVKVK,1,1,+1,0},{idVKVK,2,2,+1,0},{idVKVK,3,3,+1,0},
 					   {idVKTK,10,1,-1,0},{idVKTK,11,2,-1,0},{idVKTK,12,3,-1,0},
 					   {idTKVK,1,10,-1,0},{idTKVK,2,11,-1,0},{idTKVK,3,12,-1,0},
+					   {idA0A0,9,9,+1,0},
+					   {idV0V0,4,4,+1,0},
 					   {idA0P5,9,5,-1,0},
 					   {idP5A0,5,9,-1,0},
 					   {idV0P5,4,5,-1,1},
@@ -887,11 +891,11 @@ void perens_t::convertForSilvano() const
 		out<<"  # Contraction of S0_th0_m0_r"<<(_iMes&1)<<"_ll ^ \\dag and S0_th0_m0_r"<<((_iMes>>1)&1)<<"_ll:"<<endl;
 		out<<endl;
 		
-		const size_t mapCorr[6]={0,1,1,1,5,6};
-		const char corrName[6][5]={"P5P5","V1V1","V2V2","V3V3","A0P5","P5A0"};
-		for(size_t _iCorr=0;_iCorr<6;_iCorr++)
+		// const size_t mapCorr[6]={0,1,1,1,5,6};
+		// const char corrName[6][5]={"P5P5","V1V1","V2V2","V3V3","A0P5","P5A0"};
+		for(size_t _iCorr=0;_iCorr<nGammaComb;_iCorr++)
 		  {
-		    out<<endl<<"  # "<<corrName[_iCorr]<<endl;
+		    out<<endl<<"  # "<<gammaCombTag[_iCorr]<<endl;
 		    for(size_t _t=0;_t<T;_t++)
 		      {
 			size_t t=_t;
@@ -900,7 +904,7 @@ void perens_t::convertForSilvano() const
 			
 			double s=0;
 			for(size_t iSource=0;iSource<nSources;iSource++)
-			  s+=rawData(iConf,iSource,mapCorr[_iCorr],iMes,t);
+			  s+=rawData(iConf,iSource,_iCorr,iMes,t);
 			s/=nSources*L*L*L;
 			out<<s<<" "<<0<<endl;
 		      }
