@@ -146,7 +146,8 @@ struct DataLoader
   {
     storedPath=path;
     file.openFile(path,H5F_ACC_RDONLY);
-    groupName=file.getObjnameByIdx(0);
+    if(loadMethod==LoadMethod::Extended)
+      groupName=file.getObjnameByIdx(0);
   }
   
   void close()
@@ -154,14 +155,23 @@ struct DataLoader
     file.close();
   }
   
-  void load(const index_t& idData_loader)
+  void load(const index_t& idData_loader,const string& sourceName)
   {
     for(size_t iMes=0;iMes<nMes;iMes++)
       {
 	DataSet dataset;
 	
-	const string fullGroupName=
-	  groupName+"/mesons/"+mesTag[iMes];
+	string fullGroupName;
+	
+	switch(loadMethod)
+	  {
+	  case LoadMethod::Compact:
+	    fullGroupName=mesTag[iMes]+string("/")+sourceName;
+	    break;
+	  case LoadMethod::Extended:
+	    fullGroupName=groupName+"/mesons/"+mesTag[iMes];
+	    break;
+	  }
 	
 	try
 	  {
@@ -180,14 +190,23 @@ struct DataLoader
       }
   }
   
-  void openLoad(const index_t& idOpenData_loader)
+  void openLoad(const index_t& idOpenData_loader,const string& sourceName)
   {
     const string tag[3]={"uu_open","ud_open","dd_open"};
     
     for(size_t iMes=0;iMes<nMes;iMes++)
       {
-	const string fullGroupName=
-	  groupName+"/mesons/"+tag[iMes];
+	string fullGroupName;
+	
+	switch(loadMethod)
+	  {
+	  case LoadMethod::Compact:
+	    fullGroupName=tag[iMes]+string("/")+sourceName;
+	    break;
+	  case LoadMethod::Extended:
+	    fullGroupName=groupName+"/mesons/"+tag[iMes];
+	    break;
+	  }
 	
 	try
 	  {
@@ -221,22 +240,33 @@ string perens_t::sourceName(const size_t& iConf,const size_t& iSource)
 vector<string> getSourcesList(const string& firstConf,const string& sourceFilePattern)
 {
   vector<string> sourcesList;
-  glob_t globbuf;
   
-  const string sourcesPattern=
-    (firstConf+"/"+sourceFilePattern);
-  
-  if(glob(sourcesPattern.c_str(),0,nullptr,&globbuf))
-    CRASH("Unable to find pattern %s for source",sourcesPattern.c_str());
+  if(loadMethod==LoadMethod::Extended)
+    {
+      glob_t globbuf;
+      
+      const string sourcesPattern=
+	(firstConf+"/"+sourceFilePattern);
+      
+      if(glob(sourcesPattern.c_str(),0,nullptr,&globbuf))
+	CRASH("Unable to find pattern %s for source",sourcesPattern.c_str());
+      else
+	for(int j=0;j<(int)globbuf.gl_pathc;j++)
+	  {
+	    const std::filesystem::path confFull=globbuf.gl_pathv[j];
+	    sourcesList.push_back(confFull.filename());
+	  }
+      globfree(&globbuf);
+      
+      console<<"Found: "<<sourcesList.size()<<" sources for reference conf "<<firstConf<<endl;
+    }
   else
-    for(int j=0;j<(int)globbuf.gl_pathc;j++)
-      {
-	const std::filesystem::path confFull=globbuf.gl_pathv[j];
-	sourcesList.push_back(confFull.filename());
-      }
-  globfree(&globbuf);
-  
-  console<<"Found: "<<sourcesList.size()<<" sources for reference conf "<<firstConf<<endl;
+    {
+        H5File file;
+	file.openFile(firstConf,H5F_ACC_RDONLY);
+	file.openDataSet("dd");
+	CRASH("found %d",(int)file.getObjCount());
+    }
   
   return sourcesList;
 }
@@ -373,13 +403,19 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
       
       cout<<MPIrank<<" "<<iConf<<" ["<<firstConf<<":"<<lastConf<<"] "<<confsList[iConf]<<endl;
       
+      string file;
+      if(loadMethod==LoadMethod::Compact)
+	file=confsList[iConf];
+      
       for(size_t iSource=0;iSource<nSources;iSource++)
 	{
-	  const string file=
-	    confsList[iConf]+"/"+sourcesList[iSource];
+	  if(loadMethod==LoadMethod::Extended)
+	    file=
+	      confsList[iConf]+"/"+sourcesList[iSource];
+	  
 	  loader.open(file);
-	  loader.load(idData_loader);
-	  loader.openLoad(idOpenData_loader);
+	  loader.load(idData_loader,sourcesList[iSource]);
+	  loader.openLoad(idOpenData_loader,sourcesList[iSource]);
 	  
 	  for(size_t iMes=0;iMes<nMes;iMes++)
 	    for(size_t tIn=0;tIn<T;tIn++)

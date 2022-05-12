@@ -14,7 +14,7 @@ T uminus(const T &in)
 
 //! define the square of a double, float or integer
 template <class T>
-T sqr(const T &x)
+constexpr T sqr(const T &x)
 {return x*x;}
 
 //! define the cube

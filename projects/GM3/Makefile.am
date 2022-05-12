@@ -3,6 +3,10 @@ AM_CPPFLAGS+=-I$(top_srcdir)/projects/%D%
 bin_PROGRAMS+= \
 	$(top_builddir)/bin/gm3
 
+bin_PROGRAMS+= \
+	$(top_builddir)/bin/scaleSetting \
+	$(top_builddir)/bin/ZoldRun
+
 #	$(top_builddir)/bin/gm3Test
 
 #__top_builddir__bin_gm3Test_SOURCES= 
@@ -23,6 +27,12 @@ __top_builddir__bin_gm3_SOURCES= \
 	%D%/window.cpp
 
 # 	%D%/gilbertoBacco.cpp
+
+__top_builddir__bin_ZoldRun_SOURCES= \
+	%D%/ZoldRun.cpp
+
+__top_builddir__bin_scaleSetting_SOURCES= \
+	%D%/scaleSetting.cpp
 
 __top_builddir__bin_gm3_CXXFLAGS=@MPI_CXXFLAGS@
 __top_builddir__bin_gm3_LDFLAGS=@MPI_CXXLDFLAGS@

@@ -614,13 +614,19 @@ auto jackCall(const F& f,
   using R=
     decltype(f(getJack(std::forward<Args>(args),0)...));
   
-  jack_t<R> res;
-  
-  for(size_t ijack=0;ijack<=njacks;ijack++)
-    res[ijack]=f(getJack(std::forward<Args>(args),ijack)...);
-  
-  return
-    res;
+  if constexpr(not std::is_same_v<R,void>)
+    {
+      jack_t<R> res;
+      
+      for(size_t ijack=0;ijack<=njacks;ijack++)
+	res[ijack]=f(getJack(std::forward<Args>(args),ijack)...);
+      
+      return
+	res;
+    }
+  else
+    for(size_t ijack=0;ijack<=njacks;ijack++)
+      f(getJack(std::forward<Args>(args),ijack)...);
 }
 
 #undef EXTERN_JACK

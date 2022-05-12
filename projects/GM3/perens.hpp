@@ -58,6 +58,7 @@ struct perens_t
     aAve=input.read<double>("a");
     aErr=input.read<double>();
     ZaPetros=input.read<double>("Za");
+    loadMethod=convertTagToLoadMethod(input.read<string>("LoadMethod"));
     confsDirPattern=input.read<string>("ConfsDirPattern");
     sourceFilePattern=input.read<string>("SourceFilePattern");
     refConfPattern=input.read<string>("RefConfPattern");

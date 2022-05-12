@@ -535,7 +535,7 @@ public:
 		cout<<contr<<" = ";
 		cout<<"["<<nx<<"-f("<<ix<<")]" "*";
 		cout<<"["<<ny<<"-f("<<iy<<")]" "*";
-	        cout<<inv_cov[ix*data.size()+iy]<<endl;
+		cout<<inv_cov[ix*data.size()+iy]<<endl;
 	      }
 	    
       	}

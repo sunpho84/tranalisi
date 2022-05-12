@@ -25,6 +25,22 @@ static const string regoTag[2]={"TM","OS"};
 
 constexpr size_t regoZId[2]={1,0};
 
+enum class LoadMethod{Compact,Extended};
+LoadMethod loadMethod;
+
+inline LoadMethod convertTagToLoadMethod(const string method)
+{
+  if(method=="compact")
+    return LoadMethod::Compact;
+  
+  if(method=="extended")
+    return LoadMethod::Extended;
+  
+  CRASH("Unknown method %s, use compact or extended",method.c_str());
+  
+  return {};
+}
+
 using AveId=array<size_t,4>;
 
 constexpr double corrNorm(const CORR_ID& id)
