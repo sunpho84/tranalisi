@@ -60,7 +60,8 @@ struct perens_t
     ZaPetros=input.read<double>("Za");
     loadMethod=convertTagToLoadMethod(input.read<string>("LoadMethod"));
     confsDirPattern=input.read<string>("ConfsDirPattern");
-    sourceFilePattern=input.read<string>("SourceFilePattern");
+    if(loadMethod==LoadMethod::Extended)
+      sourceFilePattern=input.read<string>("SourceFilePattern");
     refConfPattern=input.read<string>("RefConfPattern");
     rawDataPackedPath=input.read<string>("Output");
     input.expect("TFitP5P5");

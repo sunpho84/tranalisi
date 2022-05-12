@@ -262,10 +262,10 @@ vector<string> getSourcesList(const string& firstConf,const string& sourceFilePa
     }
   else
     {
-        H5File file;
-	file.openFile(firstConf,H5F_ACC_RDONLY);
-	file.openDataSet("dd");
-	CRASH("found %d",(int)file.getObjCount());
+      H5File file;
+      file.openFile(firstConf,H5F_ACC_RDONLY);
+      file.openGroup("dd");
+      CRASH("found %d",(int)file.getObjCount());
     }
   
   return sourcesList;
