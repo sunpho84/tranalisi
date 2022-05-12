@@ -238,6 +238,8 @@ string perens_t::sourceName(const string& confName,const size_t& iSource)
       return confName+"/"+sourcesList[iSource];
       break;
     }
+  
+  return "";
 }
 
 string perens_t::sourceName(const size_t& iConf,const size_t& iSource)
