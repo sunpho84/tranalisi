@@ -237,6 +237,18 @@ string perens_t::sourceName(const size_t& iConf,const size_t& iSource)
   return sourceName(possibleConfsList[iConf],iSource);
 }
 
+herr_t file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *opdata)
+{
+  hid_t group;
+  auto group_names=reinterpret_cast< std::vector<std::string>* >(opdata);
+  group = H5Gopen2(loc_id, name, H5P_DEFAULT);
+  //do stuff with group object, if needed
+  group_names->push_back(name);
+  cout << "Name : " << name << endl;
+  H5Gclose(group);
+  return 0;
+}
+
 vector<string> getSourcesList(const string& firstConf,const string& sourceFilePattern)
 {
   vector<string> sourcesList;
@@ -264,8 +276,11 @@ vector<string> getSourcesList(const string& firstConf,const string& sourceFilePa
     {
       H5File file;
       file.openFile(firstConf,H5F_ACC_RDONLY);
-      file.openGroup("dd");
+      H5::Group group = file.openGroup("dd");
+      std::vector<std::string> group_names;
+      herr_t idx=H5Literate(group.getId(),H5_INDEX_NAME, H5_ITER_INC, NULL, file_info, &group_names);
       CRASH("found %d",(int)file.getObjCount());
+      group.close();
     }
   
   return sourcesList;
