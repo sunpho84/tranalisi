@@ -55,6 +55,8 @@ struct dirac_matr
   }
 };
 
+LoadMethod loadMethod;
+
 dirac_matr gam[16]={dirac_matr{{0,1,2,3},std::complex<double>{1,0},{1,0},{1,0},{1,0}},
 		    {{3,2,1,0},std::complex<double>{0,1},{0,1},{0,-1},{0,-1}},
 		    {{3,2,1,0},std::complex<double>{1,0},{-1,0},{-1,0},{1,0}},

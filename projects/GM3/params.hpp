@@ -26,7 +26,7 @@ static const string regoTag[2]={"TM","OS"};
 constexpr size_t regoZId[2]={1,0};
 
 enum class LoadMethod{Compact,Extended};
-LoadMethod loadMethod;
+EXTERN LoadMethod loadMethod;
 
 inline LoadMethod convertTagToLoadMethod(const string method)
 {
