@@ -279,7 +279,6 @@ vector<string> getSourcesList(const string& firstConf,const string& sourceFilePa
       H5::Group group = file.openGroup("dd");
       std::vector<std::string> datasetNames;
       H5Literate(group.getId(),H5_INDEX_NAME,H5_ITER_INC,NULL,file_info,&datasetNames);
-      CRASH("found %d",(int)datasetNames.size());
       group.close();
     }
   
