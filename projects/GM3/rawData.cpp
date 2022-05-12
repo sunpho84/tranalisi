@@ -229,7 +229,15 @@ struct DataLoader
 
 string perens_t::sourceName(const string& confName,const size_t& iSource)
 {
-  return confName+"/"+sourcesList[iSource];
+  switch(loadMethod)
+    {
+    case LoadMethod::Compact:
+      return confName;
+      break;
+    case LoadMethod::Extended:
+      return confName+"/"+sourcesList[iSource];
+      break;
+    }
 }
 
 string perens_t::sourceName(const size_t& iConf,const size_t& iSource)
@@ -328,40 +336,64 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
       {
 	const string& conf=possibleConfsList[iConf];
 	
-	string sourcePath;
-	size_t iSource=0;
-	while(iSource<nSources and accepted[iConf])
+	switch(loadMethod)
 	  {
-	    sourcePath=sourceName(iConf,iSource);
-	    
-	    const bool exists=
-	      std::filesystem::exists(sourcePath);
-	    
-	    bool correctSize=false;
-	    size_t size=refSize;
-	    if(exists)
-	      {
-		size=std::filesystem::file_size(sourcePath);
-		correctSize=(size==refSize);
-	      }
-	    
-	    accepted[iConf]=exists and correctSize;
-	    
-	    if(not accepted[iConf])
-	      {
-		ostringstream os;
-		os<<"Conf "<<conf<<" discarded since "<<sourcePath;
-		if(not exists)
-		  os<<" does not exists"<<endl;
-		else
-		  if(not correctSize)
-		    os<<" has wrong size "<<size<<" against reference size "<<refSize;
-		cout<<os.str()<<endl;
-	      }
-	    iSource++;
+	  case LoadMethod::Extended:
+	    {
+	      string sourcePath;
+	      size_t iSource=0;
+	      while(iSource<nSources and accepted[iConf])
+		{
+		  sourcePath=sourceName(iConf,iSource);
+		  
+		  const bool exists=
+		    std::filesystem::exists(sourcePath);
+		  
+		  bool correctSize=false;
+		  size_t size=refSize;
+		  if(exists)
+		    {
+		      size=std::filesystem::file_size(sourcePath);
+		      correctSize=(size==refSize);
+		    }
+		  
+		  accepted[iConf]=exists and correctSize;
+		  
+		  if(not accepted[iConf])
+		    {
+		      ostringstream os;
+		      os<<"Conf "<<conf<<" discarded since "<<sourcePath;
+		      if(not exists)
+			os<<" does not exists"<<endl;
+		      else
+			if(not correctSize)
+			  os<<" has wrong size "<<size<<" against reference size "<<refSize;
+		      cout<<os.str()<<endl;
+		    }
+		  iSource++;
+		}
+	    }
+	    break;
+	  case LoadMethod::Compact:
+	    {
+	      const string sourcePath=sourceName(iConf,0);
+		  
+		  const size_t size=std::filesystem::file_size(sourcePath);
+		  const bool correctSize=(size==refSize);
+		  
+		  accepted[iConf]=correctSize;
+		  
+		  if(not accepted[iConf])
+		    {
+		      ostringstream os;
+		      os<<"Conf "<<conf<<" discarded since "<<sourcePath;
+		      os<<" has wrong size "<<size<<" against reference size "<<refSize;
+		      cout<<os.str()<<endl;
+		    }
+		}
+	    break;
 	  }
       }
-  }
   
   for(size_t loopRank=0;loopRank<nMPIranks;loopRank++)
     {
