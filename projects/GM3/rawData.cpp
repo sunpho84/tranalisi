@@ -390,10 +390,11 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
 		      os<<" has wrong size "<<size<<" against reference size "<<refSize;
 		      cout<<os.str()<<endl;
 		    }
-		}
+	    }
 	    break;
 	  }
       }
+  }
   
   for(size_t loopRank=0;loopRank<nMPIranks;loopRank++)
     {
