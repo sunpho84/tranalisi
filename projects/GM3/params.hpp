@@ -15,10 +15,10 @@ EXTERN size_t nMPIranks,MPIrank INIT_EXTERN_TO(=0);
 EXTERN ofstream console;
 
 constexpr size_t nGammaComb=14;
-constexpr bool isVK[]=                     {0     ,1     ,1     ,1     ,1     ,1     ,0     ,0     ,0     ,0     ,1     ,1     ,1     ,1};
-constexpr int parity[]=                    {+1    ,+1    ,+1    ,+1    ,-1    ,-1    ,-1    ,-1    ,-1    ,-1    ,+1    ,+1    ,+1    ,+1};
-constexpr char gammaCombTag[nGammaComb][5]={"P5P5","P6P6","VKVK","TKTK","VKTK","TKVK","A0P5","P5A0","V0P5","P5V0","VJVJ","V0V0","A0A0","AKAK"};
-enum CORR_ID                               {idP5P5,idP6P6,idVKVK,idTKTK,idVKTK,idTKVK,idA0P5,idP5A0,idV0P5,idP5V0,idVJVJ,idV0V0,idA0A0,idAKAK};
+constexpr bool isVK[]=                     {0     ,1     ,1     ,1     ,1     ,0     ,0     ,0     ,0     ,1     ,1     ,1     ,1     ,1};
+constexpr int parity[]=                    {+1    ,+1    ,+1    ,-1    ,-1    ,-1    ,-1    ,-1    ,-1    ,+1    ,+1    ,+1    ,+1    ,+1};
+constexpr char gammaCombTag[nGammaComb][5]={"P5P5","VKVK","TKTK","VKTK","TKVK","A0P5","P5A0","V0P5","P5V0","VJVJ","V0V0","A0A0","P6P6","AKAK"};
+enum CORR_ID                               {idP5P5,idVKVK,idTKTK,idVKTK,idTKVK,idA0P5,idP5A0,idV0P5,idP5V0,idVJVJ,idV0V0,idA0A0,idP6P6,idAKAK};
 
 enum RegoType{REGO_TM,REGO_OS};
 static const string regoTag[2]={"TM","OS"};
