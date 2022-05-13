@@ -53,9 +53,11 @@ constexpr double corrNorm(const CORR_ID& id)
   case idV0V0:
     return 1.0;
     break;
-  case idVKVK:
   case idVJVJ:
   case idAKAK:
+    return +3.0;
+    break;
+  case idVKVK:
   case idTKTK:
   case idVKTK:
   case idTKVK:
