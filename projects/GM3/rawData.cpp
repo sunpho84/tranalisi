@@ -502,7 +502,7 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
 		for(const auto& m : map)
 		  {
 		    const double s=
-		      ((tIn>=TH)?m[3]:+1.0)*std::get<4>(m);
+		      ((tIn>=TH)?m[3]:+1.0)*std::get<5>(m);
 		    
 		    const complex imaginarity{
 		      (m[4]==0)?1.0:0.0,
