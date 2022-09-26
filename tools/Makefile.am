@@ -16,6 +16,7 @@ bin_PROGRAMS= \
 	prepare_jackknives \
 	simple_effective_mass \
 	test \
+	tuning_marco \
 	two_pts_fit \
 	w0
 
@@ -42,6 +43,8 @@ prepare_jackknives_SOURCES=prepare_jackknives.cpp
 simple_effective_mass_SOURCES=simple_effective_mass.cpp
 
 test_SOURCES=test.cpp
+
+tuning_marco_SOURCES=tuning_marco.cpp
 
 two_pts_fit_SOURCES=two_pts_fit.cpp
 

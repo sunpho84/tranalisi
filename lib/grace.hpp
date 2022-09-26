@@ -16,7 +16,7 @@
 #include <tools.hpp>
 
 using namespace std;
-using namespace placeholders;
+using namespace std::placeholders;
 
 namespace grace
 {
