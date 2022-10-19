@@ -29,7 +29,7 @@ void jackknivesFill(const size_t& nConfs,const function<void(const size_t& iConf
 	  const double beg=binPos;
 	  
 	  /// Rectangle right point
-	  const double end=std::min(binEnd,beg+1.0);
+	  const double end=std::min(binEnd,iConf+1.0);
 	  
 	  /// Rectangle horizontal size
 	  const double weight=end-beg;
