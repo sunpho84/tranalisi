@@ -728,7 +728,7 @@ void cont_chir_fit_pol(const dbvec_t &a,const dbvec_t &z,const vector<cont_chir_
 //! solve a linear system
 template <class TV,
 	  class Base=typename TV::base_type>
-TV lin_solve(vector<double> A,TV b)
+TV lin_solve(TV A,TV b)
 {
   if(A.size()!=sqr(b.size())) CRASH("A has different size from b^2, size A = %zu, size b = %zu",A.size(),b.size());
   
@@ -743,13 +743,13 @@ TV lin_solve(vector<double> A,TV b)
   
   for(int i=0;i<d;i++)
     {
-      double C=A[i*d+i];
+      Base C=A[i*d+i];
       for(int j=i;j<d;j++) A[i*d+j]/=C;
       b[i]/=C;
       
       for(int k=i+1;k<d;k++)
         {
-          double C=A[k*d+i];
+          Base C=A[k*d+i];
           for(int j=i;j<d;j++) A[k*d+j]-=A[i*d+j]*C;
           b[k]-=C*b[i];
         }
@@ -770,40 +770,51 @@ TV lin_solve(vector<double> A,TV b)
 
 //! perform polynomial fit
 template <class TV>
-TV poly_fit(const vector<double> &x,const TV &y,int d,double xmin=-1e300,double xmax=1e300,const string path="")
+TV poly_fit(const TV &x,const TV &y,int d,double xmin=-1e300,double xmax=1e300,const string path="")
 {
   if(x.size()!=y.size()) CRASH("x and y have different sizes, %zu %zu",x.size(),y.size());
   
   // cout<<x<<endl;
   // cout<<y.ave_err()<<endl;
   
-  vector<double> Al(2*d+1,0.0);
+  TV Al(2*d+1,0.0);
   TV c(d+1);
   c=0.0;
   
   for(int p=0;p<(int)y.size();p++)
-    if(x[p]<=xmax and x[p]>=xmin)
+    if(x[p].ave()<=xmax and x[p].ave()>=xmin)
       {
         //calculate the weight
-        double w=pow(y[p].err(),-2);
+        auto w=Al[0]*0.0+pow(y[p].err(),-2);
 	//cout<<w<<endl;
         //compute Al and c
         for(int f=0;f<=2*d;f++)
           {
             Al[f]+=w;
             if(f<=d) c[f]+=y[p]*w;
-            w*=x[p];
+            w=w*x[p];
           }
       }
   
-  vector<double> A((d+1)*(d+1));
+  TV A((d+1)*(d+1));
   for(int i=0;i<=d;i++)
     for(int j=0;j<=d;j++)
       A[i*(d+1)+j]=Al[i+j];
   
   TV res=lin_solve(A,c);
   
-  if(path!="") write_poly_fit_plot(path,xmin,xmax,res,x,y);
+  if(path!="")
+    {
+      grace_file_t out(path);
+      out.write_polygon(std::bind(poly_eval,res,_1),xmin,xmax);
+      out.new_data_set();
+      out.set_settype(grace::XYDXDY);
+      for(size_t i=0;i<x.size();i++)
+	if(not std::isnan(y[i].err()))
+	  out<<x[i].ave()<<" "<<y[i].ave()<<" "<<x[i].err()<<" "<<y[i].err()<<endl;
+      out.set_need_close_set();
+      out.new_data_set();
+    }
   
   return res;
 }

@@ -5,7 +5,10 @@
 #include <filesystem>
 #include <H5Cpp.h>
 
-#include <mpi.h>
+#ifdef USE_MPI
+# include <mpi.h>
+#endif
+
 #include <glob.h>
 
 #include "effective.hpp"
@@ -398,6 +401,7 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
       }
   }
   
+#ifdef USE_MPI
   for(size_t loopRank=0;loopRank<nMPIranks;loopRank++)
     {
       const size_t confChunk=(nPossibleConfs+nMPIranks-1)/nMPIranks;
@@ -405,6 +409,7 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
       const size_t lastConf=std::min(firstConf+confChunk,nPossibleConfs);
       MPI_Bcast(&accepted[firstConf],lastConf-firstConf,MPI_INT,loopRank,MPI_COMM_WORLD);
     }
+#endif
   
   for(size_t iConf=0;iConf<nPossibleConfs;iConf++)
     if(accepted[iConf])
@@ -542,11 +547,14 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
   
   if(MPIrank!=0)
     {
+#ifdef USE_MPI
       if(nConfsPerRank)
 	MPI_Send(&_rawData[0],idData.max(),MPI_DOUBLE,0,MPIrank,MPI_COMM_WORLD);
+#endif
     }
   else
     {
+#ifdef USE_MPI
       for(size_t iRank=1;iRank<nMPIranks;iRank++)
 	{
 	  const size_t firstConf=std::min(iRank*confChunkSize,nConfs);
@@ -560,6 +568,7 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
 	      MPI_Recv(&_rawData[beg],size,MPI_DOUBLE,iRank,iRank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	    }
 	}
+#endif
       
       for(size_t i=0;i<idData.max();i++)
 	{
@@ -580,7 +589,9 @@ void perens_t::loadAndPackRawData(int narg,char** arg)
       out.bin_write(_rawData);
     }
   
+#ifdef USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
+#endif
 }
 
 void perens_t::rawDataAn(const size_t& iGammaComb)

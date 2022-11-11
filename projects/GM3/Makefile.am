@@ -34,7 +34,7 @@ __top_builddir__bin_ZoldRun_SOURCES= \
 __top_builddir__bin_scaleSetting_SOURCES= \
 	%D%/scaleSetting.cpp
 
-__top_builddir__bin_gm3_CXXFLAGS=@MPI_CXXFLAGS@
-__top_builddir__bin_gm3_LDFLAGS=@MPI_CXXLDFLAGS@
-__top_builddir__bin_gm3_LDADD=@MPI_CXXLIBS@ $(top_builddir)/lib/libtran.a -lmpfr
+# __top_builddir__bin_gm3_CXXFLAGS=@MPI_CXXFLAGS@
+# __top_builddir__bin_gm3_LDFLAGS=@MPI_CXXLDFLAGS@
+__top_builddir__bin_gm3_LDADD=$(top_builddir)/lib/libtran.a -lmpfr #@MPI_CXXLIBS@ 
 

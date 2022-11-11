@@ -122,17 +122,54 @@ AC_LINK_IFELSE(
 	       [AC_MSG_RESULT([no]);Minuit2_found=false])
 LIBS=$SAVED_LIBS
 
-#mpi
-LX_FIND_MPI
-AC_MSG_RESULT([with C++ MPI cpp options... $MPI_CXXFLAGS])
-AC_MSG_RESULT([with C++ MPI link options... $MPI_CXXLDFLAGS])
-AC_MSG_RESULT([with C++ MPI libs... $MPI_CXXLIBS])
-AC_SUBST(MPI_CXXFLAGS)
-AC_SUBST(MPI_CXXLDFLAGS)
-AC_SUBST(CXXFLAGS)
-AC_SUBST(MPI_CXXLIBS)
-AC_SUBST(CPPFLAGS)
-AC_SUBST(CXXLDFLAGS)
+#check if we enable splitting MPI autosearch
+AC_ARG_ENABLE(MPI-autosearch,
+	AS_HELP_STRING([--enable-MPI-autosearch],[Enable MPI autosearch]),
+	enable_MPI_autosearch="${enableval}",
+	enable_MPI_autosearch="yes")
+AC_MSG_RESULT([enabling MPI autosearch... $enable_MPI_autosearch])
+
+#set MPI for fortran
+if test "$enable_fortran" == "yes" -a "$enable_MPI_autosearch" == "yes"
+then
+	AC_LANG_PUSH([Fortran])
+	LX_FIND_MPI
+	AC_LANG_POP([Fortran])
+	AC_MSG_RESULT([with Fortran MPI link options... $MPI_FLDFLAGS])
+	LIBS="$MPI_FLIBS $LIBS"
+	LDFLAGS="$MPI_FLDFLAGS $LDFLAGS"
+fi
+
+#set MPI for c++
+if test "$enable_MPI_autosearch" == "yes"
+then
+	AC_LANG_PUSH([C++])
+	LX_FIND_MPI
+	AC_LANG_POP([C++])
+	AC_MSG_RESULT([with C++ MPI link options... $MPI_CXXLDFLAGS])
+fi
+
+#MPI
+AC_ARG_ENABLE(MPI,
+	AS_HELP_STRING([--disable-MPI],[Enable MPI]),
+	enable_MPI="${enableval}",
+	enable_MPI="yes")
+AM_CONDITIONAL([USE_MPI],[test "$enable_MPI" == "yes" ],[true],[false])
+AC_MSG_RESULT([enabling MPI... $enable_MPI])
+
+if test "$enable_MPI" == "yes"
+then
+	# Check if we have MPI
+	if test "$have_CXX_mpi" == "yes" -o "$enable_MPI_autosearch" != "yes"
+	then
+		CPPFLAGS="$MPI_CXXFLAGS $CPPFLAGS"
+		LIBS="$MPI_CXXLIBS $LIBS"
+		LDFLAGS="$MPI_CXXLDFLAGS $LDFLAGS"
+		AC_DEFINE([USE_MPI],1,[Enable MPI])
+	else
+		AC_MSG_ERROR(["Unable to find MPI"])
+	fi
+fi
 
 #hdf5
 AX_LIB_HDF5([serial])
