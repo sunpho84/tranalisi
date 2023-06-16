@@ -597,7 +597,7 @@ public:
   }
   
   //! add a simple point
-  void add_point(const TS &num,const distr_fit_data_t::fun_t &teo,int block_label=DO_NOT_CORRELATE)
+  void add_point(const TS &num,const distr_fit_data_t::fun_t &teo,const int& block_label=DO_NOT_CORRELATE)
   {add_point([num](const vector<double> &p,int iel){return num[iel];},teo,num,block_label);}
   
   //! add a parameter to the fit
@@ -653,6 +653,7 @@ public:
 	      {return p[ipar];},
 	      //error
 	      ae.err());
+    
     return ipar;
   }
   
@@ -777,16 +778,17 @@ TV poly_fit(const TV &x,const TV &y,int d,double xmin=-1e300,double xmax=1e300,c
   // cout<<x<<endl;
   // cout<<y.ave_err()<<endl;
   
-  TV Al(2*d+1,0.0);
+  TV Al(2*d+1);
   TV c(d+1);
+  Al=0.0;
   c=0.0;
   
   for(int p=0;p<(int)y.size();p++)
     if(x[p].ave()<=xmax and x[p].ave()>=xmin)
       {
         //calculate the weight
-        auto w=Al[0]*0.0+pow(y[p].err(),-2);
-	//cout<<w<<endl;
+	std::decay_t<decltype(Al[0])> w;
+	w=pow(y[p].err(),-2);
         //compute Al and c
         for(int f=0;f<=2*d;f++)
           {
@@ -806,7 +808,7 @@ TV poly_fit(const TV &x,const TV &y,int d,double xmin=-1e300,double xmax=1e300,c
   if(path!="")
     {
       grace_file_t out(path);
-      out.write_polygon(std::bind(poly_eval,res,_1),xmin,xmax);
+      out.write_polygon([&res](const double& x){return poly_eval(res,x);},xmin,xmax);
       out.new_data_set();
       out.set_settype(grace::XYDXDY);
       for(size_t i=0;i<x.size();i++)
@@ -818,9 +820,24 @@ TV poly_fit(const TV &x,const TV &y,int d,double xmin=-1e300,double xmax=1e300,c
   
   return res;
 }
+
+//! perform a polynomial fit converting vector<double> to djvec_t
+template <class TV>
+TV poly_fit(const vector<double>& x0,const TV &y,int d,double xmin=-1e300,double xmax=1e300,const string& path="")
+{
+  TV x(y.size());
+  for(size_t i=0;i<y.size();i++)
+    x[i]=x0[i];
+  
+  return poly_fit(x,y,d,xmin,xmax,path);
+}
+
 //! perform a polynomial fit assuming x are ranging from 0 to y.size()
-template <class TV> TV poly_fit(const TV &y,int d,double xmin=-1e300,double xmax=1e300,const string path="")
-{return poly_fit(vector_up_to<double>(y.size()),y,d,xmin,xmax,path);}
+template <class TV>
+TV poly_fit(const TV &y,int d,double xmin=-1e300,double xmax=1e300,const string path="")
+{
+  return poly_fit(vector_up_to<double>(y.size()),y,d,xmin,xmax,path);
+}
 
 //! perform the polynomial fit and integrate
 template <class TV> typename TV::base_type poly_integrate(const vector<double> &x,const TV &y)

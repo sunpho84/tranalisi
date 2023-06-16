@@ -44,6 +44,7 @@ include_HEADERS+= \
 	%D%/gslWrap.hpp \
 	%D%/hashedFunction.hpp \
 	%D%/index.hpp \
+	%D%/invert.hpp \
 	%D%/jack.hpp \
 	%D%/macros.hpp \
 	%D%/minimizer.hpp \
@@ -57,6 +58,7 @@ include_HEADERS+= \
 	%D%/stopwatch.hpp \
 	%D%/systematics.hpp \
 	%D%/tasks.hpp \
+	%D%/tantaloBacco.hpp \
 	%D%/tools.hpp \
 	%D%/traits.hpp \
 	%D%/vecFilter.hpp

@@ -85,16 +85,17 @@ int main()
       grace_file_t gRecoPlot("plots/gaussreco"+to_string(aEStar)+".xmg");
       // gRecoPlot.write_line([&gd2Reconstructor](const double& E){return gd2Reconstructor.targetFunction(E)*E*E;},aE0,4*aEStar);
       // gRecoPlot.write_line([&gd2Reco](const double& E){return gd2Reco.smearingFunction(E).get()*E*E;},aE0,4*aEStar);
+      const int nDevStdMax=10;
       gRecoPlot.write_line([&gd2Reconstructor,sigma,aEStar](const double& x)
       {
 	const double E=x*sigma+aEStar;
 	return sigma*gd2Reconstructor.targetFunction(E)*E*E;
-      },(aE0-aEStar)/sigma,3,grace::GREEN4);
+      },(aE0-aEStar)/sigma,nDevStdMax,grace::GREEN4);
       gRecoPlot.write_line([&gd2Reco,sigma,aEStar](const double& x)
       {
 	const double E=x*sigma+aEStar;
 	return sigma*gd2Reco.smearingFunction(E).get()*E*E;
-      },(aE0-aEStar)/sigma,3);
+      },(aE0-aEStar)/sigma,nDevStdMax);
       gRecoPlot.write_polygon([&](const double& x)
       {
 	djvec_t fCorr=corr;
@@ -117,7 +118,7 @@ int main()
 	    f[ijack]=pf.get()*E*E*sigma;
 	  }
 	return f;
-      },(aE0-aEStar)/sigma,3);
+      },(aE0-aEStar)/sigma,nDevStdMax);
       
       PrecFloat A=gslIntegrateUpToInfinity([&gd2Reconstructor,mFact](const PrecFloat& E)
       {

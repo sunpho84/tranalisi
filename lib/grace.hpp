@@ -40,7 +40,7 @@ namespace grace
 };
 
 //! class to write a grace file
-struct grace_file_t : private ofstream
+struct grace_file_t : public ofstream
 {
   bool need_close_set;
   

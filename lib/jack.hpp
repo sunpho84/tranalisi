@@ -36,8 +36,16 @@ template <typename T>
 struct jack_t;
 
 template <typename U>
-decltype(auto) getJack(U&& u,
+U& getJack(U& u,
 		       const size_t& ijack)
+{
+  return
+    u;
+}
+
+template <typename U>
+const U& getJack(const U& u,
+		 const size_t& ijack)
 {
   return
     u;
