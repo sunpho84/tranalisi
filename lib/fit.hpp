@@ -967,6 +967,37 @@ TS plan_eval(const TV& data,const TVX& x)
   return out;
 }
 
+/// Wraps a lambda function to be minimized
+template <typename F>
+struct fun_minuit_wrapper_t :
+  public minimizer_fun_t
+{
+  // //! type of function to be passed
+  // using fun_t=
+  //   function<double(const vector<double> &p)>;
+  
+  //! function
+  const F fun;
+  
+public:
+  //! constructor
+  fun_minuit_wrapper_t(const F& fun) :
+    fun(fun)
+  {
+  }
+  
+  //! compute the function
+  double operator()(const vector<double> &p) const
+  {
+    return fun(p);
+  }
+  
+  double Up() const
+  {
+    return 1;
+  }
+};
+
 #undef EXTERN_FIT
 #undef INIT_TO
 

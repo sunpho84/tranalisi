@@ -84,4 +84,36 @@ double gslIntegrateUpToInfinity(F&& fun,
     res;
 }
 
+/// Use gsl to integrate from lower to infinity
+template <typename F>
+double gslIntegrateFromTo(F&& fun,
+			  const double& lower,
+			  const double& upper,
+			  const double& eps=1e-8)
+{
+  /// Absolute error
+  constexpr double epsAbs=0;
+  
+  /// Size of the workspace
+  static constexpr int workspaceSize=
+    1000;
+  
+  /// Result
+  double res;
+  
+  /// Absolute error
+  double absErr;
+  
+  /// Workspace used by gsl
+  gsl_integration_workspace *workspace=
+    gsl_integration_workspace_alloc(workspaceSize);
+  
+  gsl_integration_qags(GslFunction(fun).getWrapper(),lower,upper,epsAbs,eps,workspaceSize,workspace,&res,&absErr);
+  
+  gsl_integration_workspace_free(workspace);
+  
+  return
+    res;
+}
+
 #endif

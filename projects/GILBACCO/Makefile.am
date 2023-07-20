@@ -1,7 +1,7 @@
 AM_CPPFLAGS+=-I$(top_srcdir)/projects/%D%
 
-#bin_PROGRAMS+= 	$(top_builddir)/bin/perbacco
+bin_PROGRAMS+= 	$(top_builddir)/bin/trambacco
 
-#__top_builddir__bin_perbacco_SOURCES=%D%/perbacco.cpp
+__top_builddir__bin_trambacco_SOURCES=%D%/trambacco.cpp
 
-#__top_builddir__bin_perbacco_LDADD=$(top_builddir)/lib/libtran.a -lmpfr
+# __top_builddir__bin_trambacco_LDADD=$(top_builddir)/lib/libtran.a -lmpfr
