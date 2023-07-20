@@ -5,11 +5,15 @@ const size_t tMin=1,tMax=30;
 const size_t nT=tMax-tMin;
 size_t T;
 const size_t tNorm=5;
-const double sigmaInGeV=0.450;
+const double sigmaInGeV=0.200;
 
-djvec_t loadCorr(const string& chann)
+const string baseIn="/home/francesco/QCD/LAVORI/GM3";
+const string baseOut="/home/francesco/QCD/LAVORI/TRAMBACCO";
+
+djvec_t loadCorr(const string& ensName,
+		 const string& chann)
 {
-  raw_file_t fin("/home/francesco/QCD/LAVORI/GM3/C.06.112/data/"+chann,"r");
+  raw_file_t fin(baseIn+"/"+ensName+"/data/"+chann,"r");
   const size_t nConfs=fin.bin_read<size_t>();
   [[maybe_unused]] const size_t nHits=fin.bin_read<size_t>();
   T=fin.bin_read<size_t>();
@@ -56,12 +60,14 @@ const double b(const size_t& it,
   return exp(-t*E)+exp(-(T-t)*E);
 }
 
-int main()
+void analyzeEns(const string& ensName)
 {
-  set_njacks(50);
+  const map<char,double> zVlist{{'B',0.706379},{'C',0.725404},{'D',0.744108}};
+  const map<char,double> zAlist{{'B',0.74294},{'C',0.75830},{'D',0.77395}};
+  const double z=zAlist.at(ensName[0]);
   
   const djvec_t cP5P5=
-    loadCorr("ll_TM_P5P5");
+    loadCorr(ensName,"ll_TM_P5P5");
   const djack_t aMPi=
     constant_fit(effective_mass(cP5P5),30,40,"/tmp/pion.xmg");
   cout<<"aMPi: "<<aMPi.ave_err()<<endl;
@@ -74,37 +80,45 @@ int main()
   cout<<"a: "<<smart_print(aInFm)<<" fm"<<endl;
   
   const djvec_t cVKVK=
-    loadCorr("ll_TM_VKVK");
+    loadCorr(ensName,"ll_TM_VKVK")*sqr(z);
   effective_mass(cVKVK).ave_err().write("/tmp/rho.xmg");
   djvec_t corr(nT);
   for(size_t iT=0;iT<nT;iT++)
     corr[iT]=cVKVK[iT+tMin];
   
+  vector<double> preco(nT);
+  for(size_t iT=0;iT<nT;iT++)
+    preco[iT]=corr[iT].ave();
+  
   // grace_file_t plot("/tmp/p.xmg");
   // plot.write_line([](const double& x){return ;},-10,10);
   
-  const double sigma=sigmaInGeV/aInv.ave();
   const double E0=2*aMPi.ave();
-  cout<<"Sigma: "<<sigma<<endl;
   
-  grace_file_t RPlot("/tmp/R.xmg");
+  grace_file_t RPlot(baseOut+"/"+ensName+"/R.xmg");
   const double EMin=E0,EMax=4/aInv.ave();
   
   djvec_t norm(nT);
   for(size_t iT=0;iT<nT;iT++)
-    norm[iT]=corr[iT]/gslIntegrateUpToInfinity([t=iT+tMin](const double& E)
+    norm[iT]=corr[iT]/gslIntegrateFromTo([t=iT+tMin](const double& E)
     {
       return pow(E,N)*exp(-E*t);
-    },0);
+    },EMin,EMax);
   
-  norm.ave_err().write("/tmp/norm.xmg");
+  norm.ave_err().write(baseOut+"/"+ensName+"/norm.xmg");
   
-  for(double EStar=EMin;EStar<EMax;EStar+=0.01)
+  double EStar=EMin;
+  while(EStar<EMax)
     {
+      const double EStarInGeV=EStar*aInv.ave();
+      const double sigma=sigmaInGeV/aInv.ave()*sqrt(EStar/EMin);
+      cout<<"E: "<<EStarInGeV<<" GeV, Sigma: "<<sigma*aInv.ave()<<" GeV"<<endl;
+      
+      /// Target function
       const auto targ=
 	[EStar,sigma](const double& E)
 	{
-	  return gauss(EStar,sigma,E)/pow(E,N);
+	  return gauss(EStar,sigma,E)/sqr(E);
 	};
       
       // const double D=
@@ -133,30 +147,28 @@ int main()
 	      },E0);
 	}
       
-      vector<double> v(nT);
+      vector<double> v(nT*nT);
       for(size_t iT=0;iT<nT;iT++)
-	v[iT]=sqr(corr[iT].err());
+	for(size_t iS=0;iS<nT;iS++)
+	  v[iS+iT*nT]=cov(corr[iT],corr[iS]);
       
       djack_t R;
       djvec_t gRes(nT);
       for(size_t iJack=0;iJack<=njacks;iJack++)
 	{
-	  vector<double> c(nT);
-	  for(size_t iT=0;iT<nT;iT++)
-	    c[iT]=corr[iT][iJack];
 	  const double c2=
 	    sqr(norm[tNorm].ave());
 	  
 	  VectorXd L(nT);
 	  MatrixXd Q(nT,nT);
 	  
+	  const double statOverSyst=1;
+	  
 	  for(size_t iT=0;iT<nT;iT++)
 	    {
-	      L(iT)=c2*e(iT)/c[iT];
+	      L(iT)=c2*e(iT)/preco[iT];
 	      for(size_t iS=0;iS<nT;iS++)
-		Q(iT,iS)=c2*f(iT,iS)/(c[iT]*c[iS]);
-	      
-	      Q(iT,iT)+=v[iT]/sqr(c[iT]);
+		Q(iT,iS)=(c2*f(iT,iS)+v[iS+nT*iT]*(iS==iT)/statOverSyst)/(preco[iT]*preco[iS]);
 	    }
 	  
 	  const VectorXd g=
@@ -166,7 +178,7 @@ int main()
 	  for(size_t iT=0;iT<nT;iT++)
 	    {
 	      gRes[iT][iJack]=g[iT];
-	      R[iJack]+=g[iT];
+	      R[iJack]+=g[iT]*corr[iT][iJack]/preco[iT];
 	    }
 	  
 	  //cout<<D<<endl;
@@ -174,28 +186,47 @@ int main()
       
       RPlot.write_ave_err(EStar*aInv.ave(),R.ave_err());
       
-      grace_file_t recoPlot("/tmp/reco"+to_string(EStar)+".xmg");
-      recoPlot.write_line([&corr,&g=gRes](const double& E)
+      grace_file_t recoPlot(baseOut+"/"+ensName+"/reco"+to_string(EStarInGeV)+".xmg");
+      recoPlot.write_line([&preco,&g=gRes](const double& E)
       {
 	double s;
 	s=0;
+	// double kMin=1e300,kMax=0;
 	for(size_t iT=0;iT<nT;iT++)
-	  s+=b(iT,E)*g[iT].ave()/corr[iT].ave();
-	s*=pow(E,N);
+	  {
+	    const double k=b(iT,E)/preco[iT];
+	    s+=g[iT].ave()*k;
+	    
+	    // kMin=min(kMin,k);
+	    // kMax=max(kMax,k);
+	  }
+	s*=sqr(E);
+	
+	// cout<<E<<" "<<kMin<<" "<<kMax<<endl;
 	
 	return s;
       },E0,4);
       
       recoPlot.write_line([targ](const double& E)
       {
-	return targ(E)*pow(E,N);
+	return targ(E)*sqr(E);
       },E0,4);
+      
+      EStar+=sigma/10;
     }
   
   RPlot.write_line([c=norm[tNorm].ave()](const double& x)
   {
     return c;
   },E0,4,grace::BLACK);
+}
+
+int main()
+{
+  set_njacks(50);
+  
+  for(const char* ensName : {"B.72.64","B.72.96","C.06.80","C.06.112","D.54.96"})
+    analyzeEns(ensName);
   
   return 0;
 }
