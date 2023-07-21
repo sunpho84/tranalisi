@@ -5,7 +5,7 @@ const size_t tMin=1,tMax=30;
 const size_t nT=tMax-tMin;
 size_t T;
 const size_t tNorm=5;
-const double sigmaInGeV=0.200;
+const double sigmaInGeVEMin=0.200;
 
 const string baseIn="/home/francesco/QCD/LAVORI/GM3";
 const string baseOut="/home/francesco/QCD/LAVORI/TRAMBACCO";
@@ -53,10 +53,11 @@ double gauss(const double& x0,
   return exp(-sqr((x-x0)/sigma)/2)/(sqrt(2*M_PI)*sigma);
 }
 
-const double b(const size_t& it,
-	       const double& E)
+double b(const size_t& it,
+	 const double& E)
 {
   const double t=it+1;
+  
   return exp(-t*E)+exp(-(T-t)*E);
 }
 
@@ -107,12 +108,17 @@ void analyzeEns(const string& ensName)
   
   norm.ave_err().write(baseOut+"/"+ensName+"/norm.xmg");
   
+  grace_file_t sigmaPlot(baseOut+"/"+ensName+"/sigma.xmg");
+  
   double EStar=EMin;
   while(EStar<EMax)
     {
       const double EStarInGeV=EStar*aInv.ave();
-      const double sigma=sigmaInGeV/aInv.ave()*sqrt(EStar/EMin);
-      cout<<"E: "<<EStarInGeV<<" GeV, Sigma: "<<sigma*aInv.ave()<<" GeV"<<endl;
+      const double sigma=sigmaInGeVEMin/aInv.ave()*sqrt(EStar/EMin);
+      const double sigmaInGeV=sigma*aInv.ave();
+      cout<<"E: "<<EStarInGeV<<" GeV, Sigma: "<<sigmaInGeV<<" GeV"<<endl;
+      
+      sigmaPlot.write_xy(EStar,sigmaInGeV);
       
       /// Target function
       const auto targ=
@@ -154,37 +160,55 @@ void analyzeEns(const string& ensName)
       
       djack_t R;
       djvec_t gRes(nT);
-      for(size_t iJack=0;iJack<=njacks;iJack++)
+      
+      auto reconstruct=
+	[&norm,&e,&preco,&corr,&f,&v,&R,&gRes](const double& statOverSyst=1)
 	{
-	  const double c2=
-	    sqr(norm[tNorm].ave());
-	  
-	  VectorXd L(nT);
-	  MatrixXd Q(nT,nT);
-	  
-	  const double statOverSyst=1;
-	  
-	  for(size_t iT=0;iT<nT;iT++)
+	  for(size_t iJack=0;iJack<=njacks;iJack++)
 	    {
-	      L(iT)=c2*e(iT)/preco[iT];
-	      for(size_t iS=0;iS<nT;iS++)
-		Q(iT,iS)=(c2*f(iT,iS)+v[iS+nT*iT]*(iS==iT)/statOverSyst)/(preco[iT]*preco[iS]);
+	      const double c2=
+		sqr(norm[tNorm].ave());
+	      
+	      VectorXd L(nT);
+	      MatrixXd Q(nT,nT);
+	      
+	      for(size_t iT=0;iT<nT;iT++)
+		{
+		  L(iT)=c2*e(iT)/preco[iT];
+		  for(size_t iS=0;iS<nT;iS++)
+		    Q(iT,iS)=(c2*f(iT,iS)+v[iS+nT*iT]*(iS==iT)/statOverSyst)/(preco[iT]*preco[iS]);
+		}
+	      
+	      const VectorXd g=
+		Q.inverse()*L;
+	      
+	      R[iJack]=0;
+	      for(size_t iT=0;iT<nT;iT++)
+		{
+		  gRes[iT][iJack]=g[iT];
+		  R[iJack]+=g[iT]*corr[iT][iJack]/preco[iT];
+		}
+	      
+	      //cout<<D<<endl;
 	    }
-	  
-	  const VectorXd g=
-	    Q.inverse()*L;
-	  
-	  R[iJack]=0;
-	  for(size_t iT=0;iT<nT;iT++)
-	    {
-	      gRes[iT][iJack]=g[iT];
-	      R[iJack]+=g[iT]*corr[iT][iJack]/preco[iT];
-	    }
-	  
-	  //cout<<D<<endl;
+	};
+      
+      grace_file_t stabilityPlot(baseOut+"/"+ensName+"/stab"+to_string(EStarInGeV)+".xmg");
+      for(double statOverSyst=4000;statOverSyst>=1e-4;statOverSyst/=2)
+	{
+	  reconstruct(statOverSyst);
+	  stabilityPlot.write_ave_err(log(statOverSyst),R.ave_err());
 	}
       
+      reconstruct();
       RPlot.write_ave_err(EStar*aInv.ave(),R.ave_err());
+      
+      // double errEst=0;
+      // for(size_t iT=0;iT<nT;iT++)
+      // 	for(size_t iS=0;iS<nT;iS++)
+      // 	  errEst+=gRes[iT].ave()*gRes[iS].ave()*v[iS+nT*iT]*(iS==iT || 1)/(preco[iT]*preco[iS]);
+      // cout.precision(16);
+      // cout<<R.err()<<" "<<sqrt(errEst)<<endl;
       
       grace_file_t recoPlot(baseOut+"/"+ensName+"/reco"+to_string(EStarInGeV)+".xmg");
       recoPlot.write_line([&preco,&g=gRes](const double& E)
