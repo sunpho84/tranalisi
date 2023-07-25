@@ -1,13 +1,13 @@
 #include <tranalisi.hpp>
 
 const double N=2;
-const size_t tMin=1,tMax=30;
-const size_t nT=tMax-tMin;
+const size_t tMin=1;
 size_t T;
 const size_t tNorm=5;
 const double sigmaInGeVEMin=0.200;
 constexpr bool scaleSigma=true;
 constexpr double corrFading=0.9;
+constexpr double MPiPhys=0.1350,fPiPhys=0.1304;
 
 const string baseIn="/home/francesco/QCD/LAVORI/GM3";
 const string baseOut="/home/francesco/QCD/LAVORI/TRAMBACCO";
@@ -63,24 +63,36 @@ double b(const size_t& it,
   return exp(-t*E)+exp(-(T-t)*E);
 }
 
-void analyzeEns(const string& ensName)
+void analyzeEns(grace_file_t& glbRplot,
+		const string& ensName)
 {
   const map<char,double> zVlist{{'B',0.706379},{'C',0.725404},{'D',0.744108},{'E',0.76}};
   const map<char,double> zAlist{{'B',0.74294},{'C',0.75830},{'D',0.77395},{'E',0.79}};
+  const map<char,double> aMlist{{'B',0.00072},{'C',0.0006},{'D',0.00054},{'E',0.00044}};
+  const map<char,size_t> tMaxList{{'B',30},{'C',36},{'D',40},{'E',35}};
   const double z=zAlist.at(ensName[0]);
+  const double am=aMlist.at(ensName[0]);
+  const size_t tMax=tMaxList.at(ensName[0]);
+  const size_t nT=tMax-tMin;
   
   const djvec_t cP5P5=
     loadCorr(ensName,"ll_TM_P5P5");
-  const djack_t aMPi=
-    constant_fit(effective_mass(cP5P5),30,40,baseOut+"/"+ensName+"/pion.xmg");
+  
+  // Lattice spacing study
+  djack_t aMPi,Z2Pi;
+  two_pts_fit(Z2Pi,aMPi,cP5P5,T/2,30,40,baseOut+"/"+ensName+"/pion.xmg");
+  const djack_t aFPi=sqrt(Z2Pi)*2*am/(aMPi*sinh(aMPi));
   cout<<"aMPi: "<<aMPi.ave_err()<<endl;
+  cout<<"aFPi: "<<aFPi.ave_err()<<endl;
+  const djack_t xi=aMPi/aFPi;
+  cout<<"Xi: "<<xi.ave_err()<<" phys: "<<MPiPhys/fPiPhys<<endl;
   
   const djack_t aInv=
-    0.135/aMPi;
+    fPiPhys/aFPi;
   const djack_t aInFm=
     0.197/aInv;
   cout<<"a^-1: "<<smart_print(aInv)<<" GeV"<<endl;
-  cout<<"a: "<<smart_print(aInFm)<<" fm"<<endl;
+  cout<<ensName<<" a: "<<smart_print(aInFm)<<" fm"<<endl;
   
   const djvec_t cVKVK=
     loadCorr(ensName,"ll_TM_VKVK");
@@ -111,6 +123,7 @@ void analyzeEns(const string& ensName)
   grace_file_t sigmaPlot(baseOut+"/"+ensName+"/sigma.xmg");
   
   double EStar=EMin;
+  vector<tuple<double,djack_t>> RofE;
   while(EStar<EMax)
     {
       const double EStarInGeV=EStar*aInv.ave();
@@ -118,7 +131,7 @@ void analyzeEns(const string& ensName)
       const double sigmaInGeV=sigma*aInv.ave();
       cout<<"E: "<<EStarInGeV<<" GeV, Sigma: "<<sigmaInGeV<<" GeV"<<endl;
       
-      sigmaPlot.write_xy(EStar,sigmaInGeV);
+      sigmaPlot.write_xy(EStarInGeV,sigmaInGeV);
       
       /// Target function
       const auto targ=
@@ -171,11 +184,13 @@ void analyzeEns(const string& ensName)
 	  L(iT)=c2*e(iT)/preco[iT];
 	  for(size_t iS=0;iS<nT;iS++)
 	    {
+	      const size_t dist=abs((int)iS-(int)iT);
 	      QSyst(iT,iS)=c2*f(iT,iS)/(preco[iT]*preco[iS]);
-	      QStat(iT,iS)=v(iS,iT)*pow(corrFading,abs((int)iS-(int)iT))/(preco[iT]*preco[iS]);
+	      QStat(iT,iS)=v(iS,iT)*pow(corrFading,dist)/(preco[iT]*preco[iS]);
 	    }
 	}
       
+      /// Track the results
       VectorXd g;
       djack_t R;
       
@@ -190,6 +205,11 @@ void analyzeEns(const string& ensName)
 	  R=0;
 	  for(size_t iT=0;iT<nT;iT++)
 	    R+=g[iT]*corr[iT]/preco[iT];
+	  
+	  // const double syst=g.transpose()*QSyst*g;
+	  // const double stat=(double)(g.transpose()*QStat*g)/statOverSyst;
+	  
+	  // cout<<statOverSyst<<" "<<sqrt(stat+syst)<<endl;
 	};
       
       // Performs the stability check
@@ -201,8 +221,7 @@ void analyzeEns(const string& ensName)
 	}
       
       // Final reconstruction
-      reconstruct();
-      RPlot.write_ave_err(EStar*aInv.ave(),R.ave_err());
+      reconstruct(exp(-1));
       
       /// Print coefficients
       grace_file_t gPlot(baseOut+"/"+ensName+"/g"+to_string(EStarInGeV)+".xmg");
@@ -210,20 +229,20 @@ void analyzeEns(const string& ensName)
 	gPlot.write_xy(iT,g[iT]);
       
       /// Estimates the cancellation
-      djack_t maxCoeff;
-      maxCoeff=0;
-      {
-	djack_t r;
-	r=0;
-	for(size_t iT=0;iT<nT;iT++)
-	  {
-	    const djack_t contr=g[iT]*corr[iT]/preco[iT];
-	    r+=contr;
-	    maxCoeff=max(abs(contr),maxCoeff);
-	  }
-	const djack_t cancel=maxCoeff/r;
-	cout<<EStar<<" "<<cancel.ave_err();
-      }
+      // djack_t maxCoeff;
+      // maxCoeff=0;
+      // {
+      // 	djack_t r;
+      // 	r=0;
+      // 	for(size_t iT=0;iT<nT;iT++)
+      // 	  {
+      // 	    const djack_t contr=g[iT]*corr[iT]/preco[iT];
+      // 	    r+=contr;
+      // 	    maxCoeff=max(abs(contr),maxCoeff);
+      // 	  }
+      // 	const djack_t cancel=maxCoeff/r;
+      // 	cout<<EStar<<" "<<cancel.ave_err()<<endl;
+      // }
       // double errEst=0;
       // for(size_t iT=0;iT<nT;iT++)
       // 	for(size_t iS=0;iS<nT;iS++)
@@ -260,8 +279,30 @@ void analyzeEns(const string& ensName)
 	return targ(E)*sqr(E);
       },EMin*aInv.ave(),4);
       
+      RofE.emplace_back(EStarInGeV,R);
+      
       EStar+=sigma/10;
     }
+  
+  glbRplot.set_legend(ensName);
+  
+  for(grace_file_t* plot : {&RPlot,&glbRplot})
+    plot->write_polygon([&RofE](const double& E)
+  {
+    vector<pair<double,size_t>> distPos(RofE.size());
+    for(size_t iE=0;iE<RofE.size();iE++)
+      distPos[iE]={fabs(get<0>(RofE[iE])-E),iE};
+    sort(distPos.begin(),distPos.end());
+    
+    vector<double> x(3);
+    djvec_t y(3);
+    for(size_t iE=0;iE<3;iE++)
+      tie(x[iE],y[iE])=RofE[distPos[iE].second];
+    
+    const djvec_t pars=poly_fit(x,y,2);
+    
+    return poly_eval(pars,E);
+  },get<0>(RofE.front()),get<0>(RofE.back()));
   
   RPlot.write_line([c=norm[tNorm].ave()](const double& x)
   {
@@ -271,10 +312,12 @@ void analyzeEns(const string& ensName)
 
 int main()
 {
-  set_njacks(15);
+  set_njacks(50);
+  
+  grace_file_t RPlot(baseOut+"/R.xmg");
   
   for(const char* ensName : {"B.72.64","B.72.96","C.06.80","C.06.112","D.54.96","E.44.112"})
-    analyzeEns(ensName);
+    analyzeEns(RPlot,ensName);
   
   return 0;
 }
