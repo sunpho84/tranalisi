@@ -159,6 +159,10 @@ vector<T> vector_grid(const T xmin,const T xmax,const size_t n)
 inline void set_to_zero(double &x)
 {x=0;}
 
+//! set to zero a float
+inline void set_to_zero(float &x)
+{x=0;}
+
 //! set to zero an eigen matr
 template <typename D>
 void set_to_zero(const Eigen::MatrixBase<D> &x)
