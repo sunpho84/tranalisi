@@ -17,27 +17,44 @@
 using namespace std;
 
 //! random generator
-class gen_t: public mt19937_64
+template <typename BaseGen=mt19937_64>
+struct gen_t:
+  public BaseGen
 {
-public:
   //! init with a seed
-  gen_t(int seed) : mt19937_64(seed) {}
+  gen_t(const int& seed) :
+    BaseGen(seed)
+  {
+  }
   
   //! return a real random number in the range [min,max)
-  double get_double(double min,double max)
-  {return uniform_real_distribution<double>(min,max)(*this);}
+  double get_double(const double& min,
+		    const double& max)
+  {
+    return uniform_real_distribution<double>(min,max)(*this);
+  }
   
   //! return an integer random number in the range [min,max)
-  double get_int(int min,int max)
-  {return uniform_int_distribution<>(min,max-1)(*this);}
+  double get_int(const int& min,
+		 const int& max)
+  {
+    return uniform_int_distribution<>(min,max-1)(*this);
+  }
   
   //! return an integer random number in the range [min,max)
-  double get_gauss(double ave,double sig)
-  {return normal_distribution<>(ave,sig)(*this);}
+  double get_gauss(const double& ave,
+		   const double& sig)
+  {
+    return normal_distribution<>(ave,sig)(*this);
+  }
   
 private:
+  
   //! init without a seed
-  gen_t() : mt19937_64() {}
+  gen_t() :
+    BaseGen()
+  {
+  }
 };
 
 ///////////////////////////////////////////////////////////// gauss_filler_t /////////////////////////////////////////////////////
@@ -63,7 +80,8 @@ public:
   int &seed=second;
 };
 
-inline vector<double> multivariate(const vector<double> &_mean,const vector<double>& _sigma,gen_t& gen)
+template <typename G>
+inline vector<double> multivariate(const vector<double> &_mean,const vector<double>& _sigma,gen_t<G>& gen)
 {
   const int n=_mean.size();
   
