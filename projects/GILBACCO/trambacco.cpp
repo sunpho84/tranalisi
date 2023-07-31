@@ -31,53 +31,6 @@ auto loadCorr(const string& ensName,
   vector<double> raw(iRaw.max());
   fin.bin_read(raw);
   
-  vector<double> ave(T/2+1,0.0);
-  vector<double> covMatr((T/2+1)*(T/2+1),0.0);
-  vector<double> b(T/2+1);
-  
-  const size_t nBoots=1000;
-  gen_t gen(232452);
-  for(size_t iBoot=0;iBoot<nBoots;iBoot++)
-    {
-      for(size_t t=0;t<=T/2;t++)
-	b[t]=0.0;
-      
-      for(size_t iConf=0;iConf<nConfs;iConf++)
-	for(size_t jConf=gen.get_int(0,nConfs),t=0;t<=T/2;t++)
-	  b[t]+=raw[iRaw({jConf,t})];
-      
-      for(size_t t=0;t<=T/2;t++)
-	b[t]/=nConfs;
-      
-      for(size_t t=0;t<=T/2;t++)
-	{
-	  ave[t]+=b[t];
-	  for(size_t s=0;s<=T/2;s++)
-	    covMatr[s+(T/2+1)*t]+=b[t]*b[s];
-	}
-    }
-  
-  for(size_t t=0;t<=T/2;t++)
-    {
-      ave[t]/=nBoots;
-      for(size_t s=0;s<=T/2;s++)
-	covMatr[s+(T/2+1)*t]/=nBoots;
-    }
-  
-  for(size_t t=0;t<=T/2;t++)
-    for(size_t s=0;s<=T/2;s++)
-      covMatr[t+(T/2+1)*s]-=ave[s]*ave[t];
-  
-  for(size_t t=0;t<=T/2;t++)
-    {
-      for(size_t s=t+1;s<=T/2;s++)
-	{
-	  covMatr[t+(T/2+1)*s]/=sqrt(covMatr[t+(T/2+1)*t])*sqrt(covMatr[s+(T/2+1)*s]);
-	  covMatr[s+(T/2+1)*t]=covMatr[t+(T/2+1)*s];
-	}
-      covMatr[t+(T/2+1)*t]=1;
-    }
-  
   Jvec res(T/2+1);
   jackknivesFill(nConfs,
 		 [&](const size_t& iConf,
@@ -89,14 +42,73 @@ auto loadCorr(const string& ensName,
 		 });
   res.clusterize((Real)nConfs/njacks);
   
-  for(size_t t=0;t<=T/2;t++)
+  constexpr bool preciseCov=false;
+  
+  vector<double> covMatr((T/2+1)*(T/2+1),0.0);
+  
+  if constexpr(not preciseCov)
     {
-      const double d=res[t].err();
+      for(size_t t=0;t<=T/2;t++)
+	for(size_t s=0;s<=T/2;s++)
+	  covMatr[t+(T/2+1)*s]=cov(res[t],res[s]);
+    }
+  else
+    {
+      vector<double> ave(T/2+1,0.0);
+      vector<double> b(T/2+1);
       
-      for(size_t s=0;s<=T/2;s++)
+      const size_t nBoots=1000;
+      gen_t gen(232452);
+      for(size_t iBoot=0;iBoot<nBoots;iBoot++)
 	{
-	  covMatr[t+(T/2+1)*s]*=d;
-	  covMatr[s+(T/2+1)*t]*=d;
+	  for(size_t t=0;t<=T/2;t++)
+	    b[t]=0.0;
+	  
+	  for(size_t iConf=0;iConf<nConfs;iConf++)
+	    for(size_t jConf=gen.get_int(0,nConfs),t=0;t<=T/2;t++)
+	      b[t]+=raw[iRaw({jConf,t})];
+	  
+	  for(size_t t=0;t<=T/2;t++)
+	    b[t]/=nConfs;
+	  
+	  for(size_t t=0;t<=T/2;t++)
+	    {
+	      ave[t]+=b[t];
+	      for(size_t s=0;s<=T/2;s++)
+		covMatr[s+(T/2+1)*t]+=b[t]*b[s];
+	    }
+	}
+      
+      for(size_t t=0;t<=T/2;t++)
+	{
+	  ave[t]/=nBoots;
+	  for(size_t s=0;s<=T/2;s++)
+	    covMatr[s+(T/2+1)*t]/=nBoots;
+	}
+      
+      for(size_t t=0;t<=T/2;t++)
+	for(size_t s=0;s<=T/2;s++)
+	  covMatr[t+(T/2+1)*s]-=ave[s]*ave[t];
+      
+      for(size_t t=0;t<=T/2;t++)
+	{
+	  for(size_t s=t+1;s<=T/2;s++)
+	    {
+	      covMatr[t+(T/2+1)*s]/=sqrt(covMatr[t+(T/2+1)*t])*sqrt(covMatr[s+(T/2+1)*s]);
+	      covMatr[s+(T/2+1)*t]=covMatr[t+(T/2+1)*s];
+	    }
+	  covMatr[t+(T/2+1)*t]=1;
+	}
+      
+      for(size_t t=0;t<=T/2;t++)
+	{
+	  const double d=res[t].err();
+	  
+	  for(size_t s=0;s<=T/2;s++)
+	    {
+	      covMatr[t+(T/2+1)*s]*=d;
+	      covMatr[s+(T/2+1)*t]*=d;
+	    }
 	}
     }
   
