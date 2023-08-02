@@ -45,9 +45,6 @@ auto loadCorr(const string& ensName,
   
   // constexpr bool preciseCov=true;
   
-  djvec_t covMatr((T/2+1)*(T/2+1));
-  covMatr=0;
-  
   // if constexpr(not preciseCov)
   //   {
   //     for(size_t t=0;t<=T/2;t++)
@@ -58,116 +55,72 @@ auto loadCorr(const string& ensName,
   //   {
   gen_t gen(232452);
   const size_t nBoots=1000;
-  const double clustSize=nConfs/(double)njacks;
-  for(size_t iJack=0;iJack<=njacks;iJack++)
+  vector<double> ave(T/2+1,0.0);
+  vector<double> covMatr((T/2+1)*(T/2+1),0.0);
+  vector<double> b(T/2+1,0.0);
+      
+  for(size_t iBoot=0;iBoot<nBoots;iBoot++)
     {
-      vector<double> ave(T/2+1,0.0);
-      vector<double> c((T/2+1)*(T/2+1));
-      vector<double> b(T/2+1,0.0);
+      for(auto& bi : b)
+	bi=0.0;
       
-      cout<<iJack<<" [0,"<<iJack*clustSize<<") ["<<(iJack+1)*clustSize<<" "<<nConfs<<")"<<endl;
-      cout<<"......"<<endl;
-      
-      for(auto& ci : c)
-	ci=0.0;
-      
-      for(size_t iBoot=0;iBoot<nBoots;iBoot++)
+      for(size_t iConf=0;iConf<nConfs;iConf++)
 	{
-	  for(auto& bi : b)
-	    bi=0.0;
-	  
-	  const size_t nRedConfs=nConfs-(iJack!=njacks)*clustSize;
-	  for(size_t iConf=0;iConf<nRedConfs;iConf++)
-	    {
-	      const double i=gen.get_double(0,nConfs-clustSize);
-	      const size_t jConf=i+(i>clustSize*iJack)*clustSize;
-	      for(size_t t=0;t<=T/2;t++)
-		b[t]+=raw[iRaw({jConf,t})];
-	    }
-	  
+	  const size_t jConf=gen.get_int(0,nConfs);
 	  for(size_t t=0;t<=T/2;t++)
-	    b[t]/=nRedConfs;
-	  
-	  for(size_t t=0;t<=T/2;t++)
-	    {
-	      ave[t]+=b[t];
-	      for(size_t s=0;s<=T/2;s++)
-		c[s+(T/2+1)*t]+=b[t]*b[s];
-	    }
+	    b[t]+=raw[iRaw({jConf,t})];
 	}
       
       for(size_t t=0;t<=T/2;t++)
+	b[t]/=nConfs;
+      
+      for(size_t t=0;t<=T/2;t++)
 	{
-	  ave[t]/=nBoots;
+	  ave[t]+=b[t];
 	  for(size_t s=0;s<=T/2;s++)
-	    c[s+(T/2+1)*t]/=nBoots;
+	    covMatr[s+(T/2+1)*t]+=b[t]*b[s];
 	}
-      
-      for(size_t t=0;t<=T/2;t++)
-	for(size_t s=0;s<=T/2;s++)
-	  c[t+(T/2+1)*s]-=ave[s]*ave[t];
-      
-      for(size_t t=0;t<=T/2;t++)
-	{
-	  for(size_t s=t+1;s<=T/2;s++)
-	    {
-	      c[t+(T/2+1)*s]/=sqrt(c[t+(T/2+1)*t])*sqrt(c[s+(T/2+1)*s]);
-	      c[s+(T/2+1)*t]=c[t+(T/2+1)*s];
-	    }
-	  c[t+(T/2+1)*t]=1;
-	}
-      
-      for(size_t t=0;t<=T/2;t++)
-	for(size_t s=0;s<=T/2;s++)
-	  covMatr[t+(T/2+1)*s][iJack]=c[t+(T/2+1)*s];
-      // for(size_t t=0;t<=T/2-10;t++)
-      // 	{
-      // 	  for(size_t d=0;d<=10;d++)
-      // 	    {
-      // 	      const size_t s=(t+d)%(T/2+1);
-      // 	      cout<<pow(covMatr[t+(T/2+1)*s],1.0/(std::max(1,(int)d)))<<" ";
-      // 	    }
-      // 	  cout<<endl;
-      // 	}
     }
   
-  // covMatr.clusterize(clustSize);
-  
-  const size_t dMax=10;
-  djvec_t rs(dMax);
-  for(size_t d=0;d<dMax;d++)
+  for(size_t t=0;t<=T/2;t++)
     {
-      djack_t su;
-      su=0;
-      size_t n=0;
-      for(size_t t=1;t<=T/2-dMax;t++)
-	{
-	  const size_t s=(t+d)%(T/2+1);
-	  su+=covMatr[t+(T/2+1)*s];
-	  n++;
-	}
-      su/=n;
-      
-      rs[d]=su;
+      ave[t]/=nBoots;
+      for(size_t s=0;s<=T/2;s++)
+	covMatr[s+(T/2+1)*t]/=nBoots;
     }
-  rs.ave_err().write("/tmp/fitto.xmg");
-  cout<<endl;
   
   for(size_t t=0;t<=T/2;t++)
     for(size_t s=0;s<=T/2;s++)
-      {
-	const size_t d=abs((int)t-(int)s);
-	if(d<dMax) covMatr[t+(T/2+1)*s]=rs[d];
-	else covMatr[t+(T/2+1)*s]=0.0;
-	
+      covMatr[t+(T/2+1)*s]-=ave[s]*ave[t];
+  
+  for(size_t t=0;t<=T/2;t++)
+    {
+      for(size_t s=t+1;s<=T/2;s++)
+	{
+	  covMatr[t+(T/2+1)*s]/=sqrt(covMatr[t+(T/2+1)*t])*sqrt(covMatr[s+(T/2+1)*s]);
+	  covMatr[s+(T/2+1)*t]=covMatr[t+(T/2+1)*s];
+	}
+      covMatr[t+(T/2+1)*t]=1;
     }
-
+  
+  // for(size_t t=0;t<=T/2-10;t++)
+  // 	{
+  // 	  for(size_t d=0;d<=10;d++)
+  // 	    {
+  // 	      const size_t s=(t+d)%(T/2+1);
+  // 	      cout<<pow(covMatr[t+(T/2+1)*s],1.0/(std::max(1,(int)d)))<<" ";
+  // 	    }
+  // 	  cout<<endl;
+  // 	}
+  
+  // covMatr.clusterize(clustSize);
+  
   for(size_t t=2;t<=T/2-10;t++)
     {
       for(size_t d=0;d<=10;d++)
 	{
 	  const size_t s=(t+d)%(T/2+1);
-	  cout<<smart_print(covMatr[t+(T/2+1)*s].ave_err())<<" ";
+	  cout<<covMatr[t+(T/2+1)*s]<<" ";
 	}
       cout<<endl;
     }
@@ -247,7 +200,6 @@ void analyzeEns(grace_file_t& glbRplot,
   
   const auto [cVKVK,covVKVK]=
     loadCorr(ensName,"ll_TM_VKVK");
-  CRASH("");
   effective_mass(cVKVK).ave_err().write(baseOut+"/"+ensName+"/rho.xmg");
   Jvec corr(nT);
   vector<Real> corrCov(nT*nT);
@@ -257,7 +209,7 @@ void analyzeEns(grace_file_t& glbRplot,
       const Real fact=sqr(z);//*12*sqr(M_PI)*4/9
       corr[iT]=cVKVK[iT+tMin]*fact;////b(iT,precoEn);
       for(size_t iS=0;iS<nT;iS++)
-	corrCov[iT+nT*iS]=covVKVK[(iT+tMin)+(T/2+1)*(iS+tMin)].ave()*sqr(fact);///(b(iT,precoEn)*b(iS,precoEn));
+	corrCov[iT+nT*iS]=covVKVK[(iT+tMin)+(T/2+1)*(iS+tMin)]*sqr(fact);///(b(iT,precoEn)*b(iS,precoEn));
     }
   corr.ave_err().write(baseOut+"/"+ensName+"/rhoPreco.xmg");
   
