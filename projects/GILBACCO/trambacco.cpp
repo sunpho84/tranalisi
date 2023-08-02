@@ -115,16 +115,16 @@ auto loadCorr(const string& ensName,
   
   // covMatr.clusterize(clustSize);
   
-  for(size_t t=2;t<=T/2-10;t++)
-    {
-      for(size_t d=0;d<=10;d++)
-	{
-	  const size_t s=(t+d)%(T/2+1);
-	  cout<<covMatr[t+(T/2+1)*s]<<" ";
-	}
-      cout<<endl;
-    }
-  cout<<endl;
+  // for(size_t t=2;t<=T/2-10;t++)
+  //   {
+  //     for(size_t d=0;d<=10;d++)
+  // 	{
+  // 	  const size_t s=(t+d)%(T/2+1);
+  // 	  cout<<covMatr[t+(T/2+1)*s]<<" ";
+  // 	}
+  //     cout<<endl;
+  //   }
+  // cout<<endl;
   
   for(size_t t=0;t<=T/2;t++)
     {
@@ -218,7 +218,8 @@ void analyzeEns(grace_file_t& glbRplot,
     preco[iT]=corr[iT].ave();
   
   grace_file_t RPlot(baseOut+"/"+ensName+"/R.xmg");
-  const Real EMin=2*aMPi.ave(),EMax=4/aInv.ave();
+  const Real EMinInGeV=0.270,EMaxInGeV=4;
+  const Real EMin=EMinInGeV/aInv.ave(),EMax=EMaxInGeV/aInv.ave();
   
   Jvec norm(nT);
   for(size_t iT=0;iT<nT;iT++)
@@ -248,12 +249,6 @@ void analyzeEns(grace_file_t& glbRplot,
 	{
 	  return gauss(EStar,sigma,E)/sqr(E);
 	};
-      
-      // const Real D=
-      // 	gslIntegrateUpToInfinity([targ](const Real& E)
-      // 	{
-      // 	  return sqr(targ(E))*pow(E,2*N);
-      // 	},EMin,tol);
       
       Vect e(nT);
       Matr f(nT,nT);
@@ -317,11 +312,15 @@ void analyzeEns(grace_file_t& glbRplot,
       
       // Performs the stability check
       grace_file_t stabilityPlot(baseOut+"/"+ensName+"/stab"+to_string(EStarInGeV)+".xmg");
-      for(Real statOverSyst=400;statOverSyst>=1e-4;statOverSyst/=2)
+      vector<pair<double,djack_t>> stab;
+      for(Real statOverSyst=512;statOverSyst>=1e-4;statOverSyst/=2)
 	{
 	  reconstruct(statOverSyst);
-	  stabilityPlot.write_ave_err(log(statOverSyst),R.ave_err());
+	  stab.emplace_back(log(statOverSyst),R);
 	}
+      
+      for(const auto& [x,y] : stab)
+	stabilityPlot.write_ave_err(x,y.ave_err());
       
       // ofstream(baseOut+"/"+ensName+"/QSyst"+to_string(EStarInGeV)+".xmg")<<QSyst<<endl;
       // ofstream(baseOut+"/"+ensName+"/QStat"+to_string(EStarInGeV)+".xmg")<<QStat<<endl;
