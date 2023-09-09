@@ -242,7 +242,7 @@ PROVIDE_ACTON(/* non const*/)
 #if MEAN_TYPE==DISTR_MEAN
     if(njacks==1)
       {
-	ae.ave()=(*this)[njacks];
+	ae.ave()=(double)(*this)[njacks];
 	ae.err()=0.0;
       }
     //do nothing, the previously computed is already correct

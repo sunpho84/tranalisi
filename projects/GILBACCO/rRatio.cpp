@@ -1,5 +1,9 @@
 #include <tranalisi.hpp>
 
+#include <loadCorrCov.hpp>
+
+#include <trambacco.hpp>
+
 using Real=double;
 using Jack=jack_t<Real>;
 using Jvec=vmeas_t<Jack>;
@@ -8,7 +12,7 @@ using Matr=Matrix<Real,Dynamic,Dynamic>;
 constexpr Real tol=1e-8;
 
 /// Long distance behaviour of spectral density: E^N
-const Real N=2;
+const Real RE_exp=2;
 
 /// Minimal time from which to consider the correlator
 const size_t tMin=1;
@@ -34,177 +38,14 @@ const string baseIn="/home/francesco/QCD/LAVORI/GM3";
 /// Base directory to write data
 const string baseOut="/home/francesco/QCD/LAVORI/TRAMBACCO";
 
-/// Loads a correlator and compute covariance
-///
-/// We don't keep in count the correlation of the data, so the
-/// covariance matrix as generated from the boostrap is
-/// underestimated. So we pass to the correlation matrix, and then we
-/// renormalize with the diagonal part taken from jackknive estimate
-/// of the error
-auto loadCorrCov(const string& ensName,
-		 const string& chann,
-		 const bool computeCov=true)
-{
-  /// File needed to read data
-  raw_file_t fin(baseIn+"/"+ensName+"/data/"+chann,"r");
-  
-  /// Gets the number of confs
-  const size_t nConfs=fin.bin_read<size_t>();
-  
-  /// Read and drops the number of hits
-  [[maybe_unused]] const size_t nHits=
-		     fin.bin_read<size_t>();
-  
-  // Read the time extention
-  T=fin.bin_read<size_t>();
-  
-  /// Index to access the raw data
-  index_t iRaw({{"nConfs",nConfs},{"T/2+1",T/2+1}});
-  
-  /// Raw data
-  vector<double> raw(iRaw.max());
-  fin.bin_read(raw);
-  
-  /// Performs the jackknife resampling of the correlator
-  djvec_t res(T/2+1);
-  jackknivesFill(nConfs,
-		 [&](const size_t& iConf,
-		     const size_t& iJack,
-		     const double& w)
-		 {
-		   for(size_t t=0;t<=T/2;t++)
-		     res[t][iJack]+=w*raw[iRaw({iConf,t})];
-		 });
-  res.clusterize((double)nConfs/njacks);
-  
-  /// Covariance matrix
-  vector<double> covMatr((T/2+1)*(T/2+1),0.0);
-  
-  if(computeCov)
-    {
-      /// Random generator to create the boostrap sapmple
-      gen_t gen(232452);
-      
-      /// Number of boostrap to be used
-      const size_t nBoots=1000;
-      
-      /// Bootstrap average of the correlator
-      vector<double> ave(T/2+1,0.0);
-      
-      /// Bootstrap sample
-      vector<double> bootSamp(T/2+1,0.0);
-      
-      for(size_t iBoot=0;iBoot<nBoots;iBoot++)
-	{
-	  /// Reset the bootstrap
-	  for(auto& bi : bootSamp)
-	    bi=0.0;
-	  
-	  for(size_t iConf=0;iConf<nConfs;iConf++)
-	    {
-	      /// Draw a configuration
-	      const size_t jConf=
-		gen.get_int(0,nConfs);
-	      
-	      // Fills the bootstrap
-	      for(size_t t=0;t<=T/2;t++)
-		bootSamp[t]+=raw[iRaw({jConf,t})];
-	    }
-	  
-	  /// Normalize the bootstrap
-	  for(size_t t=0;t<=T/2;t++)
-	    bootSamp[t]/=nConfs;
-	  
-	  /// Increment the average and compute correlation
-	  for(size_t t=0;t<=T/2;t++)
-	    {
-	      ave[t]+=bootSamp[t];
-	      for(size_t s=0;s<=T/2;s++)
-		covMatr[s+(T/2+1)*t]+=bootSamp[t]*bootSamp[s];
-	    }
-	}
-      
-      // Normalize average and covariance
-      for(size_t t=0;t<=T/2;t++)
-	{
-	  ave[t]/=nBoots;
-	  for(size_t s=0;s<=T/2;s++)
-	    covMatr[s+(T/2+1)*t]/=nBoots;
-	}
-      
-      // Subtract product of averages from covariance
-      for(size_t t=0;t<=T/2;t++)
-	for(size_t s=0;s<=T/2;s++)
-	  covMatr[t+(T/2+1)*s]-=ave[s]*ave[t];
-      
-      // Pass to the correlation matrix
-      for(size_t t=0;t<=T/2;t++)
-	{
-	  for(size_t s=t+1;s<=T/2;s++)
-	    {
-	      covMatr[t+(T/2+1)*s]/=sqrt(covMatr[t+(T/2+1)*t])*sqrt(covMatr[s+(T/2+1)*s]);
-	      covMatr[s+(T/2+1)*t]=covMatr[t+(T/2+1)*s];
-	    }
-	  covMatr[t+(T/2+1)*t]=1;
-	}
-      
-      // Normalize back to the covariance matrix
-      for(size_t t=0;t<=T/2;t++)
-	{
-	  const double d=res[t].err();
-	  
-	  for(size_t s=0;s<=T/2;s++)
-	    {
-	      covMatr[t+(T/2+1)*s]*=d;
-	      covMatr[s+(T/2+1)*t]*=d;
-	    }
-	}
-    }
-  
-  return make_tuple(res,covMatr);
-}
-
 /// Loads a correlator avoiding to compute covariance, dropping returned dummy vector
 djvec_t loadCorr(const string& ensName,
 		 const string& chann)
 {
-  const auto [corr,cov]=
-    loadCorrCov(ensName,chann,false);
+  const auto [T,corr,cov]=
+    loadCorrCov(baseIn+"/"+ensName+"/data/"+chann,false);
   
   return corr;
-}
-
-/// Factorial of n
-constexpr int fact(const int& n)
-{
-  int r=1;
-  
-  for(int i=2;i<=n;i++)
-    r*=i;
-  
-  return r;
-}
-
-/// Gaussian centered in x0 with standard deviation sigma, normalized to 1
-Real gauss(const Real& x0,
-	   const Real& sigma,
-	   const Real& x)
-{
-  return exp(-sqr((x-x0)/sigma)/2)/(sqrt(2*M_PI)*sigma);
-}
-
-/// Basis function
-///
-/// The value of "it" is the element of the function, so we need to
-/// increase by tmin to get the time
-Real b(const size_t& it,
-       const Real& E)
-{
-  /// Refered time
-  const Real t=
-    it+tMin;
-  
-  return exp(-t*E)+exp(-(T-t)*E);
 }
 
 /// Analyse a given ensemble
@@ -214,11 +55,12 @@ void analyzeEns(grace_file_t& glbRplot,
   // Don't move, needed to set T
   const djvec_t cP5P5=
     loadCorr(ensName,"ll_TM_P5P5");
+  cP5P5.ave_err().write(baseOut+"/"+ensName+"/P5P5.xmg");
   
-  const map<char,Real> zVlist{{'B',0.706379},{'C',0.725404},{'D',0.744108},{'E',0.76}};
-  const map<char,Real> zAlist{{'B',0.74294},{'C',0.75830},{'D',0.77395},{'E',0.79}};
-  const map<char,Real> aMlist{{'B',0.00072},{'C',0.0006},{'D',0.00054},{'E',0.00044}};
-  const map<char,size_t> tMaxList{{'B',30},{'C',36},{'D',40},{'E',35}};
+  const map<char,Real> zVlist{{'Z',0.697},{'B',0.706379},{'C',0.725404},{'D',0.744108},{'E',0.7663}};
+  const map<char,Real> zAlist{{'Z',0.7357},{'B',0.74294},{'C',0.75830},{'D',0.77395},{'E',0.7921}};
+  const map<char,Real> aMlist{{'Z',0.00077},{'B',0.00072},{'C',0.0006},{'D',0.00054},{'E',0.00044}};
+  const map<char,size_t> tMaxList{{'Z',26},{'B',30},{'C',36},{'D',40},{'E',35}};
   const Real z=zAlist.at(ensName[0]);
   const Real am=aMlist.at(ensName[0]);
   // const size_t tMax=T/2+1;
@@ -233,6 +75,33 @@ void analyzeEns(grace_file_t& glbRplot,
   cout<<"aFPi: "<<aFPi.ave_err()<<endl;
   const djack_t xi=aMPi/aFPi;
   cout<<"Xi: "<<xi.ave_err()<<" phys: "<<MPiPhys/fPiPhys<<endl;
+  cout<<"Z: "<<z<<endl;
+  
+  const djvec_t cA0A0=
+    loadCorr(ensName,"ll_TM_A0A0");
+  cA0A0.ave_err().write(baseOut+"/"+ensName+"/A0A0.xmg");
+  const djack_t aMPiFromA0A0=constant_fit(effective_mass(cA0A0),8,T/2-3,baseOut+"/"+ensName+"/effA0A0.xmg");
+  
+  cout<<aMPi.ave_err().significativity()<<" "<<aMPiFromA0A0.ave_err().significativity()<<endl;
+
+  // {
+  // const djvec_t cV0P5=
+  //   loadCorr(ensName,"ll_TM_V0P5");
+  // cV0P5.ave_err().write(baseOut+"/"+ensName+"/corr_V0P5.xmg");
+  
+  // const djvec_t cV0P5der=
+  //   symmetric_derivative(cV0P5);
+  
+  // cV0P5der.ave_err().write(baseOut+"/"+ensName+"/corr_V0P5_der.xmg");
+  
+  // const djvec_t mPCACEff=
+  //   cV0P5der/(2*cP5P5);
+  
+  // const djack_t mPCAC=
+  //   constant_fit(mPCACEff,14,T/2-1,baseOut+"/"+ensName+"/eff_mPCAC.xmg");
+  
+  // cout<<"mPCAC: "<<mPCAC.ave_err()<<endl;
+  // }
   
   /// Inverse lattice spacing, in GeV
   const djack_t aInv=
@@ -245,8 +114,16 @@ void analyzeEns(grace_file_t& glbRplot,
   cout<<ensName<<" a: "<<smart_print(aInFm)<<" fm"<<endl;
   
   /// Loads the correlation function of which to compute R
-  const auto [cVKVK,covVKVK]=
+  const auto [readT,cVKVK,covVKVK]=
     loadCorrCov(ensName,"ll_TM_VKVK");
+  
+  if(T==0)
+    T=readT;
+  else
+    if(T!=readT)
+      CRASH("read size %zu different from stored size %zu",readT,T);
+  
+  cVKVK.ave_err().write(baseOut+"/"+ensName+"/VKVK.xmg");
   effective_mass(cVKVK).ave_err().write(baseOut+"/"+ensName+"/rho.xmg");
   
   /// Prepare the renormalized correlator
@@ -268,7 +145,9 @@ void analyzeEns(grace_file_t& glbRplot,
   
   grace_file_t RPlot(baseOut+"/"+ensName+"/R.xmg");
   const Real EMinInGeV=0.270,EMaxInGeV=4;
-  const Real EMin=EMinInGeV/aInv.ave(),EMax=EMaxInGeV/aInv.ave();
+  const Real EMin=EMinInGeV/aInv.ave();
+  const Real EMax=EMaxInGeV/aInv.ave();
+  const Real EMaxInt=EMax*4;
   
   /// Normalization of the correlation function, when assuming that R(E)=E^N
   Jvec norm(nT);
@@ -276,10 +155,10 @@ void analyzeEns(grace_file_t& glbRplot,
     {
       /// Correlator assuming that R(E)=E^N
       const double cAss=
-	gslIntegrateUpToInfinity([iT](const Real& E)
+	gslIntegrateFromTo([iT](const Real& E)
 	{
-	  return pow(E,N)*b(iT,E);
-	},EMin,tol);
+	  return pow(E,RE_exp)*b(iT,E);
+	},EMin,EMaxInt,tol);
       
       norm[iT]=corr[iT]/cAss;
     }
@@ -291,6 +170,14 @@ void analyzeEns(grace_file_t& glbRplot,
   
   /// Plots the value of sigma as a function of the energy
   grace_file_t sigmaPlot(baseOut+"/"+ensName+"/sigma.xmg");
+  
+  struct Res
+  {
+    Jack R;
+    double sigma;
+    double syst;
+    double stat;
+  };
   
   vector<tuple<Real,Jack>> RofE;
   vector<double> sigmaOfE;
@@ -326,18 +213,36 @@ void analyzeEns(grace_file_t& glbRplot,
       for(size_t iT=0;iT<nT;iT++)
 	{
 	  e(iT)=
-	    gslIntegrateUpToInfinity([targ,iT](const double& E)
+	    gslIntegrateFromTo([targ,iT](const double& E)
 	    {
-	      return targ(E)*pow(E,2*N)*b(iT,E);
-	    },EMin,tol);
+	      return targ(E)*pow(E,2*RE_exp)*b(iT,E);
+	    },EMin,EMaxInt,tol);
 	  
 	  for(size_t iS=iT;iS<nT;iS++)
 	    f(iT,iS)=f(iS,iT)=
-	      gslIntegrateUpToInfinity([iT,iS](const double& E)
+	      gslIntegrateFromTo([iT,iS](const double& E)
 	      {
-		return pow(E,2*N)*b(iT,E)*b(iS,E);
-	      },EMin,tol);
+		return pow(E,2*RE_exp)*b(iT,E)*b(iS,E);
+	      },EMin,EMaxInt,tol);
 	}
+      
+      
+      
+      // for(size_t iT=0;iT<nT;iT++)
+      // 	{
+      // 	  e(iT)=
+      // 	    gslIntegrateUpToInfinity([targ,iT](const double& E)
+      // 	    {
+      // 	      return targ(E)*pow(E,2*N)*b(iT,E);
+      // 	    },EMin,tol);
+	  
+      // 	  for(size_t iS=iT;iS<nT;iS++)
+      // 	    f(iT,iS)=f(iS,iT)=
+      // 	      gslIntegrateUpToInfinity([iT,iS](const double& E)
+      // 	      {
+      // 		return pow(E,2*N)*b(iT,E)*b(iS,E);
+      // 	      },EMin,tol);
+      // 	}
       
       const Real c2=
 	sqr(norm[tNorm].ave());
@@ -362,7 +267,7 @@ void analyzeEns(grace_file_t& glbRplot,
       Vect g;
       Jack R;
       
-      auto reconstruct=
+      const auto reconstruct=
 	[&](const Real& statOverSyst=1)
 	{
 	  MatrixXd Q=
@@ -385,7 +290,7 @@ void analyzeEns(grace_file_t& glbRplot,
 	}
       
       // Final reconstruction
-      const double lambdaExp=-3;
+      const double lambdaExp=-2.5;
       reconstruct(exp(lambdaExp));
       
       for(const auto& [x,y] : stab)
@@ -423,14 +328,14 @@ void analyzeEns(grace_file_t& glbRplot,
       // cout<<R.err()<<" "<<sqrt(errEst)<<endl;
       
       const auto interpReco=
-	[g,&aInv,&nT,&preco](const double& EInGeV)
+	[g,&aInv,&nT,&preco,&trambacco](const double& EInGeV)
       {
 	const Real E=EInGeV/aInv.ave();
 	Real s;
 	s=0;
 	for(size_t iT=0;iT<nT;iT++)
 	  {
-	    const Real k=b(iT,E)/preco[iT];
+	    const Real k=trambacco.b(iT,E)/preco[iT];
 	    s+=g[iT]*k;
 	  }
 	s*=sqr(E);
@@ -474,7 +379,7 @@ void analyzeEns(grace_file_t& glbRplot,
   };
   
   for(grace_file_t* plot : {&RPlot,&glbRplot})
-    plot->write_polygon(interpR,get<0>(RofE.front()),get<0>(RofE.back()));
+      plot->write_polygon(interpR,get<0>(RofE.front()),get<0>(RofE.back()));
   
   grace_file_t biConv(baseOut+"/"+ensName+"/biConv.xmg");
   for(size_t iE=0;iE<recoOfE.size();iE++)
@@ -483,7 +388,7 @@ void analyzeEns(grace_file_t& glbRplot,
   //     {
   // 	return abs(std::get<1>(recoOfE[iE])(E)*sqr(E)*interpR(E));
   // }, double xmin, double xmax, grace::color_t col)
-
+      
       const double x=std::get<0>(RofE[iE]);
       
       grace_file_t("/tmp/"+to_string(x)+".xmg").write_polygon([&](const double& E)
@@ -499,6 +404,19 @@ void analyzeEns(grace_file_t& glbRplot,
       biConv.write_xy(x,sqrt(syst));
     }
   biConv.set_all_colors(grace::BLACK);
+  
+  biConv.new_data_set();
+  for(size_t iE=0;iE<recoOfE.size();iE++)
+    {
+      const double x=std::get<0>(RofE[iE]);
+      const double smooth=
+	gslIntegrateUpToInfinity([&](const double& E)
+      {
+	return gauss(x,sigmaOfE[iE],E)*interpR(E).ave();
+      },EMinInGeV,1e-2);
+      biConv.write_xy(x,smooth);
+    }
+  biConv.set_all_colors(grace::MAGENTA);
   
   biConv.new_data_set();
   for(size_t iE=0;iE<recoOfE.size();iE++)
@@ -539,14 +457,28 @@ void analyzeEns(grace_file_t& glbRplot,
   },EMin*aInv.ave(),EMax*aInv.ave(),grace::BLACK);
 }
 
+vector<string> readEnsList()
+{
+  vector<string> ensList;
+  ifstream ensListFile("ensList.txt");
+  string s;
+  while(ensListFile>>s)
+    ensList.push_back(s);
+  
+  return ensList;
+}
+
 int main()
 {
-  
   set_njacks(50);
   
   grace_file_t RPlot(baseOut+"/R.xmg");
+  RPlot.set_color_scheme({grace::BLACK,grace::RED,grace::GREEN4,grace::BLUE,grace::VIOLET});
   
-  for(const char* ensName : {"B.72.64","B.72.96","C.06.80","C.06.112","D.54.96"})
+  const vector<string> ensList=readEnsList();
+  
+  // for(const char* ensName : {"B.72.64","B.72.96","C.06.80","C.06.112","D.54.96"})
+  for(const string& ensName : ensList)
   // // for(const char* ensName : {"C.06.80"})
   // for(const char* ensName : {"B.72.64"})
     analyzeEns(RPlot,ensName);
