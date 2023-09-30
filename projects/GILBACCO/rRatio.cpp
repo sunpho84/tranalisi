@@ -7,9 +7,6 @@
 using Real=double;
 using Jack=jack_t<Real>;
 using Jvec=vmeas_t<Jack>;
-using Vect=Vector<Real,Dynamic>;
-using Matr=Matrix<Real,Dynamic,Dynamic>;
-constexpr Real tol=1e-8;
 
 /// Long distance behaviour of spectral density: E^N
 const Real RE_exp=2;
@@ -26,12 +23,6 @@ const Real sigmaInGeVEMin=0.200;
 /// Scale sigma with energy
 constexpr bool scaleSigma=true;
 
-/// Physical pion mass
-constexpr Real MPiPhys=0.1350;
-
-/// Physical pion decay constant
-constexpr Real fPiPhys=0.1304;
-
 /// Base directory to read data
 const string baseIn="/home/francesco/QCD/LAVORI/GM3";
 
@@ -42,8 +33,9 @@ const string baseOut="/home/francesco/QCD/LAVORI/TRAMBACCO";
 djvec_t loadCorr(const string& ensName,
 		 const string& chann)
 {
-  const auto [T,corr,cov]=
+  const auto [readT,corr,cov]=
     loadCorrCov(baseIn+"/"+ensName+"/data/"+chann,false);
+  T=readT;
   
   return corr;
 }
@@ -56,25 +48,20 @@ void analyzeEns(grace_file_t& glbRplot,
   const djvec_t cP5P5=
     loadCorr(ensName,"ll_TM_P5P5");
   cP5P5.ave_err().write(baseOut+"/"+ensName+"/P5P5.xmg");
+
+  const map<char,size_t> tMaxList{{'Z',26},{'B',30},{'C',36},{'D',40},{'E',35}};
+  const size_t tMax=tMaxList.at(ensName[0]);
+  const Basis<double> basis(T,tMin,tMax,+1);
   
   const map<char,Real> zVlist{{'Z',0.697},{'B',0.706379},{'C',0.725404},{'D',0.744108},{'E',0.7663}};
   const map<char,Real> zAlist{{'Z',0.7357},{'B',0.74294},{'C',0.75830},{'D',0.77395},{'E',0.7921}};
   const map<char,Real> aMlist{{'Z',0.00077},{'B',0.00072},{'C',0.0006},{'D',0.00054},{'E',0.00044}};
-  const map<char,size_t> tMaxList{{'Z',26},{'B',30},{'C',36},{'D',40},{'E',35}};
   const Real z=zAlist.at(ensName[0]);
   const Real am=aMlist.at(ensName[0]);
   // const size_t tMax=T/2+1;
-  const size_t tMax=tMaxList.at(ensName[0]);
   const size_t nT=tMax-tMin;
   
   // Lattice spacing determination
-  djack_t aMPi,Z2Pi;
-  two_pts_fit(Z2Pi,aMPi,cP5P5,T/2,30,40,baseOut+"/"+ensName+"/pion.xmg");
-  const djack_t aFPi=sqrt(Z2Pi)*2*am/(aMPi*sinh(aMPi));
-  cout<<"aMPi: "<<aMPi.ave_err()<<endl;
-  cout<<"aFPi: "<<aFPi.ave_err()<<endl;
-  const djack_t xi=aMPi/aFPi;
-  cout<<"Xi: "<<xi.ave_err()<<" phys: "<<MPiPhys/fPiPhys<<endl;
   cout<<"Z: "<<z<<endl;
   
   const djvec_t cA0A0=
@@ -82,8 +69,6 @@ void analyzeEns(grace_file_t& glbRplot,
   cA0A0.ave_err().write(baseOut+"/"+ensName+"/A0A0.xmg");
   const djack_t aMPiFromA0A0=constant_fit(effective_mass(cA0A0),8,T/2-3,baseOut+"/"+ensName+"/effA0A0.xmg");
   
-  cout<<aMPi.ave_err().significativity()<<" "<<aMPiFromA0A0.ave_err().significativity()<<endl;
-
   // {
   // const djvec_t cV0P5=
   //   loadCorr(ensName,"ll_TM_V0P5");
@@ -105,7 +90,7 @@ void analyzeEns(grace_file_t& glbRplot,
   
   /// Inverse lattice spacing, in GeV
   const djack_t aInv=
-    fPiPhys/aFPi;
+    estimateA(am,cP5P5,T,baseOut+"/"+ensName+"/pion.xmg");
   cout<<"a^-1: "<<smart_print(aInv)<<" GeV"<<endl;
   
   /// Lattice spacing in fm
@@ -115,7 +100,7 @@ void analyzeEns(grace_file_t& glbRplot,
   
   /// Loads the correlation function of which to compute R
   const auto [readT,cVKVK,covVKVK]=
-    loadCorrCov(ensName,"ll_TM_VKVK");
+    loadCorrCov(baseIn+"/"+ensName+"/data/ll_TM_VKVK");
   
   if(T==0)
     T=readT;
@@ -128,13 +113,13 @@ void analyzeEns(grace_file_t& glbRplot,
   
   /// Prepare the renormalized correlator
   Jvec corr(nT);
-  vector<Real> corrCov(nT*nT);
+  MatrixX<Real> corrCov(nT,nT);
   for(size_t iT=0;iT<nT;iT++)
     {
       const Real fact=sqr(z);//*12*sqr(M_PI)*4/9
       corr[iT]=cVKVK[iT+tMin]*fact;
       for(size_t iS=0;iS<nT;iS++)
-	corrCov[iT+nT*iS]=covVKVK[(iT+tMin)+(T/2+1)*(iS+tMin)]*sqr(fact);
+	corrCov(iT,iS)=covVKVK[(iT+tMin)+(T/2+1)*(iS+tMin)]*sqr(fact);
     }
   corr.ave_err().write(baseOut+"/"+ensName+"/rhoPreco.xmg");
   
@@ -147,26 +132,33 @@ void analyzeEns(grace_file_t& glbRplot,
   const Real EMinInGeV=0.270,EMaxInGeV=4;
   const Real EMin=EMinInGeV/aInv.ave();
   const Real EMax=EMaxInGeV/aInv.ave();
-  const Real EMaxInt=EMax*4;
+  const Real EMaxInt=4*aInv.ave();
   
   /// Normalization of the correlation function, when assuming that R(E)=E^N
-  Jvec norm(nT);
+  Jvec normOfT(nT);
   for(size_t iT=0;iT<nT;iT++)
     {
       /// Correlator assuming that R(E)=E^N
       const double cAss=
-	gslIntegrateFromTo([iT](const Real& E)
+	gslIntegrateFromTo([iT,&basis](const Real& E)
 	{
-	  return pow(E,RE_exp)*b(iT,E);
-	},EMin,EMaxInt,tol);
+	  return pow(E,RE_exp)*basis(iT,E);
+	},EMin,EMaxInt);
       
-      norm[iT]=corr[iT]/cAss;
+      normOfT[iT]=corr[iT]/cAss;
     }
-  norm.ave_err().write(baseOut+"/"+ensName+"/norm.xmg");
+  normOfT.ave_err().write(baseOut+"/"+ensName+"/norm.xmg");
   
   /// Time at which to normalize the correlator: we choose 2 GeV^-1
   const size_t tNorm=round(2*aInv.ave());
   cout<<"tNorm: "<<tNorm<<endl;
+  
+  /// Ansatz of the spectral density
+  const auto specAns=
+    [norm=normOfT[tNorm].ave()](const Real& E)
+    {
+      return norm*pow(E,RE_exp);
+    };
   
   /// Plots the value of sigma as a function of the energy
   grace_file_t sigmaPlot(baseOut+"/"+ensName+"/sigma.xmg");
@@ -200,32 +192,14 @@ void analyzeEns(grace_file_t& glbRplot,
       
       sigmaPlot.write_xy(EStarInGeV,sigmaInGeV);
       
-      /// Target function
       const auto targ=
 	[EStar,sigma](const Real& E)
 	{
 	  return gauss(EStar,sigma,E)/sqr(E);
 	};
-      
-      Vect e(nT);
-      Matr f(nT,nT);
-      
-      for(size_t iT=0;iT<nT;iT++)
-	{
-	  e(iT)=
-	    gslIntegrateFromTo([targ,iT](const double& E)
-	    {
-	      return targ(E)*pow(E,2*RE_exp)*b(iT,E);
-	    },EMin,EMaxInt,tol);
-	  
-	  for(size_t iS=iT;iS<nT;iS++)
-	    f(iT,iS)=f(iS,iT)=
-	      gslIntegrateFromTo([iT,iS](const double& E)
-	      {
-		return pow(E,2*RE_exp)*b(iT,E)*b(iS,E);
-	      },EMin,EMaxInt,tol);
-	}
-      
+	
+      const TrambaccoFunctional tf=
+	getTrambaccoFunctional(basis,specAns,targ,EMin,EMaxInt,corrCov,preco);
       
       
       // for(size_t iT=0;iT<nT;iT++)
@@ -244,40 +218,18 @@ void analyzeEns(grace_file_t& glbRplot,
       // 	      },EMin,tol);
       // 	}
       
-      const Real c2=
-	sqr(norm[tNorm].ave());
-      
-      VectorXd L(nT);
-      MatrixXd QStat(nT,nT),QSyst(nT,nT);
-      
-      /// Prepares the functional components
-      for(size_t iT=0;iT<nT;iT++)
-	{
-	  L(iT)=c2*e(iT)/preco[iT];
-	  for(size_t iS=0;iS<nT;iS++)
-	    {
-	      constexpr double corrFading=1;
-	      const size_t dist=abs((int)iS-(int)iT);
-	      QSyst(iT,iS)=c2*f(iT,iS)/(preco[iT]*preco[iS]);
-	      QStat(iT,iS)=corrCov[iT+nT*iS]*pow(corrFading,dist)/(preco[iT]*preco[iS]);
-	    }
-	}
       
       /// Track the results
-      Vect g;
       Jack R;
+      VectorXd g;
       
       const auto reconstruct=
 	[&](const Real& statOverSyst=1)
 	{
-	  MatrixXd Q=
-	    QSyst+QStat/statOverSyst;
-	  
-	  g=Q.inverse()*L;
-	  
+	  g=tf.getG(preco,statOverSyst);
 	  R=0;
 	  for(size_t iT=0;iT<nT;iT++)
-	    R+=g[iT]*corr[iT]/preco[iT];
+	    R+=g[iT]*corr[iT];
 	};
       
       // Performs the stability check
@@ -297,8 +249,8 @@ void analyzeEns(grace_file_t& glbRplot,
 	stabilityPlot.write_ave_err(x,y.ave_err());
       stabilityPlot.write_constant_band(lambdaExp-0.1,lambdaExp+0.1,R);
       
-      systOfE.push_back(sqrt(g.transpose()*QSyst*g));
-      statOfE.push_back(sqrt(g.transpose()*QStat*g));
+      systOfE.push_back(sqrt(g.transpose()*tf.QSyst*g));
+      statOfE.push_back(sqrt(g.transpose()*tf.QStat*g));
       
       /// Print coefficients
       grace_file_t gPlot(baseOut+"/"+ensName+"/g"+to_string(EStarInGeV)+".xmg");
@@ -327,33 +279,33 @@ void analyzeEns(grace_file_t& glbRplot,
       // cout.precision(16);
       // cout<<R.err()<<" "<<sqrt(errEst)<<endl;
       
-      const auto interpReco=
-	[g,&aInv,&nT,&preco,&trambacco](const double& EInGeV)
-      {
-	const Real E=EInGeV/aInv.ave();
-	Real s;
-	s=0;
-	for(size_t iT=0;iT<nT;iT++)
-	  {
-	    const Real k=trambacco.b(iT,E)/preco[iT];
-	    s+=g[iT]*k;
-	  }
-	s*=sqr(E);
+      // const auto interpReco=
+      // 	[g,&aInv,&nT,&preco,&basis](const double& EInGeV)
+      // {
+      // 	const Real E=EInGeV/aInv.ave();
+      // 	Real s;
+      // 	s=0;
+      // 	for(size_t iT=0;iT<nT;iT++)
+      // 	  {
+      // 	    const Real k=basis(iT,E)/preco[iT];
+      // 	    s+=g[iT]*k;
+      // 	  }
+      // 	s*=sqr(E);
 	
-	return s;
-      };
+      // 	return s;
+      // };
       
-      recoOfE.emplace_back(interpReco);
+      // recoOfE.emplace_back(interpReco);
       
-      // Plots the reconstruction of the target function
-      grace_file_t recoPlot(baseOut+"/"+ensName+"/reco"+to_string(EStarInGeV)+".xmg");
-      recoPlot.write_line(interpReco,EMin*aInv.ave(),EMax*aInv.ave());
+      // // Plots the reconstruction of the target function
+      // grace_file_t recoPlot(baseOut+"/"+ensName+"/reco"+to_string(EStarInGeV)+".xmg");
+      // recoPlot.write_line(interpReco,EMin*aInv.ave(),EMax*aInv.ave());
       
-      recoPlot.write_line([&](const Real& EInGeV)
-      {
-	const Real E=EInGeV/aInv.ave();
-	return targ(E)*sqr(E);
-      },EMin*aInv.ave(),EMax*aInv.ave());
+      // recoPlot.write_line([&](const Real& EInGeV)
+      // {
+      // 	const Real E=EInGeV/aInv.ave();
+      // 	return targ(E)*sqr(E);
+      // },EMin*aInv.ave(),EMax*aInv.ave());
       
       RofE.emplace_back(EStarInGeV,R);
     }
@@ -451,7 +403,7 @@ void analyzeEns(grace_file_t& glbRplot,
   biConv.set_all_colors(grace::VIOLET);
   
   
-  RPlot.write_line([c=norm[tNorm].ave()](const Real& x)
+  RPlot.write_line([c=normOfT[tNorm].ave()](const Real& x)
   {
     return c;
   },EMin*aInv.ave(),EMax*aInv.ave(),grace::BLACK);

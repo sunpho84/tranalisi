@@ -409,7 +409,8 @@ void grace_file_t::closed_polygon(grace::color_t col)
 {
   set_settype(grace::XY);
   set_fill_type(grace::AS_POLYGON);
-  set_no_line();
+  //set_no_line();
+  linewidth=1;
   set_all_colors(col);
   set_transparency(0.4);
   set_no_symbol();

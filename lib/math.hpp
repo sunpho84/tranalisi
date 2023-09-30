@@ -78,4 +78,24 @@ template <class T>
 constexpr T Cube(T x)
 {return Pow<3>(x);}
 
+/// Factorial of n
+constexpr int fact(const int& n)
+{
+  int r=1;
+  
+  for(int i=2;i<=n;i++)
+    r*=i;
+  
+  return r;
+}
+
+/// Gaussian centered in x0 with standard deviation sigma, normalized to 1
+template <typename Real>
+Real gauss(const Real& x0,
+	   const Real& sigma,
+	   const Real& x)
+{
+  return exp(-sqr((x-x0)/sigma)/2)/(sqrt(2*M_PI)*sigma);
+}
+
 #endif

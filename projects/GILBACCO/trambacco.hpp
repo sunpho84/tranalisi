@@ -1,13 +1,50 @@
 #include <tranalisi.hpp>
 
+const map<char,double> aMlist{{'Z',0.00077},{'B',0.00072},{'C',0.0006},{'D',0.00054},{'E',0.00044}};
+
+/// Physical pion mass
+constexpr double MPiPhys=0.1350;
+
+/// Physical pion decay constant
+constexpr double fPiPhys=0.1304;
+
+/// Estimates the lattice spacing
+inline djack_t estimateA(const double& am,
+			 const djvec_t& cP5P5,
+			 const size_t& T,
+			 const string& plotPath)
+{
+  djack_t aMPi,Z2Pi;
+  two_pts_fit(Z2Pi,aMPi,cP5P5,T/2,30,40,plotPath);
+  
+  const djack_t aFPi=sqrt(Z2Pi)*2*am/(aMPi*sinh(aMPi));
+  
+  cout<<"am: "<<am<<endl;
+  cout<<"aMPi: "<<aMPi.ave_err()<<endl;
+  cout<<"aFPi: "<<aFPi.ave_err()<<endl;
+  
+  const djack_t xi=aMPi/aFPi;
+  cout<<"Xi: "<<xi.ave_err()<<" phys: "<<MPiPhys/fPiPhys<<endl;
+  
+  const djack_t aInv=
+    fPiPhys/aFPi;
+  
+  return aInv;
+}
+
+/////////////////////////////////////////////////////////////////
+
 template <typename Real>
-struct Trambacco
+struct Basis
 {
   /// Time extension of the correlator
   const size_t T;
   
   /// First time from which to reconstruct
-  const size_t& tMin;
+  const size_t tMin;
+  
+  /// Number of basis elements
+  const size_t nT;
   
   /// Sign of the backward signal
   const double periodicitySign;
@@ -16,20 +53,117 @@ struct Trambacco
   ///
   /// The value of "it" is the element of the function, so we need to
   /// increase by tmin to get the time
-  Real b(const size_t& it,
-	 const Real& E) const
+  Real operator()(const size_t& it,
+		  const Real& E) const
   {
     /// Refered time
     const Real t=
       it+tMin;
     
-    return exp(-t*E)+exp(-(T-t)*E);
+    return exp(-t*E)+periodicitySign*exp(-(T-t)*E);
   }
   
-  Trambacco(const size_t& T,
-	    const size_t& tMin,
-	    const double& periodicitySign=+1) :
-    T(T),tMin(tMin),periodicitySign(periodicitySign)
+  Basis(const size_t& T,
+	const size_t& tMin,
+	const size_t& tMax,
+	const double& periodicitySign) :
+    T(T),tMin(tMin),nT(tMax-tMin),periodicitySign(periodicitySign)
   {
   }
 };
+
+/// Functional of the trambacco
+struct TrambaccoFunctional
+{
+  VectorXd L;
+  
+  MatrixXd QStat;
+  
+  MatrixXd QSyst;
+  
+  TrambaccoFunctional(const size_t& nT) :
+    L(nT),QStat(nT,nT),QSyst(nT,nT)
+  {
+  }
+  
+  VectorXd getG(const vector<double>& preco,
+		const double& statOverSyst=1) const
+  {
+    const size_t& nT=
+      preco.size();
+    
+    const MatrixXd Q=
+      QSyst+QStat/statOverSyst;
+    
+    const VectorXd gPreco=
+      Q.inverse()*L;
+    
+    VectorXd g(nT);
+    
+    for(size_t iT=0;iT<preco.size();iT++)
+      g[iT]=gPreco[iT]/preco[iT];
+    
+    return g;
+  }
+};
+
+
+template <typename Real,
+	  typename SpecAns,
+	  typename Targ>
+TrambaccoFunctional getTrambaccoFunctional(const Basis<Real>& basis,
+					   const SpecAns& specAns,
+					   const Targ& targ,
+					   const Real& EMin,
+					   const Real& EMax,
+					   const MatrixX<Real>& corrCov,
+					   const vector<Real>& preco)
+{
+  static constexpr Real tol=1e-8;
+  
+  //using Real=typename Targ::Real;
+  
+  using Vect=Vector<Real,Dynamic>;
+  
+  using Matr=Matrix<Real,Dynamic,Dynamic>;
+  
+  const size_t& nT=basis.nT;
+  
+  Vect e(nT);
+  
+  Matr f(nT,nT);
+  
+  for(size_t iT=0;iT<nT;iT++)
+    {
+      e(iT)=
+	gslIntegrateFromTo([&targ,&specAns,&basis,iT](const double& E)
+	{
+	  return targ(E)*sqr(specAns(E))*basis(iT,E);
+	},EMin,EMax,tol);
+      
+      for(size_t iS=iT;iS<nT;iS++)
+	f(iT,iS)=f(iS,iT)=
+	  gslIntegrateFromTo([iT,iS,&basis,&specAns](const double& E)
+	  {
+	    return sqr(specAns(E))*basis(iT,E)*basis(iS,E);
+	  },EMin,EMax,tol);
+    }
+  
+  TrambaccoFunctional tf(nT);
+  
+  /// Prepares the functional components
+  for(size_t iT=0;iT<nT;iT++)
+    {
+      tf.L(iT)=e(iT)/preco[iT];
+      for(size_t iS=0;iS<nT;iS++)
+	{
+	  constexpr double corrFading=1;
+	  const size_t dist=abs((int)iS-(int)iT);
+	  tf.QSyst(iT,iS)=f(iT,iS)/(preco[iT]*preco[iS]);
+	  tf.QStat(iT,iS)=corrCov(iT,iS)*pow(corrFading,dist)/(preco[iT]*preco[iS]);
+	}
+    }
+  
+  return tf;
+}
+
