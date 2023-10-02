@@ -45,7 +45,11 @@ int main()
       const auto [readT,corr,cov]=
 	::loadCorrCov(baseIn+"/"+ensName+"/data/"+chann,false);
       
+      if(T!=readT)
+	CRASH("T=%zu, read %zu",T,readT);
+      
       corr.ave_err().write(baseOut+ensName+"/"+chann+".xmg");
+      effective_mass(corr).ave_err().write(baseOut+ensName+"/eff_mass_"+chann+".xmg");
       
       return make_tuple(corr,cov);
     };
@@ -67,33 +71,140 @@ int main()
     estimateA(aMlist.at('C'),P5P5_ll,T,baseOut+"/"+ensName+"/pion.xmg");
   cout<<"a^-1: "<<aInv.ave_err()<<" GeV^-1"<<endl;
   
-  const auto [cV0V0_ls,corrV0V0_ls]=
-    loadCorrCov("mix_fixed_l_s1_TM_V0V0");
-  const auto [cVKVK_ls,corrVKVK_ls]=
-    loadCorrCov("mix_fixed_l_s1_TM_VKVK");
+#define LOAD(TAG) \
+  const auto [c ## TAG ## _ls,cov ## TAG ## _ls]=\
+    loadCorrCov("mix_fixed_l_s1_TM_" #TAG)
+
+  LOAD(V0V0);
+  LOAD(VKVK);
+  LOAD(A0A0);
+  LOAD(AKAK);
+  LOAD(P5P5);
   
-  const double EMinIntInGeV=0.09;
+#undef LOAD
+  
+  const double EMinIntInGeV=0.27;
   const double EMinInt=EMinIntInGeV/aInv.ave();
-  const double EMaxInt=4;
+  const double EMaxInt=6;
   
-  const double sigma=0.3;
+  const double sigma=0.03;
+  
+  const size_t tMin=1,tMax=36;
+  const Basis<double> basis(T,tMin,tMax,+1);
+  const size_t nT=basis.nT;
+  
+  djvec_t corr(nT);
+  
+  MatrixX<double> corrCov(nT,nT);
+  for(size_t iT=0;iT<nT;iT++)
+    {
+      corr[iT]=cVKVK_ls[iT+tMin];
+      for(size_t iS=0;iS<nT;iS++)
+	corrCov(iT,iS)=covVKVK_ls[(iT+tMin)+(T/2+1)*(iS+tMin)];
+    }
   
   /// Preconditioner of the problem
-  vector<Real> preco(nT);
-  for(size_t iT=0;iT<nT;iT++)
+  vector<double> preco(nT);
+  for(size_t iT=0;iT<basis.nT;iT++)
     preco[iT]=corr[iT].ave();
+  
+  const size_t RE_exp=2;
+  
+  /// Normalization of the correlation function, when assuming that R(E)=E^N
+  djvec_t normOfT(nT);
+  for(size_t iT=0;iT<nT;iT++)
+    {
+      /// Correlator assuming that R(E)=E^N
+      const double cAss=
+	gslIntegrateFromTo([iT,&basis](const double& E)
+	{
+	  return pow(E,RE_exp)*basis(iT,E);
+	},0.5/aInv.ave(),EMaxInt);
+      
+      cout<<iT<<" "<<corr[iT].ave_err()<<" "<<cAss<<endl;
+      
+      normOfT[iT]=corr[iT]/cAss;
+    }
+  normOfT.ave_err().write(baseOut+"/"+ensName+"/norm.xmg");
+  
+  /// Time at which to normalize the correlator: we choose 2 GeV^-1
+  const size_t tNorm=round(2*aInv.ave());
+  cout<<"tNorm: "<<tNorm<<endl;
+  
+  /// Ansatz of the spectral density
+  const auto specAns=
+    [norm=normOfT[tNorm].ave()](const double& E)
+    {
+      return norm*pow(E,RE_exp);
+    };
+  
+  const auto targetFunction=
+    [sigma](const double& x)
+    {
+      return Kt(sigma,x);
+    };
   
   const TrambaccoFunctional tf=
     getTrambaccoFunctional(basis,
 			   specAns,
-			   [sigma](const double& x)
-			   {
-			     return Kt(sigma,x);
-			   }
-			   ,EMinInt,EMaxInt,cVKVK_ls,preco);
+			   targetFunction,
+			   EMinInt,EMaxInt,corrCov,preco);
   
-  grace_file_t temp("/tmp/t.xmg");
-  temp.write_line(bind(thetaSigma,sigma,std::placeholders::_1),-10,10);
+  /// Track the results
+  djack_t R;
+  VectorXd g;
+  
+  const auto reconstruct=
+    [&](const double& statOverSyst=1)
+    {
+      g=tf.getG(preco,statOverSyst);
+      R=0;
+      for(size_t iT=0;iT<nT;iT++)
+	R+=g[iT]*corr[iT];
+    };
+  
+  // Performs the stability check
+  grace_file_t stabilityPlot(baseOut+"/"+ensName+"/stab.xmg");
+  vector<pair<double,djack_t>> stab;
+  for(double statOverSyst=512;statOverSyst>=1e-10;statOverSyst/=2)
+    {
+      reconstruct(statOverSyst);
+      stab.emplace_back(log(statOverSyst),R);
+    }
+  
+  // Final reconstruction
+  const double lambdaExp=-2.5;
+  reconstruct(exp(lambdaExp));
+  
+  for(const auto& [x,y] : stab)
+    stabilityPlot.write_ave_err(x,y.ave_err());
+  stabilityPlot.write_constant_band(lambdaExp-0.1,lambdaExp+0.1,R);
+  
+  /// Print coefficients
+  grace_file_t gPlot(baseOut+"/"+ensName+"/g.xmg");
+  for(size_t iT=0;iT<nT;iT++)
+    gPlot.write_xy(iT,g[iT]);
+  
+  const auto interpReco=
+    [g,&aInv,&nT,&basis](const double& EInGeV)
+    {
+      const double E=EInGeV/aInv.ave();
+      double s=0;
+      for(size_t iT=0;iT<nT;iT++)
+	s+=g[iT]*basis(iT,E);
+      
+      return s;
+    };
+  
+  // Plots the reconstruction of the target function
+  grace_file_t recoPlot(baseOut+"/"+ensName+"/reco.xmg");
+  recoPlot.write_line(interpReco,EMinInt*aInv.ave(),EMaxInt*aInv.ave());
+  
+  recoPlot.write_line([&](const double& EInGeV)
+  {
+    const double E=EInGeV/aInv.ave();
+    return targetFunction(E);
+  },EMinInt*aInv.ave(),EMaxInt*aInv.ave());
   
   return 0;
 }

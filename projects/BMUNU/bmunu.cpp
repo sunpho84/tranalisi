@@ -2,7 +2,7 @@
 
 int main()
 {
-  set_njacks(50);
+  set_njacks(20);
   
   const size_t T=128;
   const size_t nMes2pt=3;
@@ -64,6 +64,7 @@ int main()
 	const size_t& mu,
 	const size_t& ri)
     {
+      const double charge=-1.0/3;
       djvec_t corr(T);
       
       jackknivesFill(nConfs,[&](const size_t& iConf,
@@ -76,13 +77,16 @@ int main()
       
       corr.clusterize((double)nConfs/njacks);
       
-      return corr;
+      return corr*charge;
     };
   
-  enum{MU1,MU2};
+  enum{LIGHT_INS,HEAVY_INS};
+  enum{FORW,BACK};
+  enum{V1,V2};
   
+  const size_t iMb=1,iTh=1,iQins=LIGHT_INS,fb=FORW,mu=V1,ri=RE;
   const djvec_t A1P5=
-    effective_mass(-load3Pts(0,1,0,0,MU1,RE).symmetrized(-1),T/2,-1);
+    load3Pts(iMb,iTh,iQins,fb,mu,ri);
   
   A1P5.ave_err().write("plots/A1P5.xmg");
   

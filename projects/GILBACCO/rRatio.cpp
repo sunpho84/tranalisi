@@ -132,7 +132,7 @@ void analyzeEns(grace_file_t& glbRplot,
   const Real EMinInGeV=0.270,EMaxInGeV=4;
   const Real EMin=EMinInGeV/aInv.ave();
   const Real EMax=EMaxInGeV/aInv.ave();
-  const Real EMaxInt=4*aInv.ave();
+  const Real EMaxInt=6; //it's in lattice units, go past 4 but not too much
   
   /// Normalization of the correlation function, when assuming that R(E)=E^N
   Jvec normOfT(nT);
@@ -144,6 +144,8 @@ void analyzeEns(grace_file_t& glbRplot,
 	{
 	  return pow(E,RE_exp)*basis(iT,E);
 	},EMin,EMaxInt);
+      
+      cout<<iT<<" "<<corr[iT].ave_err()<<" "<<cAss<<endl;
       
       normOfT[iT]=corr[iT]/cAss;
     }
