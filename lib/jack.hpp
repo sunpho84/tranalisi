@@ -37,7 +37,7 @@ struct jack_t;
 
 template <typename U>
 U& getJack(U& u,
-		       const size_t& ijack)
+	   const size_t& ijack)
 {
   return
     u;
@@ -463,68 +463,69 @@ void jackknivesFill(const size_t& nConfs,                                       
 		    const function<void(const size_t& iConf,const size_t& iClust,const double& weight)>& f); ///< Function used to fill
 		    
 
-#define PROVIDE_BINARY_OPERATOR(SYMBOL)				\
-  template <typename T>						\
-  jack_t<T> operator SYMBOL(const jack_t<T>& a,			\
-			    const jack_t<T>& b)			\
-  {								\
-    jack_t<T> c;						\
-								\
-    for(size_t ijack=0;ijack<=njacks;ijack++)			\
-      c[ijack]=a[ijack] SYMBOL b[ijack];			\
-								\
-    return							\
-      c;							\
-  }								\
-								\
-  template <typename T>						\
-  jack_t<T> operator SYMBOL(const jack_t<T>& a,			\
-			    const T& b)				\
-  {								\
-    jack_t<T> c;						\
-								\
-    for(size_t ijack=0;ijack<=njacks;ijack++)			\
-      c[ijack]=a[ijack] SYMBOL b;				\
-								\
-    return							\
-      c;							\
-  }								\
-								\
-  template <typename T>						\
-  jack_t<T> operator SYMBOL(const T& a,				\
-			    const jack_t<T>& b)			\
-  {								\
-    jack_t<T> c;						\
-								\
-    for(size_t ijack=0;ijack<=njacks;ijack++)			\
-      c[ijack]=a SYMBOL b[ijack];				\
-								\
-    return							\
-      c;							\
-  }								\
-								\
-  template <typename T>						\
-  jack_t<T>& operator SYMBOL ##=(jack_t<T>& a,			\
-				 const jack_t<T>& b)		\
-    {								\
-      for(size_t ijack=0;ijack<=njacks;ijack++)			\
-	a[ijack] SYMBOL ## = b[ijack];				\
-								\
-      return							\
-      a;							\
-    }								\
-								\
-  template <typename T>						\
-  jack_t<T>& operator SYMBOL ##=(jack_t<T>& a,			\
-				 const T& b)			\
-    {								\
-      for(size_t ijack=0;ijack<=njacks;ijack++)			\
-	a[ijack] SYMBOL ## = b;					\
-								\
-      return							\
-      a;							\
-    }
-
+#define PROVIDE_BINARY_OPERATOR(SYMBOL)					\
+  template <typename T,							\
+	    typename U>							\
+  auto operator SYMBOL(const jack_t<T>& a,				\
+		       const jack_t<U>& b)				\
+  {									\
+    jack_t<decltype(declval<T>() SYMBOL declval<U>())> c;		\
+    									\
+    for(size_t ijack=0;ijack<=njacks;ijack++)				\
+      c[ijack]=a[ijack] SYMBOL b[ijack];				\
+    									\
+    return								\
+      c;								\
+  }									\
+  									\
+  template <typename T>							\
+  jack_t<T> operator SYMBOL(const jack_t<T>& a,				\
+		       const T& b)					\
+  {									\
+    jack_t<T> c;							\
+    									\
+    for(size_t ijack=0;ijack<=njacks;ijack++)				\
+      c[ijack]=a[ijack] SYMBOL b;					\
+    									\
+    return								\
+      c;								\
+  }									\
+  									\
+  template <typename T>							\
+  jack_t<T> operator SYMBOL(const T& a,					\
+			    const jack_t<T>& b)				\
+  {									\
+    jack_t<T> c;							\
+    									\
+    for(size_t ijack=0;ijack<=njacks;ijack++)				\
+      c[ijack]=a SYMBOL b[ijack];					\
+    									\
+    return								\
+      c;								\
+  }									\
+  									\
+  template <typename T,							\
+	    typename U>							\
+  jack_t<T>& operator SYMBOL ##=(jack_t<T>& a,				\
+				 const jack_t<U>& b)			\
+    {									\
+      for(size_t ijack=0;ijack<=njacks;ijack++)				\
+	a[ijack] SYMBOL ## = b[ijack];					\
+      									\
+      return								\
+      a;								\
+    }									\
+    									\
+    template <typename T>						\
+    jack_t<T>& operator SYMBOL ##=(jack_t<T>& a,			\
+				   const T& b)				\
+      {									\
+	for(size_t ijack=0;ijack<=njacks;ijack++)			\
+	  a[ijack] SYMBOL ## = b;					\
+									\
+	return								\
+	a;								\
+      }
 
 PROVIDE_BINARY_OPERATOR(+)
 PROVIDE_BINARY_OPERATOR(-)

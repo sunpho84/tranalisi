@@ -84,6 +84,17 @@ void two_pts_fit(T &Z2,T &M,const TV &corr,size_t TH,size_t tmin,size_t tmax,con
   Z2=constant_fit(temp,tmin,tmax,path_Z2);
 }
 
+//! returns the Z2 and mass of the 2pts fit
+template <class TV,class T=typename TV::base_type>
+auto two_pts_fit(const TV &corr,size_t TH,size_t tmin,size_t tmax,const string &path_mass="",const string &path_Z2="",int par=1)
+{
+  std::decay_t<decltype(corr[0])> Z2,M;
+  
+  two_pts_fit(Z2,M,corr,TH,tmin,tmax,path_mass,path_Z2,par);
+  
+  return std::make_tuple(Z2,M);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //! perform a simple fit using x, a function and data

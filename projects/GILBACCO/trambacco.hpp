@@ -1,5 +1,8 @@
 #include <tranalisi.hpp>
 
+#include <PrecFloat.hpp>
+#include <hpIntegrator.hpp>
+
 const map<char,double> aMlist{{'Z',0.00077},{'B',0.00072},{'C',0.0006},{'D',0.00054},{'E',0.00044}};
 
 /// Physical pion mass
@@ -14,8 +17,8 @@ inline djack_t estimateA(const double& am,
 			 const size_t& T,
 			 const string& plotPath)
 {
-  djack_t aMPi,Z2Pi;
-  two_pts_fit(Z2Pi,aMPi,cP5P5,T/2,30,40,plotPath);
+  const auto [Z2Pi,aMPi]=
+    two_pts_fit(cP5P5,T/2,30,40,plotPath);
   
   const djack_t aFPi=sqrt(Z2Pi)*2*am/(aMPi*sinh(aMPi));
   
@@ -30,6 +33,30 @@ inline djack_t estimateA(const double& am,
     fPiPhys/aFPi;
   
   return aInv;
+}
+
+/////////////////////////////////////////////////////////////////
+
+inline const double& get(const double& x)
+{
+  return x;
+}
+
+inline double get(const PrecFloat& x)
+{
+  return x.get();
+}
+
+template <typename Real,
+	  typename F>
+Real integrateUpToInfinity(F&& f,
+			   const double& lower=0,
+			   const double& tol=1e-8)
+{
+  if constexpr(std::is_same_v<Real,double>)
+    return gslIntegrateUpToInfinity(f,lower,tol);
+  else
+    return precIntegrateUpToInfinity(f,lower);
 }
 
 /////////////////////////////////////////////////////////////////
@@ -73,32 +100,33 @@ struct Basis
 };
 
 /// Functional of the trambacco
+template <typename Real>
 struct TrambaccoFunctional
 {
-  VectorXd L;
+  VectorX<Real> L;
   
-  MatrixXd QStat;
+  MatrixX<Real> QStat;
   
-  MatrixXd QSyst;
+  MatrixX<Real> QSyst;
   
   TrambaccoFunctional(const size_t& nT) :
     L(nT),QStat(nT,nT),QSyst(nT,nT)
   {
   }
   
-  VectorXd getG(const vector<double>& preco,
-		const double& statOverSyst=1) const
+  VectorX<Real> getG(const vector<Real>& preco,
+		     const double& statOverSyst=1) const
   {
     const size_t& nT=
       preco.size();
     
-    const MatrixXd Q=
+    const MatrixX<Real> Q=
       QSyst+QStat/statOverSyst;
     
-    const VectorXd gPreco=
+    const VectorX<Real> gPreco=
       Q.inverse()*L;
     
-    VectorXd g(nT);
+    VectorX<Real> g(nT);
     
     for(size_t iT=0;iT<preco.size();iT++)
       g[iT]=gPreco[iT]/preco[iT];
@@ -107,21 +135,18 @@ struct TrambaccoFunctional
   }
 };
 
-
 template <typename Real,
 	  typename SpecAns,
 	  typename Targ>
-TrambaccoFunctional getTrambaccoFunctional(const Basis<Real>& basis,
-					   const SpecAns& specAns,
-					   const Targ& targ,
-					   const Real& EMin,
-					   const Real& EMax,
-					   const MatrixX<Real>& corrCov,
-					   const vector<Real>& preco)
+TrambaccoFunctional<Real> getTrambaccoFunctional(const Basis<Real>& basis,
+						 const SpecAns& specAns,
+						 const Targ& targ,
+						 const Real& EMin,
+						 const Real& EMax,
+						 const MatrixX<Real>& corrCov,
+						 const vector<Real>& preco)
 {
-  static constexpr Real tol=1e-8;
-  
-  //using Real=typename Targ::Real;
+  static constexpr double tol=1e-8;
   
   using Vect=Vector<Real,Dynamic>;
   
@@ -136,20 +161,20 @@ TrambaccoFunctional getTrambaccoFunctional(const Basis<Real>& basis,
   for(size_t iT=0;iT<nT;iT++)
     {
       e(iT)=
-	gslIntegrateFromTo([&targ,&specAns,&basis,iT](const double& E)
+	gslIntegrateFromTo([&targ,&specAns,&basis,iT](const Real& E)
 	{
-	  return targ(E)*sqr(specAns(E))*basis(iT,E);
-	},EMin,EMax,tol);
+	  return get(targ(E)*sqr(specAns(E))*basis(iT,E));
+	},get(EMin),get(EMax),tol);
       
       for(size_t iS=iT;iS<nT;iS++)
 	f(iT,iS)=f(iS,iT)=
-	  gslIntegrateFromTo([iT,iS,&basis,&specAns](const double& E)
+	  gslIntegrateFromTo([iT,iS,&basis,&specAns](const Real& E)
 	  {
-	    return sqr(specAns(E))*basis(iT,E)*basis(iS,E);
-	  },EMin,EMax,tol);
+	    return get(sqr(specAns(E))*basis(iT,E)*basis(iS,E));
+	  },get(EMin),get(EMax),tol);
     }
   
-  TrambaccoFunctional tf(nT);
+  TrambaccoFunctional<Real> tf(nT);
   
   /// Prepares the functional components
   for(size_t iT=0;iT<nT;iT++)

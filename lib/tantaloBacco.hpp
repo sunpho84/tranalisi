@@ -690,7 +690,7 @@ namespace Bacco
   {
     PrecFloat squareNorm() const
     {
-      return integrateUpToInfinite([this](const PrecFloat& E)
+      return precIntegrateUpToInfinity([this](const PrecFloat& E)
       {
 	return sqr(preciseTargetFunction(E));
       },E0);
@@ -705,11 +705,11 @@ namespace Bacco
     
     double deviation2(const Reconstruction& reco) const
     {
-      return integrateUpToInfinite([this,&reco](const PrecFloat& E)
+      return precIntegrateUpToInfinity([this,&reco](const PrecFloat& E)
       {
 	return sqr(preciseTargetFunction(E)-reco.smearingFunction(E));
       },E0).get()/
-	integrateUpToInfinite([this](const PrecFloat& E)
+	precIntegrateUpToInfinity([this](const PrecFloat& E)
       {
 	return sqr(preciseTargetFunction(E));
       },E0).get();
@@ -722,7 +722,7 @@ namespace Bacco
 #ifdef FAKE_HP
 	gslIntegrateUpToInfinity
 #else
-	integrateUpToInfinite
+	precIntegrateUpToInfinity
 #endif
 	([t,this](const PrecFloat& E)
       {

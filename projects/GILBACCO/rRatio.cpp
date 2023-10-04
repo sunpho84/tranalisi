@@ -48,7 +48,7 @@ void analyzeEns(grace_file_t& glbRplot,
   const djvec_t cP5P5=
     loadCorr(ensName,"ll_TM_P5P5");
   cP5P5.ave_err().write(baseOut+"/"+ensName+"/P5P5.xmg");
-
+  
   const map<char,size_t> tMaxList{{'Z',26},{'B',30},{'C',36},{'D',40},{'E',35}};
   const size_t tMax=tMaxList.at(ensName[0]);
   const Basis<double> basis(T,tMin,tMax,+1);
@@ -126,7 +126,7 @@ void analyzeEns(grace_file_t& glbRplot,
   /// Preconditioner of the problem
   vector<Real> preco(nT);
   for(size_t iT=0;iT<nT;iT++)
-    preco[iT]=corr[iT].ave();
+    preco[iT]=1/corr[iT].ave();
   
   grace_file_t RPlot(baseOut+"/"+ensName+"/R.xmg");
   const Real EMinInGeV=0.270,EMaxInGeV=4;
@@ -194,10 +194,19 @@ void analyzeEns(grace_file_t& glbRplot,
       
       sigmaPlot.write_xy(EStarInGeV,sigmaInGeV);
       
-      const auto targ=
-	[EStar,sigma](const Real& E)
+      const auto conv=
+	[](const Real& EStar,
+	   const Real& sigma,
+	   const Real& E)
 	{
-	  return gauss(EStar,sigma,E)/sqr(E);
+	  ////return 2/M_PI*cosh(E-EStar)*sin(sigma)/(cosh(2*(E-EStar))-cos(2*sigma));
+	  return gauss(EStar,sigma,E);
+      };
+      
+      const auto targ=
+	[EStar,sigma,&conv](const Real& E)
+	{
+	  return conv(EStar,sigma,E)/sqr(E);
 	};
 	
       const TrambaccoFunctional tf=
@@ -281,33 +290,33 @@ void analyzeEns(grace_file_t& glbRplot,
       // cout.precision(16);
       // cout<<R.err()<<" "<<sqrt(errEst)<<endl;
       
-      // const auto interpReco=
-      // 	[g,&aInv,&nT,&preco,&basis](const double& EInGeV)
-      // {
-      // 	const Real E=EInGeV/aInv.ave();
-      // 	Real s;
-      // 	s=0;
-      // 	for(size_t iT=0;iT<nT;iT++)
-      // 	  {
-      // 	    const Real k=basis(iT,E)/preco[iT];
-      // 	    s+=g[iT]*k;
-      // 	  }
-      // 	s*=sqr(E);
+      const auto interpReco=
+	[g,&aInv,&nT,&basis](const double& EInGeV)
+      {
+	const Real E=EInGeV/aInv.ave();
+	Real s;
+	s=0;
+	for(size_t iT=0;iT<nT;iT++)
+	  {
+	    const Real k=basis(iT,E);
+	    s+=g[iT]*k;
+	  }
+	s*=sqr(E);
 	
-      // 	return s;
-      // };
+	return s;
+      };
       
-      // recoOfE.emplace_back(interpReco);
+      recoOfE.emplace_back(interpReco);
       
-      // // Plots the reconstruction of the target function
-      // grace_file_t recoPlot(baseOut+"/"+ensName+"/reco"+to_string(EStarInGeV)+".xmg");
-      // recoPlot.write_line(interpReco,EMin*aInv.ave(),EMax*aInv.ave());
+      // Plots the reconstruction of the target function
+      grace_file_t recoPlot(baseOut+"/"+ensName+"/reco"+to_string(EStarInGeV)+".xmg");
+      recoPlot.write_line(interpReco,EMin*aInv.ave(),EMax*aInv.ave());
       
-      // recoPlot.write_line([&](const Real& EInGeV)
-      // {
-      // 	const Real E=EInGeV/aInv.ave();
-      // 	return targ(E)*sqr(E);
-      // },EMin*aInv.ave(),EMax*aInv.ave());
+      recoPlot.write_line([&](const Real& EInGeV)
+      {
+	const Real E=EInGeV/aInv.ave();
+	return targ(E)*sqr(E);
+      },EMin*aInv.ave(),EMax*aInv.ave());
       
       RofE.emplace_back(EStarInGeV,R);
     }
@@ -335,74 +344,74 @@ void analyzeEns(grace_file_t& glbRplot,
   for(grace_file_t* plot : {&RPlot,&glbRplot})
       plot->write_polygon(interpR,get<0>(RofE.front()),get<0>(RofE.back()));
   
-  grace_file_t biConv(baseOut+"/"+ensName+"/biConv.xmg");
-  for(size_t iE=0;iE<recoOfE.size();iE++)
-    {
-  //     grace_file_t("").write_polygon([&](const double& E)
+  // grace_file_t biConv(baseOut+"/"+ensName+"/biConv.xmg");
+  // for(size_t iE=0;iE<recoOfE.size();iE++)
+  //   {
+  // //     grace_file_t("").write_polygon([&](const double& E)
+  // //     {
+  // // 	return abs(std::get<1>(recoOfE[iE])(E)*sqr(E)*interpR(E));
+  // // }, double xmin, double xmax, grace::color_t col)
+      
+  //     const double x=std::get<0>(RofE[iE]);
+      
+  //     grace_file_t("/tmp/"+to_string(x)+".xmg").write_polygon([&](const double& E)
   //     {
-  // 	return abs(std::get<1>(recoOfE[iE])(E)*sqr(E)*interpR(E));
-  // }, double xmin, double xmax, grace::color_t col)
+  // 	return (recoOfE[iE](E)/aInv.ave()-gauss(x,sigmaOfE[iE],E))*interpR(E);
+  //     },EMinInGeV,EMaxInGeV);
       
-      const double x=std::get<0>(RofE[iE]);
-      
-      grace_file_t("/tmp/"+to_string(x)+".xmg").write_polygon([&](const double& E)
-      {
-	return (recoOfE[iE](E)/aInv.ave()-gauss(x,sigmaOfE[iE],E))*interpR(E);
-      },EMinInGeV,EMaxInGeV);
-      
-      const double syst=
-	gslIntegrateUpToInfinity([&](const double& E)
-      {
-	return sqr((recoOfE[iE](E)/aInv.ave()-gauss(x,sigmaOfE[iE],E))*interpR(E).ave());
-      },EMinInGeV,1e-2);
-      biConv.write_xy(x,sqrt(syst));
-    }
-  biConv.set_all_colors(grace::BLACK);
+  //     const double syst=
+  // 	gslIntegrateUpToInfinity([&](const double& E)
+  //     {
+  // 	return sqr((recoOfE[iE](E)/aInv.ave()-gauss(x,sigmaOfE[iE],E))*interpR(E).ave());
+  //     },EMinInGeV,1e-2);
+  //     biConv.write_xy(x,sqrt(syst));
+  //   }
+  // biConv.set_all_colors(grace::BLACK);
   
-  biConv.new_data_set();
-  for(size_t iE=0;iE<recoOfE.size();iE++)
-    {
-      const double x=std::get<0>(RofE[iE]);
-      const double smooth=
-	gslIntegrateUpToInfinity([&](const double& E)
-      {
-	return gauss(x,sigmaOfE[iE],E)*interpR(E).ave();
-      },EMinInGeV,1e-2);
-      biConv.write_xy(x,smooth);
-    }
-  biConv.set_all_colors(grace::MAGENTA);
+  // biConv.new_data_set();
+  // for(size_t iE=0;iE<recoOfE.size();iE++)
+  //   {
+  //     const double x=std::get<0>(RofE[iE]);
+  //     const double smooth=
+  // 	gslIntegrateUpToInfinity([&](const double& E)
+  //     {
+  // 	return gauss(x,sigmaOfE[iE],E)*interpR(E).ave();
+  //     },EMinInGeV,1e-2);
+  //     biConv.write_xy(x,smooth);
+  //   }
+  // biConv.set_all_colors(grace::MAGENTA);
   
-  biConv.new_data_set();
-  for(size_t iE=0;iE<recoOfE.size();iE++)
-    {
-      const double x=std::get<0>(RofE[iE]);
-      biConv.write_xy(x,interpR(x).err());
-    }
-  biConv.set_all_colors(grace::RED);
+  // biConv.new_data_set();
+  // for(size_t iE=0;iE<recoOfE.size();iE++)
+  //   {
+  //     const double x=std::get<0>(RofE[iE]);
+  //     biConv.write_xy(x,interpR(x).err());
+  //   }
+  // biConv.set_all_colors(grace::RED);
   
-  biConv.new_data_set();
-  for(size_t iE=0;iE<recoOfE.size();iE++)
-    {
-      const double x=std::get<0>(RofE[iE]);
-      biConv.write_xy(x,systOfE[iE]);
-    }
-  biConv.set_all_colors(grace::BLUE);
+  // biConv.new_data_set();
+  // for(size_t iE=0;iE<recoOfE.size();iE++)
+  //   {
+  //     const double x=std::get<0>(RofE[iE]);
+  //     biConv.write_xy(x,systOfE[iE]);
+  //   }
+  // biConv.set_all_colors(grace::BLUE);
   
-  biConv.new_data_set();
-  for(size_t iE=0;iE<recoOfE.size();iE++)
-    {
-      const double x=std::get<0>(RofE[iE]);
-      biConv.write_xy(x,statOfE[iE]);
-    }
-  biConv.set_all_colors(grace::GREEN4);
+  // biConv.new_data_set();
+  // for(size_t iE=0;iE<recoOfE.size();iE++)
+  //   {
+  //     const double x=std::get<0>(RofE[iE]);
+  //     biConv.write_xy(x,statOfE[iE]);
+  //   }
+  // biConv.set_all_colors(grace::GREEN4);
   
-  biConv.new_data_set();
-  for(size_t iE=0;iE<recoOfE.size();iE++)
-    {
-      const auto [x,y]=RofE[iE];
-      biConv.write_xy(x,y.ave());
-    }
-  biConv.set_all_colors(grace::VIOLET);
+  // biConv.new_data_set();
+  // for(size_t iE=0;iE<recoOfE.size();iE++)
+  //   {
+  //     const auto [x,y]=RofE[iE];
+  //     biConv.write_xy(x,y.ave());
+  //   }
+  // biConv.set_all_colors(grace::VIOLET);
   
   
   RPlot.write_line([c=normOfT[tNorm].ave()](const Real& x)
@@ -427,7 +436,7 @@ int main()
   set_njacks(50);
   
   grace_file_t RPlot(baseOut+"/R.xmg");
-  RPlot.set_color_scheme({grace::BLACK,grace::RED,grace::GREEN4,grace::BLUE,grace::VIOLET});
+  RPlot.set_color_scheme({grace::BLACK,grace::RED,grace::GREEN4,grace::BLUE,grace::VIOLET,grace::ORANGE});
   
   const vector<string> ensList=readEnsList();
   
