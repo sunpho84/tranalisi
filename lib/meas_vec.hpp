@@ -654,4 +654,15 @@ public:
 template <class T>
 using meas_vec_of_t=typename meas_vec_of<T>::type;
 
+template <typename U>
+vector<U> getJack(vmeas_t<jack_t<U>>& u,
+		  const size_t& ijack)
+{
+  vector<U> res(u.size());
+  for(size_t i=0;i<u.size();i++)
+    res[i]=u[i][ijack];
+  
+  return res;
+}
+
 #endif
