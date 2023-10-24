@@ -3,8 +3,6 @@
 #include <PrecFloat.hpp>
 #include <hpIntegrator.hpp>
 
-const map<char,double> aMlist{{'Z',0.00077},{'B',0.00072},{'C',0.0006},{'D',0.00054},{'E',0.00044}};
-
 /// Physical pion mass
 constexpr double MPiPhys=0.1350;
 

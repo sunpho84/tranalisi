@@ -279,6 +279,12 @@ public:
     return std::feof(file);
   }
   
+  //flush the file
+  int flush()
+  {
+    return fflush(file);
+  }
+  
   //! formatted print
   int printf(const char *format,...)
   {

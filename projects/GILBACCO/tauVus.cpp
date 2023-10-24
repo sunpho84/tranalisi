@@ -1,8 +1,11 @@
+#include <filesystem>
 #include <tranalisi.hpp>
 
 #include <loadCorrCov.hpp>
 
 #include <trambacco.hpp>
+
+using namespace filesystem;
 
 using Real=double;
 
@@ -46,7 +49,7 @@ template <size_t I,
 	  typename...Args>
 auto multiFit(const djvec_t& in,
 	      const size_t& T,
-	      const string& basePath,
+	      const path& basePath,
 	      const size_t& glbTMin,
 	      const size_t& glbTMax,
 	      const size_t& tMin,
@@ -55,7 +58,7 @@ auto multiFit(const djvec_t& in,
 	      const Args&...args)
 {
   const auto [Z2,M]=
-    two_pts_fit(in,T/2,tMin,tMax,basePath+path);
+    two_pts_fit(in,T/2,tMin,tMax,basePath/path);
   
   djvec_t corr=in;
   for(size_t iT=0;iT<corr.size();iT++)
@@ -142,7 +145,7 @@ auto multiFit(const djvec_t& in,
       // 	finalCh2+=sqr((in[iT].ave()-f(p.ave(),iT))/in[iT].err());
       // cout<<"Final ch2: "<<finalCh2<<endl;
       
-      grace_file_t plot(basePath+"glbFit.xmg");
+      grace_file_t plot(basePath/"glbFit.xmg");
       plot.write_vec_ave_err(effective_mass(in).ave_err());
       plot.write_polygon([&](const double& x)
       {
@@ -158,6 +161,13 @@ auto multiFit(const djvec_t& in,
     }
   
   return tmp;
+}
+
+enum OSTM{OS,TM};
+
+string osTmTag(const OSTM& osTm)
+{
+  return ((osTm==OS)?"OS":"TM");
 }
 
 enum{TRANSVERSE,LONGITUDINAL};
@@ -199,23 +209,27 @@ struct ChannAnalysis
   djack_t analyze(const djvec_t& fullCorr,
 		  const vector<double>& fullCov,
 		  const string& ensName,
+		  const OSTM& osTm,
 		  const size_t& T,
 		  const djack_t& aInv,
 		  const double& z) const
   {
-    const string baseOut=
-      ::baseOut+"/"+ensName+"/"+chann;
+    cout<<"*** "<<chann<<" ***"<<endl;
+    
+    const path baseOut=
+      (path(::baseOut)/ensName/osTmTag(osTm)/chann);
+    create_directories(baseOut);
     
     const Basis<Real> basis(T,tMinBasis,tMaxBasis,+1);
     const size_t nT=basis.nT;
     
     const auto fitPars=
       multiFit<0>(fullCorr,T,baseOut,tMinStates,tMaxStates,tMinState0,tMaxState0,"state0Fit.xmg",tMinState1,tMaxState1,"state1Fit.xmg");
-    cout<<chann+" state from multifit: "<<(fitPars[1].second*aInv).ave_err()<<endl;
+    cout<<"state from multifit: "<<(fitPars[1].second*aInv).ave_err()<<endl;
     
     const double EMinInt=
       EMinIntInGeV/aInv.ave();
-    const double EMaxInt=6;
+    const double EMaxInt=4;
     
     const djack_t normFactInGeV=
       sqr(z)*sqr(aInv)*aInv.ave()*24*sqr(M_PI)/cube(mTau);
@@ -234,8 +248,8 @@ struct ChannAnalysis
 	  corrCov(iT,iS)=fullCov[t+(T/2+1)*(iS+tMinBasis)];
       }
     
-    corr.ave_err().write(baseOut+"corrToReco.xmg");
-    effective_mass(corr,T/2,0).ave_err().write(baseOut+"eff_mass_corrToReco.xmg");
+    corr.ave_err().write(baseOut/"corrToReco.xmg");
+    effective_mass(corr,T/2,0).ave_err().write(baseOut/"eff_mass_corrToReco.xmg");
     
     /// Preconditioner of the problem
     vector<Real> preco(nT);
@@ -265,109 +279,109 @@ struct ChannAnalysis
       };
     
     
-      //parameters to fit
-      jack_fit_t fit;
-      const auto& [Z2Guess,MGuess]=fitPars[1];
+      // //parameters to fit
+      // jack_fit_t fit;
+      // const auto& [Z2Guess,MGuess]=fitPars[1];
       
-      djvec_t p(5);
-      p[0]=Z2Guess.ave();
-      p[1]=MGuess.ave();
-      p[2]=0.03;
-      p[3]=0.75*MGuess.ave();
-      p[4]=0.0;
-      cout<<"Guesses:"<<endl<<p.ave()<<endl;
+      // djvec_t p(5);
+      // p[0]=Z2Guess.ave();
+      // p[1]=MGuess.ave();
+      // p[2]=0.03;
+      // p[3]=0.75*MGuess.ave();
+      // p[4]=0.01;
+      // cout<<"Guesses:"<<endl<<p.ave()<<endl;
 
-      fit.add_fit_par_limits(p[0],"Z2G",Z2Guess.ave_err(),Z2Guess.ave()/1.2,Z2Guess.ave()*1.2);
-      fit.add_fit_par_limits(p[1],"MG",MGuess.ave_err(),MGuess.ave()/1.2,MGuess.ave()*1.2);
-      fit.add_fit_par_limits(p[2],"WG",{p[2].ave(),0.001},0.01,0.3);
-      fit.add_fit_par_limits(p[3],"ThresC",{p[3].ave(),MGuess.err()},MGuess.ave()/3,3*MGuess.ave());
-      fit.add_fit_par_limits(p[4],"WC",{0.05,0.001},0,1);
-      const auto ttt=
-	[](const double& E,
-	   const double& t)
-	{
-	  return exp(-E *t)* (-E*E/t - (2 *E)/(t*t) - 2/(t*t*t));
-	};
-      
-      const auto f=
-	[&basis,
-	 &EMaxInt,
-	 &EMinInt,
-	 &ttt](const auto& p,
-	       const double& t)
-	{
-	  return
-	    gslIntegrateFromTo([&basis,
-				t,
-				&p](const double& E)
-	    {
-	      const auto d=
-		p[0]*gauss(p[1],p[2],E)/(2*p[1]);
-	      return d*basis(t-1,E);
-	    },EMinInt,EMaxInt)+
-	    p[4]*(ttt(EMaxInt,t)-ttt(p[3],t))// gslIntegrateFromTo([&basis,
-	    // 			t](const double& E)
-	    // {
-	    //   const auto d=
-	    // 	E*E;
-	    //   return d*basis(t-1,E);
-	    // },p[3],EMaxInt);
-	    ;
-	};
-      
-      for(size_t t=tMinStates;t<tMaxStates;t++)
-	fit.add_point(//numerical data
-		      [o=fullCorr[t]]
-		      (const vector<double>& p,
-		       const int& iel)
-		      {
-			return o[iel];
-		      },
-		      //ansatz
-		      [&f,t]
-		      (const vector<double>& fp,
-		       const int& iel)
-		      {
-			return f(fp,t);
-		      },
-		      //for covariance/error
-		      fullCorr[t].err());
-      
-      // double initCh2=0;
-      // for(size_t iT=glbTMin;iT<glbTMax;iT++)
+      // fit.add_fit_par_limits(p[0],"Z2G",Z2Guess.ave_err(),Z2Guess.ave()/1.2,Z2Guess.ave()*1.2);
+      // fit.add_fit_par_limits(p[1],"MG",MGuess.ave_err(),MGuess.ave()/1.2,MGuess.ave()*1.2);
+      // fit.add_fit_par_limits(p[2],"WG",{p[2].ave(),0.001},0.01,0.3);
+      // fit.add_fit_par_limits(p[3],"ThresC",{p[3].ave(),MGuess.err()},MGuess.ave()/3,3*MGuess.ave());
+      // fit.add_fit_par_limits(p[4],"WC",{0.05,0.001},0,1);
+      // const auto ttt=
+      // 	[](const double& E,
+      // 	   const double& t)
       // 	{
-      // 	  const double a=in[iT].ave();
-      // 	  const double t=f(p.ave(),iT);
-      // 	  const double e=in[iT].err();
-      // 	  const double contr=sqr((a-t)/e);
+      // 	  return exp(-E *t)* (-E*E/t - (2 *E)/(t*t) - 2/(t*t*t));
+      // 	};
+      
+      // const auto f=
+      // 	[&basis,
+      // 	 &EMaxInt,
+      // 	 &EMinInt,
+      // 	 &ttt](const auto& p,
+      // 	       const double& t)
+      // 	{
+      // 	  return
+      // 	    gslIntegrateFromTo([&basis,
+      // 				t,
+      // 				&p](const double& E)
+      // 	    {
+      // 	      const auto d=
+      // 		p[0]*gauss(p[1],p[2],E)/(2*E);
+      // 	      return d*basis(t-1,E);
+      // 	    },std::min(EMinInt,p[1]-5*fabs(p[2])),std::max(EMaxInt,p[1]+5*fabs(p[2])))+
+      // 	    p[4]*(ttt(4,t)-ttt(p[3],t))// gslIntegrateFromTo([&basis,
+      // 	    // 			t](const double& E)
+      // 	    // {
+      // 	    //   const auto d=
+      // 	    // 	E*E;
+      // 	    //   return d*basis(t-1,E);
+      // 	    // },p[3],EMaxInt);
+      // 			       ;
+      // 	};
+      
+      // for(size_t t=tMinStates;t<tMaxStates;t++)
+      // 	fit.add_point(//numerical data
+      // 		      [o=fullCorr[t]]
+      // 		      (const vector<double>& p,
+      // 		       const int& iel)
+      // 		      {
+      // 			return o[iel];
+      // 		      },
+      // 		      //ansatz
+      // 		      [&f,t]
+      // 		      (const vector<double>& fp,
+      // 		       const int& iel)
+      // 		      {
+      // 			return f(fp,t);
+      // 		      },
+      // 		      //for covariance/error
+      // 		      fullCorr[t].err());
+      
+      // // double initCh2=0;
+      // // for(size_t iT=glbTMin;iT<glbTMax;iT++)
+      // // 	{
+      // // 	  const double a=in[iT].ave();
+      // // 	  const double t=f(p.ave(),iT);
+      // // 	  const double e=in[iT].err();
+      // // 	  const double contr=sqr((a-t)/e);
 	  
-      // 	  cout<<"contr=(sqr(("<<a<<"-"<<t<<")/"<<e<<")"<<endl;
-      // 	  initCh2+=contr;
-      // 	}
-      // cout<<"Initial ch2: "<<initCh2<<endl;
+      // // 	  cout<<"contr=(sqr(("<<a<<"-"<<t<<")/"<<e<<")"<<endl;
+      // // 	  initCh2+=contr;
+      // // 	}
+      // // cout<<"Initial ch2: "<<initCh2<<endl;
       
-      // fit_debug=true;
-      fit.fit();
+      // // fit_debug=true;
+      // fit.fit();
       
-      // double finalCh2=0;
-      // for(size_t iT=glbTMin;iT<glbTMax;iT++)
-      // 	finalCh2+=sqr((in[iT].ave()-f(p.ave(),iT))/in[iT].err());
-      // cout<<"Final ch2: "<<finalCh2<<endl;
+      // // double finalCh2=0;
+      // // for(size_t iT=glbTMin;iT<glbTMax;iT++)
+      // // 	finalCh2+=sqr((in[iT].ave()-f(p.ave(),iT))/in[iT].err());
+      // // cout<<"Final ch2: "<<finalCh2<<endl;
 
-      grace_file_t plot(baseOut+"glbFit2.xmg");
-      plot.write_vec_ave_err(effective_mass(fullCorr).ave_err());
-      plot.write_polygon([&](const double& x)
-      {
-	const auto u=
-	  [&p,&f](const double& x)
-	  {
-	    return jackCall(f,p,x);
-	  };
-	return effective_mass(u(x),u(x+1),x,T/2);
-      },tMinStates,tMaxStates,grace::BLUE);
+      // grace_file_t plot(baseOut+"glbFit2.xmg");
+      // plot.write_vec_ave_err(effective_mass(fullCorr).ave_err());
+      // plot.write_polygon([&](const double& x)
+      // {
+      // 	const auto u=
+      // 	  [&p,&f](const double& x)
+      // 	  {
+      // 	    return jackCall(f,p,x);
+      // 	  };
+      // 	return effective_mass(u(x),u(x+1),x,T/2);
+      // },tMinStates,tMaxStates,grace::BLUE);
       
-      cout<<p.ave_err()<<endl;
-      cout<<(p[2]*aInv).ave_err()<<endl;
+      // cout<<p.ave_err()<<endl;
+      // cout<<(p[2]*aInv).ave_err()<<endl;
     
     
     const auto& [Z2GroundState,MGroundState]=
@@ -400,18 +414,18 @@ struct ChannAnalysis
 	
 	cNorm[iT]=(fullCorr[iT]-groundStateContr)/get(cAss);
       }
-    cNorm.ave_err().write(baseOut+"norm.xmg");
+    cNorm.ave_err().write(baseOut/"norm.xmg");
     
-    djvec_t cNorm2(nT);
-    for(size_t iT=0;iT<nT;iT++)
-      {
-	const size_t t=iT+1;
-	const djack_t c=
-	  jackCall(f,p,t);
+    // djvec_t cNorm2(nT);
+    // for(size_t iT=0;iT<nT;iT++)
+    //   {
+    // 	const size_t t=iT+1;
+    // 	const djack_t c=
+    // 	  jackCall(f,p,t);
 	
-	cNorm2[iT]=fullCorr[t]/c;
-      }
-    cNorm2.ave_err().write(baseOut+"norm2.xmg");
+    // 	cNorm2[iT]=fullCorr[t]/c;
+    //   }
+    // cNorm2.ave_err().write(baseOut+"norm2.xmg");
     
     /// Time at which to normalize the correlator
     cout<<"tNorm: "<<tSpecDensNorm<<endl;
@@ -419,15 +433,17 @@ struct ChannAnalysis
     /// Ansatz of the spectral density
     const auto specAns=
       [norm=cNorm[tSpecDensNorm].ave(),
-       &enlargedRes,
-       p=p.ave()](const Real& E)
+       &enlargedRes// ,
+       // p=p.ave()
+       ](const Real& E)
       {
-	return p[0]*gauss(p[1],p[2],E)/(2*p[1])+
-	  p[4]*E*E*(E>p[3]);
-	// return norm*pow(E,RE_exp)+enlargedRes(E);
+	return exp(3.99*E/2);
+	// return p[0]*gauss(p[1],p[2],E)/(2*p[1])+
+	//   p[4]*E*E*(E>p[3])*(E<4);
+	return norm*pow(E,RE_exp)+enlargedRes(E);
       };
     
-    grace_file_t specAnsPlot(baseOut+"specAns.xmg");
+    grace_file_t specAnsPlot(baseOut/"specAns.xmg");
     specAnsPlot.write_line(specAns,EMinInt,EMaxInt);
     
     const TrambaccoFunctional tf=
@@ -465,12 +481,38 @@ struct ChannAnalysis
       };
     
     // Performs the stability check
-    grace_file_t stabilityPlot(baseOut+"stab.xmg");
+    grace_file_t stabilityPlot(baseOut/"stab.xmg");
+    stabilityPlot.set_xaxis_logscale();
+    double stabX;
     vector<pair<double,djack_t>> stab;
-    for(double statOverSyst=512;statOverSyst>=1e-10;statOverSyst/=2)
+    for(double statOverSyst=64;statOverSyst>=1e-10;statOverSyst/=2)
       {
 	reconstruct(statOverSyst);
-	stab.emplace_back(log(statOverSyst),R);
+	
+	auto getA=
+	  [&](const bool& withG)
+	  {
+	    return gslIntegrateFromTo([&targetFunction,
+				       nT,
+				       &g,
+				       &basis,
+				       &withG](const double& E)
+	    {
+	      Real s=0;
+	      if(withG)
+		for(size_t iT=0;iT<nT;iT++)
+		  s+=g[iT]*basis(iT,E);
+	      
+	      return sqr(targetFunction(E)-s);
+	    },EMinInt,EMaxInt);
+	  };
+	
+	//A+B/statOverSyst;
+	// const double lambda=1/(statOverSyst+1);
+	const double Ag=getA(true);
+	const double A0=getA(false);
+	stabX=Ag/A0;
+	stab.emplace_back(stabX,R);
       }
     
     // Final reconstruction
@@ -478,10 +520,10 @@ struct ChannAnalysis
     
     for(const auto& [x,y] : stab)
       stabilityPlot.write_ave_err(x,y.ave_err());
-    stabilityPlot.write_constant_band(lambda-0.1,lambda+0.1,R);
+    stabilityPlot.write_constant_band(stabX-0.1,stabX+0.1,R);
     
     /// Print coefficients
-    grace_file_t gPlot(baseOut+"g.xmg");
+    grace_file_t gPlot(baseOut/"g.xmg");
     for(size_t iT=0;iT<nT;iT++)
       gPlot.write_xy(iT,get(g[iT]));
     
@@ -497,7 +539,7 @@ struct ChannAnalysis
       };
     
     // Plots the reconstruction of the target function
-    grace_file_t recoPlot(baseOut+"reco.xmg");
+    grace_file_t recoPlot(baseOut/"reco.xmg");
     recoPlot.write_line([&](const Real& x)
     {
       return get(interpReco(x)*x);
@@ -512,7 +554,7 @@ struct ChannAnalysis
     },EMinInt*aInv.ave(),EMaxInt*aInv.ave(),1000);
     
     // Plots the relative erorr of the reconstruction of the target function
-    grace_file_t errPlot(baseOut+"err.xmg");
+    grace_file_t errPlot(baseOut/"err.xmg");
     errPlot.write_line([&](const Real& x)
     {
       const double reco=get(interpReco(x)*x);
@@ -526,49 +568,48 @@ struct ChannAnalysis
     },EMinInt*aInv.ave(),EMaxInt*aInv.ave(),1000);
     
     /// Prints the reconstruction
-    cout<<smart_print(R)<<endl;
+    cout<<"Channel contribution: "<<smart_print(R)<<endl;
     
     return R;
   }
 };
 
-auto analyzeEns(const string& ensName)
+struct EnsDetails
+{
+  const double am;
+  const size_t T;
+  const size_t L;
+  const string pref;
+};
+
+auto analyzeEns(const string& ensName,
+		const OSTM& osTm,
+		const string& sValue)
 {
   const map<char,Real> zVlist{{'Z',0.697},{'B',0.706379},{'C',0.725404},{'D',0.744108},{'E',0.7663}};
   const map<char,Real> zAlist{{'Z',0.7357},{'B',0.74294},{'C',0.75830},{'D',0.77395},{'E',0.7921}};
+  const map<char,ave_err_t> aList{{'B',{0.0795739,0.000132632}},{'C',{0.0682083,0.000134938}},{'D',{0.0569183,0.000115387}}};
   
-#if 1
-  const size_t T=224;
-  const size_t L=112;
-  const string pref="mix_fixed";
-#endif
+  map<string,EnsDetails> ensDetails{{"B.72.64", {0.00072, 128, 64, "mix_fixed"}},
+				    {"C.06.80", {0.00060, 160, 80, ""}},
+				    {"C.06.112",{0.00060, 224, 112,"mix_fixed"}},
+				    {"D.54.96", {0.00054, 192, 96, "mix"}}};
   
-#if 0
-  const size_t T=160;
-  const size_t L=80;
-  const string pref="";
-#endif
+  const auto& eDet=ensDetails.at(ensName);
+  // const double am=eDet.am;
+  const size_t T=eDet.T;
+  const size_t L=eDet.L;
+  const string pref=eDet.pref;
   
-#if 0
-  const size_t T=128;
-  const size_t L=64;
-  const string pref="mix_fixed";
-#endif
+  const double zOfV=
+    (osTm==TM?zAlist:zVlist).at(ensName[0]);
   
-#if 0
-  const size_t T=192;
-  const size_t L=96;
-  const string pref="mix";
-#endif
-  
-  const double zA=
-    zAlist.at(ensName[0]);
-  
-  const double zV=
-    zVlist.at(ensName[0]);
+  const double zOfA=
+    (osTm==TM?zVlist:zAlist).at(ensName[0]);
   
   auto loadCorrCov=
-    [&ensName](const string& chann)
+    [&ensName,
+     &T](const string& chann)
     {
       const string baseIn=
 	"/home/francesco/QCD/LAVORI/GM3/";
@@ -597,16 +638,16 @@ auto analyzeEns(const string& ensName)
   const djvec_t cP5P5_ll=
     loadCorr(pref + "_l_l_TM_P5P5");
   
-  const djack_t aInv=
-    estimateA(aMlist.at('C'),cP5P5_ll,T,baseOut+"/"+ensName+"/pion.xmg");
-  const djack_t aInFm=
-    0.197/aInv;
+  // const djack_t aInv=
+  //   estimateA(am,cP5P5_ll,T,baseOut+"/"+ensName+"/pion.xmg");
+  const djack_t aInFm(gauss_filler_t{aList.at(ensName[0]),ensName[0]+1411325});
+  const djack_t aInv=0.197/aInFm;
   cout<<"a^-1: "<<aInv.ave_err()<<" GeV^-1"<<endl;
   cout<<"a: "<<aInFm.ave_err()<<" fm"<<endl;
   
 #define LOAD(TAG) \
   const auto [c ## TAG ## _ls,cov ## TAG ## _ls]=\
-    loadCorrCov(pref + "_l_s1_TM_" #TAG)
+    loadCorrCov(pref + "_l_"+sValue+"_" + osTmTag(osTm) + "_" #TAG)
   
   LOAD(V0V0);
   LOAD(VKVK);
@@ -680,10 +721,10 @@ auto analyzeEns(const string& ensName)
   readPars(V0V0chann,2,4);
   readPars(A0A0chann,3,4);
   
-  const djack_t VKVKcontr=VKVKchann.analyze(cVKVK_ls,covVKVK_ls,ensName,T,aInv,zA);
-  const djack_t AKAKcontr=AKAKchann.analyze(cAKAK_ls,covAKAK_ls,ensName,T,aInv,zV);
-  const djack_t V0V0contr=V0V0chann.analyze(cV0V0_ls,covV0V0_ls,ensName,T,aInv,zA);
-  const djack_t A0A0contr=A0A0chann.analyze(cA0A0_ls,covA0A0_ls,ensName,T,aInv,zV);
+  const djack_t VKVKcontr=VKVKchann.analyze(cVKVK_ls,covVKVK_ls,ensName,osTm,T,aInv,zOfV);
+  const djack_t AKAKcontr=AKAKchann.analyze(cAKAK_ls,covAKAK_ls,ensName,osTm,T,aInv,zOfA);
+  const djack_t V0V0contr=V0V0chann.analyze(cV0V0_ls,covV0V0_ls,ensName,osTm,T,aInv,zOfV);
+  const djack_t A0A0contr=A0A0chann.analyze(cA0A0_ls,covA0A0_ls,ensName,osTm,T,aInv,zOfA);
   
   const djack_t tot=VKVKcontr+AKAKcontr+V0V0contr+A0A0contr;
   
@@ -696,7 +737,16 @@ int main()
   if constexpr(std::is_same_v<PrecFloat,Real>)
     PrecFloat::setDefaultPrecision(128);
   
-  analyzeEns("C.06.112");
+  for(const string ensName : {"B.72.64","C.06.80","C.06.112","D.54.96"})
+    for(const OSTM& osTm : {OS,TM})
+      for(const string sValue : {"s1"})
+	{
+	  cout<<"/////////////////////////////////////////////////////////////////"<<endl;
+	  cout<<"////////////////////////////// "<<ensName<<" "<<osTmTag(osTm)<<" ///////////////////////////////"<<endl;
+	  cout<<"/////////////////////////////////////////////////////////////////"<<endl;
+	  
+	  analyzeEns(ensName,osTm,sValue);
+	}
   
   return 0;
 }
