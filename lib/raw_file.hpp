@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 #include <map>
 #include <macros.hpp>
@@ -300,7 +301,10 @@ public:
 //! return the size of the passed path
 inline long file_size(const string &path)
 {
-  return raw_file_t(path,"r").size();
+  if(not std::filesystem::exists(path))
+    CRASH("unable to open file: %s",path.c_str());
+  
+  return std::filesystem::file_size(path);
 }
 
 //! open a file for reading, skip commented lines, put columns one after the other
