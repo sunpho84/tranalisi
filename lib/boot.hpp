@@ -194,7 +194,7 @@ public:
     for(size_t iboot=0;iboot<nboots();iboot++)
       {
 	size_t ind=iboot_ind[iboot];
-	if(ind>=njacks) CRASH("Index %d not in the interval [0,%d]",ind,njacks-1);
+	if(ind>=njacks) CRASH("Index %zu not in the interval [0,%zu]",ind,njacks-1);
 	(*this)[iboot]=jack[ind];
       }
     (*this)[nboots()]=jack[njacks];

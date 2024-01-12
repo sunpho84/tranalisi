@@ -212,7 +212,7 @@ public:
     int rc=fscanf(file,format_str<T>::value(),get_ptr(out));
     
     //check and return
-    if(rc!=1) CRASH("Unable to read %s (%s) with name \"%s\" from file",format_str<T>::value(),typeid(T).name(),name);
+    if(rc!=1) CRASH("Unable to read %s (%s) with name \"%s\" from file",format_str<T>::value(),typeid(T).name(),(name==nullptr)?"":name);
     return (typename return_type<T>::type)out;
   }
   

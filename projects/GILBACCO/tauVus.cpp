@@ -7,11 +7,19 @@
 
 using namespace filesystem;
 
+template <typename T>
+std::filesystem::path operator+(std::filesystem::path path,
+				T&& data)
+{
+    path+=std::forward<T>(data);
+    return path;
+}
+
 using Real=double;
 
 const double RE_exp=2;
 
-const string baseOut=
+const path baseOut=
   "/home/francesco/QCD/LAVORI/TAU_VUS/";
 
 constexpr double mTau=1.77686;
@@ -63,7 +71,7 @@ auto multiFit(const djvec_t& in,
   djvec_t corr=in;
   for(size_t iT=0;iT<corr.size();iT++)
     corr[iT]-=two_pts_corr_fun(Z2.ave(),M.ave(),T/2.0,iT,+1);
-  
+  corr.ave_err().write(basePath/path);
   auto tmp=
     multiFit<I+1>(corr,T,basePath,glbTMin,glbTMax,args...);
   
@@ -393,26 +401,26 @@ struct ChannAnalysis
     for(size_t iT=0;iT<nT;iT++)
       {
 	const double groundStateContr=
-	  integrateUpToInfinity<double>([&basis,
-					 iT,
-					 &enlargedRes](const double& E)
-	  {
-	    return enlargedRes(E)*basis(iT,E);
-	  });
-	
+	  basis(iT,MGroundState.ave())*Z2GroundState.ave()/(2*MGroundState.ave());
+	// integrateUpToInfinity<double>([&basis,
+	// 				 iT,
+	// 				 &enlargedRes](const double& E)
+	//   {
+	//     return enlargedRes(E)*basis(iT,E);
+	//   });
+	// //verifica che la sottrazione stia funzionando
 	/// Correlator assuming that R(E)=E^N
 	const Real cAss=
 	  gslIntegrateFromTo([iT,&basis](const double& E)
 	  {
 	    return
 	      get(
-		  //exp(3.99*E)
+		  // exp(3.99*E/2)
 		  pow(E,RE_exp)
-		  
 		  *basis(iT,E));
-	  },MGroundState.ave()-resWidthInGeV/aInv.ave(),EMaxInt);
+	  },MGroundState.ave()+1.1*resWidthInGeV*aInv.ave(),EMaxInt);
 	
-	cNorm[iT]=(fullCorr[iT]-groundStateContr)/get(cAss);
+	cNorm[iT]=(fullCorr[iT+1]-groundStateContr)/get(cAss);
       }
     cNorm.ave_err().write(baseOut/"norm.xmg");
     
@@ -435,16 +443,19 @@ struct ChannAnalysis
       [norm=cNorm[tSpecDensNorm].ave(),
        &enlargedRes// ,
        // p=p.ave()
-       ](const Real& E)
+       ,TH=MGroundState.ave()+1.1*resWidthInGeV*aInv.ave()](const Real& E)
       {
-	return exp(3.99*E/2);
+	// return exp(3.99*E/2);
 	// return p[0]*gauss(p[1],p[2],E)/(2*p[1])+
 	//   p[4]*E*E*(E>p[3])*(E<4);
-	return norm*pow(E,RE_exp)+enlargedRes(E);
+	return norm*pow(E,RE_exp)
+	  //*(E>TH)
+	  +enlargedRes(E)
+	  ;
       };
     
     grace_file_t specAnsPlot(baseOut/"specAns.xmg");
-    specAnsPlot.write_line(specAns,EMinInt,EMaxInt);
+    specAnsPlot.write_line(specAns,EMinInt,EMaxInt,1001);
     
     const TrambaccoFunctional tf=
       getTrambaccoFunctional<Real>(basis,
@@ -512,6 +523,7 @@ struct ChannAnalysis
 	const double Ag=getA(true);
 	const double A0=getA(false);
 	stabX=Ag/A0;
+	stabX=statOverSyst;
 	stab.emplace_back(stabX,R);
       }
     
@@ -520,7 +532,7 @@ struct ChannAnalysis
     
     for(const auto& [x,y] : stab)
       stabilityPlot.write_ave_err(x,y.ave_err());
-    stabilityPlot.write_constant_band(stabX-0.1,stabX+0.1,R);
+    stabilityPlot.write_constant_band(exp(lambda-0.1),exp(lambda+0.1),R);
     
     /// Print coefficients
     grace_file_t gPlot(baseOut/"g.xmg");
@@ -620,8 +632,8 @@ auto analyzeEns(const string& ensName,
       if(T!=readT)
 	CRASH("T=%zu, read %zu",T,readT);
       
-      corr.ave_err().write(baseOut+".xmg");
-      effective_mass(corr).ave_err().write(baseOut+"/"+ensName+"/"+chann+"eff_mass.xmg");
+      corr.ave_err().write(baseOut/ensName/chann+".xmg");
+      effective_mass(corr).ave_err().write(baseOut/ensName/chann+"eff_mass.xmg");
       
       return make_tuple(corr,cov);
     };
@@ -658,14 +670,14 @@ auto analyzeEns(const string& ensName,
 #undef LOAD
   
   const djack_t MPion=
-    constant_fit(effective_mass(cP5P5_ll),30,60,baseOut+ensName+"/pion_fit.xmg");
+    constant_fit(effective_mass(cP5P5_ll),30,60,baseOut/ensName/"pion_fit.xmg");
   const djack_t MKaon=
-    constant_fit(effective_mass(cP5P5_ls),30,60,baseOut+ensName+"/kaon_fit.xmg");
+    constant_fit(effective_mass(cP5P5_ls),30,60,baseOut/ensName/"kaon_fit.xmg");
   
   const auto [Z2KaonStar,MKaonStar]=
-    two_pts_fit(cVKVK_ls,T/2,22,35,baseOut+ensName+"/kaonStar_fit.xmg");
+    two_pts_fit(cVKVK_ls,T/2,22,35,baseOut/ensName/"kaonStar_fit.xmg");
   const auto [Z2K1Star,MK1Star]=
-    two_pts_fit(cAKAK_ls,T/2,20,24,baseOut+ensName+"/k1Star_fit.xmg");
+    two_pts_fit(cAKAK_ls,T/2,20,24,baseOut/ensName/"k1Star_fit.xmg");
   
   const double aPmin=2*M_PI/L;
   

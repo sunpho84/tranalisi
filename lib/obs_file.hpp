@@ -90,9 +90,9 @@ public:
 	      {
 		//read a double from the line
 		int rc=sscanf(tok,"%lg",&temp[nread_col]);
-		if(rc!=1) CRASH("Parsing col %d, rc %d from %s, line %s",nread_col,rc,tok,line);
+		if(rc!=1) CRASH("Parsing col %zu, rc %d from %s, line %s",nread_col,rc,tok,line);
 		//check not exceeding ntot_cols
-		if(nread_col>=ntot_cols) CRASH("nread_col=%d exceeded ntot_cols=%d",nread_col,ntot_cols);
+		if(nread_col>=ntot_cols) CRASH("nread_col=%zu exceeded ntot_cols=%zu",nread_col,ntot_cols);
 		
 		//search next tok
 		tok=strtok_r(NULL," \t",&saveptr);

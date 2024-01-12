@@ -9,7 +9,7 @@
 vector<size_t> get_existing_paths_in_range(const string &template_path,const range_t &range,bool verbosity)
 {
   //basic checks
-  if(range.end<range.start) CRASH("End=%d must be larger than Start=%d",range.end,range.start);
+  if(range.end<range.start) CRASH("End=%zu must be larger than Start=%zu",range.end,range.start);
   if(range.each==0) CRASH("Each=0");
   
   //try to open all of them

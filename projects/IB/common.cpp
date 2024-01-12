@@ -196,7 +196,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 	    {
 	      //put data without fse to brown
 	      if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
-	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%lu",beta_list[ib].c_str(),L).c_str());
 	      
 	      for(size_t idata=0;idata<ext_data.size();idata++)
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
@@ -253,7 +253,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 	    {
 	      //put data without fse to brown
 	      if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
-	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%lu",beta_list[ib].c_str(),L).c_str());
 	      
 	      for(size_t idata=0;idata<ext_data.size();idata++)
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
@@ -312,7 +312,7 @@ void plot_chir_fit_empty(const string path,const vector<cont_chir_fit_data_t> &e
 	      if(without_with_fse==1)
 		{
 		  grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
-		  fit_file.set_legend(combine("$$\\beta=%s, L/a=%d",beta_list[ib].c_str(),L).c_str());
+		  fit_file.set_legend(combine("$$\\beta=%s, L/a=%lu",beta_list[ib].c_str(),L).c_str());
 		}
 	      
 	      for(size_t idata=0;idata<ext_data.size();idata++)
@@ -375,7 +375,7 @@ void plot_chir_fit1(const string path,const vector<cont_chir_fit_data_t> &ext_da
 	      fit_file.new_data_set();
 	      //put data without fse to brown
 	      if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
-	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L/a=%d",beta_list[ib].c_str(),L).c_str());
+	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L/a=%lu",beta_list[ib].c_str(),L).c_str());
 	      
 	      for(size_t idata=0;idata<ext_data.size();idata++)
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)
@@ -441,8 +441,8 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		      grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
 		      fit_file.set_all_colors(grace::BROWN);
 		    }
-		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
-		        
+		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%lu",beta_list[ib].c_str(),L).c_str());
+		  
 		  for(size_t idata=0;idata<ext_data.size();idata++)
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		      {
@@ -480,7 +480,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		  fit_file.new_data_set();
 		  //put data without fse to brown
 		  if(without_with_fse==0) grace::default_symbol_fill_pattern=grace::EMPTY_SYMBOL;
-		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%lu",beta_list[ib].c_str(),L).c_str());
 	      
 		  for(size_t idata=0;idata<ext_data.size();idata++)
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
@@ -559,8 +559,8 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		      grace::default_symbol_fill_pattern=grace::FILLED_SYMBOL;
 		      fit_file.set_all_colors(grace::BROWN);
 		    }
-		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
-		        
+		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%lu",beta_list[ib].c_str(),L).c_str());
+		  
 		  for(size_t idata=0;idata<ext_data.size();idata++)
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
 		      {
@@ -597,7 +597,7 @@ void plot_chir_fit(const string path,const vector<cont_chir_fit_data_t> &ext_dat
 		  fit_file.new_data_set();
 		  //put data without fse to brown
 		  if(without_with_fse==0) grace::default_symbol_fill_pattern=grace::EMPTY_SYMBOL;
-		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+		  if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%lu",beta_list[ib].c_str(),L).c_str());
 	      
 		  for(size_t idata=0;idata<ext_data.size();idata++)
 		    if(ext_data[idata].ib==ib and ext_data[idata].L==L)
@@ -706,7 +706,7 @@ void plot_chir_fit_xi(const string &path,const vector<cont_chir_fit_xi_data_t> &
 	    {
 	      //put data without fse to brown
 	      if(without_with_fse==0) fit_file.set_all_colors(grace::BROWN);
-	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%d",beta_list[ib].c_str(),L).c_str());
+	      if(without_with_fse==1) fit_file.set_legend(combine("$$\\beta=%s, L=%lu",beta_list[ib].c_str(),L).c_str());
 	      
 	      for(size_t idata=0;idata<ext_data.size();idata++)
 		if(ext_data[idata].ib==ib and ext_data[idata].L==L)

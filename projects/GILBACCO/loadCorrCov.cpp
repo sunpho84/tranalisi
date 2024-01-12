@@ -80,8 +80,8 @@ auto loadCorrCov(const string& path,
 	//   sxy/sqrt(sxx*syy);
       }
   
-  for(size_t t=0;t<=T/2;t++)
-    for(size_t s=0;s<=T/2;s++)
+  // for(size_t t=0;t<=T/2;t++)
+  //   for(size_t s=0;s<=T/2;s++)
       // covMatr[s+(T/2+1)*t]=naiveCovMatr[s+(T/2+1)*t]*res[s].err()*res[t].err();
   
   // {

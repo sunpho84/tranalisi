@@ -4,10 +4,8 @@
 #include <Eigen/Dense>
 
 #include <array>
-#include <iostream>
 #include <macros.hpp>
 #include <string>
-#include <valarray>
 #include <vector>
 
 #include <initializer_list>
@@ -24,6 +22,7 @@ DEFINE_HAS_METHOD(ave_err);
 DEFINE_HAS_METHOD(is_printable);
 
 //! crashes emitting the message
+__attribute__ ((format (printf,4,5)))
 void internal_crash(int line,const char *file,const char *fun,const char *temp,...);
 
 //! check if two quantities have the same sign
@@ -37,9 +36,11 @@ bool opposite_sign(const T &a,const T &b)
 {return !same_sign(a,b);}
 
 //! combine arguments in a single string
+__attribute__ ((format (printf,1,2)))
 string combine(const char *format,...);
 
 //! close gently with a message
+__attribute__ ((format (printf,1,2)))
 void close_with_mess(const char *format,...);
 
 //! flush the unused memory
@@ -120,7 +121,7 @@ public:
   //! init from triplet
   range_t(initializer_list<size_t> list)
   {
-    if(list.size()!=3) CRASH("list size %d while expecting 3",list.size());
+    if(list.size()!=3) CRASH("list size %zu while expecting 3",list.size());
     copy(list.begin(),list.end(),this->begin());
   }
 };
@@ -157,10 +158,6 @@ vector<T> vector_grid(const T xmin,const T xmax,const size_t n)
 
 //! set to zero a double
 inline void set_to_zero(double &x)
-{x=0;}
-
-//! set to zero a float
-inline void set_to_zero(float &x)
 {x=0;}
 
 //! set to zero an eigen matr
