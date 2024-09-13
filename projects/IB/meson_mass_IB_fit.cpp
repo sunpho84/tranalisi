@@ -10,7 +10,7 @@
 #include <meson_mass_IB_fit.hpp>
 
 index_t ind_an;
-using namespace placeholders;
+using namespace std::placeholders;
  
 namespace
 {
