@@ -92,7 +92,7 @@ public:
   
   //! binary write, non-vector case
   template <class T>
-  auto bin_write(const T &out) const -> enable_if_t<is_pod<T>::value>
+  auto bin_write(const T &out) const -> enable_if_t<is_trivially_copyable<T>::value>
   {
     if(fwrite(&out,sizeof(T),1,file)!=1)
       CRASH("Writing to file");
@@ -100,7 +100,7 @@ public:
   
   //! specialization for vector
   template <class T>
-  auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value and (not is_pod<T>::value)>
+  auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value and (not is_trivially_copyable<T>::value)>
   {
     for(auto &it : out)
       bin_write(it);
@@ -122,7 +122,7 @@ public:
   
   //! binary read, non-vector case
   template <class T>
-  auto bin_read(T &out) const -> enable_if_t<is_pod<T>::value>
+  auto bin_read(T &out) const -> enable_if_t<is_trivially_copyable<T>::value>
   {
     int rc=fread(&out,sizeof(T),1,file);
     if(rc!=1)
@@ -131,7 +131,7 @@ public:
   
   //! binary read, complex case
   template <class T>
-  auto bin_read(complex<T> &out) const -> enable_if_t<is_pod<T>::value>
+  auto bin_read(complex<T> &out) const -> enable_if_t<is_trivially_copyable<T>::value>
   {
     for(size_t ri=0;ri<2;ri++)
       bin_read(((T*)&out)[ri]);
@@ -147,7 +147,7 @@ public:
   
   //! specialization for vector
   template <class T>
-  auto bin_read(T &out) const -> enable_if_t<is_vector<T>::value and not is_pod<T>::value>
+  auto bin_read(T &out) const -> enable_if_t<is_vector<T>::value and not is_trivially_copyable<T>::value>
   {
     for(auto &it : out)
       bin_read(it);
@@ -217,7 +217,7 @@ public:
   }
   
   //! read with check
-  template <class T,class=enable_if_t<is_pod<T>::value>>
+  template <class T,class=enable_if_t<is_trivially_copyable<T>::value>>
   void read(T &out,const char *name=nullptr) const
   {
     out=read<T>(name);
