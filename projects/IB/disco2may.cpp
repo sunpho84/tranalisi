@@ -437,7 +437,7 @@ int main(int narg,char **arg)
 	};
       
       //! same ansatz with swapped arguments
-      auto f_swapped=bind(f,placeholders::_2,placeholders::_1,placeholders::_3);
+      auto f_swapped=bind(f,std::placeholders::_2,std::placeholders::_1,std::placeholders::_3);
       
       cout<<res.ave_err()<<endl;
       const djack_t r=res[0]/res[1];
