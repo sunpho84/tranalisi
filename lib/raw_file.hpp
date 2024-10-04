@@ -90,8 +90,17 @@ public:
   //! default
   //template <class T,typename=void> void bin_write(const T &out);
   
+  //! c array
+  template <typename T>
+  auto bin_write(const T* out,
+		 const size_t& n) const -> enable_if_t<is_trivially_copyable<T>::value>
+  {
+    if(fwrite(&out,n,sizeof(T),file)!=n)
+      CRASH("Writing to file");
+  }
+  
   //! binary write, non-vector case
-  template <class T>
+  template <typename T>
   auto bin_write(const T &out) const -> enable_if_t<is_trivially_copyable<T>::value>
   {
     if(fwrite(&out,sizeof(T),1,file)!=1)
@@ -99,7 +108,7 @@ public:
   }
   
   //! specialization for vector
-  template <class T>
+  template <typename T>
   auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value and (not is_trivially_copyable<T>::value)>
   {
     for(auto &it : out)
@@ -120,8 +129,18 @@ public:
     bin_write(string(out));
   }
   
+  //! c array
+  template <typename T>
+  auto bin_read(T* out,
+		const size_t& n) const -> enable_if_t<is_trivially_copyable<T>::value>
+  {
+    int rc=fread(&out,sizeof(T),n,file);
+    if(rc!=n)
+      CRASH("Reading from file %s, rc: %d",path.c_str(),rc);
+  }
+  
   //! binary read, non-vector case
-  template <class T>
+  template <typename T>
   auto bin_read(T &out) const -> enable_if_t<is_trivially_copyable<T>::value>
   {
     int rc=fread(&out,sizeof(T),1,file);
