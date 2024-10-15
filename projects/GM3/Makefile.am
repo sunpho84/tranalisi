@@ -4,6 +4,9 @@ bin_PROGRAMS+= \
 	$(top_builddir)/bin/gm3
 
 bin_PROGRAMS+= \
+	$(top_builddir)/bin/discoSim
+
+bin_PROGRAMS+= \
 	$(top_builddir)/bin/scaleSetting \
 	$(top_builddir)/bin/ZoldRun
 
@@ -30,6 +33,9 @@ __top_builddir__bin_gm3_SOURCES= \
 
 __top_builddir__bin_ZoldRun_SOURCES= \
 	%D%/ZoldRun.cpp
+
+__top_builddir__bin_discoSim_SOURCES= \
+	%D%/discoSim.cpp
 
 __top_builddir__bin_scaleSetting_SOURCES= \
 	%D%/scaleSetting.cpp
