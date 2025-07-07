@@ -10,16 +10,19 @@ AM_YFLAGS = -Wno-yacc -d -p `basename $* | sed 's,y$$,,'`_
 AM_CPPFLAGS=-I$(top_srcdir)/lib -I$(top_srcdir)/include
 LDADD=$(top_builddir)/lib/libtran.a
 
+include GILBACCO/Makefile.am
 if HAVE_HIGH_PREC
 include SPECDENS/Makefile.am
 endif
+include HH/Makefile.am
+include DTOPI/Makefile.am
 include GM3/Makefile.am
 include fitter/Makefile.am
 include VIRTUALPH/Makefile.am
 include REPH/Makefile.am
 include IB/Makefile.am
 include HADRON_SCHEME/Makefile.am
-include GILBACCO/Makefile.am
+include BMUNU/Makefile.am
 include BARYONS/Makefile.am
 #include FPIEM/Makefile.am
 #include PLNG/Makefile.am
