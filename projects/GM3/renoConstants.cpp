@@ -25,6 +25,30 @@ djvec_t perens_t::determineRenoConst() const
       -getAve(0,nSources,idP5A0,2))/2.0,
       -getAve(0,nSources,idP5A0,1)};
   
+  /// Test to extract ZV/ZA
+  // const djvec_t corrVKVK[2]=
+  //   {(-getAve(0,nSources,idVKVK,0)+
+  //     -getAve(0,nSources,idVKVK,2))/2.0,
+  //     -getAve(0,nSources,idVKVK,1)};
+  
+  // (corrP5A0[0]/corrP5A0[1]).ave_err().write("plots/Zratio_from_A0P5_ratio.xmg");
+  // (corrVKVK[0]/corrVKVK[1]).ave_err().write("plots/Zratio_from_VKVK_ratio.xmg");
+  
+  // auto coup=[](const djvec_t& c)
+  // {
+  //   const djvec_t m=effective_mass(c,c.size()-1,-1);
+  //   const size_t TH=m.size();
+  //   djvec_t z2(TH);
+  //   for(size_t t=0;t<TH;t++)
+  //     z2[t]=c[t]/(exp(-m[t]*t)-exp(-m[t]*(2*TH-t)));
+    
+  //   return z2;
+  // };
+  
+  // coup(corrP5A0[0]).ave_err().write("/tmp/VKVK0.xmg");
+  // coup(corrP5A0[1]).ave_err().write("/tmp/VKVK1.xmg");
+  // (coup(corrP5A0[0])/coup(corrP5A0[1])).ave_err().write("/tmp/VKVK_rat.xmg");
+  
   for(size_t iMes=0;iMes<2;iMes++)
     {
       djack_t Z2P5separated,MP5separated;

@@ -2,7 +2,6 @@
 #include <tantaloBacco.hpp>
 
 #include <tranalisi.hpp>
-#include <minimizer_wrapper.hpp>
 
 int main()
 {

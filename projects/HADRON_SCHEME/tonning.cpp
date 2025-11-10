@@ -35,6 +35,7 @@ struct set_ordered_by_insertion
   }
 };
 
+
 tuple<djack_t,djack_t> retune(const djack_t& dM_dmu,
 			      const djack_t& dM_dm,
 			      const djack_t& dMPCAC_dmu,
@@ -151,7 +152,7 @@ int main(int argc, char** argv)
   grace_file_t P5P5_der_S_plot("P5P5_der_S.xmg");
   grace_file_t V0P5_der_S_plot("V0P5_der_S.xmg");
   grace_file_t P5P5_der_P_plot("P5P5_der_P.xmg");
-  grace_file_t V0P5_der_P_plot("V0P5_der_P.xmg");
+  grace_file_t V0P5_frac_V0P5_ins_P_plot("V0P5_frac_V0P5_ins_P.xmg");
   
   grace_file_t P5P5_ins_P_plot("P5P5_ins_P.xmg");
   grace_file_t P5P5_ins_S_plot("P5P5_ins_S.xmg");
@@ -176,6 +177,7 @@ int main(int argc, char** argv)
       const size_t dump=0;
       njacks=n-dump;
       
+      cout.precision(12);
       cout<<"n: "<<njacks<<" , k: "<<kappa<<" , mu: "<<mu<<" , cSW: "<<cSW<<endl;
       cout<<"================================"<<endl;
       
@@ -217,7 +219,7 @@ int main(int argc, char** argv)
       V0P5_ins_S_plot.write_vec_ave_err(V0P5_ins_S.ave_err());
       V0P5_ins_P_plot.write_vec_ave_err(V0P5_ins_P.ave_err());
       
-      const size_t tmin=12,tmax=22;
+      const size_t tmin=16,tmax=T/2-1;
       
       /////////////////////////////////////////////////////////////////
       
@@ -253,8 +255,13 @@ int main(int argc, char** argv)
       const djvec_t P5P5_der_S=P5P5_ins_S/P5P5;
       P5P5_der_S_plot.write_vec_ave_err(P5P5_der_S.ave_err());
       
-      const djvec_t V0P5_der_P=V0P5_ins_P/V0P5;
-      V0P5_der_P_plot.write_vec_ave_err(V0P5_der_P.ave_err());
+      const djvec_t V0P5_frac_V0P5_ins_P=V0P5/V0P5_ins_P;
+      const djack_t V0P5_frac_V0P5_ins_P_val=constant_fit(V0P5_frac_V0P5_ins_P,tmin,tmax);
+      V0P5_frac_V0P5_ins_P_plot.write_vec_ave_err(V0P5_frac_V0P5_ins_P.ave_err());
+      V0P5_frac_V0P5_ins_P_plot.write_constant_band(tmin,tmax,V0P5_frac_V0P5_ins_P_val);
+      const djack_t kappaPrime=1/(1/kappa-2*V0P5_frac_V0P5_ins_P_val);
+      cout.precision(9);
+      cout<<"Direct determination of new kappa: "<<kappaPrime.ave_err()<<endl;
       
       const djvec_t V0P5_der_S=V0P5_ins_S/V0P5;
       V0P5_der_S_plot.write_vec_ave_err(V0P5_der_S.ave_err());
@@ -390,7 +397,7 @@ int main(int argc, char** argv)
       }
       
       for(auto& plot : {&P5P5_plot,&mPCACCorr_plot,&dMPCAC_dmw_plot,&dMPCAC_dmu_plot,&dMPi_dmw_plot,&dMPi_dmu_plot,&V0P5_plot,
-			&P5P5_der_P_plot,&V0P5_der_P_plot,&P5P5_der_S_plot,&V0P5_der_S_plot,
+			&P5P5_der_P_plot,&V0P5_frac_V0P5_ins_P_plot,&P5P5_der_S_plot,&V0P5_der_S_plot,
 			&P5P5_ins_P_plot,&V0P5_ins_P_plot,&P5P5_ins_S_plot,&V0P5_ins_S_plot,
 			&pion_mass_file,&pion_mass_diff_file,&pion_mass_file,&pion_OS_mass_file})
 	{

@@ -212,7 +212,7 @@ struct vmeas_t
   }
   
   //! read from a stream
-  void bin_read(const raw_file_t &in)
+  void bin_read(raw_file_t &in)
   {
     in.bin_read(data);
   }

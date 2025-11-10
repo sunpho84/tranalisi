@@ -11,6 +11,7 @@ bin_PROGRAMS= \
 	djvec_ratio \
 	effective_mass \
 	linfit \
+	multivariate \
 	onlinemeas \
 	planfit \
 	prepare_jackknives \
@@ -31,6 +32,8 @@ djvec_ratio_SOURCES=djvec_ratio.cpp
 gevp_SOURCES=gevp.cpp
 
 linfit_SOURCES=linfit.cpp
+
+multivariate_SOURCES=multivariate.cpp
 
 effective_mass_SOURCES=effective_mass.cpp
 

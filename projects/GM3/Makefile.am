@@ -15,6 +15,12 @@ bin_PROGRAMS+= \
 #__top_builddir__bin_gm3Test_SOURCES= 
 #	%D%/gm3Test.cpp
 
+bin_PROGRAMS+= \
+	$(top_builddir)/bin/bubbles
+
+__top_builddir__bin_bubbles_SOURCES= \
+	%D%/bubbles.cpp
+
 __top_builddir__bin_gm3_SOURCES= \
 	%D%/amu.cpp \
 	%D%/cachedData.cpp \

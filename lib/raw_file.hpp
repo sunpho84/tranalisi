@@ -101,7 +101,7 @@ public:
   
   //! binary write, non-vector case
   template <typename T>
-  auto bin_write(const T &out) const -> enable_if_t<is_trivially_copyable<T>::value>
+  auto bin_write(const T &out) -> enable_if_t<is_trivially_copyable<T>::value>
   {
     if(fwrite(&out,sizeof(T),1,file)!=1)
       CRASH("Writing to file");
@@ -109,7 +109,7 @@ public:
   
   //! specialization for vector
   template <typename T>
-  auto bin_write(const T &out) const -> enable_if_t<is_vector<T>::value and (not is_trivially_copyable<T>::value)>
+  auto bin_write(const T &out) -> enable_if_t<is_vector<T>::value and (not is_trivially_copyable<T>::value)>
   {
     for(auto &it : out)
       bin_write(it);
@@ -150,7 +150,7 @@ public:
   
   //! binary read, complex case
   template <class T>
-  auto bin_read(complex<T> &out) const -> enable_if_t<is_trivially_copyable<T>::value>
+  auto bin_read(complex<T> &out) -> enable_if_t<is_trivially_copyable<T>::value>
   {
     for(size_t ri=0;ri<2;ri++)
       bin_read(((T*)&out)[ri]);
@@ -166,7 +166,7 @@ public:
   
   //! specialization for vector
   template <class T>
-  auto bin_read(T &out) const -> enable_if_t<is_vector<T>::value and not is_trivially_copyable<T>::value>
+  auto bin_read(T &out) -> enable_if_t<is_vector<T>::value and not is_trivially_copyable<T>::value>
   {
     for(auto &it : out)
       bin_read(it);

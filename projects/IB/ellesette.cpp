@@ -544,7 +544,9 @@ int main()
       const djvec_t P5P5_0S_conn=read_djvec("jacks/P5P5_0S_TM",T,0).symmetrized();
       P5P5_0S_conn.ave_err().write("plots/P5P5_0S_conn_TM.xmg");
       const djvec_t P5P5_0S_disc=load_bubble("S0P5_TM","P5",true,false,false);
+      const djvec_t P5P5_0S_disc_alt=load_bubble("S0P5_TM","S0P5_TM",false,true,false)*0.0032;
       P5P5_0S_disc.ave_err().write("plots/P5P5_0S_disc_TM.xmg");
+      P5P5_0S_disc_alt.ave_err().write("plots/P5P5_0S_alt_disc_TM.xmg");
       //l7 M2
       const djvec_t P5P5_0S_combo=P5P5_0S_conn-P5P5_0S_disc;
       P5P5_0S_combo.ave_err().write("plots/P5P5_0S_combo.xmg");
