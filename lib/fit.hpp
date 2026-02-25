@@ -321,9 +321,10 @@ void two_pts_with_ins_ratio_fit(TS &Z2,TS &M,TS &DZ2_fr_Z2,TS &SL,const TV &corr
 	}
       
       //write plots
-      if(path!="") write_constant_fit_plot(path,tmin,tmax,M,eff_mass);
-      if(path_ins!="") write_fit_plot(path_ins,tmin,tmax,[M,DZ2_fr_Z2,SL,TH,par](double x)->TS
-				      {return two_pts_corr_with_ins_ratio_fun(M,DZ2_fr_Z2,SL,TH,x,par);},TV(corr_ins/corr));
+      if(path!="")
+	write_constant_fit_plot(path,tmin,tmax,M,eff_mass);
+      if(path_ins!="")
+	write_constant_fit_plot(path_ins,tmin,tmax,SL,eff_slope);
     }
   else
     {
