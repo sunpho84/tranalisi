@@ -5,12 +5,14 @@ vector<string> confs;
 size_t nConfs;
 
 size_t T;
+size_t nHits=20;
+  
 
 inline void setConfs()
 {
   map<pair<int,int>,string> tmpConfs;
   for(const auto& entry : filesystem::directory_iterator(dataPath))
-    if(not entry.is_directory())
+    if(entry.is_directory())
       {
 	const string& conf=filesystem::path(entry.path()).filename();
 	const size_t iStream=atoi(conf.substr(6,1).c_str());
@@ -26,13 +28,13 @@ inline void setConfs()
   nConfs=confs.size();
 }
 
-inline map<string,vector<vector<double>>> getRawData()
+inline map<string,vector<vector<vector<double>>>> getRawData()
 {
-  map<string,vector<vector<double>>> rawData;
+  map<string,vector<vector<vector<double>>>> rawData;
   
   for(const filesystem::path conf : confs)
     {
-      raw_file_t file(dataPath/conf,"r");
+      raw_file_t file(dataPath/conf/"mes_contr_2Pi","r");
       char line[1024];
       auto readLine=[&file,
 		     &line]()
@@ -48,22 +50,23 @@ inline map<string,vector<vector<double>>> getRawData()
 	return r;
       };
       
-      char a[100]{},b[100]{},c[100];
+      map<string,vector<vector<double>>> confData;
+      
       string baseTag;
-      string tag;
       while(readLine())
 	{
+	  char a[100]{},b[100]{},c[100];
 	  if(sscanf(line," # Contraction of %s ^ \\dag and %s",a,b)==2)
-	    baseTag=tag=(string)a+"__"+b;
+	    baseTag=(string)a+"__"+b;
 	  else
 	    {
 	      if(sscanf(line," # %s",c)!=1)
 		CRASH("Unable to get the corr name on line: %s",line);
 	      else
 		{
-		  tag=baseTag+"__"+c;
+		  const string tag=baseTag+"__"+c;
 		  
-		  vector<double>& data=rawData[tag].emplace_back(2*T);
+		  vector<double>& data=confData[tag].emplace_back(2*T);
 		  for(size_t t=0;t<T;t++)
 		    {
 		      if(not readLine())
@@ -79,6 +82,29 @@ inline map<string,vector<vector<double>>> getRawData()
 		}
 	    }
 	}
+      
+      for(const auto& [tag,in] : confData)
+	{
+	  auto& outs=
+	    rawData[tag];
+	  
+	  if(outs.empty() or in.size()==outs.front().size())
+	    outs.push_back(in);
+	  // else
+	  //   cout<<"not considering conf "<<conf<<" "<<in.size()<<"!="<<outs.front().size()<<endl;
+	}
+    }
+  
+  if(size_t tmpNConfs=rawData.begin()->second.size();nConfs!=tmpNConfs)
+    {
+      nConfs=tmpNConfs;
+      cout<<"Adjusted nConfs to: "<<nConfs<<endl;
+    }
+
+  if(const size_t tmpNHits=rawData.begin()->second.front().size();tmpNHits!=nHits)
+    {
+      nHits=tmpNHits;
+      cout<<"Adjusted nHits to: "<<nHits<<endl;
     }
   
   return rawData;
@@ -89,12 +115,16 @@ int main()
   T=128;
   
   setConfs();
-  njacks=70;
+  njacks=50;
   cout<<"NConfs: "<<nConfs<<endl;
   
-  const size_t nCopies=20;
+  const index_t idx({{"hit",nHits},{"T",T},{"conf",nConfs}});
   
-  const index_t idx({{"copy",nCopies},{"T",T},{"conf",nConfs}});
+  // auto rawData=
+  //   getRawData();
+  // for(const auto& i : rawData)
+  //   cout<<i.first<<endl;
+  // return 0;
   
   auto getCorr=
     [rawData=
@@ -104,11 +134,15 @@ int main()
     {
       vector<complex<double>> res(idx.max());
       
-      for(size_t copy=0;copy<nCopies;copy++)
+      const string what=
+	combine("%s__%s,__P5P5",a.c_str(),b.c_str());
+      // cout<<"Searching for "<<what<<endl;
+      
+      const auto& v=
+	rawData.at(what);
+      
+      for(size_t iHit=0;iHit<nHits;iHit++)
 	{
-	  const auto& v=
-	    rawData.at(combine("%s_copy%zu__%s_copy%zu,__P5P5",a.c_str(),copy,b.c_str(),copy));
-	  
 	  for(size_t iConf=0;iConf<nConfs;iConf++)
 	    for(size_t t=0;t<T;t++)
 	      {
@@ -119,9 +153,9 @@ int main()
 		};
 		
 		for(size_t ri=0;ri<2;ri++)
-		  d[ri]=v[iConf][t+T*ri];
+		  d[ri]=v[iConf][iHit][t+T*ri];
 		
-		res[idx({copy,t,iConf})]+=c;
+		res[idx({iHit,t,iConf})]+=c;
 	      }
 	}
       
@@ -154,10 +188,10 @@ int main()
     {
       decltype(c(obs(0,0,0)...)) res{};
       
-      for(size_t copy=0;copy<nCopies;copy++)
+      for(size_t copy=0;copy<nHits;copy++)
 	res+=c(obs(copy,t,iConf)...);
       
-      res/=nCopies;
+      res/=nHits;
       
       return res;
     };
@@ -183,9 +217,15 @@ int main()
     };
   
   const auto Pi00=
-    getter("lr0_0_sm","SM_lr0_0_sm");
-  const auto Pi11=
-    getter("ur0_sm","SM_lr0_sm");
+    getter("ph0_sm0_Sr0_sm0_ph0","ph0_sm0_Sr0_sm0_ph0");
+
+  const auto PiP1P1R0=getter("phM_smM_Sr0_smP_phP","phP_smP_Sr0_smM_phM");
+  const auto PiP1M1R0=getter("phM_smM_Sr0_smM_phM","phP_smP_Sr0_smP_phP");
+  const auto PiM1M1R0=getter("phP_smP_Sr0_smM_phM","phM_smM_Sr0_smP_phP");
+  
+  const auto PiM1M1R1=getter("phP_smP_Sr1_smM_phM","phM_smM_Sr1_smP_phP");
+  const auto PiM1P1R1=getter("phP_smP_Sr1_smP_phP","phM_smM_Sr1_smM_phM");
+  const auto PiP1P1R1=getter("phM_smM_Sr1_smP_phP","phP_smP_Sr1_smM_phM");
   
   auto real=
     [&copyCombine](const size_t& iConf,
@@ -199,6 +239,7 @@ int main()
 	},iConf,t,f);
     };
   
+  [[maybe_unused]]
   auto imag=
     [&copyCombine](const size_t& iConf,
 		   const size_t& t,
@@ -236,95 +277,47 @@ int main()
 	  return x;
 	},iConf,t,f2);
       
-      return ((a*conj(b)).real()*nCopies-ab.real())/(double)(nCopies-1);
+      return ((a*conj(b)).real()*nHits-ab.real())/(double)(nHits-1);
     };
   
   const djvec_t P00=jackCombine(real,Pi00);
-  const complex<djvec_t> P00ri={jackCombine(real,Pi00),jackCombine(imag,Pi00)};
-  const complex<djvec_t> P11ri={jackCombine(real,Pi11),jackCombine(imag,Pi11)};
-  const djvec_t P1111=jackCombine(sub,Pi11,Pi11)-(P11ri*conj(P11ri)).real();
-  
-  const auto getSimple=
-    [&getCorr,
-     &idx](const std::string& a,
-	   const std::string& b)
-    {
-      const vector<complex<double>> g=
-	getCorr(a,b);
-      
-      djvec_t jpi1111(T);
-      
-      complex<djvec_t> jpi1;
-      djvec_t& jpi1r=*(djvec_t*)&jpi1;
-      djvec_t& jpi1i=*((djvec_t*)&jpi1+1);
-      jpi1r.resize(T);
-      jpi1i.resize(T);
-      for(size_t t=0;t<T;t++)
-	{
-	  std::vector<double> pi11(nConfs,0.0);
-	  std::vector<double> pi1r(nConfs,0.0);
-	  std::vector<double> pi1i(nConfs,0.0);
-	  
-	  for(size_t iConf=0;iConf<nConfs;iConf++)
-	    {
-	      double s11=0;
-	      complex<double> s1=0;
-	      
-	      for(size_t iCopy=0;iCopy<nCopies;iCopy++)
-		{
-		  const complex<double>& x=
-		    g[idx({iCopy,t,iConf})];
-		  
-		  s11+=norm(x);
-		  s1+=x;
-		}
-	      
-	      s11-=norm(s1);
-	      
-	      s11/=nCopies*(nCopies-1);
-	      s1/=nCopies;
-	      
-	      pi11[iConf]=s11;
-	      pi1r[iConf]=s1.real();
-	      pi1i[iConf]=s1.imag();
-	    }
-	  
-	  jackknivesFill(nConfs,
-			 [&](const size_t& iConf,
-			     const size_t& iClust,
-			     const double& weight)
-			 {
-			   jpi1111[t][iClust]+=weight*pi11[iConf];
-			   jpi1.real()[t][iClust]+=weight*pi1r[iConf];
-			   jpi1.imag()[t][iClust]+=weight*pi1i[iConf];
-			 });
-	}
-      
-      jpi1111.clusterize((double)nConfs/njacks);
-      jpi1r.clusterize((double)nConfs/njacks);
-      jpi1i.clusterize((double)nConfs/njacks);
-      
-      jpi1111-=norm(jpi1);
-      
-      return jpi1111;
-    };
-  
-  const djvec_t jpi0000=getSimple("lr0_0_sm","SM_lr0_0_sm");
-  const djvec_t jpi1111=getSimple("ur0_sm","SM_lr0_sm");
+  const djvec_t P11=jackCombine(real,PiP1P1R0);
+  const djvec_t P11b=jackCombine(real,PiM1P1R1);
+  const djvec_t P11c=jackCombine(real,PiM1M1R0);
+  const djvec_t P11d=jackCombine(real,PiP1P1R1);
+  // const complex<djvec_t> P00ri={jackCombine(real,Pi00),jackCombine(imag,Pi00)};
+  const djvec_t P0000=jackCombine(sub,Pi00,Pi00);
+  const djvec_t PI_UD_DU_mm=jackCombine(sub,PiP1P1R0,PiM1M1R1);
+  const djvec_t PI_UD_DU_pm=jackCombine(sub,PiP1M1R0,PiM1P1R1);
+  const djvec_t PI_UD_DU_pp=jackCombine(sub,PiM1M1R0,PiP1P1R1);
   
   // const djvec_t P11=
   //   copyCombine(,Pi11);
   
   effective_mass(P00.symmetrized()).ave_err().write("plots/Pi00.xmg");
-  effective_mass(P1111.symmetrized()).ave_err().write("plots/Pi1111.xmg");
-  //effective_mass(P11.symmetrized()).ave_err().write("plots/Pi11.xmg");
+  effective_mass(P11.symmetrized()).ave_err().write("plots/Pi11.xmg");
+  effective_mass(P11b.symmetrized()).ave_err().write("plots/Pi11b.xmg");
+  effective_mass(P11c.symmetrized()).ave_err().write("plots/Pi11c.xmg");
+  effective_mass(P11d.symmetrized()).ave_err().write("plots/Pi11d.xmg");
+  effective_mass(P0000.symmetrized()).ave_err().write("plots/Pi0000.xmg");
+  effective_mass(PI_UD_DU_mm.symmetrized()).ave_err().write("plots/Pi1111a.xmg");
+  effective_mass(PI_UD_DU_pm.symmetrized()).ave_err().write("plots/Pi1111b.xmg");
+  effective_mass(PI_UD_DU_pp.symmetrized()).ave_err().write("plots/Pi1111c.xmg");
   
-  effective_mass(jpi1111.symmetrized()).ave_err().write("plots/Pi1111check.xmg");
-  effective_mass(jpi0000.symmetrized()).ave_err().write("plots/Pi0000check.xmg");
+  PI_UD_DU_mm.symmetrized().ave_err().write("plots/cPi1111a.xmg");
+  PI_UD_DU_pm.symmetrized().ave_err().write("plots/cPi1111b.xmg");
+  PI_UD_DU_pp.symmetrized().ave_err().write("plots/cPi1111c.xmg");
+  
   const djvec_t P=effective_mass(P00.symmetrized());
   const size_t L=64;
-  const djvec_t twoPm=2*sqrt(P*P+sqr(2*M_PI/L));
+  const djvec_t onePm=sqrt(P*P+sqr(4*M_PI/L));
+  onePm.ave_err().write("plots/1Pm.xmg");
+  const djvec_t twoPm=2*effective_mass(P11.symmetrized());
   twoPm.ave_err().write("plots/2Pm.xmg");
+  const djvec_t twoPmp=effective_mass(sqr(P11).symmetrized());
+  twoPmp.ave_err().write("plots/2Pmp.xmg");
+  const djvec_t twoP=2*P;
+  twoP.ave_err().write("plots/2P.xmg");
   
   return 0;
 }

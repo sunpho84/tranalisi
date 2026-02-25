@@ -15,6 +15,7 @@ include GILBACCO/Makefile.am
 if HAVE_HIGH_PREC
 include SPECDENS/Makefile.am
 endif
+include CHARMONIA/Makefile.am
 include HH/Makefile.am
 include DTOPI/Makefile.am
 include GM3/Makefile.am
