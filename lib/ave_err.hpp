@@ -11,6 +11,8 @@
 
 using namespace std;
 
+inline bool useFastAveErr{};
+
 /////////////////////////////////////////////////////////////// average and error /////////////////////////////////////////////////
 
 //! average and error
@@ -57,34 +59,37 @@ ave_err_t range_ave_stddev(const V &v,
   if(size==-1)
     size=v.size();
   
-#ifndef FAST_AVE_ERR
-  ave_err_t ae;
-  
-  for(int i=0;i<size;i++)
+  if(useFastAveErr)
     {
-      auto x=v[i];
-      ae.ave()+=x;
-      ae.err()+=sqr(x);
+      ave_err_t ae;
+      
+      for(int i=0;i<size;i++)
+	{
+	  auto x=v[i];
+	  ae.ave()+=x;
+	  ae.err()+=sqr(x);
+	}
+      ae.ave()/=size;
+      ae.err()/=size;
+      ae.err()-=sqr(ae.ave());
+      ae.err()=sqrt(fabs(ae.err()));
+      
+      return ae;
     }
-  ae.ave()/=size;
-  ae.err()/=size;
-  ae.err()-=sqr(ae.ave());
-  ae.err()=sqrt(fabs(ae.err()));
-  
-  return ae;
-#else
-  double s{};
-  for(int i=0;i<size;i++)
-    s+=v[i];
-  s/=size;
-  
-  double s2{};
-  for(int i=0;i<size;i++)
-    s2+=sqr(s-v[i]);
-  s2/=size;
-  
-  return {s,sqrt(s2)};
-#endif
+  else
+    {
+      double s{};
+      for(int i=0;i<size;i++)
+	s+=v[i];
+      s/=size;
+      
+      double s2{};
+      for(int i=0;i<size;i++)
+	s2+=sqr(s-v[i]);
+      s2/=size;
+      
+      return {s,sqrt(s2)};
+    }
 }
 
 //! a vector of ave_err_t

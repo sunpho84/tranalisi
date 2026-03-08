@@ -232,7 +232,7 @@ PROVIDE_ACTON(/* non const*/)
   {
     ave_err_t ae=range_ave_stddev(*this,njacks);
     
-    if(not useEnlargedJack)
+    if(not useEnlargedJacks)
       ae.err()*=sqrt(njacks-1);
     
      
