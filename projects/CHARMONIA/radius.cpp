@@ -1,4 +1,3 @@
-
 #include <tranalisi.hpp>
 
 const size_t T{128};
@@ -33,6 +32,8 @@ int main()
   // if(not fin.feof())
   //   CRASH("not at the end of file, expecting %zu lines",rawId.max());
   
+  useEnlargedJacks=true;
+  useFastAveErr=false;
   set_njacks(50);
   
   const index_t id{{{"iEpsIn",nEpsIn},{"ins",nIns}}};
@@ -76,6 +77,32 @@ int main()
       return cData[id({iEps,0})].symmetrized();
     };
   
+  [gg=ofstream("/tmp/gg"),&rawData,&rawId]() mutable
+  {
+    const size_t t=12;
+    const size_t binSize=nConfs/njacks;
+    vector<double> j(njacks+1,0);
+    for(size_t iConf=0;iConf<nConfs;iConf++)
+      {
+	const size_t iJack=iConf/binSize;
+	for(size_t iCopy=0;iCopy<2;iCopy++)
+	  {
+	    j[iJack]+=rawData[rawId({1,0,iConf,iCopy,t})]/4;
+	    j[iJack]+=rawData[rawId({1,0,iConf,iCopy,T-t})]/4;
+	  }
+      }
+    
+    for(size_t iJack=0;iJack<njacks;iJack++)
+      j[njacks]+=j[iJack];
+    for(size_t iJack=0;iJack<njacks;iJack++)
+      j[iJack]=(j[njacks]-j[iJack])/(nConfs-binSize);
+    j[njacks]/=nConfs;
+    
+    gg.precision(16);
+    for(size_t iJack=0;iJack<=njacks;iJack++)
+      gg<<j[iJack]<<endl;
+  }();
+  
   for(size_t iEps=0;iEps<nEpsIn;iEps++)
     c2ptFun(iEps).ave_err().write("plots/c2pts"+std::to_string(iEps)+".xmg");
   
@@ -86,6 +113,20 @@ int main()
       return cData[id({iEps,1})].subset(tw,T/2);
     };
   
+  auto dumpJack=
+    [](const string& path,
+       const djvec_t& v)
+  {
+    ofstream f(path);
+    
+    f.precision(16);
+    for(size_t t=0;t<v.size();t++)
+      for(size_t ijack=0;ijack<=njacks;ijack++)
+	f<<t<<" "<<ijack<<" "<<v[t][ijack]<<endl;
+  };
+  
+  dumpJack("/tmp/hh",c2ptFun(1));
+  
   for(size_t iEps=0;iEps<nEpsIn;iEps++)
     c3ptFun(iEps).ave_err().write("plots/c3pts"+std::to_string(iEps)+".xmg");
   
@@ -93,7 +134,9 @@ int main()
   
   const djvec_t c2pt=c2ptFun(0);
   const djvec_t eff_mass=effective_mass(c2pt,T/2);
+  dumpJack("/tmp/m.txt",eff_mass);
   const djvec_t eff_sq_coupling=effective_squared_coupling(c2pt,eff_mass,T/2);
+  dumpJack("/tmp/z2.txt",eff_sq_coupling);
   
   const djack_t myM=constant_fit(eff_mass,tMin2pts,tMax2pts,"plots/c2ptEffmass.xmg");
   
@@ -151,6 +194,15 @@ int main()
   
   const djack_t a=M/2.9839;
   cout<<"a: "<<smart_print(a)<<" GeV^-1"<<endl;
+  
+  [ii=ofstream("/tmp/ii"),&F]() mutable
+  {
+    ii.precision(16);
+    ii<<" # ieps ijack f[+eps] f[-eps] f0[]"<<endl;
+    for(size_t iEst=0;iEst<2;iEst++)
+      for(size_t ijack=0;ijack<=njacks;ijack++)
+	ii<<iEst<<" "<<ijack<<" "<<F[2*iEst+2][ijack]<<" "<<F[2*iEst+1][ijack]<<" "<<F[0][ijack]<<endl;
+  }();
   
   djack_t r2[2];
   // djvec_t Q2G(2);
