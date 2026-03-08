@@ -79,7 +79,6 @@ int main()
 	  
 	  if(not acc)
 	    {
-	      size_t nIndepX=0;
 	      acc=true;
 	      for(size_t j=0;j<listToFit.size();j++)
 		{
