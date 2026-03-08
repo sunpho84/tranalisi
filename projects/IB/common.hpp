@@ -2,7 +2,11 @@
 #define _COMMON_HPP
 
 #include <cstdlib>
-#include <tranalisi.hpp>
+
+#include "boot.hpp"
+#include "fit.hpp"
+#include "index.hpp"
+#include "meas_vec.hpp"
 
 #ifndef EXTERN_COMMON
  #define EXTERN_COMMON extern

@@ -3,7 +3,7 @@
 #endif
 
 #include <tranalisi.hpp>
-#include <common.hpp>
+#include "common.hpp"
 
 const int EVN=1,ODD=-1;//,UNK=0;
 
