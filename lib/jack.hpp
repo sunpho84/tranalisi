@@ -23,6 +23,8 @@ using namespace std;
 #define UNDEF_NJACKS 0
 EXTERN_JACK size_t njacks INIT_TO(UNDEF_NJACKS);
 
+inline bool useEnlargedJacks{};
+
 //! set the number of jackknives
 inline void set_njacks(int ext_njacks)
 {
@@ -229,8 +231,11 @@ PROVIDE_ACTON(/* non const*/)
   ave_err_t ave_err() const
   {
     ave_err_t ae=range_ave_stddev(*this,njacks);
-    ae.err()*=sqrt(njacks-1);
     
+    if(not useEnlargedJack)
+      ae.err()*=sqrt(njacks-1);
+    
+     
 #if MEAN_TYPE==DISTR_MEAN
     if(njacks==1)
       {
@@ -290,8 +295,12 @@ PROVIDE_ACTON(/* non const*/)
     
     gen_t gen(gf.seed);
     
+    double s=gf.ae.err();
+    if(not useEnlargedJacks)
+      s/=sqrt(njacks-1);
+	
     for(size_t ijack=0;ijack<njacks;ijack++)
-      (*this)[ijack]=gen.get_gauss(gf.ae.ave(),gf.ae.err()/sqrt(njacks-1));
+      (*this)[ijack]=gen.get_gauss(gf.ae.ave(),s);
     
     (*this)[njacks]=gf.ae.ave();
   }
@@ -334,12 +343,18 @@ PROVIDE_ACTON(/* non const*/)
     //fill clusters and compute avarages
     set_to_zero((*this)[njacks]);
     for(size_t ijack=0;ijack<njacks;ijack++)
-      (*this)[njacks]+=(*this)[ijack];
+      {
+	(*this)[ijack]/=clust_size;
+	(*this)[njacks]+=(*this)[ijack];
+      }
+    (*this)[njacks]/=njacks;
     
     //clusterize
     for(size_t ijack=0;ijack<njacks;ijack++)
-      (*this)[ijack]=((*this)[njacks]-(*this)[ijack])/double((njacks-1)*clust_size);
-    (*this)[njacks]/=clust_size*njacks;
+      if(useEnlargedJacks)
+	(*this)[ijack]=(*this)[njacks]*(1+1/sqrt(njacks-1.0))-(*this)[ijack]/sqrt(njacks-1.0);
+      else
+	(*this)[ijack]=((*this)[njacks]*njacks-(*this)[ijack])/(njacks-1.0);
   }
   
   //! initialize from vector of T, so to create jackknives
@@ -441,8 +456,12 @@ size_t trim_to_njacks_multiple(vector<T> &v,bool verbosity=false)
 
 //! clusterize a generic vector
 template <class T>
-void clusterize(vector<T> &v,const double clust_size=1.0)
+void clusterize(vector<T> &v,
+		const double& clust_size=1.0)
 {
+  if(useEnlargedJacks)
+    CRASH("reimplement");
+  
   //compute avarages
   v[njacks]=0.0;
   for(size_t ijack=0;ijack<njacks;ijack++) v[njacks]+=v[ijack];
