@@ -51,11 +51,13 @@ public:
 
 //! compute average and stddev of a vector
 template <class V>
-ave_err_t range_ave_stddev(const V &v,int size=-1)
+ave_err_t range_ave_stddev(const V &v,
+			   int size=-1)
 {
   if(size==-1)
     size=v.size();
   
+#ifndef FAST_AVE_ERR
   ave_err_t ae;
   
   for(int i=0;i<size;i++)
@@ -70,6 +72,19 @@ ave_err_t range_ave_stddev(const V &v,int size=-1)
   ae.err()=sqrt(fabs(ae.err()));
   
   return ae;
+#else
+  double s{};
+  for(int i=0;i<size;i++)
+    s+=v[i];
+  s/=size;
+  
+  double s2{};
+  for(int i=0;i<size;i++)
+    s2+=sqr(s-v[i]);
+  s2/=size;
+  
+  return {s,sqrt(s2)};
+#endif
 }
 
 //! a vector of ave_err_t
