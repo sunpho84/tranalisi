@@ -5,8 +5,7 @@ vector<string> confs;
 size_t nConfs;
 
 size_t T;
-size_t nHits=20;
-  
+size_t nHits=5;
 
 inline void setConfs()
 {
@@ -100,8 +99,8 @@ inline map<string,vector<vector<vector<double>>>> getRawData()
       nConfs=tmpNConfs;
       cout<<"Adjusted nConfs to: "<<nConfs<<endl;
     }
-
-  if(const size_t tmpNHits=rawData.begin()->second.front().size();tmpNHits!=nHits)
+  
+  if(const size_t tmpNHits=rawData.begin()->second.front().size();tmpNHits<nHits)
     {
       nHits=tmpNHits;
       cout<<"Adjusted nHits to: "<<nHits<<endl;
