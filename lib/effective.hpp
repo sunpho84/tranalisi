@@ -32,12 +32,17 @@ inline djack_t effective_mass(djack_t ct,djack_t ct_p_dt,double t,size_t TH,doub
 template <class T>
 T effective_mass(const T &data,size_t TH=0,int par=1,int dt=1)
 {
+  if(TH==0)
+    {
+      if(par and data.size()%2!=1)
+	CRASH("Ill-defined effective mass for %zu (even) long vector",data.size());
+      TH=data.size()-1;
+    }
+  
   //check data size
   if(data.size()==0) CRASH("Empty data vector");
-  if(data.size()%2!=1 and par) CRASH("Ill-defined effective mass for %zu (even) long vector",data.size());
   
   //set TH and
-  if(TH==0) TH=data.size()-1;
   if(TH%2) CRASH("Ill-defined effective mass for TH=%zu",TH);
   
   //! output data
