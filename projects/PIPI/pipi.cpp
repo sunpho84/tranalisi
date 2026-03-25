@@ -4,8 +4,9 @@ const string dataPath="data";
 vector<string> confs;
 size_t nConfs;
 
-size_t T;
-size_t nHits=5;
+const size_t T=128;
+size_t nHits=20;
+const size_t tMax=26;
 
 inline void setConfs()
 {
@@ -31,99 +32,103 @@ inline map<string,vector<vector<vector<double>>>> getRawData()
 {
   map<string,vector<vector<vector<double>>>> rawData;
   
-  for(const filesystem::path conf : confs)
+  const string rawBoxFilePath{"rawBox.dat"};
+  if(file_exists(rawBoxFilePath))
+    raw_file_t(rawBoxFilePath,"r").bin_read(rawData);
+  else
     {
-      raw_file_t file(dataPath/conf/"mes_contr_2Pi","r");
-      char line[1024];
-      auto readLine=[&file,
-		     &line]()
-      {
-	bool r=false;
-	while((not r) and (not file.feof()))
+      for(const char* const& suffix : {"1","2","3","4","5"})
+	for(const filesystem::path conf : confs)
 	  {
-	    file.get_line(line);
-	    for(char* c=line;*c!='\0' and not r;c++)
-	      r|=(*c!=' ' and *c!='\0');
-	  };
-	
-	return r;
-      };
-      
-      map<string,vector<vector<double>>> confData;
-      
-      string baseTag;
-      while(readLine())
-	{
-	  char a[100]{},b[100]{},c[100];
-	  if(sscanf(line," # Contraction of %s ^ \\dag and %s",a,b)==2)
-	    baseTag=(string)a+"__"+b;
-	  else
+	    raw_file_t file(dataPath+"/"+conf.string()+"/mes_contr_box_src_snk"+suffix+"_T25","r");
+	    char line[1024];
+	    auto readLine=[&file,
+			   &line]()
 	    {
-	      if(sscanf(line," # %s",c)!=1)
-		CRASH("Unable to get the corr name on line: %s",line);
-	      else
+	      bool r=false;
+	      while((not r) and (not file.feof()))
 		{
-		  const string tag=baseTag+"__"+c;
-		  
-		  vector<double>& data=confData[tag].emplace_back(2*T);
-		  for(size_t t=0;t<T;t++)
-		    {
-		      if(not readLine())
-			CRASH("Unable to read time %zu for contr %s %s",t,a,b);
-		      
-		      double r,i;
-		      if(sscanf(line,"%lg %lg",&r,&i)!=2)
-			CRASH("Unable to convert %s to two doubles",line);
-		      
-		      data[t]=r;
-		      data[t+T]=i;
-		    }
-		}
-	    }
-	}
-      
-      for(const auto& [tag,in] : confData)
-	{
-	  auto& outs=
-	    rawData[tag];
-	  
-	  if(outs.empty() or in.size()==outs.front().size())
-	    outs.push_back(in);
-	  // else
-	  //   cout<<"not considering conf "<<conf<<" "<<in.size()<<"!="<<outs.front().size()<<endl;
-	}
+		  file.get_line(line);
+		  for(char* c=line;*c!='\0' and not r;c++)
+		    r|=(*c!=' ' and *c!='\0');
+		};
+	      
+	      return r;
+	    };
+	    
+	    map<string,vector<vector<double>>> confData;
+	    
+	    string baseTag;
+	    while(readLine())
+	      {
+		char a[100]{},b[100]{},c[100];
+		if(sscanf(line," # Contraction of %s ^ \\dag and %s",a,b)==2)
+		  baseTag=(string)a+"__"+b;
+		else
+		  {
+		    if(sscanf(line," # %s",c)!=1)
+		      CRASH("Unable to get the corr name on line: %s",line);
+		    else
+		      {
+			const string tag=baseTag+"__"+c;
+			
+			vector<double>& data=confData[tag].emplace_back(2*tMax);
+			for(size_t t=0;t<T;t++)
+			  {
+			    if(not readLine())
+			      CRASH("Unable to read time %zu for contr %s %s",t,a,b);
+			    
+			    double r,i;
+			    if(sscanf(line,"%lg %lg",&r,&i)!=2)
+			      CRASH("Unable to convert %s to two doubles",line);
+			    
+			    if(t<tMax)
+			      {
+				data[t]=r;
+				data[t+tMax]=i;
+			      }
+			  }
+		      }
+		  }
+	      }
+	    
+	    for(const auto& [tag,in] : confData)
+	      {
+		auto& outs=
+		  rawData[tag];
+		
+		if(outs.empty() or in.size()==outs.front().size())
+		  outs.push_back(in);
+		// else
+		//   cout<<"not considering conf "<<conf<<" "<<in.size()<<"!="<<outs.front().size()<<endl;
+	      }
+	  }
     }
   
-  if(size_t tmpNConfs=rawData.begin()->second.size();nConfs!=tmpNConfs)
-    {
-      nConfs=tmpNConfs;
-      cout<<"Adjusted nConfs to: "<<nConfs<<endl;
-    }
-  
-  if(const size_t tmpNHits=rawData.begin()->second.front().size();tmpNHits<nHits)
-    {
-      nHits=tmpNHits;
-      cout<<"Adjusted nHits to: "<<nHits<<endl;
-    }
-  
+    raw_file_t(rawBoxFilePath,"w").bin_write(rawData);
+    
+    if(size_t tmpNConfs=rawData.begin()->second.size();nConfs!=tmpNConfs)
+      {
+	nConfs=tmpNConfs;
+	cout<<"Adjusted nConfs to: "<<nConfs<<endl;
+      }
+    
+    if(const size_t tmpNHits=rawData.begin()->second.front().size();tmpNHits!=nHits)
+      {
+	nHits=tmpNHits;
+	cout<<"Adjusted nHits to: "<<nHits<<endl;
+      }
+    
   return rawData;
 }
 
 int main()
 {
-  T=128;
-  
   setConfs();
   njacks=50;
   cout<<"NConfs: "<<nConfs<<endl;
   
-  const index_t idx({{"hit",nHits},{"T",T},{"conf",nConfs}});
-  
-  // auto rawData=
-  //   getRawData();
-  // for(const auto& i : rawData)
-  //   cout<<i.first<<endl;
-  // return 0;
+  const index_t idx({{"hit",nHits},{"tMax",tMax},{"conf",nConfs}});
   
   auto getCorr=
     [rawData=
@@ -137,13 +142,17 @@ int main()
 	combine("%s__%s,__P5P5",a.c_str(),b.c_str());
       // cout<<"Searching for "<<what<<endl;
       
-      const auto& v=
-	rawData.at(what);
+      const auto _v=
+	rawData.find(what);
+      if(_v==rawData.end())
+	CRASH("Unable to find %s",what.c_str());
+      
+      const auto& v=_v->second;
       
       for(size_t iHit=0;iHit<nHits;iHit++)
 	{
 	  for(size_t iConf=0;iConf<nConfs;iConf++)
-	    for(size_t t=0;t<T;t++)
+	    for(size_t t=0;t<tMax;t++)
 	      {
 		union
 		{
@@ -161,162 +170,242 @@ int main()
       return res;
     };
   
-#define DEFINE_FUNCTOR(NAME,					\
-		       CODE...)					\
-  auto NAME=							\
-    [&](const std::string& a,					\
-	const std::string& b)					\
-    {								\
-      return							\
-	[&,							\
-	 d=getCorr(a,b)](const size_t& copy,			\
-			 const size_t& t,			\
-			 const size_t conf)			\
-	{							\
-	  return CODE;						\
-	};							\
-    }
-  
-  DEFINE_FUNCTOR(getter,d[idx({copy,t,conf})]);
-  
-  auto copyCombine=
-    [](auto c,
-       const size_t& iConf,
-       const size_t& t,
-       const auto&...obs)
+  auto getBox=
+    [&](const string& mso1,
+	const string& mso2,
+	const string& msi1,
+	const string& msi2)
     {
-      decltype(c(obs(0,0,0)...)) res{};
+      djvec_t res(tMax);
       
-      for(size_t copy=0;copy<nHits;copy++)
-	res+=c(obs(copy,t,iConf)...);
-      
-      res/=nHits;
+      const vector<complex<double>> d=getCorr("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
+      for(size_t t=0;t<tMax;t++)
+	{
+	  jackknivesFill(nConfs,
+			 [&](const size_t& iConf,
+			     const size_t& iClust,
+			     const double& weight)
+		       {
+			 double o=0;
+			 for(size_t iHit=0;iHit<nHits;iHit++)
+			   o+=d[idx({iHit,t,iConf})].real();
+			 o/=nHits;
+			 res[t][iClust]+=weight*o;
+		       });
+	}
+      res.clusterize(((double)nConfs/njacks));
       
       return res;
     };
   
-  auto jackCombine=
-    [&](auto c,
-	const auto&...obs)
-    {
-      djvec_t res(T);
+  struct BoxInterpDef
+  {
+    std::string rep;
+    
+    std::string sinkI;
+    
+    std::vector<string> sourceIs;
+  };
+  
+  const std::vector<BoxInterpDef> boxInterpDef{
+    {"001","1",{"Pz","Mz"}},
+    {"011","2",{"0P11","0M11"}},
+    {"111","3",{"P111","M111"}},
+    {"002","4",{"Pz2","Mz2"}},
+    {"012","5",{"0P12","0M12"}}
+  };
+  
+  for(const BoxInterpDef& bSo : boxInterpDef)
+    for(const BoxInterpDef& bSi : boxInterpDef)
+      {
+	const std::string& repSo{bSo.rep};
+	const std::string& repSi{bSi.rep};
+	const std::string& so1{bSo.sourceIs[0]};
+	const std::string& so2{bSo.sourceIs[1]};
+	const std::string& si{bSi.sinkI};
+	const djvec_t g=getBox(so1,so2,"M"+si,"P"+si);
+	const djvec_t h=getBox(so2,so1,"M"+si,"P"+si);
+	
+	// effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
+	// effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
+	g.ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
+	h.ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
+      }
       
-      jackknivesFill(nConfs,
-		     [&](const size_t& iConf,
-			 const size_t& iClust,
-			 const double& weight)
-		     {
-		       for(size_t t=0;t<T;t++)
-			 res[t][iClust]+=weight*c(iConf,t,obs...);
-		     });
+  // const djvec_t mzpzm1p1=getBox("Mz","Pz","M1","P1");
+  // const djvec_t pzmzm1p1=getBox("Pz","Mz","M1","P1");
+  const djvec_t mz2pz2m1p1=getBox("Mz2","Pz2","M1","P1");
+  const djvec_t pz2mz2m1p1=getBox("Pz2","Mz2","M1","P1");
+  const djvec_t mzpzm2p2=getBox("Mz","Pz","M4","P4");
+  const djvec_t pzmzm2p2=getBox("Pz","Mz","M4","P4");
+  // const djvec_t mxpxm1p1=getBox("Mx","Px","M1","P1");
+  // const djvec_t pxmxm1p1=getBox("Px","Mx","M1","P1");
+  
+  // mzpzm1p1.ave_err().write("/tmp/mzpzm1p1.xmg");
+  // pzmzm1p1.ave_err().write("/tmp/pzmzm1p1.xmg");
+  mz2pz2m1p1.ave_err().write("/tmp/mz2pz2m1p1.xmg");
+  pz2mz2m1p1.ave_err().write("/tmp/pz2mz2m1p1.xmg");
+  mzpzm2p2.ave_err().write("/tmp/mzpzm2p2.xmg");
+  pzmzm2p2.ave_err().write("/tmp/pzmzm2p2.xmg");
+  // mxpxm1p1.ave_err().write("/tmp/mxpxm1p1.xmg");
+  // pxmxm1p1.ave_err().write("/tmp/pxmxm1p1.xmg");
+  
+// #define DEFINE_FUNCTOR(NAME,					
+// 		       CODE...)					
+//   auto NAME=							
+//     [&](const std::string& a,					
+// 	const std::string& b)					
+//     {								
+//       return							
+// 	[&,							
+// 	 d=getCorr(a,b)](const size_t& copy,			
+// 			 const size_t& t,			
+// 			 const size_t conf)			
+// 	{							
+// 	  return CODE;
+// 	};					
+//     }
+  
+//   DEFINE_FUNCTOR(getter,d[idx({copy,t,conf})]);
+  
+//   auto copyCombine=
+//     [](auto c,
+//        const size_t& iConf,
+//        const size_t& t,
+//        const auto&...obs)
+//     {
+//       decltype(c(obs(0,0,0)...)) res{};
+      
+//       for(size_t copy=0;copy<nHits;copy++)
+// 	res+=c(obs(copy,t,iConf)...);
+      
+//       res/=nHits;
+      
+//       return res;
+//     };
+  
+//   auto jackCombine=
+//     [&](auto c,
+// 	const auto&...obs)
+//     {
+//       djvec_t res(T);
+      
+//       jackknivesFill(nConfs,
+// 		     [&](const size_t& iConf,
+// 			 const size_t& iClust,
+// 			 const double& weight)
+// 		     {
+// 		       for(size_t t=0;t<T;t++)
+// 			 res[t][iClust]+=weight*c(iConf,t,obs...);
+// 		     });
 		     
-      res.clusterize((double)nConfs/njacks);
+//       res.clusterize((double)nConfs/njacks);
       
-      return res;
-    };
+//       return res;
+//     };
   
-  const auto Pi00=
-    getter("ph0_sm0_Sr0_sm0_ph0","ph0_sm0_Sr0_sm0_ph0");
+//   const auto Pi00=
+//     getter("ph0_sm0_Sr0_sm0_ph0","ph0_sm0_Sr0_sm0_ph0");
 
-  const auto PiP1P1R0=getter("phM_smM_Sr0_smP_phP","phP_smP_Sr0_smM_phM");
-  const auto PiP1M1R0=getter("phM_smM_Sr0_smM_phM","phP_smP_Sr0_smP_phP");
-  const auto PiM1M1R0=getter("phP_smP_Sr0_smM_phM","phM_smM_Sr0_smP_phP");
+//   const auto PiP1P1R0=getter("phM_smM_Sr0_smP_phP","phP_smP_Sr0_smM_phM");
+//   const auto PiP1M1R0=getter("phM_smM_Sr0_smM_phM","phP_smP_Sr0_smP_phP");
+//   const auto PiM1M1R0=getter("phP_smP_Sr0_smM_phM","phM_smM_Sr0_smP_phP");
   
-  const auto PiM1M1R1=getter("phP_smP_Sr1_smM_phM","phM_smM_Sr1_smP_phP");
-  const auto PiM1P1R1=getter("phP_smP_Sr1_smP_phP","phM_smM_Sr1_smM_phM");
-  const auto PiP1P1R1=getter("phM_smM_Sr1_smP_phP","phP_smP_Sr1_smM_phM");
+//   const auto PiM1M1R1=getter("phP_smP_Sr1_smM_phM","phM_smM_Sr1_smP_phP");
+//   const auto PiM1P1R1=getter("phP_smP_Sr1_smP_phP","phM_smM_Sr1_smM_phM");
+//   const auto PiP1P1R1=getter("phM_smM_Sr1_smP_phP","phP_smP_Sr1_smM_phM");
   
-  auto real=
-    [&copyCombine](const size_t& iConf,
-		   const size_t& t,
-		   const auto& f)
-    {
-      return
-	copyCombine([](const complex<double>& x)
-	{
-	  return x.real();
-	},iConf,t,f);
-    };
+//   auto real=
+//     [&copyCombine](const size_t& iConf,
+// 		   const size_t& t,
+// 		   const auto& f)
+//     {
+//       return
+// 	copyCombine([](const complex<double>& x)
+// 	{
+// 	  return x.real();
+// 	},iConf,t,f);
+//     };
   
-  [[maybe_unused]]
-  auto imag=
-    [&copyCombine](const size_t& iConf,
-		   const size_t& t,
-		   const auto& f)
-    {
-      return
-	copyCombine([](const complex<double>& x)
-	{
-	  return x.imag();
-	},iConf,t,f);
-    };
+//   [[maybe_unused]]
+//   auto imag=
+//     [&copyCombine](const size_t& iConf,
+// 		   const size_t& t,
+// 		   const auto& f)
+//     {
+//       return
+// 	copyCombine([](const complex<double>& x)
+// 	{
+// 	  return x.imag();
+// 	},iConf,t,f);
+//     };
   
-  auto sub=
-    [&copyCombine](const size_t& iConf,
-		   const size_t& t,
-		   const auto& f1,
-		   const auto& f2)
-    {
-      const complex<double> ab=
-	copyCombine([](const auto& x,
-		       const auto& y)
-	{
-	  return x*conj(y);
-	},iConf,t,f1,f2);
+//   auto sub=
+//     [&copyCombine](const size_t& iConf,
+// 		   const size_t& t,
+// 		   const auto& f1,
+// 		   const auto& f2)
+//     {
+//       const complex<double> ab=
+// 	copyCombine([](const auto& x,
+// 		       const auto& y)
+// 	{
+// 	  return x*conj(y);
+// 	},iConf,t,f1,f2);
       
-      const complex<double> a=
-	copyCombine([](const auto& x)
-	{
-	  return x;
-	},iConf,t,f1);
+//       const complex<double> a=
+// 	copyCombine([](const auto& x)
+// 	{
+// 	  return x;
+// 	},iConf,t,f1);
       
-      const complex<double> b=
-	copyCombine([](const auto& x)
-	{
-	  return x;
-	},iConf,t,f2);
+//       const complex<double> b=
+// 	copyCombine([](const auto& x)
+// 	{
+// 	  return x;
+// 	},iConf,t,f2);
       
-      return ((a*conj(b)).real()*nHits-ab.real())/(double)(nHits-1);
-    };
+//       return ((a*conj(b)).real()*nHits-ab.real())/(double)(nHits-1);
+//     };
   
-  const djvec_t P00=jackCombine(real,Pi00);
-  const djvec_t P11=jackCombine(real,PiP1P1R0);
-  const djvec_t P11b=jackCombine(real,PiM1P1R1);
-  const djvec_t P11c=jackCombine(real,PiM1M1R0);
-  const djvec_t P11d=jackCombine(real,PiP1P1R1);
-  // const complex<djvec_t> P00ri={jackCombine(real,Pi00),jackCombine(imag,Pi00)};
-  const djvec_t P0000=jackCombine(sub,Pi00,Pi00);
-  const djvec_t PI_UD_DU_mm=jackCombine(sub,PiP1P1R0,PiM1M1R1);
-  const djvec_t PI_UD_DU_pm=jackCombine(sub,PiP1M1R0,PiM1P1R1);
-  const djvec_t PI_UD_DU_pp=jackCombine(sub,PiM1M1R0,PiP1P1R1);
+//   const djvec_t P00=jackCombine(real,Pi00);
+//   const djvec_t P11=jackCombine(real,PiP1P1R0);
+//   const djvec_t P11b=jackCombine(real,PiM1P1R1);
+//   const djvec_t P11c=jackCombine(real,PiM1M1R0);
+//   const djvec_t P11d=jackCombine(real,PiP1P1R1);
+//   // const complex<djvec_t> P00ri={jackCombine(real,Pi00),jackCombine(imag,Pi00)};
+//   const djvec_t P0000=jackCombine(sub,Pi00,Pi00);
+//   const djvec_t PI_UD_DU_mm=jackCombine(sub,PiP1P1R0,PiM1M1R1);
+//   const djvec_t PI_UD_DU_pm=jackCombine(sub,PiP1M1R0,PiM1P1R1);
+//   const djvec_t PI_UD_DU_pp=jackCombine(sub,PiM1M1R0,PiP1P1R1);
   
-  // const djvec_t P11=
-  //   copyCombine(,Pi11);
+//   // const djvec_t P11=
+//   //   copyCombine(,Pi11);
   
-  effective_mass(P00.symmetrized()).ave_err().write("plots/Pi00.xmg");
-  effective_mass(P11.symmetrized()).ave_err().write("plots/Pi11.xmg");
-  effective_mass(P11b.symmetrized()).ave_err().write("plots/Pi11b.xmg");
-  effective_mass(P11c.symmetrized()).ave_err().write("plots/Pi11c.xmg");
-  effective_mass(P11d.symmetrized()).ave_err().write("plots/Pi11d.xmg");
-  effective_mass(P0000.symmetrized()).ave_err().write("plots/Pi0000.xmg");
-  effective_mass(PI_UD_DU_mm.symmetrized()).ave_err().write("plots/Pi1111a.xmg");
-  effective_mass(PI_UD_DU_pm.symmetrized()).ave_err().write("plots/Pi1111b.xmg");
-  effective_mass(PI_UD_DU_pp.symmetrized()).ave_err().write("plots/Pi1111c.xmg");
+//   effective_mass(P00.symmetrized()).ave_err().write("plots/Pi00.xmg");
+//   effective_mass(P11.symmetrized()).ave_err().write("plots/Pi11.xmg");
+//   effective_mass(P11b.symmetrized()).ave_err().write("plots/Pi11b.xmg");
+//   effective_mass(P11c.symmetrized()).ave_err().write("plots/Pi11c.xmg");
+//   effective_mass(P11d.symmetrized()).ave_err().write("plots/Pi11d.xmg");
+//   effective_mass(P0000.symmetrized()).ave_err().write("plots/Pi0000.xmg");
+//   effective_mass(PI_UD_DU_mm.symmetrized()).ave_err().write("plots/Pi1111a.xmg");
+//   effective_mass(PI_UD_DU_pm.symmetrized()).ave_err().write("plots/Pi1111b.xmg");
+//   effective_mass(PI_UD_DU_pp.symmetrized()).ave_err().write("plots/Pi1111c.xmg");
   
-  PI_UD_DU_mm.symmetrized().ave_err().write("plots/cPi1111a.xmg");
-  PI_UD_DU_pm.symmetrized().ave_err().write("plots/cPi1111b.xmg");
-  PI_UD_DU_pp.symmetrized().ave_err().write("plots/cPi1111c.xmg");
+//   PI_UD_DU_mm.symmetrized().ave_err().write("plots/cPi1111a.xmg");
+//   PI_UD_DU_pm.symmetrized().ave_err().write("plots/cPi1111b.xmg");
+//   PI_UD_DU_pp.symmetrized().ave_err().write("plots/cPi1111c.xmg");
   
-  const djvec_t P=effective_mass(P00.symmetrized());
-  const size_t L=64;
-  const djvec_t onePm=sqrt(P*P+sqr(4*M_PI/L));
-  onePm.ave_err().write("plots/1Pm.xmg");
-  const djvec_t twoPm=2*effective_mass(P11.symmetrized());
-  twoPm.ave_err().write("plots/2Pm.xmg");
-  const djvec_t twoPmp=effective_mass(sqr(P11).symmetrized());
-  twoPmp.ave_err().write("plots/2Pmp.xmg");
-  const djvec_t twoP=2*P;
-  twoP.ave_err().write("plots/2P.xmg");
+//   const djvec_t P=effective_mass(P00.symmetrized());
+//   const size_t L=64;
+//   const djvec_t onePm=sqrt(P*P+sqr(4*M_PI/L));
+//   onePm.ave_err().write("plots/1Pm.xmg");
+//   const djvec_t twoPm=2*effective_mass(P11.symmetrized());
+//   twoPm.ave_err().write("plots/2Pm.xmg");
+//   const djvec_t twoPmp=effective_mass(sqr(P11).symmetrized());
+//   twoPmp.ave_err().write("plots/2Pmp.xmg");
+//   const djvec_t twoP=2*P;
+//   twoP.ave_err().write("plots/2P.xmg");
   
   return 0;
 }

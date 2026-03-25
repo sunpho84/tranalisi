@@ -106,6 +106,12 @@ struct jack_t
   {
   }
   
+  void resize(const size_t& i)
+  {
+    if(i!=data.size())
+      CRASH("unable to resize to %zu jacks as it is set to %zu+1",i,njacks);
+  }
+  
   // //! construct from expr
   // template<class _Dom>
   // jack_t(const _Expr<_Dom,T> &oth) :

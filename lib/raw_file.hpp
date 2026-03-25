@@ -111,15 +111,30 @@ public:
   template <typename T>
   auto bin_write(const T &out) -> enable_if_t<is_vector<T>::value and (not is_trivially_copyable<T>::value)>
   {
+    bin_write(out.size());
     for(auto &it : out)
       bin_write(it);
+  }
+  
+  //! specialization for map case
+  template <typename K,
+	    typename V>
+  inline auto bin_write(const std::map<K,V>& in)
+  {
+    bin_write<size_t>(in.size());
+    
+    for(const auto& [k,v] : in)
+      {
+	bin_write(k);
+	bin_write(v);
+      }
   }
   
   //! specialization for string
   inline auto bin_write(const string &out)
   {
     bin_write(out.length());
-    for(auto &it : out)
+    for(const auto &it : out)
       bin_write(it);
   }
   
@@ -157,7 +172,7 @@ public:
   }
   
   //! binary read, string case
-  inline auto bin_read(string &out)
+  inline auto bin_read(string& out)
   {
     out.resize(bin_read<size_t>());
     for(auto& o : out)
@@ -168,8 +183,22 @@ public:
   template <class T>
   auto bin_read(T &out) -> enable_if_t<is_vector<T>::value and not is_trivially_copyable<T>::value>
   {
+    out.resize(bin_read<size_t>());
     for(auto &it : out)
       bin_read(it);
+  }
+  
+  //! binary read, map case
+  template <typename K,
+	    typename V>
+  inline auto bin_read(std::map<K,V>& out)
+  {
+    const size_t n=bin_read<size_t>();
+    for(size_t i=0;i<n;i++)
+      {
+	const K key=bin_read<K>();
+	out[key]=bin_read<V>();
+      }
   }
   
   //! return what read
