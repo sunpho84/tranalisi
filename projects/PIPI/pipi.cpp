@@ -5,8 +5,25 @@ vector<string> confs;
 size_t nConfs;
 
 const size_t T=128;
-size_t nHits=20;
-const size_t tMax=26;
+const size_t L=64;
+const size_t tMaxBox=26;
+
+struct InterpDef
+{
+  std::string rep;
+  
+  std::string id;
+  
+  std::vector<string> rap;
+};
+
+const std::vector<InterpDef> interpDef{
+  {"001","1",{"Pz","Mz"}},
+  {"011","2",{"0P11","0M11"}},
+  {"111","3",{"P111","M111"}},
+  {"002","4",{"Pz2","Mz2"}},
+  {"012","5",{"0P12","0M12"}}
+};
 
 inline void setConfs()
 {
@@ -28,19 +45,22 @@ inline void setConfs()
   nConfs=confs.size();
 }
 
-inline map<string,vector<vector<vector<double>>>> getRawData()
+inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFilePath,
+							 const char* rawFileNameTemplate,
+							 const std::vector<const char*>& suffixList,
+							 const size_t& tMax,
+							 size_t& nHits)
 {
   map<string,vector<vector<vector<double>>>> rawData;
   
-  const string rawBoxFilePath{"rawBox.dat"};
-  if(file_exists(rawBoxFilePath))
-    raw_file_t(rawBoxFilePath,"r").bin_read(rawData);
+  if(file_exists(cachedFilePath))
+    raw_file_t(cachedFilePath,"r").bin_read(rawData);
   else
     {
-      for(const char* const& suffix : {"1","2","3","4","5"})
+      for(const char* const& suffix : suffixList)
 	for(const filesystem::path conf : confs)
 	  {
-	    raw_file_t file(dataPath+"/"+conf.string()+"/mes_contr_box_src_snk"+suffix+"_T25","r");
+	    raw_file_t file(dataPath+"/"+conf.string()+"/"+combine(rawFileNameTemplate,suffix),"r");
 	    char line[1024];
 	    auto readLine=[&file,
 			   &line]()
@@ -72,26 +92,34 @@ inline map<string,vector<vector<vector<double>>>> getRawData()
 		      {
 			const string tag=baseTag+"__"+c;
 			
-			vector<double>& data=confData[tag].emplace_back(2*tMax);
-			for(size_t t=0;t<T;t++)
+			if(c==std::string("P5P5"))
 			  {
-			    if(not readLine())
-			      CRASH("Unable to read time %zu for contr %s %s",t,a,b);
-			    
-			    double r,i;
-			    if(sscanf(line,"%lg %lg",&r,&i)!=2)
-			      CRASH("Unable to convert %s to two doubles",line);
-			    
-			    if(t<tMax)
+			    vector<double>& data=confData[tag].emplace_back(2*tMax);
+			    for(size_t t=0;t<T;t++)
 			      {
-				data[t]=r;
-				data[t+tMax]=i;
+				if(not readLine())
+				  CRASH("Unable to read time %zu for contr %s %s",t,a,b);
+				
+				double r,i;
+				if(sscanf(line,"%lg %lg",&r,&i)!=2)
+				  CRASH("Unable to convert %s to two doubles",line);
+				
+				if(t<tMax)
+				  {
+				    data[t]=r;
+				    data[t+tMax]=i;
+				  }
 			      }
 			  }
+			else
+			  for(size_t t=0;t<T;t++)
+			    if(not readLine())
+			      CRASH("Unable to read time %zu for contr %s %s",t,a,b);
 		      }
 		  }
 	      }
 	    
+	    size_t iC=0;
 	    for(const auto& [tag,in] : confData)
 	      {
 		auto& outs=
@@ -99,43 +127,45 @@ inline map<string,vector<vector<vector<double>>>> getRawData()
 		
 		if(outs.empty() or in.size()==outs.front().size())
 		  outs.push_back(in);
-		// else
-		//   cout<<"not considering conf "<<conf<<" "<<in.size()<<"!="<<outs.front().size()<<endl;
+		else
+		  CRASH("Please remove conf %s",confs[iC].c_str());
+		
+		iC++;
 	      }
 	  }
     }
   
-    raw_file_t(rawBoxFilePath,"w").bin_write(rawData);
-    
-    if(size_t tmpNConfs=rawData.begin()->second.size();nConfs!=tmpNConfs)
-      {
-	nConfs=tmpNConfs;
-	cout<<"Adjusted nConfs to: "<<nConfs<<endl;
-      }
-    
-    if(const size_t tmpNHits=rawData.begin()->second.front().size();tmpNHits!=nHits)
-      {
-	nHits=tmpNHits;
-	cout<<"Adjusted nHits to: "<<nHits<<endl;
-      }
-    
+  raw_file_t(cachedFilePath,"w").bin_write(rawData);
+  
+  if(size_t tmpNConfs=rawData.begin()->second.size();nConfs!=tmpNConfs)
+    // {
+    CRASH("nConfs has impossibly been changed from %zu to %zu",tmpNConfs,nConfs);
+  //nConfs=tmpNConfs;
+  //cout<<"Adjusted nConfs to: "<<nConfs<<endl;
+  // }
+  
+  nHits=rawData.begin()->second.front().size();
+  //cout<<"Setting nHits to: "<<nHits<<endl;
+  
   return rawData;
 }
 
-int main()
+void box()
 {
-  setConfs();
-  njacks=50;
-  cout<<"NConfs: "<<nConfs<<endl;
+  size_t nHits;
   
-  const index_t idx({{"hit",nHits},{"tMax",tMax},{"conf",nConfs}});
-  
-  auto getCorr=
+  auto getRawBox=
     [rawData=
-     getRawData(),
-     &idx](const std::string& a,
-	   const std::string& b)
+     getRaw("rawBox.dat",
+	    "mes_contr_box_src_snk%s_T25",
+	    {"1","2","3","4","5"},
+	    tMaxBox,
+	    nHits),
+     &nHits](const std::string& a,
+	     const std::string& b)
     {
+      const index_t idx({{"hit",nHits},{"tMax",tMaxBox},{"conf",nConfs}});
+      
       vector<complex<double>> res(idx.max());
       
       const string what=
@@ -152,7 +182,7 @@ int main()
       for(size_t iHit=0;iHit<nHits;iHit++)
 	{
 	  for(size_t iConf=0;iConf<nConfs;iConf++)
-	    for(size_t t=0;t<tMax;t++)
+	    for(size_t t=0;t<tMaxBox;t++)
 	      {
 		union
 		{
@@ -167,7 +197,13 @@ int main()
 	      }
 	}
       
-      return res;
+      return [res,
+	      idx](const size_t& iHit,
+		   const size_t& t,
+		   const size_t& iConf)
+      {
+	return res[idx({iHit,t,iConf})];
+      };
     };
   
   auto getBox=
@@ -176,10 +212,11 @@ int main()
 	const string& msi1,
 	const string& msi2)
     {
-      djvec_t res(tMax);
+      djvec_t res(tMaxBox);
       
-      const vector<complex<double>> d=getCorr("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
-      for(size_t t=0;t<tMax;t++)
+      const auto d=
+	getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
+      for(size_t t=0;t<tMaxBox;t++)
 	{
 	  jackknivesFill(nConfs,
 			 [&](const size_t& iConf,
@@ -188,7 +225,7 @@ int main()
 		       {
 			 double o=0;
 			 for(size_t iHit=0;iHit<nHits;iHit++)
-			   o+=d[idx({iHit,t,iConf})].real();
+			   o+=d(iHit,t,iConf).real();
 			 o/=nHits;
 			 res[t][iClust]+=weight*o;
 		       });
@@ -198,55 +235,39 @@ int main()
       return res;
     };
   
-  struct BoxInterpDef
-  {
-    std::string rep;
-    
-    std::string sinkI;
-    
-    std::vector<string> sourceIs;
-  };
-  
-  const std::vector<BoxInterpDef> boxInterpDef{
-    {"001","1",{"Pz","Mz"}},
-    {"011","2",{"0P11","0M11"}},
-    {"111","3",{"P111","M111"}},
-    {"002","4",{"Pz2","Mz2"}},
-    {"012","5",{"0P12","0M12"}}
-  };
-  
-  for(const BoxInterpDef& bSo : boxInterpDef)
-    for(const BoxInterpDef& bSi : boxInterpDef)
+  for(const InterpDef& bSo : interpDef)
+    for(const InterpDef& bSi : interpDef)
       {
 	const std::string& repSo{bSo.rep};
 	const std::string& repSi{bSi.rep};
-	const std::string& so1{bSo.sourceIs[0]};
-	const std::string& so2{bSo.sourceIs[1]};
-	const std::string& si{bSi.sinkI};
-	const djvec_t g=getBox(so1,so2,"M"+si,"P"+si);
-	const djvec_t h=getBox(so2,so1,"M"+si,"P"+si);
+	const std::string& so1{bSo.rap[0]};
+	const std::string& so2{bSo.rap[1]};
+	const std::string& si{bSi.id};
+	const djvec_t A=getBox(so1,so2,"M"+si,"P"+si);
+	const djvec_t B=getBox(so2,so1,"M"+si,"P"+si);
 	
 	// effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
 	// effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
-	g.ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
-	h.ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
+	A.ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
+	B.ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
+	(A-B).ave_err().write("plots/C_"+repSi+"_"+repSo+".xmg");
       }
       
   // const djvec_t mzpzm1p1=getBox("Mz","Pz","M1","P1");
   // const djvec_t pzmzm1p1=getBox("Pz","Mz","M1","P1");
-  const djvec_t mz2pz2m1p1=getBox("Mz2","Pz2","M1","P1");
-  const djvec_t pz2mz2m1p1=getBox("Pz2","Mz2","M1","P1");
-  const djvec_t mzpzm2p2=getBox("Mz","Pz","M4","P4");
-  const djvec_t pzmzm2p2=getBox("Pz","Mz","M4","P4");
+  // const djvec_t mz2pz2m1p1=getBox("Mz2","Pz2","M1","P1");
+  // const djvec_t pz2mz2m1p1=getBox("Pz2","Mz2","M1","P1");
+  // const djvec_t mzpzm2p2=getBox("Mz","Pz","M4","P4");
+  // const djvec_t pzmzm2p2=getBox("Pz","Mz","M4","P4");
   // const djvec_t mxpxm1p1=getBox("Mx","Px","M1","P1");
   // const djvec_t pxmxm1p1=getBox("Px","Mx","M1","P1");
   
   // mzpzm1p1.ave_err().write("/tmp/mzpzm1p1.xmg");
   // pzmzm1p1.ave_err().write("/tmp/pzmzm1p1.xmg");
-  mz2pz2m1p1.ave_err().write("/tmp/mz2pz2m1p1.xmg");
-  pz2mz2m1p1.ave_err().write("/tmp/pz2mz2m1p1.xmg");
-  mzpzm2p2.ave_err().write("/tmp/mzpzm2p2.xmg");
-  pzmzm2p2.ave_err().write("/tmp/pzmzm2p2.xmg");
+  // mz2pz2m1p1.ave_err().write("/tmp/mz2pz2m1p1.xmg");
+  // pz2mz2m1p1.ave_err().write("/tmp/pz2mz2m1p1.xmg");
+  // mzpzm2p2.ave_err().write("/tmp/mzpzm2p2.xmg");
+  // pzmzm2p2.ave_err().write("/tmp/pzmzm2p2.xmg");
   // mxpxm1p1.ave_err().write("/tmp/mxpxm1p1.xmg");
   // pxmxm1p1.ave_err().write("/tmp/pxmxm1p1.xmg");
   
@@ -406,6 +427,166 @@ int main()
 //   twoPmp.ave_err().write("plots/2Pmp.xmg");
 //   const djvec_t twoP=2*P;
 //   twoP.ave_err().write("plots/2P.xmg");
+}
+
+
+void direct()
+{
+  size_t nHits;
+  
+  auto getRawDirect=
+    [rawData=
+     getRaw("rawDirect.dat",
+	    "mes_contr_direct_r0_P%s",
+	    {"0","1","2","3","4","5"},
+	    T,
+	    nHits),
+     &nHits](const std::string& mso,
+	     const std::string& msi)
+    {
+      const index_t idx({{"t",T},{"conf",nConfs}});
+      
+      vector<double> res(idx.max());
+      vector<double> par(idx.max());
+      vector<double> sin(idx.max());
+      
+      const string what=
+	combine("M0_Sr0_P0_0__%s_Sr0_P%s_0,__P5P5",msi.c_str(),mso.c_str());
+      
+      const auto _v=
+	rawData.find(what);
+      if(_v==rawData.end())
+	{
+	  cout<<"List of corr:"<<endl;
+	  for(const auto& [key,val] : rawData)
+	    cout<<key<<endl;
+	  
+	  CRASH("Unable to find %s",what.c_str());
+	}
+      
+      const auto& v=_v->second;
+      
+      const size_t nHitsToUse=nHits;
+      
+      for(size_t iConf=0;iConf<nConfs;iConf++)
+	for(size_t t=0;t<T;t++)
+	  {
+	    double sumNorm{};
+	    double sumProd{};
+	    complex<double> sumCompl{};
+	    
+	    for(size_t iHit=0;iHit<nHitsToUse;iHit++)
+	      {
+		union
+		{
+		  complex<double> c{};
+		  double d[2];
+		};
+		
+		for(size_t ri=0;ri<2;ri++)
+		  d[ri]=v[iConf][iHit][t+T*ri];
+		
+		sumProd+=(c*c).real();
+		sumNorm+=norm(c);
+		sumCompl+=c;
+	      }
+	    
+	    res[idx({t,iConf})]=L*L*L*(norm(sumCompl)-sumNorm)/(nHitsToUse*(nHitsToUse-1));
+	    par[idx({t,iConf})]=L*L*L*((sumCompl*sumCompl).real()-sumProd)/(nHitsToUse*(nHitsToUse-1));
+	    sin[idx({t,iConf})]=sumCompl.real()/nHitsToUse;
+	  }
+      
+      return [data=std::array<std::vector<double>,3>{res,par,sin},
+	      idx](const size_t& i,
+		   const size_t& t,
+		   const size_t& iConf)
+      {
+	return data[i][idx({t,iConf})];
+      };
+    };
+  
+  {
+    const size_t iConf=1;
+    cout<<confs[iConf]<<endl;
+    const InterpDef& bSo = interpDef[0];
+    const InterpDef& bSi = interpDef[0];
+    
+    const std::string& so{bSo.id};
+    const std::string& si2{bSi.rap[1]};
+    cout<<so<<" "<<si2<<endl;
+    
+    const auto _A=getRawDirect(so,si2);
+    for(size_t t=0;t<T;t++)
+      cout<<_A(0,t,iConf)/(L*L*L)<<endl;
+  }
+  
+  auto getDirect=
+    [&](const string& mso,
+	const string& msi)
+    {
+      std::array<djvec_t,3> res{djvec_t(T),djvec_t(T),djvec_t(T)};
+      
+      const auto d=
+	getRawDirect(mso,msi);
+      
+      for(size_t i=0;i<3;i++)
+	{
+	  for(size_t t=0;t<T;t++)
+	    jackknivesFill(nConfs,
+			   [&](const size_t& iConf,
+			       const size_t& iClust,
+			       const double& weight)
+			   {
+			     res[i][t][iClust]+=weight*d(i,t,iConf);
+			   });
+	  res[i].clusterize(((double)nConfs/njacks)).symmetrize();
+	}
+      
+      return res;
+    };
+  
+  enum{DIR,PAR,SIN};
+  
+  for(const InterpDef& bSo : interpDef)
+    for(const InterpDef& bSi : interpDef)
+      {
+	const std::string& repSo{bSo.rep};
+	const std::string& repSi{bSi.rep};
+	const std::string& so{bSo.id};
+	const std::string& si1{bSi.rap[0]};
+	const std::string& si2{bSi.rap[1]};
+	
+	const auto _A=getDirect(so,si1);
+	const auto _B=getDirect(so,si2);
+	
+	const djvec_t A=_A[DIR];
+	const djvec_t B=_B[DIR];
+	const djvec_t D=_A[PAR];
+	const djvec_t E=_B[PAR];
+	const djvec_t G=_A[SIN];
+	const djvec_t H=_B[SIN];
+      // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
+      // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
+	effective_mass(A).ave_err().write("plots/dA_"+repSi+"_"+repSo+".xmg");
+	effective_mass(B).ave_err().write("plots/dB_"+repSi+"_"+repSo+".xmg");
+	effective_mass(D).ave_err().write("plots/dD_"+repSi+"_"+repSo+".xmg");
+	effective_mass(E).ave_err().write("plots/dE_"+repSi+"_"+repSo+".xmg");
+	effective_mass(G).ave_err().write("plots/dG_"+repSi+"_"+repSo+".xmg");
+	effective_mass(H).ave_err().write("plots/dH_"+repSi+"_"+repSo+".xmg");
+	effective_mass(A-B).ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
+	effective_mass(A+B).ave_err().write("plots/dI_"+repSi+"_"+repSo+".xmg");
+    }
+}
+
+int main()
+{
+  setConfs();
+  njacks=50;
+  cout<<"NConfs: "<<nConfs<<endl;
+  
+  box();
+  
+  direct();
   
   return 0;
 }
