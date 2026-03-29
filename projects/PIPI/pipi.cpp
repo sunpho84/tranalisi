@@ -27,20 +27,29 @@ const std::vector<InterpDef> interpDef{
 
 inline void setConfs()
 {
-  map<pair<int,int>,string> tmpConfs;
-  for(const auto& entry : filesystem::directory_iterator(dataPath))
-    if(entry.is_directory())
-      {
-	const string& conf=filesystem::path(entry.path()).filename();
-	const size_t iStream=atoi(conf.substr(6,1).c_str());
-	const size_t iConf=atoi(conf.substr(0,4).c_str());
-	const int par=(iStream%2)*2-1;
-	const int offs=iStream/2*2;
-	tmpConfs[{offs,iConf*par}]=conf;
-      }
+  const std::string confsListPath="confsList.txt";
   
-  for(const auto& [dum,conf] : tmpConfs)
-    confs.emplace_back(conf);
+  if(not file_exists(confsListPath))
+    {
+      map<pair<int,int>,string> tmpConfs;
+      for(const auto& entry : filesystem::directory_iterator(dataPath))
+	if(entry.is_directory())
+	  {
+	    const string& conf=filesystem::path(entry.path()).filename();
+	    const size_t iStream=atoi(conf.substr(6,1).c_str());
+	    const size_t iConf=atoi(conf.substr(0,4).c_str());
+	    const int par=(iStream%2)*2-1;
+	    const int offs=iStream/2*2;
+	    tmpConfs[{offs,iConf*par}]=conf;
+	  }
+      
+      for(const auto& [dum,conf] : tmpConfs)
+	confs.emplace_back(conf);
+      
+      raw_file_t(confsListPath,"w").bin_write(confs);
+    }
+  else
+    raw_file_t(confsListPath,"r").bin_read(confs);
   
   nConfs=confs.size();
 }
@@ -567,6 +576,7 @@ void direct()
 	const djvec_t H=_B[SIN];
       // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
       // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
+
 	effective_mass(A).ave_err().write("plots/dA_"+repSi+"_"+repSo+".xmg");
 	effective_mass(B).ave_err().write("plots/dB_"+repSi+"_"+repSo+".xmg");
 	effective_mass(D).ave_err().write("plots/dD_"+repSi+"_"+repSo+".xmg");
@@ -574,7 +584,7 @@ void direct()
 	effective_mass(G).ave_err().write("plots/dG_"+repSi+"_"+repSo+".xmg");
 	effective_mass(H).ave_err().write("plots/dH_"+repSi+"_"+repSo+".xmg");
 	effective_mass(A-B).ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
-	effective_mass(A+B).ave_err().write("plots/dI_"+repSi+"_"+repSo+".xmg");
+	effective_mass(H-G).ave_err().write("plots/dI_"+repSi+"_"+repSo+".xmg");
     }
 }
 
@@ -584,7 +594,7 @@ int main()
   njacks=50;
   cout<<"NConfs: "<<nConfs<<endl;
   
-  box();
+  //box();
   
   direct();
   
