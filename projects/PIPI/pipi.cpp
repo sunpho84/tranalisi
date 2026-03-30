@@ -49,7 +49,7 @@ inline std::vector<std::string> getConfs(const std::string& confsListPath,
     }
   else
     {
-      cout<<"Readinf conf list from "<<confsListPath<<endl;
+      cout<<"Reading conf list from "<<confsListPath<<endl;
       raw_file_t(confsListPath,"r").bin_read(confs);
     }
   
@@ -152,6 +152,7 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
 		    cout<<"First conf: "<<outs.empty()<<endl;
 		    cout<<"Size: "<<in.size()<<endl;
 		    cout<<"Expected size: "<<outs.front().size()<<endl;
+		    cout<<"Tag: "<<tag<<endl;
 		    CRASH("Please remove conf %s",confs[iC].c_str());
 		  }
 		
