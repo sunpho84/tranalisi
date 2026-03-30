@@ -545,20 +545,20 @@ void direct()
       };
     };
   
-  {
-    const size_t iConf=1;
-    cout<<confs[iConf]<<endl;
-    const InterpDef& bSo = interpDef[0];
-    const InterpDef& bSi = interpDef[0];
+  // {
+  //   const size_t iConf=1;
+  //   cout<<confs[iConf]<<endl;
+  //   const InterpDef& bSo = interpDef[0];
+  //   const InterpDef& bSi = interpDef[0];
     
-    const std::string& so{bSo.id};
-    const std::string& si2{bSi.rap[1]};
-    cout<<so<<" "<<si2<<endl;
+  //   const std::string& so{bSo.id};
+  //   const std::string& si2{bSi.rap[1]};
+  //   cout<<so<<" "<<si2<<endl;
     
-    const auto _A=getRawDirect(so,si2);
-    for(size_t t=0;t<T;t++)
-      cout<<_A(0,t,iConf)/(L*L*L)<<endl;
-  }
+  //   const auto _A=getRawDirect(so,si2);
+  //   for(size_t t=0;t<T;t++)
+  //     cout<<_A(0,t,iConf)/(L*L*L)<<endl;
+  // }
   
   auto getDirect=
     [&](const string& mso,
@@ -608,17 +608,19 @@ void direct()
       // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
       // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
 	
-	(effective_mass(_B[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/dinte_"+repSi+"_"+repSo+".xmg");
-	(effective_mass(_B[DIR]-_A[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/dinte2_"+repSi+"_"+repSo+".xmg");
+	(A-B).ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
 	
-	effective_mass(A).ave_err().write("plots/dA_"+repSi+"_"+repSo+".xmg");
-	effective_mass(B).ave_err().write("plots/dB_"+repSi+"_"+repSo+".xmg");
-	effective_mass(D).ave_err().write("plots/dD_"+repSi+"_"+repSo+".xmg");
-	effective_mass(E).ave_err().write("plots/dE_"+repSi+"_"+repSo+".xmg");
-	(2*effective_mass(G)).ave_err().write("plots/dG_"+repSi+"_"+repSo+".xmg");
-	(2*effective_mass(H)).ave_err().write("plots/dH_"+repSi+"_"+repSo+".xmg");
-	effective_mass(A-B).ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
-	effective_mass(H-G).ave_err().write("plots/dI_"+repSi+"_"+repSo+".xmg");
+	(effective_mass(_B[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte_"+repSi+"_"+repSo+".xmg");
+	(effective_mass(_B[DIR]-_A[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte2_"+repSi+"_"+repSo+".xmg");
+	
+	effective_mass(A).ave_err().write("plots/effDA_"+repSi+"_"+repSo+".xmg");
+	effective_mass(B).ave_err().write("plots/effDB_"+repSi+"_"+repSo+".xmg");
+	effective_mass(D).ave_err().write("plots/effDD_"+repSi+"_"+repSo+".xmg");
+	effective_mass(E).ave_err().write("plots/effDE_"+repSi+"_"+repSo+".xmg");
+	(2*effective_mass(G)).ave_err().write("plots/effDG_"+repSi+"_"+repSo+".xmg");
+	(2*effective_mass(H)).ave_err().write("plots/effDH_"+repSi+"_"+repSo+".xmg");
+	effective_mass(A-B).ave_err().write("plots/effDC_"+repSi+"_"+repSo+".xmg");
+	effective_mass(H-G).ave_err().write("plots/effDI_"+repSi+"_"+repSo+".xmg");
     }
 }
 
