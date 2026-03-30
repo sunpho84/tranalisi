@@ -27,10 +27,12 @@ const std::vector<InterpDef> interpDef{
 
 inline void setConfs()
 {
-  const std::string confsListPath="confsList.txt";
+  const std::string confsListPath="confsList.dat";
   
   if(not file_exists(confsListPath))
     {
+      cout<<"Searching for confs"<<endl;
+      
       map<pair<int,int>,string> tmpConfs;
       for(const auto& entry : filesystem::directory_iterator(dataPath))
 	if(entry.is_directory())
@@ -49,9 +51,13 @@ inline void setConfs()
       raw_file_t(confsListPath,"w").bin_write(confs);
     }
   else
-    raw_file_t(confsListPath,"r").bin_read(confs);
+    {
+      cout<<"Readinf conf list from "<<confsListPath<<endl;
+      raw_file_t(confsListPath,"r").bin_read(confs);
+    }
   
   nConfs=confs.size();
+  cout<<"NConfs: "<<nConfs<<endl;
 }
 
 inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFilePath,
@@ -63,9 +69,13 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
   map<string,vector<vector<vector<double>>>> rawData;
   
   if(file_exists(cachedFilePath))
-    raw_file_t(cachedFilePath,"r").bin_read(rawData);
+    {
+      cout<<"Reading cached data from file "<<cachedFilePath<<endl;
+      raw_file_t(cachedFilePath,"r").bin_read(rawData);
+    }
   else
     {
+      cout<<"Reading all data from "<<rawFileNameTemplate<<" raw files"<<endl;
       for(const char* const& suffix : suffixList)
 	for(const filesystem::path conf : confs)
 	  {
@@ -576,7 +586,10 @@ void direct()
 	const djvec_t H=_B[SIN];
       // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
       // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
-
+	
+	(effective_mass(_B[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/dinte_"+repSi+"_"+repSo+".xmg");
+	(effective_mass(_B[DIR]-_A[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/dinte2_"+repSi+"_"+repSo+".xmg");
+	
 	effective_mass(A).ave_err().write("plots/dA_"+repSi+"_"+repSo+".xmg");
 	effective_mass(B).ave_err().write("plots/dB_"+repSi+"_"+repSo+".xmg");
 	effective_mass(D).ave_err().write("plots/dD_"+repSi+"_"+repSo+".xmg");
@@ -592,7 +605,6 @@ int main()
 {
   setConfs();
   njacks=50;
-  cout<<"NConfs: "<<nConfs<<endl;
   
   //box();
   
