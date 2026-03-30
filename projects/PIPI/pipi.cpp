@@ -1,9 +1,5 @@
 #include <tranalisi.hpp>
 
-const string dataPath="data";
-vector<string> confs;
-size_t nConfs;
-
 const size_t T=128;
 const size_t L=64;
 const size_t tMaxBox=26;
@@ -25,16 +21,17 @@ const std::vector<InterpDef> interpDef{
   {"012","5",{"0P12","0M12"}}
 };
 
-inline void setConfs()
+inline std::vector<std::string> getConfs(const std::string& confsListPath,
+					 const std::string& rawDataPath)
 {
-  const std::string confsListPath="confsList.dat";
+  std::vector<std::string> confs;
   
   if(not file_exists(confsListPath))
     {
-      cout<<"Searching for confs"<<endl;
+      cout<<"Searching for confs in the \""<<rawDataPath<<"\" directory"<<endl;
       
-      map<pair<int,int>,string> tmpConfs;
-      for(const auto& entry : filesystem::directory_iterator(dataPath))
+      std::map<std::pair<int,int>,std::string> tmpConfs;
+      for(const auto& entry : filesystem::directory_iterator(rawDataPath))
 	if(entry.is_directory())
 	  {
 	    const string& conf=filesystem::path(entry.path()).filename();
@@ -56,16 +53,19 @@ inline void setConfs()
       raw_file_t(confsListPath,"r").bin_read(confs);
     }
   
-  nConfs=confs.size();
-  cout<<"NConfs: "<<nConfs<<endl;
+  return confs;
 }
 
 inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFilePath,
 							 const char* rawFileNameTemplate,
 							 const std::vector<const char*>& suffixList,
 							 const size_t& tMax,
-							 size_t& nHits)
+							 size_t& nHits,
+							 const std::string& rawDataDir,
+							 const std::vector<std::string> confs)
 {
+  const size_t nConfs=confs.size();
+  
   map<string,vector<vector<vector<double>>>> rawData;
   
   if(file_exists(cachedFilePath))
@@ -79,7 +79,7 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
       for(const char* const& suffix : suffixList)
 	for(const filesystem::path conf : confs)
 	  {
-	    raw_file_t file(dataPath+"/"+conf.string()+"/"+combine(rawFileNameTemplate,suffix),"r");
+	    raw_file_t file(rawDataDir+"/"+conf.string()+"/"+combine(rawFileNameTemplate,suffix),"r");
 	    char line[1024];
 	    auto readLine=[&file,
 			   &line]()
@@ -171,6 +171,10 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
 
 void box()
 {
+  const std::string boxDataPath="boxData";
+  const std::vector<std::string> confs=getConfs("confsBoxList.dat",boxDataPath);
+  const size_t nConfs=confs.size();
+  
   size_t nHits;
   
   auto getRawBox=
@@ -179,9 +183,12 @@ void box()
 	    "mes_contr_box_src_snk%s_T25",
 	    {"1","2","3","4","5"},
 	    tMaxBox,
-	    nHits),
-     &nHits](const std::string& a,
-	     const std::string& b)
+	    nHits,
+	    boxDataPath,
+	    confs),
+     &nHits,
+     &nConfs](const std::string& a,
+	      const std::string& b)
     {
       const index_t idx({{"hit",nHits},{"tMax",tMaxBox},{"conf",nConfs}});
       
@@ -451,6 +458,10 @@ void box()
 
 void direct()
 {
+  const std::string directDataPath="directData";
+  const std::vector<std::string> confs=getConfs("confsDirectList.dat",directDataPath);
+  const size_t nConfs=confs.size();
+  
   size_t nHits;
   
   auto getRawDirect=
@@ -459,9 +470,12 @@ void direct()
 	    "mes_contr_direct_r0_P%s",
 	    {"0","1","2","3","4","5"},
 	    T,
-	    nHits),
-     &nHits](const std::string& mso,
-	     const std::string& msi)
+	    nHits,
+	    directDataPath,
+	    confs),
+     &nHits,
+     &nConfs](const std::string& mso,
+	      const std::string& msi)
     {
       const index_t idx({{"t",T},{"conf",nConfs}});
       
@@ -594,8 +608,8 @@ void direct()
 	effective_mass(B).ave_err().write("plots/dB_"+repSi+"_"+repSo+".xmg");
 	effective_mass(D).ave_err().write("plots/dD_"+repSi+"_"+repSo+".xmg");
 	effective_mass(E).ave_err().write("plots/dE_"+repSi+"_"+repSo+".xmg");
-	effective_mass(G).ave_err().write("plots/dG_"+repSi+"_"+repSo+".xmg");
-	effective_mass(H).ave_err().write("plots/dH_"+repSi+"_"+repSo+".xmg");
+	(2*effective_mass(G)).ave_err().write("plots/dG_"+repSi+"_"+repSo+".xmg");
+	(2*effective_mass(H)).ave_err().write("plots/dH_"+repSi+"_"+repSo+".xmg");
 	effective_mass(A-B).ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
 	effective_mass(H-G).ave_err().write("plots/dI_"+repSi+"_"+repSo+".xmg");
     }
@@ -603,7 +617,6 @@ void direct()
 
 int main()
 {
-  setConfs();
   njacks=50;
   
   //box();
