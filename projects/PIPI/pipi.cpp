@@ -619,7 +619,7 @@ int main()
 {
   njacks=50;
   
-  //box();
+  box();
   
   direct();
   
