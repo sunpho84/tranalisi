@@ -147,7 +147,13 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
 		if(outs.empty() or in.size()==outs.front().size())
 		  outs.push_back(in);
 		else
-		  CRASH("Please remove conf %s",confs[iC].c_str());
+		  {
+		    cout<<"Problem in conf "<<confs[iC]<<endl;
+		    cout<<"First conf: "<<outs.empty()<<endl;
+		    cout<<"Size: "<<in.size()<<endl;
+		    cout<<"Expected size: "<<outs.front().size()<<endl;
+		    CRASH("Please remove conf %s",confs[iC].c_str());
+		  }
 		
 		iC++;
 	      }
