@@ -176,7 +176,7 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
   return rawData;
 }
 
-void box()
+auto box()
 {
   const std::string boxDataPath="boxData";
   const std::vector<std::string> confs=getConfs("confsBoxList.dat",boxDataPath);
@@ -268,9 +268,15 @@ void box()
       return res;
     };
   
-  for(const InterpDef& bSo : interpDef)
-    for(const InterpDef& bSi : interpDef)
+  index_t idOut({{"bSo",interpDef.size()},{"bSi",interpDef.size()}});
+  
+  std::vector<djvec_t> res(idOut.max(),djvec_t(tMaxBox));
+  for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
+    for(size_t iBSi=0;iBSi<interpDef.size();iBSi++)
       {
+	const InterpDef& bSo{interpDef[iBSo]};
+	const InterpDef& bSi{interpDef[iBSi]};
+	
 	const std::string& repSo{bSo.rep};
 	const std::string& repSi{bSi.rep};
 	const std::string& so1{bSo.rap[0]};
@@ -283,187 +289,22 @@ void box()
 	// effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
 	A.ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
 	B.ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
-	(A-B).ave_err().write("plots/C_"+repSi+"_"+repSo+".xmg");
+	const djvec_t C=A-B;
+	C.ave_err().write("plots/C_"+repSi+"_"+repSo+".xmg");
+	
+	res[idOut({iBSo,iBSi})]=C;
       }
-      
-  // const djvec_t mzpzm1p1=getBox("Mz","Pz","M1","P1");
-  // const djvec_t pzmzm1p1=getBox("Pz","Mz","M1","P1");
-  // const djvec_t mz2pz2m1p1=getBox("Mz2","Pz2","M1","P1");
-  // const djvec_t pz2mz2m1p1=getBox("Pz2","Mz2","M1","P1");
-  // const djvec_t mzpzm2p2=getBox("Mz","Pz","M4","P4");
-  // const djvec_t pzmzm2p2=getBox("Pz","Mz","M4","P4");
-  // const djvec_t mxpxm1p1=getBox("Mx","Px","M1","P1");
-  // const djvec_t pxmxm1p1=getBox("Px","Mx","M1","P1");
   
-  // mzpzm1p1.ave_err().write("/tmp/mzpzm1p1.xmg");
-  // pzmzm1p1.ave_err().write("/tmp/pzmzm1p1.xmg");
-  // mz2pz2m1p1.ave_err().write("/tmp/mz2pz2m1p1.xmg");
-  // pz2mz2m1p1.ave_err().write("/tmp/pz2mz2m1p1.xmg");
-  // mzpzm2p2.ave_err().write("/tmp/mzpzm2p2.xmg");
-  // pzmzm2p2.ave_err().write("/tmp/pzmzm2p2.xmg");
-  // mxpxm1p1.ave_err().write("/tmp/mxpxm1p1.xmg");
-  // pxmxm1p1.ave_err().write("/tmp/pxmxm1p1.xmg");
-  
-// #define DEFINE_FUNCTOR(NAME,					
-// 		       CODE...)					
-//   auto NAME=							
-//     [&](const std::string& a,					
-// 	const std::string& b)					
-//     {								
-//       return							
-// 	[&,							
-// 	 d=getCorr(a,b)](const size_t& copy,			
-// 			 const size_t& t,			
-// 			 const size_t conf)			
-// 	{							
-// 	  return CODE;
-// 	};					
-//     }
-  
-//   DEFINE_FUNCTOR(getter,d[idx({copy,t,conf})]);
-  
-//   auto copyCombine=
-//     [](auto c,
-//        const size_t& iConf,
-//        const size_t& t,
-//        const auto&...obs)
-//     {
-//       decltype(c(obs(0,0,0)...)) res{};
-      
-//       for(size_t copy=0;copy<nHits;copy++)
-// 	res+=c(obs(copy,t,iConf)...);
-      
-//       res/=nHits;
-      
-//       return res;
-//     };
-  
-//   auto jackCombine=
-//     [&](auto c,
-// 	const auto&...obs)
-//     {
-//       djvec_t res(T);
-      
-//       jackknivesFill(nConfs,
-// 		     [&](const size_t& iConf,
-// 			 const size_t& iClust,
-// 			 const double& weight)
-// 		     {
-// 		       for(size_t t=0;t<T;t++)
-// 			 res[t][iClust]+=weight*c(iConf,t,obs...);
-// 		     });
-		     
-//       res.clusterize((double)nConfs/njacks);
-      
-//       return res;
-//     };
-  
-//   const auto Pi00=
-//     getter("ph0_sm0_Sr0_sm0_ph0","ph0_sm0_Sr0_sm0_ph0");
-
-//   const auto PiP1P1R0=getter("phM_smM_Sr0_smP_phP","phP_smP_Sr0_smM_phM");
-//   const auto PiP1M1R0=getter("phM_smM_Sr0_smM_phM","phP_smP_Sr0_smP_phP");
-//   const auto PiM1M1R0=getter("phP_smP_Sr0_smM_phM","phM_smM_Sr0_smP_phP");
-  
-//   const auto PiM1M1R1=getter("phP_smP_Sr1_smM_phM","phM_smM_Sr1_smP_phP");
-//   const auto PiM1P1R1=getter("phP_smP_Sr1_smP_phP","phM_smM_Sr1_smM_phM");
-//   const auto PiP1P1R1=getter("phM_smM_Sr1_smP_phP","phP_smP_Sr1_smM_phM");
-  
-//   auto real=
-//     [&copyCombine](const size_t& iConf,
-// 		   const size_t& t,
-// 		   const auto& f)
-//     {
-//       return
-// 	copyCombine([](const complex<double>& x)
-// 	{
-// 	  return x.real();
-// 	},iConf,t,f);
-//     };
-  
-//   [[maybe_unused]]
-//   auto imag=
-//     [&copyCombine](const size_t& iConf,
-// 		   const size_t& t,
-// 		   const auto& f)
-//     {
-//       return
-// 	copyCombine([](const complex<double>& x)
-// 	{
-// 	  return x.imag();
-// 	},iConf,t,f);
-//     };
-  
-//   auto sub=
-//     [&copyCombine](const size_t& iConf,
-// 		   const size_t& t,
-// 		   const auto& f1,
-// 		   const auto& f2)
-//     {
-//       const complex<double> ab=
-// 	copyCombine([](const auto& x,
-// 		       const auto& y)
-// 	{
-// 	  return x*conj(y);
-// 	},iConf,t,f1,f2);
-      
-//       const complex<double> a=
-// 	copyCombine([](const auto& x)
-// 	{
-// 	  return x;
-// 	},iConf,t,f1);
-      
-//       const complex<double> b=
-// 	copyCombine([](const auto& x)
-// 	{
-// 	  return x;
-// 	},iConf,t,f2);
-      
-//       return ((a*conj(b)).real()*nHits-ab.real())/(double)(nHits-1);
-//     };
-  
-//   const djvec_t P00=jackCombine(real,Pi00);
-//   const djvec_t P11=jackCombine(real,PiP1P1R0);
-//   const djvec_t P11b=jackCombine(real,PiM1P1R1);
-//   const djvec_t P11c=jackCombine(real,PiM1M1R0);
-//   const djvec_t P11d=jackCombine(real,PiP1P1R1);
-//   // const complex<djvec_t> P00ri={jackCombine(real,Pi00),jackCombine(imag,Pi00)};
-//   const djvec_t P0000=jackCombine(sub,Pi00,Pi00);
-//   const djvec_t PI_UD_DU_mm=jackCombine(sub,PiP1P1R0,PiM1M1R1);
-//   const djvec_t PI_UD_DU_pm=jackCombine(sub,PiP1M1R0,PiM1P1R1);
-//   const djvec_t PI_UD_DU_pp=jackCombine(sub,PiM1M1R0,PiP1P1R1);
-  
-//   // const djvec_t P11=
-//   //   copyCombine(,Pi11);
-  
-//   effective_mass(P00.symmetrized()).ave_err().write("plots/Pi00.xmg");
-//   effective_mass(P11.symmetrized()).ave_err().write("plots/Pi11.xmg");
-//   effective_mass(P11b.symmetrized()).ave_err().write("plots/Pi11b.xmg");
-//   effective_mass(P11c.symmetrized()).ave_err().write("plots/Pi11c.xmg");
-//   effective_mass(P11d.symmetrized()).ave_err().write("plots/Pi11d.xmg");
-//   effective_mass(P0000.symmetrized()).ave_err().write("plots/Pi0000.xmg");
-//   effective_mass(PI_UD_DU_mm.symmetrized()).ave_err().write("plots/Pi1111a.xmg");
-//   effective_mass(PI_UD_DU_pm.symmetrized()).ave_err().write("plots/Pi1111b.xmg");
-//   effective_mass(PI_UD_DU_pp.symmetrized()).ave_err().write("plots/Pi1111c.xmg");
-  
-//   PI_UD_DU_mm.symmetrized().ave_err().write("plots/cPi1111a.xmg");
-//   PI_UD_DU_pm.symmetrized().ave_err().write("plots/cPi1111b.xmg");
-//   PI_UD_DU_pp.symmetrized().ave_err().write("plots/cPi1111c.xmg");
-  
-//   const djvec_t P=effective_mass(P00.symmetrized());
-//   const size_t L=64;
-//   const djvec_t onePm=sqrt(P*P+sqr(4*M_PI/L));
-//   onePm.ave_err().write("plots/1Pm.xmg");
-//   const djvec_t twoPm=2*effective_mass(P11.symmetrized());
-//   twoPm.ave_err().write("plots/2Pm.xmg");
-//   const djvec_t twoPmp=effective_mass(sqr(P11).symmetrized());
-//   twoPmp.ave_err().write("plots/2Pmp.xmg");
-//   const djvec_t twoP=2*P;
-//   twoP.ave_err().write("plots/2P.xmg");
+  return [data=std::move(res),
+	  idOut](const size_t& iBso,
+		 const size_t& iBsi,
+		 const size_t& t)
+  {
+    return data[idOut({iBso,iBsi})][t];
+  };
 }
 
-
-void direct()
+auto direct()
 {
   const std::string directDataPath="directData";
   const std::vector<std::string> confs=getConfs("confsDirectList.dat",directDataPath);
@@ -587,9 +428,16 @@ void direct()
   
   enum{DIR,PAR,SIN};
   
-  for(const InterpDef& bSo : interpDef)
-    for(const InterpDef& bSi : interpDef)
+  index_t idOut({{"bSo",interpDef.size()},{"bSi",interpDef.size()},{"combo",3}});
+  
+  std::vector<djvec_t> res(idOut.max(),djvec_t(T/2+1));
+  
+  for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
+    for(size_t iBSi=0;iBSi<interpDef.size();iBSi++)
       {
+	const InterpDef& bSo{interpDef[iBSo]};
+	const InterpDef& bSi{interpDef[iBSi]};
+	
 	const std::string& repSo{bSo.rep};
 	const std::string& repSi{bSi.rep};
 	const std::string& so{bSo.id};
@@ -599,29 +447,39 @@ void direct()
 	const auto _A=getDirect(so,si1);
 	const auto _B=getDirect(so,si2);
 	
-	const djvec_t A=_A[DIR];
-	const djvec_t B=_B[DIR];
-	const djvec_t D=_A[PAR];
-	const djvec_t E=_B[PAR];
-	const djvec_t G=_A[SIN];
-	const djvec_t H=_B[SIN];
-      // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
-      // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
+	for(size_t iCombo=0;iCombo<3;iCombo++)
+	  res[idOut({iBSo,iBSi,iCombo})]=_A[iCombo]-_B[iCombo];
 	
-	(A-B).ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
+	// const djvec_t A=_A[DIR];
+	// const djvec_t B=_B[DIR];
+	// const djvec_t D=_A[PAR];
+	// const djvec_t E=_B[PAR];
+	// const djvec_t G=_A[SIN];
+	// const djvec_t H=_B[SIN];
 	
-	(effective_mass(_B[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte_"+repSi+"_"+repSo+".xmg");
-	(effective_mass(_B[DIR]-_A[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte2_"+repSi+"_"+repSo+".xmg");
+	// (A-B).ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
 	
-	effective_mass(A).ave_err().write("plots/effDA_"+repSi+"_"+repSo+".xmg");
-	effective_mass(B).ave_err().write("plots/effDB_"+repSi+"_"+repSo+".xmg");
-	effective_mass(D).ave_err().write("plots/effDD_"+repSi+"_"+repSo+".xmg");
-	effective_mass(E).ave_err().write("plots/effDE_"+repSi+"_"+repSo+".xmg");
-	(2*effective_mass(G)).ave_err().write("plots/effDG_"+repSi+"_"+repSo+".xmg");
-	(2*effective_mass(H)).ave_err().write("plots/effDH_"+repSi+"_"+repSo+".xmg");
-	effective_mass(A-B).ave_err().write("plots/effDC_"+repSi+"_"+repSo+".xmg");
-	effective_mass(H-G).ave_err().write("plots/effDI_"+repSi+"_"+repSo+".xmg");
+	// (effective_mass(_B[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte_"+repSi+"_"+repSo+".xmg");
+	// (effective_mass(_B[DIR]-_A[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte2_"+repSi+"_"+repSo+".xmg");
+	
+	// effective_mass(A).ave_err().write("plots/effDA_"+repSi+"_"+repSo+".xmg");
+	// effective_mass(B).ave_err().write("plots/effDB_"+repSi+"_"+repSo+".xmg");
+	// effective_mass(D).ave_err().write("plots/effDD_"+repSi+"_"+repSo+".xmg");
+	// effective_mass(E).ave_err().write("plots/effDE_"+repSi+"_"+repSo+".xmg");
+	// (2*effective_mass(G)).ave_err().write("plots/effDG_"+repSi+"_"+repSo+".xmg");
+	// (2*effective_mass(H)).ave_err().write("plots/effDH_"+repSi+"_"+repSo+".xmg");
+	// effective_mass(A-B).ave_err().write("plots/effDC_"+repSi+"_"+repSo+".xmg");
+	// effective_mass(H-G).ave_err().write("plots/effDI_"+repSi+"_"+repSo+".xmg");
     }
+  
+  return [data=std::move(res),
+	  idOut](const size_t& iBso,
+		 const size_t& iBsi,
+		 const size_t& iCombo,
+		 const size_t& t)
+  {
+    return data[idOut({iBso,iBsi,iCombo})][t];
+  };
 }
 
 int main()
