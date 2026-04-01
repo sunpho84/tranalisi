@@ -60,7 +60,6 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
 							 const char* rawFileNameTemplate,
 							 const std::vector<const char*>& suffixList,
 							 const size_t& tMax,
-							 size_t& nHits,
 							 const std::string& rawDataDir,
 							 const std::vector<std::string> confs)
 {
@@ -170,7 +169,6 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
   //cout<<"Adjusted nConfs to: "<<nConfs<<endl;
   // }
   
-  nHits=rawData.begin()->second.front().size();
   //cout<<"Setting nHits to: "<<nHits<<endl;
   
   return rawData;
@@ -202,25 +200,24 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
   
   const size_t nConfs=confs.size();
   
-  size_t nHits;
+  const auto rawData=
+    getRaw("rawBox.dat",
+	   "mes_contr_box_src_snk%s_T25",
+	   {"1","2","3","4","5"},
+	   tMaxBox,
+	   boxCorrPath,
+	   confs);
+  const size_t nHits=rawData.begin()->second.front().size();
   
-  index_t idx;
+  const index_t idx({{"hit",nHits},{"tMax",tMaxBox},{"conf",nConfs}});
   
   auto getRawBox=
-    [rawData=
-     getRaw("rawBox.dat",
-	    "mes_contr_box_src_snk%s_T25",
-	    {"1","2","3","4","5"},
-	    tMaxBox,
-	    nHits,
-	    boxCorrPath,
-	    confs),
+    [&rawData,
      &nHits,
      &idx,
      &nConfs](const std::string& a,
 	      const std::string& b)
     {
-      idx=index_t({{"hit",nHits},{"tMax",tMaxBox},{"conf",nConfs}});
       vector<complex<double>> res(idx.max());
       
       const string what=
@@ -335,17 +332,18 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
   const std::vector<std::string> confs=getConfs("confsDirectList.dat",directDataPath);
   const size_t nConfs=confs.size();
   
-  size_t nHits;
-  
-  auto getRawDirect=
-    [rawData=
+  const auto rawData=
      getRaw("rawDirect.dat",
 	    "mes_contr_direct_r0_P%s",
 	    {"0","1","2","3","4","5"},
 	    T,
-	    nHits,
 	    directDataPath,
-	    confs),
+	    confs);
+  
+  const size_t nHits=rawData.begin()->second.front().size();
+  
+  auto getRawDirect=
+    [&rawData,
      &nHits,
      &nConfs](const std::string& mso,
 	      const std::string& msi)
