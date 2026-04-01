@@ -204,7 +204,7 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
   
   size_t nHits;
   
-  const index_t idx({{"hit",nHits},{"tMax",tMaxBox},{"conf",nConfs}});
+  index_t idx;
   
   auto getRawBox=
     [rawData=
@@ -220,6 +220,7 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
      &nConfs](const std::string& a,
 	      const std::string& b)
     {
+      idx=index_t({{"hit",nHits},{"tMax",tMaxBox},{"conf",nConfs}});
       vector<complex<double>> res(idx.max());
       
       const string what=
