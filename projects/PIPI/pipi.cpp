@@ -181,10 +181,14 @@ std::vector<djvec_t> computeOrLoad(const index_t& idOut,
   std::vector<djvec_t> res;
   
   if(file_exists(path))
-    res=raw_file_t(path,"r").bin_read<std::vector<djvec_t>>();
+    {
+      cout<<"Loading all data from "<<path<<endl;
+      res=raw_file_t(path,"r").bin_read<std::vector<djvec_t>>();
+    }
   else
     {
       res=compute(idOut);
+      cout<<"Writing all data to "<<path<<endl;
       raw_file_t(path,"w").bin_write(res);
     }
   
