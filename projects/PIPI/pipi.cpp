@@ -176,13 +176,35 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
   return rawData;
 }
 
-auto box()
+std::vector<djvec_t> computeOrLoad(const index_t& idOut,
+				   const std::string& path,
+				   std::vector<djvec_t> compute(const index_t& idOut))
 {
-  const std::string boxDataPath="boxData";
-  const std::vector<std::string> confs=getConfs("confsBoxList.dat",boxDataPath);
+  std::vector<djvec_t> res;
+  ;
+  if(file_exists(path))
+    res=raw_file_t(path,"r").bin_read<std::vector<djvec_t>>();
+  else
+    {
+      res=compute(idOut);
+      raw_file_t(path,"w").bin_write(res);
+    }
+  
+  return res;
+}
+
+/////////////////////////////////////////////////////////////////
+
+std::vector<djvec_t> computeBox(const index_t& idOut)
+{
+  const std::string boxCorrPath="boxData";
+  const std::vector<std::string> confs=getConfs("confsBoxList.dat",boxCorrPath);
+  
   const size_t nConfs=confs.size();
   
   size_t nHits;
+  
+  const index_t idx({{"hit",nHits},{"tMax",tMaxBox},{"conf",nConfs}});
   
   auto getRawBox=
     [rawData=
@@ -191,14 +213,13 @@ auto box()
 	    {"1","2","3","4","5"},
 	    tMaxBox,
 	    nHits,
-	    boxDataPath,
+	    boxCorrPath,
 	    confs),
      &nHits,
+     &idx,
      &nConfs](const std::string& a,
 	      const std::string& b)
     {
-      const index_t idx({{"hit",nHits},{"tMax",tMaxBox},{"conf",nConfs}});
-      
       vector<complex<double>> res(idx.max());
       
       const string what=
@@ -230,13 +251,7 @@ auto box()
 	      }
 	}
       
-      return [res,
-	      idx](const size_t& iHit,
-		   const size_t& t,
-		   const size_t& iConf)
-      {
-	return res[idx({iHit,t,iConf})];
-      };
+      return res;
     };
   
   auto getBox=
@@ -249,6 +264,7 @@ auto box()
       
       const auto d=
 	getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
+      
       for(size_t t=0;t<tMaxBox;t++)
 	{
 	  jackknivesFill(nConfs,
@@ -258,7 +274,7 @@ auto box()
 		       {
 			 double o=0;
 			 for(size_t iHit=0;iHit<nHits;iHit++)
-			   o+=d(iHit,t,iConf).real();
+			   o+=d[idx({iHit,t,iConf})].real();
 			 o/=nHits;
 			 res[t][iClust]+=weight*o;
 		       });
@@ -268,9 +284,8 @@ auto box()
       return res;
     };
   
-  index_t idOut({{"bSo",interpDef.size()},{"bSi",interpDef.size()}});
+  std::vector<djvec_t> res;
   
-  std::vector<djvec_t> res(idOut.max(),djvec_t(tMaxBox));
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
     for(size_t iBSi=0;iBSi<interpDef.size();iBSi++)
       {
@@ -295,7 +310,14 @@ auto box()
 	res[idOut({iBSo,iBSi})]=C;
       }
   
-  return [data=std::move(res),
+  return res;
+}
+
+auto box()
+{
+  index_t idOut({{"bSo",interpDef.size()},{"bSi",interpDef.size()}});
+  
+  return [data=computeOrLoad(idOut,"boxData",computeBox),
 	  idOut](const size_t& iBso,
 		 const size_t& iBsi,
 		 const size_t& t)
@@ -304,7 +326,9 @@ auto box()
   };
 }
 
-auto direct()
+/////////////////////////////////////////////////////////////////
+
+std::vector<djvec_t> computeDirect(const index_t& idOut)
 {
   const std::string directDataPath="directData";
   const std::vector<std::string> confs=getConfs("confsDirectList.dat",directDataPath);
@@ -428,8 +452,6 @@ auto direct()
   
   enum{DIR,PAR,SIN};
   
-  index_t idOut({{"bSo",interpDef.size()},{"bSi",interpDef.size()},{"combo",3}});
-  
   std::vector<djvec_t> res(idOut.max(),djvec_t(T/2+1));
   
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
@@ -438,8 +460,8 @@ auto direct()
 	const InterpDef& bSo{interpDef[iBSo]};
 	const InterpDef& bSi{interpDef[iBSi]};
 	
-	const std::string& repSo{bSo.rep};
-	const std::string& repSi{bSi.rep};
+	// const std::string& repSo{bSo.rep};
+	// const std::string& repSi{bSi.rep};
 	const std::string& so{bSo.id};
 	const std::string& si1{bSi.rap[0]};
 	const std::string& si2{bSi.rap[1]};
@@ -472,7 +494,14 @@ auto direct()
 	// effective_mass(H-G).ave_err().write("plots/effDI_"+repSi+"_"+repSo+".xmg");
     }
   
-  return [data=std::move(res),
+  return res;
+}
+
+auto direct()
+{
+  index_t idOut{{{"bSo",interpDef.size()},{"bSi",interpDef.size()},{"combo",3}}};
+  
+  return [data=computeOrLoad(idOut,"directData",computeDirect),
 	  idOut](const size_t& iBso,
 		 const size_t& iBsi,
 		 const size_t& iCombo,
