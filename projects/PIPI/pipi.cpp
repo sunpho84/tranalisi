@@ -282,7 +282,7 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
       return res;
     };
   
-  std::vector<djvec_t> res;
+  std::vector<djvec_t> res(idOut.max());
   
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
     for(size_t iBSi=0;iBSi<interpDef.size();iBSi++)
@@ -451,7 +451,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
   
   enum{DIR,PAR,SIN};
   
-  std::vector<djvec_t> res(idOut.max(),djvec_t(T/2+1));
+  std::vector<djvec_t> res(idOut.max());
   
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
     for(size_t iBSi=0;iBSi<interpDef.size();iBSi++)
