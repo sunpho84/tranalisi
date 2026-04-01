@@ -183,7 +183,7 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
   AllMesCombos res;
   
   //! Name of the meson
-  const string& mesName=get<0>(mes);
+  // const string& mesName=get<0>(mes);
   
   //! Name of spectator quark
   const quark_t& quarkS=quarkList[get<1>(mes)];
@@ -192,8 +192,8 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
   const quark_t& quarkT=quarkList[get<2>(mes)];
   
   //! Charge of the spectator and forward line
-  const double eS=get<0>(quarkS)/3.0;
-  const double eT=get<0>(quarkT)/3.0;
+  // const double eS=get<0>(quarkS)/3.0;
+  // const double eT=get<0>(quarkT)/3.0;
   
   //! Loop on all meson combos
   const size_t nMs=get<2>(quarkS).size();
@@ -206,20 +206,22 @@ AllMesCombos computeAllMesCombos(const perens_t& ens,const meson_t& mes)
   for(size_t iMesCombo=0;iMesCombo<nMesCombos;iMesCombo++)
     {
       const vector<size_t> c=indMesCombo(iMesCombo);
-      const size_t iMs=get<2>(quarkS)[c[0]];
-      const size_t iMt=get<2>(quarkT)[c[1]];
+      // const size_t iMs=get<2>(quarkS)[c[0]];
+      // const size_t iMt=get<2>(quarkT)[c[1]];
       
       //cout<<endl<<" === "<<mesName<<" "<<indMesCombo.descr(iMesCombo)<<" ==="<<endl;
       
-      res.emplace_back(ens,mesName,iMs,iMt,eS,eT);
+      CRASH("uncomment and fix");
+      // res.emplace_back(ens,mesName,iMs,iMt,eS,eT);
       
-      const bool USE_ANALYTIC=true;
+      // const bool USE_ANALYTIC=true;
       
-      res[iMesCombo]
-	.fit2pts()
-	.prepareKinematics(USE_ANALYTIC)
-	.fit3pts()
-	.plotFf();
+      CRASH("uncomment and fix");
+      // res[iMesCombo]
+      // 	.fit2pts()
+      // 	.prepareKinematics(USE_ANALYTIC)
+      // 	.fit3pts()
+      // 	.plotFf();
       
       res[iMesCombo].printKin();
       
