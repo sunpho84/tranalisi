@@ -181,7 +181,7 @@ std::vector<djvec_t> computeOrLoad(const index_t& idOut,
 				   std::vector<djvec_t> compute(const index_t& idOut))
 {
   std::vector<djvec_t> res;
-  ;
+  
   if(file_exists(path))
     res=raw_file_t(path,"r").bin_read<std::vector<djvec_t>>();
   else
@@ -197,7 +197,7 @@ std::vector<djvec_t> computeOrLoad(const index_t& idOut,
 
 std::vector<djvec_t> computeBox(const index_t& idOut)
 {
-  const std::string boxCorrPath="boxData";
+  const std::string boxCorrPath="boxCorr";
   const std::vector<std::string> confs=getConfs("confsBoxList.dat",boxCorrPath);
   
   const size_t nConfs=confs.size();
@@ -317,7 +317,7 @@ auto box()
 {
   index_t idOut({{"bSo",interpDef.size()},{"bSi",interpDef.size()}});
   
-  return [data=computeOrLoad(idOut,"boxData",computeBox),
+  return [data=computeOrLoad(idOut,"box.dat",computeBox),
 	  idOut](const size_t& iBso,
 		 const size_t& iBsi,
 		 const size_t& t)
@@ -330,7 +330,7 @@ auto box()
 
 std::vector<djvec_t> computeDirect(const index_t& idOut)
 {
-  const std::string directDataPath="directData";
+  const std::string directDataPath="directCorr";
   const std::vector<std::string> confs=getConfs("confsDirectList.dat",directDataPath);
   const size_t nConfs=confs.size();
   
@@ -501,7 +501,7 @@ auto direct()
 {
   index_t idOut{{{"bSo",interpDef.size()},{"bSi",interpDef.size()},{"combo",3}}};
   
-  return [data=computeOrLoad(idOut,"directData",computeDirect),
+  return [data=computeOrLoad(idOut,"direct.dat",computeDirect),
 	  idOut](const size_t& iBso,
 		 const size_t& iBsi,
 		 const size_t& iCombo,
