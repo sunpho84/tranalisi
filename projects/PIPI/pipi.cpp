@@ -321,10 +321,9 @@ auto box()
   
   return [data=computeOrLoad(idOut,"box.dat",computeBox),
 	  idOut](const size_t& iBso,
-		 const size_t& iBsi,
-		 const size_t& t)
+		 const size_t& iBsi) -> const djvec_t&
   {
-    return data[idOut({iBso,iBsi})][t];
+    return data[idOut({iBso,iBsi})];
   };
 }
 
@@ -345,6 +344,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	    confs);
   
   const size_t nHits=rawData.begin()->second.front().size();
+  cout<<"NHits: "<<nHits<<endl;
   
   auto getRawDirect=
     [&rawData,
@@ -463,8 +463,6 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	const InterpDef& bSo{interpDef[iBSo]};
 	const InterpDef& bSi{interpDef[iBSi]};
 	
-	// const std::string& repSo{bSo.rep};
-	// const std::string& repSi{bSi.rep};
 	const std::string& so{bSo.id};
 	const std::string& si1{bSi.rap[0]};
 	const std::string& si2{bSi.rap[1]};
@@ -475,26 +473,28 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	for(size_t iCombo=0;iCombo<3;iCombo++)
 	  res[idOut({iBSo,iBSi,iCombo})]=_A[iCombo]-_B[iCombo];
 	
-	// const djvec_t A=_A[DIR];
-	// const djvec_t B=_B[DIR];
-	// const djvec_t D=_A[PAR];
-	// const djvec_t E=_B[PAR];
-	// const djvec_t G=_A[SIN];
-	// const djvec_t H=_B[SIN];
+	const djvec_t A=_A[DIR];
+	const djvec_t B=_B[DIR];
+	const djvec_t D=_A[PAR];
+	const djvec_t E=_B[PAR];
+	const djvec_t G=_A[SIN];
+	const djvec_t H=_B[SIN];
 	
-	// (A-B).ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
+	const std::string& repSo{bSo.rep};
+	const std::string& repSi{bSi.rep};
+	(A-B).ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
 	
-	// (effective_mass(_B[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte_"+repSi+"_"+repSo+".xmg");
-	// (effective_mass(_B[DIR]-_A[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte2_"+repSi+"_"+repSo+".xmg");
+	(effective_mass(_B[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte_"+repSi+"_"+repSo+".xmg");
+	(effective_mass(_B[DIR]-_A[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte2_"+repSi+"_"+repSo+".xmg");
 	
-	// effective_mass(A).ave_err().write("plots/effDA_"+repSi+"_"+repSo+".xmg");
-	// effective_mass(B).ave_err().write("plots/effDB_"+repSi+"_"+repSo+".xmg");
-	// effective_mass(D).ave_err().write("plots/effDD_"+repSi+"_"+repSo+".xmg");
-	// effective_mass(E).ave_err().write("plots/effDE_"+repSi+"_"+repSo+".xmg");
-	// (2*effective_mass(G)).ave_err().write("plots/effDG_"+repSi+"_"+repSo+".xmg");
-	// (2*effective_mass(H)).ave_err().write("plots/effDH_"+repSi+"_"+repSo+".xmg");
-	// effective_mass(A-B).ave_err().write("plots/effDC_"+repSi+"_"+repSo+".xmg");
-	// effective_mass(H-G).ave_err().write("plots/effDI_"+repSi+"_"+repSo+".xmg");
+	effective_mass(A).ave_err().write("plots/effDA_"+repSi+"_"+repSo+".xmg");
+	effective_mass(B).ave_err().write("plots/effDB_"+repSi+"_"+repSo+".xmg");
+	effective_mass(D).ave_err().write("plots/effDD_"+repSi+"_"+repSo+".xmg");
+	effective_mass(E).ave_err().write("plots/effDE_"+repSi+"_"+repSo+".xmg");
+	(2*effective_mass(G)).ave_err().write("plots/effDG_"+repSi+"_"+repSo+".xmg");
+	(2*effective_mass(H)).ave_err().write("plots/effDH_"+repSi+"_"+repSo+".xmg");
+	effective_mass(A-B).ave_err().write("plots/effDC_"+repSi+"_"+repSo+".xmg");
+	effective_mass(H-G).ave_err().write("plots/effDI_"+repSi+"_"+repSo+".xmg");
     }
   
   return res;
@@ -507,10 +507,9 @@ auto direct()
   return [data=computeOrLoad(idOut,"direct.dat",computeDirect),
 	  idOut](const size_t& iBso,
 		 const size_t& iBsi,
-		 const size_t& iCombo,
-		 const size_t& t)
+		 const size_t& iCombo) -> const djvec_t&
   {
-    return data[idOut({iBso,iBsi,iCombo})][t];
+    return data[idOut({iBso,iBsi,iCombo})];
   };
 }
 
@@ -518,9 +517,16 @@ int main()
 {
   njacks=50;
   
-  box();
+  const auto b=box();
   
-  direct();
+  const auto d=direct();
+  
+  for(size_t ibSo=0;ibSo<interpDef.size();ibSo++)
+    for(size_t ibSi=0;ibSi<interpDef.size();ibSi++)
+      {
+	b(ibSo,ibSi).ave_err().write(combine("plots/box_%zu_%zu.xmg",ibSo,ibSi));
+	d(ibSo,ibSi,0).ave_err().write(combine("plots/dir_%zu_%zu.xmg",ibSo,ibSi));
+      }
   
   return 0;
 }
