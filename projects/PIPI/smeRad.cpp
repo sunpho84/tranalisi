@@ -1,0 +1,98 @@
+#include "common.hpp"
+
+int main()
+{
+  njacks=10;
+  
+  const std::string dataPath="out";
+  const std::vector<std::string> confs=getConfs("confstList.dat",dataPath);
+  const size_t nConfs=confs.size();
+  
+  const auto rawData=
+     getRaw("raw.dat",
+	    "mes_contr_2Pi",
+	    {""},
+	    T,
+	    dataPath,
+	    confs);
+  
+  auto getRaw=
+    [&rawData,
+     &nConfs](const std::string& bw,
+	      const std::string& fw)
+    {
+      const index_t idx({{"t",T},{"conf",nConfs}});
+      
+      vector<double> res(idx.max());
+      
+      const string what=
+	combine("%s__%s,__P5P5",bw.c_str(),fw.c_str());
+      
+      const auto _v=
+	rawData.find(what);
+      if(_v==rawData.end())
+	{
+	  cout<<"List of corr:"<<endl;
+	  for(const auto& [key,val] : rawData)
+	    cout<<key<<endl;
+	  
+	  CRASH("Unable to find %s",what.c_str());
+	}
+      
+      const auto& v=_v->second;
+      
+      for(size_t iConf=0;iConf<nConfs;iConf++)
+	for(size_t t=0;t<T;t++)
+	    res[idx({t,iConf})]=v[iConf][0][t];
+      
+      return [res,
+	      idx](const size_t& t,
+		   const size_t& iConf)
+      {
+	return res[idx({t,iConf})];
+      };
+    };
+  
+  // {
+  //   const size_t iConf=1;
+  //   cout<<confs[iConf]<<endl;
+  //   const InterpDef& bSo = interpDef[0];
+  //   const InterpDef& bSi = interpDef[0];
+    
+  //   const std::string& so{bSo.id};
+  //   const std::string& si2{bSi.rap[1]};
+  //   cout<<so<<" "<<si2<<endl;
+    
+  //   const auto _A=getRawDirect(so,si2);
+  //   for(size_t t=0;t<T;t++)
+  //     cout<<_A(0,t,iConf)/(L*L*L)<<endl;
+  // }
+  
+  auto get=
+    [&](const string& bw,
+	const string& fw)
+    {
+      djvec_t res(T);
+      
+      const auto d=
+	getRaw(bw,fw);
+      
+      for(size_t t=0;t<T;t++)
+	jackknivesFill(nConfs,
+		       [&](const size_t& iConf,
+			   const size_t& iClust,
+			   const double& weight)
+		       {
+			 res[t][iClust]+=weight*d(t,iConf);
+		       });
+      res.clusterize(((double)nConfs/njacks)).symmetrize();
+      
+      return res;
+    };
+  
+  enum{DIR,PAR,SIN};
+  
+  const djvec_t res=get("","");
+  
+  return 0;
+}
