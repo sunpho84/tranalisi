@@ -263,7 +263,7 @@ struct grace_file_t : public ofstream
   
   //! write a polygon from a function
   template <class fun_t>
-  void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,size_t npoints=101)
+  void write_polygon(const fun_t &fun,double xmin,double xmax,grace::color_t col,const size_t& npoints=101)
   {
     //! x coordinates
     vector<double> x=vector_grid(xmin,xmax,npoints);
@@ -282,7 +282,7 @@ struct grace_file_t : public ofstream
   
   //! write a polygon setting automatically col
   template <class fun_t>
-  void write_polygon(const fun_t &fun,double xmin,double xmax,size_t npoints=101)
+  void write_polygon(const fun_t &fun,double xmin,double xmax,const size_t& npoints=101)
   {
     write_polygon(fun,xmin,xmax,get_poly_col_no_increment(),npoints);
   }
@@ -292,7 +292,7 @@ struct grace_file_t : public ofstream
   
   //! write a line
   template <typename F>
-  void write_line(const F &fun,double xmin,double xmax,grace::color_t col,size_t npoints=101)
+  void write_line(const F &fun,double xmin,double xmax,grace::color_t col,const size_t& npoints=101)
   {
     close_cur_set();
     
@@ -318,7 +318,7 @@ struct grace_file_t : public ofstream
   }
   
   template <typename F>
-  void write_line(const F &fun,double xmin,double xmax,size_t npoints=101)
+  void write_line(const F &fun,double xmin,double xmax,const size_t& npoints=101)
   {
     write_line(fun,xmin,xmax,get_line_col_no_increment(),npoints);
   }
