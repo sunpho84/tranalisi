@@ -3,6 +3,7 @@
 const size_t T=128;
 const size_t L=64;
 const size_t tMaxBox=26;
+const double aGeVInv=0.07948/0.197;;
 
 struct InterpDef
 {
@@ -20,6 +21,8 @@ const std::vector<InterpDef> interpDef{
   {"002","4",{"Pz2","Mz2"}},
   {"012","5",{"0P12","0M12"}}
 };
+
+const size_t nOp=interpDef.size();
 
 inline std::vector<std::string> getConfs(const std::string& confsListPath,
 					 const std::string& rawDataPath)
@@ -523,12 +526,90 @@ int main()
   
   const auto d=direct();
   
-  for(size_t ibSo=0;ibSo<interpDef.size();ibSo++)
-    for(size_t ibSi=0;ibSi<interpDef.size();ibSi++)
+  const size_t nOpToUse=nOp;
+  std::vector<djvec_t> c(nOpToUse*nOpToUse);
+  
+  for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
+    for(size_t ibSi=0;ibSi<nOpToUse;ibSi++)
       {
-	b(ibSo,ibSi).ave_err().write(combine("plots/box_%zu_%zu.xmg",ibSo,ibSi));
-	d(ibSo,ibSi,0).ave_err().write(combine("plots/dir_%zu_%zu.xmg",ibSo,ibSi));
+	const djvec_t& box=b(ibSo,ibSi);
+	const djvec_t& dir=d(ibSo,ibSi,0);
+	box.ave_err().write(combine("plots/box_%zu_%zu.xmg",ibSo,ibSi));
+	(-dir).ave_err().write(combine("plots/dir_%zu_%zu.xmg",ibSo,ibSi));
+	const djvec_t cmb=2*box-dir;
+	c[ibSo+nOpToUse*ibSi]=cmb;
+	cmb.ave_err().write(combine("plots/cmb_%zu_%zu.xmg",ibSo,ibSi));
+	
+	if(ibSi<ibSo)
+	  c[ibSo+nOpToUse*ibSi]=c[ibSi+nOpToUse*ibSo];
       }
+  
+  const size_t t0=10;
+  
+  vector<djvec_t> eig;
+  vector<djvec_t> recastEigvec;
+  vector<djvec_t> origEigvec;
+  
+  tie(eig,recastEigvec,ignore)=gevp(c,t0);
+  vector<double> expSh{0.0019364276101050126,0.016167593494143095,0.028595040062616484,0.04024620996370226,0.04075042586371391};
+  
+  grace_file_t fullCompa("plots/fullCompa.xmg");
+  fullCompa.set_color_scheme({grace::BLACK,grace::BLUE,grace::RED,grace::ORANGE,grace::GREEN4});
+  for(size_t iop=0;iop<nOpToUse;iop++)
+    {
+      grace_file_t cmp("plots/cmp"+to_string(iop)+".xmg");
+      cmp.set_title(interpDef[iop].rep);
+      cmp.set_color_scheme({grace::BLACK,grace::BLUE,grace::RED,grace::ORANGE});
+      cmp.set_no_line();
+      
+      const djvec_t nonInter=(2*effective_mass(d(iop,iop,2),T/2));
+      cmp.write_vec_ave_err(nonInter.ave_err());
+      cmp.set_legend("Non interacting pion");
+      cmp.new_data_set();
+      cmp.set_no_line();
+      
+      const djvec_t eigP=effective_mass(eig[iop],T/2);
+      cmp.write_vec_ave_err(eigP.ave_err());
+      cmp.set_no_line();
+      cmp.set_legend("gevp");
+      
+      const djvec_t full=effective_mass(c[iop+nOpToUse*iop],T/2);
+      cmp.write_vec_ave_err(full.ave_err());
+      cmp.set_no_line();
+      cmp.set_legend("2Box-direct");
+      
+      fullCompa.write_vec_ave_err(full.ave_err());
+      fullCompa.set_legend(interpDef[iop].rep);
+      fullCompa.set_no_line();
+      
+      const djvec_t expected=(2*effective_mass(d(iop,iop,2),T/2)-expSh[iop]);
+      cmp.write_vec_ave_err(expected.ave_err());
+      cmp.set_no_line();
+      cmp.set_legend("GS expectation");
+      
+      grace_file_t shiftPlot("plots/shift"+to_string(iop)+".xmg");
+      shiftPlot.write_vec_ave_err((full-nonInter).ave_err());
+      shiftPlot.write_line([e=-expSh[iop]](const double&){return e;},0,tMaxBox);
+      
+      //cout<<expSh[iop]/aGeVInv<<endl;
+      
+      // /////////////////////////////////////////////////////////////////
+      
+      grace_file_t gevpCompa("plots/gevp"+to_string(iop)+".xmg");
+      gevpCompa.set_title(interpDef[iop].rep);
+      gevpCompa.set_color_scheme({grace::BLACK,grace::BLUE,grace::RED,grace::ORANGE});
+      gevpCompa.set_no_line();
+      
+      gevpCompa.write_vec_ave_err(full.ave_err());
+      gevpCompa.set_legend("2Box-direct");
+      gevpCompa.new_data_set();
+      gevpCompa.set_no_line();
+      
+      const djvec_t eigEffMass=effective_mass(eig[iop],T/2);
+      gevpCompa.write_vec_ave_err(eigEffMass.ave_err());
+      gevpCompa.set_no_line();
+      gevpCompa.set_legend("Eig");
+    }
   
   return 0;
 }
