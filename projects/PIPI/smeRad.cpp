@@ -18,25 +18,21 @@ int main()
   
   auto getRaw=
     [&rawData,
-     &nConfs](const std::string& bw,
-	      const std::string& fw)
+     &nConfs](const std::string& tag)
     {
       const index_t idx({{"t",T},{"conf",nConfs}});
       
       vector<double> res(idx.max());
       
-      const string what=
-	combine("%s__%s,__P5P5",bw.c_str(),fw.c_str());
-      
       const auto _v=
-	rawData.find(what);
+	rawData.find(tag);
       if(_v==rawData.end())
 	{
 	  cout<<"List of corr:"<<endl;
 	  for(const auto& [key,val] : rawData)
 	    cout<<key<<endl;
 	  
-	  CRASH("Unable to find %s",what.c_str());
+	  CRASH("Unable to find %s",tag.c_str());
 	}
       
       const auto& v=_v->second;
@@ -69,13 +65,12 @@ int main()
   // }
   
   auto get=
-    [&](const string& bw,
-	const string& fw)
+    [&](const string& tag)
     {
       djvec_t res(T);
       
       const auto d=
-	getRaw(bw,fw);
+	getRaw(tag);
       
       for(size_t t=0;t<T;t++)
 	jackknivesFill(nConfs,
@@ -90,9 +85,8 @@ int main()
       return res;
     };
   
-  enum{DIR,PAR,SIN};
-  
-  const djvec_t res=get("","");
+  for(const auto& [key,val] : rawData)
+    effective_mass(get(key).symmetrized()).ave_err().write("plots/"+key+".xmg");
   
   return 0;
 }
