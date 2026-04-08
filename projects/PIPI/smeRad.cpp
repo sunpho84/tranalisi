@@ -2,7 +2,7 @@
 
 int main()
 {
-  njacks=10;
+  njacks=50;
   
   const std::string dataPath="out";
   const std::vector<std::string> confs=getConfs("confstList.dat",dataPath);
