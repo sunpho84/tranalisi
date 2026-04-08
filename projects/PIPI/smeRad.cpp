@@ -86,7 +86,7 @@ int main()
     };
   
   for(const auto& [key,val] : rawData)
-    effective_mass(get(key).symmetrized()).ave_err().write("plots/"+key+".xmg");
+    effective_mass(get(key)).ave_err().write("plots/"+key+".xmg");
   
   return 0;
 }
