@@ -348,7 +348,7 @@ auto direct()
 
 int main()
 {
-  njacks=50;
+  njacks=67;
   
   const auto b=box();
   
