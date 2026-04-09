@@ -85,22 +85,28 @@ int main()
       return res;
     };
   
+  for(const auto& [key,val] : rawData)
+    {
+      const djvec_t k=get(key);
+      k.ave_err().write("plots/"+key+".xmg");
+      effective_mass(k).ave_err().write("plots/eff_"+key+".xmg");
+    }
+  
+  /////////////////////////////////////////////////////////////////
+  
   std::vector<djvec_t> c;
   c.push_back(get("P3_SR0_M3_0__M3_SR0_P3_0__P5P5"));
   c.push_back(get("P3_SMM3_SR0_M3_0__M3_SMP3_SR0_P3_0__P5P5"));
   c.push_back(get("P3_SMM3_SR0_M3_0__M3_SMP3_SR0_P3_0__P5P5"));
   c.push_back(get("P3_SMM3_SR0_SMP3_M3_0__M3_SMP3_SR0_SMM3_P3_0__P5P5"));
   
-  const size_t t0=8;
+  const size_t t0=6;
   
   vector<djvec_t> eig;
   vector<djvec_t> recastEigvec;
   vector<djvec_t> origEigvec;
   
   tie(eig,recastEigvec,ignore)=gevp(c,t0);
-  
-  for(const auto& [key,val] : rawData)
-    effective_mass(get(key)).ave_err().write("plots/"+key+".xmg");
   
   for(size_t i=0;i<2;i++)
     effective_mass(eig[i]).ave_err().write("plots/gevp"+to_string(i)+".xmg");
