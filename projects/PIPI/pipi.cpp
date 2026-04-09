@@ -263,8 +263,8 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
       
       const auto d=
 	getRawDirect(mso,msi);
-      
-      cout<<"Smmeeeee "<<mso<<" "<<msi<<" "<<d(0,1,1)<<endl;
+
+      printf("Smmeeeee %s %s %.16lg\n",mso.c_str(),msi.c_str(),d(0,1,1));
       
       for(size_t i=0;i<3;i++)
 	{
