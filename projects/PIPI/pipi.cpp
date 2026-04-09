@@ -264,6 +264,8 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
       const auto d=
 	getRawDirect(mso,msi);
       
+      cout<<"Smmeeeee "<<mso<<" "<<msi<<" "<<d(0,1,1)<<endl;
+      
       for(size_t i=0;i<3;i++)
 	{
 	  for(size_t t=0;t<T;t++)

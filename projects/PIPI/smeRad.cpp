@@ -96,9 +96,9 @@ int main()
   
   std::vector<djvec_t> c;
   c.push_back(get("P3_SR0_M3_0__M3_SR0_P3_0__P5P5"));
-  c.push_back(get("P3_SMM3_SR0_M3_0__M3_SMP3_SR0_P3_0__P5P5"));
-  c.push_back(get("P3_SMM3_SR0_M3_0__M3_SMP3_SR0_P3_0__P5P5"));
-  c.push_back(get("P3_SMM3_SR0_SMP3_M3_0__M3_SMP3_SR0_SMM3_P3_0__P5P5"));
+  c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__P5P5"));
+  c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__P5P5"));
+  c.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__P5P5"));
   
   const size_t t0=6;
   
