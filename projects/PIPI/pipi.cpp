@@ -265,7 +265,8 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	getRawDirect(mso,msi);
       
       for(size_t iConf=0;iConf<nConfs;iConf++)
-	printf("Check %s %s %.16lg\n",mso.c_str(),msi.c_str(),d(0,1,iConf)/L/L/L);
+	printf("%s %s %s %.16lg\n",confs[iConf].c_str(),mso.c_str(),msi.c_str(),d(0,1,iConf)/L/L/L);
+      cout<<endl;
       
       for(size_t i=0;i<3;i++)
 	{
