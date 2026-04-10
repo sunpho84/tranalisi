@@ -99,6 +99,13 @@ int main()
   c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__P5P5"));
   c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__P5P5"));
   c.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__P5P5"));
+
+  const double x=0.3;
+  const djvec_t one=c[3]+c[0]*x*x-x*(c[1]+c[2]);
+  effective_mass(one).ave_err().write("plots/one.xmg");
+  const double y=1.05;
+  const djvec_t two=c[0]+c[3]*y*y-y*(c[1]+c[2]);
+  effective_mass(two).ave_err().write("plots/two.xmg");
   
   const size_t t0=6;
   
