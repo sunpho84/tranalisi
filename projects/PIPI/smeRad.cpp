@@ -118,16 +118,27 @@ int main()
   jf.add_fit_par(M[0],"M0",0.18,0.01);
   jf.add_fit_par(M[1],"M1",0.57,0.01);
   
+  auto f=
+    [](const double& C,
+       const double& M,
+       const double& t)
+    {
+      return C*exp(-M*t);
+    };
+  
   for(size_t t=6;t<20;t++)
     {
       auto add=
-	[&jf,
+	[&jf,f,
 	 t](const djvec_t& c,
 	    const size_t& LS1,
 	    const size_t& LS2)
       {
 	jf.add_point(c[t],
-		     [t,LS1,LS2](const vector<double> &p,size_t iel){return two_pts_corr_fun(p[0+2*LS1]*p[0+2*LS2],p[4],T/2.0,t,1)+two_pts_corr_fun(p[1+2*LS1]*p[1+2*LS2],p[5],T/2.0,t,1);});
+		     [t,LS1,LS2,f](const vector<double> &p,size_t iel)
+		     {
+		       return f(p[0+2*LS1]*p[0+2*LS2],p[4],t)+f(p[1+2*LS1]*p[1+2*LS2],p[5],t);
+		     });
       };
       
       add(c[0],0,0);
