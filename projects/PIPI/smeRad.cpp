@@ -158,8 +158,8 @@ int main()
   
   for(size_t t=0;t<T/2+1;t++)
     {
-      LLSub[t]=c[0]-f(ZL[0]*ZL[0],M[0],t);
-      SSSub[t]=c[3]-f(ZS[1]*ZS[1],M[1],t);
+      LLSub[t]=c[0][t]-f(ZL[0]*ZL[0],M[0],t);
+      SSSub[t]=c[3][t]-f(ZS[1]*ZS[1],M[1],t);
     }
   
   grace_file_t ground("plots/ground.xmg");
