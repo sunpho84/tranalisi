@@ -164,11 +164,11 @@ int main()
   
   grace_file_t ground("plots/ground.xmg");
   ground.write_vec_ave_err(effective_mass(c[0]).ave_err());
-  ground.write_vec_ave_err(effective_mass(LLSub.ave_err()));
+  ground.write_vec_ave_err(effective_mass(LLSub).ave_err());
   
   grace_file_t excited("plots/excited.xmg");
   excited.write_vec_ave_err(effective_mass(c[1]).ave_err());
-  excited.write_vec_ave_err(effective_mass(SSSub.ave_err()));
+  excited.write_vec_ave_err(effective_mass(SSSub).ave_err());
   
   const size_t t0=6;
   
