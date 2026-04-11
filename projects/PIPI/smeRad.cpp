@@ -119,9 +119,9 @@ int main()
   jf.add_fit_par(M[1],"M1",0.57,0.01);
   
   auto f=
-    [](const double& C,
-       const double& M,
-       const double& t)
+    [](const auto& C,
+       const auto& M,
+       const auto& t)
     {
       return C*exp(-M*t);
     };
@@ -153,6 +153,22 @@ int main()
   cout<<ZS.ave_err()<<endl;
   cout<<M.ave_err()<<endl;
   
+  djvec_t LLSub(T/2+1);
+  djvec_t SSSub(T/2+1);
+  
+  for(size_t t=0;t<T/2+1;t++)
+    {
+      LLSub[t]=c[0]-f(ZL[0]*ZL[0],M[0],t);
+      SSSub[t]=c[3]-f(ZS[1]*ZS[1],M[1],t);
+    }
+  
+  grace_file_t ground("plots/ground.xmg");
+  ground.write_vec_ave_err(effective_mass(c[0]).ave_err());
+  ground.write_vec_ave_err(effective_mass(LLSub.ave_err()));
+  
+  grace_file_t excited("plots/excited.xmg");
+  excited.write_vec_ave_err(effective_mass(c[1]).ave_err());
+  excited.write_vec_ave_err(effective_mass(SSSub.ave_err()));
   
   const size_t t0=6;
   
