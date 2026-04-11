@@ -149,6 +149,8 @@ int main()
     }
   
   jf.fit();
+  cout<<ZL.ave_err()<<endl;
+  cout<<ZS.ave_err()<<endl;
   cout<<M.ave_err()<<endl;
   
   
