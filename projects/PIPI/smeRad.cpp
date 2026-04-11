@@ -131,19 +131,21 @@ int main()
       auto add=
 	[&jf,f,
 	 t](const djvec_t& c,
-	    const size_t& LS1,
-	    const size_t& LS2)
+	    const size_t& i1,
+	    const size_t& i2,
+	    const size_t& i3,
+	    const size_t& i4)
       {
 	jf.add_point(c[t],
-		     [t,LS1,LS2,f](const vector<double> &p,size_t iel)
+		     [t,i1,i2,i3,i4,f](const vector<double> &p,size_t iel)
 		     {
-		       return f(p[0+2*LS1]*p[0+2*LS2],p[4],t)+f(p[1+2*LS1]*p[1+2*LS2],p[5],t);
+		       return f(p[i1]*p[i2],p[4],t)+f(p[i3]*p[i4],p[5],t);
 		     });
       };
       
-      add(c[0],0,0);
-      add(c[1],1,0);
-      add(c[2],1,1);
+      add(c[0],0,0,1,1);
+      add(c[1],0,2,1,3);
+      add(c[2],2,2,3,3);
     }
   
   jf.fit();
