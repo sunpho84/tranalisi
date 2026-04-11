@@ -99,13 +99,45 @@ int main()
   c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__P5P5"));
   c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__P5P5"));
   c.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__P5P5"));
-
+  
   const double x=0.3;
   const djvec_t one=c[3]+c[0]*x*x-x*(c[1]+c[2]);
   effective_mass(one).ave_err().write("plots/one.xmg");
   const double y=1.05;
   const djvec_t two=c[0]+c[3]*y*y-y*(c[1]+c[2]);
   effective_mass(two).ave_err().write("plots/two.xmg");
+  
+  djvec_t ZL(2);
+  djvec_t ZS(2);
+  djvec_t M(2);
+  jack_fit_t jf;
+  jf.add_fit_par(ZL[0],"ZL0",0.19,0.01);
+  jf.add_fit_par(ZL[1],"ZL1",0.019,0.001);
+  jf.add_fit_par(ZS[0],"ZS0",0.23,0.01);
+  jf.add_fit_par(ZS[1],"ZS1",0.004,0.001);
+  jf.add_fit_par(M[0],"M0",0.18,0.01);
+  jf.add_fit_par(M[1],"M1",0.57,0.01);
+  
+  for(size_t t=6;t<20;t++)
+    {
+      auto add=
+	[&jf,
+	 t](const djvec_t& c,
+	    const size_t& LS1,
+	    const size_t& LS2)
+      {
+	jf.add_point(c[t],
+		     [t,LS1,LS2](const vector<double> &p,size_t iel){return two_pts_corr_fun(p[0+2*LS1]*p[0+2*LS2],p[4],T/2.0,t,1)+two_pts_corr_fun(p[1+2*LS1]*p[1+2*LS2],p[5],T/2.0,t,1);});
+      };
+      
+      add(c[0],0,0);
+      add(c[1],1,0);
+      add(c[2],1,1);
+    }
+  
+  jf.fit();
+  cout<<M.ave_err()<<endl;
+  
   
   const size_t t0=6;
   
