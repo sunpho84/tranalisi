@@ -165,6 +165,13 @@ int main()
   grace_file_t ground("plots/ground.xmg");
   ground.write_vec_ave_err(effective_mass(c[3]).ave_err());
   ground.write_vec_ave_err(effective_mass(SSSub).ave_err());
+  ground.write_polygon([&](const double& t)
+  {
+    const djack_t a=f(ZS[0]*ZS[0],M[0],t);
+    const djack_t b=f(ZS[1]*ZS[1],M[1],t);
+    return (M[0]*a+M[1]*b)/(a+b);
+  },6,20);
+  ground.write_constant_band(6,20,M[0]);
   
   grace_file_t excited("plots/excited.xmg");
   excited.write_vec_ave_err(effective_mass(c[0]).ave_err());
