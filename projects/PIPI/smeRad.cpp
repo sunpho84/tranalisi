@@ -126,27 +126,30 @@ int main()
       return C*exp(-M*t);
     };
   
-  for(size_t t=6;t<20;t++)
-    {
-      auto add=
-	[&jf,f,
-	 t](const djvec_t& c,
+  auto add=
+    [&jf,f](const size_t tMin,
+	    const djvec_t& c,
 	    const size_t& i1,
 	    const size_t& i2,
 	    const size_t& i3,
 	    const size_t& i4)
-      {
-	jf.add_point(c[t],
-		     [t,i1,i2,i3,i4,f](const vector<double> &p,size_t iel)
-		     {
-		       return f(p[i1]*p[i2],p[4],t)+f(p[i3]*p[i4],p[5],t);
-		     });
-      };
-      
-      add(c[0],0,0,1,1);
-      add(c[1],0,2,1,3);
-      add(c[3],2,2,3,3);
-    }
+    {
+      for(size_t t=tMin;t<20;t++)
+	{
+	  jf.add_point(c[t],
+		       [t,i1,i2,i3,i4,f](const vector<double> &p,size_t iel)
+		       {
+			 return f(p[i1]*p[i2],p[4],t)+f(p[i3]*p[i4],p[5],t);
+		       });
+	};
+    };
+
+  const size_t tminLL=6;
+  const size_t tminLS=6;
+  const size_t tminSS=6;
+  add(tminLL,c[0],0,0,1,1);
+  add(tminLS,c[1],0,2,1,3);
+  add(tminSS,c[3],2,2,3,3);
   
   jf.fit();
   cout<<ZL.ave_err()<<endl;
@@ -176,14 +179,14 @@ int main()
   grace_file_t ground("plots/myGevp1.xmg");
   ground.write_vec_ave_err(effective_mass(c[3]).ave_err());
   ground.write_vec_ave_err(effective_mass(SSSub).ave_err());
-  ground.write_polygon(getF(ZS),6,20);
-  ground.write_constant_band(6,20,M[0]);
+  ground.write_polygon(getF(ZS),tminSS,20);
+  ground.write_constant_band(tminSS,20,M[0]);
   
   grace_file_t excited("plots/myGevp2.xmg");
   excited.write_vec_ave_err(effective_mass(c[0]).ave_err());
   excited.write_vec_ave_err(effective_mass(LLSub).ave_err());
-  excited.write_polygon(getF(ZL),6,20);
-  excited.write_constant_band(6,20,M[0]);
+  excited.write_polygon(getF(ZL),tminLL,20);
+  excited.write_constant_band(tminLL,20,M[0]);
   
   // const size_t t0=6;
   
