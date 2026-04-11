@@ -182,8 +182,8 @@ int main()
   grace_file_t excited("plots/myGevp2.xmg");
   excited.write_vec_ave_err(effective_mass(c[0]).ave_err());
   excited.write_vec_ave_err(effective_mass(LLSub).ave_err());
-  ground.write_polygon(getF(ZL),6,20);
-  ground.write_constant_band(6,20,M[0]);
+  excited.write_polygon(getF(ZL),6,20);
+  excited.write_constant_band(6,20,M[0]);
   
   // const size_t t0=6;
   
