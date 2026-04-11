@@ -112,8 +112,8 @@ int main()
   djvec_t M(2);
   jack_fit_t jf;
   jf.add_fit_par(ZL[0],"ZL0",0.19,0.01);
-  jf.add_fit_par(ZL[1],"ZL1",0.019,0.001);
-  jf.add_fit_par(ZS[0],"ZS0",0.23,0.01);
+  jf.add_fit_par(ZL[1],"ZL1",0.23,0.001);
+  jf.add_fit_par(ZS[0],"ZS0",0.016,0.01);
   jf.add_fit_par(ZS[1],"ZS1",0.004,0.001);
   jf.add_fit_par(M[0],"M0",0.18,0.01);
   jf.add_fit_par(M[1],"M1",0.57,0.01);
