@@ -158,35 +158,43 @@ int main()
   
   for(size_t t=0;t<T/2+1;t++)
     {
-      LLSub[t]=c[0][t]-f(ZL[0]*ZL[0],M[0],t);
+      LLSub[t]=c[0][t]-f(ZL[1]*ZL[1],M[0],t);
       SSSub[t]=c[3][t]-f(ZS[1]*ZS[1],M[1],t);
     }
   
-  grace_file_t ground("plots/ground.xmg");
+  const auto getF=
+    [f,&M](const djvec_t& Z)
+    {
+      return [&](const double& t)
+      {
+	const djack_t a=f(Z[0]*Z[0],M[0],t);
+	const djack_t b=f(Z[1]*Z[1],M[1],t);
+	return (M[0]*a+M[1]*b)/(a+b);
+      };
+    };
+  
+  grace_file_t ground("plots/myGevp1.xmg");
   ground.write_vec_ave_err(effective_mass(c[3]).ave_err());
   ground.write_vec_ave_err(effective_mass(SSSub).ave_err());
-  ground.write_polygon([&](const double& t)
-  {
-    const djack_t a=f(ZS[0]*ZS[0],M[0],t);
-    const djack_t b=f(ZS[1]*ZS[1],M[1],t);
-    return (M[0]*a+M[1]*b)/(a+b);
-  },6,20);
+  ground.write_polygon(getF(ZS),6,20);
   ground.write_constant_band(6,20,M[0]);
   
-  grace_file_t excited("plots/excited.xmg");
+  grace_file_t excited("plots/myGevp2.xmg");
   excited.write_vec_ave_err(effective_mass(c[0]).ave_err());
   excited.write_vec_ave_err(effective_mass(LLSub).ave_err());
+  ground.write_polygon(getF(ZL),6,20);
+  ground.write_constant_band(6,20,M[0]);
   
-  const size_t t0=6;
+  // const size_t t0=6;
   
-  vector<djvec_t> eig;
-  vector<djvec_t> recastEigvec;
-  vector<djvec_t> origEigvec;
+  // vector<djvec_t> eig;
+  // vector<djvec_t> recastEigvec;
+  // vector<djvec_t> origEigvec;
   
-  tie(eig,recastEigvec,ignore)=gevp(c,t0);
+  // tie(eig,recastEigvec,ignore)=gevp(c,t0);
   
-  for(size_t i=0;i<2;i++)
-    effective_mass(eig[i]).ave_err().write("plots/gevp"+to_string(i)+".xmg");
+  // for(size_t i=0;i<2;i++)
+  //   effective_mass(eig[i]).ave_err().write("plots/gevp"+to_string(i)+".xmg");
   
   return 0;
 }
