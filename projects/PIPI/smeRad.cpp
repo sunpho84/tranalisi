@@ -136,14 +136,14 @@ int main()
     {
       for(size_t t=tMin;t<20;t++)
 	{
-	  jf.add_point(c[t],
+	  jf.add_point([&c,t](const vector<double> &p,size_t iel){return c[t][iel];},
 		       [t,i1,i2,i3,i4,f](const vector<double> &p,size_t iel)
 		       {
 			 return f(p[i1]*p[i2],p[4],t)+f(p[i3]*p[i4],p[5],t);
-		       });
+		       },0);
 	};
     };
-
+  
   const size_t tminLL=6;
   const size_t tminLS=6;
   const size_t tminSS=6;
@@ -151,7 +151,7 @@ int main()
   add(tminLS,c[1],0,2,1,3);
   add(tminSS,c[3],2,2,3,3);
   
-  jf.fit();
+  jf.fit(true);
   cout<<ZL.ave_err()<<endl;
   cout<<ZS.ave_err()<<endl;
   cout<<M.ave_err()<<endl;
