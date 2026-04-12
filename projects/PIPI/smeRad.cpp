@@ -158,11 +158,13 @@ int main()
   
   djvec_t LLSub(T/2+1);
   djvec_t SSSub(T/2+1);
+  djvec_t SSSubg(T/2+1);
   
   for(size_t t=0;t<T/2+1;t++)
     {
       LLSub[t]=c[0][t]-f(ZL[1]*ZL[1],M[0],t);
       SSSub[t]=c[3][t]-f(ZS[1]*ZS[1],M[1],t);
+      SSSubg[t]=c[3][t]-f(ZS[0]*ZS[0],M[0],t);
     }
   
   const auto getF=
@@ -187,6 +189,8 @@ int main()
   excited.write_vec_ave_err(effective_mass(LLSub).ave_err());
   excited.write_polygon(getF(ZL),tminLL,20);
   excited.write_constant_band(tminLL,20,M[0]);
+  
+  SSSubg.ave_err().write("plots/ssSunGround.xmg");
   
   // const size_t t0=6;
   
