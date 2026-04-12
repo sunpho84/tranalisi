@@ -190,7 +190,7 @@ int main()
   excited.write_polygon(getF(ZL),tminLL,20);
   excited.write_constant_band(tminLL,20,M[0]);
   
-  SSSubg.ave_err().write("plots/ssSunGround.xmg");
+  effective_mass(SSSubg).ave_err().write("plots/ssSubGround.xmg");
   
   // const size_t t0=6;
   
