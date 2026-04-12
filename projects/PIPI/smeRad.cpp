@@ -144,8 +144,8 @@ int main()
 	};
     };
 
-  const size_t tminLL=8;
-  const size_t tminLS=7;
+  const size_t tminLL=6;
+  const size_t tminLS=6;
   const size_t tminSS=5;
   add(tminLL,c[0],0,0,1,1);
   add(tminLS,c[1],0,2,1,3);
