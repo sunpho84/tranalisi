@@ -46,6 +46,7 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
 							 const std::vector<std::string> confs)
 {
   const size_t nConfs=confs.size();
+  cout<<"nConfs: "<<confs.size()<<endl;
   
   map<string,vector<vector<vector<double>>>> rawData;
   
