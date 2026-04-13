@@ -2,11 +2,10 @@
 
 int main()
 {
-  njacks=50;
-  
   const std::string dataPath="out";
   const std::vector<std::string> confs=getConfs("confstList.dat",dataPath);
   const size_t nConfs=confs.size();
+  njacks=std::min(nConfs,50lu);
   
   const auto rawData=
      getRaw("raw.dat",
