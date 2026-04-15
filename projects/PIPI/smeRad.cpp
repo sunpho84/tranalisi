@@ -94,7 +94,7 @@ int main()
   /////////////////////////////////////////////////////////////////
   
   string tag;
-  for(const std::string& s : {"P5P5","A0A0"})
+  for(const std::string s : {"P5P5","A0A0"})
     if(rawData.find("P3_SR0_M3_0__M3_SR0_P3_0__"+s)!=rawData.end())
       tag=s;
   if(tag=="")
