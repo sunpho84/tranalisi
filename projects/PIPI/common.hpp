@@ -93,7 +93,7 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
 		      {
 			const string tag=baseTag+"__"+c;
 			
-			if(c==std::string("P5P5"))
+			if(c==std::string("P5P5") or c==std::string("A0A0"))
 			  {
 			    vector<double>& data=confData[tag].emplace_back(2*tMax);
 			    for(size_t t=0;t<T;t++)
