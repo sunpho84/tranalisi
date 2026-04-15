@@ -192,9 +192,9 @@ int main()
   effective_mass(SSSubg).ave_err().write("plots/ssSubGround.xmg");
   
   const djack_t optC=ZS[1]/ZL[1];
-  cout<<"Optimal relative weight of Loc :"<<smart_print(optC)<<endl;
+  cout<<"Optimal relative weight of Loc: "<<smart_print(optC)<<endl;
   djvec_t retest=c[3]-2*optC*c[1]+optC*optC*c[0];
-  retest.ave_err().write("plots/reconstrcutedOpt.xmg");
+  effective_mass(retest).ave_err().write("plots/reconstrcutedOpt.xmg");
   
   // const size_t t0=6;
   
