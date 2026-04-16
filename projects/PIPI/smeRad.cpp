@@ -217,28 +217,31 @@ int main()
       effective_mass(eig[0]).ave_err().write("plots/"+tag+"Eig1.xmg");
       effective_mass(eig[1]).ave_err().write("plots/"+tag+"Eig2.xmg");
       
-      cout<<"Recast eigvec0:"<<endl;
-      cout<<recastEigvec[0][1].ave_err()<<endl;
-      cout<<recastEigvec[1][1].ave_err()<<endl;
+      // cout<<"Recast eigvec0:"<<endl;
+      // cout<<recastEigvec[0][1].ave_err()<<endl;
+      // cout<<recastEigvec[1][1].ave_err()<<endl;
       
-      cout<<"Recast eigvec1:"<<endl;
-      cout<<recastEigvec[2][1].ave_err()<<endl;
-      cout<<recastEigvec[3][1].ave_err()<<endl;
+      // cout<<"Recast eigvec1:"<<endl;
+      // cout<<recastEigvec[2][1].ave_err()<<endl;
+      // cout<<recastEigvec[3][1].ave_err()<<endl;
       
       {
 	djvec_t SS0(T/2+1),SS1(T/2+1);
 	typedef Matrix<double,2,2> Matr;
 	
 	const auto& ei=recastEigvec;
+	Matr e;
+	e(0,0)=ei[0][t1].ave();
+	e(0,1)=ei[2][t1].ave();
+	e(1,0)=ei[1][t1].ave();
+	e(1,1)=ei[3][t1].ave();
+	
+	const double n=sqrt(sqr(e(0,0))+sqr(e(0,1)));
+	cout<<"weights of op1, op2: "<<e(0,0)/n<<" "<<e(0,1)/n<<endl;
+	
 	for(size_t t=0;t<=T/2;t++)
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    {
-	      Matr e;
-	      e(0,0)=ei[0][t1][ijack];
-	      e(0,1)=ei[2][t1][ijack];
-	      e(1,0)=ei[1][t1][ijack];
-	      e(1,1)=ei[3][t1][ijack];
-	      
 	      Matr cm;
 	      cm(0,0)=c[0][t][ijack];
 	      cm(0,1)=c[1][t][ijack];
