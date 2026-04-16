@@ -43,7 +43,7 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
 							 const std::vector<const char*>& suffixList,
 							 const size_t& tMax,
 							 const std::string& rawDataDir,
-							 const std::vector<std::string> confs)
+							 const std::vector<std::string> confs,const std::vector<std::string>& corrsName={"P5P5"})
 {
   const size_t nConfs=confs.size();
   cout<<"nConfs: "<<confs.size()<<endl;
@@ -93,7 +93,7 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
 		      {
 			const string tag=baseTag+"__"+c;
 			
-			if(c==std::string("P5P5") or c==std::string("A0A0"))
+			if(std::find(corrsName.begin(),corrsName.end(),c)!=corrsName.end())
 			  {
 			    vector<double>& data=confData[tag].emplace_back(2*tMax);
 			    for(size_t t=0;t<T;t++)
