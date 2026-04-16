@@ -99,126 +99,121 @@ int main()
   
   /////////////////////////////////////////////////////////////////
   
-  string tag;
-  for(const std::string s : {"P5P5","A0A0"})
-    if(rawData.find("P3_SR0_M3_0__M3_SR0_P3_0__"+s)!=rawData.end())
-      tag=s;
-  if(tag=="")
-    CRASH("unable to find P5P5 or A0A0");
+  auto tsFit=
+    [](const std::vector<djvec_t>& c,
+       const std::vector<double>& guesses,
+       const std::string& tag,
+       const std::vector<size_t>& tMin,
+       const size_t& tMax)
+    {
+      // const double x=0.3;
+      // const djvec_t one=c[3]+c[0]*x*x-x*(c[1]+c[2]);
+      // effective_mass(one).ave_err().write("plots/one.xmg");
+      // const double y=1.05;
+      // const djvec_t two=c[0]+c[3]*y*y-y*(c[1]+c[2]);
+      // effective_mass(two).ave_err().write("plots/two.xmg");
+      
+      djvec_t ZL(2);
+      djvec_t ZS(2);
+      djvec_t M(2);
+      jack_fit_t jf;
+      jf.add_fit_par(ZL[0],"ZL0",guesses[0],0.01);
+      jf.add_fit_par(ZL[1],"ZL1",guesses[1],0.001);
+      jf.add_fit_par(ZS[0],"ZS0",guesses[2],0.01);
+      jf.add_fit_par(ZS[1],"ZS1",guesses[3],0.001);
+      jf.add_fit_par(M[0],"M0",guesses[4],0.01);
+      jf.add_fit_par(M[1],"M1",guesses[5],0.01);
+      
+      auto f=
+	[](const auto& C,
+	   const auto& M,
+	   const auto& t)
+	{
+	  return C*exp(-M*t);
+	};
+      
+      auto add=
+	[&jf,f](const size_t tMin,
+		const djvec_t& c,
+		const size_t& i1,
+		const size_t& i2,
+		const size_t& i3,
+		const size_t& i4)
+	{
+	  for(size_t t=tMin;t<20;t++)
+	    {
+	      jf.add_point(c[t],
+			   [t,i1,i2,i3,i4,f](const vector<double> &p,size_t iel)
+			   {
+			     return f(p[i1]*p[i2],p[4],t)+f(p[i3]*p[i4],p[5],t);
+			   });
+	    };
+	};
+      
+      add(tMin[0],c[0],0,0,1,1);
+      add(tMin[1],c[1],0,2,1,3);
+      add(tMin[2],c[3],2,2,3,3);
+      
+      jf.fit();
+      cout<<ZL.ave_err()<<endl;
+      cout<<ZS.ave_err()<<endl;
+      cout<<M.ave_err()<<endl;
+      
+      djvec_t LLSub(T/2+1);
+      djvec_t SSSub(T/2+1);
+      djvec_t SSSubg(T/2+1);
+      
+      for(size_t t=0;t<T/2+1;t++)
+	{
+	  LLSub[t]=c[0][t]-f(ZL[1]*ZL[1],M[0],t);
+	  SSSub[t]=c[3][t]-f(ZS[1]*ZS[1],M[1],t);
+	  SSSubg[t]=c[3][t]-f(ZS[0]*ZS[0],M[0],t);
+	}
+      
+      const auto getF=
+	[f,&M](const djvec_t& Z)
+	{
+	  return [&](const double& t)
+	  {
+	    const djack_t a=f(Z[0]*Z[0],M[0],t);
+	    const djack_t b=f(Z[1]*Z[1],M[1],t);
+	    return (M[0]*a+M[1]*b)/(a+b);
+	  };
+	};
+      
+      grace_file_t ground("plots/"+tag+"MyGevp1.xmg");
+      ground.write_vec_ave_err(effective_mass(c[3]).ave_err());
+      ground.write_vec_ave_err(effective_mass(SSSub).ave_err());
+      ground.write_polygon(getF(ZS),tMin[2],tMax);
+      ground.write_constant_band(tMin[2],tMax,M[0]);
+      
+      grace_file_t excited("plots/"+tag+"MyGevp2.xmg");
+      excited.write_vec_ave_err(effective_mass(c[0]).ave_err());
+      excited.write_vec_ave_err(effective_mass(LLSub).ave_err());
+      excited.write_polygon(getF(ZL),tMin[0],tMax);
+      excited.write_constant_band(tMin[0],tMax,M[0]);
+      
+      effective_mass(SSSubg).ave_err().write("plots/"+tag+"ssSubGround.xmg");
+      
+      const djack_t optC=ZS[1]/ZL[1];
+      cout<<"Optimal relative weight of Loc: "<<smart_print(optC)<<endl;
+      djvec_t retest=c[3]-2*optC*c[1]+optC*optC*c[0];
+      effective_mass(retest).ave_err().write("plots/"+tag+"ReconstrcutedOpt.xmg");
+    };
   
   std::vector<djvec_t> c;
-  c.push_back(get("P3_SR0_M3_0__M3_SR0_P3_0__"+tag));
-  c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__"+tag));
-  c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__"+tag));
-  c.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__"+tag));
+  c.push_back(get("P3_SR0_M3_0__M3_SR0_P3_0__P5P5"));
+  c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__P5P5"));
+  c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__P5P5"));
+  c.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__P5P5"));
+  tsFit(c,{0.19,0.23,0.016,0.004,0.18,0.57},"SL",{6,6,6},20);
   
-  const double x=0.3;
-  const djvec_t one=c[3]+c[0]*x*x-x*(c[1]+c[2]);
-  effective_mass(one).ave_err().write("plots/one.xmg");
-  const double y=1.05;
-  const djvec_t two=c[0]+c[3]*y*y-y*(c[1]+c[2]);
-  effective_mass(two).ave_err().write("plots/two.xmg");
-  
-  djvec_t ZL(2);
-  djvec_t ZS(2);
-  djvec_t M(2);
-  jack_fit_t jf;
-  jf.add_fit_par(ZL[0],"ZL0",0.19,0.01);
-  jf.add_fit_par(ZL[1],"ZL1",0.23,0.001);
-  jf.add_fit_par(ZS[0],"ZS0",0.016,0.01);
-  jf.add_fit_par(ZS[1],"ZS1",0.004,0.001);
-  jf.add_fit_par(M[0],"M0",0.18,0.01);
-  jf.add_fit_par(M[1],"M1",0.57,0.01);
-  
-  auto f=
-    [](const auto& C,
-       const auto& M,
-       const auto& t)
-    {
-      return C*exp(-M*t);
-    };
-  
-  auto add=
-    [&jf,f](const size_t tMin,
-	    const djvec_t& c,
-	    const size_t& i1,
-	    const size_t& i2,
-	    const size_t& i3,
-	    const size_t& i4)
-    {
-      for(size_t t=tMin;t<20;t++)
-	{
-	  jf.add_point(c[t],
-		       [t,i1,i2,i3,i4,f](const vector<double> &p,size_t iel)
-		       {
-			 return f(p[i1]*p[i2],p[4],t)+f(p[i3]*p[i4],p[5],t);
-		       });
-	};
-    };
-  
-  const size_t tminLL=6;
-  const size_t tminLS=6;
-  const size_t tminSS=6;
-  add(tminLL,c[0],0,0,1,1);
-  add(tminLS,c[1],0,2,1,3);
-  add(tminSS,c[3],2,2,3,3);
-  
-  jf.fit();
-  cout<<ZL.ave_err()<<endl;
-  cout<<ZS.ave_err()<<endl;
-  cout<<M.ave_err()<<endl;
-  
-  djvec_t LLSub(T/2+1);
-  djvec_t SSSub(T/2+1);
-  djvec_t SSSubg(T/2+1);
-  
-  for(size_t t=0;t<T/2+1;t++)
-    {
-      LLSub[t]=c[0][t]-f(ZL[1]*ZL[1],M[0],t);
-      SSSub[t]=c[3][t]-f(ZS[1]*ZS[1],M[1],t);
-      SSSubg[t]=c[3][t]-f(ZS[0]*ZS[0],M[0],t);
-    }
-  
-  const auto getF=
-    [f,&M](const djvec_t& Z)
-    {
-      return [&](const double& t)
-      {
-	const djack_t a=f(Z[0]*Z[0],M[0],t);
-	const djack_t b=f(Z[1]*Z[1],M[1],t);
-	return (M[0]*a+M[1]*b)/(a+b);
-      };
-    };
-  
-  grace_file_t ground("plots/myGevp1.xmg");
-  ground.write_vec_ave_err(effective_mass(c[3]).ave_err());
-  ground.write_vec_ave_err(effective_mass(SSSub).ave_err());
-  ground.write_polygon(getF(ZS),tminSS,20);
-  ground.write_constant_band(tminSS,20,M[0]);
-  
-  grace_file_t excited("plots/myGevp2.xmg");
-  excited.write_vec_ave_err(effective_mass(c[0]).ave_err());
-  excited.write_vec_ave_err(effective_mass(LLSub).ave_err());
-  excited.write_polygon(getF(ZL),tminLL,20);
-  excited.write_constant_band(tminLL,20,M[0]);
-  
-  effective_mass(SSSubg).ave_err().write("plots/ssSubGround.xmg");
-  
-  const djack_t optC=ZS[1]/ZL[1];
-  cout<<"Optimal relative weight of Loc: "<<smart_print(optC)<<endl;
-  djvec_t retest=c[3]-2*optC*c[1]+optC*optC*c[0];
-  effective_mass(retest).ave_err().write("plots/reconstrcutedOpt.xmg");
-  
-  // const size_t t0=6;
-  
-  // vector<djvec_t> eig;
-  // vector<djvec_t> recastEigvec;
-  // vector<djvec_t> origEigvec;
-  
-  // tie(eig,recastEigvec,ignore)=gevp(c,t0);
-  
-  // for(size_t i=0;i<2;i++)
-  //   effective_mass(eig[i]).ave_err().write("plots/gevp"+to_string(i)+".xmg");
+  std::vector<djvec_t> d;
+  d.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__P5P5"));
+  d.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__A0P5"));
+  d.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__A0P5"));
+  d.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__A0A0"));
+  tsFit(d,{0.014,0.006,-0.004,0.006,0.23,0.58},"AP",{6,6,6},16);
   
   return 0;
 }
