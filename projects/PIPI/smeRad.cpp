@@ -206,14 +206,14 @@ int main()
   c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__P5P5"));
   c.push_back(get("P3_SMP3_SR0_M3_0__M3_SMM3_SR0_P3_0__P5P5"));
   c.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__P5P5"));
-  tsFit(c,{0.19,0.23,0.016,0.004,0.18,0.57},"SL",{6,6,6},20);
+  tsFit(c,{0.19,0.23,0.01,0.01,0.18,0.57},"SL",{6,6,5},20);
   
   std::vector<djvec_t> d;
   d.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__P5P5"));
-  d.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__A0P5"));
-  d.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__A0P5"));
-  d.push_back(get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__A0A0"));
-  tsFit(d,{0.014,0.006,-0.004,0.006,0.23,0.58},"AP",{6,6,6},16);
+  d.push_back(-get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__A0P5"));
+  d.push_back(-get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__A0P5"));
+  d.push_back(-get("P3_SMP3_SR0_SMP3_M3_0__M3_SMM3_SR0_SMM3_P3_0__A0A0"));
+  tsFit(d,{0.014,0.006,-0.004,0.006,0.23,0.58},"AP",{5,5,5},16);
   
   return 0;
 }
