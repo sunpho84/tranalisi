@@ -181,6 +181,11 @@ int main()
 	  };
 	};
       
+      grace_file_t myGevpCorrs("plots/"+tag+"MyGevpCorrs.xmg");
+      myGevpCorrs.write_vec_ave_err(c[0].ave_err());
+      myGevpCorrs.write_vec_ave_err(c[1].ave_err());
+      myGevpCorrs.write_vec_ave_err(c[3].ave_err());
+      
       grace_file_t ground("plots/"+tag+"MyGevp1.xmg");
       ground.write_vec_ave_err(effective_mass(c[3]).ave_err());
       ground.write_vec_ave_err(effective_mass(SSSub).ave_err());
