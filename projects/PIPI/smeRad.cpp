@@ -217,19 +217,19 @@ int main()
       effective_mass(eig[0]).ave_err().write("plots/"+tag+"Eig1.xmg");
       effective_mass(eig[1]).ave_err().write("plots/"+tag+"Eig2.xmg");
       
-      cout<<"Original eigvec0:"<<endl;
-      cout<<origEigvec[0][1].ave_err()<<endl;
-      cout<<origEigvec[1][1].ave_err()<<endl;
+      cout<<"Recast eigvec0:"<<endl;
+      cout<<recastEigvec[0][1].ave_err()<<endl;
+      cout<<recastEigvec[1][1].ave_err()<<endl;
       
-      cout<<"Original eigvec1:"<<endl;
-      cout<<origEigvec[2][1].ave_err()<<endl;
-      cout<<origEigvec[3][1].ave_err()<<endl;
+      cout<<"Recast eigvec1:"<<endl;
+      cout<<recastEigvec[2][1].ave_err()<<endl;
+      cout<<recastEigvec[3][1].ave_err()<<endl;
       
       {
 	djvec_t SS0(T/2+1),SS1(T/2+1);
 	typedef Matrix<double,2,2> Matr;
 	
-	const auto& ei=origEigvec;
+	const auto& ei=recastEigvec;
 	for(size_t t=0;t<=T/2;t++)
 	  for(size_t ijack=0;ijack<=njacks;ijack++)
 	    {
