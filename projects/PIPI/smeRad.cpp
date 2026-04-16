@@ -204,6 +204,17 @@ int main()
       cout<<"Optimal relative weight of Loc: "<<smart_print(optC)<<endl;
       djvec_t retest=c[3]-2*optC*c[1]+optC*optC*c[0];
       effective_mass(retest).ave_err().write("plots/"+tag+"ReconstrcutedOpt.xmg");
+      
+      vector<djvec_t> eig;
+      vector<djvec_t> recastEigvec;
+      vector<djvec_t> origEigvec;
+      
+      const size_t t0=5;
+      
+      tie(eig,recastEigvec,origEigvec)=gevp(c,t0);
+      
+      effective_mass(eig[0]).ave_err().write("plots/"+tag+"Eig1.xmg");
+      effective_mass(eig[1]).ave_err().write("plots/"+tag+"Eig2.xmg");
     };
   
   std::vector<djvec_t> c;
