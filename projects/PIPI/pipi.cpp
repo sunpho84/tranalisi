@@ -315,7 +315,8 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	const std::string& repSi{bSi.rep};
 	A.ave_err().write("plots/dA_"+repSi+"_"+repSo+".xmg");
 	B.ave_err().write("plots/dB_"+repSi+"_"+repSo+".xmg");
-	(A-B).ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
+	const djvec_t C=A-B;
+	C.ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
 	
 	(effective_mass(_B[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte_"+repSi+"_"+repSo+".xmg");
 	(effective_mass(_B[DIR]-_A[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte2_"+repSi+"_"+repSo+".xmg");
