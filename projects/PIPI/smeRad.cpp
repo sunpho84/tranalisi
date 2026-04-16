@@ -215,6 +215,12 @@ int main()
       
       effective_mass(eig[0]).ave_err().write("plots/"+tag+"Eig1.xmg");
       effective_mass(eig[1]).ave_err().write("plots/"+tag+"Eig2.xmg");
+      
+      cout<<"Original eigvec0:"<<endl;
+      cout<<origEigvec[0].ave_err()<<endl;
+      
+      cout<<"Original eigvec1:"<<endl;
+      cout<<origEigvec[0].ave_err()<<endl;
     };
   
   std::vector<djvec_t> c;
