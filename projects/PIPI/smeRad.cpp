@@ -240,10 +240,10 @@ int main()
 	      e(1,1)=ei[3][t1][ijack];
 	      
 	      Matr cm;
-	      cm(0,0)=c[0][t1][ijack];
-	      cm(0,1)=c[1][t1][ijack];
-	      cm(1,0)=c[1][t1][ijack];
-	      cm(1,1)=c[3][t1][ijack];
+	      cm(0,0)=c[0][t][ijack];
+	      cm(0,1)=c[1][t][ijack];
+	      cm(1,0)=c[1][t][ijack];
+	      cm(1,1)=c[3][t][ijack];
 	      
 	      const Matr ss=e*cm*e.transpose();
 	      
