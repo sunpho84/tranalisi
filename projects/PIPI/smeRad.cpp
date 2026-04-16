@@ -72,6 +72,11 @@ int main()
       const auto d=
 	getRaw(tag);
       
+      const std::string corr=
+	tag.substr(tag.length()-4);
+      const std::vector<std::string> oddCorrs{"A0P5","P5A0"};
+      const bool isOddCorr=std::find(oddCorrs.begin(),oddCorrs.end(),corr)!=oddCorrs.end();
+      
       for(size_t t=0;t<T;t++)
 	jackknivesFill(nConfs,
 		       [&](const size_t& iConf,
@@ -80,7 +85,7 @@ int main()
 		       {
 			 res[t][iClust]+=weight*d(t,iConf);
 		       });
-      res.clusterize(((double)nConfs/njacks)).symmetrize();
+      res.clusterize(((double)nConfs/njacks)).symmetrize(isOddCorr?-1:+1);
       
       return res;
     };
