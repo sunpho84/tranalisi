@@ -210,6 +210,7 @@ int main()
       vector<djvec_t> origEigvec;
       
       const size_t t0=5;
+      const size_t t1=8;
       
       tie(eig,recastEigvec,origEigvec)=gevp(c,t0);
       
@@ -217,10 +218,42 @@ int main()
       effective_mass(eig[1]).ave_err().write("plots/"+tag+"Eig2.xmg");
       
       cout<<"Original eigvec0:"<<endl;
-      cout<<origEigvec[0].ave_err()<<endl;
+      cout<<origEigvec[0][1].ave_err()<<endl;
+      cout<<origEigvec[1][1].ave_err()<<endl;
       
       cout<<"Original eigvec1:"<<endl;
-      cout<<origEigvec[0].ave_err()<<endl;
+      cout<<origEigvec[2][1].ave_err()<<endl;
+      cout<<origEigvec[3][1].ave_err()<<endl;
+      
+      {
+	djvec_t SS0(T/2+1),SS1(T/2+1);
+	typedef Matrix<double,2,2> Matr;
+	
+	const auto& ei=origEigvec;
+	for(size_t t=0;t<=T/2;t++)
+	  for(size_t ijack=0;ijack<=njacks;ijack++)
+	    {
+	      Matr e;
+	      e(0,0)=ei[0][t1][ijack];
+	      e(0,1)=ei[2][t1][ijack];
+	      e(1,0)=ei[1][t1][ijack];
+	      e(1,1)=ei[3][t1][ijack];
+	      
+	      Matr cm;
+	      cm(0,0)=c[0][t1][ijack];
+	      cm(0,1)=c[1][t1][ijack];
+	      cm(1,0)=c[1][t1][ijack];
+	      cm(1,1)=c[3][t1][ijack];
+	      
+	      const Matr ss=e*cm*e.transpose();
+	      
+	      SS0[t][ijack]=ss(0,0);
+	      SS1[t][ijack]=ss(1,1);
+	    }
+	
+	effective_mass(SS0).ave_err().write("plots/"+tag+"recreateEff1.xmg");
+	effective_mass(SS1).ave_err().write("plots/"+tag+"recreateEff2.xmg");
+      }
     };
   
   std::vector<djvec_t> c;
