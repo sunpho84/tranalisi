@@ -14,7 +14,7 @@ int main()
 	    T,
 	    dataPath,
 	    confs,
-	    {"P5P5","A0P5","P5A0,A0A0"});
+	    {"P5P5","A0P5","P5A0","A0A0"});
   
   auto getRaw=
     [&rawData,
