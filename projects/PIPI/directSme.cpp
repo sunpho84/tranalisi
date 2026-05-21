@@ -3,7 +3,7 @@
 void computeDirect()
 {
   const std::string directDataPath="out";
-  const std::vector<std::string> confs=getConfs("confsDirectList.dat",directDataPath);
+  const std::vector<std::string> confs=getConfs("confsDirectList.dat",directDataPath,"finished");
   const size_t nConfs=confs.size();
   
   const auto rawData=
