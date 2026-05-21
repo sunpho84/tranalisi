@@ -8,12 +8,13 @@ void computeDirect()
   cout<<"NConfs: "<<nConfs<<endl;
   
   const auto rawData=
-     getRaw("rawDirect.dat",
-	    "mes_contr_dir",
-	    {""},
-	    T,
-	    directDataPath,
-	    confs);
+    getRaw("rawDirect.dat",
+	   "mes_contr_dir",
+	   {""},
+	   T,
+	   directDataPath,
+	   confs,
+	   {"S0S0"});
   
   const size_t nHits=rawData.begin()->second.front().size();
   cout<<"NHits: "<<nHits<<endl;
