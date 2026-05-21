@@ -125,9 +125,13 @@ void computeDirect()
   dir.set_color_scheme({grace::RED,grace::BLACK,grace::BLUE});
   dir.new_data_set();
   dir.write_vec_ave_err((2*effective_mass(_A[DIR])).ave_err());
+  dir.set_legend("2Rest");
   dir.write_vec_ave_err(effective_mass(_B[DIR]).ave_err());
+  dir.set_legend("Dir");
   dir.write_vec_ave_err(effective_mass(_B[DIR]-_C[DIR]).ave_err());
+  dir.set_legend("Dir_proj");
   dir.write_vec_ave_err((2*sqrt(sqr(effective_mass(_A[SIN]))+3*sqr(2*M_PI/L))).ave_err());
+  dir.set_legend("2Motion");
 }
 
 int main()
