@@ -1,6 +1,7 @@
 AM_CPPFLAGS+=-I$(top_srcdir)/projects/%D%
 
 bin_PROGRAMS+= \
+        $(top_builddir)/bin/directSme \
         $(top_builddir)/bin/pipi \
         $(top_builddir)/bin/smeRad
 
