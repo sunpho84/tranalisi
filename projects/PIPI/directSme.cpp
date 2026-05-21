@@ -32,7 +32,7 @@ void computeDirect()
       vector<double> sin(idx.max());
       
       const string what=
-	combine("%s__%s,__S0S0",bw.c_str(),fw.c_str());
+	combine("%s__%s,__P5P5",bw.c_str(),fw.c_str());
       
       const auto _v=
 	rawData.find(what);
@@ -124,10 +124,10 @@ void computeDirect()
   grace_file_t dir("plots/dir.xmg");
   dir.set_color_scheme({grace::RED,grace::BLACK,grace::BLUE});
   dir.new_data_set();
-  dir.write_vec_ave_err((2*effective_mass(_A[SIN])).ave_err());
-  dir.write_vec_ave_err((2*effective_mass(_B[SIN])).ave_err());
+  dir.write_vec_ave_err((2*effective_mass(_A[DIR])).ave_err());
+  dir.write_vec_ave_err(effective_mass(_B[DIR]).ave_err());
   dir.write_vec_ave_err(effective_mass(_B[DIR]-_C[DIR]).ave_err());
-  // dir.write_vec_ave_err((2*sqrt(sqr(effective_mass(_A[SIN]))+3*sqr(2*M_PI/L))).ave_err());
+  dir.write_vec_ave_err((2*sqrt(sqr(effective_mass(_A[SIN]))+3*sqr(2*M_PI/L))).ave_err());
 }
 
 int main()
