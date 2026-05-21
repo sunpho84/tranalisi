@@ -7,5 +7,8 @@ bin_PROGRAMS+= \
 __top_builddir__bin_pipi_SOURCES= \
 	%D%/pipi.cpp
 
+__top_builddir__bin_directSme_SOURCES= \
+	%D%/directSme.cpp
+
 __top_builddir__bin_smeRad_SOURCES= \
 	%D%/smeRad.cpp
