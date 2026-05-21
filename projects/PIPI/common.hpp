@@ -15,7 +15,7 @@ inline std::vector<std::string> getConfs(const std::string& confsListPath,
       
       std::map<std::pair<int,int>,std::string> tmpConfs;
       for(const auto& entry : filesystem::directory_iterator(rawDataPath))
-	if(entry.is_directory() and (finished.empty() or file_exists((std::string)entry.path().filename()+"/"+finished)))
+	if(entry.is_directory() and (finished.empty() or file_exists((std::string)entry.path()+"/"+finished)))
 	  {
 	    const string& conf=filesystem::path(entry.path()).filename();
 	    const size_t iStream=atoi(conf.substr(6,1).c_str());
