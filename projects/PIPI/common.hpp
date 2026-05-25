@@ -39,8 +39,8 @@ inline std::vector<std::string> getConfs(const std::string& confsListPath,
   return confs;
 }
 
-inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFilePath,
-							 const char* rawFileNameTemplate,
+inline map<string,vector<vector<vector<double>>>> getRaw(const std::string& cachedFilePath,
+							 const std::string& rawFileNameTemplate,
 							 const std::vector<const char*>& suffixList,
 							 const size_t& tMax,
 							 const std::string& rawDataDir,
@@ -62,7 +62,7 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const char* cachedFileP
       for(const char* const& suffix : suffixList)
 	for(const filesystem::path conf : confs)
 	  {
-	    raw_file_t file(rawDataDir+"/"+conf.string()+"/"+combine(rawFileNameTemplate,suffix),"r");
+	    raw_file_t file(rawDataDir+"/"+conf.string()+"/"+combine(rawFileNameTemplate.c_str(),suffix),"r");
 	    char line[1024];
 	    auto readLine=[&file,
 			   &line]()

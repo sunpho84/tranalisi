@@ -122,23 +122,124 @@ void computeDirect()
   const auto _C=getDirect("bw2","fw2");
   
   grace_file_t dir("plots/dir.xmg");
-  dir.set_color_scheme({grace::RED,grace::BLACK,grace::BLUE});
+  dir.set_color_scheme({grace::RED,grace::BLACK,grace::BLUE,grace::GREEN4});
   dir.new_data_set();
-  dir.write_vec_ave_err((2*effective_mass(_A[DIR])).ave_err());
-  dir.set_legend("2Rest");
+  // dir.write_vec_ave_err((2*effective_mass(_A[DIR])).ave_err());
+  // dir.set_legend("2Rest");
   dir.write_vec_ave_err(effective_mass(_B[DIR]).ave_err());
   dir.set_legend("Dir");
   dir.write_vec_ave_err(effective_mass(_B[DIR]-_C[DIR]).ave_err());
   dir.set_legend("Dir_proj");
   dir.write_vec_ave_err((2*sqrt(sqr(effective_mass(_A[SIN]))+3*sqr(2*M_PI/L))).ave_err());
   dir.set_legend("2Motion");
+  dir.write_vec_ave_err((2*effective_mass(_B[SIN])).ave_err());
+  dir.set_legend("2Motion");
+}
+
+void computeBox()
+{
+  const int tMaxBox{25};
+  
+  auto getter=
+    [](const std::string& l)
+    {
+      const std::vector<std::string> confs=getConfs("confsBoxList"+l+".dat","mes_contr_box"+l);
+      
+      const size_t nConfs=confs.size();
+      
+      return
+	getRaw("rawBox"+l+".dat",
+	       "mes_contr_box"+l,
+	       {""},
+	       tMaxBox,
+	       "mes_contr_box"+l,
+	       confs);
+    };
+  
+  auto rawDataA=getter("A");
+  auto rawDataB=getter("B");
+  
+  // const size_t nHits=rawData.begin()->second.front().size();
+      
+  //     const index_t idx({{"hit",nHits},{"tMax",tMaxBox},{"conf",nConfs}});
+  
+  // auto getRawBox=
+  //   [&rawData,
+  //    &nHits,
+  //    &idx,
+  //    &nConfs](const std::string& a,
+  // 	      const std::string& b)
+  //   {
+  //     vector<complex<double>> res(idx.max());
+      
+  //     const string what=
+  // 	combine("%s__%s,__P5P5",a.c_str(),b.c_str());
+  //     // cout<<"Searching for "<<what<<endl;
+      
+  //     const auto _v=
+  // 	rawData.find(what);
+  //     if(_v==rawData.end())
+  // 	CRASH("Unable to find %s",what.c_str());
+      
+  //     const auto& v=_v->second;
+      
+  //     for(size_t iHit=0;iHit<nHits;iHit++)
+  // 	{
+  // 	  for(size_t iConf=0;iConf<nConfs;iConf++)
+  // 	    for(size_t t=0;t<tMaxBox;t++)
+  // 	      {
+  // 		union
+  // 		{
+  // 		  complex<double> c{};
+  // 		  double d[2];
+  // 		};
+		
+  // 		for(size_t ri=0;ri<2;ri++)
+  // 		  d[ri]=v[iConf][iHit][t+T*ri];
+		
+  // 		res[idx({iHit,t,iConf})]+=c;
+  // 	      }
+  // 	}
+      
+  //     return res;
+  //   };
+  
+  // auto getBox=
+  //   [&]()
+  //   {
+  //     djvec_t res(tMaxBox);
+      
+  //     const auto d=
+  // 	getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
+      
+  //     for(size_t t=0;t<tMaxBox;t++)
+  // 	{
+  // 	  jackknivesFill(nConfs,
+  // 			 [&](const size_t& iConf,
+  // 			     const size_t& iClust,
+  // 			     const double& weight)
+  // 		       {
+  // 			 double o=0;
+  // 			 for(size_t iHit=0;iHit<nHits;iHit++)
+  // 			   o+=d[idx({iHit,t,iConf})].real();
+  // 			 o/=nHits;
+  // 			 res[t][iClust]+=weight*o;
+  // 		       });
+  // 	}
+  //     res.clusterize(((double)nConfs/njacks));
+      
+  //     return res;
+  //   };
+  
 }
 
 int main()
 {
   set_njacks(50);
   
-  computeDirect();
+  // computeDirect();
+  
+  computeBox();
   
   return 0;
 }
