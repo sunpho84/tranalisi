@@ -152,8 +152,9 @@ void computeBox()
 	       "mes_contr_box"+l,
 	       {""},
 	       tMaxBox,
-	       "mes_contr_box"+l,
-	       confs);
+	       "out",
+	       confs,
+	       "S0S0");
     };
   
   auto rawDataA=getter("A");
