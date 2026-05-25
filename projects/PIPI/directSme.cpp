@@ -154,7 +154,7 @@ void computeBox()
 	       tMaxBox,
 	       "out",
 	       confs,
-	       "S0S0");
+	       {"S0S0"});
     };
   
   auto rawDataA=getter("A");
