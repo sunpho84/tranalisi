@@ -144,7 +144,7 @@ void computeBox()
     [](const std::string& l)
     {
       const std::string dataPath="out";
-      const std::vector<std::string> confs=getConfs(dataPath,"mes_contr_box"+l);
+      const std::vector<std::string> confs=getConfs("confsBoxList"+l+".dat",dataPath,"finished");
       
       const size_t nConfs=confs.size();
       
