@@ -143,7 +143,8 @@ void computeBox()
   auto getter=
     [](const std::string& l)
     {
-      const std::vector<std::string> confs=getConfs("confsBoxList"+l+".dat","mes_contr_box"+l);
+      const std::string dataPath="out";
+      const std::vector<std::string> confs=getConfs(dataPath,"mes_contr_box"+l);
       
       const size_t nConfs=confs.size();
       
@@ -152,7 +153,7 @@ void computeBox()
 	       "mes_contr_box"+l,
 	       {""},
 	       tMaxBox,
-	       "out",
+	       dataPath,
 	       confs,
 	       {"S0S0"});
     };
