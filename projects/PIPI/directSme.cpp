@@ -164,10 +164,9 @@ void computeBox()
   auto rawDataB=getter("B");
   
   auto getRawBox=
-    [&rawDataA,
-     &rawDataB,
-     nHits=1,
-     &nConfs](const std::string& bw,
+    [nHits=1,
+     &nConfs](const auto& rawData,
+	      const std::string& bw,
 	      const std::string& fw)
     {
       const index_t idx({{"t",T},{"conf",nConfs}});
@@ -175,14 +174,14 @@ void computeBox()
       vector<double> res(idx.max());
       
       const string what=
-	combine("%s__%s,__P5P5",bw.c_str(),fw.c_str());
+	combine("%s__%s,__S0S0",bw.c_str(),fw.c_str());
       
       const auto _v=
-	rawDataA.find(what);
-      if(_v==rawDataA.end())
+	rawData.find(what);
+      if(_v==rawData.end())
 	{
 	  cout<<"List of corr:"<<endl;
-	  for(const auto& [key,val] : rawDataA)
+	  for(const auto& [key,val] : rawData)
 	    cout<<key<<endl;
 	  
 	  CRASH("Unable to find %s",what.c_str());
@@ -191,7 +190,8 @@ void computeBox()
       const auto& v=_v->second;
     };
   
-  getRawBox("","");
+  getRawBox(rawDataA,"bw","fwA");
+  getRawBox(rawDataB,"bw","fwB");
   
   
   // const size_t nHits=rawData.begin()->second.front().size();
@@ -272,7 +272,7 @@ int main()
 {
   set_njacks(50);
   
-  // computeDirect();
+  computeDirect();
   
   computeBox();
   
