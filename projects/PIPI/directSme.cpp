@@ -2,7 +2,7 @@
 
 void computeDirect()
 {
-  const std::string directDataPath="out";
+  const std::string directDataPath="outDir";
   const std::vector<std::string> confs=getConfs("confsDirectList.dat",directDataPath,"finished");
   const size_t nConfs=confs.size();
   cout<<"NConfs: "<<nConfs<<endl;
@@ -140,13 +140,15 @@ void computeBox()
 {
   const int tMaxBox{25};
   
+  int nConfs;
+  
   auto getter=
-    [](const std::string& l)
+    [&nConfs](const std::string& l)
     {
-      const std::string dataPath="out";
+      const std::string dataPath="outBox";
       const std::vector<std::string> confs=getConfs("confsBoxList"+l+".dat",dataPath,"finished");
       
-      const size_t nConfs=confs.size();
+      nConfs=confs.size();
       
       return
 	getRaw("rawBox"+l+".dat",
@@ -160,6 +162,37 @@ void computeBox()
   
   auto rawDataA=getter("A");
   auto rawDataB=getter("B");
+  
+  auto getRawBox=
+    [&rawDataA,
+     &rawDataB,
+     nHits=1,
+     &nConfs](const std::string& bw,
+	      const std::string& fw)
+    {
+      const index_t idx({{"t",T},{"conf",nConfs}});
+      
+      vector<double> res(idx.max());
+      
+      const string what=
+	combine("%s__%s,__P5P5",bw.c_str(),fw.c_str());
+      
+      const auto _v=
+	rawDataA.find(what);
+      if(_v==rawDataA.end())
+	{
+	  cout<<"List of corr:"<<endl;
+	  for(const auto& [key,val] : rawDataA)
+	    cout<<key<<endl;
+	  
+	  CRASH("Unable to find %s",what.c_str());
+	}
+      
+      const auto& v=_v->second;
+    };
+  
+  getRawBox("","");
+  
   
   // const size_t nHits=rawData.begin()->second.front().size();
       
