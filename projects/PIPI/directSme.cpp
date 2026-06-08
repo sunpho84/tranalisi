@@ -1,6 +1,6 @@
 #include "common.hpp"
 
-void computeDirect()
+djvec_t computeDirect()
 {
   const std::string directDataPath="outDir";
   const std::vector<std::string> confs=getConfs("confsDirectList.dat",directDataPath,"finished");
@@ -122,7 +122,7 @@ void computeDirect()
   const auto _C=getDirect("bw2","fw2");
   
   grace_file_t dir("plots/dir.xmg");
-  dir.set_color_scheme({grace::RED,grace::BLACK,grace::BLUE,grace::GREEN4});
+  dir.set_color_scheme({grace::RED,grace::BLACK,grace::BLUE,grace::GREEN4,grace::ORANGE});
   dir.new_data_set();
   // dir.write_vec_ave_err((2*effective_mass(_A[DIR])).ave_err());
   // dir.set_legend("2Rest");
@@ -130,17 +130,26 @@ void computeDirect()
   dir.set_legend("Dir");
   dir.write_vec_ave_err(effective_mass(_B[DIR]-_C[DIR]).ave_err());
   dir.set_legend("Dir_proj");
+  dir.write_vec_ave_err(effective_mass(_B[DIR]+_C[DIR]).ave_err());
+  dir.set_legend("Dir_wr_proj");
   dir.write_vec_ave_err((2*sqrt(sqr(effective_mass(_A[SIN]))+3*sqr(2*M_PI/L))).ave_err());
   dir.set_legend("2Motion");
   dir.write_vec_ave_err((2*effective_mass(_B[SIN])).ave_err());
-  dir.set_legend("2Motion");
+  dir.set_legend("2Rest");
+  dir.write_vec_ave_err((2*effective_mass(_A[SIN])).ave_err());
+
+  grace_file_t inte("plots/dirInte.xmg");
+  inte.write_vec_ave_err((_B[DIR]-_C[DIR]).ave_err());
+  inte.write_vec_ave_err((_B[DIR]-_C[DIR]-sqr(_B[SIN])*L*L*L).ave_err());
+  
+  return _B[DIR]-_C[DIR];
 }
 
-void computeBox()
+djvec_t computeBox()
 {
   const int tMaxBox{25};
   
-  int nConfs;
+  size_t nConfs;
   
   auto getter=
     [&nConfs](const std::string& l)
@@ -163,15 +172,15 @@ void computeBox()
   auto rawDataA=getter("A");
   auto rawDataB=getter("B");
   
+  const index_t idx({{"t",T},{"conf",nConfs}});
+  
   auto getRawBox=
-    [nHits=1,
+    [&idx,
      &nConfs](const auto& rawData,
 	      const std::string& bw,
 	      const std::string& fw)
     {
-      const index_t idx({{"t",T},{"conf",nConfs}});
-      
-      vector<double> res(idx.max());
+      vector<complex<double>> res(idx.max());
       
       const string what=
 	combine("%s__%s,__S0S0",bw.c_str(),fw.c_str());
@@ -188,93 +197,79 @@ void computeBox()
 	}
       
       const auto& v=_v->second;
+      
+      for(size_t iConf=0;iConf<nConfs;iConf++)
+	for(size_t t=0;t<tMaxBox;t++)
+	  {
+	    union
+	    {
+	      complex<double> c{};
+	      double d[2];
+	    };
+	    
+	    for(size_t ri=0;ri<2;ri++)
+	      d[ri]=v[iConf][0][t+T*ri];
+	    
+	    res[idx({t,iConf})]+=c;
+	  }
+      
+      return res;
     };
   
-  getRawBox(rawDataA,"bw","fwA");
-  getRawBox(rawDataB,"bw","fwB");
+  auto getBox=
+    [&idx,
+     &getRawBox,
+     &nConfs](const auto& rawData,
+	      const std::string& bw,
+	      const std::string& fw)
+    {
+      djvec_t res(tMaxBox);
+      
+      const auto d=
+	getRawBox(rawData,bw,fw);
+      
+      for(size_t t=0;t<tMaxBox;t++)
+	{
+	  jackknivesFill(nConfs,
+			 [&](const size_t& iConf,
+			     const size_t& iClust,
+			     const double& weight)
+			 {
+			   res[t][iClust]+=weight*d[idx({t,iConf})].real();
+		       });
+	}
+      res.clusterize(((double)nConfs/njacks));
+      
+      return res;
+    };
   
+  const djvec_t A=getBox(rawDataA,"bw","fwA");
+  const djvec_t B=getBox(rawDataB,"bw","fwB");
   
-  // const size_t nHits=rawData.begin()->second.front().size();
-      
-  //     const index_t idx({{"hit",nHits},{"tMax",tMaxBox},{"conf",nConfs}});
+  A.ave_err().write("plots/A.xmg");
+  B.ave_err().write("plots/B.xmg");
   
-  // auto getRawBox=
-  //   [&rawData,
-  //    &nHits,
-  //    &idx,
-  //    &nConfs](const std::string& a,
-  // 	      const std::string& b)
-  //   {
-  //     vector<complex<double>> res(idx.max());
-      
-  //     const string what=
-  // 	combine("%s__%s,__P5P5",a.c_str(),b.c_str());
-  //     // cout<<"Searching for "<<what<<endl;
-      
-  //     const auto _v=
-  // 	rawData.find(what);
-  //     if(_v==rawData.end())
-  // 	CRASH("Unable to find %s",what.c_str());
-      
-  //     const auto& v=_v->second;
-      
-  //     for(size_t iHit=0;iHit<nHits;iHit++)
-  // 	{
-  // 	  for(size_t iConf=0;iConf<nConfs;iConf++)
-  // 	    for(size_t t=0;t<tMaxBox;t++)
-  // 	      {
-  // 		union
-  // 		{
-  // 		  complex<double> c{};
-  // 		  double d[2];
-  // 		};
-		
-  // 		for(size_t ri=0;ri<2;ri++)
-  // 		  d[ri]=v[iConf][iHit][t+T*ri];
-		
-  // 		res[idx({iHit,t,iConf})]+=c;
-  // 	      }
-  // 	}
-      
-  //     return res;
-  //   };
+  effective_mass(A).ave_err().write("plots/effA.xmg");
+  effective_mass(B).ave_err().write("plots/effB.xmg");
   
-  // auto getBox=
-  //   [&]()
-  //   {
-  //     djvec_t res(tMaxBox);
-      
-  //     const auto d=
-  // 	getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
-      
-  //     for(size_t t=0;t<tMaxBox;t++)
-  // 	{
-  // 	  jackknivesFill(nConfs,
-  // 			 [&](const size_t& iConf,
-  // 			     const size_t& iClust,
-  // 			     const double& weight)
-  // 		       {
-  // 			 double o=0;
-  // 			 for(size_t iHit=0;iHit<nHits;iHit++)
-  // 			   o+=d[idx({iHit,t,iConf})].real();
-  // 			 o/=nHits;
-  // 			 res[t][iClust]+=weight*o;
-  // 		       });
-  // 	}
-  //     res.clusterize(((double)nConfs/njacks));
-      
-  //     return res;
-  //   };
-  
+  return B-A;
 }
 
 int main()
 {
   set_njacks(50);
   
-  computeDirect();
+  grace_file_t totPlot("plots/tot.xmg");
   
-  computeBox();
+  const djvec_t dir=computeDirect();
+  totPlot.write_vec_ave_err(effective_mass(dir).ave_err());
+  
+  const djvec_t box=computeBox();
+  
+  const djvec_t tot=dir-2*box;
+  totPlot.write_vec_ave_err(effective_mass(tot,T/2,1).ave_err());
+  const djvec_t tot2=dir+2*box;
+  totPlot.write_vec_ave_err(effective_mass(tot2,T/2,1).ave_err());
   
   return 0;
 }
