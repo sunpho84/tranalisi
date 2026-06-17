@@ -33,7 +33,7 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
   
   const auto rawData=
     getRaw("rawBox.dat",
-	   "mes_contr_box_src_snk%s_T25",
+	   "mes_contr_box",
 	   {"1","2","3","4","5"},
 	   tMaxBox,
 	   boxCorrPath,
