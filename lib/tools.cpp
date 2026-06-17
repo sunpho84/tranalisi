@@ -175,13 +175,14 @@ string exec(const string& cmd)
 {
   array<char,128> buffer;
   string result;
-  unique_ptr<FILE,decltype(&pclose)> pipe(popen(cmd.c_str(),"r"), pclose);
+  FILE *t=popen(cmd.c_str(),"r");
+  unique_ptr<FILE,decltype(&pclose)> pipe(t,pclose);
   
-  if(!pipe)
+  if(not pipe)
     CRASH("popen() failed!");
   
   while(fgets(buffer.data(),buffer.size(),pipe.get())!=nullptr)
-    result += buffer.data();
+    result+=buffer.data();
   
   return result;
 }

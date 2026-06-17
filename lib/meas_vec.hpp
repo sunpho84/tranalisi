@@ -371,7 +371,7 @@ struct vmeas_t
 			     const vmeas_t<T>& b)			\
   {									\
     const size_t size=							\
-      a.size();								\
+      std::min(a.size(),b.size());					\
 									\
     vmeas_t<T> c(size);							\
     									\
