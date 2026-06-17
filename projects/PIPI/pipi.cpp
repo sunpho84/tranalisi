@@ -13,10 +13,10 @@ struct InterpDef
 };
 
 const std::vector<InterpDef> interpDef{
-  {"001","1",{"Pz","Mz"}},
+  {"001","1",{"PZ","MZ"}},
   {"011","2",{"0P11","0M11"}},
   {"111","3",{"P111","M111"}},
-  {"002","4",{"Pz2","Mz2"}},
+  {"002","4",{"PZ2","MZ2"}},
   {"012","5",{"0P12","0M12"}}
 };
 
@@ -96,7 +96,8 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
       djvec_t res(tMaxBox);
       
       const auto d=
-	getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
+	// getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
+	getRawBox("bw"+mso1,"fwP"+msi1);
       
       for(size_t t=0;t<tMaxBox;t++)
 	{
