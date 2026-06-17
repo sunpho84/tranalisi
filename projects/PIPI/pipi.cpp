@@ -27,7 +27,7 @@ const size_t nOp=interpDef.size();
 std::vector<djvec_t> computeBox(const index_t& idOut)
 {
   const std::string boxCorrPath="boxCorr";
-  const std::vector<std::string> confs=getConfs("confsBoxList.dat",boxCorrPath);
+  const std::vector<std::string> confs=getConfs("confsBoxList.dat",boxCorrPath,"finished");
   
   const size_t nConfs=confs.size();
   
