@@ -17,7 +17,7 @@ const std::vector<InterpDef> interpDef{
   {"011","1",{"0P11","0M11"}},
   {"111","2",{"P111","M111"}},
   {"002","3",{"PZ2","MZ2"}},
-  {"012","4",{"0P12","0M12"}}
+  {"012","4",{"P012","M012"}}
 };
 
 const size_t nOp=interpDef.size();
