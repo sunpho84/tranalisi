@@ -58,7 +58,11 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
       const auto _v=
 	rawData.find(what);
       if(_v==rawData.end())
-	CRASH("Unable to find %s",what.c_str());
+	{
+	  for(const auto& [tag,vale] : rawData)
+	    cout<<" "<<tag<<endl;
+	  CRASH("Unable to find %s",what.c_str());
+	}
       
       const auto& v=_v->second;
       
