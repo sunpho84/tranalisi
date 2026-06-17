@@ -44,7 +44,8 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const std::string& cach
 							 const std::vector<const char*>& suffixList,
 							 const size_t& tMax,
 							 const std::string& rawDataDir,
-							 const std::vector<std::string> confs,const std::vector<std::string>& corrsName={"P5P5"})
+							 const std::vector<std::string> confs,
+							 const std::vector<std::string>& corrsName={"P5P5"})
 {
   const size_t nConfs=confs.size();
   cout<<"nConfs: "<<confs.size()<<endl;
