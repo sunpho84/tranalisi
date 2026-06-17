@@ -97,7 +97,7 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
       
       const auto d=
 	// getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
-	getRawBox("bw"+mso1,"fwP"+msi2);
+	getRawBox("bw"+mso1,"fw"+msi2);
       
       for(size_t t=0;t<tMaxBox;t++)
 	{
