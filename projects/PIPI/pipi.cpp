@@ -164,7 +164,7 @@ auto box()
 std::vector<djvec_t> computeDirect(const index_t& idOut)
 {
   const std::string directDataPath="directCorr";
-  const std::vector<std::string> confs=getConfs("confsDirectList.dat",directDataPath);
+  const std::vector<std::string> confs=getConfs("confsDirectList.dat",directDataPath,"finished");
   const size_t nConfs=confs.size();
   
   const auto rawData=
