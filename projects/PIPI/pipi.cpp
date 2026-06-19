@@ -169,8 +169,8 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
   
   const auto rawData=
      getRaw("rawDirect.dat",
-	    "mes_contr_direct_r0_P%s",
-	    {"0","1","2","3","4","5"},
+	    "mes_contr_dir",
+	    {""},
 	    T,
 	    directDataPath,
 	    confs);
