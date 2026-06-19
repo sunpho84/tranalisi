@@ -63,7 +63,8 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const std::string& cach
       for(const char* const& suffix : suffixList)
 	for(const filesystem::path conf : confs)
 	  {
-	    raw_file_t file(rawDataDir+"/"+conf.string()+"/"+combine(rawFileNameTemplate.c_str(),suffix),"r");
+	    const string specPath=rawDataDir+"/"+conf.string()+"/"+combine(rawFileNameTemplate.c_str(),suffix);
+	    raw_file_t file(specPath,"r");
 	    char line[1024];
 	    auto readLine=[&file,
 			   &line]()
@@ -101,11 +102,11 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const std::string& cach
 			    for(size_t t=0;t<T;t++)
 			      {
 				if(not readLine())
-				  CRASH("Unable to read time %zu for contr %s %s",t,a,b);
+				  CRASH("File %s unable to read time %zu for contr %s %s",specPath.c_str(),t,a,b);
 				
 				double r,i;
 				if(sscanf(line,"%lg %lg",&r,&i)!=2)
-				  CRASH("Unable to convert %s to two doubles",line);
+				  CRASH("File %s nable to convert %s to two doubles",specPath.c_str(),line);
 				
 				if(t<tMax)
 				  {
