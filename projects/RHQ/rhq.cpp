@@ -113,6 +113,26 @@ int main()
   const djvec_t M1=getMPCAC("H1");
   M1.ave_err().write("plots/mPCAC_run1.xmg");
   
+  const auto getMPCAC2=
+    [&rawData,
+     &get](const std::string& i)
+    {
+      const djvec_t AP5P5=get(rawData,"P5P5",i,i,0);
+      const djvec_t AV0P5=get(rawData,"V0P5",i,i,1);
+      
+      djvec_t out(T);
+      for(size_t it=0;it<T;it++)
+	out[it]=(AV0P5[(it+1)%T]-AV0P5[(it+T-1)%T])/2.0;
+      // for(size_t it=0;it<T;it++)
+      // 	out[it]=AV0P5[(it+1)%T]-AV0P5[it];
+      
+      // effective_mass
+      return out/AP5P5;
+    };
+  
+  getMPCAC2("H0").ave_err().write("plots/mPCAC_Alt.xmg");
+  
+  
   // const double k0=0.1394267;
   // const double k1=0.1394;
   // const double k0=0.15;
