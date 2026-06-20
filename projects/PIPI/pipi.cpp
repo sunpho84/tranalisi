@@ -299,7 +299,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	const InterpDef& bSo{interpDef[iBSo]};
 	const InterpDef& bSi{interpDef[iBSi]};
 	
-	const std::string& so{bSo.id};
+	const std::string& so{bSo.rap[0]};
 	const std::string& si1{bSi.rap[0]};
 	const std::string& si2{bSi.rap[1]};
 	
