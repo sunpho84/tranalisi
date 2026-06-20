@@ -106,7 +106,7 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const std::string& cach
 				
 				double r,i;
 				if(sscanf(line,"%lg %lg",&r,&i)!=2)
-				  CRASH("File %s nable to convert %s to two doubles",specPath.c_str(),line);
+				  CRASH("File %s unable to convert %s to two doubles",specPath.c_str(),line);
 				
 				if(t<tMax)
 				  {
