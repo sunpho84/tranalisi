@@ -174,7 +174,8 @@ djvec_t current()
 	   {""},
 	   T,
 	   corrPath,
-	   confs);
+	   confs,
+	   {"V1V1","V2V2","V3V3"});
   const size_t nHits=rawData.begin()->second.front().size();
   
   const index_t idx({{"hit",nHits},{"tMax",T},{"conf",nConfs}});
@@ -245,7 +246,7 @@ djvec_t current()
     }
   res.clusterize(((double)nConfs/njacks));
   
-  return res;
+  return res.symmetrized();
 }
 
 /////////////////////////////////////////////////////////////////
@@ -449,7 +450,7 @@ int main()
   
   const auto d=direct();
   
-  const djvec_t j=current();
+  const djvec_t jj=current();
   
   const size_t nOpToUse=nOp;
   std::vector<djvec_t> c(nOpToUse*nOpToUse);
@@ -468,6 +469,8 @@ int main()
 	if(ibSi<ibSo)
 	  c[ibSo+nOpToUse*ibSi]=c[ibSi+nOpToUse*ibSo];
       }
+  
+  jj.ave_err().write("plots/jj.xmg");
   
   const size_t t0=7;
   
