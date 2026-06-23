@@ -161,7 +161,7 @@ auto box()
 
 /////////////////////////////////////////////////////////////////
 
-djvec_t current()
+std::vector<djvec_t> computeCurrent(const index_t&)
 {
   const std::string corrPath="directCorr";
   const std::vector<std::string> confs=getConfs("confsDirectList",corrPath,"finished");
@@ -246,7 +246,18 @@ djvec_t current()
     }
   res.clusterize(((double)nConfs/njacks));
   
-  return res.symmetrized();
+  return {res.symmetrized()};
+}
+
+auto current()
+{
+  index_t idOut({{"dum",1}});
+  
+  return [data=computeOrLoad(idOut,"cur.dat",computeCurrent),
+	  idOut]() -> const djvec_t&
+  {
+    return data[0];
+  };
 }
 
 /////////////////////////////////////////////////////////////////
@@ -450,7 +461,7 @@ int main()
   
   const auto d=direct();
   
-  const djvec_t jj=current();
+  const djvec_t jj=current()();
   
   const size_t nOpToUse=nOp;
   std::vector<djvec_t> c(nOpToUse*nOpToUse);
