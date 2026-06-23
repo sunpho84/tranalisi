@@ -161,6 +161,95 @@ auto box()
 
 /////////////////////////////////////////////////////////////////
 
+djvec_t current()
+{
+  const std::string corrPath="directCorr";
+  const std::vector<std::string> confs=getConfs("confsDirectList",corrPath,"finished");
+  
+  const size_t nConfs=confs.size();
+  
+  const auto rawData=
+    getRaw("rawCur.dat",
+	   "mes_contr_current",
+	   {""},
+	   T,
+	   corrPath,
+	   confs);
+  const size_t nHits=rawData.begin()->second.front().size();
+  
+  const index_t idx({{"hit",nHits},{"tMax",T},{"conf",nConfs}});
+  
+  auto getRawBox=
+    [&rawData,
+     &nHits,
+     &idx,
+     &nConfs](const std::string& tag)
+    {
+      vector<complex<double>> res(idx.max());
+      
+      const string what=
+	combine("propR1__propR0,%s",tag.c_str());
+      // cout<<"Searching for "<<what<<endl;
+      
+      const auto _v=
+	rawData.find(what);
+      if(_v==rawData.end())
+	{
+	  for(const auto& [tag,vale] : rawData)
+	    cout<<" "<<tag<<endl;
+	  CRASH("Unable to find %s",what.c_str());
+	}
+      
+      const auto& v=_v->second;
+      
+      for(size_t iHit=0;iHit<nHits;iHit++)
+	{
+	  for(size_t iConf=0;iConf<nConfs;iConf++)
+	    for(size_t t=0;t<T;t++)
+	      {
+		union
+		{
+		  complex<double> c{};
+		  double d[2];
+		};
+		
+		for(size_t ri=0;ri<2;ri++)
+		  d[ri]=v[iConf][iHit][t+T*ri];
+		
+		res[idx({iHit,t,iConf})]+=c;
+	      }
+	}
+      
+      return res;
+    };
+  
+  djvec_t res(tMaxBox);
+  
+  const auto d=
+    // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
+    (getRawBox("V1V1")+getRawBox("V2V2")+getRawBox("V3V3"))/3;
+  
+  for(size_t t=0;t<tMaxBox;t++)
+    {
+      jackknivesFill(nConfs,
+		     [&](const size_t& iConf,
+			 const size_t& iClust,
+			 const double& weight)
+		     {
+		       double o=0;
+		       for(size_t iHit=0;iHit<nHits;iHit++)
+			 o+=d[idx({iHit,t,iConf})].real();
+		       o/=nHits;
+		       res[t][iClust]+=weight*o;
+		     });
+    }
+  res.clusterize(((double)nConfs/njacks));
+  
+  return res;
+}
+
+/////////////////////////////////////////////////////////////////
+
 std::vector<djvec_t> computeDirect(const index_t& idOut)
 {
   const std::string directDataPath="directCorr";
@@ -360,6 +449,8 @@ int main()
   
   const auto d=direct();
   
+  const djvec_t j=current();
+  
   const size_t nOpToUse=nOp;
   std::vector<djvec_t> c(nOpToUse*nOpToUse);
   
@@ -367,10 +458,10 @@ int main()
     for(size_t ibSi=0;ibSi<nOpToUse;ibSi++)
       {
 	const djvec_t& box=b(ibSo,ibSi);
-	const djvec_t& dir=d(ibSo,ibSi,0);
+	const djvec_t& dir=-d(ibSo,ibSi,0); //so it is
 	box.ave_err().write(combine("plots/box_%zu_%zu.xmg",ibSo,ibSi));
-	(-dir).ave_err().write(combine("plots/dir_%zu_%zu.xmg",ibSo,ibSi));
-	const djvec_t cmb=2*box-dir;
+	dir.ave_err().write(combine("plots/dir_%zu_%zu.xmg",ibSo,ibSi));
+	const djvec_t cmb=dir-2*box;
 	c[ibSo+nOpToUse*ibSi]=cmb;
 	cmb.ave_err().write(combine("plots/cmb_%zu_%zu.xmg",ibSo,ibSi));
 	
@@ -378,11 +469,18 @@ int main()
 	  c[ibSo+nOpToUse*ibSi]=c[ibSi+nOpToUse*ibSo];
       }
   
-  const size_t t0=10;
+  const size_t t0=7;
   
   vector<djvec_t> eig;
   vector<djvec_t> recastEigvec;
   vector<djvec_t> origEigvec;
+  
+  for(size_t i=0;i<nOpToUse;i++)
+    {
+      for(size_t j=0;j<nOpToUse;j++)
+	cout<<c[j+nOpToUse*i][10].ave_err()<<"     ";
+      cout<<endl;
+    }
   
   tie(eig,recastEigvec,ignore)=gevp(c,t0);
   vector<double> expSh{0.0019364276101050126,0.016167593494143095,0.028595040062616484,0.04024620996370226,0.04075042586371391};
