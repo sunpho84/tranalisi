@@ -481,7 +481,7 @@ int main()
 	  c[ibSo+nOpToUse*ibSi]=c[ibSi+nOpToUse*ibSo];
       }
   
-  jj.ave_err().write("plots/jj.xmg");
+  effective_mass(jj).ave_err().write("plots/jj.xmg");
   
   const size_t t0=7;
   
