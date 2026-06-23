@@ -227,7 +227,7 @@ djvec_t current()
   
   const auto d=
     // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
-    (getRawBox("V1V1")+getRawBox("V2V2")+getRawBox("V3V3"))/3;
+    (getRawBox("V1V1")+getRawBox("V2V2")+getRawBox("V3V3"))*(1.0/3);
   
   for(size_t t=0;t<tMaxBox;t++)
     {
