@@ -189,7 +189,7 @@ djvec_t current()
       vector<complex<double>> res(idx.max());
       
       const string what=
-	combine("propR1__propR0,%s",tag.c_str());
+	combine("propR1__propR0,__%s",tag.c_str());
       // cout<<"Searching for "<<what<<endl;
       
       const auto _v=
