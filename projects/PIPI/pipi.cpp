@@ -180,7 +180,7 @@ std::vector<djvec_t> computeCurrent(const index_t&)
   
   const index_t idx({{"hit",nHits},{"tMax",T},{"conf",nConfs}});
   
-  auto getRawBox=
+  auto getRawCur=
     [&rawData,
      &nHits,
      &idx,
@@ -228,7 +228,7 @@ std::vector<djvec_t> computeCurrent(const index_t&)
   
   const auto d=
     // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
-    (getRawBox("V1V1")+getRawBox("V2V2")+getRawBox("V3V3"))*(1.0/3);
+    (getRawCur("V1V1")+getRawCur("V2V2")+getRawCur("V3V3"))*(1.0/3);
   
   for(size_t t=0;t<T;t++)
     {
@@ -257,6 +257,137 @@ auto current()
 	  idOut]() -> const djvec_t&
   {
     return data[0];
+  };
+}
+
+/////////////////////////////////////////////////////////////////
+
+std::vector<djvec_t> computeTri(const index_t&)
+{
+  const std::string corrPath="boxCorr";
+  const std::vector<std::string> confs=getConfs("confsBoxList",corrPath,"finished");
+  
+  const size_t nConfs=confs.size();
+  
+  const auto rawData=
+    getRaw("rawTri.dat",
+	   "mes_contr_tri",
+	   {""},
+	   T,
+	   corrPath,
+	   confs,
+	   {"V1P5","V2P5","V3P5"});
+  const size_t nHits=rawData.begin()->second.front().size();
+  
+  const index_t idx({{"hit",nHits},{"tMax",T},{"conf",nConfs}});
+  
+  auto getRawTri=
+    [&rawData,
+     &nHits,
+     &idx,
+     &nConfs](const std::string& p,
+	      const std::string& tag)
+    {
+      vector<complex<double>> res(idx.max());
+      
+      const string what=
+	combine("prop%s__sm_prop,__%s",p.c_str(),tag.c_str());
+      // cout<<"Searching for "<<what<<endl;
+      
+      const auto _v=
+	rawData.find(what);
+      if(_v==rawData.end())
+	{
+	  for(const auto& [tag,vale] : rawData)
+	    cout<<" "<<tag<<endl;
+	  CRASH("Unable to find %s",what.c_str());
+	}
+      
+      const auto& v=_v->second;
+      
+      for(size_t iHit=0;iHit<nHits;iHit++)
+	{
+	  for(size_t iConf=0;iConf<nConfs;iConf++)
+	    for(size_t t=0;t<T;t++)
+	      {
+		union
+		{
+		  complex<double> c{};
+		  double d[2];
+		};
+		
+		for(size_t ri=0;ri<2;ri++)
+		  d[ri]=v[iConf][iHit][t+T*ri];
+		
+		res[idx({iHit,t,iConf})]+=c;
+	      }
+	}
+      
+      return res;
+    };
+  
+  auto getTri=
+    [&](const string& p)
+    {
+      djvec_t res(T);
+      
+      const std::array<vector<complex<double>>,3> d =
+          // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
+	{getRawTri(p,"V1P5"),getRawTri(p,"V2P5"),getRawTri(p,"V3P5")};
+      
+      for(size_t t=0;t<T;t++)
+	{
+	  jackknivesFill(nConfs,
+			 [&](const size_t& iConf,
+			     const size_t& iClust,
+			     const double& weight)
+		       {
+			 double o=0;
+			 for(size_t iHit=0;iHit<nHits;iHit++)
+			   for(int mu=0;mu<3;mu++)
+			     o+=d[idx({iHit,t,iConf})][mu].real();
+			 o/=3*nHits;
+			 res[t][iClust]+=weight*o;
+		       });
+	}
+      res.clusterize(((double)nConfs/njacks));
+      
+      return res;
+    };
+  
+  std::vector<djvec_t> res(interpDef.size());
+  
+  for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
+    {
+      const InterpDef& bSo{interpDef[iBSo]};
+      const std::string& repSo{bSo.rep};
+      const std::string& so1{bSo.rap[0]};
+      const std::string& so2{bSo.rap[1]};
+      
+      const djvec_t A=getTri(so1);
+      const djvec_t B=getTri(so2);
+      
+      // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
+      // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
+      A.ave_err().write("plots/triA_"+repSo+".xmg");
+      B.ave_err().write("plots/triB_"+repSo+".xmg");
+      const djvec_t C=A-B;
+      C.ave_err().write("plots/triC_"+repSo+".xmg");
+      
+      res[iBSo]=C;
+      // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
+    }
+  
+  return res;
+}
+
+auto triangle()
+{
+  index_t idOut{{{{"dum",1}}}};
+  
+  return [data=computeOrLoad(idOut,"triangle.dat",computeTri)](const size_t& iOp) -> const djvec_t&
+  {
+    return data[iOp];
   };
 }
 
@@ -462,6 +593,8 @@ int main()
   const auto d=direct();
   
   const djvec_t jj=current()();
+  
+  const auto tri=triangle();
   
   const size_t nOpToUse=nOp;
   std::vector<djvec_t> c(nOpToUse*nOpToUse);
