@@ -327,13 +327,20 @@ std::vector<djvec_t> computeTri(const index_t&)
     };
   
   auto getTri=
-    [&](const string& p)
+    [&](const string& repSo,
+	const string& p)
     {
       djvec_t res(T);
       
       const std::array<vector<complex<double>>,3> d =
           // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
 	{getRawTri(p,"V1P5"),getRawTri(p,"V2P5"),getRawTri(p,"V3P5")};
+      
+      int C=0;
+      for(int mu=0;mu<3;mu++)
+	if(repSo[mu]!='0')
+	  C++;
+      cout<<repSo<<" "<<C<<endl;
       
       for(size_t t=0;t<T;t++)
 	{
@@ -345,8 +352,9 @@ std::vector<djvec_t> computeTri(const index_t&)
 			 double o=0;
 			 for(size_t iHit=0;iHit<nHits;iHit++)
 			   for(int mu=0;mu<3;mu++)
-			     o+=d[mu][idx({iHit,t,iConf})].real();
-			 o/=3*nHits;
+			     if(repSo[mu]!='0')
+			       o+=d[mu][idx({iHit,t,iConf})].imag();
+			 o/=C*nHits;
 			 res[t][iClust]+=weight*o;
 		       });
 	}
@@ -364,8 +372,8 @@ std::vector<djvec_t> computeTri(const index_t&)
       const std::string& so1{bSo.rap[0]};
       const std::string& so2{bSo.rap[1]};
       
-      const djvec_t A=getTri(so1);
-      const djvec_t B=getTri(so2);
+      const djvec_t A=getTri(repSo,so1);
+      const djvec_t B=getTri(repSo,so2);
       
       // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
       // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
@@ -597,22 +605,36 @@ int main()
   const auto tri=triangle();
   
   const size_t nOpToUse=nOp;
-  std::vector<djvec_t> c(nOpToUse*nOpToUse);
+  
+  index_t idC({{"so",nOpToUse},{"si",nOpToUse}});
+  std::vector<djvec_t> c((nOpToUse+1)*(nOpToUse+1));
   
   for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
-    for(size_t ibSi=0;ibSi<nOpToUse;ibSi++)
-      {
-	const djvec_t& box=b(ibSo,ibSi);
-	const djvec_t& dir=-d(ibSo,ibSi,0); //so it is
-	box.ave_err().write(combine("plots/box_%zu_%zu.xmg",ibSo,ibSi));
-	dir.ave_err().write(combine("plots/dir_%zu_%zu.xmg",ibSo,ibSi));
-	const djvec_t cmb=dir-2*box;
-	c[ibSo+nOpToUse*ibSi]=cmb;
-	cmb.ave_err().write(combine("plots/cmb_%zu_%zu.xmg",ibSo,ibSi));
-	
-	if(ibSi<ibSo)
-	  c[ibSo+nOpToUse*ibSi]=c[ibSi+nOpToUse*ibSo];
-      }
+    {
+      for(size_t ibSi=0;ibSi<nOpToUse;ibSi++)
+	{
+	  const djvec_t& box=b(ibSo,ibSi);
+	  const djvec_t& dir=-d(ibSo,ibSi,0); //so it is
+	  box.ave_err().write(combine("plots/box_%zu_%zu.xmg",ibSo,ibSi));
+	  dir.ave_err().write(combine("plots/dir_%zu_%zu.xmg",ibSo,ibSi));
+	  const djvec_t cmb=dir-2*box;
+	  c[ibSo+(nOpToUse+1)*ibSi]=cmb;
+	  cmb.ave_err().write(combine("plots/cmb_%zu_%zu.xmg",ibSo,ibSi));
+	}
+      
+      c[ibSo+(nOpToUse+1)*nOpToUse]=
+	c[nOpToUse+(nOpToUse+1)*ibSo]=
+	tri(ibSo)*sqrt(2);
+    }
+  
+  c[nOpToUse+(nOpToUse+1)*nOpToUse]=jj;
+  
+  for(size_t i=0;i<nOpToUse+1;i++)
+    for(size_t j=0;j<nOpToUse+1;j++)
+      c[i+(nOpToUse+1)*j]=
+	c[j+(nOpToUse+1)*i]=
+	(c[i+(nOpToUse+1)*j]+
+	 c[j+(nOpToUse+1)*i])/2;
   
   effective_mass(jj).ave_err().write("plots/jj.xmg");
   
@@ -622,15 +644,15 @@ int main()
   vector<djvec_t> recastEigvec;
   vector<djvec_t> origEigvec;
   
-  for(size_t i=0;i<nOpToUse;i++)
+  for(size_t i=0;i<nOpToUse+1;i++)
     {
-      for(size_t j=0;j<nOpToUse;j++)
-	cout<<c[j+nOpToUse*i][10].ave_err()<<"     ";
+      for(size_t j=0;j<nOpToUse+1;j++)
+	cout<<c[j+(nOpToUse+1)*i][10].ave_err()<<"     ";
       cout<<endl;
     }
   
   tie(eig,recastEigvec,ignore)=gevp(c,t0);
-  vector<double> expSh{0.0019364276101050126,0.016167593494143095,0.028595040062616484,0.04024620996370226,0.04075042586371391};
+  vector<double> expSh{0.0019364276101050126,0.016167593494143095,0.028595040062616484,0.04024620996370226,0.04075042586371391,0.04075042586371391};
   
   grace_file_t fullCompa("plots/fullCompa.xmg");
   fullCompa.set_color_scheme({grace::BLACK,grace::BLUE,grace::RED,grace::ORANGE,grace::GREEN4});
