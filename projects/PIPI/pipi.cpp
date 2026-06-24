@@ -291,7 +291,7 @@ std::vector<djvec_t> computeTri(const index_t&)
       vector<complex<double>> res(idx.max());
       
       const string what=
-	combine("prop%s__sm_prop,__%s",p.c_str(),tag.c_str());
+	combine("bw%s__sm_prop,__%s",p.c_str(),tag.c_str());
       // cout<<"Searching for "<<what<<endl;
       
       const auto _v=
