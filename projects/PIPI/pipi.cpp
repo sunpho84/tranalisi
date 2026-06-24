@@ -336,12 +336,6 @@ std::vector<djvec_t> computeTri(const index_t&)
           // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
 	{getRawTri(p,"V1P5"),getRawTri(p,"V2P5"),getRawTri(p,"V3P5")};
       
-      int C=0;
-      for(int mu=0;mu<3;mu++)
-	if(repSo[mu]!='0')
-	  C++;
-      cout<<repSo<<" "<<C<<endl;
-      
       for(size_t t=0;t<T;t++)
 	{
 	  jackknivesFill(nConfs,
@@ -354,7 +348,7 @@ std::vector<djvec_t> computeTri(const index_t&)
 			   for(int mu=0;mu<3;mu++)
 			     if(repSo[mu]!='0')
 			       o+=d[mu][idx({iHit,t,iConf})].imag();
-			 o/=C*nHits;
+			 o/=3*nHits; //always 3
 			 res[t][iClust]+=weight*o;
 		       });
 	}
