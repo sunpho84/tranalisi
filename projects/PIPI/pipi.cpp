@@ -345,7 +345,7 @@ std::vector<djvec_t> computeTri(const index_t&)
 			 double o=0;
 			 for(size_t iHit=0;iHit<nHits;iHit++)
 			   for(int mu=0;mu<3;mu++)
-			     o+=d[idx({iHit,t,iConf})][mu].real();
+			     o+=d[mu][idx({iHit,t,iConf})].real();
 			 o/=3*nHits;
 			 res[t][iClust]+=weight*o;
 		       });
