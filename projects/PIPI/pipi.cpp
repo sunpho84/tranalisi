@@ -632,7 +632,7 @@ int main()
 	djvec_t& b=
 	  c[iC({j,i})];
 	
-	a=b=(a+b)/2;
+	a=b=(a+b).subset(0,tMaxBox)/2;
       }
   
   effective_mass(jj).ave_err().write("plots/jj.xmg");
