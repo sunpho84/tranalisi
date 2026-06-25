@@ -349,7 +349,7 @@ std::vector<djvec_t> computeTri(const index_t&)
 			   // for(int mu=0;mu<3;mu++)
 			     // if(repSo[mu]!='0')
 			       o+=d[mu][idx({iHit,t,iConf})].imag();
-			 res[t][iClust]+=weight*o*sqrt(2)/nHits;
+			 res[t][iClust]+=weight*o/nHits;
 		       });
 	}
       res.clusterize(((double)nConfs/njacks));
@@ -376,7 +376,7 @@ std::vector<djvec_t> computeTri(const index_t&)
       const djvec_t C=A-B;
       C.ave_err().write("plots/triC_"+repSo+".xmg");
       
-      res[iBSo]=C;
+      res[iBSo]=C/sqrt(2);
       // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
     }
   
