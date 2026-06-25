@@ -349,7 +349,7 @@ std::vector<djvec_t> computeTri(const index_t&)
 			   // for(int mu=0;mu<3;mu++)
 			     // if(repSo[mu]!='0')
 			       o+=d[mu][idx({iHit,t,iConf})].imag();
-			 res[t][iClust]+=weight*o*sqrt(2)/sqrt(/*3**/nHits);
+			 res[t][iClust]+=weight*o*sqrt(2)/nHits;
 		       });
 	}
       res.clusterize(((double)nConfs/njacks));
