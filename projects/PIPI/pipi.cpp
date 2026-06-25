@@ -619,7 +619,7 @@ int main()
       
       c[iC({ibSo+1,0})]=
 	c[iC({0,ibSo+1})]=
-	tri(ibSo)*sqrt(2);
+	tri(ibSo);
     }
   
   c[0]=jj;
