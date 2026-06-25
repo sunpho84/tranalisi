@@ -645,7 +645,8 @@ int main()
 	  const size_t i=(_i+1)%(nOpToUse+1);
 	  const size_t j=(_j+1)%(nOpToUse+1);
 	  cout<<c[j+(nOpToUse+1)*i][10].ave_err()<<"     ";
-	  
+	}
+      
       cout<<endl;
     }
   
