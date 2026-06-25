@@ -460,7 +460,7 @@ std::vector<djvec_t> computeTri(const index_t&)
 			 res[t][iClust]+=weight*o/nHits;
 		       });
 	}
-      res.clusterize(((double)nConfs/njacks));
+      res.clusterize(((double)nConfs/njacks)).symmetrize();
       
       return res;
     };
