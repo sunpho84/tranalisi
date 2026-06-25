@@ -175,7 +175,7 @@ std::vector<djvec_t> computeCurrent(const index_t&)
 	   T,
 	   corrPath,
 	   confs,
-	   {"P5P5","V1V1","V2V2","V3V3"});
+	   {"V1V1","V2V2","V3V3"});
   const size_t nHits=rawData.begin()->second.front().size();
   
   const index_t idx({{"hit",nHits},{"tMax",T},{"conf",nConfs}});
@@ -228,8 +228,109 @@ std::vector<djvec_t> computeCurrent(const index_t&)
     // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
     (getRawCur("V1V1")+getRawCur("V2V2")+getRawCur("V3V3"))*(1.0/3);
   
-  const auto e=
-    (getRawCur("P5P5"));
+  auto comb=
+    [&](const auto& f)
+    {
+      djvec_t res(T);
+      for(size_t t=0;t<T;t++)
+	{
+	  jackknivesFill(nConfs,
+			 [&](const size_t& iConf,
+			     const size_t& iClust,
+			     const double& weight)
+			 {
+			   double o=0;
+			   for(size_t iHit=0;iHit<nHits;iHit++)
+			     o+=d[idx({iHit,t,iConf})].real();
+			   o/=nHits;
+			   res[t][iClust]+=weight*o;
+			 });
+	}
+      res.clusterize(((double)nConfs/njacks)).symmetrize();
+      
+      return res;
+    };
+    
+  return {comb(d)};
+}
+
+auto current()
+{
+  index_t idOut({{"dum",1}});
+  
+  return [data=computeOrLoad(idOut,"cur.dat",computeCurrent)](const size_t i) -> const djvec_t&
+  {
+    return data[i];
+  };
+}
+
+/////////////////////////////////////////////////////////////////
+
+std::vector<djvec_t> computePion(const index_t&)
+{
+  const std::string corrPath="piCorr";
+  const std::vector<std::string> confs=getConfs("confsDirectList",corrPath,"finished");
+  
+  const size_t nConfs=confs.size();
+  
+  const auto rawData=
+    getRaw("rawPi.dat",
+	   "mes_contr_pi",
+	   {""},
+	   T,
+	   corrPath,
+	   confs,
+	   {"P5P5"});
+  const size_t nHits=rawData.begin()->second.front().size();
+  
+  const index_t idx({{"hit",nHits},{"tMax",T},{"conf",nConfs}});
+  
+  auto getRawPi=
+    [&rawData,
+     &nHits,
+     &idx,
+     &nConfs](const std::string& tag)
+    {
+      vector<complex<double>> res(idx.max());
+      
+      const string what=
+	combine("propR1__propR0,__%s",tag.c_str());
+      // cout<<"Searching for "<<what<<endl;
+      
+      const auto _v=
+	rawData.find(what);
+      if(_v==rawData.end())
+	{
+	  for(const auto& [tag,vale] : rawData)
+	    cout<<" "<<tag<<endl;
+	  CRASH("Unable to find %s",what.c_str());
+	}
+      
+      const auto& v=_v->second;
+      
+      for(size_t iHit=0;iHit<nHits;iHit++)
+	{
+	  for(size_t iConf=0;iConf<nConfs;iConf++)
+	    for(size_t t=0;t<T;t++)
+	      {
+		union
+		{
+		  complex<double> c{};
+		  double d[2];
+		};
+		
+		for(size_t ri=0;ri<2;ri++)
+		  d[ri]=v[iConf][iHit][t+T*ri];
+		
+		res[idx({iHit,t,iConf})]+=c;
+	      }
+	}
+      
+      return res;
+    };
+  
+  const auto d=
+    getRawPi("P5P5");
   
   auto comb=
     [&](const auto& f)
@@ -254,14 +355,14 @@ std::vector<djvec_t> computeCurrent(const index_t&)
       return res;
     };
     
-  return {comb(d),comb(e)};
+  return {comb(d)};
 }
 
-auto current()
+auto pion()
 {
   index_t idOut({{"dum",1}});
   
-  return [data=computeOrLoad(idOut,"cur.dat",computeCurrent)](const size_t i) -> const djvec_t&
+  return [data=computeOrLoad(idOut,"pi.dat",computePion)](const size_t i) -> const djvec_t&
   {
     return data[i];
   };
@@ -603,6 +704,8 @@ int main()
   
   const auto jj=current();
   
+  const auto pi=pion();
+  
   const auto tri=triangle();
   
   const size_t nOpToUse=nOp;
@@ -644,7 +747,7 @@ int main()
   
   effective_mass(jj(0)).ave_err().write("plots/jj.xmg");
   
-  jj(1).ave_err().write("plots/pi.xmg");
+  pi(0).ave_err().write("plots/pi.xmg");
   
   const size_t t0=7;
   
