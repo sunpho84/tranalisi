@@ -344,12 +344,12 @@ std::vector<djvec_t> computeTri(const index_t&)
 			     const double& weight)
 		       {
 			 double o=0;
+			 const int mu=2;
 			 for(size_t iHit=0;iHit<nHits;iHit++)
-			   for(int mu=0;mu<3;mu++)
-			     if(repSo[mu]!='0')
+			   // for(int mu=0;mu<3;mu++)
+			     // if(repSo[mu]!='0')
 			       o+=d[mu][idx({iHit,t,iConf})].imag();
-			 o/=3*nHits; //always 3
-			 res[t][iClust]+=weight*o;
+			 res[t][iClust]+=weight*o*sqrt(2)/sqrt(/*3**/nHits);
 		       });
 	}
       res.clusterize(((double)nConfs/njacks));
@@ -638,10 +638,14 @@ int main()
   vector<djvec_t> recastEigvec;
   vector<djvec_t> origEigvec;
   
-  for(size_t i=0;i<nOpToUse+1;i++)
+  for(size_t _i=0;_i<nOpToUse+1;_i++)
     {
-      for(size_t j=0;j<nOpToUse+1;j++)
-	cout<<c[j+(nOpToUse+1)*i][10].ave_err()<<"     ";
+      for(size_t _j=0;_j<nOpToUse+1;_j++)
+	{
+	  const size_t i=(_i+1)%(nOpToUse+1);
+	  const size_t j=(_j+1)%(nOpToUse+1);
+	  cout<<c[j+(nOpToUse+1)*i][10].ave_err()<<"     ";
+	}
       cout<<endl;
     }
   
