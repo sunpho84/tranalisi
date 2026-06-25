@@ -175,7 +175,7 @@ std::vector<djvec_t> computeCurrent(const index_t&)
 	   T,
 	   corrPath,
 	   confs,
-	   {"V1V1","V2V2","V3V3"});
+	   {"P5P5","V1V1","V2V2","V3V3"});
   const size_t nHits=rawData.begin()->second.front().size();
   
   const index_t idx({{"hit",nHits},{"tMax",T},{"conf",nConfs}});
@@ -224,39 +224,46 @@ std::vector<djvec_t> computeCurrent(const index_t&)
       return res;
     };
   
-  djvec_t res(T);
-  
   const auto d=
     // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
     (getRawCur("V1V1")+getRawCur("V2V2")+getRawCur("V3V3"))*(1.0/3);
   
-  for(size_t t=0;t<T;t++)
-    {
-      jackknivesFill(nConfs,
-		     [&](const size_t& iConf,
-			 const size_t& iClust,
-			 const double& weight)
-		     {
-		       double o=0;
-		       for(size_t iHit=0;iHit<nHits;iHit++)
-			 o+=d[idx({iHit,t,iConf})].real();
-		       o/=nHits;
-		       res[t][iClust]+=weight*o;
-		     });
-    }
-  res.clusterize(((double)nConfs/njacks));
+  const auto e=
+    (getRawCur("P5P5"));
   
-  return {res.symmetrized()};
+  auto comb=
+    [&](const auto& f)
+    {
+      djvec_t res(T);
+      for(size_t t=0;t<T;t++)
+	{
+	  jackknivesFill(nConfs,
+			 [&](const size_t& iConf,
+			     const size_t& iClust,
+			     const double& weight)
+			 {
+			   double o=0;
+			   for(size_t iHit=0;iHit<nHits;iHit++)
+			     o+=d[idx({iHit,t,iConf})].real();
+			   o/=nHits;
+			   res[t][iClust]+=weight*o;
+			 });
+	}
+      res.clusterize(((double)nConfs/njacks)).symmetrize();
+      
+      return res;
+    };
+    
+  return {comb(d),comb(e)};
 }
 
 auto current()
 {
   index_t idOut({{"dum",1}});
   
-  return [data=computeOrLoad(idOut,"cur.dat",computeCurrent),
-	  idOut]() -> const djvec_t&
+  return [data=computeOrLoad(idOut,"cur.dat",computeCurrent)](const size_t i) -> const djvec_t&
   {
-    return data[0];
+    return data[i];
   };
 }
 
@@ -594,7 +601,7 @@ int main()
   
   const auto d=direct();
   
-  const djvec_t jj=current()();
+  const auto jj=current();
   
   const auto tri=triangle();
   
@@ -622,7 +629,7 @@ int main()
 	tri(ibSo);
     }
   
-  c[0]=jj;
+  c[0]=jj(0);
   
   for(size_t i=0;i<nOpToUse+1;i++)
     for(size_t j=0;j<nOpToUse+1;j++)
@@ -635,7 +642,9 @@ int main()
 	a=b=(a+b).subset(0,tMaxBox-1)/2;
       }
   
-  effective_mass(jj).ave_err().write("plots/jj.xmg");
+  effective_mass(jj(0)).ave_err().write("plots/jj.xmg");
+  
+  jj(1).ave_err().write("plots/pi.xmg");
   
   const size_t t0=7;
   
@@ -653,6 +662,25 @@ int main()
   
   tie(eig,recastEigvec,ignore)=gevp(c,t0);
   vector<double> expSh{0.0019364276101050126,0.016167593494143095,0.028595040062616484,0.04024620996370226,0.04075042586371391,0.04075042586371391};
+  
+  vector<djvec_t> de=eig;
+  for(size_t t=0;t<tMaxBox;t++)
+    for(size_t ijack=0;ijack<=njacks;ijack++)
+      {
+	std::vector<double> temp(nOpToUse+1);
+	for(size_t iop=0;iop<nOpToUse+1;iop++)
+	  temp[iop]=eig[iop][t][ijack];
+	std::sort(temp.begin(),temp.end());
+	for(size_t iop=0;iop<nOpToUse+1;iop++)
+	  eig[iop][t][ijack]=temp[nOpToUse-iop];
+      }
+  
+  // for(size_t t=0;t<tMaxBox;t++)
+  //   {
+  //     for(size_t iop=0;iop<nOpToUse+1;iop++)
+  // 	cout<<eig[iop][t].ave()<<" ";
+  //     cout<<endl;
+  //   }
   
   grace_file_t fullCompa("plots/fullCompa.xmg");
   fullCompa.set_color_scheme({grace::BLACK,grace::BLUE,grace::RED,grace::ORANGE,grace::GREEN4});
@@ -674,7 +702,7 @@ int main()
       cmp.set_no_line();
       cmp.set_legend("gevp");
       
-      const djvec_t full=effective_mass(c[iop+nOpToUse*iop],T/2);
+      const djvec_t full=effective_mass(c[iC({iop+1,iop+1})],T/2);
       cmp.write_vec_ave_err(full.ave_err());
       cmp.set_no_line();
       cmp.set_legend("2Box-direct");
@@ -683,8 +711,11 @@ int main()
       fullCompa.set_legend(interpDef[iop].rep);
       fullCompa.set_no_line();
       
-      const djvec_t expected=(2*effective_mass(d(iop,iop,2),T/2)-expSh[iop]);
-      cmp.write_vec_ave_err(expected.ave_err());
+      const std::vector<double> n2={1,2,3,4,5,6};
+      
+      const double E=2*sqrt(sqr(0.110)+sqr(2*M_PI/64)*(n2[iop]-1))-expSh[iop];
+      // const djvec_t expected=(2*effective_mass(d(0,0,2),T/2)-expSh[iop]);
+      cmp.write_line([E](const double){return E;},0,tMaxBox);
       cmp.set_no_line();
       cmp.set_legend("GS expectation");
       
