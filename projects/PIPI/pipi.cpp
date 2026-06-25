@@ -600,7 +600,7 @@ int main()
   
   const size_t nOpToUse=nOp;
   
-  index_t idC({{"so",nOpToUse},{"si",nOpToUse}});
+  index_t iC({{"so",nOpToUse+1},{"si",nOpToUse+1}});
   std::vector<djvec_t> c((nOpToUse+1)*(nOpToUse+1));
   
   for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
@@ -612,12 +612,13 @@ int main()
 	  box.ave_err().write(combine("plots/box_%zu_%zu.xmg",ibSo,ibSi));
 	  dir.ave_err().write(combine("plots/dir_%zu_%zu.xmg",ibSo,ibSi));
 	  const djvec_t cmb=dir-2*box;
-	  c[(ibSo+1)+(nOpToUse+1)*(ibSi+1)]=cmb;
+	  
+	  c[iC({ibSo+1,ibSi+1})]=cmb;
 	  cmb.ave_err().write(combine("plots/cmb_%zu_%zu.xmg",ibSo,ibSi));
 	}
       
-      c[ibSo+1+(nOpToUse+1)*nOpToUse]=
-	c[(nOpToUse+1)*(ibSo+1)]=
+      c[iC({ibSo+1,0})]=
+	c[iC({0,ibSo+1})]=
 	tri(ibSo)*sqrt(2);
     }
   
@@ -625,10 +626,14 @@ int main()
   
   for(size_t i=0;i<nOpToUse+1;i++)
     for(size_t j=0;j<nOpToUse+1;j++)
-      c[i+(nOpToUse+1)*j]=
-	c[j+(nOpToUse+1)*i]=
-	(c[i+(nOpToUse+1)*j]+
-	 c[j+(nOpToUse+1)*i])/2;
+      {
+	djvec_t& a=
+	  c[iC({i,j})];
+	djvec_t& b=
+	  c[iC({j,i})];
+	
+	a=b=(a+b)/2;
+      }
   
   effective_mass(jj).ave_err().write("plots/jj.xmg");
   
@@ -638,14 +643,10 @@ int main()
   vector<djvec_t> recastEigvec;
   vector<djvec_t> origEigvec;
   
-  for(size_t _i=0;_i<nOpToUse+1;_i++)
+  for(size_t i=0;i<nOpToUse+1;i++)
     {
-      for(size_t _j=0;_j<nOpToUse+1;_j++)
-	{
-	  const size_t i=(_i+1)%(nOpToUse+1);
-	  const size_t j=(_j+1)%(nOpToUse+1);
-	  cout<<c[j+(nOpToUse+1)*i][10].ave_err()<<"     ";
-	}
+      for(size_t j=0;j<nOpToUse+1;j++)
+	cout<<c[iC({i,j})][10].ave_err()<<"     ";
       
       cout<<endl;
     }
