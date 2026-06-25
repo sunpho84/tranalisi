@@ -612,16 +612,16 @@ int main()
 	  box.ave_err().write(combine("plots/box_%zu_%zu.xmg",ibSo,ibSi));
 	  dir.ave_err().write(combine("plots/dir_%zu_%zu.xmg",ibSo,ibSi));
 	  const djvec_t cmb=dir-2*box;
-	  c[ibSo+(nOpToUse+1)*ibSi]=cmb;
+	  c[(ibSo+1)+(nOpToUse+1)*(ibSi+1)]=cmb;
 	  cmb.ave_err().write(combine("plots/cmb_%zu_%zu.xmg",ibSo,ibSi));
 	}
       
-      c[ibSo+(nOpToUse+1)*nOpToUse]=
-	c[nOpToUse+(nOpToUse+1)*ibSo]=
+      c[ibSo+1+(nOpToUse+1)*nOpToUse]=
+	c[(nOpToUse+1)*(ibSo+1)]=
 	tri(ibSo)*sqrt(2);
     }
   
-  c[nOpToUse+(nOpToUse+1)*nOpToUse]=jj;
+  c[0]=jj;
   
   for(size_t i=0;i<nOpToUse+1;i++)
     for(size_t j=0;j<nOpToUse+1;j++)
@@ -645,7 +645,7 @@ int main()
 	  const size_t i=(_i+1)%(nOpToUse+1);
 	  const size_t j=(_j+1)%(nOpToUse+1);
 	  cout<<c[j+(nOpToUse+1)*i][10].ave_err()<<"     ";
-	}
+	  
       cout<<endl;
     }
   
