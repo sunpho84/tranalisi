@@ -763,6 +763,9 @@ int main()
       cout<<endl;
     }
   
+  cout<<"VV: "<<combine("%.16lg\n",c[0][10].ave())<<endl;
+  cout<<"tri: "<<combine("%.16lg\n",c[1][10].ave())<<endl;
+  
   tie(eig,recastEigvec,ignore)=gevp(c,t0);
   vector<double> expSh{0.0019364276101050126,0.016167593494143095,0.028595040062616484,0.04024620996370226,0.04075042586371391,0.04075042586371391};
   
@@ -816,10 +819,9 @@ int main()
       
       const std::vector<double> n2={1,2,3,4,5,6};
       
-      const double E=2*sqrt(sqr(0.110)+sqr(2*M_PI/64)*(n2[iop]-1))-expSh[iop];
+      const djack_t E=2*sqrt(sqr(mPi)+sqr(2*M_PI/64)*n2[iop])-expSh[iop];
       // const djvec_t expected=(2*effective_mass(d(0,0,2),T/2)-expSh[iop]);
-      cmp.write_line([E](const double){return E;},0,tMaxBox);
-      cmp.set_no_line();
+      cmp.write_constant_band(0,tMaxBox,E);
       cmp.set_legend("GS expectation");
       
       grace_file_t shiftPlot("plots/shift"+to_string(iop)+".xmg");
