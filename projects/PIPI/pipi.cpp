@@ -747,7 +747,7 @@ int main()
   
   effective_mass(jj(0)).ave_err().write("plots/jj.xmg");
   
-  pi(0).ave_err().write("plots/pi.xmg");
+  const djack_t mPi=constant_fit(effective_mass(pi(0)),15,20,"plots/pi.xmg");
   
   const size_t t0=7;
   
