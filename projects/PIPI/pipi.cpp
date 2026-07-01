@@ -407,7 +407,7 @@ std::vector<djvec_t> computeTri(const index_t& idOut)
       vector<complex<double>> res(idx.max());
       
       const string what=
-	combine("bw%s__sm_%s_prop,__%s",p.c_str(),maybeSm.c_str(),tag.c_str());
+	combine("bw%s__sm%s_prop,__%s",p.c_str(),maybeSm.c_str(),tag.c_str());
       // cout<<"Searching for "<<what<<endl;
       
       const auto _v=
@@ -493,7 +493,7 @@ std::vector<djvec_t> computeTri(const index_t& idOut)
 	     &iSm,
 	     &getTri](const string& so)
 	    {
-	      return getTri(repSo,so,(iVT==0)?"V3P5":"T3P5",(iSm==0)?"":"sm",(iVT==0)?1:-1);
+	      return getTri(repSo,so,(iVT==0)?"V3P5":"T3P5",(iSm==0)?"":"_sm",(iVT==0)?1:-1);
 	    };
 	  const djvec_t A=g(so1);
 	  const djvec_t B=g(so2);
