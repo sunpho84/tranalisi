@@ -372,8 +372,8 @@ auto pion()
 
 std::vector<djvec_t> computeTri(const index_t&)
 {
-  const std::string corrPath="boxCorr";
-  const std::vector<std::string> confs=getConfs("confsBoxList",corrPath,"finished");
+  const std::string corrPath="triCorr";
+  const std::vector<std::string> confs=getConfs("confsTriList",corrPath,"finished");
   
   const size_t nConfs=confs.size();
   
@@ -384,7 +384,7 @@ std::vector<djvec_t> computeTri(const index_t&)
 	   T,
 	   corrPath,
 	   confs,
-	   {"V1P5","V2P5","V3P5"});
+	   {"V1P5","V2P5","V3P5","T1P5,T2P5,T3P5"});
   const size_t nHits=rawData.begin()->second.front().size();
   
   const index_t idx({{"hit",nHits},{"tMax",T},{"conf",nConfs}});
@@ -767,9 +767,38 @@ int main()
   cout<<"tri: "<<combine("%.16lg\n",c[1][10].ave())<<endl;
   
   tie(eig,recastEigvec,ignore)=gevp(c,t0);
+  
+  // typedef Matrix<double,Dynamic,Dynamic> Matr;
+  // GeneralizedEigenSolver<Matr> ges;
+  // Matr aM(nOpToUse+1,nOpToUse+1);
+  // Matr bM(nOpToUse+1,nOpToUse+1);
+  // vector<djvec_t> eig2(nOpToUse+1,djvec_t(tMaxBox));
+  // for(size_t ijack=0;ijack<=njacks;ijack++)
+  //   {
+  //     //Fill the rhs matrix
+  //     for(size_t i=0;i<nOpToUse+1;i++)
+  // 	for(size_t j=0;j<nOpToUse+1;j++)
+  // 	  bM(i,j)=c[iC({i,j})][t0][ijack];
+      
+  //     for(size_t t=0;t<tMaxBox;t++)
+  // 	{
+  // 	  for(size_t i=0;i<nOpToUse+1;i++)
+  // 	    for(size_t j=0;j<nOpToUse+1;j++)
+  // 	      aM(i,j)=c[iC({i,j})][t][ijack];
+	  
+	  
+  // 	  ges.compute(aM,bM,1);
+	  
+  // 	  for(size_t i=0;i<nOpToUse+1;i++)
+  // 	    eig2[i][t][ijack]=ges.eigenvalues()[i].real();
+  // 	}
+  //   }
+  
   vector<double> expSh{0.0019364276101050126,0.016167593494143095,0.028595040062616484,0.04024620996370226,0.04075042586371391,0.04075042586371391};
   
-  vector<djvec_t> de=eig;
+  // auto resort=
+  //   [nOpToUse](std::vector<djvec_t>& eig)
+  //   {
   for(size_t t=0;t<tMaxBox;t++)
     for(size_t ijack=0;ijack<=njacks;ijack++)
       {
@@ -780,6 +809,15 @@ int main()
 	for(size_t iop=0;iop<nOpToUse+1;iop++)
 	  eig[iop][t][ijack]=temp[nOpToUse-iop];
       }
+// };
+  
+//   resort(eig);
+//   resort(eig2);
+  
+//   for(size_t ijack=0;ijack<=njacks;ijack++)
+//     for(size_t t=0;t<tMaxBox;t++)
+//       for(size_t i=0;i<nOpToUse+1;i++)
+// 	cout<<ijack<<" jack, "<<t<<" t, "<<i<<" op, "<<eig[i][t][ijack]<<" "<<eig2[i][t][ijack]<<endl;
   
   // for(size_t t=0;t<tMaxBox;t++)
   //   {
@@ -787,6 +825,22 @@ int main()
   // 	cout<<eig[iop][t].ave()<<" ";
   //     cout<<endl;
   //   }
+  
+  const std::vector<double> n2={1,2,3,4,5,6};
+  
+  grace_file_t gevp("plots/gevp.xmg");
+  gevp.set_color_scheme({grace::BLACK,grace::BLUE,grace::RED,grace::ORANGE,grace::GREEN4,grace::VIOLET});
+  for(size_t iop=0;iop<nOpToUse+1;iop++)
+    {
+      const djvec_t eigP=effective_mass(eig[iop],T/2);
+      gevp.write_vec_ave_err(eigP.ave_err(),gevp.color_scheme[iop%gevp.color_scheme.size()],gevp.symbol_scheme[iop&gevp.symbol_scheme.size()]);
+      gevp.set_no_line();
+      
+      cout<<iop<<" "<<eigP[10].ave_err()<<endl;
+      
+      const djack_t E=2*sqrt(sqr(mPi)+sqr(2*M_PI/64)*n2[iop])-expSh[iop];
+      gevp.write_constant_band(0,tMaxBox,E,gevp.color_scheme[iop]);
+    }
   
   grace_file_t fullCompa("plots/fullCompa.xmg");
   fullCompa.set_color_scheme({grace::BLACK,grace::BLUE,grace::RED,grace::ORANGE,grace::GREEN4});
@@ -816,8 +870,6 @@ int main()
       fullCompa.write_vec_ave_err(full.ave_err());
       fullCompa.set_legend(interpDef[iop].rep);
       fullCompa.set_no_line();
-      
-      const std::vector<double> n2={1,2,3,4,5,6};
       
       const djack_t E=2*sqrt(sqr(mPi)+sqr(2*M_PI/64)*n2[iop])-expSh[iop];
       // const djvec_t expected=(2*effective_mass(d(0,0,2),T/2)-expSh[iop]);
