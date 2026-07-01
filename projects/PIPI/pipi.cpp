@@ -516,11 +516,12 @@ auto triangle()
 {
   index_t idOut{{{{"bSo",interpDef.size()},{"sm",2},{"vt",2}}}};
   
-  return [data=computeOrLoad(idOut,"triangle.dat",computeTri)](const size_t& iOp,
-							       const size_t& iSm,
-							       const size_t& vt) -> const djvec_t&
+  return [data=computeOrLoad(idOut,"triangle.dat",computeTri),
+	  idOut](const size_t& iOp,
+		 const size_t& iSm,
+		 const size_t& iVt) -> const djvec_t&
   {
-    return data[iOp];
+    return data[idOut({iOp,iSm,iVt})];
   };
 }
 
