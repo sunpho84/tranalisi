@@ -370,21 +370,28 @@ auto pion()
 
 /////////////////////////////////////////////////////////////////
 
-std::vector<djvec_t> computeTri(const index_t&)
+std::vector<djvec_t> computeTri(const index_t& idOut)
 {
   const std::string corrPath="triCorr";
   const std::vector<std::string> confs=getConfs("confsTriList",corrPath,"finished");
   
   const size_t nConfs=confs.size();
   
-  const auto rawData=
-    getRaw("rawTri.dat",
-	   "mes_contr_tri",
-	   {""},
-	   T,
-	   corrPath,
-	   confs,
-	   {"V1P5","V2P5","V3P5","T1P5,T2P5,T3P5"});
+  map<string,vector<vector<vector<double>>>> rawData;
+  for(const auto& [mesFile,rawFile,what] : std::vector<std::array<string,3>>{
+      {"mes_contr_tri","rawTri","V3P5"},
+      {"mes_contr_triT","rawTriT","T3P5"},
+      {"mes_contr_triSme","rawTriSme","V3P5"},
+      {"mes_contr_triTSme","rawTriTSme","T3P5"}})
+    for(const auto& it : getRaw(rawFile,
+				mesFile,
+				{""},
+				T,
+				corrPath,
+				confs,
+				{what}))
+      rawData.insert(it);
+  
   const size_t nHits=rawData.begin()->second.front().size();
   
   const index_t idx({{"hit",nHits},{"tMax",T},{"conf",nConfs}});
@@ -394,12 +401,13 @@ std::vector<djvec_t> computeTri(const index_t&)
      &nHits,
      &idx,
      &nConfs](const std::string& p,
+	      const std::string& maybeSm,
 	      const std::string& tag)
     {
       vector<complex<double>> res(idx.max());
       
       const string what=
-	combine("bw%s__sm_prop,__%s",p.c_str(),tag.c_str());
+	combine("bw%s__sm_%s_prop,__%s",p.c_str(),maybeSm.c_str(),tag.c_str());
       // cout<<"Searching for "<<what<<endl;
       
       const auto _v=
@@ -436,13 +444,16 @@ std::vector<djvec_t> computeTri(const index_t&)
   
   auto getTri=
     [&](const string& repSo,
-	const string& p)
+	const string& p,
+	const string& what,
+	const string& maybeSme,
+	const int& parity)
     {
       djvec_t res(T);
       
-      const std::array<vector<complex<double>>,3> d =
+      vector<complex<double>> d =
           // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
-	{getRawTri(p,"V1P5"),getRawTri(p,"V2P5"),getRawTri(p,"V3P5")};
+	getRawTri(p,maybeSme,what);
       
       for(size_t t=0;t<T;t++)
 	{
@@ -452,50 +463,62 @@ std::vector<djvec_t> computeTri(const index_t&)
 			     const double& weight)
 		       {
 			 double o=0;
-			 const int mu=2;
+			 // const int mu=2;
 			 for(size_t iHit=0;iHit<nHits;iHit++)
 			   // for(int mu=0;mu<3;mu++)
 			     // if(repSo[mu]!='0')
-			       o+=d[mu][idx({iHit,t,iConf})].imag();
+			       o+=d[idx({iHit,t,iConf})].imag();
 			 res[t][iClust]+=weight*o/nHits;
 		       });
 	}
-      res.clusterize(((double)nConfs/njacks)).symmetrize();
+      res.clusterize(((double)nConfs/njacks)).symmetrize(parity);
       
       return res;
     };
   
-  std::vector<djvec_t> res(interpDef.size());
+  std::vector<djvec_t> res(idOut.max());
   
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
-    {
-      const InterpDef& bSo{interpDef[iBSo]};
-      const std::string& repSo{bSo.rep};
-      const std::string& so1{bSo.rap[0]};
-      const std::string& so2{bSo.rap[1]};
-      
-      const djvec_t A=getTri(repSo,so1);
-      const djvec_t B=getTri(repSo,so2);
-      
-      // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
-      // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
-      A.ave_err().write("plots/triA_"+repSo+".xmg");
-      B.ave_err().write("plots/triB_"+repSo+".xmg");
-      const djvec_t C=A-B;
-      C.ave_err().write("plots/triC_"+repSo+".xmg");
-      
-      res[iBSo]=C/sqrt(2);
-      // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
-    }
+    for(size_t iVT=0;iVT<2;iVT++)
+      for(size_t iSm=0;iSm<2;iSm++)
+	{
+	  const InterpDef& bSo{interpDef[iBSo]};
+	  const std::string& repSo{bSo.rep};
+	  const std::string& so1{bSo.rap[0]};
+	  const std::string& so2{bSo.rap[1]};
+	  
+	  auto g=
+	    [&repSo,
+	     &iVT,
+	     &iSm,
+	     &getTri](const string& so)
+	    {
+	      return getTri(repSo,so,(iVT==0)?"V3P5":"T3P5",(iSm==0)?"":"sm",(iVT==0)?1:-1);
+	    };
+	  const djvec_t A=g(so1);
+	  const djvec_t B=g(so2);
+	  
+	  // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
+	  // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
+	  A.ave_err().write("plots/triA_"+repSo+".xmg");
+	  B.ave_err().write("plots/triB_"+repSo+".xmg");
+	  const djvec_t C=A-B;
+	  C.ave_err().write("plots/triC_"+repSo+".xmg");
+	  
+	  res[idOut({iBSo,iSm,iVT})]=C/sqrt(2);
+	  // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
+	}
   
   return res;
 }
 
 auto triangle()
 {
-  index_t idOut{{{{"dum",1}}}};
+  index_t idOut{{{{"bSo",interpDef.size()},{"sm",2},{"vt",2}}}};
   
-  return [data=computeOrLoad(idOut,"triangle.dat",computeTri)](const size_t& iOp) -> const djvec_t&
+  return [data=computeOrLoad(idOut,"triangle.dat",computeTri)](const size_t& iOp,
+							       const size_t& iSm,
+							       const size_t& vt) -> const djvec_t&
   {
     return data[iOp];
   };
@@ -714,6 +737,11 @@ int main()
   std::vector<djvec_t> c((nOpToUse+1)*(nOpToUse+1));
   
   for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
+    for(size_t iSm=0;iSm<nOpToUse;iSm++)
+      for(size_t iVt=0;iVt<nOpToUse;iVt++)
+	effective_mass(tri(ibSo,iSm,iVt),T/2,(iVt==0)?1:-1).ave_err().write(combine("plots/effTri%zu_sm%zu_vt%zu.xmg",ibSo,iSm,iVt));
+  
+  for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
     {
       for(size_t ibSi=0;ibSi<nOpToUse;ibSi++)
 	{
@@ -729,7 +757,7 @@ int main()
       
       c[iC({ibSo+1,0})]=
 	c[iC({0,ibSo+1})]=
-	tri(ibSo);
+	tri(ibSo,0,0);
     }
   
   c[0]=jj(0);
