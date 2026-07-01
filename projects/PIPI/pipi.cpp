@@ -738,8 +738,8 @@ int main()
   std::vector<djvec_t> c((nOpToUse+1)*(nOpToUse+1));
   
   for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
-    for(size_t iSm=0;iSm<nOpToUse;iSm++)
-      for(size_t iVt=0;iVt<nOpToUse;iVt++)
+    for(size_t iSm=0;iSm<2;iSm++)
+      for(size_t iVt=0;iVt<2;iVt++)
 	effective_mass(tri(ibSo,iSm,iVt),T/2,(iVt==0)?1:-1).ave_err().write(combine("plots/effTri%zu_sm%zu_vt%zu.xmg",ibSo,iSm,iVt));
   
   for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
