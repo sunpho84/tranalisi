@@ -164,7 +164,7 @@ auto box()
 std::vector<djvec_t> computeCurrent(const index_t&)
 {
   const std::string corrPath="directCorr";
-  const std::vector<std::string> confs=getConfs("confsDirectList",corrPath,"finished");
+  const std::vector<std::string> confs=getConfs("confsDirectList.dat",corrPath,"finished");
   
   const size_t nConfs=confs.size();
   
@@ -269,7 +269,7 @@ auto current()
 std::vector<djvec_t> computePion(const index_t&)
 {
   const std::string corrPath="directCorr";
-  const std::vector<std::string> confs=getConfs("confsDirectList",corrPath,"finished");
+  const std::vector<std::string> confs=getConfs("confsDirectList.dat",corrPath,"finished");
   
   const size_t nConfs=confs.size();
   
