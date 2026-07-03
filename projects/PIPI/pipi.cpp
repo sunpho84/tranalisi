@@ -479,8 +479,8 @@ std::vector<djvec_t> computeTri(const index_t& idOut)
   std::vector<djvec_t> res(idOut.max());
   
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
-    for(size_t iVT=0;iVT<2;iVT++)
-      for(size_t iSm=0;iSm<2;iSm++)
+    for(size_t iSm=0;iSm<2;iSm++)
+      for(size_t iVT=0;iVT<2;iVT++)
 	{
 	  const InterpDef& bSo{interpDef[iBSo]};
 	  const std::string& repSo{bSo.rep};
@@ -489,8 +489,8 @@ std::vector<djvec_t> computeTri(const index_t& idOut)
 	  
 	  auto g=
 	    [&repSo,
-	     &iVT,
 	     &iSm,
+	     &iVT,
 	     &getTri](const string& so)
 	    {
 	      return getTri(repSo,so,(iVT==0)?"V3P5":"T3P5",(iSm==0)?"":"_sm",(iVT==0)?1:-1);
@@ -738,9 +738,10 @@ int main()
   std::vector<djvec_t> c((nOpToUse+1)*(nOpToUse+1));
   
   for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
-    for(size_t iSm=0;iSm<2;iSm++)
-      for(size_t iVt=0;iVt<2;iVt++)
-	effective_mass(tri(ibSo,iSm,iVt),T/2,(iVt==0)?1:-1).ave_err().write(combine("plots/effTri%zu_sm%zu_vt%zu.xmg",ibSo,iSm,iVt));
+    {
+      (tri(ibSo,1/*ism*/,/*iVt*/ 0)/tri(ibSo,0/*ism*/,/*iVt*/ 0)).ave_err().write(combine("plots/rat_SM_noSM%zu.xmg",ibSo));
+      (-tri(ibSo,0/*ism*/,/*iVt*/ 1)/tri(ibSo,0/*ism*/,/*iVt*/ 0)).ave_err().write(combine("plots/rat_T_V_%zu.xmg",ibSo));
+    }
   
   for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
     {
