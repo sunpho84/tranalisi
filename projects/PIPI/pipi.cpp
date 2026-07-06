@@ -373,7 +373,7 @@ auto pion()
 std::vector<djvec_t> computeTri(const index_t& idOut)
 {
   const std::string corrPath="triCorr";
-  const std::vector<std::string> confs=getConfs("confsTriList",corrPath,"finished");
+  const std::vector<std::string> confs=getConfs("confsTriList.dat",corrPath,"finished");
   
   const size_t nConfs=confs.size();
   
