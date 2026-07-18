@@ -9,7 +9,7 @@ inline std::vector<std::string> getConfs(const std::string& confsListPath,
 {
   std::vector<std::string> confs;
   
-  if(not file_exists(confsListPath))
+  if(confsListPath.empty() or not file_exists(confsListPath))
     {
       cout<<"Searching for confs in the \""<<rawDataPath<<"\" directory"<<endl;
       
@@ -28,7 +28,8 @@ inline std::vector<std::string> getConfs(const std::string& confsListPath,
       for(const auto& [dum,conf] : tmpConfs)
 	confs.emplace_back(conf);
       
-      raw_file_t(confsListPath,"w").bin_write(confs);
+      if(not confsListPath.empty())
+	raw_file_t(confsListPath,"w").bin_write(confs);
     }
   else
     {
@@ -52,7 +53,7 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const std::string& cach
   
   map<string,vector<vector<vector<double>>>> rawData;
   
-  if(file_exists(cachedFilePath))
+  if((not cachedFilePath.empty()) and file_exists(cachedFilePath))
     {
       cout<<"Reading cached data from file "<<cachedFilePath<<endl;
       raw_file_t(cachedFilePath,"r").bin_read(rawData);
@@ -146,7 +147,8 @@ inline map<string,vector<vector<vector<double>>>> getRaw(const std::string& cach
 	  }
     }
   
-  raw_file_t(cachedFilePath,"w").bin_write(rawData);
+  if(not cachedFilePath.empty())
+    raw_file_t(cachedFilePath,"w").bin_write(rawData);
   
   if(size_t tmpNConfs=rawData.begin()->second.size();nConfs!=tmpNConfs)
     // {
