@@ -1,136 +1,213 @@
 #include "../PIPI/common.hpp"
 
+djvec_t get(const std::vector<string>& confs,
+	    const std::string& path,
+	    const std::string& a,
+	    const std::string& b,
+	    const std::string& c)
+{
+  const auto rawData=
+    getRaw("",
+	   "mes_contr_c0",
+	   {""},
+	   T,
+	   path,
+	   confs);
+  
+  const string what=
+    a+"__"+b+",__"+c;
+      
+  const auto _v=
+    rawData.find(what);
+  if(_v==rawData.end())
+    {
+      for(const auto& [tag,vale] : rawData)
+	cout<<" "<<tag<<endl;
+      CRASH("Unable to find %s",what.c_str());
+    }
+  
+  const auto& v=_v->second;
+  
+  djvec_t res(T);
+  
+  jackknivesFill(confs.size(),
+		 [&res,
+		  &v](const size_t& iConf,
+		     const size_t& iClust,
+		     const double& weight)
+		 {
+		   for(size_t t=0;t<T;t++)
+		     res[t][iClust]+=weight*v[iConf][0][t];
+		 });
+  
+  res.clusterize(((double)confs.size()/njacks));
+  
+  return res;
+}
+
 int main()
 {
   set_njacks(50);
   
-  const std::string dataPath="out";
-  const std::vector<std::string> confs=getConfs("confsDataList.dat",dataPath,"");
+  const std::string path="out";
+  const std::vector<std::string> confs=getConfs("",path,"finished");
+  
   const size_t nConfs=confs.size();
   cout<<"NConfs: "<<nConfs<<endl;
   
-  const auto rawData=
-    getRaw("RUN0.dat",
-	   "mes_contr_HH",
-	   {""},
-	   T,
-	   dataPath,
-	   confs,
-	   {"P5P5","V0P5","V1V1"});
+  get(confs,path,"C1","C1","V1V1");
   
-  const index_t idx({{"t",T},{"conf",nConfs}});
   
-  auto getRaw=
-    [&idx,
-     &nConfs](const auto& rawData,
-	      const std::string& tag,
-	      const std::string& bw,
-	      const std::string& fw)
-    {
-      vector<complex<double>> res(idx.max());
+  // const djvec_t A=read_djvec("mes_contr_P5P5_cp",T).symmetrized();
+  // const djvec_t B=read_djvec("mes_contr_P5P5_cm",T).symmetrized();
+  // const djvec_t C=read_djvec("mes_contr_P5P5_c0",T).symmetrized();
+  
+  // effective_mass(A).ave_err().write("/tmp/A.xmg");
+  // effective_mass(B).ave_err().write("/tmp/B.xmg");
+  // effective_mass(C).ave_err().write("/tmp/C.xmg");
+  
+  // auto e2=
+  //   [](const djvec_t& c)
+  // {
+  //   return sqr(effective_mass(c));
+  // };
+
+  // const double p2=sqr(1e-3*M_PI/64);
+  // const djvec_t D=(e2(A)+e2(B)-2*e2(C))/(2*p2);
+  // D.ave_err().write("/tmp/D.xmg");
+  
+  // const djvec_t E=D/C;
+  // E.ave_err().write("/tmp/E.xmg");
+  
+  // return 0;
+  
+  // const std::string dataPath="out";
+  // const std::vector<std::string> confs=getConfs("confsDataList.dat",dataPath,"");
+  // const size_t nConfs=confs.size();
+  // cout<<"NConfs: "<<nConfs<<endl;
+  
+  // const auto rawData=
+  //   getRaw("RUN0.dat",
+  // 	   "mes_contr_HH",
+  // 	   {""},
+  // 	   T,
+  // 	   dataPath,
+  // 	   confs,
+  // 	   {"P5P5","V0P5","V1V1"});
+  
+  // const index_t idx({{"t",T},{"conf",nConfs}});
+  
+  // auto getRaw=
+  //   [&idx,
+  //    &nConfs](const auto& rawData,
+  // 	      const std::string& tag,
+  // 	      const std::string& bw,
+  // 	      const std::string& fw)
+  //   {
+  //     vector<complex<double>> res(idx.max());
       
-      const string what=
-	combine("%s__%s__%s",bw.c_str(),fw.c_str(),tag.c_str());
+  //     const string what=
+  // 	combine("%s__%s__%s",bw.c_str(),fw.c_str(),tag.c_str());
       
-      const auto _v=
-	rawData.find(what);
-      if(_v==rawData.end())
-	{
-	  cout<<"List of corr:"<<endl;
-	  for(const auto& [key,val] : rawData)
-	    cout<<key<<endl;
+  //     const auto _v=
+  // 	rawData.find(what);
+  //     if(_v==rawData.end())
+  // 	{
+  // 	  cout<<"List of corr:"<<endl;
+  // 	  for(const auto& [key,val] : rawData)
+  // 	    cout<<key<<endl;
 	  
-	  CRASH("Unable to find %s",what.c_str());
-	}
+  // 	  CRASH("Unable to find %s",what.c_str());
+  // 	}
       
-      const auto& v=_v->second;
+  //     const auto& v=_v->second;
       
-      for(size_t iConf=0;iConf<nConfs;iConf++)
-	for(size_t t=0;t<T;t++)
-	  {
-	    union
-	    {
-	      complex<double> c{};
-	      double d[2];
-	    };
+  //     for(size_t iConf=0;iConf<nConfs;iConf++)
+  // 	for(size_t t=0;t<T;t++)
+  // 	  {
+  // 	    union
+  // 	    {
+  // 	      complex<double> c{};
+  // 	      double d[2];
+  // 	    };
 	    
-	    for(size_t ri=0;ri<2;ri++)
-	      d[ri]=v[iConf][0][t+T*ri];
+  // 	    for(size_t ri=0;ri<2;ri++)
+  // 	      d[ri]=v[iConf][0][t+T*ri];
 	    
-	    res[idx({t,iConf})]+=c;
-	  }
+  // 	    res[idx({t,iConf})]+=c;
+  // 	  }
       
-      return res;
-    };
+  //     return res;
+  //   };
   
-  auto get=
-    [&idx,
-     &getRaw,
-     &nConfs](const auto& rawData,
-	      const std::string& tag,
-	      const std::string& bw,
-	      const std::string& fw,
-	      const bool& ri)
-    {
-      djvec_t res(T);
+  // auto get=
+  //   [&idx,
+  //    &getRaw,
+  //    &nConfs](const auto& rawData,
+  // 	      const std::string& tag,
+  // 	      const std::string& bw,
+  // 	      const std::string& fw,
+  // 	      const bool& ri)
+  //   {
+  //     djvec_t res(T);
       
-      const auto d=
-	getRaw(rawData,tag,bw,fw);
+  //     const auto d=
+  // 	getRaw(rawData,tag,bw,fw);
       
-      for(size_t t=0;t<T;t++)
-	{
-	  jackknivesFill(nConfs,
-			 [&](const size_t& iConf,
-			     const size_t& iClust,
-			     const double& weight)
-			 {
-			   const double r=d[idx({t,iConf})].real();
-			   const double i=d[idx({t,iConf})].imag();
-			   res[t][iClust]+=weight*(ri?i:r);
-		       });
-	}
-      res.clusterize(((double)nConfs/njacks));
+  //     for(size_t t=0;t<T;t++)
+  // 	{
+  // 	  jackknivesFill(nConfs,
+  // 			 [&](const size_t& iConf,
+  // 			     const size_t& iClust,
+  // 			     const double& weight)
+  // 			 {
+  // 			   const double r=d[idx({t,iConf})].real();
+  // 			   const double i=d[idx({t,iConf})].imag();
+  // 			   res[t][iClust]+=weight*(ri?i:r);
+  // 		       });
+  // 	}
+  //     res.clusterize(((double)nConfs/njacks));
       
-      return res;
-    };
+  //     return res;
+  //   };
   
-  const auto getMPCAC=
-    [&rawData,
-     &get](const std::string& i)
-    {
-      const djvec_t AP5P5=get(rawData,"P5P5",i,i,0);
-      const djvec_t AV0P5=get(rawData,"V0P5",i,i,1);
+  // const auto getMPCAC=
+  //   [&rawData,
+  //    &get](const std::string& i)
+  //   {
+  //     const djvec_t AP5P5=get(rawData,"P5P5",i,i,0);
+  //     const djvec_t AV0P5=get(rawData,"V0P5",i,i,1);
       
-      // effective_mass
-      return (forward_derivative(AV0P5.symmetrized(-1))/AP5P5.symmetrized());
-    };
+  //     // effective_mass
+  //     return (forward_derivative(AV0P5.symmetrized(-1))/AP5P5.symmetrized());
+  //   };
   
-  effective_mass(get(rawData,"P5P5","H0","H0",0).symmetrized()).ave_err().write("plots/P5P5_run0.xmg");
-  effective_mass(get(rawData,"P5P5","H1","H1",0).symmetrized()).ave_err().write("plots/P5P5_run1.xmg");
+  // effective_mass(get(rawData,"P5P5","H0","H0",0).symmetrized()).ave_err().write("plots/P5P5_run0.xmg");
+  // effective_mass(get(rawData,"P5P5","H1","H1",0).symmetrized()).ave_err().write("plots/P5P5_run1.xmg");
   
-  const djvec_t M0=getMPCAC("H0");
-  M0.ave_err().write("plots/mPCAC_run0.xmg");
-  const djvec_t M1=getMPCAC("H1");
-  M1.ave_err().write("plots/mPCAC_run1.xmg");
+  // const djvec_t M0=getMPCAC("H0");
+  // M0.ave_err().write("plots/mPCAC_run0.xmg");
+  // const djvec_t M1=getMPCAC("H1");
+  // M1.ave_err().write("plots/mPCAC_run1.xmg");
   
-  const auto getMPCAC2=
-    [&rawData,
-     &get](const std::string& i)
-    {
-      const djvec_t AP5P5=get(rawData,"P5P5",i,i,0);
-      const djvec_t AV0P5=get(rawData,"V0P5",i,i,1);
+  // const auto getMPCAC2=
+  //   [&rawData,
+  //    &get](const std::string& i)
+  //   {
+  //     const djvec_t AP5P5=get(rawData,"P5P5",i,i,0);
+  //     const djvec_t AV0P5=get(rawData,"V0P5",i,i,1);
       
-      djvec_t out(T);
-      for(size_t it=0;it<T;it++)
-	out[it]=(AV0P5[(it+1)%T]-AV0P5[(it+T-1)%T])/2.0;
-      // for(size_t it=0;it<T;it++)
-      // 	out[it]=AV0P5[(it+1)%T]-AV0P5[it];
+  //     djvec_t out(T);
+  //     for(size_t it=0;it<T;it++)
+  // 	out[it]=(AV0P5[(it+1)%T]-AV0P5[(it+T-1)%T])/2.0;
+  //     // for(size_t it=0;it<T;it++)
+  //     // 	out[it]=AV0P5[(it+1)%T]-AV0P5[it];
       
-      // effective_mass
-      return out/AP5P5;
-    };
+  //     // effective_mass
+  //     return out/AP5P5;
+  //   };
   
-  getMPCAC2("H0").ave_err().write("plots/mPCAC_Alt.xmg");
+  // getMPCAC2("H0").ave_err().write("plots/mPCAC_Alt.xmg");
   
   
   // const double k0=0.1394267;
