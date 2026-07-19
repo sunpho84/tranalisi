@@ -122,6 +122,7 @@ int main()
   // const double p2=2*M_PI/L;
   
   const djvec_t m0=effective_mass(P5P5[0]);
+  const djvec_t v0=effective_mass(VKVK[0]);
   const djvec_t e1=effective_mass(P5P5[1]+P5P5[2]);
   // const djvec_t e2=effective_mass(c[3]+c[4]);
   // const djvec_t e3=effective_mass(c[5]+c[6]);
