@@ -79,7 +79,12 @@ int main()
   const auto it=
     ensParsList.find(ensName);
   if(it==ensParsList.end())
-    CRASH("Unable to fine ens %s",ensName.c_str());
+    {
+      cerr<<"available ensembles:"<<endl;
+      for(const auto& [name,_] : ensParsList)
+	cout<<" \""<<name<<"\""<<endl;
+      CRASH("Unable to find ens %s",ensName.c_str());
+    }
   
   const EnsPars& ensPars=
     it->second;
