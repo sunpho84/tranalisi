@@ -58,7 +58,7 @@ int main()
   
   std::vector<djvec_t> c(7);
   for(size_t i=0;i<7;i++)
-    c[i]=get(confs,path,"C1",combine("C%zu",i),"V1V1");
+    c[i]=get(confs,path,"C1",combine("C%zu",i+1),"V1V1");
   
   const djvec_t d0=(c[1]+c[2]-2*c[0])*L/M_PI/1e-3;
   const djvec_t d1=(c[3]+c[4]-2*c[0])*L/M_PI/1e-5;
