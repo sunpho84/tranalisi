@@ -6,6 +6,7 @@
 #include <array>
 #include <macros.hpp>
 #include <string>
+#include <unistd.h>
 #include <vector>
 
 #include <initializer_list>
@@ -219,5 +220,14 @@ string absolute_path(const string& path);
 
 //! Gets the basename
 string basename(const string& path);
+
+inline string pwd()
+{
+   char cwd[PATH_MAX];
+   if(getcwd(cwd,sizeof(cwd))==nullptr)
+     CRASH("error getting current path");
+   
+   return cwd;
+}
 
 #endif
