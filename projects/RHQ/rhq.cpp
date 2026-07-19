@@ -12,7 +12,8 @@ djvec_t get(const std::vector<string>& confs,
 	   {""},
 	   T,
 	   path,
-	   confs);
+	   confs,
+	   {"P5P5","V1V1","V2V2","V3V3","V0P5"});
   
   const string what=
     a+"__"+b+",__"+c;
