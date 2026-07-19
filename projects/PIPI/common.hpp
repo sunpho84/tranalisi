@@ -13,20 +13,28 @@ inline std::vector<std::string> getConfs(const std::string& confsListPath,
     {
       cout<<"Searching for confs in the \""<<rawDataPath<<"\" directory"<<endl;
       
-      std::map<std::pair<int,int>,std::string> tmpConfs;
       for(const auto& entry : filesystem::directory_iterator(rawDataPath))
 	if(entry.is_directory() and (finished.empty() or file_exists((std::string)entry.path()+"/"+finished)))
-	  {
-	    const string& conf=filesystem::path(entry.path()).filename();
-	    const size_t iStream=atoi(conf.substr(6,1).c_str());
-	    const size_t iConf=atoi(conf.substr(0,4).c_str());
-	    const int par=(iStream%2)*2-1;
-	    const int offs=iStream/2*2;
-	    tmpConfs[{offs,iConf*par}]=conf;
-	  }
+	  confs.push_back(filesystem::path(entry.path()).filename());
       
-      for(const auto& [dum,conf] : tmpConfs)
-	confs.emplace_back(conf);
+      if(confs.size() and confs.front().length()>4)
+	{
+	  cout<<"Conf "<<confs.front()<<" recognized as _r pattern, parsing"<<endl;
+	  std::map<std::pair<int,int>,std::string> tmpConfs;
+	  
+	  for(const std::string& conf : confs)
+	    {
+	      const size_t iStream=atoi(conf.substr(6,1).c_str());
+	      const size_t iConf=atoi(conf.substr(0,4).c_str());
+	      const int par=(iStream%2)*2-1;
+	      const int offs=iStream/2*2;
+	      tmpConfs[{offs,iConf*par}]=conf;
+	      
+	      confs.clear();
+	      for(const auto& [dum,conf] : tmpConfs)
+		confs.emplace_back(conf);
+	    }
+	}
       
       if(not confsListPath.empty())
 	raw_file_t(confsListPath,"w").bin_write(confs);
