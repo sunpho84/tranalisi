@@ -8,7 +8,7 @@ djvec_t get(const std::vector<string>& confs,
 {
   const auto rawData=
     getRaw("",
-	   "mes_contr_c0",
+	   "mes_contr_c",
 	   {""},
 	   T,
 	   path,
