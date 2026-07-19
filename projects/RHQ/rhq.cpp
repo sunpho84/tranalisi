@@ -1,20 +1,13 @@
 #include "../PIPI/common.hpp"
 
-djvec_t get(const std::vector<string>& confs,
+template <typename A>
+djvec_t get(const A& rawData,
+	    const std::vector<string>& confs,
 	    const std::string& path,
 	    const std::string& a,
 	    const std::string& b,
 	    const std::string& c)
 {
-  const auto rawData=
-    getRaw("",
-	   "mes_contr_c",
-	   {""},
-	   T,
-	   path,
-	   confs,
-	   {"P5P5","V1V1","V2V2","V3V3","V0P5"});
-  
   const string what=
     a+"__"+b+",__"+c;
       
@@ -62,9 +55,18 @@ int main(int narg,
   const size_t nConfs=confs.size();
   cout<<"NConfs: "<<nConfs<<endl;
   
+  const auto rawData=
+    getRaw("",
+	   "mes_contr_c",
+	   {""},
+	   T,
+	   path,
+	   confs,
+	   {"P5P5","V1V1","V2V2","V3V3","V0P5"});
+  
   std::vector<djvec_t> c(7);
   for(size_t i=0;i<7;i++)
-    c[i]=get(confs,path,"C1",combine("C%zu",i+1),"V1V1").symmetrized();
+    c[i]=get(rawData,confs,path,"C1",combine("C%zu",i+1),"P5P5").symmetrized();
   
   const double p0=M_PI*1e-3/L;
   const double p1=M_PI*1e-5/L;
