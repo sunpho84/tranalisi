@@ -1,4 +1,5 @@
 #include "../PIPI/common.hpp"
+#include <format>
 
 djvec_t get(const std::vector<string>& confs,
 	    const std::string& path,
@@ -56,9 +57,15 @@ int main()
   const size_t nConfs=confs.size();
   cout<<"NConfs: "<<nConfs<<endl;
   
-  get(confs,path,"C1","C1","V1V1");
+  std::vector<djvec_t> c(7);
+  for(size_t i=0;i<7;i++)
+    c[i]=get(confs,path,"C1",combine("C%zu",i),"V1V1");
   
+  const djvec_t d0=(c[1]+c[2]-2*c[0])*L/M_PI/1e-3;
+  const djvec_t d1=(c[3]+c[4]-2*c[0])*L/M_PI/1e-5;
   
+  d0.ave_err().write("plots/d0.xmg");
+  d1.ave_err().write("plots/d1.xmg");
   // const djvec_t A=read_djvec("mes_contr_P5P5_cp",T).symmetrized();
   // const djvec_t B=read_djvec("mes_contr_P5P5_cm",T).symmetrized();
   // const djvec_t C=read_djvec("mes_contr_P5P5_c0",T).symmetrized();
