@@ -109,7 +109,7 @@ int main()
 	   {"P5P5","V1V1","V2V2","V3V3","V0P5"});
   
   std::vector<djvec_t> P5P5(7);
-  std::vector<djvec_t> VKVK(7);
+  std::vector<djvec_t> VKVK(7,djvec_t(T/2+1));
   for(size_t i=0;i<7;i++)
     {
       P5P5[i]=get(rawData,confs,path,"C1",combine("C%zu",i+1),"P5P5").symmetrized();
