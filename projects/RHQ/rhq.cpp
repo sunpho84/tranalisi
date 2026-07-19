@@ -1,5 +1,4 @@
 #include "../PIPI/common.hpp"
-#include <format>
 
 djvec_t get(const std::vector<string>& confs,
 	    const std::string& path,
