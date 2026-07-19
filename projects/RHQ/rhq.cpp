@@ -74,7 +74,7 @@ const std::map<std::string,EnsPars> ensParsList{
 int main()
 {
   const std::string ensName=
-    basename(pwd());
+    std::filesystem::path{pwd()}.filename();
   
   const auto it=
     ensParsList.find(ensName);
