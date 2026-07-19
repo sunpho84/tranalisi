@@ -88,9 +88,11 @@ int main()
   
   const EnsPars& ensPars=
     it->second;
-  
+
   L=ensPars.L;
   T=L*2;
+  const djack_t& a=ensPars.a;
+  
   //set_njacks(50);
   
   const std::string path="out";
@@ -133,8 +135,8 @@ int main()
   
   // const djack_t M=constant_fit(m0/ensPars.a,15,18,"plots/m0.xmg");
   // cout<<M.ave_err()<<endl;
-  const djack_t V=constant_fit(v0/ensPars.a,15,18,"plots/v0.xmg");
-  cout<<V.ave_err()<<endl;
+  const djack_t V=constant_fit(v0/a,30,35,"plots/v0.xmg");
+  cout<<sqr(a).ave()<<" "<<V.ave_err()<<endl;
   c1.ave_err().write("plots/c1.xmg");
   // c2.ave_err().write("plots/c2.xmg");
   // c3.ave_err().write("plots/c3.xmg");
