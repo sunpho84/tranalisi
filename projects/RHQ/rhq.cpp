@@ -60,8 +60,11 @@ int main()
   for(size_t i=0;i<7;i++)
     c[i]=get(confs,path,"C1",combine("C%zu",i+1),"V1V1");
   
-  const djvec_t d0=(c[1]+c[2]-2*c[0])*L/M_PI/1e-3;
-  const djvec_t d1=(c[3]+c[4]-2*c[0])*L/M_PI/1e-5;
+  const double p0=2*M_PI*1e-3/L;
+  const double p1=2*M_PI*1e-5/L;
+  
+  const djvec_t d0=(c[1]+c[2]-2*c[0])/sqr(p0);
+  const djvec_t d1=(c[3]+c[4]-2*c[0])/sqr(p1);
   
   d0.ave_err().write("plots/d0.xmg");
   d1.ave_err().write("plots/d1.xmg");
