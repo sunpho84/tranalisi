@@ -46,10 +46,14 @@ djvec_t get(const std::vector<string>& confs,
   return res;
 }
 
-int main()
+int main(int narg,
+	 char** arg)
 {
-  L=112;
-  T=224;
+  if(narg<2)
+    CRASH("Use %s L",arg[0]);
+  
+  L=atoi(arg[1]);
+  T=L*2;
   set_njacks(50);
   
   const std::string path="out";
@@ -75,6 +79,7 @@ int main()
   const djvec_t c2=(sqr(e2)-sqr(m0))/sqr(p1);
   const djvec_t c3=(sqr(e3)-sqr(m0))/sqr(p2);
   
+  m0.ave_err().write("plots/m0.xmg");
   c1.ave_err().write("plots/c1.xmg");
   c2.ave_err().write("plots/c2.xmg");
   c3.ave_err().write("plots/c3.xmg");
