@@ -67,8 +67,8 @@ int main()
   const djvec_t e1=effective_mass(c[1]+c[2]);
   const djvec_t e2=effective_mass(c[3]+c[4]);
   
-  const djvec_t c1=sqr(e1-m0)/sqr(p0);
-  const djvec_t c2=sqr(e2-m0)/sqr(p1);
+  const djvec_t c1=(sqr(e1)-sqr(m0))/sqr(p0);
+  const djvec_t c2=(sqr(e2)-sqr(m0))/sqr(p1);
   
   c1.ave_err().write("plots/c1.xmg");
   c2.ave_err().write("plots/c2.xmg");
