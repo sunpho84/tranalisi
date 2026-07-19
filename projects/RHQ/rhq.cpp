@@ -60,18 +60,22 @@ int main()
   for(size_t i=0;i<7;i++)
     c[i]=get(confs,path,"C1",combine("C%zu",i+1),"V1V1").symmetrized();
   
-  const double p0=2*M_PI*1e-3/L;
-  const double p1=2*M_PI*1e-5/L;
+  const double p0=M_PI*1e-3/L;
+  const double p1=M_PI*1e-5/L;
+  const double p2=M_PI/L;
   
   const djvec_t m0=effective_mass(c[0]);
   const djvec_t e1=effective_mass(c[1]+c[2]);
   const djvec_t e2=effective_mass(c[3]+c[4]);
+  const djvec_t e3=effective_mass(c[5]+c[6]);
   
   const djvec_t c1=(sqr(e1)-sqr(m0))/sqr(p0);
   const djvec_t c2=(sqr(e2)-sqr(m0))/sqr(p1);
+  const djvec_t c3=(sqr(e3)-sqr(m0))/sqr(p2);
   
   c1.ave_err().write("plots/c1.xmg");
   c2.ave_err().write("plots/c2.xmg");
+  c3.ave_err().write("plots/c3.xmg");
   // const djvec_t A=read_djvec("mes_contr_P5P5_cp",T).symmetrized();
   // const djvec_t B=read_djvec("mes_contr_P5P5_cm",T).symmetrized();
   // const djvec_t C=read_djvec("mes_contr_P5P5_c0",T).symmetrized();
