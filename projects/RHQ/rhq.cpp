@@ -62,7 +62,7 @@ int main()
   
   const double p0=M_PI*1e-3/L;
   const double p1=M_PI*1e-5/L;
-  const double p2=M_PI/L;
+  const double p2=2*M_PI/L;
   
   const djvec_t m0=effective_mass(c[0]);
   const djvec_t e1=effective_mass(c[1]+c[2]);
