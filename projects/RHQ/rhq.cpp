@@ -130,8 +130,8 @@ int main()
   // const djvec_t c2=(sqr(e2)-sqr(m0))/sqr(p1);
   // const djvec_t c3=(sqr(e3)-sqr(m0))/sqr(p2);
   
-  const djack_t M=constant_fit(m0,15,18,"plots/m0.xmg");
-  cout<<(M/ensPars.a).ave_err()<<endl;
+  const djack_t M=constant_fit(m0/ensPars.a,15,18,"plots/m0.xmg");
+  cout<<M.ave_err()<<endl;
   c1.ave_err().write("plots/c1.xmg");
   // c2.ave_err().write("plots/c2.xmg");
   // c3.ave_err().write("plots/c3.xmg");
