@@ -39,15 +39,54 @@ djvec_t get(const A& rawData,
   return res;
 }
 
-int main(int narg,
-	 char** arg)
+auto dum=
+  []()
+  {
+    njacks=50;
+    return 1;
+  }();
+
+struct EnsPars
 {
-  if(narg<2)
-    CRASH("Use %s L",arg[0]);
+  int L;
   
-  L=atoi(arg[1]);
+  djack_t a;
+  
+  EnsPars(const int& L,
+	  const double& aAve,
+	  const double& eErr,
+	  const int seed) :
+    L(L)
+  {
+    cout<<smart_print({aAve,eErr})<<endl;
+    a.fill_gauss(aAve,eErr,seed);
+  }
+};
+
+const std::map<std::string,EnsPars> ensParsList{
+  {"A48", {48,0.090700,0.000500,223525}},
+  {"B64", {64,0.079480,0.000110,223526}},
+  {"C80", {80,0.068190,0.000140,223527}},
+  {"D96", {96,0.056850,0.000090,223528}},
+  {"E112",{112,0.048920,0.000110,223529}},
+};
+
+int main()
+{
+  const std::string ensName=
+    basename(pwd());
+  
+  const auto it=
+    ensParsList.find(ensName);
+  if(it==ensParsList.end())
+    CRASH("Unable to fine ens %s",ensName.c_str());
+  
+  const EnsPars& ensPars=
+    it->second;
+  
+  L=ensPars.L;
   T=L*2;
-  set_njacks(50);
+  //set_njacks(50);
   
   const std::string path="out";
   const std::vector<std::string> confs=getConfs("",path,"finished");
@@ -64,27 +103,32 @@ int main(int narg,
 	   confs,
 	   {"P5P5","V1V1","V2V2","V3V3","V0P5"});
   
-  std::vector<djvec_t> c(7);
+  std::vector<djvec_t> P5P5(7);
+  std::vector<djvec_t> VKVK(7);
   for(size_t i=0;i<7;i++)
-    c[i]=get(rawData,confs,path,"C1",combine("C%zu",i+1),"P5P5").symmetrized();
-  
+    {
+      P5P5[i]=get(rawData,confs,path,"C1",combine("C%zu",i+1),"P5P5").symmetrized();
+      for(int mu=1;mu<=3;mu++)
+	VKVK[i]+=get(rawData,confs,path,"C1",combine("C%zu",i+1),combine("V%dV%d",mu,mu)).symmetrized();
+      VKVK[i]/=3;
+    }
   const double p0=M_PI*1e-3/L;
-  const double p1=M_PI*1e-5/L;
-  const double p2=2*M_PI/L;
+  // const double p1=M_PI*1e-5/L;
+  // const double p2=2*M_PI/L;
   
-  const djvec_t m0=effective_mass(c[0]);
-  const djvec_t e1=effective_mass(c[1]+c[2]);
-  const djvec_t e2=effective_mass(c[3]+c[4]);
-  const djvec_t e3=effective_mass(c[5]+c[6]);
+  const djvec_t m0=effective_mass(P5P5[0]);
+  const djvec_t e1=effective_mass(P5P5[1]+P5P5[2]);
+  // const djvec_t e2=effective_mass(c[3]+c[4]);
+  // const djvec_t e3=effective_mass(c[5]+c[6]);
   
   const djvec_t c1=(sqr(e1)-sqr(m0))/sqr(p0);
-  const djvec_t c2=(sqr(e2)-sqr(m0))/sqr(p1);
-  const djvec_t c3=(sqr(e3)-sqr(m0))/sqr(p2);
+  // const djvec_t c2=(sqr(e2)-sqr(m0))/sqr(p1);
+  // const djvec_t c3=(sqr(e3)-sqr(m0))/sqr(p2);
   
   m0.ave_err().write("plots/m0.xmg");
   c1.ave_err().write("plots/c1.xmg");
-  c2.ave_err().write("plots/c2.xmg");
-  c3.ave_err().write("plots/c3.xmg");
+  // c2.ave_err().write("plots/c2.xmg");
+  // c3.ave_err().write("plots/c3.xmg");
   // const djvec_t A=read_djvec("mes_contr_P5P5_cp",T).symmetrized();
   // const djvec_t B=read_djvec("mes_contr_P5P5_cm",T).symmetrized();
   // const djvec_t C=read_djvec("mes_contr_P5P5_c0",T).symmetrized();
