@@ -720,6 +720,9 @@ auto direct()
 
 int main()
 {
+  L=64;
+  T=128;
+  
   njacks=50;
   
   const auto b=box();

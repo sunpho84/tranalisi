@@ -1,7 +1,7 @@
 #include <tranalisi.hpp>
 
-const size_t T=128;
-const size_t L=64;
+inline size_t T;
+inline size_t L;
 
 inline std::vector<std::string> getConfs(const std::string& confsListPath,
 					 const std::string& rawDataPath,

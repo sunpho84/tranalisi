@@ -48,6 +48,8 @@ djvec_t get(const std::vector<string>& confs,
 
 int main()
 {
+  L=112;
+  T=224;
   set_njacks(50);
   
   const std::string path="out";
