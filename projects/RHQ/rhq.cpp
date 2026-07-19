@@ -58,16 +58,20 @@ int main()
   
   std::vector<djvec_t> c(7);
   for(size_t i=0;i<7;i++)
-    c[i]=get(confs,path,"C1",combine("C%zu",i+1),"V1V1");
+    c[i]=get(confs,path,"C1",combine("C%zu",i+1),"V1V1").symmetrized();
   
   const double p0=2*M_PI*1e-3/L;
   const double p1=2*M_PI*1e-5/L;
   
-  const djvec_t d0=(c[1]+c[2]-2*c[0])/sqr(p0);
-  const djvec_t d1=(c[3]+c[4]-2*c[0])/sqr(p1);
+  const djvec_t m0=effective_mass(c[0]);
+  const djvec_t e1=effective_mass(c[1]+c[2]);
+  const djvec_t e2=effective_mass(c[3]+c[4]);
   
-  d0.ave_err().write("plots/d0.xmg");
-  d1.ave_err().write("plots/d1.xmg");
+  const djvec_t c1=sqr(e1-m0)/sqr(p0);
+  const djvec_t c2=sqr(e2-m0)/sqr(p1);
+  
+  c1.ave_err().write("plots/c1.xmg");
+  c2.ave_err().write("plots/c2.xmg");
   // const djvec_t A=read_djvec("mes_contr_P5P5_cp",T).symmetrized();
   // const djvec_t B=read_djvec("mes_contr_P5P5_cm",T).symmetrized();
   // const djvec_t C=read_djvec("mes_contr_P5P5_c0",T).symmetrized();
