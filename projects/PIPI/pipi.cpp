@@ -480,8 +480,9 @@ std::vector<djvec_t> computeTri(const index_t& idOut)
     {
       const InterpDef& bSo{interpDef[iBSo]};
       const std::string& repSo{bSo.rep};
-      const std::string& so1{bSo.rap[0]};
-      const std::string& so2{bSo.rap[1]};
+      const std::string& so{bSo.id};
+      // const std::string& so1{bSo.rap[0]};
+      // const std::string& so2{bSo.rap[1]};
       
       auto g=
 	[&repSo,
@@ -489,14 +490,15 @@ std::vector<djvec_t> computeTri(const index_t& idOut)
 	{
 	  return getTri(repSo,so,"V3P5",1);
 	};
-      const djvec_t A=g(so1);
-      const djvec_t B=g(so2);
+      // const djvec_t A=g(so1);
+      // const djvec_t B=g(so2);
+      const djvec_t C=g(so);
       
       // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
       // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
-      A.ave_err().write("plots/triA_"+repSo+".xmg");
-      B.ave_err().write("plots/triB_"+repSo+".xmg");
-      const djvec_t C=A-B;
+      // A.ave_err().write("plots/triA_"+repSo+".xmg");
+      // B.ave_err().write("plots/triB_"+repSo+".xmg");
+      // const djvec_t C=A-B;
       C.ave_err().write("plots/triC_"+repSo+".xmg");
       
       res[idOut(std::vector<size_t>{iBSo})]=C/sqrt(2);
