@@ -721,13 +721,13 @@ int main()
   
   const auto b=box();
   
-  const auto d=direct();
-  
   const auto jj=current();
   
   const auto pi=pion();
   
   const auto tri=triangle();
+  
+  const auto d=direct();
   
   const size_t nOpToUse=nOp;
   
