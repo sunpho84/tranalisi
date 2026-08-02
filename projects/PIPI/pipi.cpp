@@ -267,8 +267,8 @@ auto current()
 
 std::vector<djvec_t> computePion(const index_t&)
 {
-  const std::string corrPath="directCorr";
-  const std::vector<std::string> confs=getConfs("confsDirectList.dat",corrPath,"finished");
+  const std::string corrPath="pionCorr";
+  const std::vector<std::string> confs=getConfs("confsPionList.dat",corrPath,"finished");
   
   const size_t nConfs=confs.size();
   
