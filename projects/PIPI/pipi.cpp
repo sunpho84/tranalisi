@@ -128,11 +128,12 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
 	
 	const std::string& repSo{bSo.rep};
 	const std::string& repSi{bSi.rep};
-	const std::string& so1{bSo.rap[0]};
-	const std::string& so2{bSo.rap[1]};
+	// const std::string& so1{bSo.rap[0]};
+	// const std::string& so2{bSo.rap[1]};
+	const std::string& so{bSo.id};
 	const std::string& si{bSi.id};
-	const djvec_t A=getBox(so1,so2,"M"+si,"P"+si);
-	const djvec_t B=getBox(so2,so1,"M"+si,"P"+si);
+	const djvec_t A=getBox(so,so,si,si);
+	const djvec_t B=getBox(so,so,si,si);
 	
 	// effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
 	// effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
@@ -799,7 +800,32 @@ int main()
   cout<<"VV: "<<combine("%.16lg\n",c[0][10].ave())<<endl;
   cout<<"tri: "<<combine("%.16lg\n",c[1][10].ave())<<endl;
   
-  tie(eig,recastEigvec,ignore)=gevp(c,t0);
+  tie(eig,recastEigvec,origEigvec)=gevp(c,t0);
+  
+  for(size_t iState=0;iState<nOpToUse+1;iState++)
+    {
+      double a=recastEigvec[iC({0,iState})][t0][0];
+      for(size_t t=0;t<tMaxBox;t++)
+	for(size_t ijack=0;ijack<=njacks;ijack++)
+	  for(size_t iOp=0;iOp<nOpToUse+1;iOp++)
+	    {
+	      double& b=recastEigvec[iC({iOp,iState})][t][ijack];
+	      b=(a*b)/fabs(a*b)*b;
+	    }
+    }
+  
+  for(size_t i1=0;i1<nOpToUse+1;i1++)
+    for(size_t i2=0;i2<nOpToUse+1;i2++)
+      {
+	djvec_t s(tMaxBox);
+	for(size_t j=0;j<nOpToUse+1;j++)
+	  for(size_t k=0;k<nOpToUse+1;k++)
+	    s+=recastEigvec[iC({j,i1})]*c[iC({j,k})]*recastEigvec[iC({k,i2})];
+	cout<<i1<<" "<<i2<<" "<<s[11].ave_err()<<endl;
+      }
+  
+  for(size_t iOp=0;iOp<nOpToUse+1;iOp++)
+    recastEigvec[iC({iOp,4})].ave_err().write(combine("/tmp/%zu.xmg",iOp));
   
   // typedef Matrix<double,Dynamic,Dynamic> Matr;
   // GeneralizedEigenSolver<Matr> ges;
