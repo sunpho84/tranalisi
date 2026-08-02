@@ -52,7 +52,7 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
       vector<complex<double>> res(idx.max());
       
       const string what=
-	combine("%s__%s,__P5P5",a.c_str(),b.c_str());
+	combine("%s__%s__P5P5",a.c_str(),b.c_str());
       // cout<<"Searching for "<<what<<endl;
       
       const auto _v=
@@ -88,16 +88,14 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
     };
   
   auto getBox=
-    [&](const string& mso1,
-	const string& mso2,
-	const string& msi1,
-	const string& msi2)
+    [&](const string& mso,
+	const string& msi)
     {
       djvec_t res(tMaxBox);
       
       const auto d=
 	// getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
-	getRawBox("bw"+mso1,"fw"+msi2);
+	getRawBox("bw"+mso,"fw"+msi);
       
       for(size_t t=0;t<tMaxBox;t++)
 	{
@@ -132,8 +130,8 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
 	// const std::string& so2{bSo.rap[1]};
 	const std::string& so{bSo.id};
 	const std::string& si{bSi.id};
-	const djvec_t A=getBox(so,so,si,si);
-	const djvec_t B=getBox(so,so,si,si);
+	const djvec_t A=getBox(so,si);
+	const djvec_t B=getBox(so,si);
 	
 	// effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
 	// effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
