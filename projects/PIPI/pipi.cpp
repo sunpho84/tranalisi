@@ -401,13 +401,12 @@ std::vector<djvec_t> computeTri(const index_t& idOut)
      &nHits,
      &idx,
      &nConfs](const std::string& p,
-	      const std::string& maybeSm,
 	      const std::string& tag)
     {
       vector<complex<double>> res(idx.max());
       
       const string what=
-	combine("bw%s__sm%s_prop,__%s",p.c_str(),maybeSm.c_str(),tag.c_str());
+	combine("bw%s__prop__%s",p.c_str(),tag.c_str());
       // cout<<"Searching for "<<what<<endl;
       
       const auto _v=
@@ -446,14 +445,13 @@ std::vector<djvec_t> computeTri(const index_t& idOut)
     [&](const string& repSo,
 	const string& p,
 	const string& what,
-	const string& maybeSme,
 	const int& parity)
     {
       djvec_t res(T);
       
       vector<complex<double>> d =
           // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
-	getRawTri(p,maybeSme,what);
+	getRawTri(p,what);
       
       for(size_t t=0;t<T;t++)
 	{
@@ -479,49 +477,43 @@ std::vector<djvec_t> computeTri(const index_t& idOut)
   std::vector<djvec_t> res(idOut.max());
   
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
-    for(size_t iSm=0;iSm<2;iSm++)
-      for(size_t iVT=0;iVT<2;iVT++)
+    {
+      const InterpDef& bSo{interpDef[iBSo]};
+      const std::string& repSo{bSo.rep};
+      const std::string& so1{bSo.rap[0]};
+      const std::string& so2{bSo.rap[1]};
+      
+      auto g=
+	[&repSo,
+	 &getTri](const string& so)
 	{
-	  const InterpDef& bSo{interpDef[iBSo]};
-	  const std::string& repSo{bSo.rep};
-	  const std::string& so1{bSo.rap[0]};
-	  const std::string& so2{bSo.rap[1]};
-	  
-	  auto g=
-	    [&repSo,
-	     &iSm,
-	     &iVT,
-	     &getTri](const string& so)
-	    {
-	      return getTri(repSo,so,(iVT==0)?"V3P5":"T3P5",(iSm==0)?"":"_sm",(iVT==0)?1:-1);
-	    };
-	  const djvec_t A=g(so1);
-	  const djvec_t B=g(so2);
-	  
-	  // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
-	  // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
-	  A.ave_err().write("plots/triA_"+repSo+".xmg");
-	  B.ave_err().write("plots/triB_"+repSo+".xmg");
-	  const djvec_t C=A-B;
-	  C.ave_err().write("plots/triC_"+repSo+".xmg");
-	  
-	  res[idOut({iBSo,iSm,iVT})]=C/sqrt(2);
-	  // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
-	}
+	  return getTri(repSo,so,"V3P5",1);
+	};
+      const djvec_t A=g(so1);
+      const djvec_t B=g(so2);
+      
+      // effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
+      // effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
+      A.ave_err().write("plots/triA_"+repSo+".xmg");
+      B.ave_err().write("plots/triB_"+repSo+".xmg");
+      const djvec_t C=A-B;
+      C.ave_err().write("plots/triC_"+repSo+".xmg");
+      
+      res[idOut(std::vector<size_t>{iBSo})]=C/sqrt(2);
+      // getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
+    }
   
   return res;
 }
 
 auto triangle()
 {
-  index_t idOut{{{{"bSo",interpDef.size()},{"sm",2},{"vt",2}}}};
+  index_t idOut{{{{"bSo",interpDef.size()}}}};
   
   return [data=computeOrLoad(idOut,"triangle.dat",computeTri),
-	  idOut](const size_t& iOp,
-		 const size_t& iSm,
-		 const size_t& iVt) -> const djvec_t&
+	  idOut](const size_t& iOp) -> const djvec_t&
   {
-    return data[idOut({iOp,iSm,iVt})];
+    return data[idOut(std::vector<size_t>{iOp})];
   };
 }
 
@@ -740,11 +732,11 @@ int main()
   index_t iC({{"so",nOpToUse+1},{"si",nOpToUse+1}});
   std::vector<djvec_t> c((nOpToUse+1)*(nOpToUse+1));
   
-  for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
-    {
-      (tri(ibSo,1/*ism*/,/*iVt*/ 0)/tri(ibSo,0/*ism*/,/*iVt*/ 0)).ave_err().write(combine("plots/rat_SM_noSM%zu.xmg",ibSo));
-      (-tri(ibSo,0/*ism*/,/*iVt*/ 1)/tri(ibSo,0/*ism*/,/*iVt*/ 0)).ave_err().write(combine("plots/rat_T_V_%zu.xmg",ibSo));
-    }
+  // for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
+  //   {
+  //     (tri(ibSo,1/*ism*/,/*iVt*/ 0)/tri(ibSo,0/*ism*/,/*iVt*/ 0)).ave_err().write(combine("plots/rat_SM_noSM%zu.xmg",ibSo));
+  //     (-tri(ibSo,0/*ism*/,/*iVt*/ 1)/tri(ibSo,0/*ism*/,/*iVt*/ 0)).ave_err().write(combine("plots/rat_T_V_%zu.xmg",ibSo));
+  //   }
   
   for(size_t ibSo=0;ibSo<nOpToUse;ibSo++)
     {
@@ -762,7 +754,7 @@ int main()
       
       c[iC({ibSo+1,0})]=
 	c[iC({0,ibSo+1})]=
-	tri(ibSo,0,0);
+	tri(ibSo);
     }
   
   c[0]=jj(0);
