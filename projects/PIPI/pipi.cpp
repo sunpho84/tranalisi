@@ -681,9 +681,9 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
       const auto d=
 	getRawDirect(mso,msi);
       
-      for(size_t iConf=0;iConf<nConfs;iConf++)
-	printf("%s %s %s %.16lg\n",confs[iConf].c_str(),mso.c_str(),msi.c_str(),d(0,1,iConf)/L/L/L);
-      cout<<endl;
+      // for(size_t iConf=0;iConf<nConfs;iConf++)
+      // 	printf("%s %s %s %.16lg\n",confs[iConf].c_str(),mso.c_str(),msi.c_str(),d(0,1,iConf)/L/L/L);
+      // cout<<endl;
       
       for(size_t i=0;i<3;i++)
 	{
@@ -703,7 +703,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
   
   enum{DIR,PAR,SIN};
   
-  std::vector<djvec_t> res(idOut.max());
+  std::vector<djvec_t> res(idOut.max(),djvec_t(T));
   
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
     {
@@ -808,6 +808,8 @@ int main()
   const auto tri=triangle();
   
   const auto d=direct();
+  
+  return 0;
   
   const size_t nOpToUse=nOp;
   
