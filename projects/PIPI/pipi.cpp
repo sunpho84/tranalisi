@@ -602,7 +602,8 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
       vector<double> sin(idx.max());
       
       const string what=
-	combine("bw%s_%s__fw%s_%s,__P5P5",msi.c_str(),mso.c_str(),msi.c_str(),mso.c_str());
+	//combine("bw%s_%s__fw%s_%s,__P5P5",msi.c_str(),mso.c_str(),msi.c_str(),mso.c_str());
+	combine("bw%s__fw%s,__P5P5",msi.c_str(),mso.c_str());
       
       const auto _v=
 	rawData.find(what);
