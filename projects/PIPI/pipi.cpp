@@ -703,7 +703,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
   
   enum{DIR,PAR,SIN};
   
-  std::vector<djvec_t> res(idOut.max(),djvec_t(T));
+  std::vector<djvec_t> res(idOut.max(),djvec_t(T/2+1));
   
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
     {
@@ -723,8 +723,8 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	      
 	      const size_t iCombo=(momSo!=momSi);
 
-	      size_t i=idOut({iBSo,iBSi,iCombo});
-	      cout<<" "<<i<<" "<<res.size()<<" "<< res[idOut({iBSo,iBSi,iCombo})].size()<<" "<<getDirect(a,b)[0].size()<<endl;
+	      // size_t i=idOut({iBSo,iBSi,iCombo});
+	      // cout<<" "<<i<<" "<<res.size()<<" "<< res[idOut({iBSo,iBSi,iCombo})].size()<<" "<<getDirect(a,b)[0].size()<<endl;
 	      res[idOut({iBSo,iBSi,iCombo})]+=getDirect(a,b)[0]*momSo[2]*momSi[2];
 	      
 	      iSi++;
