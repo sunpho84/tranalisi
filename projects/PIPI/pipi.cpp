@@ -1,23 +1,46 @@
 #include "common.hpp"
+#include <set>
 
 const size_t tMaxBox=26;
 const double aGeVInv=0.07948/0.197;;
+
+struct Momentum :
+  std::array<double,3>
+{
+  Momentum operator/(const double& d) const
+  {
+    Momentum res;
+	  
+    for(int i=0;i<3;i++)
+      res[i]=(*this)[i]/d;
+	  
+    return res;
+  }
+};
+
+inline std::ostream& operator<<(std::ostream& os,
+			 const Momentum& mom)
+{
+  return os<<"{"<<mom[0]<<","<<mom[1]<<","<<mom[2]<<"}";
+}
 
 struct InterpDef
 {
   std::string rep;
   
-  std::string id;
+  std::string _id;
   
-  std::vector<string> rap;
+  std::vector<string> _rap;
+  
+  Momentum mom;
 };
 
 const std::vector<InterpDef> interpDef{
-  {"001","0",{"PZ","MZ"}},
-  {"011","1",{"0P11","0M11"}},
-  {"111","2",{"P111","M111"}},
-  {"002","3",{"PZ2","MZ2"}},
-  {"012","4",{"P012","M012"}}
+  {"001","0",{"PZ","MZ"},{0,0,1}},
+  {"011","1",{"0P11","0M11"},{0,1,1}},
+  {"111","2",{"P111","M111"},{1,1,1}},
+  {"002","3",{"PZ2","MZ2"},{0,0,2}},
+  {"012","4",{"P012","M012"},{0,1,2}}
 };
 
 const size_t nOp=interpDef.size();
@@ -128,8 +151,8 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
 	const std::string& repSi{bSi.rep};
 	// const std::string& so1{bSo.rap[0]};
 	// const std::string& so2{bSo.rap[1]};
-	const std::string& so{bSo.id};
-	const std::string& si{bSi.id};
+	const std::string& so{std::to_string(iBSo)};
+	const std::string& si{std::to_string(iBSi)};
 	const djvec_t A=getBox(so,si);
 	const djvec_t B=getBox(so,si);
 	
@@ -480,7 +503,7 @@ std::vector<djvec_t> computeTri(const index_t& idOut)
     {
       const InterpDef& bSo{interpDef[iBSo]};
       const std::string& repSo{bSo.rep};
-      const std::string& so{bSo.id};
+      const std::string& so{std::to_string(iBSo)};
       // const std::string& so1{bSo.rap[0]};
       // const std::string& so2{bSo.rap[1]};
       
@@ -520,6 +543,34 @@ auto triangle()
 }
 
 /////////////////////////////////////////////////////////////////
+
+std::pair<std::set<Momentum>,std::set<Momentum>> getAllPerms(Momentum a)
+{
+  std::set<Momentum> source;
+  std::set<Momentum> sink;
+  
+  do
+    {
+      Momentum c{a};
+      std::sort(c.begin(),c.begin()+2);
+      if(c[2])
+	sink.insert(c);
+      
+      for(int i=0;i<8;i++)
+	{
+	  Momentum b;
+	  
+	  for(int mu=0;mu<3;mu++)
+	    b[mu]=a[mu]*(((i>>mu)&1)*2-1);
+	  
+	  if(b[2])
+	    source.insert(b);
+	}
+    }
+  while(std::next_permutation(a.begin(),a.end()));
+  
+  return {source,sink};
+}
 
 std::vector<djvec_t> computeDirect(const index_t& idOut)
 {
@@ -654,46 +705,74 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
   std::vector<djvec_t> res(idOut.max());
   
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
-    for(size_t iBSi=0;iBSi<interpDef.size();iBSi++)
-      {
-	const InterpDef& bSo{interpDef[iBSo]};
-	const InterpDef& bSi{interpDef[iBSi]};
+    {
+      const size_t iBSi=iBSo;
+      const auto [source,sink]=getAllPerms(interpDef[iBSo].mom);
+      
+      size_t iSo{};
+      for(const Momentum& momSo : source)
+	{
+	  size_t iSi{};
+	  for(const Momentum& momSi : sink)
+	    {
+	      const string a=combine("bw%zu_%zu_%zu",iBSo,iSo,iSi);
+	      const string b=combine("fw%zu_%zu_%zu",iBSo,iSo,iSi);
+	      
+	      //cout<<a<<" "<<b<<" "<<momSo[2]<<" "<<momSi[2]<<endl;
+	      
+	      const size_t iCombo=(momSo!=momSi);
+	      
+	      res[idOut({iBSo,iBSi,iCombo})]+=getDirect(a,b)[0]*momSo[2]*momSi[2];
+	      
+	      iSi++;
+	    }
+	  iSo++;
+	}
+      
+      for(size_t iCombo=0;iCombo<2;iCombo++)
+	res[idOut({iBSo,iBSi,iCombo})].ave_err().write(combine("plots/effD_%zu_%zu_%zu.xmg",iBSo,iBSi,iCombo));
+      
+      
+      // for(size_t iBSi=0;iBSi<interpDef.size();iBSi++)
+      // {
+      // 	const InterpDef& bSo{interpDef[iBSo]};
+      // 	const InterpDef& bSi{interpDef[iBSi]};
 	
-	const std::string& so{bSo.rap[0]};
-	const std::string& si1{bSi.rap[0]};
-	const std::string& si2{bSi.rap[1]};
+      // 	const std::string& so{bSo.rap[0]};
+      // 	const std::string& si1{bSi.rap[0]};
+      // 	const std::string& si2{bSi.rap[1]};
 	
-	const auto _A=getDirect(so,si1);
-	const auto _B=getDirect(so,si2);
+      // 	const auto _A=getDirect(so,si1);
+      // 	const auto _B=getDirect(so,si2);
 	
-	for(size_t iCombo=0;iCombo<3;iCombo++)
-	  res[idOut({iBSo,iBSi,iCombo})]=_A[iCombo]-_B[iCombo];
+      // 	for(size_t iCombo=0;iCombo<3;iCombo++)
+      // 	  res[idOut({iBSo,iBSi,iCombo})]=_A[iCombo]-_B[iCombo];
 	
-	const djvec_t A=_A[DIR];
-	const djvec_t B=_B[DIR];
-	const djvec_t D=_A[PAR];
-	const djvec_t E=_B[PAR];
-	const djvec_t G=_A[SIN];
-	const djvec_t H=_B[SIN];
+      // 	const djvec_t A=_A[DIR];
+      // 	const djvec_t B=_B[DIR];
+      // 	const djvec_t D=_A[PAR];
+      // 	const djvec_t E=_B[PAR];
+      // 	const djvec_t G=_A[SIN];
+      // 	const djvec_t H=_B[SIN];
 	
-	const std::string& repSo{bSo.rep};
-	const std::string& repSi{bSi.rep};
-	A.ave_err().write("plots/dA_"+repSi+"_"+repSo+".xmg");
-	B.ave_err().write("plots/dB_"+repSi+"_"+repSo+".xmg");
-	const djvec_t C=A-B;
-	C.ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
+      // 	const std::string& repSo{bSo.rep};
+      // 	const std::string& repSi{bSi.rep};
+      // 	A.ave_err().write("plots/dA_"+repSi+"_"+repSo+".xmg");
+      // 	B.ave_err().write("plots/dB_"+repSi+"_"+repSo+".xmg");
+      // 	const djvec_t C=A-B;
+      // 	C.ave_err().write("plots/dC_"+repSi+"_"+repSo+".xmg");
 	
-	(effective_mass(_B[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte_"+repSi+"_"+repSo+".xmg");
-	(effective_mass(_B[DIR]-_A[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte2_"+repSi+"_"+repSo+".xmg");
+      // 	(effective_mass(_B[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte_"+repSi+"_"+repSo+".xmg");
+      // 	(effective_mass(_B[DIR]-_A[DIR])-2*effective_mass(_B[SIN])).ave_err().write("plots/effDinte2_"+repSi+"_"+repSo+".xmg");
 	
-	effective_mass(A).ave_err().write("plots/effDA_"+repSi+"_"+repSo+".xmg");
-	effective_mass(B).ave_err().write("plots/effDB_"+repSi+"_"+repSo+".xmg");
-	effective_mass(D).ave_err().write("plots/effDD_"+repSi+"_"+repSo+".xmg");
-	effective_mass(E).ave_err().write("plots/effDE_"+repSi+"_"+repSo+".xmg");
-	(2*effective_mass(G)).ave_err().write("plots/effDG_"+repSi+"_"+repSo+".xmg");
-	(2*effective_mass(H)).ave_err().write("plots/effDH_"+repSi+"_"+repSo+".xmg");
-	effective_mass(A-B).ave_err().write("plots/effDC_"+repSi+"_"+repSo+".xmg");
-	effective_mass(H-G).ave_err().write("plots/effDI_"+repSi+"_"+repSo+".xmg");
+      // 	effective_mass(A).ave_err().write("plots/effDA_"+repSi+"_"+repSo+".xmg");
+      // 	effective_mass(B).ave_err().write("plots/effDB_"+repSi+"_"+repSo+".xmg");
+      // 	effective_mass(D).ave_err().write("plots/effDD_"+repSi+"_"+repSo+".xmg");
+      // 	effective_mass(E).ave_err().write("plots/effDE_"+repSi+"_"+repSo+".xmg");
+      // 	(2*effective_mass(G)).ave_err().write("plots/effDG_"+repSi+"_"+repSo+".xmg");
+      // 	(2*effective_mass(H)).ave_err().write("plots/effDH_"+repSi+"_"+repSo+".xmg");
+      // 	effective_mass(A-B).ave_err().write("plots/effDC_"+repSi+"_"+repSo+".xmg");
+      // 	effective_mass(H-G).ave_err().write("plots/effDI_"+repSi+"_"+repSo+".xmg");
     }
   
   return res;
