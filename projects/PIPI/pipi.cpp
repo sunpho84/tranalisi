@@ -24,6 +24,21 @@ inline std::ostream& operator<<(std::ostream& os,
   return os<<"{"<<mom[0]<<","<<mom[1]<<","<<mom[2]<<"}";
 }
 
+/// Negate a momentum
+inline Momentum operator-(const Momentum& y)
+{
+  auto minus=
+    [](const double& x)
+    {
+      if(x)
+	return -x;
+      else
+	return x;
+    };
+  
+  return {minus(y[0]),minus(y[1]),minus(y[2])};
+}
+
 struct InterpDef
 {
   std::string rep;
@@ -721,7 +736,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	      
 	      //cout<<a<<" "<<b<<" "<<momSo[2]<<" "<<momSi[2]<<endl;
 	      
-	      const size_t iCombo=(momSo!=momSi);
+	      const size_t iCombo=(momSo!=momSi) and (momSo!=-momSi);
 
 	      // size_t i=idOut({iBSo,iBSi,iCombo});
 	      // cout<<" "<<i<<" "<<res.size()<<" "<< res[idOut({iBSo,iBSi,iCombo})].size()<<" "<<getDirect(a,b)[0].size()<<endl;
