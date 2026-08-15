@@ -715,8 +715,8 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	  size_t iSi{};
 	  for(const Momentum& momSi : sink)
 	    {
-	      const string a=combine("bw%zu_%zu_%zu",iBSo,iSo,iSi);
-	      const string b=combine("fw%zu_%zu_%zu",iBSo,iSo,iSi);
+	      const string a=combine("%zu_%zu_%zu",iBSo,iSo,iSi);
+	      const string b=combine("%zu_%zu_%zu",iBSo,iSo,iSi);
 	      
 	      //cout<<a<<" "<<b<<" "<<momSo[2]<<" "<<momSi[2]<<endl;
 	      
