@@ -747,7 +747,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	  iSo++;
 	}
       
-      for(size_t iCombo=0;iCombo<2;iCombo++)
+      for(size_t iCombo=0;iCombo<3;iCombo++)
 	res[idOut({iBSo,iBSi,iCombo})].ave_err().write(combine("plots/effD_%zu_%zu_%zu.xmg",iBSo,iBSi,iCombo));
       
       
