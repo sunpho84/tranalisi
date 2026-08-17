@@ -736,17 +736,20 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	      
 	      //cout<<a<<" "<<b<<" "<<momSo[2]<<" "<<momSi[2]<<endl;
 	      
-	      const size_t iCombo=(momSo==momSi)?0:((momSo==-momSi)?1:2);
+	      const size_t iCombo=(momSo==-momSi)?0:((momSo==momSi)?1:2);
 	      
 	      // size_t i=idOut({iBSo,iBSi,iCombo});
 	      // cout<<" "<<i<<" "<<res.size()<<" "<< res[idOut({iBSo,iBSi,iCombo})].size()<<" "<<getDirect(a,b)[0].size()<<endl;
 	      for(size_t jCombo=iCombo;jCombo<3;jCombo++)
 		res[idOut({iBSo,iBSi,jCombo})]+=getDirect(a,b)[0]*momSo[2]*momSi[2];
 	      
+	      cout<<iBSo<<" "<<momSo[2]<<" "<<momSi[2]<<endl;
+	      
 	      iSi++;
 	    }
 	  iSo++;
 	}
+      cout<<endl;
       
       for(size_t iCombo=0;iCombo<3;iCombo++)
 	effective_mass(res[idOut({iBSo,iBSi,iCombo})]).ave_err().write(combine("plots/effD_%zu_%zu_%zu.xmg",iBSo,iBSi,iCombo));
