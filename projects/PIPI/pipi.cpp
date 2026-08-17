@@ -748,7 +748,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	}
       
       for(size_t iCombo=0;iCombo<3;iCombo++)
-	res[idOut({iBSo,iBSi,iCombo})].ave_err().write(combine("plots/effD_%zu_%zu_%zu.xmg",iBSo,iBSi,iCombo));
+	effective_mass(res[idOut({iBSo,iBSi,iCombo})]).ave_err().write(combine("plots/effD_%zu_%zu_%zu.xmg",iBSo,iBSi,iCombo));
       
       
       // for(size_t iBSi=0;iBSi<interpDef.size();iBSi++)
