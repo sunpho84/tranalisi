@@ -740,7 +740,8 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	      
 	      // size_t i=idOut({iBSo,iBSi,iCombo});
 	      // cout<<" "<<i<<" "<<res.size()<<" "<< res[idOut({iBSo,iBSi,iCombo})].size()<<" "<<getDirect(a,b)[0].size()<<endl;
-	      res[idOut({iBSo,iBSi,iCombo})]+=getDirect(a,b)[0]*momSo[2]*momSi[2];
+	      for(size_t jCombo=iCombo;jCombo<3;jCombo++)
+		res[idOut({iBSo,iBSi,jCombo})]+=getDirect(a,b)[0]*momSo[2]*momSi[2];
 	      
 	      iSi++;
 	    }
