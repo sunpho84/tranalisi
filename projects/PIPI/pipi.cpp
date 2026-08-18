@@ -187,10 +187,10 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
     for(size_t iBSi=0;iBSi<interpDef.size();iBSi++)
       {
-	const auto [fullSo,reducedSo]=
-	  getAllPerms(interpDef[iBSo].mom);
-	const auto [fullSi,reducedSi]=
-	  getAllPerms(interpDef[iBSi].mom);
+	// const auto [fullSo,reducedSo]=
+	//   getAllPerms(interpDef[iBSo].mom);
+	// const auto [fullSi,reducedSi]=
+	//   getAllPerms(interpDef[iBSi].mom);
 	
 	const InterpDef& bSo{interpDef[iBSo]};
 	const InterpDef& bSi{interpDef[iBSi]};
@@ -211,7 +211,7 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
 	// const djvec_t C=A-B;
 	// C.ave_err().write("plots/C_"+repSi+"_"+repSo+".xmg");
 	
-	#warning res[idOut({iBSo,iBSi})]=A*fullSo.front.;
+	res[idOut({iBSo,iBSi})]=A;
       }
   
   return res;
@@ -730,6 +730,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
       const size_t iBSi=iBSo;
       const auto [sourceWM,sinkWM]=
 	getAllPerms(interpDef[iBSo].mom);
+      const int r=sourceWM.size()/sinkWM.size();
       
       size_t iSo{};
       for(const auto& [momSo,mulSo] : sourceWM)
@@ -751,7 +752,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	      
 	      for(size_t iCombo=0;iCombo<3;iCombo++)
 		res[idOut({iBSo,iBSi,iCombo})]+=getDirect(a,b)[iCombo]*momSo[2]*momSi[2]*mulSi*mulSo;
-	      cout<<iBSo<<" "<<momSo<<" {"<<momSo[2]<<","<<mulSo<<"} {"<<momSi[2]<<","<<mulSi<<"}"<<endl;
+	      cout<<iBSo<<" "<<momSo<<" {"<<momSo[2]<<","<<mulSo<<"} {"<<momSi[2]<<","<<mulSi<<"} "<<r<<endl;
 	      
 	      iSi++;
 	    }
