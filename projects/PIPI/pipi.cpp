@@ -732,6 +732,14 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	getAllPerms(interpDef[iBSo].mom);
       const int r=sourceWM.size()/sinkWM.size();
       
+      for(const auto& [sw,tag] : {std::pair{sourceWM,"source"},{sinkWM,"sink"}})
+	{
+	  cout<<tag<<" ";
+	  for(const auto& [s,w] : sw)
+	    cout<<s<<" ";
+	  cout<<endl;
+	}
+      
       size_t iSo{};
       for(const auto& [momSo,mulSo] : sourceWM)
 	{
