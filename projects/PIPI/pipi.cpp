@@ -559,17 +559,17 @@ auto triangle()
 
 /////////////////////////////////////////////////////////////////
 
-std::pair<std::set<Momentum>,std::set<Momentum>> getAllPerms(Momentum a)
+auto getAllPerms(Momentum a)
 {
-  std::set<Momentum> source;
-  std::set<Momentum> sink;
+  std::map<Momentum,int> source;
+  std::map<Momentum,int> sink;
   
   do
     {
       Momentum c{a};
       std::sort(c.begin(),c.begin()+2);
       if(c[2])
-	sink.insert(c);
+	sink[c]++;
       
       for(int i=0;i<8;i++)
 	{
@@ -579,12 +579,12 @@ std::pair<std::set<Momentum>,std::set<Momentum>> getAllPerms(Momentum a)
 	    b[mu]=a[mu]*(((i>>mu)&1)*2-1);
 	  
 	  if(b[2])
-	    source.insert(b);
+	    source[b]++;
 	}
     }
   while(std::next_permutation(a.begin(),a.end()));
   
-  return {source,sink};
+  return std::pair{source,sink};
 }
 
 std::vector<djvec_t> computeDirect(const index_t& idOut)
@@ -723,27 +723,29 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
     {
       const size_t iBSi=iBSo;
-      const auto [source,sink]=getAllPerms(interpDef[iBSo].mom);
+      const auto [sourceWM,sinkWM]=getAllPerms(interpDef[iBSo].mom);
       
       size_t iSo{};
-      for(const Momentum& momSo : source)
+      for(const auto& [momSo,mulSo] : sourceWM)
 	{
 	  size_t iSi{};
-	  for(const Momentum& momSi : sink)
+	  for(const auto& [momSi,mulSi] : sinkWM)
 	    {
 	      const string a=combine("%zu_%zu_%zu",iBSo,iSo,iSi);
 	      const string b=combine("%zu_%zu_%zu",iBSo,iSo,iSi);
 	      
 	      //cout<<a<<" "<<b<<" "<<momSo[2]<<" "<<momSi[2]<<endl;
 	      
-	      const size_t iCombo=(momSo==-momSi)?0:((momSo==momSi)?1:2);
+	      // const size_t iCombo=(momSo==-momSi)?0:((momSo==momSi)?1:2);
 	      
 	      // size_t i=idOut({iBSo,iBSi,iCombo});
 	      // cout<<" "<<i<<" "<<res.size()<<" "<< res[idOut({iBSo,iBSi,iCombo})].size()<<" "<<getDirect(a,b)[0].size()<<endl;
-	      for(size_t jCombo=iCombo;jCombo<3;jCombo++)
-		res[idOut({iBSo,iBSi,jCombo})]+=getDirect(a,b)[0]*momSo[2]*momSi[2];
+	      // for(size_t jCombo=iCombo;jCombo<3;jCombo++)
+	      // 	res[idOut({iBSo,iBSi,jCombo})]+=getDirect(a,b)[0]*momSo[2]*momSi[2];
 	      
-	      cout<<iBSo<<" "<<momSo[2]<<" "<<momSi[2]<<endl;
+	      for(size_t iCombo=0;iCombo<3;iCombo++)
+		res[idOut({iBSo,iBSi,iCombo})]+=getDirect(a,b)[iCombo]*momSo[2]*momSi[2]*mulSi*mulSo;
+	      cout<<iBSo<<" {"<<momSo[2]<<","<<mulSo<<"} {"<<momSi[2]<<","<<mulSi<<"}"<<endl;
 	      
 	      iSi++;
 	    }
