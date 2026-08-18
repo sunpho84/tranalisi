@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include <set>
+// #include <set>
 
 const size_t tMaxBox=26;
 const double aGeVInv=0.07948/0.197;;
@@ -59,6 +59,34 @@ const std::vector<InterpDef> interpDef{
 };
 
 const size_t nOp=interpDef.size();
+
+auto getAllPerms(Momentum a)
+{
+  std::map<Momentum,int> full;
+  std::map<Momentum,int> reduced;
+  
+  do
+    {
+      Momentum c{a};
+      std::sort(c.begin(),c.begin()+2);
+      if(c[2])
+	reduced[c]++;
+      
+      for(int i=0;i<8;i++)
+	{
+	  Momentum b;
+	  
+	  for(int mu=0;mu<3;mu++)
+	    b[mu]=a[mu]*(((i>>mu)&1)*2-1);
+	  
+	  if(b[2])
+	    full[b]++;
+	}
+    }
+  while(std::next_permutation(a.begin(),a.end()));
+  
+  return std::pair{full,reduced};
+}
 
 /////////////////////////////////////////////////////////////////
 
@@ -159,6 +187,11 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
     for(size_t iBSi=0;iBSi<interpDef.size();iBSi++)
       {
+	const auto [fullSo,reducedSo]=
+	  getAllPerms(interpDef[iBSo].mom);
+	const auto [fullSi,reducedSi]=
+	  getAllPerms(interpDef[iBSi].mom);
+	
 	const InterpDef& bSo{interpDef[iBSo]};
 	const InterpDef& bSi{interpDef[iBSi]};
 	
@@ -169,16 +202,16 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
 	const std::string& so{std::to_string(iBSo)};
 	const std::string& si{std::to_string(iBSi)};
 	const djvec_t A=getBox(so,si);
-	const djvec_t B=getBox(so,si);
+	// const djvec_t B=getBox(so,si);
 	
 	// effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
 	// effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
 	A.ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
-	B.ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
-	const djvec_t C=A-B;
-	C.ave_err().write("plots/C_"+repSi+"_"+repSo+".xmg");
+	// B.ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
+	// const djvec_t C=A-B;
+	// C.ave_err().write("plots/C_"+repSi+"_"+repSo+".xmg");
 	
-	res[idOut({iBSo,iBSi})]=C;
+	#warning res[idOut({iBSo,iBSi})]=A*fullSo.front.;
       }
   
   return res;
@@ -190,7 +223,7 @@ auto box()
   
   return [data=computeOrLoad(idOut,"box.dat",computeBox),
 	  idOut](const size_t& iBso,
-		 const size_t& iBsi) -> const djvec_t&
+		 const size_t& iBsi)->const djvec_t&
   {
     return data[idOut({iBso,iBsi})];
   };
@@ -559,34 +592,6 @@ auto triangle()
 
 /////////////////////////////////////////////////////////////////
 
-auto getAllPerms(Momentum a)
-{
-  std::map<Momentum,int> source;
-  std::map<Momentum,int> sink;
-  
-  do
-    {
-      Momentum c{a};
-      std::sort(c.begin(),c.begin()+2);
-      if(c[2])
-	sink[c]++;
-      
-      for(int i=0;i<8;i++)
-	{
-	  Momentum b;
-	  
-	  for(int mu=0;mu<3;mu++)
-	    b[mu]=a[mu]*(((i>>mu)&1)*2-1);
-	  
-	  if(b[2])
-	    source[b]++;
-	}
-    }
-  while(std::next_permutation(a.begin(),a.end()));
-  
-  return std::pair{source,sink};
-}
-
 std::vector<djvec_t> computeDirect(const index_t& idOut)
 {
   const std::string directDataPath="directCorr";
@@ -723,7 +728,8 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
     {
       const size_t iBSi=iBSo;
-      const auto [sourceWM,sinkWM]=getAllPerms(interpDef[iBSo].mom);
+      const auto [sourceWM,sinkWM]=
+	getAllPerms(interpDef[iBSo].mom);
       
       size_t iSo{};
       for(const auto& [momSo,mulSo] : sourceWM)
@@ -745,7 +751,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	      
 	      for(size_t iCombo=0;iCombo<3;iCombo++)
 		res[idOut({iBSo,iBSi,iCombo})]+=getDirect(a,b)[iCombo]*momSo[2]*momSi[2]*mulSi*mulSo;
-	      cout<<iBSo<<" {"<<momSo[2]<<","<<mulSo<<"} {"<<momSi[2]<<","<<mulSi<<"}"<<endl;
+	      cout<<iBSo<<" "<<momSo<<" {"<<momSo[2]<<","<<mulSo<<"} {"<<momSi[2]<<","<<mulSi<<"}"<<endl;
 	      
 	      iSi++;
 	    }
