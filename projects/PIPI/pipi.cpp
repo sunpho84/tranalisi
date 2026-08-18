@@ -1,5 +1,5 @@
 #include "common.hpp"
-// #include <set>
+#include <set>
 
 const size_t tMaxBox=26;
 const double aGeVInv=0.07948/0.197;;
@@ -62,15 +62,15 @@ const size_t nOp=interpDef.size();
 
 auto getAllPerms(Momentum a)
 {
-  std::map<Momentum,int> full;
-  std::map<Momentum,int> reduced;
+  std::set<Momentum> full;
+  std::set<Momentum> reduced;
   
   do
     {
       Momentum c{a};
       std::sort(c.begin(),c.begin()+2);
       if(c[2])
-	reduced[c]++;
+	reduced.insert(c);
       
       for(int i=0;i<8;i++)
 	{
@@ -80,7 +80,7 @@ auto getAllPerms(Momentum a)
 	    b[mu]=a[mu]*(((i>>mu)&1)*2-1);
 	  
 	  if(b[2])
-	    full[b]++;
+	    full.insert(b);
 	}
     }
   while(std::next_permutation(a.begin(),a.end()));
@@ -728,23 +728,24 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
     {
       const size_t iBSi=iBSo;
-      const auto [sourceWM,sinkWM]=
+      const auto [source,sink]=
 	getAllPerms(interpDef[iBSo].mom);
-      const int r=sourceWM.size()/sinkWM.size();
+      const int r=
+	source.size()/sink.size();
       
-      for(const auto& [sw,tag] : {std::pair{sourceWM,"source"},{sinkWM,"sink"}})
+      for(const auto& [sl,tag] : {std::pair{source,"source"},{sink,"sink"}})
 	{
 	  cout<<tag<<" ";
-	  for(const auto& [s,w] : sw)
+	  for(const auto& s : sl)
 	    cout<<s<<" ";
 	  cout<<endl;
 	}
       
       size_t iSo{};
-      for(const auto& [momSo,mulSo] : sourceWM)
+      for(const auto& momSo : source)
 	{
 	  size_t iSi{};
-	  for(const auto& [momSi,mulSi] : sinkWM)
+	  for(const auto& momSi : sink)
 	    {
 	      const string a=combine("%zu_%zu_%zu",iBSo,iSo,iSi);
 	      const string b=combine("%zu_%zu_%zu",iBSo,iSo,iSi);
@@ -759,8 +760,8 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	      // 	res[idOut({iBSo,iBSi,jCombo})]+=getDirect(a,b)[0]*momSo[2]*momSi[2];
 	      
 	      for(size_t iCombo=0;iCombo<3;iCombo++)
-		res[idOut({iBSo,iBSi,iCombo})]+=getDirect(a,b)[iCombo]*momSo[2]*momSi[2]*mulSi*mulSo;
-	      cout<<iBSo<<" "<<momSo<<" {"<<momSo[2]<<","<<mulSo<<"} {"<<momSi[2]<<","<<mulSi<<"} "<<r<<endl;
+		res[idOut({iBSo,iBSi,iCombo})]+=getDirect(a,b)[iCombo]*momSo[2]*momSi[2]*r;
+	      cout<<iBSo<<" "<<momSo<<" {"<<momSo[2]<<"} {"<<momSi[2]<<"} "<<r<<endl;
 	      
 	      iSi++;
 	    }
