@@ -206,7 +206,7 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
 	
 	// effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
 	// effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
-	A.ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
+	A.ave_err().write("plots/boxA_"+repSi+"_"+repSo+".xmg");
 	// B.ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
 	// const djvec_t C=A-B;
 	// C.ave_err().write("plots/C_"+repSi+"_"+repSo+".xmg");
@@ -848,8 +848,6 @@ int main()
   
   const auto d=direct();
   
-  return 0;
-  
   const size_t nOpToUse=nOp;
   
   index_t iC({{"so",nOpToUse+1},{"si",nOpToUse+1}});
@@ -893,16 +891,6 @@ int main()
 	a=b=(a+b).subset(0,tMaxBox-1)/2;
       }
   
-  effective_mass(jj(0)).ave_err().write("plots/jj.xmg");
-  
-  const djack_t mPi=constant_fit(effective_mass(pi(0)),15,20,"plots/pi.xmg");
-  
-  const size_t t0=7;
-  
-  vector<djvec_t> eig;
-  vector<djvec_t> recastEigvec;
-  vector<djvec_t> origEigvec;
-  
   for(size_t i=0;i<nOpToUse+1;i++)
     {
       for(size_t j=0;j<nOpToUse+1;j++)
@@ -911,8 +899,18 @@ int main()
       cout<<endl;
     }
   
-  cout<<"VV: "<<combine("%.16lg\n",c[0][10].ave())<<endl;
-  cout<<"tri: "<<combine("%.16lg\n",c[1][10].ave())<<endl;
+  effective_mass(jj(0)).ave_err().write("plots/jj.xmg");
+  
+  const djack_t mPi=constant_fit(effective_mass(pi(0)),15,20,"plots/pi.xmg");
+  
+  const size_t t0=10;
+  
+  vector<djvec_t> eig;
+  vector<djvec_t> recastEigvec;
+  vector<djvec_t> origEigvec;
+  
+  cout<<"VV: "<<combine("%.16lg\n",c[0][t0].ave())<<endl;
+  cout<<"tri: "<<combine("%.16lg\n",c[1][t0].ave())<<endl;
   
   tie(eig,recastEigvec,origEigvec)=gevp(c,t0);
   
@@ -1009,7 +1007,7 @@ int main()
       gevp.write_vec_ave_err(eigP.ave_err(),gevp.color_scheme[iop%gevp.color_scheme.size()],gevp.symbol_scheme[iop&gevp.symbol_scheme.size()]);
       gevp.set_no_line();
       
-      cout<<iop<<" "<<eigP[10].ave_err()<<endl;
+      cout<<iop<<" "<<eigP[t0].ave_err()<<endl;
       
       const djack_t E=2*sqrt(sqr(mPi)+sqr(2*M_PI/64)*n2[iop])-expSh[iop];
       gevp.write_constant_band(0,tMaxBox,E,gevp.color_scheme[iop]);
