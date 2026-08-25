@@ -176,7 +176,7 @@ string exec(const string& cmd)
   array<char,128> buffer;
   string result;
   FILE *t=popen(cmd.c_str(),"r");
-  unique_ptr<FILE,decltype(&pclose)> pipe(t,pclose);
+  unique_ptr<FILE,int(*)(FILE*)> pipe(t,pclose);
   
   if(not pipe)
     CRASH("popen() failed!");
