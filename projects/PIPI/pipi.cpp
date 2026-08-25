@@ -2,7 +2,7 @@
 #include <set>
 
 const size_t tMaxBox=26;
-const double aGeVInv=0.07948/0.197;;
+const double aGeVInv=0.07948/0.197;
 
 struct Momentum :
   std::array<double,3>
@@ -104,7 +104,8 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
 	   tMaxBox,
 	   boxCorrPath,
 	   confs);
-  const size_t nHits=rawData.begin()->second.front().size();
+  const size_t nHits=
+    rawData.begin()->second.front().size();
   
   const index_t idx({{"hit",nHits},{"tMax",tMaxBox},{"conf",nConfs}});
   
@@ -130,7 +131,8 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
 	  CRASH("Unable to find %s",what.c_str());
 	}
       
-      const auto& v=_v->second;
+      const auto& v=
+	_v->second;
       
       for(size_t iHit=0;iHit<nHits;iHit++)
 	{
@@ -160,7 +162,6 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
       djvec_t res(tMaxBox);
       
       const auto d=
-	// getRawBox("Sr1_"+mso1+"_D0_G5_Sr0_"+mso2+"_0",msi1+"_TH25_Sr1_G5_"+msi2+"_Sr0_0");
 	getRawBox("bw"+mso,"fw"+msi);
       
       for(size_t t=0;t<tMaxBox;t++)
@@ -187,29 +188,16 @@ std::vector<djvec_t> computeBox(const index_t& idOut)
   for(size_t iBSo=0;iBSo<interpDef.size();iBSo++)
     for(size_t iBSi=0;iBSi<interpDef.size();iBSi++)
       {
-	// const auto [fullSo,reducedSo]=
-	//   getAllPerms(interpDef[iBSo].mom);
-	// const auto [fullSi,reducedSi]=
-	//   getAllPerms(interpDef[iBSi].mom);
-	
 	const InterpDef& bSo{interpDef[iBSo]};
 	const InterpDef& bSi{interpDef[iBSi]};
 	
 	const std::string& repSo{bSo.rep};
 	const std::string& repSi{bSi.rep};
-	// const std::string& so1{bSo.rap[0]};
-	// const std::string& so2{bSo.rap[1]};
 	const std::string& so{std::to_string(iBSo)};
 	const std::string& si{std::to_string(iBSi)};
 	const djvec_t A=getBox(so,si);
-	// const djvec_t B=getBox(so,si);
 	
-	// effective_mass(g,T/2).ave_err().write("plots/A_"+repSi+"_"+repSo+".xmg");
-	// effective_mass(h,T/2).ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
 	A.ave_err().write("plots/boxA_"+repSi+"_"+repSo+".xmg");
-	// B.ave_err().write("plots/B_"+repSi+"_"+repSo+".xmg");
-	// const djvec_t C=A-B;
-	// C.ave_err().write("plots/C_"+repSi+"_"+repSo+".xmg");
 	
 	res[idOut({iBSo,iBSi})]=A;
       }
@@ -351,7 +339,8 @@ std::vector<djvec_t> computePion(const index_t&)
 	   corrPath,
 	   confs,
 	   {"P5P5"});
-  const size_t nHits=rawData.begin()->second.front().size();
+  const size_t nHits=
+    rawData.begin()->second.front().size();
   
   const index_t idx({{"hit",nHits},{"tMax",T},{"conf",nConfs}});
   
@@ -760,7 +749,7 @@ std::vector<djvec_t> computeDirect(const index_t& idOut)
 	      // 	res[idOut({iBSo,iBSi,jCombo})]+=getDirect(a,b)[0]*momSo[2]*momSi[2];
 	      
 	      for(size_t iCombo=0;iCombo<3;iCombo++)
-		res[idOut({iBSo,iBSi,iCombo})]+=getDirect(a,b)[iCombo]*momSo[2]*momSi[2]*r;
+		res[idOut({iBSo,iBSi,iCombo})]+=getDirect(a,b)[iCombo]*momSo[2]*momSi[2];//*r;
 	      cout<<iBSo<<" "<<momSo<<" {"<<momSo[2]<<"} {"<<momSi[2]<<"} "<<r<<endl;
 	      
 	      iSi++;
@@ -894,7 +883,10 @@ int main()
   for(size_t i=0;i<nOpToUse+1;i++)
     {
       for(size_t j=0;j<nOpToUse+1;j++)
-	cout<<c[iC({i,j})][10].ave_err()<<"     ";
+	{
+	  const auto [a,e]=c[iC({i,j})][10].ave_err();
+	  printf("%e %e     ",a,e);
+	}
       
       cout<<endl;
     }
@@ -926,15 +918,15 @@ int main()
 	    }
     }
   
-  for(size_t i1=0;i1<nOpToUse+1;i1++)
-    for(size_t i2=0;i2<nOpToUse+1;i2++)
-      {
-	djvec_t s(tMaxBox);
-	for(size_t j=0;j<nOpToUse+1;j++)
-	  for(size_t k=0;k<nOpToUse+1;k++)
-	    s+=recastEigvec[iC({j,i1})]*c[iC({j,k})]*recastEigvec[iC({k,i2})];
-	cout<<i1<<" "<<i2<<" "<<s[11].ave_err()<<endl;
-      }
+  // for(size_t i1=0;i1<nOpToUse+1;i1++)
+  //   for(size_t i2=0;i2<nOpToUse+1;i2++)
+  //     {
+  // 	djvec_t s(tMaxBox);
+  // 	for(size_t j=0;j<nOpToUse+1;j++)
+  // 	  for(size_t k=0;k<nOpToUse+1;k++)
+  // 	    s+=recastEigvec[iC({j,i1})]*c[iC({j,k})]*recastEigvec[iC({k,i2})];
+  // 	//cout<<i1<<" "<<i2<<" "<<s[11].ave_err()<<endl;
+  //     }
   
   for(size_t iOp=0;iOp<nOpToUse+1;iOp++)
     recastEigvec[iC({iOp,4})].ave_err().write(combine("/tmp/%zu.xmg",iOp));
