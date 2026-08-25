@@ -438,7 +438,7 @@ std::vector<djvec_t> computeTri(const index_t& idOut)
   
   map<string,vector<vector<vector<double>>>> rawData;
   for(const auto& [mesFile,rawFile,what] : std::vector<std::array<string,3>>{
-      {"mes_contr_tri.dat","rawTri.dat","V3P5"}//,
+      {"mes_contr_tri","rawTri.dat","V3P5"}//,
       // {"mes_contr_triT","rawTriT","T3P5"},
       // {"mes_contr_triSme","rawTriSme","V3P5"},
       // {"mes_contr_triTSme","rawTriTSme","T3P5"}
